@@ -25,6 +25,9 @@ import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import catalog.hoprxi.core.domain.model.madeIn.Domestic;
+import catalog.hoprxi.core.domain.model.madeIn.Imported;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -64,55 +67,58 @@ public class ArangoDBSkuRepositoryTest {
         categoryRepository.save(skin);
 
         EANUPCBarcode barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6907861191394");
-        PlaceOfProduction placeOfProduction = new PlaceOfProduction("成都市");
-        Sku one = new Sku("one", barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "彩虹电热灭蚊香液"), placeOfProduction, Unit.HE,
+        MadeIn madeIn = new Domestic("四川", "成都");
+        Sku one = new Sku("one", barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "彩虹电热灭蚊香液"), madeIn, Unit.HE,
                 new Specification("150ml"), Grade.QUALIFIED, null, caihong.id(), skin.id());
         skuRepository.save(one);
-        Sku two = new Sku("two", new EAN_13("6907861181388"), new Name("彩虹电热灭蚊香液橙子香型2瓶装", "彩虹电热灭蚊香液2瓶装"), placeOfProduction, Unit.HE,
+        Sku two = new Sku("two", new EAN_13("6907861181388"), new Name("彩虹电热灭蚊香液橙子香型2瓶装", "彩虹电热灭蚊香液2瓶装"), madeIn, Unit.HE,
                 new Specification("2*150ml"), Grade.QUALIFIED, null, caihong.id(), skin.id());
         skuRepository.save(two);
         barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6907861181395");
-        Sku three = new Sku("three", barcode, new Name("彩虹电热灭蚊香液4瓶装（橙子+芒果香型）", "彩虹电热灭蚊香液4瓶装"), placeOfProduction, Unit.HE,
+        Sku three = new Sku("three", barcode, new Name("彩虹电热灭蚊香液4瓶装（橙子+芒果香型）", "彩虹电热灭蚊香液4瓶装"), madeIn, Unit.HE,
                 new Specification("4*120ml"), Grade.QUALIFIED, null, caihong.id(), skin.id());
         skuRepository.save(three);
-        placeOfProduction = new PlaceOfProduction("重庆市");
-        Sku four = new Sku("four", new EAN_13("6942070284987"), new Name("天友南美酸奶", "天友南美酸奶"), placeOfProduction, Unit.HE,
+        madeIn = new Domestic("重庆市");
+        Sku four = new Sku("four", new EAN_13("6942070284987"), new Name("天友南美酸奶", "天友南美酸奶"), madeIn, Unit.HE,
                 new Specification("350ml"), Grade.QUALIFIED, new ShelfLife(7), tianyou.id(), food.id());
         skuRepository.save(four);
         barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6923555240896");
-        Sku five = new Sku("five", barcode, new Name("天友纯牛奶", "天友纯牛奶"), placeOfProduction, Unit.HE,
+        Sku five = new Sku("five", barcode, new Name("天友纯牛奶", "天友纯牛奶"), madeIn, Unit.HE,
                 new Specification("350ml"), Grade.QUALIFIED, new ShelfLife(15), tianyou.id(), food.id());
         skuRepository.save(five);
 
-        Sku six = new Sku("six", new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), placeOfProduction, Unit.PCS,
+        Sku six = new Sku("six", new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), madeIn, Unit.PCS,
                 new Specification("6*250ml"), Grade.QUALIFIED, new ShelfLife(7), tianyou.id(), food.id());
         skuRepository.save(six);
         barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6923555240865");
-        Sku six_1 = new Sku("six_1", barcode, new Name("250ml天友纯牛奶(高钙）", "天友纯牛奶"), placeOfProduction, Unit.PCS,
+        Sku six_1 = new Sku("six_1", barcode, new Name("250ml天友纯牛奶(高钙）", "天友纯牛奶"), madeIn, Unit.PCS,
                 new Specification("250ml"), Grade.QUALIFIED, new ShelfLife(7), tianyou.id(), food.id());
         skuRepository.save(six_1);
         barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6923555240889");
-        Sku six_2 = new Sku("six_2", barcode, new Name("250ml天友纯牛奶", "天友纯牛奶"), placeOfProduction, Unit.PCS,
+        Sku six_2 = new Sku("six_2", barcode, new Name("250ml天友纯牛奶", "天友纯牛奶"), madeIn, Unit.PCS,
                 new Specification("250ml"), Grade.QUALIFIED, new ShelfLife(7), tianyou.id(), food.id());
         skuRepository.save(six_2);
 
         EANUPCBarcode[] eans = EANUPCBarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(9134, 3, "21");
-        placeOfProduction = new PlaceOfProduction("天津市");
-        Sku seven = new Sku("seven", new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), placeOfProduction, Unit.DAI, new Specification("25g"),
+        madeIn = new Domestic("天津市");
+        Sku seven = new Sku("seven", new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), madeIn, Unit.DAI, new Specification("25g"),
                 Grade.QUALIFIED, new ShelfLife(180), Brand.UNDEFINED.id(), food.id());
         skuRepository.save(seven);
-        Sku eight = new Sku("eight", new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), placeOfProduction, Unit.DAI, new Specification("50g"),
+        Sku eight = new Sku("eight", new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), madeIn, Unit.DAI, new Specification("50g"),
                 Grade.QUALIFIED, new ShelfLife(180), Brand.UNDEFINED.id(), food.id());
         skuRepository.save(eight);
-        Sku nine = new Sku("nine", new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), placeOfProduction, Unit.DAI, new Specification("75g"),
+        Sku nine = new Sku("nine", new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), madeIn, Unit.DAI, new Specification("75g"),
                 Grade.QUALIFIED, new ShelfLife(180), Brand.UNDEFINED.id(), food.id());
         skuRepository.save(nine);
-        Sku ten = new Sku("ten", new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new PlaceOfProduction("绵阳市"), Unit.SHUANG, new Specification("10粒缩卡装"),
+        Sku ten = new Sku("ten", new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic("四川", "绵阳"), Unit.SHUANG, new Specification("10粒缩卡装"),
                 Grade.QUALIFIED, null, changhong.id(), Category.UNDEFINED.id());
         skuRepository.save(ten);
-        Sku twelve = new Sku("twelve", new EAN_13("6925834037159"), new Name("车线本", "未知"), new PlaceOfProduction("浙江.仓南"), Unit.BEN,
-                new Specification("山本水册"), Grade.QUALIFIED, null, changhong.id(), Category.UNDEFINED.id());
+        Sku twelve = new Sku("twelve", new EAN_13("6925834037159"), new Name("车线本", "未知"), new Domestic("浙江", "仓南县"), Unit.BEN,
+                Specification.UNDEFINED, Grade.QUALIFIED, null, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
         skuRepository.save(twelve);
+        Sku thirteen = new Sku(skuRepository.nextIdentity(), new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("泰国"), Unit.HE,
+                new Specification("10片装"), Grade.QUALIFIED, new ShelfLife(1800), Brand.UNDEFINED.id(), Category.UNDEFINED.id());
+        skuRepository.save(thirteen);
     }
 
     @AfterClass
@@ -142,6 +148,9 @@ public class ArangoDBSkuRepositoryTest {
         skuRepository.remove("nine");
         skuRepository.remove("ten");
         skuRepository.remove("twelve");
+
+        for (Sku sku : skuRepository.fromBarcode("4547691239136"))
+            skuRepository.remove(sku.id());
     }
 
     @Test
@@ -185,9 +194,9 @@ public class ArangoDBSkuRepositoryTest {
     @Test
     public void findAll() {
         Sku[] skus = skuRepository.findAll(0, 25);
-        Assert.assertEquals(skus.length, 13);
+        Assert.assertEquals(skus.length, 14);
         skus = skuRepository.findAll(12, 25);
-        Assert.assertEquals(skus.length, 1);
+        Assert.assertEquals(skus.length, 2);
         skus = skuRepository.findAll(5, 5);
         Assert.assertEquals(skus.length, 5);
     }
@@ -207,7 +216,7 @@ public class ArangoDBSkuRepositoryTest {
 
     @Test
     public void size() {
-        Assert.assertEquals(skuRepository.size(), 13);
+        Assert.assertEquals(skuRepository.size(), 14);
     }
 
     @Test

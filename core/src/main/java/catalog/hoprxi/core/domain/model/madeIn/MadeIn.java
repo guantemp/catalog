@@ -22,5 +22,5 @@ package catalog.hoprxi.core.domain.model.madeIn;
  * @version 0.0.1 2019-08-28
  */
 public interface MadeIn {
-    String abc = "书法大赛";
+    String madeIn();
 }

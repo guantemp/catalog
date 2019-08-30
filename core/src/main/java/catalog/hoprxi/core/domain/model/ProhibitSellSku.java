@@ -18,6 +18,7 @@ package catalog.hoprxi.core.domain.model;
 import catalog.hoprxi.core.domain.Validator;
 import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
 import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
@@ -38,7 +39,7 @@ public class ProhibitSellSku {
     @DocumentField(DocumentField.Type.KEY)
     private String id;
     private Name name;
-    private PlaceOfProduction placeOfProduction;
+    private MadeIn madeIn;
     private Unit unit;
     private Specification spec;
     private ShelfLife shelfLife;
@@ -47,7 +48,7 @@ public class ProhibitSellSku {
      * @param id
      * @param barcode
      * @param name
-     * @param placeOfProduction
+     * @param madeIn
      * @param spec
      * @param unit
      * @param grade
@@ -58,12 +59,12 @@ public class ProhibitSellSku {
      *                                  if madeIn is null
      *                                  if unit is null
      */
-    protected ProhibitSellSku(String id, EANUPCBarcode barcode, Name name, PlaceOfProduction placeOfProduction, Unit unit, Specification spec,
+    protected ProhibitSellSku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Unit unit, Specification spec,
                               Grade grade, ShelfLife shelfLife, String brandId, String categoryId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
-        setPlaceOfProduction(placeOfProduction);
+        setMadeIn(madeIn);
         setUnit(unit);
         setSpecification(spec);
         setGrade(grade);
@@ -150,8 +151,8 @@ public class ProhibitSellSku {
         return name;
     }
 
-    PlaceOfProduction madeIn() {
-        return placeOfProduction;
+    MadeIn madeIn() {
+        return madeIn;
     }
 
     private void setBarcode(EANUPCBarcode barcode) {
@@ -168,8 +169,8 @@ public class ProhibitSellSku {
         this.name = Objects.requireNonNull(name, "name required");
     }
 
-    protected void setPlaceOfProduction(PlaceOfProduction placeOfProduction) {
-        this.placeOfProduction = Objects.requireNonNull(placeOfProduction, "madeIn required");
+    protected void setMadeIn(MadeIn madeIn) {
+        this.madeIn = Objects.requireNonNull(madeIn, "madeIn required");
     }
 
     protected void setUnit(Unit unit) {
@@ -183,11 +184,11 @@ public class ProhibitSellSku {
     }
 
     public Sku permitSell() {
-        return new Sku(id, barcode, name, placeOfProduction, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new Sku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
     }
 
     public ProhibitPurchaseAndSellSku prohibitPurchase() {
-        return new ProhibitPurchaseAndSellSku(id, barcode, name, placeOfProduction, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new ProhibitPurchaseAndSellSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
     }
 
     @Override
@@ -209,7 +210,7 @@ public class ProhibitSellSku {
                 .add("grade=" + grade)
                 .add("id='" + id + "'")
                 .add("name=" + name)
-                .add("madeIn=" + placeOfProduction)
+                .add("madeIn=" + madeIn)
                 .add("unit=" + unit)
                 .add("spec=" + spec)
                 .add("shelfLife=" + shelfLife)

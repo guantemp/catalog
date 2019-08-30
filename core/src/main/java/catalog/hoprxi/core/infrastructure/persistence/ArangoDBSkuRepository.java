@@ -19,6 +19,9 @@ package catalog.hoprxi.core.infrastructure.persistence;
 import catalog.hoprxi.core.domain.model.*;
 import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
 import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcodeGenerateServices;
+import catalog.hoprxi.core.domain.model.madeIn.Domestic;
+import catalog.hoprxi.core.domain.model.madeIn.Imported;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.ArangoGraph;
@@ -29,7 +32,7 @@ import com.arangodb.entity.VertexUpdateEntity;
 import com.arangodb.model.VertexUpdateOptions;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
-import mi.foxtail.id.ObjectId;
+import mi.foxtail.id.LongId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,14 +126,21 @@ public class ArangoDBSkuRepository implements SkuRepository {
         VPackSlice sku = slice.get("sku");
         String id = sku.get(DocumentField.Type.KEY.getSerializeName()).getAsString();
         Name name = nameConstructor.newInstance(sku.get("name").get("name").getAsString(), sku.get("name").get("mnemonic").getAsString(), sku.get("name").get("alias").getAsString());
-        PlaceOfProduction placeOfProduction = new PlaceOfProduction(sku.get("placeOfProduction").get("locality").getAsString());
+        VPackSlice madeInSlice = sku.get("madeIn");
+        MadeIn madeIn = null;
+        String className = madeInSlice.get("_class").getAsString();
+        if (Domestic.class.getName().equals(className)) {
+            madeIn = new Domestic(madeInSlice.get("province").getAsString(), madeInSlice.get("city").getAsString());
+        } else if (Imported.class.getName().equals(className)) {
+            madeIn = new Imported(madeInSlice.get("country").getAsString());
+        }
         Unit unit = Unit.valueOf(sku.get("unit").getAsString());
         Specification spec = new Specification(sku.get("spec").get("value").getAsString());
         Grade grade = Grade.valueOf(sku.get("grade").getAsString());
         ShelfLife shelfLife = new ShelfLife(sku.get("shelfLife").get("days").getAsInt());
         String brandId = sku.get("brandId").getAsString();
         String categoryId = sku.get("categoryId").getAsString();
-        return new Sku(id, barcode, name, placeOfProduction, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new Sku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
     }
 
     @Override
@@ -155,7 +165,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
 
     @Override
     public String nextIdentity() {
-        return new ObjectId().id();
+        return String.valueOf(LongId.nextId());
     }
 
     @Override

@@ -28,8 +28,5 @@ public class CoreSetupTest {
     @Test
     public void setup() {
         CoreSetup.setup("catalog");
-        CoreSetup.setup("catalog_18982455056");
-        //CoreSetup.setup("catalog_13679692301");
-        CoreSetup.test();
     }
 }

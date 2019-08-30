@@ -18,7 +18,9 @@ package catalog.hoprxi.core.domain.model;
 import catalog.hoprxi.core.domain.DomainRegistry;
 import catalog.hoprxi.core.domain.Validator;
 import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
+import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
@@ -39,7 +41,7 @@ public class Sku {
     @DocumentField(DocumentField.Type.KEY)
     private String id;
     private Name name;
-    private PlaceOfProduction placeOfProduction;
+    private MadeIn madeIn;
     private Unit unit;
     private Specification spec;
     private ShelfLife shelfLife;
@@ -48,7 +50,7 @@ public class Sku {
      * @param id
      * @param barcode
      * @param name
-     * @param placeOfProduction
+     * @param madeIn
      * @param spec
      * @param unit
      * @param grade
@@ -59,18 +61,22 @@ public class Sku {
      *                                  if madeIn is null
      *                                  if unit is null
      */
-    public Sku(String id, EANUPCBarcode barcode, Name name, PlaceOfProduction placeOfProduction, Unit unit, Specification spec,
+    public Sku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Unit unit, Specification spec,
                Grade grade, ShelfLife shelfLife, String brandId, String categoryId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
-        setPlaceOfProduction(placeOfProduction);
+        setMadeIn(madeIn);
         setUnit(unit);
         setSpecification(spec);
         setGrade(grade);
         setShelfLife(shelfLife);
         setBrandId(brandId);
         setCategoryId(categoryId);
+    }
+
+    private void setMadeIn(MadeIn madeIn) {
+        this.madeIn = madeIn;
     }
 
     /**
@@ -95,13 +101,14 @@ public class Sku {
     }
 
     /**
-     * @param placeOfProduction
-     * @throws IllegalArgumentException if madeIn is <CODE>NULL</CODE>
+     * @param newMadeIn
+     * @throws IllegalArgumentException if newMadeIn is <CODE>NULL</CODE>
      */
-    public void changeMadeIn(PlaceOfProduction placeOfProduction) {
-        Objects.requireNonNull(placeOfProduction, "madeIn required");
-        if (!placeOfProduction.equals(this.placeOfProduction))
-            this.placeOfProduction = placeOfProduction;
+    public void changeMadeIn(MadeIn newMadeIn) {
+        Objects.requireNonNull(newMadeIn, "newMadeIn required");
+        if (!newMadeIn.equals(this.madeIn)) {
+            this.madeIn = newMadeIn;
+        }
     }
 
     /**
@@ -119,7 +126,8 @@ public class Sku {
      * @throws IllegalArgumentException if spec is <CODE>NULL</CODE>
      */
     public void changeSpecification(Specification spec) {
-        Objects.requireNonNull(spec, "spec required");
+        if (spec == null)
+            spec = Specification.UNDEFINED;
         if (!this.spec.equals(spec)) {
             this.spec = spec;
             DomainRegistry.domainEventPublisher().publish(new SkuSpecificationChanged(id, spec));
@@ -132,8 +140,10 @@ public class Sku {
     public void changeShelfLife(ShelfLife shelfLife) {
         if (shelfLife == null)
             shelfLife = ShelfLife.NO_SHELF_LIFE;
-        if (!this.shelfLife.equals(shelfLife))
+        if (!this.shelfLife.equals(shelfLife)) {
             this.shelfLife = shelfLife;
+            DomainRegistry.domainEventPublisher().publish(new SkuShelfLifeChanged(id, shelfLife));
+        }
     }
 
     private void setShelfLife(ShelfLife shelfLife) {
@@ -153,7 +163,7 @@ public class Sku {
     private void setCategoryId(String categoryId) {
         if (categoryId != null) {
             categoryId = categoryId.trim();
-            if (Validator.isCategoryIdExist(categoryId)) {
+            if (!categoryId.equals(Category.UNDEFINED.id()) && Validator.isCategoryIdExist(categoryId)) {
                 this.categoryId = categoryId;
                 return;
             }
@@ -162,17 +172,26 @@ public class Sku {
     }
 
     private void setBrandId(String brandId) {
-        this.brandId = Objects.requireNonNull(brandId, "brand id required").trim();
+        if (brandId != null) {
+            brandId = brandId.trim();
+            if (!brandId.equals(Brand.UNDEFINED.id()) && Validator.isBrandIdExist(brandId)) {
+                this.brandId = brandId;
+                return;
+            }
+        }
+        this.brandId = Brand.UNDEFINED.id();
     }
 
     private void setSpecification(Specification spec) {
+        if (spec == null)
+            spec = Specification.UNDEFINED;
         this.spec = spec;
     }
 
     private void setId(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
-        if (id.isEmpty() || id.length() > 255)
-            throw new IllegalArgumentException("id length range is [1-255]");
+        if (id.isEmpty() || id.length() > 36)
+            throw new IllegalArgumentException("id length range is [1-36]");
         this.id = id;
     }
 
@@ -194,8 +213,10 @@ public class Sku {
      *                                  categoryId is not valid
      */
     public void moveToNewCategory(String categoryId) {
-        if (!this.categoryId.equals(categoryId))
+        if (!this.categoryId.equals(categoryId) && Validator.isCategoryIdExist(categoryId)) {
             setCategoryId(categoryId);
+            DomainRegistry.domainEventPublisher().publish(new SkuCategoryReallocated(id, categoryId));
+        }
     }
 
     /**
@@ -204,8 +225,10 @@ public class Sku {
      *                                  brandId is not valid
      */
     public void moveToNewBrand(String brandId) {
-        if (!this.brandId.equals(brandId))
+        if (!this.brandId.equals(brandId) && Validator.isBrandIdExist(brandId)) {
             setBrandId(brandId);
+            DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
+        }
     }
 
     public EANUPCBarcode barcode() {
@@ -232,10 +255,6 @@ public class Sku {
         return name;
     }
 
-    public PlaceOfProduction placeOfProduction() {
-        return placeOfProduction;
-    }
-
     private void setBarcode(EANUPCBarcode barcode) {
         this.barcode = Objects.requireNonNull(barcode, "barcode required");
     }
@@ -248,10 +267,6 @@ public class Sku {
 
     private void setName(Name name) {
         this.name = Objects.requireNonNull(name, "name required");
-    }
-
-    private void setPlaceOfProduction(PlaceOfProduction placeOfProduction) {
-        this.placeOfProduction = Objects.requireNonNull(placeOfProduction, "madeIn required");
     }
 
     private void setUnit(Unit unit) {
@@ -279,15 +294,15 @@ public class Sku {
     }
 
     public ProhibitPurchaseSku prohibitPurchase() {
-        return new ProhibitPurchaseSku(id, barcode, name, placeOfProduction, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new ProhibitPurchaseSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
     }
 
     public ProhibitSellSku prohibitSell() {
-        return new ProhibitSellSku(id, barcode, name, placeOfProduction, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new ProhibitSellSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
     }
 
     public ProhibitPurchaseAndSellSku prohibitPurchaseAndSell() {
-        return new ProhibitPurchaseAndSellSku(id, barcode, name, placeOfProduction, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new ProhibitPurchaseAndSellSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
     }
 
     @Override
@@ -299,7 +314,7 @@ public class Sku {
                 .add("grade=" + grade)
                 .add("id='" + id + "'")
                 .add("name=" + name)
-                .add("placeOfProduction=" + placeOfProduction)
+                .add("madeIn=" + madeIn)
                 .add("unit=" + unit)
                 .add("spec=" + spec)
                 .add("shelfLife=" + shelfLife)

@@ -23,23 +23,32 @@ import java.util.StringJoiner;
  * @since JDK8.0
  * @version 0.0.1 2019-08-28
  */
-public class Imported implements MadeIn {
-    // 进口（国家或地区,如：美国）
-    private String country;
+public class Domestic implements MadeIn {
+    //合江县（本地生产标识到县/区） or 乐山（省/市级）
+    private String province;
+    private String city;
 
-    public Imported(String country) {
-        this.country = country;
+    public Domestic(String province, String city) {
+        this.province = province;
+        this.city = city;
+    }
+
+    public Domestic(String city) {
+        this(city, city);
     }
 
     @Override
     public String madeIn() {
-        return country;
+        if (province.equals(city))
+            return city;
+        return province + city;
     }
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", Imported.class.getSimpleName() + "[", "]")
-                .add("country='" + country + "'")
+        return new StringJoiner(", ", Domestic.class.getSimpleName() + "[", "]")
+                .add("province='" + province + "'")
+                .add("city='" + city + "'")
                 .toString();
     }
 
@@ -48,13 +57,16 @@ public class Imported implements MadeIn {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Imported imported = (Imported) o;
+        Domestic domestic = (Domestic) o;
 
-        return country != null ? country.equals(imported.country) : imported.country == null;
+        if (province != null ? !province.equals(domestic.province) : domestic.province != null) return false;
+        return city != null ? city.equals(domestic.city) : domestic.city == null;
     }
 
     @Override
     public int hashCode() {
-        return country != null ? country.hashCode() : 0;
+        int result = province != null ? province.hashCode() : 0;
+        result = 31 * result + (city != null ? city.hashCode() : 0);
+        return result;
     }
 }

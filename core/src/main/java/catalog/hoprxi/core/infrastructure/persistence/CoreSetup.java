@@ -15,22 +15,17 @@
  */
 package catalog.hoprxi.core.infrastructure.persistence;
 
-import catalog.hoprxi.core.domain.model.madeIn.Imported;
-import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
-import catalog.hoprxi.core.domain.model.madeIn.SingleOrigin;
 import com.arangodb.ArangoDB;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.EdgeDefinition;
 import com.arangodb.entity.KeyType;
 import com.arangodb.model.CollectionCreateOptions;
-import com.arangodb.model.DocumentCreateOptions;
 import com.arangodb.model.SkiplistIndexOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Locale;
 
 /***
  * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuang</a>
@@ -50,7 +45,7 @@ public class CoreSetup {
         arangoDB.createDatabase(databaseName);
         ArangoDatabase db = arangoDB.db(databaseName);
         //vertex
-        for (String s : new String[]{"brand", "category", "sku", "prohibit_sell_sku", "prohibit_purchase_sku", "prohibit_purchase_and_sell_sku", "barcode", "test"}) {
+        for (String s : new String[]{"brand", "category", "sku", "prohibit_sell_sku", "prohibit_purchase_sku", "prohibit_purchase_and_sell_sku", "barcode"}) {
             CollectionCreateOptions options = new CollectionCreateOptions();
             options.keyOptions(true, KeyType.traditional, 1, 1);
             db.createCollection(s, options);
@@ -93,24 +88,5 @@ public class CoreSetup {
         db.createGraph("core", edgeList);
         arangoDB.shutdown();
         logger.info("{} be created", databaseName);
-    }
-
-    public static void test() {
-        MadeIn im = new Imported(Locale.TRADITIONAL_CHINESE);
-        MadeIn single = new SingleOrigin("四川", "乐山");
-        Te t = new Te(im, single);
-        ArangoDatabase catalog = ArangoDBUtil.getDatabase();
-        DocumentCreateOptions op = new DocumentCreateOptions();
-        catalog.collection("test").insertDocument(t);
-    }
-
-    static class Te {
-        MadeIn i1;
-        MadeIn i2;
-
-        public Te(MadeIn i1, MadeIn i2) {
-            this.i1 = i1;
-            this.i2 = i2;
-        }
     }
 }

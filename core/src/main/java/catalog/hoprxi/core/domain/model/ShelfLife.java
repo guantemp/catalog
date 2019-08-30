@@ -41,6 +41,14 @@ public class ShelfLife {
         setDays(days);
     }
 
+    public static ShelfLife createShelfLifeWithMonth(int month) {
+        return new ShelfLife(month * 30);
+    }
+
+    public static ShelfLife createShelfLifeWithYear(int year) {
+        return new ShelfLife(year * 365);
+    }
+
     private void setDays(int days) {
         if (days < 0)
             throw new IllegalArgumentException("days larger zero");
