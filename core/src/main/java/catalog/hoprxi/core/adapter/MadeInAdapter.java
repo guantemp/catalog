@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019. www.foxtail.cc All Rights Reserved.
+ * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,23 @@
 package catalog.hoprxi.core.adapter;
 
 
-import catalog.hoprxi.core.domain.model.PlaceOfProduction;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 
 import java.util.Locale;
 
 /***
- * @author <a href=
- *         "mailto:myis1000@126.com?subject=about%20cc.foxtail.catalog.adapter.OriginInAreasAdapter.java">guan
- *         xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 20170421
+ * @version 0.0.1 2019-09-02
  */
-public final class OriginInAreasAdapter {
+public class MadeInAdapter {
     /**
      * @param locale
      * @param province
      * @param city
      * @return
      */
-    public PlaceOfProduction translatingOrigin(Locale locale, String province, String city) {
+    public MadeIn translatingOrigin(Locale locale, String province, String city) {
         return null;
     }
 }

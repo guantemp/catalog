@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.foxtail.cc All Rights Reserved.
+ * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,7 @@
 
 package catalog.hoprxi.core.domain.model;
 
-import catalog.hoprxi.core.domain.Validator;
 import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
-import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
@@ -44,21 +42,6 @@ public class ProhibitPurchaseAndSellSku {
     private Specification spec;
     private ShelfLife shelfLife;
 
-    /**
-     * @param id
-     * @param barcode
-     * @param name
-     * @param madeIn
-     * @param spec
-     * @param unit
-     * @param grade
-     * @param brandId
-     * @param categoryId
-     * @throws IllegalArgumentException if id is null or id length range not in [1-255]
-     *                                  if name is null
-     *                                  if madeIn is null
-     *                                  if unit is null
-     */
     protected ProhibitPurchaseAndSellSku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Unit unit, Specification spec,
                                          Grade grade, ShelfLife shelfLife, String brandId, String categoryId) {
         setId(id);
@@ -73,9 +56,7 @@ public class ProhibitPurchaseAndSellSku {
         setCategoryId(categoryId);
     }
 
-    protected void setShelfLife(ShelfLife shelfLife) {
-        if (null == shelfLife)
-            shelfLife = ShelfLife.NO_SHELF_LIFE;
+    private void setShelfLife(ShelfLife shelfLife) {
         this.shelfLife = shelfLife;
     }
 
@@ -83,29 +64,19 @@ public class ProhibitPurchaseAndSellSku {
         return spec;
     }
 
-    protected void setCategoryId(String categoryId) {
-        if (categoryId != null) {
-            categoryId = categoryId.trim();
-            if (Validator.isCategoryIdExist(categoryId)) {
-                this.categoryId = categoryId;
-                return;
-            }
-        }
-        this.categoryId = Category.UNDEFINED.id();
+    private void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
     }
 
-    protected void setBrandId(String brandId) {
-        this.brandId = Objects.requireNonNull(brandId, "brand id required").trim();
+    private void setBrandId(String brandId) {
+        this.brandId = brandId;
     }
 
-    protected void setSpecification(Specification spec) {
+    private void setSpecification(Specification spec) {
         this.spec = spec;
     }
 
-    protected void setId(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
-        if (id.isEmpty() || id.length() > 255)
-            throw new IllegalArgumentException("id length range is [1-255]");
+    private void setId(String id) {
         this.id = id;
     }
 
