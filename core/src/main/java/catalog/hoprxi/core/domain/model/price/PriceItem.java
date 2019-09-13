@@ -16,16 +16,11 @@
 
 package catalog.hoprxi.core.domain.model.price;
 
-import javax.money.MonetaryAmount;
-
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-09-03
+ * @version 0.0.1 2019-09-13
  */
-public class Price {
-    private String id;
-    private String name;
-    private String customerRoleId;
-    private MonetaryAmount amount;
+public enum PriceItem {
+    RETAIL_PRICE, RECOMMENDEDRETAIL_PRICE, Membership_price, Trade_price, Distribution_price
 }

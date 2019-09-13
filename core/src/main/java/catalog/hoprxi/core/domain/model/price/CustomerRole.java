@@ -14,35 +14,12 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.collaborator;
-
+package catalog.hoprxi.core.domain.model.price;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-08-31
+ * @version 0.0.1 2019-09-13
  */
-public class Store {
-    private String id;
-    private String name;
-
-    public Store(String id, String name) {
-        this.id = id;
-        this.name = name;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Store store = (Store) o;
-
-        return id != null ? id.equals(store.id) : store.id == null;
-    }
-
-    @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
-    }
+public class CustomerRole {
 }
