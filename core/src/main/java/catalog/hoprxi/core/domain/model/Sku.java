@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.foxtail.cc All Rights Reserved.
+ * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,12 @@ import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
+import javax.money.MonetaryAmount;
 import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @version 0.0.2 builder 2019-05-02
  * @since JDK8.0
  */
@@ -163,7 +164,7 @@ public class Sku {
     private void setCategoryId(String categoryId) {
         if (categoryId != null) {
             categoryId = categoryId.trim();
-            if (!categoryId.equals(Category.UNDEFINED.id()) && Validator.isCategoryIdExist(categoryId)) {
+            if (!categoryId.equals(Category.UNDEFINED.id()) && Validator.isCategoryExist(categoryId)) {
                 this.categoryId = categoryId;
                 return;
             }
@@ -174,7 +175,7 @@ public class Sku {
     private void setBrandId(String brandId) {
         if (brandId != null) {
             brandId = brandId.trim();
-            if (!brandId.equals(Brand.UNDEFINED.id()) && Validator.isBrandIdExist(brandId)) {
+            if (!brandId.equals(Brand.UNDEFINED.id()) && Validator.isBrandExist(brandId)) {
                 this.brandId = brandId;
                 return;
             }
@@ -213,7 +214,7 @@ public class Sku {
      *                                  categoryId is not valid
      */
     public void moveToNewCategory(String categoryId) {
-        if (!this.categoryId.equals(categoryId) && Validator.isCategoryIdExist(categoryId)) {
+        if (!this.categoryId.equals(categoryId) && Validator.isCategoryExist(categoryId)) {
             setCategoryId(categoryId);
             DomainRegistry.domainEventPublisher().publish(new SkuCategoryReallocated(id, categoryId));
         }
@@ -225,7 +226,7 @@ public class Sku {
      *                                  brandId is not valid
      */
     public void moveToNewBrand(String brandId) {
-        if (!this.brandId.equals(brandId) && Validator.isBrandIdExist(brandId)) {
+        if (!this.brandId.equals(brandId) && Validator.isBrandExist(brandId)) {
             setBrandId(brandId);
             DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
         }
@@ -303,6 +304,13 @@ public class Sku {
 
     public ProhibitPurchaseAndSellSku prohibitPurchaseAndSell() {
         return new ProhibitPurchaseAndSellSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
+    }
+
+    public Price price(String priceId,
+                       String customerRoleId,
+                       MonetaryAmount amount) {
+        Price price = new Price(priceId, customerRoleId, amount);
+        return price;
     }
 
     @Override

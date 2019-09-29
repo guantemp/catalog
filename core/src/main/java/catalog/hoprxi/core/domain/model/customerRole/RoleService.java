@@ -14,31 +14,13 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.price;
+package catalog.hoprxi.core.domain.model.customerRole;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-09-03
+ * @version 0.0.1 2019-09-14
  */
-public enum CustomerType {
-    ROLE() {
-        @Override
-        public boolean isRole() {
-            return true;
-        }
-    }, CUSTOMER() {
-        @Override
-        public boolean isCustomer() {
-            return true;
-        }
-    };
-
-    public boolean isCustomer() {
-        return false;
-    }
-
-    public boolean isRole() {
-        return false;
-    }
+public interface RoleService {
+    CustomerRole roleFrom(String personId);
 }

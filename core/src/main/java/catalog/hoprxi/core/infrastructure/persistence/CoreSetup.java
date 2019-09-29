@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.foxtail.cc All Rights Reserved.
+ * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /***
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.3 2019-05-04
  */

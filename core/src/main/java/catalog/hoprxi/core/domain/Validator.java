@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.foxtail.cc All Rights Reserved.
+ * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,22 @@ import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 
 /***
- * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 2019-08-27
  */
 public class Validator {
-    public static boolean isCategoryIdExist(String id) {
+    public static boolean isCategoryExist(String id) {
         ValidatorCategoryId validatorCategoryId = new ValidatorCategoryId(new ArangoDBCategoryRepository());
         return validatorCategoryId.isIdExist(id);
     }
 
-    public static boolean isBrandIdExist(String id) {
+    public static boolean isBrandExist(String id) {
         ValidatorBrandId validatorBrandId = new ValidatorBrandId(new ArangoDBBrandRepository());
         return validatorBrandId.isIdExist(id);
+    }
+
+    public static boolean isCustomerRoleExist(String id) {
+        return true;
     }
 }

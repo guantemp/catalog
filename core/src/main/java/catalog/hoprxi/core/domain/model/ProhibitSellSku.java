@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.foxtail.cc All Rights Reserved.
+ * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 /***
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2018-06-19
  */
@@ -86,7 +86,7 @@ public class ProhibitSellSku {
     protected void setCategoryId(String categoryId) {
         if (categoryId != null) {
             categoryId = categoryId.trim();
-            if (Validator.isCategoryIdExist(categoryId)) {
+            if (Validator.isCategoryExist(categoryId)) {
                 this.categoryId = categoryId;
                 return;
             }

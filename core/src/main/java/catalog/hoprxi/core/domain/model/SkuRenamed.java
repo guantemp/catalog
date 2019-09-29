@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019. www.foxtail.cc All Rights Reserved.
+ * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import event.foxtail.alpha.domain.model.DomainEvent;
 import java.time.LocalDateTime;
 
 /**
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @version 0.0.2 builder 2019-04-29
  * @since JDK8.0
  */

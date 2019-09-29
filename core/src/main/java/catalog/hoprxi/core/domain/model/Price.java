@@ -14,7 +14,9 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.price;
+package catalog.hoprxi.core.domain.model;
+
+import catalog.hoprxi.core.domain.Validator;
 
 import javax.money.MonetaryAmount;
 
@@ -24,8 +26,28 @@ import javax.money.MonetaryAmount;
  * @version 0.0.1 2019-09-03
  */
 public class Price {
-    private String id;
-    private String name;
+    private String skuId;
     private String customerRoleId;
     private MonetaryAmount amount;
+
+    protected Price(String skuId, String customerRoleId, MonetaryAmount amount) {
+        setSkuId(skuId);
+        setCustomerRoleId(customerRoleId);
+        setAmount(amount);
+    }
+
+    private void setSkuId(String skuId) {
+        this.skuId = skuId;
+    }
+
+    private void setCustomerRoleId(String customerRoleId) {
+        if (!Validator.isCustomerRoleExist(customerRoleId))
+            throw new IllegalArgumentException("customer role is not exist");
+        this.customerRoleId = customerRoleId;
+    }
+
+    private void setAmount(MonetaryAmount amount) {
+        this.amount = amount;
+    }
+
 }

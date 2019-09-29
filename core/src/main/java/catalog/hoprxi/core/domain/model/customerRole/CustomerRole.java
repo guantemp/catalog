@@ -14,7 +14,8 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.collaborator;
+package catalog.hoprxi.core.domain.model.customerRole;
+
 
 import java.util.StringJoiner;
 
@@ -23,11 +24,13 @@ import java.util.StringJoiner;
  * @since JDK8.0
  * @version 0.0.1 2019-09-02
  */
-public class Role {
+public class CustomerRole {
     private String id;
     private String name;
 
-    public Role(String id, String name) {
+    public static final CustomerRole ANONYMOUS = new CustomerRole("anonymous", "anonymous");
+
+    public CustomerRole(String id, String name) {
         this.id = id;
         this.name = name;
     }
@@ -37,9 +40,9 @@ public class Role {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Role role = (Role) o;
+        CustomerRole customerRole = (CustomerRole) o;
 
-        return id != null ? id.equals(role.id) : role.id == null;
+        return id != null ? id.equals(customerRole.id) : customerRole.id == null;
     }
 
     @Override
@@ -49,7 +52,7 @@ public class Role {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", Role.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", CustomerRole.class.getSimpleName() + "[", "]")
                 .add("id='" + id + "'")
                 .add("name='" + name + "'")
                 .toString();

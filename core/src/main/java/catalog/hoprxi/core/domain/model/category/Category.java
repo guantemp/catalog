@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.foxtail.cc All Rights Reserved.
+ * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Objects;
 
 /***
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
  * @version 0.0.2 builder 2018-05-23
  */
@@ -115,7 +115,7 @@ public class Category {
         parentId = Objects.requireNonNull(parentId, "parentId required").trim();
         if (parentId.isEmpty() || parentId.length() > ID_MAX_LENGTH)
             throw new IllegalArgumentException("parentId length rang is 1-" + ID_MAX_LENGTH + "char");
-        if (!id.equals(parentId) && !Validator.isCategoryIdExist(parentId))
+        if (!id.equals(parentId) && !Validator.isCategoryExist(parentId))
             throw new InvalidCategoryIdException("parent id not exist");
         this.parentId = parentId;
     }
@@ -189,7 +189,7 @@ public class Category {
         parentId = Objects.requireNonNull(parentId, "parentId required").trim();
         if (parentId.isEmpty() || parentId.length() > ID_MAX_LENGTH)
             throw new IllegalArgumentException("parentId length rang is 1-" + ID_MAX_LENGTH);
-        if (!Validator.isCategoryIdExist(parentId))
+        if (!Validator.isCategoryExist(parentId))
             throw new InvalidCategoryIdException("parent id not exist");
         if (!this.parentId.equals(parentId)) {
             this.parentId = parentId;
