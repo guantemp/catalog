@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.domain.model;
 
-import event.foxtail.alpha.domain.model.DomainEvent;
+import event.hoprxi.domain.model.DomainEvent;
 
 import java.time.LocalDateTime;
 

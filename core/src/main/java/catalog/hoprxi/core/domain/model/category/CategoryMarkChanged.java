@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.domain.model.category;
 
 
-import event.foxtail.alpha.domain.model.DomainEvent;
+import event.hoprxi.domain.model.DomainEvent;
 
 import java.awt.image.BufferedImage;
 import java.time.LocalDateTime;

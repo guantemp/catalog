@@ -16,7 +16,7 @@
 package catalog.hoprxi.core.domain.model.brand;
 
 
-import event.foxtail.alpha.domain.model.DomainEvent;
+import event.hoprxi.domain.model.DomainEvent;
 
 import java.awt.image.BufferedImage;
 import java.net.URL;
