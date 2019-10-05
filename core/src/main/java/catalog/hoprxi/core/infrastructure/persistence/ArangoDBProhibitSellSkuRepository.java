@@ -19,6 +19,9 @@ package catalog.hoprxi.core.infrastructure.persistence;
 import catalog.hoprxi.core.domain.model.*;
 import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
 import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcodeGenerateServices;
+import catalog.hoprxi.core.domain.model.madeIn.Domestic;
+import catalog.hoprxi.core.domain.model.madeIn.Imported;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.ArangoGraph;
@@ -54,7 +57,7 @@ public class ArangoDBProhibitSellSkuRepository implements ProhibitSellSkuReposit
         try {
             nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class);
             nameConstructor.setAccessible(true);
-            stopSellSkuConstructor = ProhibitSellSku.class.getDeclaredConstructor(String.class, EANUPCBarcode.class, Name.class, PlaceOfProduction.class, Unit.class, Specification.class,
+            stopSellSkuConstructor = ProhibitSellSku.class.getDeclaredConstructor(String.class, EANUPCBarcode.class, Name.class, MadeIn.class, Unit.class, Specification.class,
                     Grade.class, ShelfLife.class, String.class, String.class);
             stopSellSkuConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
@@ -97,14 +100,21 @@ public class ArangoDBProhibitSellSkuRepository implements ProhibitSellSkuReposit
         VPackSlice sku = slice.get("sku");
         String id = sku.get(DocumentField.Type.KEY.getSerializeName()).getAsString();
         Name name = nameConstructor.newInstance(sku.get("name").get("name").getAsString(), sku.get("name").get("mnemonic").getAsString());
-        PlaceOfProduction placeOfProduction = new PlaceOfProduction(sku.get("madeIn").get("locality").getAsString());
+        VPackSlice madeInSlice = sku.get("madeIn");
+        MadeIn madeIn = null;
+        String className = madeInSlice.get("_class").getAsString();
+        if (Domestic.class.getName().equals(className)) {
+            madeIn = new Domestic(madeInSlice.get("province").getAsString(), madeInSlice.get("city").getAsString());
+        } else if (Imported.class.getName().equals(className)) {
+            madeIn = new Imported(madeInSlice.get("country").getAsString());
+        }
         Unit unit = Unit.valueOf(sku.get("unit").getAsString());
         Specification spec = new Specification(sku.get("spec").get("value").getAsString());
         Grade grade = Grade.valueOf(sku.get("grade").getAsString());
         ShelfLife shelfLife = new ShelfLife(sku.get("shelfLife").get("days").getAsInt());
         String brandId = sku.get("brandId").getAsString();
         String categoryId = sku.get("categoryId").getAsString();
-        return stopSellSkuConstructor.newInstance(id, barcode, name, placeOfProduction, unit, spec, grade, shelfLife, brandId, categoryId);
+        return stopSellSkuConstructor.newInstance(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
     }
 
     @Override

@@ -28,7 +28,7 @@ import com.arangodb.entity.DocumentField;
 import com.arangodb.model.DocumentUpdateOptions;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
-import mi.foxtail.id.LongId;
+import mi.hoprxi.id.LongId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,7 +118,7 @@ public class ArangoDBBrandRepository implements BrandRepository {
 
     @Override
     public String nextIdentity() {
-        return String.valueOf(LongId.nextId());
+        return String.valueOf(LongId.generate());
     }
 
     @Override

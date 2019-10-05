@@ -13,20 +13,14 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.core.domain;
 
-
-import event.hoprxi.domain.model.DomainEventPublisher;
-import event.hoprxi.infrastruture.simple.SimpleDomainEventPublisher;
+package catalog.hoprxi.core.domain.model.role;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-07-05
+ * @version 0.0.1 2019-09-14
  */
-public class DomainRegistry {
-    public static DomainEventPublisher domainEventPublisher() {
-        return SimpleDomainEventPublisher.instance();
-    }
-
+public interface RoleService {
+    Role roleFrom(String personId);
 }

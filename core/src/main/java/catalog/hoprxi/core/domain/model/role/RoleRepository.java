@@ -14,13 +14,12 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.customerRole;
+package catalog.hoprxi.core.domain.model.role;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-09-14
+ * @version 0.0.1 2019-09-29
  */
-public interface RoleService {
-    CustomerRole roleFrom(String personId);
+public interface RoleRepository {
 }

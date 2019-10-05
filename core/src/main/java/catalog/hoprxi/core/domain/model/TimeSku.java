@@ -25,11 +25,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /***
- * @author <a href=
- *         "mailto:myis1000@126.com?subject=about%20cc.foxtail.catalog.domain.model.item.TimeSku.java">guan
- *         xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.21 builder 20170827
+ * @version 0.0.21 builder 2019-10-05
  */
 public final class TimeSku {
     private EANUPCBarcode barcode;

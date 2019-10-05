@@ -16,7 +16,7 @@
 package catalog.hoprxi.core.infrastructure.i18n;
 
 
-import mi.foxtail.util.NLS;
+import mi.hoprxi.util.NLS;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
@@ -84,6 +84,8 @@ public class Label extends NLS {
     public static String GRADE_SECOND_LEVEL;
     public static String GRADE_THREE_LEVEL;
     public static String GRADE_UNQUALIFIED;
+
+    public static String PRICE_RETAIL;
 
     static {
         NLS.initializeMessages(BUNDLE_NAME, Label.class);

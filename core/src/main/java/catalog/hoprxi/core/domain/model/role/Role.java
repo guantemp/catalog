@@ -14,8 +14,10 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.customerRole;
+package catalog.hoprxi.core.domain.model.role;
 
+
+import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 import java.util.StringJoiner;
 
@@ -24,15 +26,17 @@ import java.util.StringJoiner;
  * @since JDK8.0
  * @version 0.0.1 2019-09-02
  */
-public class CustomerRole {
+public class Role {
     private String id;
     private String name;
+    public static final Role ANONYMOUS = new Role("anonymous", "anonymous", Label.PRICE_RETAIL);
+    private String priceName;
 
-    public static final CustomerRole ANONYMOUS = new CustomerRole("anonymous", "anonymous");
 
-    public CustomerRole(String id, String name) {
+    public Role(String id, String name, String priceName) {
         this.id = id;
         this.name = name;
+        this.priceName = priceName;
     }
 
     @Override
@@ -40,9 +44,9 @@ public class CustomerRole {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        CustomerRole customerRole = (CustomerRole) o;
+        Role role = (Role) o;
 
-        return id != null ? id.equals(customerRole.id) : customerRole.id == null;
+        return id != null ? id.equals(role.id) : role.id == null;
     }
 
     @Override
@@ -52,7 +56,7 @@ public class CustomerRole {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", CustomerRole.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", Role.class.getSimpleName() + "[", "]")
                 .add("id='" + id + "'")
                 .add("name='" + name + "'")
                 .toString();

@@ -16,8 +16,7 @@
 
 package catalog.hoprxi.core.domain.model;
 
-
-import mi.foxtail.to.PinYin;
+import mi.hoprxi.to.PinYin;
 
 import java.util.Objects;
 

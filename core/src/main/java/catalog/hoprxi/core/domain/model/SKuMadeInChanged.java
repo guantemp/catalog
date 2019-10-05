@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.domain.model;
 
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import event.foxtail.alpha.domain.model.DomainEvent;
 
 import java.time.LocalDateTime;
@@ -27,13 +28,13 @@ import java.time.LocalDateTime;
  */
 public class SKuMadeInChanged implements DomainEvent {
     private String id;
-    private PlaceOfProduction placeOfProduction;
+    private MadeIn madeIn;
     private LocalDateTime occurredOn;
     private int version;
 
-    public SKuMadeInChanged(String id, PlaceOfProduction placeOfProduction) {
+    public SKuMadeInChanged(String id, MadeIn madeIn) {
         this.id = id;
-        this.placeOfProduction = placeOfProduction;
+        this.madeIn = madeIn;
         occurredOn = LocalDateTime.now();
         version = 1;
     }
@@ -52,7 +53,7 @@ public class SKuMadeInChanged implements DomainEvent {
         return id;
     }
 
-    public PlaceOfProduction madeIn() {
-        return placeOfProduction;
+    public MadeIn madeIn() {
+        return madeIn;
     }
 }

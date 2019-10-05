@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.foxtail.cc All Rights Reserved.
+ * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
-import mi.foxtail.id.LongId;
+import mi.hoprxi.id.LongId;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 
@@ -136,7 +136,7 @@ public class ArangoDBCategoryRepositoryTest {
 
     @Test
     public void nextIdentity() {
-        String id = String.valueOf(LongId.nextId());
+        String id = String.valueOf(LongId.generate());
         Assert.assertNotNull(id);
     }
 

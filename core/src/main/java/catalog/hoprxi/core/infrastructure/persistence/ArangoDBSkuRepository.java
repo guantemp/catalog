@@ -32,7 +32,7 @@ import com.arangodb.entity.VertexUpdateEntity;
 import com.arangodb.model.VertexUpdateOptions;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
-import mi.foxtail.id.LongId;
+import mi.hoprxi.id.LongId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -165,7 +165,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
 
     @Override
     public String nextIdentity() {
-        return String.valueOf(LongId.nextId());
+        return String.valueOf(LongId.generate());
     }
 
     @Override
