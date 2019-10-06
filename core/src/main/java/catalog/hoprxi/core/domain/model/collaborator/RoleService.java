@@ -14,17 +14,15 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.price;
+package catalog.hoprxi.core.domain.model.collaborator;
+
+import catalog.hoprxi.core.domain.model.role.Role;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-09-29
+ * @version 0.0.1 2019-09-14
  */
-public interface PriceRepository {
-    void save(Price price);
-
-    Price find(String skuId, String roleId);
-
-    void remove(Price price);
+public interface RoleService {
+    Role roleFrom(String personId);
 }

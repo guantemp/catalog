@@ -90,7 +90,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
 
     @Override
     public Sku find(String id) {
-        final String query = "WITH sku,has,barcode\n" +
+        final String query = "WITH sku,barcode\n" +
                 "FOR s IN sku FILTER s._key == @key \n" +
                 "LET barcode = (FOR v,e IN 1..1 OUTBOUND s._id has RETURN v)\n" +
                 "RETURN {'sku':s,'barcode':barcode[0].barcode}";
@@ -179,8 +179,8 @@ public class ArangoDBSkuRepository implements SkuRepository {
 
     @Override
     public void save(Sku sku) {
-        ArangoGraph graph = catalog.graph("core");
         boolean exists = catalog.collection("sku").documentExists(sku.id());
+        ArangoGraph graph = catalog.graph("core");
         if (exists) {
             VertexUpdateEntity skuVertex = graph.vertexCollection("sku").updateVertex(sku.id(), sku, UPDATE_OPTIONS);
             if (isBrandIdChanged(catalog, skuVertex, sku.brandId()))
@@ -205,7 +205,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
     }
 
     private boolean isCategoryIdChanged(ArangoDatabase arangoDatabase, DocumentEntity startVertex, String categoryId) {
-        final String query = "WITH sku,belong\n" +
+        final String query = "WITH sku\n" +
                 "FOR v,e IN 1..1 OUTBOUND @startVertex belong FILTER v._id =~ '^category' && v._key != @categoryId REMOVE e IN belong RETURN e";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", startVertex.getId()).put("categoryId", categoryId).get();
         ArangoCursor<VPackSlice> slices = arangoDatabase.query(query, bindVars, null, VPackSlice.class);
@@ -223,7 +223,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
     }
 
     private void updateBarcode(ArangoDatabase arangoDatabase, DocumentEntity startVertex, EANUPCBarcode barcode) {
-        final String query = "WITH sku,has,barcode\n" +
+        final String query = "WITH sku,barcode\n" +
                 "FOR v,e IN 1..1 OUTBOUND @startVertex has FILTER v.barcode != @barcode REMOVE v IN barcode REMOVE e IN has RETURN v";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", startVertex.getId()).put("barcode", barcode.barcode()).get();
         ArangoCursor<VPackSlice> slices = arangoDatabase.query(query, bindVars, null, VPackSlice.class);
@@ -304,7 +304,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
 
     @Override
     public Sku[] fromBarcode(String barcode) {
-        final String query = "WITH barcode,belong,sku,has\n" +
+        final String query = "WITH barcode,sku\n" +
                 "FOR b IN barcode FILTER b.barcode =~ @barcode\n" +
                 "FOR sku,e IN 1..1 INBOUND b has\n" +
                 "LET barcode = (FOR v,h IN 1..1 OUTBOUND sku._id has RETURN v)\n" +
@@ -316,7 +316,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
 
     @Override
     public Sku[] fromMnemonic(String mnemonic) {
-        final String query = "WITH sku,has,barcode\n" +
+        final String query = "WITH sku,barcode\n" +
                 "FOR s IN sku FILTER s.name.mnemonic =~ @mnemonic\n" +
                 "LET barcode = (FOR v,h IN 1..1 OUTBOUND s._id has RETURN v)\n" +
                 "RETURN {'sku':s,'barcode':barcode[0].barcode}";
@@ -327,7 +327,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
 
     @Override
     public Sku[] fromName(String name) {
-        final String query = "WITH sku,has,barcode\n" +
+        final String query = "WITH sku,barcode\n" +
                 "FOR s IN sku FILTER s.name.name =~ @name\n" +
                 "LET barcode = (FOR v,h IN 1..1 OUTBOUND s._id has  RETURN v)\n" +
                 "RETURN {'sku':s,'barcode':barcode[0].barcode}";

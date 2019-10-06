@@ -18,7 +18,9 @@ package catalog.hoprxi.core.domain.model.role;
 
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
+import com.arangodb.entity.DocumentField;
 
+import java.util.Objects;
 import java.util.StringJoiner;
 
 /***
@@ -27,16 +29,43 @@ import java.util.StringJoiner;
  * @version 0.0.1 2019-09-02
  */
 public class Role {
-    private String id;
-    private String name;
     public static final Role ANONYMOUS = new Role("anonymous", "anonymous", Label.PRICE_RETAIL);
+    private String name;
     private String priceName;
-
+    @DocumentField(DocumentField.Type.KEY)
+    private String id;
 
     public Role(String id, String name, String priceName) {
+        setId(id);
+        setName(name);
+        setPriceName(priceName);
+    }
+
+    private void setPriceName(String priceName) {
+        this.priceName = Objects.requireNonNull(priceName, "priceName required");
+    }
+
+    private void setName(String name) {
+        this.name = Objects.requireNonNull(name, "name required");
+    }
+
+    private void setId(String id) {
+        id = Objects.requireNonNull(id, "id required").trim();
+        if (id.isEmpty() || id.length() > 36)
+            throw new IllegalArgumentException("id length is 1 to 36");
         this.id = id;
-        this.name = name;
-        this.priceName = priceName;
+    }
+
+    public void rename(String newName) {
+        newName = Objects.requireNonNull(newName, "newName required");
+        if (!newName.equals(name))
+            this.name = newName;
+    }
+
+    public void renamePrice(String newPriceName) {
+        newPriceName = Objects.requireNonNull(newPriceName, "newName required");
+        if (!newPriceName.equals(name))
+            this.name = newPriceName;
     }
 
     @Override
@@ -47,6 +76,18 @@ public class Role {
         Role role = (Role) o;
 
         return id != null ? id.equals(role.id) : role.id == null;
+    }
+
+    public String id() {
+        return id;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public String priceName() {
+        return priceName;
     }
 
     @Override

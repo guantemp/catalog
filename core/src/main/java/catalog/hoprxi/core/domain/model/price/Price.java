@@ -41,8 +41,8 @@ public class Price {
     }
 
     private void setRoleId(String roleId) {
-        if (!Validator.isCustomerRoleExist(roleId))
-            throw new IllegalArgumentException("customer role is not exist");
+        if (!Validator.isRoleExist(roleId))
+            throw new IllegalArgumentException("role isn't exist");
         this.roleId = roleId;
     }
 
@@ -50,4 +50,38 @@ public class Price {
         this.amount = amount;
     }
 
+    public String skuId() {
+        return skuId;
+    }
+
+    public String roleId() {
+        return roleId;
+    }
+
+    public MonetaryAmount amount() {
+        return amount;
+    }
+
+    public void changAmount(MonetaryAmount amount) {
+        if (!this.amount.isEqualTo(amount))
+            this.amount = amount;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Price price = (Price) o;
+
+        if (skuId != null ? !skuId.equals(price.skuId) : price.skuId != null) return false;
+        return roleId != null ? roleId.equals(price.roleId) : price.roleId == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = skuId != null ? skuId.hashCode() : 0;
+        result = 31 * result + (roleId != null ? roleId.hashCode() : 0);
+        return result;
+    }
 }

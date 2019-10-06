@@ -14,13 +14,23 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.role;
+package catalog.hoprxi.core.domain.model.price;
+
+import catalog.hoprxi.core.infrastructure.persistence.ArangoDBPriceRepository;
+
+import javax.money.MonetaryAmount;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-09-14
+ * @version 0.0.1 2019/10/6
  */
-public interface RoleService {
-    Role roleFrom(String personId);
+public class PriceService {
+    private PriceRepository priceRepository = new ArangoDBPriceRepository();
+
+
+    public void price(String skuId, String roleId, MonetaryAmount amount) {
+        Price price = new Price(skuId, roleId, amount);
+        priceRepository.save(price);
+    }
 }

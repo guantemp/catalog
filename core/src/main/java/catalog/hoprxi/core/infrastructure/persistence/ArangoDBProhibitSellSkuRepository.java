@@ -94,7 +94,6 @@ public class ArangoDBProhibitSellSkuRepository implements ProhibitSellSkuReposit
     }
 
     private ProhibitSellSku rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-
         EANUPCBarcode barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode(slice.get("barcode").getAsString());
         //Sku
         VPackSlice sku = slice.get("sku");

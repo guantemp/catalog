@@ -22,4 +22,19 @@ package catalog.hoprxi.core.domain.model.role;
  * @version 0.0.1 2019-09-29
  */
 public interface RoleRepository {
+    /**
+     * @param role
+     */
+    void save(Role role);
+
+    /**
+     * @param id
+     * @return
+     */
+    Role find(String id);
+
+    /**
+     * @param id
+     */
+    void remove(String id);
 }

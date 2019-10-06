@@ -39,7 +39,7 @@ public class EANUPCBarcodeGenerateServices {
             return new EAN_8(barcode);
         if (barcode.length() == 13)
             return new EAN_13(barcode);
-        return null;
+        throw new InvalidBarcodeException("Not effective barcode");
     }
 
     /**
