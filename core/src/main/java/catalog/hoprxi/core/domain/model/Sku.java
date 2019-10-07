@@ -36,6 +36,7 @@ import java.util.StringJoiner;
  * @since JDK8.0
  */
 public class Sku {
+    private static final int ID_MAX_LENGTH = 36;
     @Expose(serialize = false, deserialize = false)
     private EANUPCBarcode barcode;
     private String brandId;
@@ -164,25 +165,17 @@ public class Sku {
     }
 
     private void setCategoryId(String categoryId) {
-        if (categoryId != null) {
-            categoryId = categoryId.trim();
-            if (!categoryId.equals(Category.UNDEFINED.id()) && Validator.isCategoryExist(categoryId)) {
-                this.categoryId = categoryId;
-                return;
-            }
-        }
-        this.categoryId = Category.UNDEFINED.id();
+        categoryId = Objects.requireNonNull(categoryId, "categoryId is required").trim();
+        if (!categoryId.equals(Category.UNDEFINED.id()) && !Validator.isCategoryExist(categoryId))
+            throw new IllegalArgumentException("categoryId isn't effective");
+        this.categoryId = categoryId;
     }
 
     private void setBrandId(String brandId) {
-        if (brandId != null) {
-            brandId = brandId.trim();
-            if (!brandId.equals(Brand.UNDEFINED.id()) && Validator.isBrandExist(brandId)) {
-                this.brandId = brandId;
-                return;
-            }
-        }
-        this.brandId = Brand.UNDEFINED.id();
+        brandId = Objects.requireNonNull(brandId, "brandId is required").trim();
+        if (!brandId.equals(Brand.UNDEFINED.id()) && !Validator.isBrandExist(brandId))
+            throw new IllegalArgumentException("brandId isn't effective");
+        this.brandId = brandId;
     }
 
     private void setSpecification(Specification spec) {
@@ -193,8 +186,8 @@ public class Sku {
 
     private void setId(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
-        if (id.isEmpty() || id.length() > 36)
-            throw new IllegalArgumentException("id length range is [1-36]");
+        if (id.isEmpty() || id.length() > ID_MAX_LENGTH)
+            throw new IllegalArgumentException("id length range is 1 to " + ID_MAX_LENGTH);
         this.id = id;
     }
 
