@@ -18,7 +18,6 @@ package catalog.hoprxi.core.domain.model.brand;
 
 import event.hoprxi.domain.model.DomainEvent;
 
-import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.Year;
@@ -27,11 +26,11 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2019-05-13
+ * @version 0.0.2 builder 2019-10-07
  */
 
 public class BrandAboutChanged implements DomainEvent {
-    private BufferedImage logo;
+    private URL logo;
     private Year since;
     private String story;
     private URL homePage;
@@ -39,7 +38,7 @@ public class BrandAboutChanged implements DomainEvent {
     private LocalDateTime occurredOn;
     private int version;
 
-    public BrandAboutChanged(String id, BufferedImage logo, URL homePage, Year since, String story) {
+    public BrandAboutChanged(String id, URL logo, URL homePage, Year since, String story) {
         super();
         this.id = id;
         this.logo = logo;
@@ -65,7 +64,7 @@ public class BrandAboutChanged implements DomainEvent {
         return Objects.hash(id, occurredOn, version);
     }
 
-    public BufferedImage logo() {
+    public URL logo() {
         return logo;
     }
 

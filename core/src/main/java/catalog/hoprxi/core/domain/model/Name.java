@@ -23,7 +23,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2019-04-28
+ * @version 0.0.2 builder 2019-10-07
  */
 public class Name {
     private String name;
@@ -55,9 +55,7 @@ public class Name {
      * @throws IllegalArgumentException if name is <code>NULL</code>
      */
     public Name(String name) {
-        setName(name);
-        this.mnemonic = PinYin.toShortPinYing(this.name);
-        setAlias(name);
+        this(name, name);
     }
 
     public String alias() {
@@ -76,8 +74,8 @@ public class Name {
 
     private void setName(String name) {
         name = Objects.requireNonNull(name, "name required").trim();
-        if (name.length() > 256)
-            throw new IllegalArgumentException("name length rang is 0-256");
+        if (name.length() > 255)
+            throw new IllegalArgumentException("name length rang is 0-255");
         this.name = name;
     }
 

@@ -13,69 +13,46 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.core.domain.model.brand;
+
+package catalog.hoprxi.core.domain.model.category;
 
 import event.hoprxi.domain.model.DomainEvent;
 
 import java.time.LocalDateTime;
 
-
-/**
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
- * @version 0.0.2 builder 2019-05-15
+/***
+ * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
+ * @version 0.0.1 2019/10/7
  */
-public class BrandRenamed implements DomainEvent {
-    private String name;
-    private String mnemonic;
-    private String alias;
+public class CategoryPositionMoved implements DomainEvent {
     private LocalDateTime occurredOn;
     private String id;
+    private String movedId;
     private int version;
 
-
-    /**
-     * @param id
-     * @param name
-     * @param mnemonic
-     * @param alias
-     */
-    public BrandRenamed(String id, String name, String mnemonic, String alias) {
+    public CategoryPositionMoved(String id, String movedId) {
         this.id = id;
-        this.name = name;
-        this.mnemonic = mnemonic;
-        this.alias = alias;
+        this.movedId = movedId;
         this.occurredOn = LocalDateTime.now();
         this.version = 1;
     }
 
-
     @Override
     public LocalDateTime occurredOn() {
-        return occurredOn;
-    }
-
-    /**
-     * @return the id
-     */
-    public String id() {
-        return id;
-    }
-
-    public String name() {
-        return name;
-    }
-
-    public String mnemonic() {
-        return mnemonic;
-    }
-
-    public String alias() {
-        return alias;
+        return null;
     }
 
     @Override
     public int version() {
-        return version;
+        return 0;
+    }
+
+    public String id() {
+        return id;
+    }
+
+    public String movedId() {
+        return movedId;
     }
 }

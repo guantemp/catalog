@@ -38,6 +38,10 @@ public class ArangoDBRoleRepositoryTest {
         Role cash = new Role(" cash", "现金采购", "现金价");
         Role tax = new Role("tax", "含3%普票", "含税价");
         Role VAT = new Role("VAT", "含10%增殖税", "增殖税价");
+
+        Role lz = new Role("lz", "泸州市", "泸洲地区价");
+        Role ls = new Role("ls", "乐山市", "乐山地区建议零售价");
+
         roleRepository.save(blackGold);
         roleRepository.save(blackGold);
         roleRepository.save(platinum);
@@ -46,18 +50,32 @@ public class ArangoDBRoleRepositoryTest {
         roleRepository.save(cash);
         roleRepository.save(tax);
         roleRepository.save(VAT);
+
+        roleRepository.save(lz);
+        roleRepository.save(ls);
+
         roleRepository.save(Role.ANONYMOUS);
     }
+/*
+    @AfterClass
+    public static void teardown() {
+        roleRepository.remove("blackGold");
+        roleRepository.remove("blackGold");
+        roleRepository.remove("platinum");
+        roleRepository.remove("enterprise");
+        roleRepository.remove("monthly");
+        roleRepository.remove("cash");
+        roleRepository.remove("tax");
+        roleRepository.remove("VAT");
 
-    @Test
-    public void save() {
+        roleRepository.remove("lz");
+        roleRepository.remove("ls");
+
+        roleRepository.remove(Role.ANONYMOUS.id());
     }
+*/
 
     @Test
     public void find() {
-    }
-
-    @Test
-    public void remove() {
     }
 }

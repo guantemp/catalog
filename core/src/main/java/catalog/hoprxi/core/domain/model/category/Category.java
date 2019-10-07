@@ -28,7 +28,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2018-05-23
+ * @version 0.0.2 builder 2019-05-23
  */
 public class Category {
     public static final Category UNDEFINED = new Category("undefined", "undefined", Label.CATEGORY_UNDEFINED) {
@@ -45,7 +45,7 @@ public class Category {
         }
 
         @Override
-        public void moveTo(String parentId) {
+        public void moveTo(String movedId) {
         }
     };
     private String description;
@@ -55,7 +55,7 @@ public class Category {
     private String name;
     private String parentId;
     private List<SpecificationFamily> specificationFamily;
-    private static final int NAME_MAX_LENGTH = 256;
+    private static final int NAME_MAX_LENGTH = 255;
     private static final int ID_MAX_LENGTH = 36;
     private static final int DESCRIPTION_MAX_LENGTH = 512;
 
@@ -76,8 +76,8 @@ public class Category {
      * @param name
      * @param description
      * @param mark
-     * @throws IllegalArgumentException if parentId is null or rang not in 1-36
-     *                                  if id is null or range not in [1-36]
+     * @throws IllegalArgumentException if parentId is null or length rang not in 1-36
+     *                                  if id is null or length range not in [1-36]
      *                                  if name length range not in [1-256]
      *                                  if description not null and length range not in [0-512]
      */
@@ -185,14 +185,14 @@ public class Category {
 
     }
 
-    public void moveTo(String parentId) {
-        parentId = Objects.requireNonNull(parentId, "parentId required").trim();
-        if (parentId.isEmpty() || parentId.length() > ID_MAX_LENGTH)
+    public void moveTo(String movedId) {
+        movedId = Objects.requireNonNull(movedId, "parentId required").trim();
+        if (movedId.isEmpty() || movedId.length() > ID_MAX_LENGTH)
             throw new IllegalArgumentException("parentId length rang is 1-" + ID_MAX_LENGTH);
-        if (!Validator.isCategoryExist(parentId))
+        if (!Validator.isCategoryExist(movedId))
             throw new InvalidCategoryIdException("parent id not exist");
-        if (!this.parentId.equals(parentId)) {
-            this.parentId = parentId;
+        if (!this.parentId.equals(movedId)) {
+            this.parentId = movedId;
             //DomainRegistry.domainEventPublisher().publish(new CategoryRenamed(id, description));
         }
     }

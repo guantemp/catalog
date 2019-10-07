@@ -170,11 +170,14 @@ public class ArangoDBSkuRepository implements SkuRepository {
 
     @Override
     public void remove(String id) {
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "sku/" + id).get();
-        final String removeHas_2 = "WITH sku,has,barcode\n" +
-                "FOR v,e IN 1..1 OUTBOUND @startVertex has REMOVE v IN barcode";
-        catalog.query(removeHas_2, bindVars, null, VPackSlice.class);
-        catalog.graph("core").vertexCollection("sku").deleteVertex(id);
+        boolean exists = catalog.collection("sku").documentExists(id);
+        if (exists) {
+            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "sku/" + id).get();
+            final String removeHas_2 = "WITH sku,has,barcode\n" +
+                    "FOR v,e IN 1..1 OUTBOUND @startVertex has REMOVE v IN barcode";
+            catalog.query(removeHas_2, bindVars, null, VPackSlice.class);
+            catalog.graph("core").vertexCollection("sku").deleteVertex(id);
+        }
     }
 
     @Override

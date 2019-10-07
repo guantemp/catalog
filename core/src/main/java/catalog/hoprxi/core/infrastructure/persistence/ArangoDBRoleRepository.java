@@ -19,7 +19,6 @@ package catalog.hoprxi.core.infrastructure.persistence;
 import catalog.hoprxi.core.domain.model.role.Role;
 import catalog.hoprxi.core.domain.model.role.RoleRepository;
 import com.arangodb.ArangoDatabase;
-import com.arangodb.ArangoGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +48,8 @@ public class ArangoDBRoleRepository implements RoleRepository {
 
     @Override
     public void remove(String id) {
-        ArangoGraph graph = catalog.graph("core");
-        graph.vertexCollection("role").deleteVertex(id);
+        boolean exists = catalog.collection("role").documentExists(id);
+        if (exists)
+            catalog.graph("core").vertexCollection("role").deleteVertex(id);
     }
 }

@@ -27,12 +27,16 @@ import java.util.StringJoiner;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.3 builder 2019-05-13
+ * @version 0.0.3 builder 2019-10-07
  */
 public class Brand {
     public static final Brand UNDEFINED = new Brand("undefined", new Name(Label.BRAND_UNDEFINED, "undefined")) {
         @Override
         public void rename(Name newName) {
+        }
+
+        @Override
+        public void changeAbout(AboutBrand newAbout) {
         }
     };
     private AboutBrand about;
@@ -40,6 +44,10 @@ public class Brand {
     private String id;
     private static final int ID_MAX_LENGTH = 36;
     private Name name;
+
+    public Brand(String id, String name) {
+        this(id, new Name(name), null);
+    }
 
     /**
      * @param id
@@ -60,11 +68,18 @@ public class Brand {
         this.about = about;
     }
 
+    public void changeAbout(AboutBrand newAbout) {
+        if ((about == null && newAbout != null) || (about != null && !about.equals(newAbout))) {
+            this.about = newAbout;
+            DomainRegistry.domainEventPublisher().publish(new BrandAboutChanged(id, about.logo(), about.homepage(), about.since(), about.story()));
+        }
+    }
+
     private void setId(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
-        if (id.length() > ID_MAX_LENGTH)
+        if (id.isEmpty() || id.length() > ID_MAX_LENGTH)
             throw new IllegalArgumentException("id length is 1-" + ID_MAX_LENGTH);
-        this.id = id.trim();
+        this.id = id;
     }
 
     public AboutBrand about() {
@@ -96,9 +111,9 @@ public class Brand {
 
     public void rename(Name newName) {
         Objects.requireNonNull(newName, "newName required");
-        if (!newName.equals(this.name)) {
+        if (!newName.equals(name)) {
             this.name = newName;
-            DomainRegistry.domainEventPublisher().publish(new BrandRenamed(id, newName));
+            DomainRegistry.domainEventPublisher().publish(new BrandRenamed(id, newName.name(), newName.mnemonic(), newName.alias()));
         }
     }
 
