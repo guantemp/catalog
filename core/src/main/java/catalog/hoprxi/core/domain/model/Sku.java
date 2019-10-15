@@ -21,12 +21,9 @@ import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
-import catalog.hoprxi.core.domain.model.price.Price;
-import catalog.hoprxi.core.domain.model.role.Role;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
-import javax.money.MonetaryAmount;
 import java.util.Objects;
 import java.util.StringJoiner;
 
@@ -301,14 +298,6 @@ public class Sku {
         return new ProhibitPurchaseAndSellSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
     }
 
-    public Price price(String roleId, MonetaryAmount amount) {
-        Price price = new Price(id, roleId, amount);
-        return price;
-    }
-
-    public Price retailPrice(MonetaryAmount amount) {
-        return new Price(id, Role.ANONYMOUS.id(), amount);
-    }
 
     @Override
     public String toString() {

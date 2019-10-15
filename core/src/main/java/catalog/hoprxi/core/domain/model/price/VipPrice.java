@@ -16,15 +16,27 @@
 
 package catalog.hoprxi.core.domain.model.price;
 
+import catalog.hoprxi.core.infrastructure.i18n.Label;
+
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-09-29
+ * @version 0.0.1 2019/10/15
  */
-public interface PriceRepository {
-    void save(Price price);
+public class VipPrice {
+    private Price price;
+    private String name;
 
-    Price find(String skuId, String roleId);
+    public VipPrice(String name, Price price) {
+        this.price = price;
+        this.name = name;
+    }
 
-    void remove(Price price);
+    public Price price() {
+        return price;
+    }
+
+    public String name() {
+        return Label.PRICE_RETAIL;
+    }
 }

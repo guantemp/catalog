@@ -86,6 +86,7 @@ public class Label extends NLS {
     public static String GRADE_UNQUALIFIED;
 
     public static String PRICE_RETAIL;
+    public static String PRICE_MEMBER;
 
     static {
         NLS.initializeMessages(BUNDLE_NAME, Label.class);

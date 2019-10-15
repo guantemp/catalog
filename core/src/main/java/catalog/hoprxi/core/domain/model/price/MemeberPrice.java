@@ -16,21 +16,27 @@
 
 package catalog.hoprxi.core.domain.model.price;
 
-import catalog.hoprxi.core.infrastructure.persistence.ArangoDBPriceRepository;
-
-import javax.money.MonetaryAmount;
+import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 /***
  * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019/10/6
+ * @version 0.0.1 2019/10/15
  */
-public class PriceService {
-    private PriceRepository priceRepository = new ArangoDBPriceRepository();
+public class MemeberPrice {
+    private Price price;
+    private String name;
 
+    public MemeberPrice(String name, Price price) {
+        this.price = price;
+        this.name = name;
+    }
 
-    public void price(String skuId, String roleId, MonetaryAmount amount) {
-        Price price = new Price(skuId, roleId, amount);
-        priceRepository.save(price);
+    public Price price() {
+        return price;
+    }
+
+    public String name() {
+        return Label.PRICE_RETAIL;
     }
 }

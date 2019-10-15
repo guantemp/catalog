@@ -16,72 +16,46 @@
 
 package catalog.hoprxi.core.domain.model.price;
 
-import catalog.hoprxi.core.domain.Validator;
+import catalog.hoprxi.core.domain.model.Unit;
+import org.javamoney.moneta.Money;
 
+import javax.money.Monetary;
 import javax.money.MonetaryAmount;
+import java.util.Locale;
+import java.util.Objects;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-09-03
+ * @version 0.0.1 2019/10/15
  */
 public class Price {
-    private String skuId;
-    private String roleId;
     private MonetaryAmount amount;
+    private Unit unit;
 
-    public Price(String skuId, String roleId, MonetaryAmount amount) {
-        setSkuId(skuId);
-        setRoleId(roleId);
+    public Price(MonetaryAmount amount, Unit unit) {
         setAmount(amount);
+        setUnit(unit);
     }
 
-    private void setSkuId(String skuId) {
-        this.skuId = skuId;
-    }
-
-    private void setRoleId(String roleId) {
-        if (!Validator.isRoleExist(roleId))
-            throw new IllegalArgumentException("role isn't exist");
-        this.roleId = roleId;
+    private void setUnit(Unit unit) {
+        Objects.requireNonNull(unit, "unit is required");
+        this.unit = unit;
     }
 
     private void setAmount(MonetaryAmount amount) {
+        if (amount == null)
+            amount = Money.zero(Monetary.getCurrency(Locale.getDefault()));
+        if (amount.isNegative())
+            throw new IllegalArgumentException("amount isn't negative");
         this.amount = amount;
-    }
-
-    public String skuId() {
-        return skuId;
-    }
-
-    public String roleId() {
-        return roleId;
     }
 
     public MonetaryAmount amount() {
         return amount;
     }
 
-    public void changAmount(MonetaryAmount amount) {
-        if (!this.amount.isEqualTo(amount))
-            this.amount = amount;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Price price = (Price) o;
-
-        if (skuId != null ? !skuId.equals(price.skuId) : price.skuId != null) return false;
-        return roleId != null ? roleId.equals(price.roleId) : price.roleId == null;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = skuId != null ? skuId.hashCode() : 0;
-        result = 31 * result + (roleId != null ? roleId.hashCode() : 0);
-        return result;
+    public Unit unit() {
+        return unit;
     }
 }

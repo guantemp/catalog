@@ -19,7 +19,6 @@ package catalog.hoprxi.core.domain;
 
 import catalog.hoprxi.core.domain.model.brand.ValidatorBrandId;
 import catalog.hoprxi.core.domain.model.category.ValidatorCategoryId;
-import catalog.hoprxi.core.domain.model.role.Role;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 
@@ -37,11 +36,5 @@ public class Validator {
     public static boolean isBrandExist(String id) {
         ValidatorBrandId validatorBrandId = new ValidatorBrandId(new ArangoDBBrandRepository());
         return validatorBrandId.isIdExist(id);
-    }
-
-    public static boolean isRoleExist(String id) {
-        if (id.equals(Role.ANONYMOUS.id()))
-            return true;
-        return true;
     }
 }

@@ -14,27 +14,24 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.role;
+package catalog.hoprxi.core.domain.model.price;
+
+import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-09-29
+ * @version 0.0.1 2019/10/15
  */
-public interface RoleRepository {
-    /**
-     * @param role
-     */
-    void save(Role role);
+public class RetailPrice {
+    private Price price;
+    private String name;
 
-    /**
-     * @param id
-     * @return
-     */
-    Role find(String id);
+    public Price price() {
+        return price;
+    }
 
-    /**
-     * @param id
-     */
-    void remove(String id);
+    public String name() {
+        return Label.PRICE_RETAIL;
+    }
 }

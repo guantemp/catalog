@@ -45,7 +45,7 @@ public class CoreSetup {
         arangoDB.createDatabase(databaseName);
         ArangoDatabase db = arangoDB.db(databaseName);
         //vertex
-        for (String s : new String[]{"brand", "category", "sku", "prohibit_sell_sku", "prohibit_purchase_sku", "prohibit_purchase_and_sell_sku", "barcode", "role"}) {
+        for (String s : new String[]{"brand", "category", "sku", "prohibit_sell_sku", "prohibit_purchase_sku", "prohibit_purchase_and_sell_sku", "barcode"}) {
             CollectionCreateOptions options = new CollectionCreateOptions();
             options.keyOptions(true, KeyType.traditional, 1, 1);
             db.createCollection(s, options);
@@ -85,7 +85,6 @@ public class CoreSetup {
         edgeList.add(new EdgeDefinition().collection("subordinate").from("category").to("category"));
         edgeList.add(new EdgeDefinition().collection("belong").from("sku", "prohibit_sell_sku", "prohibit_purchase_sku", "prohibit_purchase_and_sell_sku").to("category", "brand"));
         edgeList.add(new EdgeDefinition().collection("has").from("sku", "prohibit_sell_sku", "prohibit_purchase_sku", "prohibit_purchase_and_sell_sku", "category").to("barcode"));
-        edgeList.add(new EdgeDefinition().collection("price").from("sku", "prohibit_sell_sku", "prohibit_purchase_sku", "prohibit_purchase_and_sell_sku").to("role"));
         db.createGraph("core", edgeList);
         arangoDB.shutdown();
         logger.info("{} be created", databaseName);
