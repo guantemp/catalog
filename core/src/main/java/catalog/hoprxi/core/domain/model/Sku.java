@@ -94,7 +94,7 @@ public class Sku {
 
     public Sku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
                Grade grade, RetailPrice retailPrice, String brandId, String categoryId) {
-        this(id, barcode, name, madeIn, spec, grade, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
+        this(id, barcode, name, madeIn, spec, grade, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, brandId, categoryId);
     }
 
     /**
