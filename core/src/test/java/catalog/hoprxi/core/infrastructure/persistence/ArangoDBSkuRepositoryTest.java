@@ -33,6 +33,7 @@ import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
 import org.javamoney.moneta.Money;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -158,41 +159,40 @@ public class ArangoDBSkuRepositoryTest {
         skuRepository.save(thirteen);
     }
 
-    /*
-        @AfterClass
-        public static void teardown() {
-            brandRepository.remove(Brand.UNDEFINED.id());
-            brandRepository.remove("caihong");
-            brandRepository.remove("tianyou");
-            brandRepository.remove("changjhong");
+    @AfterClass
+    public static void teardown() {
+        brandRepository.remove(Brand.UNDEFINED.id());
+        brandRepository.remove("caihong");
+        brandRepository.remove("tianyou");
+        brandRepository.remove("changjhong");
 
-            categoryRepository.remove(Category.UNDEFINED.id());
-            categoryRepository.remove("skin");
-            categoryRepository.remove("cosmetics");
-            categoryRepository.remove("chemicals");
-            categoryRepository.remove("food");
-            categoryRepository.remove("root");
+        categoryRepository.remove(Category.UNDEFINED.id());
+        categoryRepository.remove("skin");
+        categoryRepository.remove("cosmetics");
+        categoryRepository.remove("chemicals");
+        categoryRepository.remove("food");
+        categoryRepository.remove("root");
 
-            skuRepository.remove("one");
-            skuRepository.remove("two");
-            skuRepository.remove("three");
-            skuRepository.remove("four");
-            skuRepository.remove("five");
-            skuRepository.remove("six");
-            skuRepository.remove("six_1");
-            skuRepository.remove("six_2");
-            skuRepository.remove("seven");
-            skuRepository.remove("eight");
-            skuRepository.remove("nine");
-            skuRepository.remove("ten");
-            skuRepository.remove("twelve");
+        skuRepository.remove("one");
+        skuRepository.remove("two");
+        skuRepository.remove("three");
+        skuRepository.remove("four");
+        skuRepository.remove("five");
+        skuRepository.remove("six");
+        skuRepository.remove("six_1");
+        skuRepository.remove("six_2");
+        skuRepository.remove("seven");
+        skuRepository.remove("eight");
+        skuRepository.remove("nine");
+        skuRepository.remove("ten");
+        skuRepository.remove("twelve");
 
-            for (Sku sku : skuRepository.fromBarcode("4547691239136"))
-                skuRepository.remove(sku.id());
+        for (Sku sku : skuRepository.fromBarcode("4547691239136"))
+            skuRepository.remove(sku.id());
 
-            skuRepository.remove("twelve");
-        }
-    */
+        skuRepository.remove("twelve");
+    }
+
     @Test
     public void belongToBrand() {
         Sku[] skus = skuRepository.belongToBrand("caihong", 0, 3);
