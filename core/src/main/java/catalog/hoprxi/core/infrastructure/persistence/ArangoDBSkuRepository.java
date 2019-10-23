@@ -22,6 +22,10 @@ import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcodeGenerateServices;
 import catalog.hoprxi.core.domain.model.madeIn.Domestic;
 import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.price.MemberPrice;
+import catalog.hoprxi.core.domain.model.price.Price;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.VipPrice;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.ArangoGraph;
@@ -33,9 +37,11 @@ import com.arangodb.model.VertexUpdateOptions;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
 import mi.hoprxi.id.LongId;
+import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.money.MonetaryAmount;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -134,13 +140,32 @@ public class ArangoDBSkuRepository implements SkuRepository {
         } else if (Imported.class.getName().equals(className)) {
             madeIn = new Imported(madeInSlice.get("country").getAsString());
         }
-        Unit unit = Unit.valueOf(sku.get("unit").getAsString());
         Specification spec = new Specification(sku.get("spec").get("value").getAsString());
         Grade grade = Grade.valueOf(sku.get("grade").getAsString());
-        ShelfLife shelfLife = new ShelfLife(sku.get("shelfLife").get("days").getAsInt());
+
+        VPackSlice retailPriceSlice = sku.get("retailPrice");
+        VPackSlice amountSlice = retailPriceSlice.get("price").get("amount");
+        MonetaryAmount amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
+        Unit unit = Unit.valueOf(retailPriceSlice.get("price").get("unit").getAsString());
+        RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
+
+        VPackSlice memberPriceSlice = sku.get("memberPrice");
+        String priceName = memberPriceSlice.get("name").getAsString();
+        amountSlice = memberPriceSlice.get("price").get("amount");
+        amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
+        unit = Unit.valueOf(memberPriceSlice.get("price").get("unit").getAsString());
+        MemberPrice memberPrice = new MemberPrice(priceName, new Price(amount, unit));
+
+        VPackSlice vipPriceSlice = sku.get("vipPrice");
+        priceName = vipPriceSlice.get("name").getAsString();
+        amountSlice = vipPriceSlice.get("price").get("amount");
+        amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
+        unit = Unit.valueOf(vipPriceSlice.get("price").get("unit").getAsString());
+        VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
+
         String brandId = sku.get("brandId").getAsString();
         String categoryId = sku.get("categoryId").getAsString();
-        return new Sku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new Sku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
     @Override
@@ -148,7 +173,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
         Sku[] skus = ArangoDBUtil.calculationCollectionSize(catalog, Sku.class, offset, limit);
         if (skus.length == 0)
             return skus;
-        final String query = "WITH sku,has,barcode\n" +
+        final String query = "WITH sku,barcode\n" +
                 "FOR s IN sku LIMIT @offset,@limit\n" +
                 "LET barcode = (FOR v,e IN 1..1 OUTBOUND s._id has RETURN v)\n" +
                 "RETURN {'sku':s,'barcode':barcode[0].barcode}";

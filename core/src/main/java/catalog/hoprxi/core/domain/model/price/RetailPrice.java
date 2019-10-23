@@ -45,4 +45,19 @@ public class RetailPrice {
     public String name() {
         return Label.PRICE_RETAIL;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        RetailPrice that = (RetailPrice) o;
+
+        return price != null ? price.equals(that.price) : that.price == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return price != null ? price.hashCode() : 0;
+    }
 }

@@ -30,9 +30,14 @@ import java.util.Objects;
  * @version 0.0.1 2019/10/15
  */
 public class Price {
-    public static Price ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.getDefault())), Unit.PCS);
+    private static Money MONEY_ZERO = Money.zero(Monetary.getCurrency(Locale.getDefault()));
+    public static Price ZERO = new Price(MONEY_ZERO, Unit.PCS);
     private MonetaryAmount amount;
     private Unit unit;
+
+    public static Price zero(Locale locale) {
+        return new Price(Money.zero(Monetary.getCurrency(locale)), Unit.PCS);
+    }
 
     public Price(MonetaryAmount amount, Unit unit) {
         setAmount(amount);
@@ -46,7 +51,7 @@ public class Price {
 
     private void setAmount(MonetaryAmount amount) {
         if (amount == null)
-            amount = Money.zero(Monetary.getCurrency(Locale.getDefault()));
+            amount = MONEY_ZERO;
         if (amount.isNegative())
             throw new IllegalArgumentException("amount isn't negative");
         this.amount = amount;
@@ -58,5 +63,23 @@ public class Price {
 
     public Unit unit() {
         return unit;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Price price = (Price) o;
+
+        if (amount != null ? !amount.equals(price.amount) : price.amount != null) return false;
+        return unit == price.unit;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = amount != null ? amount.hashCode() : 0;
+        result = 31 * result + (unit != null ? unit.hashCode() : 0);
+        return result;
     }
 }

@@ -26,8 +26,8 @@ import java.util.Objects;
  * @version 0.0.1 2019/10/15
  */
 public class VipPrice {
+    private static int NAME_LENGTH = 64;
     public static VipPrice ZERO = new VipPrice(Price.ZERO);
-    private static int NAME_LEGTH = 64;
     private Price price;
     private String name;
 
@@ -46,8 +46,8 @@ public class VipPrice {
 
     private void setName(String name) {
         name = Objects.requireNonNull(name, "name required").trim();
-        if (name.isEmpty() || name.length() > NAME_LEGTH)
-            throw new IllegalArgumentException("name length rang is 1-" + NAME_LEGTH);
+        if (name.isEmpty() || name.length() > NAME_LENGTH)
+            throw new IllegalArgumentException("name length rang is 1-" + NAME_LENGTH);
         this.name = name;
     }
 

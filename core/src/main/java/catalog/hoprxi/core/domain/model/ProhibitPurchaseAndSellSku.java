@@ -18,6 +18,9 @@ package catalog.hoprxi.core.domain.model;
 
 import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.price.MemberPrice;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.VipPrice;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
@@ -38,26 +41,37 @@ public class ProhibitPurchaseAndSellSku {
     private String id;
     private Name name;
     private MadeIn madeIn;
-    private Unit unit;
+    private RetailPrice retailPrice;
+    private MemberPrice memberPrice;
+    private VipPrice vipPrice;
     private Specification spec;
-    private ShelfLife shelfLife;
 
-    protected ProhibitPurchaseAndSellSku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Unit unit, Specification spec,
-                                         Grade grade, ShelfLife shelfLife, String brandId, String categoryId) {
+    /**
+     * @param id
+     * @param barcode
+     * @param name
+     * @param madeIn
+     * @param spec
+     * @param grade
+     * @param retailPrice
+     * @param memberPrice
+     * @param vipPrice
+     * @param brandId
+     * @param categoryId
+     */
+    protected ProhibitPurchaseAndSellSku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
+                                         Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String brandId, String categoryId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
         setMadeIn(madeIn);
-        setUnit(unit);
+        setRetailPrice(retailPrice);
+        setMemberPrice(memberPrice);
+        setVipPrice(vipPrice);
         setSpecification(spec);
         setGrade(grade);
-        setShelfLife(shelfLife);
         setBrandId(brandId);
         setCategoryId(categoryId);
-    }
-
-    private void setShelfLife(ShelfLife shelfLife) {
-        this.shelfLife = shelfLife;
     }
 
     public Specification spec() {
@@ -80,6 +94,17 @@ public class ProhibitPurchaseAndSellSku {
         this.id = id;
     }
 
+    private void setVipPrice(VipPrice vipPrice) {
+        this.vipPrice = vipPrice;
+    }
+
+    private void setMemberPrice(MemberPrice memberPrice) {
+        this.memberPrice = memberPrice;
+    }
+
+    private void setRetailPrice(RetailPrice retailPrice) {
+        this.retailPrice = retailPrice;
+    }
     /**
      * @param name
      */
@@ -144,27 +169,17 @@ public class ProhibitPurchaseAndSellSku {
         this.madeIn = Objects.requireNonNull(madeIn, "madeIn required");
     }
 
-    protected void setUnit(Unit unit) {
-        if (unit == null)
-            unit = Unit.PCS;
-        this.unit = unit;
-    }
-
-    public Unit unit() {
-        return unit;
-    }
-
 
     public ProhibitSellSku permitPurchase() {
-        return new ProhibitSellSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new ProhibitSellSku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
     public ProhibitPurchaseSku permitSales() {
-        return new ProhibitPurchaseSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new ProhibitPurchaseSku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
     public Sku permitPurchaseAndSales() {
-        return new Sku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new Sku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
     @Override
@@ -184,17 +199,18 @@ public class ProhibitPurchaseAndSellSku {
 
     @Override
     public String toString() {
-        return "ProhibitPurchaseAndSalesSku{" +
-                ", barcode=" + barcode +
+        return "ProhibitPurchaseAndSellSku{" +
+                "barcode=" + barcode +
                 ", brandId='" + brandId + '\'' +
                 ", categoryId='" + categoryId + '\'' +
                 ", grade=" + grade +
                 ", id='" + id + '\'' +
                 ", name=" + name +
                 ", madeIn=" + madeIn +
-                ", unit=" + unit +
+                ", retailPrice=" + retailPrice +
+                ", memberPrice=" + memberPrice +
+                ", vipPrice=" + vipPrice +
                 ", spec=" + spec +
-                ", shelfLife=" + shelfLife +
                 '}';
     }
 }

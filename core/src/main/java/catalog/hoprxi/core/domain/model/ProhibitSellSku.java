@@ -19,11 +19,13 @@ import catalog.hoprxi.core.domain.Validator;
 import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.price.MemberPrice;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.VipPrice;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
@@ -40,9 +42,10 @@ public class ProhibitSellSku {
     private String id;
     private Name name;
     private MadeIn madeIn;
-    private Unit unit;
+    private RetailPrice retailPrice;
+    private MemberPrice memberPrice;
+    private VipPrice vipPrice;
     private Specification spec;
-    private ShelfLife shelfLife;
 
     /**
      * @param id
@@ -50,33 +53,23 @@ public class ProhibitSellSku {
      * @param name
      * @param madeIn
      * @param spec
-     * @param unit
      * @param grade
+     * @param retailPrice
+     * @param memberPrice
+     * @param vipPrice
      * @param brandId
      * @param categoryId
-     * @throws IllegalArgumentException if id is null or id length range not in [1-255]
-     *                                  if name is null
-     *                                  if madeIn is null
-     *                                  if unit is null
      */
-    protected ProhibitSellSku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Unit unit, Specification spec,
-                              Grade grade, ShelfLife shelfLife, String brandId, String categoryId) {
+    protected ProhibitSellSku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
+                              Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String brandId, String categoryId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
         setMadeIn(madeIn);
-        setUnit(unit);
         setSpecification(spec);
         setGrade(grade);
-        setShelfLife(shelfLife);
         setBrandId(brandId);
         setCategoryId(categoryId);
-    }
-
-    protected void setShelfLife(ShelfLife shelfLife) {
-        if (null == shelfLife)
-            shelfLife = ShelfLife.NO_SHELF_LIFE;
-        this.shelfLife = shelfLife;
     }
 
     public Specification spec() {
@@ -173,22 +166,12 @@ public class ProhibitSellSku {
         this.madeIn = Objects.requireNonNull(madeIn, "madeIn required");
     }
 
-    protected void setUnit(Unit unit) {
-        if (unit == null)
-            unit = Unit.PCS;
-        this.unit = unit;
-    }
-
-    public Unit unit() {
-        return unit;
-    }
-
     public Sku permitSell() {
-        return new Sku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new Sku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
     public ProhibitPurchaseAndSellSku prohibitPurchase() {
-        return new ProhibitPurchaseAndSellSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new ProhibitPurchaseAndSellSku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
     @Override
@@ -202,23 +185,24 @@ public class ProhibitSellSku {
     }
 
     @Override
-    public String toString() {
-        return new StringJoiner(", ", ProhibitSellSku.class.getSimpleName() + "[", "]")
-                .add("barcode=" + barcode)
-                .add("brandId='" + brandId + "'")
-                .add("categoryId='" + categoryId + "'")
-                .add("grade=" + grade)
-                .add("id='" + id + "'")
-                .add("name=" + name)
-                .add("madeIn=" + madeIn)
-                .add("unit=" + unit)
-                .add("spec=" + spec)
-                .add("shelfLife=" + shelfLife)
-                .toString();
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
 
     @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+    public String toString() {
+        return "ProhibitSellSku{" +
+                "barcode=" + barcode +
+                ", brandId='" + brandId + '\'' +
+                ", categoryId='" + categoryId + '\'' +
+                ", grade=" + grade +
+                ", id='" + id + '\'' +
+                ", name=" + name +
+                ", madeIn=" + madeIn +
+                ", retailPrice=" + retailPrice +
+                ", memberPrice=" + memberPrice +
+                ", vipPrice=" + vipPrice +
+                ", spec=" + spec +
+                '}';
     }
 }

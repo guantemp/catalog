@@ -31,8 +31,11 @@ public class ValidatorBrandId {
     }
 
     public boolean isIdExist(String id) {
+        if (id.equals(Brand.UNDEFINED.id()))
+            return true;
+        Brand brand = repository.find(id);
         //Brand brand = repository.find(parentId);
         // return brand == null ? false : true;
-        return true;
+        return brand != null;
     }
 }

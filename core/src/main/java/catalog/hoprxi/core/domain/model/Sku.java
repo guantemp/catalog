@@ -21,7 +21,7 @@ import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
-import catalog.hoprxi.core.domain.model.price.MemeberPrice;
+import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
 import com.arangodb.entity.DocumentField;
@@ -31,7 +31,7 @@ import java.util.Objects;
 
 /**
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
- * @version 0.0.2 builder 2019-05-02
+ * @version 0.0.2 builder 2019-10-23
  * @since JDK8.0
  */
 public class Sku {
@@ -46,7 +46,7 @@ public class Sku {
     private Name name;
     private MadeIn madeIn;
     private RetailPrice retailPrice;
-    private MemeberPrice memeberPrice;
+    private MemberPrice memberPrice;
     private VipPrice vipPrice;
     private Unit unit;
     private Specification spec;
@@ -59,7 +59,7 @@ public class Sku {
      * @param spec
      * @param grade
      * @param retailPrice
-     * @param memeberPrice
+     * @param memberPrice
      * @param vipPrice
      * @param brandId
      * @param categoryId
@@ -68,7 +68,7 @@ public class Sku {
      *                                  if madeIn is null
      */
     public Sku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
-               Grade grade, RetailPrice retailPrice, MemeberPrice memeberPrice, VipPrice vipPrice, String brandId, String categoryId) {
+               Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String brandId, String categoryId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
@@ -76,10 +76,25 @@ public class Sku {
         setSpecification(spec);
         setGrade(grade);
         setRetailPrice(retailPrice);
-        setMemberPrice(memeberPrice);
+        setMemberPrice(memberPrice);
         setVipPrice(vipPrice);
         setBrandId(brandId);
         setCategoryId(categoryId);
+    }
+
+    public Sku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
+               Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
+        this(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
+    }
+
+    public Sku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
+               Grade grade, RetailPrice retailPrice) {
+        this(id, barcode, name, madeIn, spec, grade, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
+    }
+
+    public Sku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
+               Grade grade, RetailPrice retailPrice, String brandId, String categoryId) {
+        this(id, barcode, name, madeIn, spec, grade, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
     }
 
     /**
@@ -113,17 +128,17 @@ public class Sku {
     private void setVipPrice(VipPrice vipPrice) {
         if (vipPrice == null)
             vipPrice = VipPrice.ZERO;
-        if (vipPrice.price().unit() != Unit.PCS || vipPrice.price().unit() != retailPrice.price().unit())
+        if (vipPrice.price().unit() != Unit.PCS && vipPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("vipPrice unit must be consistent with retailPrice unit");
         this.vipPrice = vipPrice;
     }
 
-    private void setMemberPrice(MemeberPrice memeberPrice) {
-        if (memeberPrice == null)
-            memeberPrice = MemeberPrice.ZERO;
-        if (memeberPrice.price().unit() != Unit.PCS || memeberPrice.price().unit() != retailPrice.price().unit())
+    private void setMemberPrice(MemberPrice memberPrice) {
+        if (memberPrice == null)
+            memberPrice = MemberPrice.ZERO;
+        if (memberPrice.price().unit() != Unit.PCS && memberPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("memberPrice unit must be consistent with retailPrice unit");
-        this.memeberPrice = memeberPrice;
+        this.memberPrice = memberPrice;
     }
 
     private void setRetailPrice(RetailPrice retailPrice) {
@@ -143,7 +158,7 @@ public class Sku {
         Objects.requireNonNull(barcode, "barcode required");
         if (!barcode.equals(this.barcode)) {
             this.barcode = barcode;
-            DomainRegistry.domainEventPublisher().publish(new SkuRenamed(id, name));
+            DomainRegistry.domainEventPublisher().publish(new SkuBarcodeChanged(id, barcode));
         }
     }
 
@@ -165,16 +180,18 @@ public class Sku {
         Objects.requireNonNull(newMadeIn, "newMadeIn required");
         if (!newMadeIn.equals(this.madeIn)) {
             this.madeIn = newMadeIn;
+            DomainRegistry.domainEventPublisher().publish(new SKuMadeInChanged(id, madeIn));
         }
     }
 
     /**
-     * @param unit
+     * @param retailPrice
      */
-    public void changeUnit(Unit unit) {
-        if (unit != null) {
-            if (!this.unit.equals(unit))
-                this.unit = unit;
+    public void changeRetailPrice(RetailPrice retailPrice) {
+        Objects.requireNonNull(retailPrice, "retailPrice required");
+        if (this.retailPrice.equals(retailPrice)) {
+            this.retailPrice = retailPrice;
+            DomainRegistry.domainEventPublisher().publish(new SkuRetailPriceChanged(id, retailPrice.price().amount(), retailPrice.price().unit()));
         }
     }
 
@@ -197,14 +214,14 @@ public class Sku {
     }
 
     private void setCategoryId(String categoryId) {
-        categoryId = Objects.requireNonNull(categoryId, "categoryId is required").trim();
+        categoryId = Objects.requireNonNull(categoryId, "categoryId required").trim();
         if (!categoryId.equals(Category.UNDEFINED.id()) && !Validator.isCategoryExist(categoryId))
             throw new IllegalArgumentException("categoryId isn't effective");
         this.categoryId = categoryId;
     }
 
     private void setBrandId(String brandId) {
-        brandId = Objects.requireNonNull(brandId, "brandId is required").trim();
+        brandId = Objects.requireNonNull(brandId, "brandId required").trim();
         if (!brandId.equals(Brand.UNDEFINED.id()) && !Validator.isBrandExist(brandId))
             throw new IllegalArgumentException("brandId isn't effective");
         this.brandId = brandId;
@@ -257,6 +274,18 @@ public class Sku {
             setBrandId(brandId);
             DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
         }
+    }
+
+    public RetailPrice retailPrice() {
+        return retailPrice;
+    }
+
+    public MemberPrice memberPrice() {
+        return memberPrice;
+    }
+
+    public VipPrice vipPrice() {
+        return vipPrice;
     }
 
     public EANUPCBarcode barcode() {
@@ -322,15 +351,15 @@ public class Sku {
     }
 
     public ProhibitPurchaseSku prohibitPurchase() {
-        return new ProhibitPurchaseSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new ProhibitPurchaseSku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
     public ProhibitSellSku prohibitSell() {
-        return new ProhibitSellSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new ProhibitSellSku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
     public ProhibitPurchaseAndSellSku prohibitPurchaseAndSell() {
-        return new ProhibitPurchaseAndSellSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new ProhibitPurchaseAndSellSku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
     @Override
@@ -344,7 +373,7 @@ public class Sku {
                 ", name=" + name +
                 ", madeIn=" + madeIn +
                 ", retailPrice=" + retailPrice +
-                ", memeberPrice=" + memeberPrice +
+                ", memeberPrice=" + memberPrice +
                 ", vipPrice=" + vipPrice +
                 ", unit=" + unit +
                 ", spec=" + spec +

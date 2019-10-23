@@ -19,6 +19,9 @@ import catalog.hoprxi.core.domain.Validator;
 import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.price.MemberPrice;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.VipPrice;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
@@ -38,10 +41,12 @@ public class ProhibitPurchaseSku {
     @DocumentField(DocumentField.Type.KEY)
     private String id;
     private Name name;
+    private RetailPrice retailPrice;
+    private MemberPrice memberPrice;
+    private VipPrice vipPrice;
     private MadeIn madeIn;
-    private Unit unit;
     private Specification spec;
-    private ShelfLife shelfLife;
+
 
     /**
      * @param id
@@ -49,33 +54,23 @@ public class ProhibitPurchaseSku {
      * @param name
      * @param madeIn
      * @param spec
-     * @param unit
      * @param grade
+     * @param retailPrice
+     * @param memberPrice
+     * @param vipPrice
      * @param brandId
      * @param categoryId
-     * @throws IllegalArgumentException if id is null or id length range not in [1-255]
-     *                                  if name is null
-     *                                  if madeIn is null
-     *                                  if unit is null
      */
-    protected ProhibitPurchaseSku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Unit unit, Specification spec,
-                                  Grade grade, ShelfLife shelfLife, String brandId, String categoryId) {
+    protected ProhibitPurchaseSku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
+                                  Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String brandId, String categoryId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
         setMadeIn(madeIn);
-        setUnit(unit);
         setSpecification(spec);
         setGrade(grade);
-        setShelfLife(shelfLife);
         setBrandId(brandId);
         setCategoryId(categoryId);
-    }
-
-    protected void setShelfLife(ShelfLife shelfLife) {
-        if (null == shelfLife)
-            shelfLife = ShelfLife.NO_SHELF_LIFE;
-        this.shelfLife = shelfLife;
     }
 
     public Specification spec() {
@@ -172,12 +167,6 @@ public class ProhibitPurchaseSku {
         this.madeIn = Objects.requireNonNull(madeIn, "madeIn required");
     }
 
-    protected void setUnit(Unit unit) {
-        if (unit == null)
-            unit = Unit.PCS;
-        this.unit = unit;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -196,27 +185,25 @@ public class ProhibitPurchaseSku {
     @Override
     public String toString() {
         return "ProhibitPurchaseSku{" +
-                ", barcode=" + barcode +
+                "barcode=" + barcode +
                 ", brandId='" + brandId + '\'' +
                 ", categoryId='" + categoryId + '\'' +
                 ", grade=" + grade +
                 ", id='" + id + '\'' +
                 ", name=" + name +
+                ", retailPrice=" + retailPrice +
+                ", memberPrice=" + memberPrice +
+                ", vipPrice=" + vipPrice +
                 ", madeIn=" + madeIn +
-                ", unit=" + unit +
                 ", spec=" + spec +
                 '}';
     }
 
-    public Unit unit() {
-        return unit;
-    }
-
     public Sku permitPurchase() {
-        return new Sku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new Sku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
     public ProhibitPurchaseAndSellSku prohibitSales() {
-        return new ProhibitPurchaseAndSellSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
+        return new ProhibitPurchaseAndSellSku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 }

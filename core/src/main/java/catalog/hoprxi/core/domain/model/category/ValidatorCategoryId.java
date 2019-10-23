@@ -31,11 +31,13 @@ public class ValidatorCategoryId {
     }
 
     /**
-     * @param parentId
+     * @param id
      * @return
      */
-    public boolean isIdExist(String parentId) {
-        Category category = repository.find(parentId);
+    public boolean isIdExist(String id) {
+        if (id.equals(Category.UNDEFINED.id()))
+            return true;
+        Category category = repository.find(id);
         return category != null;
     }
 }

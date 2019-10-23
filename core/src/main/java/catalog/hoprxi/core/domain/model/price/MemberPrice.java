@@ -25,18 +25,18 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 2019/10/15
  */
-public class MemeberPrice {
-    public static final MemeberPrice ZERO = new MemeberPrice(Price.ZERO);
-    private static int NAME_LEGTH = 64;
+public class MemberPrice {
+    public static final MemberPrice ZERO = new MemberPrice(Price.ZERO);
+    private static final int NAME_LENGTH = 64;
     private Price price;
     private String name;
 
-    public MemeberPrice(String name, Price price) {
+    public MemberPrice(String name, Price price) {
         setName(name);
         setPrice(price);
     }
 
-    public MemeberPrice(Price price) {
+    public MemberPrice(Price price) {
         this(Label.PRICE_MEMBER, price);
     }
 
@@ -46,8 +46,8 @@ public class MemeberPrice {
 
     private void setName(String name) {
         name = Objects.requireNonNull(name, "name required").trim();
-        if (name.isEmpty() || name.length() > NAME_LEGTH)
-            throw new IllegalArgumentException("name length rang is 1-" + NAME_LEGTH);
+        if (name.isEmpty() || name.length() > NAME_LENGTH)
+            throw new IllegalArgumentException("name length rang is 1-" + NAME_LENGTH);
         this.name = name;
     }
 

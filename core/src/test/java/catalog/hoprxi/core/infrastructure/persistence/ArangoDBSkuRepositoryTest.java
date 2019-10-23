@@ -28,10 +28,18 @@ import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.domain.model.madeIn.Domestic;
 import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
-import org.junit.AfterClass;
+import catalog.hoprxi.core.domain.model.price.MemberPrice;
+import catalog.hoprxi.core.domain.model.price.Price;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.VipPrice;
+import org.javamoney.moneta.Money;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
+import java.util.Locale;
 
 /***
  * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuan</a>
@@ -42,6 +50,7 @@ public class ArangoDBSkuRepositoryTest {
     private static SkuRepository skuRepository = new ArangoDBSkuRepository();
     private static BrandRepository brandRepository = new ArangoDBBrandRepository();
     private static CategoryRepository categoryRepository = new ArangoDBCategoryRepository();
+    private static CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
 
     @BeforeClass
     public static void setUpBeforeClass() {
@@ -68,93 +77,122 @@ public class ArangoDBSkuRepositoryTest {
 
         EANUPCBarcode barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6907861191394");
         MadeIn madeIn = new Domestic("四川", "成都");
-        Sku one = new Sku("one", barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "彩虹电热灭蚊香液"), madeIn, Unit.HE,
-                new Specification("150ml"), Grade.QUALIFIED, null, caihong.id(), skin.id());
+        RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.59, currency), Unit.HE));
+        Sku one = new Sku("one", barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "彩虹电热灭蚊香液"), madeIn,
+                new Specification("150ml"), Grade.QUALIFIED, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, caihong.id(), skin.id());
         skuRepository.save(one);
-        Sku two = new Sku("two", new EAN_13("6907861181388"), new Name("彩虹电热灭蚊香液橙子香型2瓶装", "彩虹电热灭蚊香液2瓶装"), madeIn, Unit.HE,
-                new Specification("2*150ml"), Grade.QUALIFIED, null, caihong.id(), skin.id());
+
+        retailPrice = new RetailPrice(new Price(Money.of(35.50, currency), Unit.HE));
+        Sku two = new Sku("two", new EAN_13("6907861181388"), new Name("彩虹电热灭蚊香液橙子香型2瓶装", "彩虹电热灭蚊香液2瓶装"), madeIn,
+                new Specification("2*150ml"), Grade.QUALIFIED, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, caihong.id(), skin.id());
         skuRepository.save(two);
+
+        retailPrice = new RetailPrice(new Price(Money.of(56.80, currency), Unit.HE));
         barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6907861181395");
-        Sku three = new Sku("three", barcode, new Name("彩虹电热灭蚊香液4瓶装（橙子+芒果香型）", "彩虹电热灭蚊香液4瓶装"), madeIn, Unit.HE,
-                new Specification("4*120ml"), Grade.QUALIFIED, null, caihong.id(), skin.id());
+        Sku three = new Sku("three", barcode, new Name("彩虹电热灭蚊香液4瓶装（橙子+芒果香型）", "彩虹电热灭蚊香液4瓶装"), madeIn,
+                new Specification("4*120ml"), Grade.QUALIFIED, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, caihong.id(), skin.id());
         skuRepository.save(three);
+
         madeIn = new Domestic("重庆市");
-        Sku four = new Sku("four", new EAN_13("6942070284987"), new Name("天友南美酸奶", "天友南美酸奶"), madeIn, Unit.HE,
-                new Specification("350ml"), Grade.QUALIFIED, new ShelfLife(7), tianyou.id(), food.id());
+        retailPrice = new RetailPrice(new Price(Money.of(4.50, currency), Unit.HE));
+        MemberPrice memberPrice = new MemberPrice(new Price(Money.of(3.96, currency), Unit.HE));
+        VipPrice vipPrice = new VipPrice("PLUS价", new Price(Money.of(3.00, currency), Unit.HE));
+        Sku four = new Sku("four", new EAN_13("6942070284987"), new Name("天友南美酸奶", "天友南美酸奶"), madeIn,
+                new Specification("350ml"), Grade.QUALIFIED, retailPrice, memberPrice, vipPrice, tianyou.id(), food.id());
         skuRepository.save(four);
+
+        retailPrice = new RetailPrice(new Price(Money.of(55.00, currency), Unit.TI));
+        memberPrice = new MemberPrice(new Price(Money.of(50.00, currency), Unit.TI));
+        vipPrice = new VipPrice("PLUS价", new Price(Money.of(48.00, currency), Unit.TI));
         barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6923555240896");
-        Sku five = new Sku("five", barcode, new Name("天友纯牛奶", "天友纯牛奶"), madeIn, Unit.HE,
-                new Specification("350ml"), Grade.QUALIFIED, new ShelfLife(15), tianyou.id(), food.id());
+        Sku five = new Sku("five", barcode, new Name("天友纯牛奶", "天友纯牛奶"), madeIn,
+                new Specification("350ml"), Grade.QUALIFIED, retailPrice, memberPrice, vipPrice, tianyou.id(), food.id());
         skuRepository.save(five);
 
-        Sku six = new Sku("six", new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), madeIn, Unit.PCS,
-                new Specification("6*250ml"), Grade.QUALIFIED, new ShelfLife(7), tianyou.id(), food.id());
+        retailPrice = new RetailPrice(new Price(Money.of(17.90, currency), Unit.PCS));
+        vipPrice = new VipPrice("PLUS价", new Price(Money.of(15.50, currency), Unit.PCS));
+        Sku six = new Sku("six", new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), madeIn,
+                new Specification("6*250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.ZERO, vipPrice, tianyou.id(), food.id());
         skuRepository.save(six);
+
         barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6923555240865");
-        Sku six_1 = new Sku("six_1", barcode, new Name("250ml天友纯牛奶(高钙）", "天友纯牛奶"), madeIn, Unit.PCS,
-                new Specification("250ml"), Grade.QUALIFIED, new ShelfLife(7), tianyou.id(), food.id());
+        Sku six_1 = new Sku("six_1", barcode, new Name("250ml天友纯牛奶(高钙）", "天友高钙纯牛奶"), madeIn,
+                new Specification("250ml"), Grade.QUALIFIED, RetailPrice.ZERO, MemberPrice.ZERO, VipPrice.ZERO, tianyou.id(), food.id());
         skuRepository.save(six_1);
+
+        retailPrice = new RetailPrice(new Price(Money.of(2.5, currency), Unit.DAI));
         barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6923555240889");
-        Sku six_2 = new Sku("six_2", barcode, new Name("250ml天友纯牛奶", "天友纯牛奶"), madeIn, Unit.PCS,
-                new Specification("250ml"), Grade.QUALIFIED, new ShelfLife(7), tianyou.id(), food.id());
+        Sku six_2 = new Sku("six_2", barcode, new Name("250ml天友纯牛奶", "天友纯牛奶"), madeIn,
+                new Specification("250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, tianyou.id(), food.id());
         skuRepository.save(six_2);
 
-        EANUPCBarcode[] eans = EANUPCBarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(9134, 3, "21");
         madeIn = new Domestic("天津市");
-        Sku seven = new Sku("seven", new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), madeIn, Unit.DAI, new Specification("25g"),
-                Grade.QUALIFIED, new ShelfLife(180), Brand.UNDEFINED.id(), food.id());
+        retailPrice = new RetailPrice(new Price(Money.of(2.5, currency), Unit.DAI));
+        Sku seven = new Sku("seven", new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), madeIn, new Specification("25g"),
+                Grade.QUALIFIED, retailPrice, Brand.UNDEFINED.id(), food.id());
         skuRepository.save(seven);
-        Sku eight = new Sku("eight", new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), madeIn, Unit.DAI, new Specification("50g"),
-                Grade.QUALIFIED, new ShelfLife(180), Brand.UNDEFINED.id(), food.id());
+
+        retailPrice = new RetailPrice(new Price(Money.of(4.80, currency), Unit.DAI));
+        Sku eight = new Sku("eight", new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), madeIn, new Specification("50g"),
+                Grade.QUALIFIED, retailPrice, Brand.UNDEFINED.id(), food.id());
         skuRepository.save(eight);
-        Sku nine = new Sku("nine", new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), madeIn, Unit.DAI, new Specification("75g"),
-                Grade.QUALIFIED, new ShelfLife(180), Brand.UNDEFINED.id(), food.id());
+
+        retailPrice = new RetailPrice(new Price(Money.of(6.90, currency), Unit.DAI));
+        Sku nine = new Sku("nine", new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), madeIn, new Specification("75g"),
+                Grade.QUALIFIED, retailPrice, Brand.UNDEFINED.id(), food.id());
         skuRepository.save(nine);
-        Sku ten = new Sku("ten", new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic("四川", "绵阳"), Unit.SHUANG, new Specification("10粒缩卡装"),
-                Grade.QUALIFIED, null, changhong.id(), Category.UNDEFINED.id());
+
+        retailPrice = new RetailPrice(new Price(Money.of(5.00, currency), Unit.DUI));
+        Sku ten = new Sku("ten", new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic("四川", "绵阳"), new Specification("10粒缩卡装"),
+                Grade.QUALIFIED, retailPrice, changhong.id(), Category.UNDEFINED.id());
         skuRepository.save(ten);
-        Sku twelve = new Sku("twelve", new EAN_13("6925834037159"), new Name("车线本", "未知"), new Domestic("浙江", "仓南县"), Unit.BEN,
-                Specification.UNDEFINED, Grade.QUALIFIED, null, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
+
+        retailPrice = new RetailPrice(new Price(Money.of(3.50, currency), Unit.BEN));
+        Sku twelve = new Sku("twelve", new EAN_13("6925834037159"), new Name("车线本"), new Domestic("浙江", "仓南县"),
+                Specification.UNDEFINED, Grade.QUALIFIED, retailPrice, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
         skuRepository.save(twelve);
-        Sku thirteen = new Sku(skuRepository.nextIdentity(), new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("泰国"), Unit.HE,
-                new Specification("10片装"), Grade.QUALIFIED, new ShelfLife(1800), Brand.UNDEFINED.id(), Category.UNDEFINED.id());
+
+        retailPrice = new RetailPrice(new Price(Money.of(25.00, currency), Unit.HE));
+        Sku thirteen = new Sku(skuRepository.nextIdentity(), new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("泰国"),
+                new Specification("10片装"), Grade.QUALIFIED, retailPrice, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
         skuRepository.save(thirteen);
     }
 
-    @AfterClass
-    public static void teardown() {
-        brandRepository.remove(Brand.UNDEFINED.id());
-        brandRepository.remove("caihong");
-        brandRepository.remove("tianyou");
-        brandRepository.remove("changjhong");
+    /*
+        @AfterClass
+        public static void teardown() {
+            brandRepository.remove(Brand.UNDEFINED.id());
+            brandRepository.remove("caihong");
+            brandRepository.remove("tianyou");
+            brandRepository.remove("changjhong");
 
-        categoryRepository.remove(Category.UNDEFINED.id());
-        categoryRepository.remove("skin");
-        categoryRepository.remove("cosmetics");
-        categoryRepository.remove("chemicals");
-        categoryRepository.remove("food");
-        categoryRepository.remove("root");
+            categoryRepository.remove(Category.UNDEFINED.id());
+            categoryRepository.remove("skin");
+            categoryRepository.remove("cosmetics");
+            categoryRepository.remove("chemicals");
+            categoryRepository.remove("food");
+            categoryRepository.remove("root");
 
-        skuRepository.remove("one");
-        skuRepository.remove("two");
-        skuRepository.remove("three");
-        skuRepository.remove("four");
-        skuRepository.remove("five");
-        skuRepository.remove("six");
-        skuRepository.remove("six_1");
-        skuRepository.remove("six_2");
-        skuRepository.remove("seven");
-        skuRepository.remove("eight");
-        skuRepository.remove("nine");
-        skuRepository.remove("ten");
-        skuRepository.remove("twelve");
+            skuRepository.remove("one");
+            skuRepository.remove("two");
+            skuRepository.remove("three");
+            skuRepository.remove("four");
+            skuRepository.remove("five");
+            skuRepository.remove("six");
+            skuRepository.remove("six_1");
+            skuRepository.remove("six_2");
+            skuRepository.remove("seven");
+            skuRepository.remove("eight");
+            skuRepository.remove("nine");
+            skuRepository.remove("ten");
+            skuRepository.remove("twelve");
 
-        for (Sku sku : skuRepository.fromBarcode("4547691239136"))
-            skuRepository.remove(sku.id());
+            for (Sku sku : skuRepository.fromBarcode("4547691239136"))
+                skuRepository.remove(sku.id());
 
-        skuRepository.remove("twelve");
-    }
-
+            skuRepository.remove("twelve");
+        }
+    */
     @Test
     public void belongToBrand() {
         Sku[] skus = skuRepository.belongToBrand("caihong", 0, 3);
@@ -185,7 +223,7 @@ public class ArangoDBSkuRepositoryTest {
 
     @Test
     public void find() {
-        Sku six = skuRepository.find("six");
+        Sku six = skuRepository.find("six_1");
         Assert.assertNotNull(six);
         Sku eight = skuRepository.find("eight");
         Assert.assertNotNull(eight);
@@ -210,6 +248,7 @@ public class ArangoDBSkuRepositoryTest {
         skuRepository.save(ten);
         ten = skuRepository.find("ten");
         Assert.assertEquals(ten.name(), new Name("长虹5号碳性电池", "长虹1号"));
+
         Sku six = skuRepository.find("six_1");
         Assert.assertNotNull(six);
         six.changeBarcode(new EAN_13("6923555240728"));
