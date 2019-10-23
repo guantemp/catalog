@@ -18,14 +18,25 @@ package catalog.hoprxi.core.domain.model.price;
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
+import java.util.Objects;
+
 /***
  * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 2019/10/15
  */
 public class RetailPrice {
+    public static final RetailPrice ZERO = new RetailPrice(Price.ZERO);
     private Price price;
-    private String name;
+
+    public RetailPrice(Price price) {
+        setPrice(price);
+    }
+
+    private void setPrice(Price price) {
+        this.price = Objects.requireNonNull(price, "price required");
+    }
+
 
     public Price price() {
         return price;

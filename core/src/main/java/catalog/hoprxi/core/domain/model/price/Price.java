@@ -30,6 +30,7 @@ import java.util.Objects;
  * @version 0.0.1 2019/10/15
  */
 public class Price {
+    public static Price ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.getDefault())), Unit.PCS);
     private MonetaryAmount amount;
     private Unit unit;
 
@@ -39,7 +40,7 @@ public class Price {
     }
 
     private void setUnit(Unit unit) {
-        Objects.requireNonNull(unit, "unit is required");
+        Objects.requireNonNull(unit, "unit required");
         this.unit = unit;
     }
 

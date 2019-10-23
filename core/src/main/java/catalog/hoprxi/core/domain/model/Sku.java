@@ -21,11 +21,13 @@ import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.price.MemeberPrice;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.VipPrice;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /**
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
@@ -43,9 +45,42 @@ public class Sku {
     private String id;
     private Name name;
     private MadeIn madeIn;
+    private RetailPrice retailPrice;
+    private MemeberPrice memeberPrice;
+    private VipPrice vipPrice;
     private Unit unit;
     private Specification spec;
-    private ShelfLife shelfLife;
+
+    /**
+     * @param id
+     * @param barcode
+     * @param name
+     * @param madeIn
+     * @param spec
+     * @param grade
+     * @param retailPrice
+     * @param memeberPrice
+     * @param vipPrice
+     * @param brandId
+     * @param categoryId
+     * @throws IllegalArgumentException if id is null or id length range not in [1-36]
+     *                                  if name is null
+     *                                  if madeIn is null
+     */
+    public Sku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
+               Grade grade, RetailPrice retailPrice, MemeberPrice memeberPrice, VipPrice vipPrice, String brandId, String categoryId) {
+        setId(id);
+        setBarcode(barcode);
+        setName(name);
+        setMadeIn(madeIn);
+        setSpecification(spec);
+        setGrade(grade);
+        setRetailPrice(retailPrice);
+        setMemberPrice(memeberPrice);
+        setVipPrice(vipPrice);
+        setBrandId(brandId);
+        setCategoryId(categoryId);
+    }
 
     /**
      * @param id
@@ -57,7 +92,7 @@ public class Sku {
      * @param grade
      * @param brandId
      * @param categoryId
-     * @throws IllegalArgumentException if id is null or id length range not in [1-255]
+     * @throws IllegalArgumentException if id is null or id length range not in [1-36]
      *                                  if name is null
      *                                  if madeIn is null
      *                                  if unit is null
@@ -71,9 +106,30 @@ public class Sku {
         setUnit(unit);
         setSpecification(spec);
         setGrade(grade);
-        setShelfLife(shelfLife);
         setBrandId(brandId);
         setCategoryId(categoryId);
+    }
+
+    private void setVipPrice(VipPrice vipPrice) {
+        if (vipPrice == null)
+            vipPrice = VipPrice.ZERO;
+        if (vipPrice.price().unit() != Unit.PCS || vipPrice.price().unit() != retailPrice.price().unit())
+            throw new IllegalArgumentException("vipPrice unit must be consistent with retailPrice unit");
+        this.vipPrice = vipPrice;
+    }
+
+    private void setMemberPrice(MemeberPrice memeberPrice) {
+        if (memeberPrice == null)
+            memeberPrice = MemeberPrice.ZERO;
+        if (memeberPrice.price().unit() != Unit.PCS || memeberPrice.price().unit() != retailPrice.price().unit())
+            throw new IllegalArgumentException("memberPrice unit must be consistent with retailPrice unit");
+        this.memeberPrice = memeberPrice;
+    }
+
+    private void setRetailPrice(RetailPrice retailPrice) {
+        if (retailPrice == null)
+            retailPrice = RetailPrice.ZERO;
+        this.retailPrice = retailPrice;
     }
 
     private void setMadeIn(MadeIn madeIn) {
@@ -135,27 +191,6 @@ public class Sku {
         }
     }
 
-    /**
-     * @param shelfLife
-     */
-    public void changeShelfLife(ShelfLife shelfLife) {
-        if (shelfLife == null)
-            shelfLife = ShelfLife.NO_SHELF_LIFE;
-        if (!this.shelfLife.equals(shelfLife)) {
-            this.shelfLife = shelfLife;
-            DomainRegistry.domainEventPublisher().publish(new SkuShelfLifeChanged(id, shelfLife));
-        }
-    }
-
-    private void setShelfLife(ShelfLife shelfLife) {
-        if (shelfLife == null)
-            shelfLife = ShelfLife.NO_SHELF_LIFE;
-        this.shelfLife = shelfLife;
-    }
-
-    public ShelfLife shelfLife() {
-        return shelfLife;
-    }
 
     public Specification spec() {
         return spec;
@@ -298,20 +333,21 @@ public class Sku {
         return new ProhibitPurchaseAndSellSku(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
     }
 
-
     @Override
     public String toString() {
-        return new StringJoiner(", ", Sku.class.getSimpleName() + "[", "]")
-                .add("barcode=" + barcode)
-                .add("brandId='" + brandId + "'")
-                .add("categoryId='" + categoryId + "'")
-                .add("grade=" + grade)
-                .add("id='" + id + "'")
-                .add("name=" + name)
-                .add("madeIn=" + madeIn)
-                .add("unit=" + unit)
-                .add("spec=" + spec)
-                .add("shelfLife=" + shelfLife)
-                .toString();
+        return "Sku{" +
+                "barcode=" + barcode +
+                ", brandId='" + brandId + '\'' +
+                ", categoryId='" + categoryId + '\'' +
+                ", grade=" + grade +
+                ", id='" + id + '\'' +
+                ", name=" + name +
+                ", madeIn=" + madeIn +
+                ", retailPrice=" + retailPrice +
+                ", memeberPrice=" + memeberPrice +
+                ", vipPrice=" + vipPrice +
+                ", unit=" + unit +
+                ", spec=" + spec +
+                '}';
     }
 }

@@ -18,17 +18,36 @@ package catalog.hoprxi.core.domain.model.price;
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
+import java.util.Objects;
+
 /***
  * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 2019/10/15
  */
 public class VipPrice {
+    public static VipPrice ZERO = new VipPrice(Price.ZERO);
+    private static int NAME_LEGTH = 64;
     private Price price;
     private String name;
 
     public VipPrice(String name, Price price) {
-        this.price = price;
+        setName(name);
+        setPrice(price);
+    }
+
+    public VipPrice(Price price) {
+        this(Label.PRICE_VIP, price);
+    }
+
+    private void setPrice(Price price) {
+        this.price = Objects.requireNonNull(price, "price required");
+    }
+
+    private void setName(String name) {
+        name = Objects.requireNonNull(name, "name required").trim();
+        if (name.isEmpty() || name.length() > NAME_LEGTH)
+            throw new IllegalArgumentException("name length rang is 1-" + NAME_LEGTH);
         this.name = name;
     }
 
@@ -37,6 +56,6 @@ public class VipPrice {
     }
 
     public String name() {
-        return Label.PRICE_RETAIL;
+        return name;
     }
 }
