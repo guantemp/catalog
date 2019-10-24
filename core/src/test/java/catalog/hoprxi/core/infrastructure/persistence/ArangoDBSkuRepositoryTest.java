@@ -17,8 +17,8 @@
 package catalog.hoprxi.core.infrastructure.persistence;
 
 import catalog.hoprxi.core.domain.model.*;
-import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
-import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcodeGenerateServices;
+import catalog.hoprxi.core.domain.model.barcode.Barcode;
+import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
 import catalog.hoprxi.core.domain.model.barcode.EAN_13;
 import catalog.hoprxi.core.domain.model.barcode.EAN_8;
 import catalog.hoprxi.core.domain.model.brand.Brand;
@@ -76,7 +76,7 @@ public class ArangoDBSkuRepositoryTest {
         Category skin = new Category("cosmetics", "skin", "肤用化妆品");
         categoryRepository.save(skin);
 
-        EANUPCBarcode barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6907861191394");
+        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode("6907861191394");
         MadeIn madeIn = new Domestic("四川", "成都");
         RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.59, currency), Unit.HE));
         Sku one = new Sku("one", barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "彩虹电热灭蚊香液"), madeIn,
@@ -89,7 +89,7 @@ public class ArangoDBSkuRepositoryTest {
         skuRepository.save(two);
 
         retailPrice = new RetailPrice(new Price(Money.of(56.80, currency), Unit.HE));
-        barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6907861181395");
+        barcode = BarcodeGenerateServices.createMatchingBarcode("6907861181395");
         Sku three = new Sku("three", barcode, new Name("彩虹电热灭蚊香液4瓶装（橙子+芒果香型）", "彩虹电热灭蚊香液4瓶装"), madeIn,
                 new Specification("4*120ml"), Grade.QUALIFIED, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, caihong.id(), skin.id());
         skuRepository.save(three);
@@ -105,7 +105,7 @@ public class ArangoDBSkuRepositoryTest {
         retailPrice = new RetailPrice(new Price(Money.of(55.00, currency), Unit.TI));
         memberPrice = new MemberPrice(new Price(Money.of(50.00, currency), Unit.TI));
         vipPrice = new VipPrice("PLUS价", new Price(Money.of(48.00, currency), Unit.TI));
-        barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6923555240896");
+        barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240896");
         Sku five = new Sku("five", barcode, new Name("天友纯牛奶", "天友纯牛奶"), madeIn,
                 new Specification("350ml"), Grade.QUALIFIED, retailPrice, memberPrice, vipPrice, tianyou.id(), food.id());
         skuRepository.save(five);
@@ -116,13 +116,13 @@ public class ArangoDBSkuRepositoryTest {
                 new Specification("6*250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.ZERO, vipPrice, tianyou.id(), food.id());
         skuRepository.save(six);
 
-        barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6923555240865");
+        barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240865");
         Sku six_1 = new Sku("six_1", barcode, new Name("250ml天友纯牛奶(高钙）", "天友高钙纯牛奶"), madeIn,
                 new Specification("250ml"), Grade.QUALIFIED, RetailPrice.ZERO, MemberPrice.ZERO, VipPrice.ZERO, tianyou.id(), food.id());
         skuRepository.save(six_1);
 
         retailPrice = new RetailPrice(new Price(Money.of(2.5, currency), Unit.DAI));
-        barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode("6923555240889");
+        barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240889");
         Sku six_2 = new Sku("six_2", barcode, new Name("250ml天友纯牛奶", "天友纯牛奶"), madeIn,
                 new Specification("250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, tianyou.id(), food.id());
         skuRepository.save(six_2);

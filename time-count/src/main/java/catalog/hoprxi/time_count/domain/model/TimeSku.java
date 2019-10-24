@@ -13,10 +13,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.core.domain.model;
+package catalog.hoprxi.time_count.domain.model;
 
 
-import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
 
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
@@ -27,10 +26,9 @@ import java.util.concurrent.TimeUnit;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.21 builder 2019-10-05
+ * @version 0.0.1 builder 2019-10-24
  */
-public final class TimeSku {
-    private EANUPCBarcode barcode;
+public class TimeSku {
     private long brandId;
     private long categoryId;
     private long id;

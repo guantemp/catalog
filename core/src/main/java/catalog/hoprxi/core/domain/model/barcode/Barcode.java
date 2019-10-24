@@ -24,11 +24,11 @@ import java.util.regex.Pattern;
  * @since JDK8.0
  * @version 0.0.1 2019-04-22
  */
-public abstract class EANUPCBarcode {
+public abstract class Barcode {
     private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{7}$||^\\d{11}$||^\\d{12}$");
     protected CharSequence barcode;
 
-    public EANUPCBarcode(CharSequence barcode) {
+    public Barcode(CharSequence barcode) {
         Objects.requireNonNull(barcode, "barcode is required");
         if (!checkFeature(barcode))
             throw new IllegalArgumentException("Invalid barcode");

@@ -17,7 +17,7 @@ package catalog.hoprxi.core.domain.model;
 
 import catalog.hoprxi.core.domain.DomainRegistry;
 import catalog.hoprxi.core.domain.Validator;
-import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
+import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
@@ -37,7 +37,7 @@ import java.util.Objects;
 public class Sku {
     private static final int ID_MAX_LENGTH = 36;
     @Expose(serialize = false, deserialize = false)
-    private EANUPCBarcode barcode;
+    private Barcode barcode;
     private String brandId;
     private String categoryId;
     private Grade grade;
@@ -67,7 +67,7 @@ public class Sku {
      *                                  if name is null
      *                                  if madeIn is null
      */
-    public Sku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
+    public Sku(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
                Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String brandId, String categoryId) {
         setId(id);
         setBarcode(barcode);
@@ -82,17 +82,17 @@ public class Sku {
         setCategoryId(categoryId);
     }
 
-    public Sku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
+    public Sku(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
                Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
         this(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
     }
 
-    public Sku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
+    public Sku(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
                Grade grade, RetailPrice retailPrice) {
         this(id, barcode, name, madeIn, spec, grade, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
     }
 
-    public Sku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
+    public Sku(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
                Grade grade, RetailPrice retailPrice, String brandId, String categoryId) {
         this(id, barcode, name, madeIn, spec, grade, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, brandId, categoryId);
     }
@@ -112,7 +112,7 @@ public class Sku {
      *                                  if madeIn is null
      *                                  if unit is null
      */
-    public Sku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Unit unit, Specification spec,
+    public Sku(String id, Barcode barcode, Name name, MadeIn madeIn, Unit unit, Specification spec,
                Grade grade, ShelfLife shelfLife, String brandId, String categoryId) {
         setId(id);
         setBarcode(barcode);
@@ -154,7 +154,7 @@ public class Sku {
     /**
      * @param barcode
      */
-    public void changeBarcode(EANUPCBarcode barcode) {
+    public void changeBarcode(Barcode barcode) {
         Objects.requireNonNull(barcode, "barcode required");
         if (!barcode.equals(this.barcode)) {
             this.barcode = barcode;
@@ -288,7 +288,7 @@ public class Sku {
         return vipPrice;
     }
 
-    public EANUPCBarcode barcode() {
+    public Barcode barcode() {
         return barcode;
     }
 
@@ -312,7 +312,7 @@ public class Sku {
         return name;
     }
 
-    private void setBarcode(EANUPCBarcode barcode) {
+    private void setBarcode(Barcode barcode) {
         this.barcode = Objects.requireNonNull(barcode, "barcode required");
     }
 

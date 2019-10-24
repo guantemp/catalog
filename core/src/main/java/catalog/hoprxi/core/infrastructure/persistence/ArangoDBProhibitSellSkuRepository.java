@@ -17,8 +17,8 @@
 package catalog.hoprxi.core.infrastructure.persistence;
 
 import catalog.hoprxi.core.domain.model.*;
-import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
-import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcodeGenerateServices;
+import catalog.hoprxi.core.domain.model.barcode.Barcode;
+import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
 import catalog.hoprxi.core.domain.model.madeIn.Domestic;
 import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
@@ -57,7 +57,7 @@ public class ArangoDBProhibitSellSkuRepository implements ProhibitSellSkuReposit
         try {
             nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class);
             nameConstructor.setAccessible(true);
-            stopSellSkuConstructor = ProhibitSellSku.class.getDeclaredConstructor(String.class, EANUPCBarcode.class, Name.class, MadeIn.class, Unit.class, Specification.class,
+            stopSellSkuConstructor = ProhibitSellSku.class.getDeclaredConstructor(String.class, Barcode.class, Name.class, MadeIn.class, Unit.class, Specification.class,
                     Grade.class, ShelfLife.class, String.class, String.class);
             stopSellSkuConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
@@ -94,7 +94,7 @@ public class ArangoDBProhibitSellSkuRepository implements ProhibitSellSkuReposit
     }
 
     private ProhibitSellSku rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        EANUPCBarcode barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode(slice.get("barcode").getAsString());
+        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(slice.get("barcode").getAsString());
         //Sku
         VPackSlice sku = slice.get("sku");
         String id = sku.get(DocumentField.Type.KEY.getSerializeName()).getAsString();
@@ -181,12 +181,12 @@ public class ArangoDBProhibitSellSkuRepository implements ProhibitSellSkuReposit
         graph.edgeCollection("belong").insertEdge(new BelongEdge(skuVertex.getId(), categoryVertex.getId(), false));
     }
 
-    private void updateBarcodeBook(ArangoDatabase arangoDatabase, DocumentEntity startVertex, EANUPCBarcode book) {
+    private void updateBarcodeBook(ArangoDatabase arangoDatabase, DocumentEntity startVertex, Barcode book) {
 
     }
 
 
-    private void insertBarcodeWithHasEdge(ArangoGraph graph, DocumentEntity skuVertex, EANUPCBarcode barcode) {
+    private void insertBarcodeWithHasEdge(ArangoGraph graph, DocumentEntity skuVertex, Barcode barcode) {
         VertexEntity barcodeVertex = graph.vertexCollection("barcode").insertVertex(barcode);
         graph.edgeCollection("has").insertEdge(new HasEdge(skuVertex.getId(), barcodeVertex.getId(), false));
 

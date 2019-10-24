@@ -17,8 +17,8 @@
 package catalog.hoprxi.core.infrastructure.persistence;
 
 import catalog.hoprxi.core.domain.model.*;
-import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
-import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcodeGenerateServices;
+import catalog.hoprxi.core.domain.model.barcode.Barcode;
+import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
 import catalog.hoprxi.core.domain.model.madeIn.Domestic;
 import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
@@ -127,7 +127,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
     }
 
     private Sku rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        EANUPCBarcode barcode = EANUPCBarcodeGenerateServices.createMatchingBarcode(slice.get("barcode").getAsString());
+        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(slice.get("barcode").getAsString());
         //Sku
         VPackSlice sku = slice.get("sku");
         String id = sku.get(DocumentField.Type.KEY.getSerializeName()).getAsString();
@@ -250,7 +250,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
         graph.edgeCollection("belong").insertEdge(new BelongEdge(skuVertex.getId(), categoryVertex.getId()));
     }
 
-    private void updateBarcode(ArangoDatabase arangoDatabase, DocumentEntity startVertex, EANUPCBarcode barcode) {
+    private void updateBarcode(ArangoDatabase arangoDatabase, DocumentEntity startVertex, Barcode barcode) {
         final String query = "WITH sku,barcode\n" +
                 "FOR v,e IN 1..1 OUTBOUND @startVertex has FILTER v.barcode != @barcode REMOVE v IN barcode REMOVE e IN has RETURN v";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", startVertex.getId()).put("barcode", barcode.barcode()).get();
@@ -315,7 +315,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
     }
 
 
-    private void insertHasEdgeOfBarcode(ArangoGraph graph, DocumentEntity skuVertex, EANUPCBarcode barcode) {
+    private void insertHasEdgeOfBarcode(ArangoGraph graph, DocumentEntity skuVertex, Barcode barcode) {
         VertexEntity barcodeVertex = graph.vertexCollection("barcode").insertVertex(barcode);
         graph.edgeCollection("has").insertEdge(new HasEdge(skuVertex.getId(), barcodeVertex.getId()));
     }

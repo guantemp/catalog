@@ -28,18 +28,18 @@ import java.util.regex.Pattern;
  * @since JDK8.0
  * @version 0.0.1 2019-04-22
  */
-public class EANUPCBarcodeGenerateServices {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EANUPCBarcodeGenerateServices.class);
+public class BarcodeGenerateServices {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BarcodeGenerateServices.class);
     private static final Pattern IN_STORE_PREFIX = Pattern.compile("^2[0-4]$");
     private static final DecimalFormat EAN_8_DECIMAL_FORMAT = new DecimalFormat("00000");
     private static final DecimalFormat EAN_13_DECIMAL_FORMAT = new DecimalFormat("0000000000");
 
-    public static EANUPCBarcode createMatchingBarcode(CharSequence barcode) {
+    public static Barcode createMatchingBarcode(CharSequence barcode) {
         if (barcode.length() == 8)
             return new EAN_8(barcode);
         if (barcode.length() == 13)
             return new EAN_13(barcode);
-        throw new InvalidBarcodeException("Not effective barcode");
+        throw new InvalidBarcodeException("Not invalid barcode");
     }
 
     /**
@@ -48,7 +48,7 @@ public class EANUPCBarcodeGenerateServices {
      * @param prefix
      * @return
      */
-    public static EANUPCBarcode[] inStoreEAN_8BarcodeGenerate(int start, int amount, String prefix) {
+    public static Barcode[] inStoreEAN_8BarcodeGenerate(int start, int amount, String prefix) {
         if (start < 0)
             throw new IllegalArgumentException("initiaVlaue is positive number");
         if (amount <= 0)
@@ -62,7 +62,7 @@ public class EANUPCBarcodeGenerateServices {
         try {
             for (int i = 0; i < amount; i++) {
                 StringBuilder sb = new StringBuilder(prefix).append(EAN_8_DECIMAL_FORMAT.format(start));
-                int checkSum = EANUPCBarcode.computeChecksum(sb);
+                int checkSum = Barcode.computeChecksum(sb);
                 ean_8s[i] = new EAN_8(sb.append(checkSum));
                 start += 1;
             }
@@ -78,7 +78,7 @@ public class EANUPCBarcodeGenerateServices {
      * @param prefix rang is 20-24
      * @return
      */
-    public static EANUPCBarcode[] inStoreEAN_13BarcodeGenerate(long start, int amount, String prefix) {
+    public static Barcode[] inStoreEAN_13BarcodeGenerate(long start, int amount, String prefix) {
         if (start < 0l)
             throw new IllegalArgumentException("initiaVlaue is positive number");
         if (amount <= 0)
@@ -92,7 +92,7 @@ public class EANUPCBarcodeGenerateServices {
         try {
             for (int i = 0; i < amount; i++) {
                 StringBuilder sb = new StringBuilder(prefix).append(EAN_13_DECIMAL_FORMAT.format(start));
-                int checkSum = EANUPCBarcode.computeChecksum(sb);
+                int checkSum = Barcode.computeChecksum(sb);
                 ean_13s[i] = new EAN_13(sb.append(checkSum));
                 start += 1;
             }

@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * @since JDK8.0
  * @version 0.0.1 2019-04-22
  */
-public class EAN_8 extends EANUPCBarcode {
+public class EAN_8 extends Barcode {
     private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{8}$");
 
     public EAN_8(CharSequence barcode) {

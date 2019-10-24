@@ -18,7 +18,7 @@ package catalog.hoprxi.core.domain.model;
 
 import catalog.hoprxi.core.domain.DomainRegistry;
 import catalog.hoprxi.core.domain.Validator;
-import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
+import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
@@ -33,7 +33,7 @@ import com.arangodb.velocypack.annotations.Expose;
  */
 public class ProhibitPurchaseAndSellSku {
     @Expose(serialize = false, deserialize = false)
-    private EANUPCBarcode barcode;
+    private Barcode barcode;
     private String brandId;
     private String categoryId;
     private Grade grade;
@@ -59,7 +59,7 @@ public class ProhibitPurchaseAndSellSku {
      * @param brandId
      * @param categoryId
      */
-    protected ProhibitPurchaseAndSellSku(String id, EANUPCBarcode barcode, Name name, MadeIn madeIn, Specification spec,
+    protected ProhibitPurchaseAndSellSku(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
                                          Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String brandId, String categoryId) {
         setId(id);
         setBarcode(barcode);
@@ -131,7 +131,7 @@ public class ProhibitPurchaseAndSellSku {
         }
     }
 
-    public EANUPCBarcode barcode() {
+    public Barcode barcode() {
         return barcode;
     }
 
@@ -159,7 +159,7 @@ public class ProhibitPurchaseAndSellSku {
         return madeIn;
     }
 
-    private void setBarcode(EANUPCBarcode barcode) {
+    private void setBarcode(Barcode barcode) {
         this.barcode = barcode;
     }
 

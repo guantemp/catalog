@@ -9,6 +9,7 @@
         <option value="$PROJECT_DIR$/core/pom.xml" />
         <option value="$PROJECT_DIR$/fresh/pom.xml" />
         <option value="$PROJECT_DIR$/java-velocypack-module-customize/pom.xml" />
+        <option value="$PROJECT_DIR$/time-count/pom.xml" />
       </list>
     </option>
   </component>

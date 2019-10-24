@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  * @since JDK8.0
  * @version 0.0.1 2019-04-22
  */
-public class UPC_E extends EANUPCBarcode {
+public class UPC_E extends Barcode {
     private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{6}$");
 
     public UPC_E(CharSequence barcode) {

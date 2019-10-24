@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.domain.model;
 
-import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
+import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import event.hoprxi.domain.model.DomainEvent;
 
 import java.time.LocalDateTime;
@@ -28,11 +28,11 @@ import java.time.LocalDateTime;
  */
 public class SkuBarcodeChanged implements DomainEvent {
     private String id;
-    private EANUPCBarcode barcode;
+    private Barcode barcode;
     private LocalDateTime occurredOn;
     private int version;
 
-    public SkuBarcodeChanged(String id, EANUPCBarcode barcode) {
+    public SkuBarcodeChanged(String id, Barcode barcode) {
         this.id = id;
         this.barcode = barcode;
         occurredOn = LocalDateTime.now();
@@ -53,7 +53,7 @@ public class SkuBarcodeChanged implements DomainEvent {
         return id;
     }
 
-    public EANUPCBarcode barcode() {
+    public Barcode barcode() {
         return barcode;
     }
 }
