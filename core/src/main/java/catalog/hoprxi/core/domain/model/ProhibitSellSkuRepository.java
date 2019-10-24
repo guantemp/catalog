@@ -18,7 +18,7 @@ package catalog.hoprxi.core.domain.model;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-06-21
+ * @version 0.0.1 builder 2019-06-21
  */
 
 public interface ProhibitSellSkuRepository {

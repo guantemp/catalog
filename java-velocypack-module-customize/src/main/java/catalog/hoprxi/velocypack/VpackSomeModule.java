@@ -14,15 +14,25 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.madeIn;
+package catalog.hoprxi.velocypack;
+
+import catalog.hoprxi.velocypack.internal.VPackSomeDeserializers;
+import catalog.hoprxi.velocypack.internal.VPackSomeSerializers;
+import com.arangodb.velocypack.VPackModule;
+import com.arangodb.velocypack.VPackSetupContext;
+
+import javax.money.MonetaryAmount;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-08-28
+ * @version 0.0.1 2019-10-24
  */
-public interface MadeIn {
-    String madeIn();
+public class VpackSomeModule implements VPackModule {
+    @Override
+    public <C extends VPackSetupContext<C>> void setup(final C context) {
+        context.registerDeserializer(MonetaryAmount.class, VPackSomeDeserializers.MONETARY_AMOUNT_V_PACK_DESERIALIZER);
 
-    long code();
+        context.registerSerializer(MonetaryAmount.class, VPackSomeSerializers.MONETARY_AMOUNT_V_PACK_SERIALIZER);
+    }
 }

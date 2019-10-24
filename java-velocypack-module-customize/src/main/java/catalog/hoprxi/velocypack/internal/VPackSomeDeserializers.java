@@ -14,45 +14,21 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model;
+package catalog.hoprxi.velocypack.internal;
 
-import event.hoprxi.domain.model.DomainEvent;
 
-import java.time.LocalDateTime;
+import com.arangodb.velocypack.VPackDeserializer;
+import org.javamoney.moneta.Money;
+
+import javax.money.MonetaryAmount;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-05-02
+ * @version 0.0.1 2019-05-14
  */
-public class SkuUnitChanged implements DomainEvent {
-    private String id;
-    private Unit unit;
-    private LocalDateTime occurredOn;
-    private int version;
+public class VPackSomeDeserializers {
 
-    public SkuUnitChanged(String id, Unit unit) {
-        this.id = id;
-        this.unit = unit;
-        occurredOn = LocalDateTime.now();
-        version = 1;
-    }
-
-    @Override
-    public LocalDateTime occurredOn() {
-        return occurredOn;
-    }
-
-    @Override
-    public int version() {
-        return version;
-    }
-
-    public String id() {
-        return id;
-    }
-
-    public Unit unit() {
-        return unit;
-    }
+    public static final VPackDeserializer<MonetaryAmount> MONETARY_AMOUNT_V_PACK_DESERIALIZER = (parent, vpack, vPackDeserializationContext) ->
+            Money.of(vpack.get("number").getAsNumber(), vpack.get("currencyUnit").getAsString());
 }

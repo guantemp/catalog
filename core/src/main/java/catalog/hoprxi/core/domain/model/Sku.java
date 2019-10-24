@@ -180,7 +180,7 @@ public class Sku {
         Objects.requireNonNull(newMadeIn, "newMadeIn required");
         if (!newMadeIn.equals(this.madeIn)) {
             this.madeIn = newMadeIn;
-            DomainRegistry.domainEventPublisher().publish(new SKuMadeInChanged(id, madeIn));
+            DomainRegistry.domainEventPublisher().publish(new SKuMadeInChanged(id, madeIn.code(), madeIn.madeIn()));
         }
     }
 

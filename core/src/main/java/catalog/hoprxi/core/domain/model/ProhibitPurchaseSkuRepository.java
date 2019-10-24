@@ -20,7 +20,7 @@ import java.util.Collection;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-06-21
+ * @version 0.0.1 builder 2019-06-21
  */
 
 public interface ProhibitPurchaseSkuRepository {

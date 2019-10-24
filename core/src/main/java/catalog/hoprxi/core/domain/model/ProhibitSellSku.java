@@ -30,7 +30,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-06-19
+ * @version 0.0.1 builder 2019-06-19
  */
 public class ProhibitSellSku {
     @Expose(serialize = false, deserialize = false)
@@ -72,11 +72,23 @@ public class ProhibitSellSku {
         setCategoryId(categoryId);
     }
 
-    public Specification spec() {
-        return spec;
+    private void setBarcode(EANUPCBarcode barcode) {
+        this.barcode = barcode;
     }
 
-    protected void setCategoryId(String categoryId) {
+    private void setGrade(Grade grade) {
+        this.grade = grade;
+    }
+
+    private void setName(Name name) {
+        this.name = Objects.requireNonNull(name, "name required");
+    }
+
+    private void setMadeIn(MadeIn madeIn) {
+        this.madeIn = Objects.requireNonNull(madeIn, "madeIn required");
+    }
+
+    private void setCategoryId(String categoryId) {
         if (categoryId != null) {
             categoryId = categoryId.trim();
             if (Validator.isCategoryExist(categoryId)) {
@@ -87,18 +99,15 @@ public class ProhibitSellSku {
         this.categoryId = Category.UNDEFINED.id();
     }
 
-    protected void setBrandId(String brandId) {
+    private void setBrandId(String brandId) {
         this.brandId = Objects.requireNonNull(brandId, "brand id required").trim();
     }
 
-    protected void setSpecification(Specification spec) {
+    private void setSpecification(Specification spec) {
         this.spec = spec;
     }
 
-    protected void setId(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
-        if (id.isEmpty() || id.length() > 255)
-            throw new IllegalArgumentException("id length range is [1-255]");
+    private void setId(String id) {
         this.id = id;
     }
 
@@ -144,26 +153,24 @@ public class ProhibitSellSku {
         return name;
     }
 
-    MadeIn madeIn() {
+    public Specification spec() {
+        return spec;
+    }
+
+    public MadeIn madeIn() {
         return madeIn;
     }
 
-    private void setBarcode(EANUPCBarcode barcode) {
-        this.barcode = Objects.requireNonNull(barcode, "barcode required");
+    public RetailPrice retailPrice() {
+        return retailPrice;
     }
 
-    protected void setGrade(Grade grade) {
-        if (null == grade)
-            grade = Grade.QUALIFIED;
-        this.grade = grade;
+    public MemberPrice memberPrice() {
+        return memberPrice;
     }
 
-    protected void setName(Name name) {
-        this.name = Objects.requireNonNull(name, "name required");
-    }
-
-    protected void setMadeIn(MadeIn madeIn) {
-        this.madeIn = Objects.requireNonNull(madeIn, "madeIn required");
+    public VipPrice vipPrice() {
+        return vipPrice;
     }
 
     public Sku permitSell() {

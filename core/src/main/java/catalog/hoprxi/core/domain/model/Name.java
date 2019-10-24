@@ -74,8 +74,8 @@ public class Name {
 
     private void setName(String name) {
         name = Objects.requireNonNull(name, "name required").trim();
-        if (name.length() > 255)
-            throw new IllegalArgumentException("name length rang is 0-255");
+        if (name.length() > 256)
+            throw new IllegalArgumentException("name length rang is 0-256");
         this.name = name;
     }
 

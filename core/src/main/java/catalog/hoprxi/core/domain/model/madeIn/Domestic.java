@@ -41,7 +41,12 @@ public class Domestic implements MadeIn {
     public String madeIn() {
         if (province.equals(city))
             return city;
-        return province + city;
+        return province + "." + city;
+    }
+
+    @Override
+    public long code() {
+        return 0;
     }
 
     @Override

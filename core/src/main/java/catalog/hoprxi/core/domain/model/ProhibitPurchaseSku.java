@@ -15,9 +15,9 @@
  */
 package catalog.hoprxi.core.domain.model;
 
+import catalog.hoprxi.core.domain.DomainRegistry;
 import catalog.hoprxi.core.domain.Validator;
 import catalog.hoprxi.core.domain.model.barcode.EANUPCBarcode;
-import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
@@ -30,7 +30,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-06-19
+ * @version 0.0.1 builder 2019-06-19
  */
 public class ProhibitPurchaseSku {
     @Expose(serialize = false, deserialize = false)
@@ -69,43 +69,57 @@ public class ProhibitPurchaseSku {
         setMadeIn(madeIn);
         setSpecification(spec);
         setGrade(grade);
+        setRetailPrice(retailPrice);
+        setMemberPrice(memberPrice);
+        setVipPrice(vipPrice);
         setBrandId(brandId);
         setCategoryId(categoryId);
     }
 
-    public Specification spec() {
-        return spec;
+    private void setVipPrice(VipPrice vipPrice) {
+        this.vipPrice = vipPrice;
     }
 
-    protected void setCategoryId(String categoryId) {
-        if (categoryId != null) {
-            categoryId = categoryId.trim();
-            if (Validator.isCategoryExist(categoryId)) {
-                this.categoryId = categoryId;
-                return;
-            }
-        }
-        this.categoryId = Category.UNDEFINED.id();
+    private void setMemberPrice(MemberPrice memberPrice) {
+        this.memberPrice = memberPrice;
     }
 
-    protected void setBrandId(String brandId) {
-        this.brandId = Objects.requireNonNull(brandId, "brand id required").trim();
+    private void setRetailPrice(RetailPrice retailPrice) {
+        this.retailPrice = retailPrice;
     }
 
-    protected void setSpecification(Specification spec) {
+    private void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    private void setBrandId(String brandId) {
+        this.brandId = brandId;
+    }
+
+    private void setSpecification(Specification spec) {
         this.spec = spec;
     }
 
-    protected void setId(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
-        if (id.isEmpty() || id.length() > 255)
-            throw new IllegalArgumentException("id length range is [1-255]");
+    private void setId(String id) {
         this.id = id;
     }
 
-    /**
-     * @param name
-     */
+    private void setBarcode(EANUPCBarcode barcode) {
+        this.barcode = barcode;
+    }
+
+    private void setGrade(Grade grade) {
+        this.grade = grade;
+    }
+
+    private void setName(Name name) {
+        this.name = name;
+    }
+
+    private void setMadeIn(MadeIn madeIn) {
+        this.madeIn = madeIn;
+    }
+
     public void rename(Name name) {
         name = Objects.requireNonNull(name, "name required");
         if (!this.name.equals(name)) {
@@ -114,14 +128,76 @@ public class ProhibitPurchaseSku {
     }
 
     /**
-     * @param categoryId
+     * @param barcode
      */
-    public void moveToCategory(String categoryId) {
-        if (!this.categoryId.equals(categoryId))
-            setCategoryId(categoryId);
+    public void changeBarcode(EANUPCBarcode barcode) {
+        Objects.requireNonNull(barcode, "barcode required");
+        if (!barcode.equals(this.barcode)) {
+            this.barcode = barcode;
+            DomainRegistry.domainEventPublisher().publish(new SkuBarcodeChanged(id, barcode));
+        }
     }
 
-    public EANUPCBarcode barcodeBook() {
+    /**
+     * @param grade
+     */
+    public void changeGrade(Grade grade) {
+        if (grade != null) {
+            if (this.grade != grade)
+                this.grade = grade;
+        }
+    }
+
+    /**
+     * @param newMadeIn
+     * @throws IllegalArgumentException if newMadeIn is <CODE>NULL</CODE>
+     */
+    public void changeMadeIn(MadeIn newMadeIn) {
+        Objects.requireNonNull(newMadeIn, "newMadeIn required");
+        if (!newMadeIn.equals(this.madeIn)) {
+            this.madeIn = newMadeIn;
+            DomainRegistry.domainEventPublisher().publish(new SKuMadeInChanged(id, madeIn.code(), madeIn.madeIn()));
+        }
+    }
+
+    /**
+     * @param retailPrice
+     */
+    public void changeRetailPrice(RetailPrice retailPrice) {
+        Objects.requireNonNull(retailPrice, "retailPrice required");
+        if (this.retailPrice.equals(retailPrice)) {
+            this.retailPrice = retailPrice;
+            DomainRegistry.domainEventPublisher().publish(new SkuRetailPriceChanged(id, retailPrice.price().amount(), retailPrice.price().unit()));
+        }
+    }
+
+    /**
+     * @param spec
+     * @throws IllegalArgumentException if spec is <CODE>NULL</CODE>
+     */
+    public void changeSpecification(Specification spec) {
+        if (spec == null)
+            spec = Specification.UNDEFINED;
+        if (!this.spec.equals(spec)) {
+            this.spec = spec;
+            DomainRegistry.domainEventPublisher().publish(new SkuSpecificationChanged(id, spec));
+        }
+    }
+
+    public void moveToCategory(String categoryId) {
+        if (!this.categoryId.equals(categoryId) && Validator.isCategoryExist(categoryId)) {
+            setCategoryId(categoryId);
+        }
+    }
+
+    public void moveToNewBrand(String brandId) {
+        if (!this.brandId.equals(brandId) && Validator.isBrandExist(brandId)) {
+            setBrandId(brandId);
+            DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
+        }
+    }
+
+    public EANUPCBarcode barcode() {
         return barcode;
     }
 
@@ -145,26 +221,12 @@ public class ProhibitPurchaseSku {
         return name;
     }
 
-    MadeIn origin() {
+    public MadeIn madeIn() {
         return madeIn;
     }
 
-    protected void setBarcode(EANUPCBarcode barcode) {
-        this.barcode = Objects.requireNonNull(barcode, "barcode required");
-    }
-
-    protected void setGrade(Grade grade) {
-        if (null == grade)
-            grade = Grade.QUALIFIED;
-        this.grade = grade;
-    }
-
-    protected void setName(Name name) {
-        this.name = Objects.requireNonNull(name, "name required");
-    }
-
-    protected void setMadeIn(MadeIn madeIn) {
-        this.madeIn = Objects.requireNonNull(madeIn, "madeIn required");
+    public Specification spec() {
+        return spec;
     }
 
     @Override
