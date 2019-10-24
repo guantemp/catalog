@@ -23,18 +23,22 @@ import java.time.LocalDateTime;
 
 /**
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
- * @version 0.0.2 builder 2019-04-29
+ * @version 0.0.2 builder 2019-10-24
  * @since JDK8.0
  */
 public class SkuRenamed implements DomainEvent {
-    private Name name;
+    private String name;
+    private String alias;
+    private String mnemonic;
     private LocalDateTime occurredOn;
     private String id;
     private int version;
 
-    public SkuRenamed(String id, Name name) {
+    public SkuRenamed(String id, String name, String mnemonic, String alias) {
         this.id = id;
         this.name = name;
+        this.mnemonic = mnemonic;
+        this.alias = alias;
         occurredOn = LocalDateTime.now();
         version = 1;
     }
@@ -49,8 +53,16 @@ public class SkuRenamed implements DomainEvent {
         return version;
     }
 
-    public Name name() {
+    public String name() {
         return name;
+    }
+
+    public String alias() {
+        return alias;
+    }
+
+    public String mnemonic() {
+        return mnemonic;
     }
 
     public String id() {

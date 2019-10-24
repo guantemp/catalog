@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.fresh.infrastructure.persistence;
+package catalog.hoprxi.scale.infrastructure.persistence;
 
 import catalog.foxtail.core.domain.model.*;
 import catalog.foxtail.core.infrastructure.persistence.ArangoDBUtil;

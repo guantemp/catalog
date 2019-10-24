@@ -248,7 +248,7 @@ public class Sku {
         Objects.requireNonNull(name, "name required");
         if (!this.name.equals(name)) {
             this.name = name;
-            DomainRegistry.domainEventPublisher().publish(new SkuRenamed(id, name));
+            DomainRegistry.domainEventPublisher().publish(new SkuRenamed(id, name.name(), name.mnemonic(), name.alias()));
         }
     }
 

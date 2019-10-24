@@ -4,8 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/catalog.iml" filepath="$PROJECT_DIR$/.idea/catalog.iml" />
       <module fileurl="file://$PROJECT_DIR$/core/core.iml" filepath="$PROJECT_DIR$/core/core.iml" />
-      <module fileurl="file://$PROJECT_DIR$/fresh/fresh.iml" filepath="$PROJECT_DIR$/fresh/fresh.iml" />
       <module fileurl="file://$PROJECT_DIR$/java-velocypack-module-customize/java-velocypack-module-customize.iml" filepath="$PROJECT_DIR$/java-velocypack-module-customize/java-velocypack-module-customize.iml" />
+      <module fileurl="file://$PROJECT_DIR$/scale/scale.iml" filepath="$PROJECT_DIR$/scale/scale.iml" />
       <module fileurl="file://$PROJECT_DIR$/time-count/time-count.iml" filepath="$PROJECT_DIR$/time-count/time-count.iml" />
     </modules>
   </component>

@@ -13,54 +13,33 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.fresh.domain.model;
+package catalog.hoprxi.scale.domain.model;
 
-/***
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.g builder 2019-05-04
- */
-
-public interface WeightRepository {
-
+public interface StopSellWeightRepository {
     /**
      * @param brandId
-     * @param offset
-     * @param limit
      * @return
      */
-    Weight[] belongingToBrand(String brandId, int offset, int limit);
+    StopSellWeight[] belongingToBrand(long brandId);
 
     /**
      * @param categoryId
-     * @param offset
-     * @param limit
      * @return
      */
-    Weight[] belongingToCategory(String categoryId, int offset, int limit);
+    StopSellWeight[] belongingToCategory(long categoryId);
 
     /**
      * @param id
      * @return
      */
-    Weight find(String id);
+    StopSellWeight[] find(int id);
 
     /**
-     * @param offset
-     * @param limit
+     * @param low
+     * @param high
      * @return
      */
-    Weight[] findAll(int offset, int limit);
-
-    /**
-     * @return
-     */
-    String nextIdentity();
-
-    /**
-     * @return
-     */
-    int nextPlu();
+    StopSellWeight[] findAll(int low, int high);
 
     /**
      * @param id
@@ -68,15 +47,9 @@ public interface WeightRepository {
     void remove(String id);
 
     /**
-     * @param weight
+     * @param stopSellWeight
      */
-    void save(Weight weight);
-
-    /**
-     * @param plu
-     * @return
-     */
-    boolean isPluExists(int plu);
+    void save(StopSellWeight stopSellWeight);
 
     /**
      * @return
@@ -84,20 +57,14 @@ public interface WeightRepository {
     int size();
 
     /**
-     * @param mnemonic
+     * @param mnemonicCode
      * @return
      */
-    Weight[] fromMnemonic(String mnemonic);
+    StopSellWeight[] withMnemonicCode(String mnemonicCode);
 
     /**
      * @param name
      * @return
      */
-    Weight[] fromName(String name);
-
-    /**
-     * @param plu
-     * @return
-     */
-    Weight fromPlu(int plu);
+    StopSellWeight[] withName(String name);
 }

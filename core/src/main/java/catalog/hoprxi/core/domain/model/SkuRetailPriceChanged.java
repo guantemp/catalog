@@ -41,6 +41,18 @@ public class SkuRetailPriceChanged implements DomainEvent {
         version = 1;
     }
 
+    public String id() {
+        return id;
+    }
+
+    public MonetaryAmount amount() {
+        return amount;
+    }
+
+    public Unit unit() {
+        return unit;
+    }
+
     @Override
     public LocalDateTime occurredOn() {
         return occurredOn;

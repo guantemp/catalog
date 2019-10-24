@@ -13,45 +13,70 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
-package catalog.hoprxi.fresh.domain.model;
-
+package catalog.hoprxi.scale.domain.model;
 
 /***
- * @author <a href="www.foxtail.cc/author/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 20170830
+ * @version 0.0.g builder 2019-05-04
  */
-public interface StopPurchasWeightRepository {
+
+public interface WeightRepository {
+
     /**
      * @param brandId
+     * @param offset
+     * @param limit
      * @return
      */
-    StopPurchasWeight[] belongingToBrand(long brandId);
+    Weight[] belongingToBrand(String brandId, int offset, int limit);
 
     /**
      * @param categoryId
+     * @param offset
+     * @param limit
      * @return
      */
-    StopPurchasWeight[] belongingToCategory(long categoryId);
+    Weight[] belongingToCategory(String categoryId, int offset, int limit);
 
     /**
      * @param id
      * @return
      */
-    StopPurchasWeight find(int id);
+    Weight find(String id);
 
     /**
-     * @param low
-     * @param high
+     * @param offset
+     * @param limit
      * @return
      */
-    StopPurchasWeight[] findAll(int low, int high);
+    Weight[] findAll(int offset, int limit);
 
+    /**
+     * @return
+     */
+    String nextIdentity();
+
+    /**
+     * @return
+     */
+    int nextPlu();
+
+    /**
+     * @param id
+     */
     void remove(String id);
 
+    /**
+     * @param weight
+     */
+    void save(Weight weight);
 
-    void save(StopPurchasWeight stopPurchasWeight);
+    /**
+     * @param plu
+     * @return
+     */
+    boolean isPluExists(int plu);
 
     /**
      * @return
@@ -59,20 +84,20 @@ public interface StopPurchasWeightRepository {
     int size();
 
     /**
-     * @param barcode
+     * @param mnemonic
      * @return
      */
-    StopPurchasWeight[] withBarcode(String barcode);
-
-    /**
-     * @param mnemonicCode
-     * @return
-     */
-    StopPurchasWeight[] withMnemonicCode(String mnemonicCode);
+    Weight[] fromMnemonic(String mnemonic);
 
     /**
      * @param name
      * @return
      */
-    StopPurchasWeight[] withName(String name);
+    Weight[] fromName(String name);
+
+    /**
+     * @param plu
+     * @return
+     */
+    Weight fromPlu(int plu);
 }

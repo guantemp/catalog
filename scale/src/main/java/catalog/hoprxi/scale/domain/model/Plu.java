@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.fresh.domain.model;
+package catalog.hoprxi.scale.domain.model;
 
 import java.util.StringJoiner;
 

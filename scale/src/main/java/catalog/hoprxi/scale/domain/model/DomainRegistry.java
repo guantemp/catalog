@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.fresh.domain.model;
+package catalog.hoprxi.scale.domain.model;
 
 
 import event.foxtail.alpha.domain.model.DomainEventPublisher;

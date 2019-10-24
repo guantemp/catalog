@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.fresh.domain.model;
+package catalog.hoprxi.scale.domain.model;
 
 import catalog.foxtail.core.domain.model.*;
 import catalog.foxtail.core.domain.model.category.Category;
@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2018-06-20
  * @since JDK8.0
  */
-public class StopSellWeight {
+public class StopPurchasWeight {
     private static final Pattern ID_PATTERN = Pattern.compile("[1-9]{1}\\d{0,4}");
     private String alias;
     private String brandId;
@@ -44,8 +44,8 @@ public class StopSellWeight {
     private ShelfLife shelfLife;
     private WeightUnit unit;
 
-    public StopSellWeight(String id, Name name, String alias, Specification spec, WeightUnit unit, Grade grade, PlaceOfProduction placeOfProduction,
-                          ShelfLife shelfLife, String brandId, String categoryId) {
+    public StopPurchasWeight(String id, Name name, String alias, Specification spec, WeightUnit unit, Grade grade, PlaceOfProduction placeOfProduction,
+                             ShelfLife shelfLife, String brandId, String categoryId) {
         super();
         setId(id);
         setName(name);

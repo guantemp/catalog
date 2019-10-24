@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.fresh.domain.model;
+package catalog.hoprxi.scale.domain.model;
 
 import catalog.foxtail.core.domain.model.*;
 import catalog.foxtail.core.domain.model.brand.Brand;
@@ -25,13 +25,12 @@ import com.arangodb.velocypack.annotations.Expose;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-/***
+/**
  * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuang</a>
+ * @version 0.0.1 builder 2019-05-02
  * @since JDK8.0
- * @version 0.0.2 builder 2019-05-04
  */
-
-public class Count {
+public class Weight {
     //@Expose(serialize = false, deserialize = false)
     private String brandId;
     // @Expose(serialize = false, deserialize = false)
@@ -45,39 +44,46 @@ public class Count {
     private PlaceOfProduction placeOfProduction;
     private Specification spec;
     private ShelfLife shelfLife;
-    private CountUnit unit;
+    private WeightUnit unit;
 
     /**
      * @param id
-     * @param plu
+     * @param plu               1-99999
      * @param name
      * @param spec
      * @param unit
      * @param grade
      * @param placeOfProduction
-     * @param shelfLife
-     * @param categoryId
+     * @param shelfLife         at least one day
      * @param brandId
+     * @param categoryId
      */
-    public Count(String id, Plu plu, Name name, Specification spec, CountUnit unit, Grade grade, PlaceOfProduction placeOfProduction, ShelfLife shelfLife, String categoryId, String brandId) {
+    public Weight(String id, Plu plu, Name name, Specification spec, WeightUnit unit, Grade grade, PlaceOfProduction placeOfProduction, ShelfLife shelfLife, String brandId, String categoryId) {
         setId(id);
         setPlu(plu);
         setName(name);
         setSpecification(spec);
-        setCountUnit(unit);
+        setUnit(unit);
         setGrade(grade);
         setPlaceOfProduction(placeOfProduction);
         setShelfLife(shelfLife);
-        setCategoryId(categoryId);
         setBrandId(brandId);
+        setCategoryId(categoryId);
     }
 
-    public Count(String id, Plu plu, Name name, CountUnit unit, PlaceOfProduction placeOfProduction) {
+    public Weight(String id, Plu plu, Name name, WeightUnit unit, PlaceOfProduction placeOfProduction) {
         this(id, plu, name, Specification.UNDEFINED, unit, Grade.QUALIFIED, placeOfProduction, ShelfLife.SAME_DAY, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
     }
 
-    public ShelfLife shelflife() {
+    public ShelfLife shelLife() {
         return shelfLife;
+    }
+
+    public void changeShelLife(ShelfLife shelfLife) {
+        Objects.requireNonNull(shelfLife, "shelLife required");
+        if (!this.shelfLife.equals(shelfLife)) {
+            this.shelfLife = shelfLife;
+        }
     }
 
     private void setShelfLife(ShelfLife shelfLife) {
@@ -92,12 +98,28 @@ public class Count {
         this.spec = spec;
     }
 
+    public void changeSpec(Specification spec) {
+        Objects.requireNonNull(spec, "spec required");
+        if (!this.spec.equals(spec)) {
+            this.spec = spec;
+            DomainRegistry1.domainEventPublisher().publish(new WeightSpecificationChanged(id, spec));
+        }
+    }
+
     public String brandId() {
         return brandId;
     }
 
+    public void reallocateBrand(String brandId) {
+
+    }
+
     public String categoryId() {
         return categoryId;
+    }
+
+    public void reallocateCategory(String categoryId) {
+
     }
 
     public Grade grade() {
@@ -114,6 +136,10 @@ public class Count {
 
     public PlaceOfProduction placeOfProduction() {
         return placeOfProduction;
+    }
+
+    public void changePlaceOfProduction(PlaceOfProduction placeOfProduction) {
+
     }
 
     private void setBrandId(String brandId) {
@@ -141,39 +167,47 @@ public class Count {
         this.grade = grade;
     }
 
+    public void changGrade(Grade grade) {
+
+    }
+
+    /**
+     * @param id
+     */
     private void setId(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         this.id = id;
     }
 
-    /**
-     * @param name the name to set
-     */
+    public void rename(Name name) {
+        Objects.requireNonNull(name, "name required");
+        if (!name.equals(this.name))
+            this.name = name;
+    }
+
     private void setName(Name name) {
         this.name = Objects.requireNonNull(name, "name required");
     }
 
-    /**
-     * @param placeOfProduction
-     */
     private void setPlaceOfProduction(PlaceOfProduction placeOfProduction) {
         this.placeOfProduction = Objects.requireNonNull(placeOfProduction, "madeIn required");
     }
 
-    /**
-     * @param unit the unit to set
-     */
-    private void setCountUnit(CountUnit unit) {
+    private void setUnit(WeightUnit unit) {
         if (unit == null)
-            unit = CountUnit.PCS;
+            unit = WeightUnit.KILOGRAM;
         this.unit = unit;
+    }
+
+    public void changeUnit(WeightUnit unit) {
+
     }
 
     public Specification spec() {
         return spec;
     }
 
-    public CountUnit unit() {
+    public WeightUnit unit() {
         return unit;
     }
 
@@ -182,9 +216,9 @@ public class Count {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Count count = (Count) o;
+        Weight weight = (Weight) o;
 
-        return id != null ? id.equals(count.id) : count.id == null;
+        return id != null ? id.equals(weight.id) : weight.id == null;
     }
 
     @Override
@@ -194,7 +228,7 @@ public class Count {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", Count.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", Weight.class.getSimpleName() + "[", "]")
                 .add("brandId='" + brandId + "'")
                 .add("categoryId='" + categoryId + "'")
                 .add("grade=" + grade)

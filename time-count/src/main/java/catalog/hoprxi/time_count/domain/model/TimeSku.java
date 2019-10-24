@@ -37,22 +37,12 @@ public class TimeSku {
     private String name;
     private Set<BufferedImage> pictures;
 
-    /**
-     * @param id
-     * @param barcode
-     * @param name
-     * @param mnemonicCode
-     * @param unit
-     * @param brandId
-     * @param categoryId
-     * @param pictures
-     */
-    public TimeSku(long id, EANUPCBarcode barcode, String name, String mnemonicCode,
+
+    public TimeSku(long id, String name, String mnemonicCode,
                    TimeUnit unit, long brandId, long categoryId,
                    Set<BufferedImage> pictures) {
         super();
         this.id = id;
-        setBarcode(barcode);
         setName(name);
         this.mnemonicCode = mnemonicCode;
         setTimeUnit(unit);
@@ -61,12 +51,6 @@ public class TimeSku {
         setPictures(pictures);
     }
 
-    /**
-     * @return the barcode
-     */
-    public EANUPCBarcode barcode() {
-        return barcode;
-    }
 
     /**
      * @return the brand
@@ -119,12 +103,6 @@ public class TimeSku {
         return pictures;
     }
 
-    /**
-     * @param barcode the barcode to set
-     */
-    protected void setBarcode(EANUPCBarcode barcode) {
-        this.barcode = Objects.requireNonNull(barcode, "barcode required");
-    }
 
     /**
      * @param unit
@@ -151,17 +129,4 @@ public class TimeSku {
         this.pictures = pictures;
     }
 
-    @Override
-    public String toString() {
-        return "TimeSku{" +
-                "barcode=" + barcode +
-                ", brandId=" + brandId +
-                ", categoryId=" + categoryId +
-                ", id=" + id +
-                ", unit=" + unit +
-                ", mnemonic='" + mnemonicCode + '\'' +
-                ", newName='" + name + '\'' +
-                ", pictures=" + pictures +
-                '}';
-    }
 }

@@ -13,43 +13,45 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.fresh.domain.model;
 
-public interface StopSellWeightRepository {
+package catalog.hoprxi.scale.domain.model;
+
+
+/***
+ * @author <a href="www.foxtail.cc/author/guan xianghuang">guan xiangHuan</a>
+ * @since JDK8.0
+ * @version 0.0.1 builder 20170830
+ */
+public interface StopPurchasWeightRepository {
     /**
      * @param brandId
      * @return
      */
-    StopSellWeight[] belongingToBrand(long brandId);
+    StopPurchasWeight[] belongingToBrand(long brandId);
 
     /**
      * @param categoryId
      * @return
      */
-    StopSellWeight[] belongingToCategory(long categoryId);
+    StopPurchasWeight[] belongingToCategory(long categoryId);
 
     /**
      * @param id
      * @return
      */
-    StopSellWeight[] find(int id);
+    StopPurchasWeight find(int id);
 
     /**
      * @param low
      * @param high
      * @return
      */
-    StopSellWeight[] findAll(int low, int high);
+    StopPurchasWeight[] findAll(int low, int high);
 
-    /**
-     * @param id
-     */
     void remove(String id);
 
-    /**
-     * @param stopSellWeight
-     */
-    void save(StopSellWeight stopSellWeight);
+
+    void save(StopPurchasWeight stopPurchasWeight);
 
     /**
      * @return
@@ -57,14 +59,20 @@ public interface StopSellWeightRepository {
     int size();
 
     /**
+     * @param barcode
+     * @return
+     */
+    StopPurchasWeight[] withBarcode(String barcode);
+
+    /**
      * @param mnemonicCode
      * @return
      */
-    StopSellWeight[] withMnemonicCode(String mnemonicCode);
+    StopPurchasWeight[] withMnemonicCode(String mnemonicCode);
 
     /**
      * @param name
      * @return
      */
-    StopSellWeight[] withName(String name);
+    StopPurchasWeight[] withName(String name);
 }

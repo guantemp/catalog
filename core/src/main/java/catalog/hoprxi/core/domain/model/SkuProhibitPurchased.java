@@ -21,22 +21,14 @@ import event.hoprxi.domain.model.DomainEvent;
 import java.time.LocalDateTime;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-05-02
+ * @version 0.0.1 2019/10/24
  */
-public class SkuShelfLifeChanged implements DomainEvent {
-    private String id;
-    private ShelfLife shelfLife;
+public class SkuProhibitPurchased implements DomainEvent {
     private LocalDateTime occurredOn;
+    private String id;
     private int version;
-
-    public SkuShelfLifeChanged(String id, ShelfLife shelLife) {
-        this.id = id;
-        this.shelfLife = shelLife;
-        occurredOn = LocalDateTime.now();
-        version = 1;
-    }
 
     @Override
     public LocalDateTime occurredOn() {
@@ -46,13 +38,5 @@ public class SkuShelfLifeChanged implements DomainEvent {
     @Override
     public int version() {
         return version;
-    }
-
-    public String id() {
-        return id;
-    }
-
-    public ShelfLife shelfLife() {
-        return shelfLife;
     }
 }

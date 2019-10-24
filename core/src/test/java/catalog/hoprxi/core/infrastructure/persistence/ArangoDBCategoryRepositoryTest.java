@@ -27,7 +27,7 @@ import org.junit.rules.ExpectedException;
 /***
  * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-05-28
+ * @version 0.0.1 builder 2019-05-28
  */
 public class ArangoDBCategoryRepositoryTest {
     private static CategoryRepository repository = new ArangoDBCategoryRepository();
