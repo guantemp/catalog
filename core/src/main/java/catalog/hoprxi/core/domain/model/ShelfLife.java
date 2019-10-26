@@ -25,14 +25,11 @@ import java.util.concurrent.TimeUnit;
  * @version 0.0.1 builder 2019-04-28
  */
 public class ShelfLife {
-    public final static ShelfLife SAME_DAY = new ShelfLife(1);
-    public final static ShelfLife NO_SHELF_LIFE = new ShelfLife(0);
+    public final static ShelfLife SAME_DAY = new ShelfLife(0);
     private int days;
 
     public static ShelfLife rebuild(int days) {
         if (days == 0)
-            return NO_SHELF_LIFE;
-        if (days == 1)
             return SAME_DAY;
         return new ShelfLife(days);
     }

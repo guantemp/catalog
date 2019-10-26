@@ -43,7 +43,7 @@ import javax.money.Monetary;
 import java.util.Locale;
 
 /***
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2018-06-05
  */

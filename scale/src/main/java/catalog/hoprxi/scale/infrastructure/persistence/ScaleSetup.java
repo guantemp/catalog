@@ -34,13 +34,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /***
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.2 2019-05-04
  */
 
-public class FreshSetup {
-    private static final Logger logger = LoggerFactory.getLogger(FreshSetup.class);
+public class ScaleSetup {
+    private static final Logger logger = LoggerFactory.getLogger(ScaleSetup.class);
 
     public static void setup(String databaseName) {
         ArangoDB arangoDB = ArangoDBUtil.getResource();
@@ -77,9 +77,9 @@ public class FreshSetup {
         db.collection("plu").ensureHashIndex(index, hashIndexOptions);
         //graph
         Collection<EdgeDefinition> edgeList = new ArrayList<>();
-        edgeList.add(new EdgeDefinition().collection("belong_fresh").from("weight", "count").to("category", "brand"));
+        edgeList.add(new EdgeDefinition().collection("belong_scale").from("weight", "count").to("category", "brand"));
         edgeList.add(new EdgeDefinition().collection("scale").from("weight", "count").to("plu"));
-        db.createGraph("fresh", edgeList);
+        db.createGraph("scale", edgeList);
         arangoDB.shutdown();
         logger.info("{} be created", databaseName);
     }
@@ -94,12 +94,11 @@ public class FreshSetup {
         categoryRepository.save(vegetables);
         Category freshMeat = new Category("fresh", "meat", "肉类", "包含冷鲜肉和热鲜肉");
         categoryRepository.save(freshMeat);
-        Category cooked_food = new Category("fresh", "cooked_food", "熟食", "包含冷鲜肉和热鲜肉");
+        Category cooked_food = new Category("fresh", "cooked_food", "熟食", "是经过加工或焯水处理后的原料通过配好的卤汁、红油凉拌、熏烤、油炸等制作而成的菜肴。");
         categoryRepository.save(cooked_food);
         Category aquatic = new Category("fresh", "aquatic", "水产", "指江、河、湖、海里出产的经济动、植物的统称。可分为活鲜水产、冰鲜水产、冷冻水产、水发水、水产干货");
         categoryRepository.save(aquatic);
-        Category dried_foods = new Category("fresh", "dried_foods", "干货", "指江、河、湖、海里出产的经济动、植物的统称。可分为活鲜水产、冰鲜水产、冷冻水产、水发水、水产干货");
+        Category dried_foods = new Category("fresh", "dried_foods", "干货", "泛指用风干、晾晒等方法去除了水分的调味品、食品");
         categoryRepository.save(dried_foods);
-
     }
 }

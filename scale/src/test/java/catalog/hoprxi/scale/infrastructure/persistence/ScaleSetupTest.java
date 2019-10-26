@@ -14,33 +14,21 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.barcode;
+package catalog.hoprxi.scale.infrastructure.persistence;
 
 import org.junit.Test;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
+ * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-04-26
+ * @version 0.0.1 2019/10/25
  */
-public class BarcodeGenerateServicesTest {
+public class ScaleSetupTest {
 
     @Test
-    public void getTheMatchingEANUPCBarcode() {
+    public void setup() {
+        ScaleSetup.setup("catalog");
+        ScaleSetup.createCategory();
     }
 
-    @Test
-    public void inStoreEAN_8Generate() {
-        Barcode[] eans = BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(7542, 20, "20");
-        for (Barcode e : eans)
-            System.out.println(e);
-    }
-
-
-    @Test
-    public void inStoreEAN_13Generate() {
-        Barcode[] eans = BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(5678921, 20, "22");
-        for (Barcode e : eans)
-            System.out.println(e);
-    }
 }

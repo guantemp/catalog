@@ -16,17 +16,21 @@
 package catalog.hoprxi.scale.domain.model;
 
 import catalog.foxtail.core.domain.model.*;
-import catalog.foxtail.core.domain.model.brand.Brand;
-import catalog.foxtail.core.domain.model.category.Category;
 import catalog.foxtail.core.domain.model.category.ValidatorCategoryId;
+import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.domain.model.ShelfLife;
+import catalog.hoprxi.core.domain.model.Specification;
+import catalog.hoprxi.core.domain.model.brand.Brand;
+import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /**
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @version 0.0.1 builder 2019-05-02
  * @since JDK8.0
  */
@@ -41,38 +45,37 @@ public class Weight {
     @Expose(serialize = false, deserialize = false)
     private Plu plu;
     private Name name;
-    private PlaceOfProduction placeOfProduction;
     private Specification spec;
     private ShelfLife shelfLife;
     private WeightUnit unit;
+    private MadeIn madeIn;
 
     /**
      * @param id
-     * @param plu               1-99999
+     * @param plu
      * @param name
      * @param spec
      * @param unit
      * @param grade
-     * @param placeOfProduction
-     * @param shelfLife         at least one day
+     * @param shelfLife
      * @param brandId
      * @param categoryId
      */
-    public Weight(String id, Plu plu, Name name, Specification spec, WeightUnit unit, Grade grade, PlaceOfProduction placeOfProduction, ShelfLife shelfLife, String brandId, String categoryId) {
+    public Weight(String id, Plu plu, Name name, Specification spec, WeightUnit unit, Grade grade, ShelfLife shelfLife, String brandId, String categoryId) {
         setId(id);
         setPlu(plu);
         setName(name);
         setSpecification(spec);
         setUnit(unit);
         setGrade(grade);
-        setPlaceOfProduction(placeOfProduction);
+
         setShelfLife(shelfLife);
         setBrandId(brandId);
         setCategoryId(categoryId);
     }
 
-    public Weight(String id, Plu plu, Name name, WeightUnit unit, PlaceOfProduction placeOfProduction) {
-        this(id, plu, name, Specification.UNDEFINED, unit, Grade.QUALIFIED, placeOfProduction, ShelfLife.SAME_DAY, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
+    public Weight(String id, Plu plu, Name name, WeightUnit unit) {
+        this(id, plu, name, Specification.UNDEFINED, unit, Grade.QUALIFIED, ShelfLife.SAME_DAY, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
     }
 
     public ShelfLife shelLife() {
@@ -134,14 +137,6 @@ public class Weight {
         return name;
     }
 
-    public PlaceOfProduction placeOfProduction() {
-        return placeOfProduction;
-    }
-
-    public void changePlaceOfProduction(PlaceOfProduction placeOfProduction) {
-
-    }
-
     private void setBrandId(String brandId) {
         this.brandId = Objects.requireNonNull(brandId, "brand id required").trim();
     }
@@ -189,10 +184,6 @@ public class Weight {
         this.name = Objects.requireNonNull(name, "name required");
     }
 
-    private void setPlaceOfProduction(PlaceOfProduction placeOfProduction) {
-        this.placeOfProduction = Objects.requireNonNull(placeOfProduction, "madeIn required");
-    }
-
     private void setUnit(WeightUnit unit) {
         if (unit == null)
             unit = WeightUnit.KILOGRAM;
@@ -211,36 +202,6 @@ public class Weight {
         return unit;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Weight weight = (Weight) o;
-
-        return id != null ? id.equals(weight.id) : weight.id == null;
-    }
-
-    @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", Weight.class.getSimpleName() + "[", "]")
-                .add("brandId='" + brandId + "'")
-                .add("categoryId='" + categoryId + "'")
-                .add("grade=" + grade)
-                .add("id='" + id + "'")
-                .add("plu=" + plu)
-                .add("name=" + name)
-                .add("placeOfProduction=" + placeOfProduction)
-                .add("spec=" + spec)
-                .add("shelfLife=" + shelfLife)
-                .add("unit=" + unit)
-                .toString();
-    }
 
     public Plu plu() {
         return plu;

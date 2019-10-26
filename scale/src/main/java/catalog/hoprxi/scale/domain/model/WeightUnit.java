@@ -16,20 +16,21 @@
 
 package catalog.hoprxi.scale.domain.model;
 
-import catalog.foxtail.fresh.infrastructure.i18n.Label;
+
+import catalog.hoprxi.scale.infrastructure.i18n.Label;
 
 import java.math.BigDecimal;
 
 /**
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuan</a>
- * @version 0.0.2 builder 2018-06-03
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
+ * @version 0.0.2 builder 2019-10-03
  * @since JDK8.0
  */
 public enum WeightUnit {
     TON {
         @Override
-        public Number toGram(Number number) {
-            return 1000000;
+        public Number toFiveHundredGram(Number number) {
+            return super.toFiveHundredGram(number);
         }
 
         @Override
@@ -113,6 +114,10 @@ public enum WeightUnit {
     }
 
     public Number toGram(Number number) {
+        return 1;
+    }
+
+    public Number toFiveHundredGram(Number number) {
         return 1;
     }
 }

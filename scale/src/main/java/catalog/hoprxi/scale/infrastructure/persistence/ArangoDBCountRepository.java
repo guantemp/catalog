@@ -16,12 +16,10 @@
 
 package catalog.hoprxi.scale.infrastructure.persistence;
 
-import catalog.foxtail.core.domain.model.*;
-import catalog.foxtail.core.infrastructure.persistence.ArangoDBUtil;
-import catalog.foxtail.fresh.domain.model.Count;
-import catalog.foxtail.fresh.domain.model.CountRepository;
-import catalog.foxtail.fresh.domain.model.CountUnit;
-import catalog.foxtail.fresh.domain.model.Plu;
+import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.infrastructure.persistence.ArangoDBUtil;
+import catalog.hoprxi.scale.domain.model.Count;
+import catalog.hoprxi.scale.domain.model.CountRepository;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.ArangoGraph;
@@ -31,18 +29,16 @@ import com.arangodb.entity.VertexEntity;
 import com.arangodb.entity.VertexUpdateEntity;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
-import mi.foxtail.id.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 /***
- * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 2019-05-11
  */
@@ -263,7 +259,7 @@ public class ArangoDBCountRepository implements CountRepository {
     }
 
     @Override
-    public Count fromPlu(int plu) {
+    public Count findPlu(int plu) {
         if (isPluExists(plu)) {
             final String query = "WITH count,plu\n" +
                     "LET plu=(FOR v1 IN plu FILTER v1.plu == @plu RETURN v1)\n" +

@@ -15,20 +15,23 @@
  */
 package catalog.hoprxi.scale.domain.model;
 
-import catalog.foxtail.core.domain.model.*;
-import catalog.foxtail.core.domain.model.brand.Brand;
-import catalog.foxtail.core.domain.model.category.Category;
-import catalog.foxtail.core.domain.model.category.ValidatorCategoryId;
+import catalog.hoprxi.core.domain.Validator;
+import catalog.hoprxi.core.domain.model.*;
+import catalog.hoprxi.core.domain.model.brand.Brand;
+import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.price.MemberPrice;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.VipPrice;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /***
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2019-05-04
+ * @version 0.0.2 builder 2019-10-26
  */
 
 public class Count {
@@ -42,42 +45,49 @@ public class Count {
     @Expose(serialize = false, deserialize = false)
     private Plu plu;
     private Name name;
-    private PlaceOfProduction placeOfProduction;
+    private MadeIn madeIn;
     private Specification spec;
+    private RetailPrice retailPrice;
+    private MemberPrice memberPrice;
+    private VipPrice vipPrice;
     private ShelfLife shelfLife;
-    private CountUnit unit;
 
-    /**
-     * @param id
-     * @param plu
-     * @param name
-     * @param spec
-     * @param unit
-     * @param grade
-     * @param placeOfProduction
-     * @param shelfLife
-     * @param categoryId
-     * @param brandId
-     */
-    public Count(String id, Plu plu, Name name, Specification spec, CountUnit unit, Grade grade, PlaceOfProduction placeOfProduction, ShelfLife shelfLife, String categoryId, String brandId) {
+    public Count(String id, Plu plu, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife,
+                 RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
         setId(id);
         setPlu(plu);
         setName(name);
         setSpecification(spec);
-        setCountUnit(unit);
         setGrade(grade);
-        setPlaceOfProduction(placeOfProduction);
+        setMadeIn(madeIn);
+        setRetailPrice(retailPrice);
+        setMemberPrice(memberPrice);
+        setVipPrice(vipPrice);
         setShelfLife(shelfLife);
         setCategoryId(categoryId);
         setBrandId(brandId);
     }
 
-    public Count(String id, Plu plu, Name name, CountUnit unit, PlaceOfProduction placeOfProduction) {
-        this(id, plu, name, Specification.UNDEFINED, unit, Grade.QUALIFIED, placeOfProduction, ShelfLife.SAME_DAY, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
+    private void setVipPrice(VipPrice vipPrice) {
+        if (vipPrice == null)
+            vipPrice = VipPrice.ZERO;
+        if (vipPrice.price().unit() != Unit.PCS && vipPrice.price().unit() != retailPrice.price().unit())
+            throw new IllegalArgumentException("vipPrice unit must be consistent with retailPrice unit");
+        this.vipPrice = vipPrice;
     }
 
-    public ShelfLife shelflife() {
-        return shelfLife;
+    private void setMemberPrice(MemberPrice memberPrice) {
+        if (memberPrice == null)
+            memberPrice = MemberPrice.ZERO;
+        if (memberPrice.price().unit() != Unit.PCS && memberPrice.price().unit() != retailPrice.price().unit())
+            throw new IllegalArgumentException("memberPrice unit must be consistent with retailPrice unit");
+        this.memberPrice = memberPrice;
+    }
+
+    private void setRetailPrice(RetailPrice retailPrice) {
+        if (retailPrice == null)
+            retailPrice = RetailPrice.ZERO;
+        this.retailPrice = retailPrice;
     }
 
     private void setShelfLife(ShelfLife shelfLife) {
@@ -90,6 +100,48 @@ public class Count {
         if (spec == null)
             spec = Specification.UNDEFINED;
         this.spec = spec;
+    }
+
+    private void setCategoryId(String categoryId) {
+        categoryId = Objects.requireNonNull(categoryId, "categoryId required").trim();
+        if (!categoryId.equals(Category.UNDEFINED.id()) && !Validator.isCategoryExist(categoryId))
+            throw new IllegalArgumentException("categoryId isn't effective");
+        this.categoryId = categoryId;
+    }
+
+    private void setBrandId(String brandId) {
+        brandId = Objects.requireNonNull(brandId, "brandId required").trim();
+        if (!brandId.equals(Brand.UNDEFINED.id()) && !Validator.isBrandExist(brandId))
+            throw new IllegalArgumentException("brandId isn't effective");
+        this.brandId = brandId;
+    }
+
+    private void setGrade(Grade grade) {
+        if (null == grade)
+            grade = Grade.QUALIFIED;
+        this.grade = grade;
+    }
+
+    private void setId(String id) {
+        id = Objects.requireNonNull(id, "id required").trim();
+        this.id = id;
+    }
+
+    private void setPlu(Plu plu) {
+        this.plu = Objects.requireNonNull(plu, "plu required");
+    }
+
+    private void setName(Name name) {
+        this.name = Objects.requireNonNull(name, "name required");
+    }
+
+    private void setMadeIn(MadeIn madeIn) {
+        this.madeIn = Objects.requireNonNull(madeIn, "madeIn required");
+    }
+
+
+    public ShelfLife shelflife() {
+        return shelfLife;
     }
 
     public String brandId() {
@@ -112,70 +164,14 @@ public class Count {
         return name;
     }
 
-    public PlaceOfProduction placeOfProduction() {
-        return placeOfProduction;
-    }
-
-    private void setBrandId(String brandId) {
-        this.brandId = Objects.requireNonNull(brandId, "brand id required").trim();
-    }
-
-    private void setCategoryId(String categoryId) {
-        if (categoryId != null) {
-            categoryId = categoryId.trim();
-            ValidatorCategoryId vcis = new ValidatorCategoryId();
-            if (vcis.isIdExist(categoryId)) {
-                this.categoryId = categoryId;
-                return;
-            }
-        }
-        this.categoryId = Category.UNDEFINED.id();
-    }
-
-    /**
-     * @param grade the grade to set
-     */
-    private void setGrade(Grade grade) {
-        if (null == grade)
-            grade = Grade.QUALIFIED;
-        this.grade = grade;
-    }
-
-    private void setId(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
-        this.id = id;
-    }
-
-    /**
-     * @param name the name to set
-     */
-    private void setName(Name name) {
-        this.name = Objects.requireNonNull(name, "name required");
-    }
-
-    /**
-     * @param placeOfProduction
-     */
-    private void setPlaceOfProduction(PlaceOfProduction placeOfProduction) {
-        this.placeOfProduction = Objects.requireNonNull(placeOfProduction, "madeIn required");
-    }
-
-    /**
-     * @param unit the unit to set
-     */
-    private void setCountUnit(CountUnit unit) {
-        if (unit == null)
-            unit = CountUnit.PCS;
-        this.unit = unit;
+    public MadeIn madeIn() {
+        return madeIn;
     }
 
     public Specification spec() {
         return spec;
     }
 
-    public CountUnit unit() {
-        return unit;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -192,33 +188,14 @@ public class Count {
         return id != null ? id.hashCode() : 0;
     }
 
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", Count.class.getSimpleName() + "[", "]")
-                .add("brandId='" + brandId + "'")
-                .add("categoryId='" + categoryId + "'")
-                .add("grade=" + grade)
-                .add("id='" + id + "'")
-                .add("plu=" + plu)
-                .add("name=" + name)
-                .add("placeOfProduction=" + placeOfProduction)
-                .add("spec=" + spec)
-                .add("shelfLife=" + shelfLife)
-                .add("unit=" + unit)
-                .toString();
-    }
 
     public Plu plu() {
         return plu;
     }
 
     public void changePlu(Plu plu) {
-        Objects.requireNonNull(plu, "plu is required");
+        Objects.requireNonNull(plu, "plu required");
         if (!this.plu.equals(plu))
             this.plu = plu;
-    }
-
-    private void setPlu(Plu plu) {
-        this.plu = Objects.requireNonNull(plu, "plu required");
     }
 }

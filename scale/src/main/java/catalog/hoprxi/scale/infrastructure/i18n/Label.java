@@ -16,15 +16,15 @@
 package catalog.hoprxi.scale.infrastructure.i18n;
 
 
-import mi.foxtail.util.NLS;
+import mi.hoprxi.util.NLS;
 
 /***
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-05-03
+ * @version 0.0.1 builder 2019-10-25
  */
 public class Label extends NLS {
-    private static final String BUNDLE_NAME = "catalog.foxtail.fresh.infrastructure.i18n.label"; //$NON-NLS-1$
+    private static final String BUNDLE_NAME = "catalog.hoprix.scale.infrastructure.i18n.label"; //$NON-NLS-1$
 
     public static String COUNT_UNIT_PAN;
     public static String COUNT_UNIT_FENG;

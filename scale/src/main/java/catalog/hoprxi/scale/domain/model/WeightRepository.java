@@ -16,7 +16,7 @@
 package catalog.hoprxi.scale.domain.model;
 
 /***
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.g builder 2019-05-04
  */

@@ -97,33 +97,33 @@ public class Sku {
         this(id, barcode, name, madeIn, spec, grade, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, brandId, categoryId);
     }
 
-    /**
-     * @param id
-     * @param barcode
-     * @param name
-     * @param madeIn
-     * @param spec
-     * @param unit
-     * @param grade
-     * @param brandId
-     * @param categoryId
-     * @throws IllegalArgumentException if id is null or id length range not in [1-36]
-     *                                  if name is null
-     *                                  if madeIn is null
-     *                                  if unit is null
-     */
-    public Sku(String id, Barcode barcode, Name name, MadeIn madeIn, Unit unit, Specification spec,
-               Grade grade, ShelfLife shelfLife, String brandId, String categoryId) {
-        setId(id);
-        setBarcode(barcode);
-        setName(name);
-        setMadeIn(madeIn);
-        setUnit(unit);
-        setSpecification(spec);
-        setGrade(grade);
-        setBrandId(brandId);
-        setCategoryId(categoryId);
+    private void setCategoryId(String categoryId) {
+        categoryId = Objects.requireNonNull(categoryId, "categoryId required").trim();
+        if (!categoryId.equals(Category.UNDEFINED.id()) && !Validator.isCategoryExist(categoryId))
+            throw new IllegalArgumentException("categoryId isn't effective");
+        this.categoryId = categoryId;
     }
+
+    private void setBrandId(String brandId) {
+        brandId = Objects.requireNonNull(brandId, "brandId required").trim();
+        if (!brandId.equals(Brand.UNDEFINED.id()) && !Validator.isBrandExist(brandId))
+            throw new IllegalArgumentException("brandId isn't effective");
+        this.brandId = brandId;
+    }
+
+    private void setSpecification(Specification spec) {
+        if (spec == null)
+            spec = Specification.UNDEFINED;
+        this.spec = spec;
+    }
+
+    private void setId(String id) {
+        id = Objects.requireNonNull(id, "id required").trim();
+        if (id.isEmpty() || id.length() > ID_MAX_LENGTH)
+            throw new IllegalArgumentException("id length range is 1 to " + ID_MAX_LENGTH);
+        this.id = id;
+    }
+
 
     private void setVipPrice(VipPrice vipPrice) {
         if (vipPrice == null)
@@ -211,33 +211,6 @@ public class Sku {
 
     public Specification spec() {
         return spec;
-    }
-
-    private void setCategoryId(String categoryId) {
-        categoryId = Objects.requireNonNull(categoryId, "categoryId required").trim();
-        if (!categoryId.equals(Category.UNDEFINED.id()) && !Validator.isCategoryExist(categoryId))
-            throw new IllegalArgumentException("categoryId isn't effective");
-        this.categoryId = categoryId;
-    }
-
-    private void setBrandId(String brandId) {
-        brandId = Objects.requireNonNull(brandId, "brandId required").trim();
-        if (!brandId.equals(Brand.UNDEFINED.id()) && !Validator.isBrandExist(brandId))
-            throw new IllegalArgumentException("brandId isn't effective");
-        this.brandId = brandId;
-    }
-
-    private void setSpecification(Specification spec) {
-        if (spec == null)
-            spec = Specification.UNDEFINED;
-        this.spec = spec;
-    }
-
-    private void setId(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
-        if (id.isEmpty() || id.length() > ID_MAX_LENGTH)
-            throw new IllegalArgumentException("id length range is 1 to " + ID_MAX_LENGTH);
-        this.id = id;
     }
 
     /**

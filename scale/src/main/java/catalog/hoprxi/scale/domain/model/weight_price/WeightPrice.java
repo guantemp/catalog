@@ -14,30 +14,18 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.scale.domain.model;
+package catalog.hoprxi.scale.domain.model.weight_price;
 
-import catalog.foxtail.fresh.infrastructure.i18n.Label;
+import catalog.hoprxi.scale.domain.model.WeightUnit;
 
-/**
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuan</a>
- * @version 0.0.2 builder 2018-06-03
+import javax.money.MonetaryAmount;
+
+/***
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
+ * @version 0.0.1 2019/10/25
  */
-public enum CountUnit {
-    PCS, PAN {
-        @Override
-        public String toString() {
-            return Label.COUNT_UNIT_PAN;
-        }
-    }, FENG {
-        @Override
-        public String toString() {
-            return Label.COUNT_UNIT_FENG;
-        }
-    }, BA {
-        @Override
-        public String toString() {
-            return Label.COUNT_UNIT_BA;
-        }
-    }
+public class WeightPrice {
+    private MonetaryAmount amount;
+    private WeightUnit weightUnit;
 }

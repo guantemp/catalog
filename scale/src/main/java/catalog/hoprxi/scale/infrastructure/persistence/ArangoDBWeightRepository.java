@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 /***
- * @author <a href="www.foxtail.cc/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.2 builder 2019-05-04
  */

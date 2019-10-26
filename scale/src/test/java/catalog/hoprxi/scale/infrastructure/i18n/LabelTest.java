@@ -14,17 +14,18 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.i18n;
+package catalog.hoprxi.scale.infrastructure.i18n;
 
 import org.junit.Test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-05-14
+ * @version 0.0.1 2019/10/25
  */
 public class LabelTest {
     @Test
@@ -44,6 +45,4 @@ public class LabelTest {
             }
         }
     }
-
-
 }
