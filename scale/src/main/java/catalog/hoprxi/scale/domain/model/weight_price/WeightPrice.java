@@ -16,7 +16,6 @@
 
 package catalog.hoprxi.scale.domain.model.weight_price;
 
-import catalog.hoprxi.scale.domain.model.WeightUnit;
 import org.javamoney.moneta.Money;
 
 import javax.money.Monetary;
@@ -76,5 +75,13 @@ public class WeightPrice {
         int result = amount != null ? amount.hashCode() : 0;
         result = 31 * result + (weightUnit != null ? weightUnit.hashCode() : 0);
         return result;
+    }
+
+    public WeightPrice conversion(WeightUnit weightUnit) {
+        if (this.weightUnit == weightUnit)
+            return this;
+        Number number = this.weightUnit.toKillogram(1);
+        amount = amount.multiply(number);
+        return new WeightPrice(amount, weightUnit);
     }
 }

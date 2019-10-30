@@ -29,19 +29,6 @@ public class Label extends NLS {
     public static String CATEGORY_UNDEFINED;
     public static String SPEC_NAME;
 
-    public static String COUNTUNIT_BUNCH;
-    public static String COUNTUNIT_DISC;
-    public static String COUNTUNIT_PCS;
-    public static String COUNTUNIT_SHARE;
-
-    public static String MASSUNIT_GRAM;
-    public static String MASSUNIT_KILOGRAM;
-    public static String MASSUNIT_MILLIGRAM;
-    public static String MASSUNIT_TON;
-
-    public static String TIMEUNIT_MINUTE;
-    public static String TIMEUNIT_SECOND;
-
     public static String UNIT_BEI;
     public static String UNIT_BEN;
     public static String UNIT_DAI;
@@ -78,12 +65,15 @@ public class Label extends NLS {
     public static String UNIT_LI;
     public static String UNIT_FENG;
     public static String UNIT_WANG;
+    public static String UNIT_CHUAN;
+    public static String UNIT_PAN;
 
     public static String GRADE_ONE_LEVEL;
     public static String GRADE_QUALIFIED;
     public static String GRADE_SECOND_LEVEL;
     public static String GRADE_THREE_LEVEL;
     public static String GRADE_UNQUALIFIED;
+    public static String GRADE_SUPERFINE;
 
     public static String PRICE_RETAIL;
     public static String PRICE_MEMBER;

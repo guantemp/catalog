@@ -26,15 +26,13 @@ import mi.hoprxi.util.NLS;
 public class Label extends NLS {
     private static final String BUNDLE_NAME = "catalog.hoprix.scale.infrastructure.i18n.label"; //$NON-NLS-1$
 
-    public static String COUNT_UNIT_PAN;
-    public static String COUNT_UNIT_FENG;
-    public static String COUNT_UNIT_PCS;
-    public static String COUNT_UNIT_BA;
-
     public static String WEIGHT_UNIT_GRAM;
+    public static String WEIGHT_UNIT_FIVE_HUNDRED_GRAM;
     public static String WEIGHT_UNIT_KILOGRAM;
     public static String WEIGHT_UNIT_MILLIGRAM;
     public static String WEIGHT_UNIT_TON;
+    public static String WEIGHT_UNIT_OUNCE;
+    public static String WEIGHT_UNIT_POUND;
 
     static {
         NLS.initializeMessages(BUNDLE_NAME, Label.class);

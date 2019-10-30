@@ -24,7 +24,6 @@ import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.scale.domain.model.weight_price.WeightMemberPrice;
-import catalog.hoprxi.scale.domain.model.weight_price.WeightPrice;
 import catalog.hoprxi.scale.domain.model.weight_price.WeightRetailPrice;
 import catalog.hoprxi.scale.domain.model.weight_price.WeightVipPrice;
 import com.arangodb.velocypack.annotations.Expose;
@@ -53,14 +52,34 @@ public class Weight {
     private MadeIn madeIn;
 
     public Weight(Plu plu, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife,
-                  WeightPrice retailPrice, WeightPrice memberPrice, WeightPrice vipPrice, String categoryId, String brandId) {
+                  WeightRetailPrice retailPrice, WeightMemberPrice memberPrice, WeightVipPrice vipPrice, String categoryId, String brandId) {
         setPlu(plu);
         setName(name);
+        setMadeIn(madeIn);
         setSpecification(spec);
         setGrade(grade);
         setShelfLife(shelfLife);
+        setRetailPrice(retailPrice);
+        setMemberPrice(memberPrice);
+        setVipPrice(vipPrice);
         setBrandId(brandId);
         setCategoryId(categoryId);
+    }
+
+    private void setVipPrice(WeightVipPrice vipPrice) {
+        this.vipPrice = vipPrice;
+    }
+
+    private void setMemberPrice(WeightMemberPrice memberPrice) {
+        this.memberPrice = memberPrice;
+    }
+
+    private void setRetailPrice(WeightRetailPrice retailPrice) {
+        this.retailPrice = retailPrice;
+    }
+
+    private void setMadeIn(MadeIn madeIn) {
+        this.madeIn = madeIn;
     }
 
 

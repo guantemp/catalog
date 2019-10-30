@@ -30,5 +30,4 @@ public class ScaleSetupTest {
         ScaleSetup.setup("catalog");
         ScaleSetup.createCategory();
     }
-
 }

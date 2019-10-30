@@ -66,8 +66,8 @@ public class ArangoDBWeightRepository implements WeightRepository {
     private ArangoDatabase catalog = ArangoDBUtil.getDatabase();
 
     @Override
-    public int nextPlu() {
-        return 0;
+    public Plu nextPlu() {
+        return null;
     }
 
     @Override

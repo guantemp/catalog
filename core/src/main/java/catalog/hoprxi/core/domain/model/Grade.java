@@ -49,6 +49,11 @@ public enum Grade {
         public String toString() {
             return Label.GRADE_THREE_LEVEL;
         }
+    }, SUPERFINE {
+        @Override
+        public String toString() {
+            return Label.GRADE_SUPERFINE;
+        }
     };
 
     /**

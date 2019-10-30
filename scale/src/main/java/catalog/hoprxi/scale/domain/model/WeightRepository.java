@@ -56,7 +56,7 @@ public interface WeightRepository {
     /**
      * @return
      */
-    int nextPlu();
+    Plu nextPlu();
 
     /**
      * @param plu
