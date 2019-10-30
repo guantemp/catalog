@@ -15,8 +15,7 @@
  */
 package catalog.hoprxi.scale.domain.model;
 
-import catalog.foxtail.core.domain.model.*;
-import catalog.foxtail.core.domain.model.category.ValidatorCategoryId;
+import catalog.hoprxi.core.domain.Validator;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.ShelfLife;
@@ -24,14 +23,17 @@ import catalog.hoprxi.core.domain.model.Specification;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
-import com.arangodb.entity.DocumentField;
+import catalog.hoprxi.scale.domain.model.weight_price.WeightMemberPrice;
+import catalog.hoprxi.scale.domain.model.weight_price.WeightPrice;
+import catalog.hoprxi.scale.domain.model.weight_price.WeightRetailPrice;
+import catalog.hoprxi.scale.domain.model.weight_price.WeightVipPrice;
 import com.arangodb.velocypack.annotations.Expose;
 
 import java.util.Objects;
 
 /**
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
- * @version 0.0.1 builder 2019-05-02
+ * @version 0.0.2 builder 2019-10-29
  * @since JDK8.0
  */
 public class Weight {
@@ -40,53 +42,34 @@ public class Weight {
     // @Expose(serialize = false, deserialize = false)
     private String categoryId;
     private Grade grade;
-    @DocumentField(DocumentField.Type.KEY)
-    private String id;
     @Expose(serialize = false, deserialize = false)
     private Plu plu;
     private Name name;
     private Specification spec;
     private ShelfLife shelfLife;
-    private WeightUnit unit;
+    private WeightRetailPrice retailPrice;
+    private WeightMemberPrice memberPrice;
+    private WeightVipPrice vipPrice;
     private MadeIn madeIn;
 
-    /**
-     * @param id
-     * @param plu
-     * @param name
-     * @param spec
-     * @param unit
-     * @param grade
-     * @param shelfLife
-     * @param brandId
-     * @param categoryId
-     */
-    public Weight(String id, Plu plu, Name name, Specification spec, WeightUnit unit, Grade grade, ShelfLife shelfLife, String brandId, String categoryId) {
-        setId(id);
+    public Weight(Plu plu, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife,
+                  WeightPrice retailPrice, WeightPrice memberPrice, WeightPrice vipPrice, String categoryId, String brandId) {
         setPlu(plu);
         setName(name);
         setSpecification(spec);
-        setUnit(unit);
         setGrade(grade);
-
         setShelfLife(shelfLife);
         setBrandId(brandId);
         setCategoryId(categoryId);
     }
 
-    public Weight(String id, Plu plu, Name name, WeightUnit unit) {
-        this(id, plu, name, Specification.UNDEFINED, unit, Grade.QUALIFIED, ShelfLife.SAME_DAY, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
+
+    private void setPlu(Plu plu) {
+        this.plu = Objects.requireNonNull(plu, "plu required");
     }
 
-    public ShelfLife shelLife() {
-        return shelfLife;
-    }
-
-    public void changeShelLife(ShelfLife shelfLife) {
-        Objects.requireNonNull(shelfLife, "shelLife required");
-        if (!this.shelfLife.equals(shelfLife)) {
-            this.shelfLife = shelfLife;
-        }
+    private void setName(Name name) {
+        this.name = Objects.requireNonNull(name, "name required");
     }
 
     private void setShelfLife(ShelfLife shelfLife) {
@@ -101,110 +84,114 @@ public class Weight {
         this.spec = spec;
     }
 
-    public void changeSpec(Specification spec) {
-        Objects.requireNonNull(spec, "spec required");
-        if (!this.spec.equals(spec)) {
-            this.spec = spec;
-            DomainRegistry1.domainEventPublisher().publish(new WeightSpecificationChanged(id, spec));
-        }
-    }
-
-    public String brandId() {
-        return brandId;
-    }
-
-    public void reallocateBrand(String brandId) {
-
-    }
-
-    public String categoryId() {
-        return categoryId;
-    }
-
-    public void reallocateCategory(String categoryId) {
-
-    }
-
-    public Grade grade() {
-        return grade;
-    }
-
-    public String id() {
-        return id;
-    }
-
-    public Name name() {
-        return name;
+    private void setCategoryId(String categoryId) {
+        categoryId = Objects.requireNonNull(categoryId, "categoryId required").trim();
+        if (!categoryId.equals(Category.UNDEFINED.id()) && !Validator.isCategoryExist(categoryId))
+            throw new IllegalArgumentException("categoryId isn't effective");
+        this.categoryId = categoryId;
     }
 
     private void setBrandId(String brandId) {
-        this.brandId = Objects.requireNonNull(brandId, "brand id required").trim();
+        brandId = Objects.requireNonNull(brandId, "brandId required").trim();
+        if (!brandId.equals(Brand.UNDEFINED.id()) && !Validator.isBrandExist(brandId))
+            throw new IllegalArgumentException("brandId isn't effective");
+        this.brandId = brandId;
     }
 
-    private void setCategoryId(String categoryId) {
-        if (categoryId != null) {
-            categoryId = categoryId.trim();
-            ValidatorCategoryId vcis = new ValidatorCategoryId();
-            if (vcis.isIdExist(categoryId)) {
-                this.categoryId = categoryId;
-                return;
-            }
-        }
-        this.categoryId = Category.UNDEFINED.id();
-    }
-
-    /**
-     * @param grade the grade to set
-     */
     private void setGrade(Grade grade) {
         if (null == grade)
             grade = Grade.QUALIFIED;
         this.grade = grade;
     }
 
-    public void changGrade(Grade grade) {
-
+    public WeightRetailPrice retailPrice() {
+        return retailPrice;
     }
 
-    /**
-     * @param id
-     */
-    private void setId(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
-        this.id = id;
+    public WeightMemberPrice memberPrice() {
+        return memberPrice;
     }
 
-    public void rename(Name name) {
-        Objects.requireNonNull(name, "name required");
-        if (!name.equals(this.name))
-            this.name = name;
+    public WeightVipPrice vipPrice() {
+        return vipPrice;
     }
 
-    private void setName(Name name) {
-        this.name = Objects.requireNonNull(name, "name required");
+    public ShelfLife shelLife() {
+        return shelfLife;
     }
 
-    private void setUnit(WeightUnit unit) {
-        if (unit == null)
-            unit = WeightUnit.KILOGRAM;
-        this.unit = unit;
+    public String brandId() {
+        return brandId;
     }
 
-    public void changeUnit(WeightUnit unit) {
+    public Grade grade() {
+        return grade;
+    }
 
+    public Name name() {
+        return name;
     }
 
     public Specification spec() {
         return spec;
     }
 
-    public WeightUnit unit() {
-        return unit;
+    public Plu plu() {
+        return plu;
+    }
+
+    public String categoryId() {
+        return categoryId;
+    }
+
+    public void changeShelLife(ShelfLife shelfLife) {
+        Objects.requireNonNull(shelfLife, "shelLife required");
+        if (!this.shelfLife.equals(shelfLife)) {
+            this.shelfLife = shelfLife;
+        }
+    }
+
+    public void changGrade(Grade grade) {
+
+    }
+
+    public void changeSpec(Specification spec) {
+        Objects.requireNonNull(spec, "spec required");
+        if (!this.spec.equals(spec)) {
+            this.spec = spec;
+            //DomainRegistry1.domainEventPublisher().publish(new WeightSpecificationChanged(id, spec));
+        }
+    }
+
+    /**
+     * @param categoryId
+     * @throws IllegalArgumentException if categoryId is <code>NULL</code>
+     *                                  categoryId is not valid
+     */
+    public void moveToNewCategory(String categoryId) {
+        if (!this.categoryId.equals(categoryId) && Validator.isCategoryExist(categoryId)) {
+            setCategoryId(categoryId);
+            //catalog.hoprxi.core.domain.DomainRegistry.domainEventPublisher().publish(new SkuCategoryReallocated(id, categoryId));
+        }
+    }
+
+    /**
+     * @param brandId
+     * @throws IllegalArgumentException if brandId is <code>NULL</code>
+     *                                  brandId is not valid
+     */
+    public void moveToNewBrand(String brandId) {
+        if (!this.brandId.equals(brandId) && Validator.isBrandExist(brandId)) {
+            setBrandId(brandId);
+            //DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
+        }
     }
 
 
-    public Plu plu() {
-        return plu;
+    public void rename(Name name) {
+        Objects.requireNonNull(name, "name required");
+        if (!name.equals(this.name))
+            this.name = name;
     }
 
     public void changePlu(Plu plu) {
@@ -213,7 +200,18 @@ public class Weight {
             this.plu = plu;
     }
 
-    private void setPlu(Plu plu) {
-        this.plu = Objects.requireNonNull(plu, "plu required");
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Weight weight = (Weight) o;
+
+        return plu != null ? plu.equals(weight.plu) : weight.plu == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return plu != null ? plu.hashCode() : 0;
     }
 }

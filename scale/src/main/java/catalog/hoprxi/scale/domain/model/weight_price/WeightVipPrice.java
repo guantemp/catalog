@@ -13,19 +13,15 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.scale.domain.model;
 
-
-import event.hoprxi.domain.model.DomainEventPublisher;
-import event.hoprxi.infrastruture.simple.SimpleDomainEventPublisher;
+package catalog.hoprxi.scale.domain.model.weight_price;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-07-05
+ * @version 0.0.1 2019/10/29
  */
-public final class DomainRegistry {
-    public static DomainEventPublisher domainEventPublisher() {
-        return SimpleDomainEventPublisher.instance();
-    }
+public class WeightVipPrice {
+    private String name;
+    private WeightPrice weightPrice;
 }

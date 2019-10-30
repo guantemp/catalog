@@ -16,12 +16,16 @@
 
 package catalog.hoprxi.scale.infrastructure.persistence;
 
-import catalog.foxtail.core.domain.model.*;
-import catalog.foxtail.core.infrastructure.persistence.ArangoDBUtil;
-import catalog.foxtail.fresh.domain.model.Plu;
-import catalog.foxtail.fresh.domain.model.Weight;
-import catalog.foxtail.fresh.domain.model.WeightRepository;
-import catalog.foxtail.fresh.domain.model.WeightUnit;
+
+import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.domain.model.ShelfLife;
+import catalog.hoprxi.core.domain.model.Specification;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.infrastructure.persistence.ArangoDBUtil;
+import catalog.hoprxi.scale.domain.model.Plu;
+import catalog.hoprxi.scale.domain.model.Weight;
+import catalog.hoprxi.scale.domain.model.WeightRepository;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.ArangoGraph;
@@ -31,7 +35,6 @@ import com.arangodb.entity.VertexEntity;
 import com.arangodb.entity.VertexUpdateEntity;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
-import mi.foxtail.id.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +81,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
     }
 
     @Override
-    public Weight fromPlu(int plu) {
+    public Weight find(int plu) {
         if (isPluExists(plu)) {
             final String query = "WITH weight,plu\n" +
                     "LET plu=(FOR v1 IN plu FILTER v1.plu == @plu RETURN v1)\n" +
@@ -120,37 +123,17 @@ public class ArangoDBWeightRepository implements WeightRepository {
         return transform(slices);
     }
 
-    @Override
-    public Weight find(String id) {
-        final String query = "WITH weight,plu\n" +
-                "FOR v IN weight FILTER v._key == @key\n" +
-                "LET plu = (FOR v1,e IN 1..1 OUTBOUND v._id scale RETURN v1)\n" +
-                "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
-        final Map<String, Object> bindVars = new MapBuilder().put("key", id).get();
-        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        if (slices.hasNext()) {
-            try {
-                return rebuild(slices.next());
-            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                if (LOGGER.isDebugEnabled())
-                    LOGGER.debug("Can't rebuild sku", e);
-            }
-        }
-        return null;
-    }
-
     private Weight rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
         String id = slice.get("id").getAsString();
         Plu plu = new Plu(slice.get("plu").getAsInt());
         Name name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());
         Specification spec = Specification.rebulid(slice.get("spec").get("value").getAsString());
-        WeightUnit unit = WeightUnit.valueOf(slice.get("unit").getAsString());
         Grade grade = Grade.valueOf(slice.get("grade").getAsString());
-        PlaceOfProduction placeOfProduction = new PlaceOfProduction(slice.get("placeOfProduction").get("locality").getAsString());
+        MadeIn madeIn = null;
         ShelfLife shelfLife = new ShelfLife(slice.get("shelfLife").get("days").getAsInt());
         String brandId = slice.get("brandId").getAsString();
         String categoryId = slice.get("categoryId").getAsString();
-        return new Weight(id, plu, name, spec, unit, grade, placeOfProduction, shelfLife, brandId, categoryId);
+        return new Weight(plu, name, madeIn, spec, grade, shelfLife, null, null, null, categoryId, brandId);
     }
 
     @Override
@@ -188,28 +171,23 @@ public class ArangoDBWeightRepository implements WeightRepository {
     }
 
     @Override
-    public String nextIdentity() {
-        return new ObjectId().id();
-    }
-
-    @Override
-    public void remove(String id) {
-        boolean exists = catalog.collection("weight").documentExists(id);
+    public void remove(int id) {
+        boolean exists = catalog.collection("weight").documentExists(String.valueOf(id));
         if (!exists)
             return;
         final String removeScale = "WITH weight,plu\n" +
                 "FOR v,e IN 1..1 OUTBOUND @startVertex scale REMOVE v IN plu REMOVE e IN scale";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "weight/" + id).get();
         catalog.query(removeScale, bindVars, null, VPackSlice.class);
-        catalog.graph("fresh").vertexCollection("weight").deleteVertex(id);
+        catalog.graph("fresh").vertexCollection("weight").deleteVertex(String.valueOf(id));
     }
 
     @Override
     public void save(Weight weight) {
-        boolean exists = catalog.collection("weight").documentExists(weight.id());
+        boolean exists = catalog.collection("weight").documentExists(String.valueOf(weight.plu().plu()));
         ArangoGraph graph = catalog.graph("fresh");
         if (exists) {
-            VertexUpdateEntity vertex = graph.vertexCollection("weight").updateVertex(weight.id(), weight);
+            VertexUpdateEntity vertex = graph.vertexCollection("weight").updateVertex(String.valueOf(weight.plu().plu()), weight);
             updateScaleEdge(catalog, vertex, weight.plu());
             if (isBrandIdChanged(catalog, vertex, weight.brandId()))
                 insertBelongEdgeOfBrand(graph, vertex, weight.brandId());

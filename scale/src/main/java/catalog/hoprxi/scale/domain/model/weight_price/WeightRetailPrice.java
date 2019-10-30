@@ -14,27 +14,33 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.scale.domain.model;
+package catalog.hoprxi.scale.domain.model.weight_price;
 
-import com.arangodb.entity.DocumentField;
 
-import java.util.StringJoiner;
+import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-05-04
+ * @version 0.0.1 2019/10/29
  */
-public class Plu {
-    @DocumentField(DocumentField.Type.KEY)
-    private int plu;
+public class WeightRetailPrice {
+    private WeightPrice weightPrice;
 
-    public Plu(int plu) {
-        setPlu(plu);
+    public WeightRetailPrice(WeightPrice weightPrice) {
+        setWeightPrice(weightPrice);
     }
 
-    public int plu() {
-        return plu;
+    public String name() {
+        return Label.PRICE_RETAIL;
+    }
+
+    public WeightPrice weightPrice() {
+        return weightPrice;
+    }
+
+    private void setWeightPrice(WeightPrice weightPrice) {
+        this.weightPrice = weightPrice;
     }
 
     @Override
@@ -42,26 +48,13 @@ public class Plu {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Plu plu1 = (Plu) o;
+        WeightRetailPrice that = (WeightRetailPrice) o;
 
-        return plu == plu1.plu;
+        return weightPrice != null ? weightPrice.equals(that.weightPrice) : that.weightPrice == null;
     }
 
     @Override
     public int hashCode() {
-        return plu;
-    }
-
-    private void setPlu(int plu) {
-        if (plu <= 0 || plu > 99999)
-            throw new IllegalArgumentException("plu rang is [1-99999]");
-        this.plu = plu;
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", Plu.class.getSimpleName() + "[", "]")
-                .add("plu=" + plu)
-                .toString();
+        return weightPrice != null ? weightPrice.hashCode() : 0;
     }
 }

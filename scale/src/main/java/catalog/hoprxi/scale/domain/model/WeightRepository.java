@@ -18,7 +18,7 @@ package catalog.hoprxi.scale.domain.model;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.g builder 2019-05-04
+ * @version 0.0.g builder 2019-10-30
  */
 
 public interface WeightRepository {
@@ -39,11 +39,12 @@ public interface WeightRepository {
      */
     Weight[] belongingToCategory(String categoryId, int offset, int limit);
 
+
     /**
-     * @param id
+     * @param plu
      * @return
      */
-    Weight find(String id);
+    Weight find(int plu);
 
     /**
      * @param offset
@@ -55,17 +56,12 @@ public interface WeightRepository {
     /**
      * @return
      */
-    String nextIdentity();
-
-    /**
-     * @return
-     */
     int nextPlu();
 
     /**
-     * @param id
+     * @param plu
      */
-    void remove(String id);
+    void remove(int plu);
 
     /**
      * @param weight
@@ -94,10 +90,4 @@ public interface WeightRepository {
      * @return
      */
     Weight[] fromName(String name);
-
-    /**
-     * @param plu
-     * @return
-     */
-    Weight fromPlu(int plu);
 }

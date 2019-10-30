@@ -16,10 +16,12 @@
 
 package catalog.hoprxi.scale.infrastructure.persistence;
 
-import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.domain.model.*;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBUtil;
 import catalog.hoprxi.scale.domain.model.Count;
 import catalog.hoprxi.scale.domain.model.CountRepository;
+import catalog.hoprxi.scale.domain.model.Plu;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.ArangoGraph;
@@ -29,12 +31,14 @@ import com.arangodb.entity.VertexEntity;
 import com.arangodb.entity.VertexUpdateEntity;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
+import mi.hoprxi.id.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /***
@@ -195,13 +199,13 @@ public class ArangoDBCountRepository implements CountRepository {
         Plu plu = new Plu(slice.get("plu").getAsInt());
         Name name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());
         Specification spec = Specification.rebulid(slice.get("spec").get("value").getAsString());
-        CountUnit unit = CountUnit.valueOf(slice.get("unit").getAsString());
+        Unit unit = Unit.valueOf(slice.get("unit").getAsString());
         Grade grade = Grade.valueOf(slice.get("grade").getAsString());
-        PlaceOfProduction placeOfProduction = new PlaceOfProduction(slice.get("placeOfProduction").get("locality").getAsString());
+        MadeIn madeIn = null;
         ShelfLife shelfLife = ShelfLife.rebuild(slice.get("shelfLife").get("days").getAsInt());
         String brandId = slice.get("brandId").getAsString();
         String categoryId = slice.get("categoryId").getAsString();
-        return new Count(id, plu, name, spec, unit, grade, placeOfProduction, shelfLife, brandId, categoryId);
+        return new Count(id, plu, name, madeIn, spec, grade, shelfLife, null, null, null, brandId, categoryId);
     }
 
     @Override

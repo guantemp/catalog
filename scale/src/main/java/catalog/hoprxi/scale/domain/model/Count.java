@@ -15,6 +15,7 @@
  */
 package catalog.hoprxi.scale.domain.model;
 
+import catalog.hoprxi.core.domain.DomainRegistry;
 import catalog.hoprxi.core.domain.Validator;
 import catalog.hoprxi.core.domain.model.*;
 import catalog.hoprxi.core.domain.model.brand.Brand;
@@ -170,6 +171,30 @@ public class Count {
 
     public Specification spec() {
         return spec;
+    }
+
+    /**
+     * @param categoryId
+     * @throws IllegalArgumentException if categoryId is <code>NULL</code>
+     *                                  categoryId is not valid
+     */
+    public void moveToNewCategory(String categoryId) {
+        if (!this.categoryId.equals(categoryId) && Validator.isCategoryExist(categoryId)) {
+            setCategoryId(categoryId);
+            catalog.hoprxi.core.domain.DomainRegistry.domainEventPublisher().publish(new SkuCategoryReallocated(id, categoryId));
+        }
+    }
+
+    /**
+     * @param brandId
+     * @throws IllegalArgumentException if brandId is <code>NULL</code>
+     *                                  brandId is not valid
+     */
+    public void moveToNewBrand(String brandId) {
+        if (!this.brandId.equals(brandId) && Validator.isBrandExist(brandId)) {
+            setBrandId(brandId);
+            DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
+        }
     }
 
 

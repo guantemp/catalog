@@ -25,7 +25,6 @@ import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.EdgeDefinition;
 import com.arangodb.entity.KeyType;
 import com.arangodb.model.CollectionCreateOptions;
-import com.arangodb.model.HashIndexOptions;
 import com.arangodb.model.SkiplistIndexOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,10 +70,12 @@ public class ScaleSetup {
         db.collection("weight").ensureSkiplistIndex(index, skiplistIndexOptions);
         db.collection("count").ensureSkiplistIndex(index, skiplistIndexOptions);
         //plu
+        /*
         index.clear();
         index.add("plu");
         HashIndexOptions hashIndexOptions = new HashIndexOptions().unique(true);
         db.collection("plu").ensureHashIndex(index, hashIndexOptions);
+        */
         //graph
         Collection<EdgeDefinition> edgeList = new ArrayList<>();
         edgeList.add(new EdgeDefinition().collection("belong_scale").from("weight", "count").to("category", "brand"));
