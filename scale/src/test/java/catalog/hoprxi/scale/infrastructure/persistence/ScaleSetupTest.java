@@ -29,5 +29,6 @@ public class ScaleSetupTest {
     public void setup() {
         ScaleSetup.setup("catalog");
         ScaleSetup.createCategory();
+        //System.out.println((Locale.getDefault()==Locale.CHINA));
     }
 }

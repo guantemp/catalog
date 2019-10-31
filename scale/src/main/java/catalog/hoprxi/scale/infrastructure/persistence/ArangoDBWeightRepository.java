@@ -47,7 +47,7 @@ import java.util.Map;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2019-05-04
+ * @version 0.0.2 builder 2019-10-31
  */
 public class ArangoDBWeightRepository implements WeightRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBWeightRepository.class);
@@ -171,21 +171,21 @@ public class ArangoDBWeightRepository implements WeightRepository {
     }
 
     @Override
-    public void remove(int id) {
-        boolean exists = catalog.collection("weight").documentExists(String.valueOf(id));
+    public void remove(Plu plu) {
+        boolean exists = catalog.collection("weight").documentExists(String.valueOf(plu.plu()));
         if (!exists)
             return;
         final String removeScale = "WITH weight,plu\n" +
                 "FOR v,e IN 1..1 OUTBOUND @startVertex scale REMOVE v IN plu REMOVE e IN scale";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "weight/" + id).get();
+        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "weight/" + plu.plu()).get();
         catalog.query(removeScale, bindVars, null, VPackSlice.class);
-        catalog.graph("fresh").vertexCollection("weight").deleteVertex(String.valueOf(id));
+        catalog.graph("fresh").vertexCollection("weight").deleteVertex(String.valueOf(plu));
     }
 
     @Override
     public void save(Weight weight) {
-        boolean exists = catalog.collection("weight").documentExists(String.valueOf(weight.plu().plu()));
-        ArangoGraph graph = catalog.graph("fresh");
+        boolean exists = catalog.collection("plu").documentExists(String.valueOf(weight.plu().plu()));
+        ArangoGraph graph = catalog.graph("scale");
         if (exists) {
             VertexUpdateEntity vertex = graph.vertexCollection("weight").updateVertex(String.valueOf(weight.plu().plu()), weight);
             updateScaleEdge(catalog, vertex, weight.plu());
@@ -194,10 +194,11 @@ public class ArangoDBWeightRepository implements WeightRepository {
             if (isCategoryIdChanged(catalog, vertex, weight.categoryId()))
                 insertBelongEdgeOfCategory(graph, vertex, weight.categoryId());
         } else {
-            VertexEntity vertex = graph.vertexCollection("weight").insertVertex(weight);
-            insertScaleEdge(graph, vertex, weight.plu());
-            insertBelongEdgeOfBrand(graph, vertex, weight.brandId());
-            insertBelongEdgeOfCategory(graph, vertex, weight.categoryId());
+            VertexEntity vertexPlu = graph.vertexCollection("plu").insertVertex(weight.plu());
+            VertexEntity vertexWeight = graph.vertexCollection("weight").insertVertex(weight);
+            insertScaleEdge(graph, vertexPlu, vertexWeight);
+            insertBelongEdgeOfBrand(graph, vertexPlu, weight.brandId());
+            insertBelongEdgeOfCategory(graph, vertexPlu, weight.categoryId());
         }
     }
 
@@ -218,19 +219,18 @@ public class ArangoDBWeightRepository implements WeightRepository {
         return slices.hasNext();
     }
 
-    private void insertBelongEdgeOfCategory(ArangoGraph graph, DocumentEntity weightVertex, String categoryId) {
+    private void insertBelongEdgeOfCategory(ArangoGraph graph, DocumentEntity pluVertex, String categoryId) {
         VertexEntity categoryVertex = graph.vertexCollection("category").getVertex(categoryId, VertexEntity.class);
-        graph.edgeCollection("belong_fresh").insertEdge(new BelongEdge(weightVertex.getId(), categoryVertex.getId()));
+        graph.edgeCollection("belong_scale").insertEdge(new BelongEdge(pluVertex.getId(), categoryVertex.getId()));
     }
 
-    private void insertBelongEdgeOfBrand(ArangoGraph graph, DocumentEntity weightVertex, String brandId) {
+    private void insertBelongEdgeOfBrand(ArangoGraph graph, DocumentEntity pluVertex, String brandId) {
         VertexEntity brandVertex = graph.vertexCollection("brand").getVertex(brandId, VertexEntity.class);
-        graph.edgeCollection("belong_fresh").insertEdge(new BelongEdge(weightVertex.getId(), brandVertex.getId()));
+        graph.edgeCollection("belong_scale").insertEdge(new BelongEdge(pluVertex.getId(), brandVertex.getId()));
     }
 
-    private void insertScaleEdge(ArangoGraph graph, DocumentEntity weightVertex, Plu plu) {
-        VertexEntity pluVertex = graph.vertexCollection("plu").insertVertex(plu);
-        graph.edgeCollection("scale").insertEdge(new ScaleEdge(weightVertex.getId(), pluVertex.getId()));
+    private void insertScaleEdge(ArangoGraph graph, DocumentEntity vertexPlu, DocumentEntity vertexWeight) {
+        graph.edgeCollection("scale").insertEdge(new ScaleEdge(vertexPlu.getId(), vertexWeight.getId()));
     }
 
     private void updateScaleEdge(ArangoDatabase arangoDatabase, DocumentEntity startVertex, Plu plu) {
@@ -239,7 +239,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", startVertex.getId()).put("plu", plu.plu()).get();
         ArangoCursor<VPackSlice> slices = arangoDatabase.query(query, bindVars, null, VPackSlice.class);
         if (slices.hasNext()) {
-            insertScaleEdge(arangoDatabase.graph("fresh"), startVertex, plu);
+            //insertScaleEdge(arangoDatabase.graph("scale"), startVertex, plu);
         }
     }
 

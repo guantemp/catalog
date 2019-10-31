@@ -55,7 +55,7 @@ public class ScaleSetup {
             options.keyOptions(true, KeyType.traditional, 1, 1);
             db.createCollection(s, options);
         }
-        //db.createCollection("plu", new CollectionCreateOptions().keyOptions(false, KeyType.autoincrement, 1, 1));
+        //db.createCollection("plu_seq", new CollectionCreateOptions().keyOptions(false, KeyType.autoincrement, 1, 0));
         //index
         Collection<String> index = new ArrayList<>();
         //name.name
@@ -79,7 +79,7 @@ public class ScaleSetup {
         //graph
         Collection<EdgeDefinition> edgeList = new ArrayList<>();
         edgeList.add(new EdgeDefinition().collection("belong_scale").from("weight", "count").to("category", "brand"));
-        edgeList.add(new EdgeDefinition().collection("scale").from("weight", "count").to("plu"));
+        edgeList.add(new EdgeDefinition().collection("scale").from("plu").to("weight", "count"));
         db.createGraph("scale", edgeList);
         arangoDB.shutdown();
         logger.info("{} be created", databaseName);
@@ -87,7 +87,7 @@ public class ScaleSetup {
 
     public static void createCategory() {
         CategoryRepository categoryRepository = new ArangoDBCategoryRepository();
-        Category root = Category.createRootCategory("fresh", "生鲜", "指未经烹调、制作等深加工过程，只做必要保鲜和简单整理上架而出售的初级产品", null);
+        Category root = Category.createRootCategory("fresh", "生鲜", "指未经烹调、制作等深加工过程，只做必要保鲜和简单整理上架而出售的初级产品");
         categoryRepository.save(root);
         Category fruits = new Category("fresh", "fruits", "水果", "指多汁且主要味觉为甜味和酸味，可食用的植物果实");
         categoryRepository.save(fruits);

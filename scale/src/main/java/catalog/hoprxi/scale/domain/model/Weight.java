@@ -82,7 +82,6 @@ public class Weight {
         this.madeIn = madeIn;
     }
 
-
     private void setPlu(Plu plu) {
         this.plu = Objects.requireNonNull(plu, "plu required");
     }

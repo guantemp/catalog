@@ -16,6 +16,10 @@
 
 package catalog.hoprxi.scale.domain.model.weight_price;
 
+import catalog.hoprxi.core.infrastructure.i18n.Label;
+
+import java.util.Locale;
+
 /***
  * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
@@ -24,4 +28,51 @@ package catalog.hoprxi.scale.domain.model.weight_price;
 public class WeightVipPrice {
     private String name;
     private WeightPrice weightPrice;
+
+    public WeightVipPrice(String name, WeightPrice weightPrice) {
+        setName(name);
+        setWeightPrice(weightPrice);
+    }
+
+    public WeightVipPrice(WeightPrice weightPrice) {
+        this(Label.PRICE_VIP, weightPrice);
+    }
+
+    public static final WeightVipPrice zero(String name, Locale locale) {
+        return new WeightVipPrice(name, WeightPrice.zero(locale));
+    }
+
+    public String name() {
+        return name;
+    }
+
+    private void setName(String name) {
+        this.name = name;
+    }
+
+    public WeightPrice weightPrice() {
+        return weightPrice;
+    }
+
+    private void setWeightPrice(WeightPrice weightPrice) {
+        this.weightPrice = weightPrice;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        WeightVipPrice that = (WeightVipPrice) o;
+
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        return weightPrice != null ? weightPrice.equals(that.weightPrice) : that.weightPrice == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (weightPrice != null ? weightPrice.hashCode() : 0);
+        return result;
+    }
 }

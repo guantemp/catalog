@@ -16,6 +16,11 @@
 
 package catalog.hoprxi.scale.domain.model.weight_price;
 
+
+import catalog.hoprxi.core.infrastructure.i18n.Label;
+
+import java.util.Locale;
+
 /***
  * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
@@ -26,19 +31,31 @@ public class WeightMemberPrice {
     private WeightPrice weightPrice;
 
     public WeightMemberPrice(String name, WeightPrice weightPrice) {
-        this.name = name;
-        this.weightPrice = weightPrice;
+        setName(name);
+        setWeightPrice(weightPrice);
     }
 
     public WeightMemberPrice(WeightPrice weightPrice) {
-        this.weightPrice = weightPrice;
+        this(Label.PRICE_MEMBER, weightPrice);
     }
 
-    public String getName() {
+    public static final WeightMemberPrice zero(String name, Locale locale) {
+        return new WeightMemberPrice(name, WeightPrice.zero(locale));
+    }
+
+    public String name() {
         return name;
     }
 
-    public WeightPrice getWeightPrice() {
+    private void setName(String name) {
+        this.name = name;
+    }
+
+    private void setWeightPrice(WeightPrice weightPrice) {
+        this.weightPrice = weightPrice;
+    }
+
+    public WeightPrice weightPrice() {
         return weightPrice;
     }
 

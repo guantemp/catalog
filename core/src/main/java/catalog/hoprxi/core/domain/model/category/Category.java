@@ -98,6 +98,10 @@ public class Category {
         return new Category(id, id, name);
     }
 
+    public static Category createRootCategory(String id, String name, String description) {
+        return new Category(id, id, name, description, null);
+    }
+
     public static Category createRootCategory(String id, String name, String description, BufferedImage mark) {
         return new Category(id, id, name, description, mark);
     }

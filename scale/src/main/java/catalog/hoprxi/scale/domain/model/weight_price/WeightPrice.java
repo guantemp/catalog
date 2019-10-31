@@ -29,7 +29,7 @@ import java.util.Objects;
  * @version 0.0.1 2019/10/25
  */
 public class WeightPrice {
-    private static Money MONEY_ZERO = Money.zero(Monetary.getCurrency(Locale.getDefault()));
+    private static final WeightPrice ZERO = new WeightPrice(Money.zero(Monetary.getCurrency(Locale.getDefault())), WeightUnit.KILOGRAM);
     private MonetaryAmount amount;
     private WeightUnit weightUnit;
 
@@ -38,14 +38,19 @@ public class WeightPrice {
         setWeightUnit(weightUnit);
     }
 
+    public static WeightPrice zero(Locale locale) {
+        if (locale == Locale.getDefault())
+            return ZERO;
+        return new WeightPrice(Money.zero(Monetary.getCurrency(locale)), WeightUnit.KILOGRAM);
+    }
+
     private void setWeightUnit(WeightUnit weightUnit) {
         Objects.requireNonNull(weightUnit, "unit required");
         this.weightUnit = weightUnit;
     }
 
     private void setAmount(MonetaryAmount amount) {
-        if (amount == null)
-            amount = MONEY_ZERO;
+        Objects.requireNonNull(amount, "amount required");
         if (amount.isNegative())
             throw new IllegalArgumentException("amount isn't negative");
         this.amount = amount;
@@ -80,8 +85,8 @@ public class WeightPrice {
     public WeightPrice conversion(WeightUnit weightUnit) {
         if (this.weightUnit == weightUnit)
             return this;
-        Number number = this.weightUnit.toKillogram(1);
-        amount = amount.multiply(number);
+        Number number = this.weightUnit.to(weightUnit);
+        amount = amount.divide(number);
         return new WeightPrice(amount, weightUnit);
     }
 }

@@ -27,14 +27,14 @@ import java.util.StringJoiner;
  */
 public class Plu {
     @DocumentField(DocumentField.Type.KEY)
-    private int plu;
+    private String plu;
 
     public Plu(int plu) {
         setPlu(plu);
     }
 
     public int plu() {
-        return plu;
+        return Integer.parseInt(plu);
     }
 
     @Override
@@ -44,18 +44,18 @@ public class Plu {
 
         Plu plu1 = (Plu) o;
 
-        return plu == plu1.plu;
+        return plu != null ? plu.equals(plu1.plu) : plu1.plu == null;
     }
 
     @Override
     public int hashCode() {
-        return plu;
+        return plu != null ? plu.hashCode() : 0;
     }
 
     private void setPlu(int plu) {
         if (plu <= 0 || plu > 99999)
             throw new IllegalArgumentException("plu rang is [1-99999]");
-        this.plu = plu;
+        this.plu = String.valueOf(plu);
     }
 
     @Override

@@ -61,7 +61,7 @@ public interface WeightRepository {
     /**
      * @param plu
      */
-    void remove(int plu);
+    void remove(Plu plu);
 
     /**
      * @param weight
