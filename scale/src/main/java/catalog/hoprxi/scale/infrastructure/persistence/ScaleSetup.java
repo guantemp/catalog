@@ -78,8 +78,9 @@ public class ScaleSetup {
         */
         //graph
         Collection<EdgeDefinition> edgeList = new ArrayList<>();
-        edgeList.add(new EdgeDefinition().collection("belong_scale").from("weight", "count").to("category", "brand"));
         edgeList.add(new EdgeDefinition().collection("scale").from("plu").to("weight", "count"));
+        edgeList.add(new EdgeDefinition().collection("subordinate").from("category").to("category"));
+        edgeList.add(new EdgeDefinition().collection("belong_scale").from("weight", "count").to("category", "brand"));
         db.createGraph("scale", edgeList);
         arangoDB.shutdown();
         logger.info("{} be created", databaseName);

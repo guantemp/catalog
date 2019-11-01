@@ -93,7 +93,7 @@ public enum WeightUnit {
 
         @Override
         public String toString() {
-            return "$classname{}";
+            return Label.WEIGHT_UNIT_FIVE_HUNDRED_GRAM;
         }
     }, MILLIGRAM {
         @Override
@@ -110,7 +110,7 @@ public enum WeightUnit {
 
         @Override
         public String toString() {
-            return Label.WEIGHT_UNIT_FIVE_HUNDRED_GRAM;
+            return Label.WEIGHT_UNIT_MILLIGRAM;
         }
     }, OUNCE {
         @Override
@@ -150,5 +150,13 @@ public enum WeightUnit {
     };
 
     public abstract Number to(WeightUnit unit);
+
+    public WeightUnit of(String s) {
+        for (WeightUnit unit : values()) {
+            if (unit.toString().equals(s))
+                return unit;
+        }
+        return WeightUnit.KILOGRAM;
+    }
 }
 

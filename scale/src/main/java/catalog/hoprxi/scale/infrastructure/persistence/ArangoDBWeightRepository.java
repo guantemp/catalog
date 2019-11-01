@@ -21,23 +21,28 @@ import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.ShelfLife;
 import catalog.hoprxi.core.domain.model.Specification;
+import catalog.hoprxi.core.domain.model.madeIn.Domestic;
+import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBUtil;
 import catalog.hoprxi.scale.domain.model.Plu;
 import catalog.hoprxi.scale.domain.model.Weight;
 import catalog.hoprxi.scale.domain.model.WeightRepository;
+import catalog.hoprxi.scale.domain.model.weight_price.*;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.ArangoGraph;
 import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.entity.VertexEntity;
-import com.arangodb.entity.VertexUpdateEntity;
+import com.arangodb.model.VertexUpdateOptions;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
+import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.money.MonetaryAmount;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -51,6 +56,7 @@ import java.util.Map;
  */
 public class ArangoDBWeightRepository implements WeightRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBWeightRepository.class);
+    private static final VertexUpdateOptions UPDATE_OPTIONS = new VertexUpdateOptions().keepNull(false);
     private static Constructor<Name> nameConstructor;
 
     static {
@@ -83,10 +89,10 @@ public class ArangoDBWeightRepository implements WeightRepository {
     @Override
     public Weight find(int plu) {
         if (isPluExists(plu)) {
-            final String query = "WITH weight,plu\n" +
+            final String query = "WITH plu,weight\n" +
                     "LET plu=(FOR v1 IN plu FILTER v1.plu == @plu RETURN v1)\n" +
-                    "FOR v IN 1..1 INBOUND plu[0]._id scale\n" +
-                    "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
+                    "FOR v IN 1..1 OUTBOUND plu[0]._id scale\n" +
+                    "RETURN {'plu':plu[0]._key,'name':v.name,'madeIn':v.madeIn,'spec':v.spec,'grade':v.grade,'shelfLife':v.shelfLife,'retailPrice':v.retailPrice,'memberPrice':v.memberPrice,'vipPrice':v.vipPrice,'categoryId':v.categoryId,'brandId':v.brandId}";
             final Map<String, Object> bindVars = new MapBuilder().put("plu", plu).get();
             ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
             if (slices.hasNext()) {
@@ -104,7 +110,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
     @Override
     public Weight[] belongingToBrand(String brandId, int offset, int limit) {
         final String query = "WITH brand,weight,plu\n" +
-                "FOR v,e IN 1..1 INBOUND @startVertex belong_fresh LIMIT @offset,@limit\n" +
+                "FOR v,e IN 1..1 INBOUND @startVertex belong_scale LIMIT @offset,@limit\n" +
                 "LET plu = (FOR v1,e1 IN 1..1 OUTBOUND v._id scale RETURN v1)\n" +
                 "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "brand/" + brandId).put("offset", offset).put("limit", limit).get();
@@ -115,7 +121,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
     @Override
     public Weight[] belongingToCategory(String categoryId, int offset, int limit) {
         final String query = "WITH category,weight,plu\n" +
-                "FOR v,e IN 1..1 INBOUND @startVertex belong_fresh LIMIT @offset,@limit\n" +
+                "FOR v,e IN 1..1 INBOUND @startVertex belong_scale LIMIT @offset,@limit\n" +
                 "LET plu = (FOR v1,e1 IN 1..1 OUTBOUND v._id scale RETURN v1)\n" +
                 "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + categoryId).put("offset", offset).put("limit", limit).get();
@@ -123,16 +129,45 @@ public class ArangoDBWeightRepository implements WeightRepository {
         return transform(slices);
     }
 
-    private Weight rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        String id = slice.get("id").getAsString();
-        Plu plu = new Plu(slice.get("plu").getAsInt());
-        Name name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());
-        Specification spec = Specification.rebulid(slice.get("spec").get("value").getAsString());
-        Grade grade = Grade.valueOf(slice.get("grade").getAsString());
+    private Weight rebuild(VPackSlice weight) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+        Plu plu = new Plu(weight.get("plu").getAsInt());
+        Name name = nameConstructor.newInstance(weight.get("name").get("name").getAsString(), weight.get("name").get("mnemonic").getAsString(), weight.get("name").get("alias").getAsString());
+        VPackSlice madeInSlice = weight.get("madeIn");
         MadeIn madeIn = null;
-        ShelfLife shelfLife = new ShelfLife(slice.get("shelfLife").get("days").getAsInt());
-        String brandId = slice.get("brandId").getAsString();
-        String categoryId = slice.get("categoryId").getAsString();
+        if (!madeInSlice.isNull()) {
+            String className = madeInSlice.get("_class").getAsString();
+            if (Domestic.class.getName().equals(className)) {
+                madeIn = new Domestic(madeInSlice.get("province").getAsString(), madeInSlice.get("city").getAsString());
+            } else if (Imported.class.getName().equals(className)) {
+                madeIn = new Imported(madeInSlice.get("country").getAsString());
+            }
+        }
+        Specification spec = new Specification(weight.get("spec").get("value").getAsString());
+        Grade grade = Grade.valueOf(weight.get("grade").getAsString());
+        ShelfLife shelfLife = new ShelfLife(weight.get("shelfLife").get("days").getAsInt());
+
+        VPackSlice retailPriceSlice = weight.get("retailPrice");
+        VPackSlice amountSlice = retailPriceSlice.get("price").get("amount");
+        MonetaryAmount amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
+        WeightUnit unit = WeightUnit.valueOf(retailPriceSlice.get("price").get("unit").getAsString());
+        WeightRetailPrice retailPrice = new WeightRetailPrice(new WeightPrice(amount, unit));
+
+        VPackSlice memberPriceSlice = weight.get("memberPrice");
+        String priceName = memberPriceSlice.get("name").getAsString();
+        amountSlice = memberPriceSlice.get("price").get("amount");
+        amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
+        unit = WeightUnit.valueOf(retailPriceSlice.get("price").get("unit").getAsString());
+        WeightMemberPrice memberPrice = new WeightMemberPrice(priceName, new WeightPrice(amount, unit));
+
+        VPackSlice vipPriceSlice = weight.get("vipPrice");
+        priceName = vipPriceSlice.get("name").getAsString();
+        amountSlice = vipPriceSlice.get("price").get("amount");
+        amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
+        unit = WeightUnit.valueOf(retailPriceSlice.get("price").get("unit").getAsString());
+        WeightVipPrice vipPrice = new WeightVipPrice(priceName, new WeightPrice(amount, unit));
+
+        String brandId = weight.get("brandId").getAsString();
+        String categoryId = weight.get("categoryId").getAsString();
         return new Weight(plu, name, madeIn, spec, grade, shelfLife, null, null, null, categoryId, brandId);
     }
 
@@ -179,58 +214,62 @@ public class ArangoDBWeightRepository implements WeightRepository {
                 "FOR v,e IN 1..1 OUTBOUND @startVertex scale REMOVE v IN plu REMOVE e IN scale";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "weight/" + plu.plu()).get();
         catalog.query(removeScale, bindVars, null, VPackSlice.class);
-        catalog.graph("fresh").vertexCollection("weight").deleteVertex(String.valueOf(plu));
+        catalog.graph("scale").vertexCollection("weight").deleteVertex(String.valueOf(plu));
     }
 
     @Override
     public void save(Weight weight) {
         boolean exists = catalog.collection("plu").documentExists(String.valueOf(weight.plu().plu()));
-        ArangoGraph graph = catalog.graph("scale");
         if (exists) {
-            VertexUpdateEntity vertex = graph.vertexCollection("weight").updateVertex(String.valueOf(weight.plu().plu()), weight);
-            updateScaleEdge(catalog, vertex, weight.plu());
-            if (isBrandIdChanged(catalog, vertex, weight.brandId()))
-                insertBelongEdgeOfBrand(graph, vertex, weight.brandId());
+            ArangoGraph graph = catalog.graph("scale");
+            VertexEntity vertex = graph.vertexCollection("plu").getVertex(String.valueOf(weight.plu().plu()), VertexEntity.class);
             if (isCategoryIdChanged(catalog, vertex, weight.categoryId()))
                 insertBelongEdgeOfCategory(graph, vertex, weight.categoryId());
+            if (isBrandIdChanged(catalog, vertex, weight.brandId()))
+                insertBelongEdgeOfBrand(graph, vertex, weight.brandId());
+            final String query = "WITH plu,weight\n" +
+                    "FOR v,e IN 1..1 OUTBOUND @startVertex scale RETURN v._key";
+            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", vertex.getId()).get();
+            final ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
+            if (slices.hasNext()) {
+                //System.out.println(slices.next().getAsString());
+                graph.vertexCollection("weight").updateVertex(slices.next().getAsString(), weight, UPDATE_OPTIONS);
+            }
         } else {
+            ArangoGraph graph = catalog.graph("scale");
             VertexEntity vertexPlu = graph.vertexCollection("plu").insertVertex(weight.plu());
             VertexEntity vertexWeight = graph.vertexCollection("weight").insertVertex(weight);
-            insertScaleEdge(graph, vertexPlu, vertexWeight);
-            insertBelongEdgeOfBrand(graph, vertexPlu, weight.brandId());
+            graph.edgeCollection("scale").insertEdge(new ScaleEdge(vertexPlu.getId(), vertexWeight.getId()));
             insertBelongEdgeOfCategory(graph, vertexPlu, weight.categoryId());
+            insertBelongEdgeOfBrand(graph, vertexPlu, weight.brandId());
         }
     }
 
 
-    private boolean isCategoryIdChanged(ArangoDatabase catalog, VertexUpdateEntity weightVertex, String categoryId) {
-        final String query = "WITH weight\n" +
-                "FOR v,e IN 1..1 OUTBOUND @startVertex belong_fresh FILTER v._id =~ '^category' && v._key != @categoryId REMOVE e IN belong_fresh RETURN e";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", weightVertex.getId()).put("categoryId", categoryId).get();
+    private boolean isCategoryIdChanged(ArangoDatabase catalog, VertexEntity vertex, String categoryId) {
+        final String query = "WITH plu\n" +
+                "FOR v,e IN 1..1 OUTBOUND @startVertex belong_scale FILTER v._id =~ '^category' && v._key != @categoryId REMOVE e IN belong_scale RETURN e";
+        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", vertex.getId()).put("categoryId", categoryId).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return slices.hasNext();
     }
 
-    private boolean isBrandIdChanged(ArangoDatabase catalog, VertexUpdateEntity weightVertex, String brandId) {
-        final String query = "WITH weight\n" +
-                "FOR v,e IN 1..1 OUTBOUND @startVertex belong_fresh FILTER v._id =~ '^brand' && v._key != @brandId REMOVE e IN belong_fresh RETURN e";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", weightVertex.getId()).put("brandId", brandId).get();
+    private boolean isBrandIdChanged(ArangoDatabase catalog, VertexEntity vertex, String brandId) {
+        final String query = "WITH plu\n" +
+                "FOR v,e IN 1..1 OUTBOUND @startVertex belong_scale FILTER v._id =~ '^brand' && v._key != @brandId REMOVE e IN belong_scale RETURN e";
+        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", vertex.getId()).put("brandId", brandId).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return slices.hasNext();
     }
 
-    private void insertBelongEdgeOfCategory(ArangoGraph graph, DocumentEntity pluVertex, String categoryId) {
+    private void insertBelongEdgeOfCategory(ArangoGraph graph, VertexEntity pluVertex, String categoryId) {
         VertexEntity categoryVertex = graph.vertexCollection("category").getVertex(categoryId, VertexEntity.class);
         graph.edgeCollection("belong_scale").insertEdge(new BelongEdge(pluVertex.getId(), categoryVertex.getId()));
     }
 
-    private void insertBelongEdgeOfBrand(ArangoGraph graph, DocumentEntity pluVertex, String brandId) {
+    private void insertBelongEdgeOfBrand(ArangoGraph graph, VertexEntity pluVertex, String brandId) {
         VertexEntity brandVertex = graph.vertexCollection("brand").getVertex(brandId, VertexEntity.class);
         graph.edgeCollection("belong_scale").insertEdge(new BelongEdge(pluVertex.getId(), brandVertex.getId()));
-    }
-
-    private void insertScaleEdge(ArangoGraph graph, DocumentEntity vertexPlu, DocumentEntity vertexWeight) {
-        graph.edgeCollection("scale").insertEdge(new ScaleEdge(vertexPlu.getId(), vertexWeight.getId()));
     }
 
     private void updateScaleEdge(ArangoDatabase arangoDatabase, DocumentEntity startVertex, Plu plu) {

@@ -162,6 +162,10 @@ public class Weight {
         return categoryId;
     }
 
+    public MadeIn madeIn() {
+        return madeIn;
+    }
+
     public void changeShelLife(ShelfLife shelfLife) {
         Objects.requireNonNull(shelfLife, "shelLife required");
         if (!this.shelfLife.equals(shelfLife)) {
