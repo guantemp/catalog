@@ -57,4 +57,11 @@ public class WeightRetailPrice {
     public int hashCode() {
         return weightPrice != null ? weightPrice.hashCode() : 0;
     }
+
+    @Override
+    public String toString() {
+        return "WeightRetailPrice{" +
+                "weightPrice=" + weightPrice +
+                '}';
+    }
 }

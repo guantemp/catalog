@@ -75,4 +75,12 @@ public class WeightVipPrice {
         result = 31 * result + (weightPrice != null ? weightPrice.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "WeightVipPrice{" +
+                "name='" + name + '\'' +
+                ", weightPrice=" + weightPrice +
+                '}';
+    }
 }

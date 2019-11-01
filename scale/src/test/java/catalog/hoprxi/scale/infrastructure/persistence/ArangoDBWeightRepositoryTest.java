@@ -29,6 +29,7 @@ import catalog.hoprxi.scale.domain.model.Weight;
 import catalog.hoprxi.scale.domain.model.WeightRepository;
 import catalog.hoprxi.scale.domain.model.weight_price.*;
 import org.javamoney.moneta.Money;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -81,8 +82,8 @@ public class ArangoDBWeightRepositoryTest {
                 retailPrice, memberPrice, vipPrice, "meat", Brand.UNDEFINED.id());
         weightRepository.save(pig_intestine);
 
-        retailPrice = new WeightRetailPrice(new WeightPrice(Money.of(35.50, currency), WeightUnit.FIVE_HUNDRED_GRAM));
-        memberPrice = new WeightMemberPrice(new WeightPrice(Money.of(32.9, currency), WeightUnit.FIVE_HUNDRED_GRAM));
+        retailPrice = new WeightRetailPrice(new WeightPrice(Money.of(35.505050, currency), WeightUnit.FIVE_HUNDRED_GRAM));
+        memberPrice = new WeightMemberPrice(new WeightPrice(Money.of(65.99, currency), WeightUnit.KILOGRAM));
         Weight tenderloin = new Weight(new Plu(13), new Name("里脊肉", "pig tenderloin"), null, Specification.UNDEFINED, Grade.QUALIFIED, ShelfLife.SAME_DAY,
                 retailPrice, memberPrice, vipPrice, "meat", Brand.UNDEFINED.id());
         weightRepository.save(tenderloin);
@@ -126,7 +127,9 @@ public class ArangoDBWeightRepositoryTest {
     @Test
     public void find() {
         Weight apple = weightRepository.find(1);
-        System.out.println(apple);
+        Assert.assertNotNull(apple);
+        Weight tenderloin = weightRepository.find(13);
+        System.out.println(tenderloin);
     }
 
     @Test

@@ -89,4 +89,12 @@ public class WeightPrice {
         amount = amount.divide(number);
         return new WeightPrice(amount, weightUnit);
     }
+
+    @Override
+    public String toString() {
+        return "WeightPrice{" +
+                "amount=" + amount +
+                ", weightUnit=" + weightUnit +
+                '}';
+    }
 }

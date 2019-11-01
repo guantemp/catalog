@@ -24,7 +24,7 @@ import mi.hoprxi.util.NLS;
  * @version 0.0.1 builder 2019-10-25
  */
 public class Label extends NLS {
-    private static final String BUNDLE_NAME = "catalog.hoprix.scale.infrastructure.i18n.label"; //$NON-NLS-1$
+    private static final String BUNDLE_NAME = "catalog.hoprxi.scale.infrastructure.i18n.label"; //$NON-NLS-1$
 
     public static String WEIGHT_UNIT_GRAM;
     public static String WEIGHT_UNIT_FIVE_HUNDRED_GRAM;

@@ -88,12 +88,11 @@ public class ArangoDBWeightRepository implements WeightRepository {
 
     @Override
     public Weight find(int plu) {
-        System.out.println(isPluExists(plu));
         if (isPluExists(plu)) {
             final String query = "WITH plu,weight\n" +
                     "LET plu=(FOR v1 IN plu FILTER v1._key == @plu RETURN v1)\n" +
                     "FOR v,e IN 1..1 OUTBOUND plu[0]._id scale\n" +
-                    "RETURN {'plu':plu[0]._key,'name':v.name,'madeIn':v.madeIn,'spec':v.spec,'grade':v.grade,'shelfLife':v.shelfLife,'retailPrice':v.retailPrice,'memberPrice':v.memberPrice,'vipPrice':v.vipPrice,'categoryId':v.categoryId,'brandId':v.brandId}";
+                    "RETURN {'plu':TO_NUMBER(plu[0]._key),'name':v.name,'madeIn':v.madeIn,'spec':v.spec,'grade':v.grade,'shelfLife':v.shelfLife,'retailPrice':v.retailPrice,'memberPrice':v.memberPrice,'vipPrice':v.vipPrice,'categoryId':v.categoryId,'brandId':v.brandId}";
             final Map<String, Object> bindVars = new MapBuilder().put("plu", String.valueOf(plu)).get();
             ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
             if (slices.hasNext()) {
@@ -131,7 +130,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
     }
 
     private Weight rebuild(VPackSlice weight) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        Plu plu = new Plu(weight.get("plu").getAsInt());
+        Plu plu = new Plu(weight.get("plu").getAsNumber().intValue());
         Name name = nameConstructor.newInstance(weight.get("name").get("name").getAsString(), weight.get("name").get("mnemonic").getAsString(), weight.get("name").get("alias").getAsString());
         VPackSlice madeInSlice = weight.get("madeIn");
         MadeIn madeIn = null;
@@ -143,28 +142,28 @@ public class ArangoDBWeightRepository implements WeightRepository {
                 madeIn = new Imported(madeInSlice.get("country").getAsString());
             }
         }
-        Specification spec = new Specification(weight.get("spec").get("value").getAsString());
+        Specification spec = Specification.rebulid(weight.get("spec").get("value").getAsString());
         Grade grade = Grade.valueOf(weight.get("grade").getAsString());
-        ShelfLife shelfLife = new ShelfLife(weight.get("shelfLife").get("days").getAsInt());
+        ShelfLife shelfLife = ShelfLife.rebuild(weight.get("shelfLife").get("days").getAsInt());
 
         VPackSlice retailPriceSlice = weight.get("retailPrice");
-        VPackSlice amountSlice = retailPriceSlice.get("price").get("amount");
+        VPackSlice amountSlice = retailPriceSlice.get("weightPrice").get("amount");
         MonetaryAmount amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
-        WeightUnit unit = WeightUnit.valueOf(retailPriceSlice.get("price").get("unit").getAsString());
+        WeightUnit unit = WeightUnit.valueOf(retailPriceSlice.get("weightPrice").get("weightUnit").getAsString());
         WeightRetailPrice retailPrice = new WeightRetailPrice(new WeightPrice(amount, unit));
 
         VPackSlice memberPriceSlice = weight.get("memberPrice");
         String priceName = memberPriceSlice.get("name").getAsString();
-        amountSlice = memberPriceSlice.get("price").get("amount");
+        amountSlice = memberPriceSlice.get("weightPrice").get("amount");
         amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
-        unit = WeightUnit.valueOf(retailPriceSlice.get("price").get("unit").getAsString());
+        unit = WeightUnit.valueOf(memberPriceSlice.get("weightPrice").get("weightUnit").getAsString());
         WeightMemberPrice memberPrice = new WeightMemberPrice(priceName, new WeightPrice(amount, unit));
 
         VPackSlice vipPriceSlice = weight.get("vipPrice");
         priceName = vipPriceSlice.get("name").getAsString();
-        amountSlice = vipPriceSlice.get("price").get("amount");
+        amountSlice = vipPriceSlice.get("weightPrice").get("amount");
         amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
-        unit = WeightUnit.valueOf(retailPriceSlice.get("price").get("unit").getAsString());
+        unit = WeightUnit.valueOf(vipPriceSlice.get("weightPrice").get("weightUnit").getAsString());
         WeightVipPrice vipPrice = new WeightVipPrice(priceName, new WeightPrice(amount, unit));
 
         String brandId = weight.get("brandId").getAsString();
@@ -233,7 +232,6 @@ public class ArangoDBWeightRepository implements WeightRepository {
             final Map<String, Object> bindVars = new MapBuilder().put("startVertex", vertex.getId()).get();
             final ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
             if (slices.hasNext()) {
-                //System.out.println(slices.next().getAsString());
                 graph.vertexCollection("weight").updateVertex(slices.next().getAsString(), weight, UPDATE_OPTIONS);
             }
         } else {

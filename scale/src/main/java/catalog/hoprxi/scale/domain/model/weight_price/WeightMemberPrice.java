@@ -76,4 +76,12 @@ public class WeightMemberPrice {
         result = 31 * result + (weightPrice != null ? weightPrice.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "WeightMemberPrice{" +
+                "name='" + name + '\'' +
+                ", weightPrice=" + weightPrice +
+                '}';
+    }
 }
