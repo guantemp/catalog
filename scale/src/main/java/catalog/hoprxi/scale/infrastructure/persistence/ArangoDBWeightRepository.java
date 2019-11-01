@@ -176,10 +176,10 @@ public class ArangoDBWeightRepository implements WeightRepository {
         Weight[] weights = ArangoDBUtil.calculationCollectionSize(catalog, Weight.class, offset, limit);
         if (weights.length == 0)
             return weights;
-        final String query = "WITH weight,plu\n" +
-                "FOR v IN weight LIMIT @offset,@limit\n" +
-                "LET plu = (FOR v1,e IN 1..1 OUTBOUND v._id scale RETURN v1)\n" +
-                "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
+        final String query = "WITH plu,weight\n" +
+                "FOR p IN plu LIMIT @offset,@limit\n" +
+                "LET v =(FOR v IN 1..1 OUTBOUND p._id scale RETURN v)\n" +
+                "RETURN {'plu':TO_NUMBER(p._key),'name':v[0].name,'madeIn':v[0].madeIn,'spec':v[0].spec,'grade':v[0].grade,'shelfLife':v[0].shelfLife,'retailPrice':v[0].retailPrice,'memberPrice':v[0].memberPrice,'vipPrice':v[0].vipPrice,'categoryId':v[0].categoryId,'brandId':v[0].brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("offset", offset).put("limit", limit).get();
         final ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         try {

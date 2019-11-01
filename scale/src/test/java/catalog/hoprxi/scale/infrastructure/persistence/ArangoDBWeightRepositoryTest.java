@@ -66,7 +66,7 @@ public class ArangoDBWeightRepositoryTest {
 
         retailPrice = new WeightRetailPrice(new WeightPrice(Money.of(32.50, currency), WeightUnit.FIVE_HUNDRED_GRAM));
         memberPrice = new WeightMemberPrice(new WeightPrice(Money.of(29.99, currency), WeightUnit.FIVE_HUNDRED_GRAM));
-        Weight marbled = new Weight(new Plu(10), new Name("五花肉", "marbled meat"), null, Specification.UNDEFINED, Grade.QUALIFIED, ShelfLife.SAME_DAY,
+        Weight marbled = new Weight(new Plu(10), new Name("猪五花肉", "pig marbled meat"), null, Specification.UNDEFINED, Grade.QUALIFIED, ShelfLife.SAME_DAY,
                 retailPrice, memberPrice, vipPrice, "meat", Brand.UNDEFINED.id());
         weightRepository.save(marbled);
 
@@ -78,7 +78,7 @@ public class ArangoDBWeightRepositoryTest {
 
         retailPrice = new WeightRetailPrice(new WeightPrice(Money.of(27.99, currency), WeightUnit.FIVE_HUNDRED_GRAM));
         memberPrice = new WeightMemberPrice(new WeightPrice(Money.of(25.5, currency), WeightUnit.FIVE_HUNDRED_GRAM));
-        Weight pig_intestine = new Weight(new Plu(12), new Name("猪五花肉", "pig intestine"), null, Specification.UNDEFINED, Grade.QUALIFIED, ShelfLife.SAME_DAY,
+        Weight pig_intestine = new Weight(new Plu(12), new Name("猪大肠", "pig intestine"), null, Specification.UNDEFINED, Grade.QUALIFIED, ShelfLife.SAME_DAY,
                 retailPrice, memberPrice, vipPrice, "meat", Brand.UNDEFINED.id());
         weightRepository.save(pig_intestine);
 
@@ -142,6 +142,16 @@ public class ArangoDBWeightRepositoryTest {
 
     @Test
     public void findAll() {
+        Weight[] weights = weightRepository.findAll(0, 4);
+        Assert.assertEquals(4, weights.length);
+        weights = weightRepository.findAll(1, 0);
+        Assert.assertEquals(0, weights.length);
+        weights = weightRepository.findAll(0, 11);
+        Assert.assertEquals(8, weights.length);
+        weights = weightRepository.findAll(7, 2);
+        Assert.assertEquals(1, weights.length);
+        weights = weightRepository.findAll(9, 2);
+        Assert.assertEquals(0, weights.length);
     }
 
     @Test
@@ -150,6 +160,13 @@ public class ArangoDBWeightRepositoryTest {
 
     @Test
     public void save() {
+        Weight marbled = weightRepository.find(10);
+        WeightRetailPrice retailPrice = new WeightRetailPrice(new WeightPrice(Money.of(65, currency), WeightUnit.KILOGRAM));
+        marbled.changeRetailPrice(retailPrice);
+        weightRepository.save(marbled);
+        marbled = weightRepository.find(10);
+        WeightPrice price = marbled.retailPrice().weightPrice().conversion(WeightUnit.FIVE_HUNDRED_GRAM);
+        Assert.assertTrue(price.equals(new WeightPrice(Money.of(32.5, currency), WeightUnit.FIVE_HUNDRED_GRAM)));
     }
 
     @Test

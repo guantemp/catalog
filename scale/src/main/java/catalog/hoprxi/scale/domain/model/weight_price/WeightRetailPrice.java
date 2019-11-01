@@ -19,6 +19,9 @@ package catalog.hoprxi.scale.domain.model.weight_price;
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
+import java.util.Locale;
+import java.util.Objects;
+
 /***
  * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
@@ -31,6 +34,10 @@ public class WeightRetailPrice {
         setWeightPrice(weightPrice);
     }
 
+    public static final WeightRetailPrice zero(Locale locale) {
+        return new WeightRetailPrice(WeightPrice.zero(locale));
+    }
+
     public String name() {
         return Label.PRICE_RETAIL;
     }
@@ -40,6 +47,7 @@ public class WeightRetailPrice {
     }
 
     private void setWeightPrice(WeightPrice weightPrice) {
+        Objects.requireNonNull(weightPrice, "weightPrice required");
         this.weightPrice = weightPrice;
     }
 

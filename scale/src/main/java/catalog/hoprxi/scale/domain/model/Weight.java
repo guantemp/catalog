@@ -28,6 +28,7 @@ import catalog.hoprxi.scale.domain.model.weight_price.WeightRetailPrice;
 import catalog.hoprxi.scale.domain.model.weight_price.WeightVipPrice;
 import com.arangodb.velocypack.annotations.Expose;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -126,6 +127,13 @@ public class Weight {
         return retailPrice;
     }
 
+    public void changeRetailPrice(WeightRetailPrice retailPrice) {
+        if (retailPrice == null)
+            retailPrice = WeightRetailPrice.zero(Locale.getDefault());
+        if (!this.retailPrice.equals(retailPrice))
+            this.retailPrice = retailPrice;
+    }
+
     public WeightMemberPrice memberPrice() {
         return memberPrice;
     }
@@ -214,12 +222,6 @@ public class Weight {
         Objects.requireNonNull(name, "name required");
         if (!name.equals(this.name))
             this.name = name;
-    }
-
-    public void changePlu(Plu plu) {
-        Objects.requireNonNull(plu, "plu is required");
-        if (!this.plu.equals(plu))
-            this.plu = plu;
     }
 
     @Override
