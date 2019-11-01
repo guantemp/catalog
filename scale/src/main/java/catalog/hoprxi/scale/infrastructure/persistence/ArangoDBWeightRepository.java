@@ -80,20 +80,21 @@ public class ArangoDBWeightRepository implements WeightRepository {
     public boolean isPluExists(int plu) {
         if (plu < 0 || plu > 99999)
             return false;
-        final String query = "FOR v IN plu FILTER v.plu == @plu RETURN v";
-        final Map<String, Object> bindVars = new MapBuilder().put("plu", plu).get();
+        final String query = "FOR v IN plu FILTER v._key == @plu RETURN v";
+        final Map<String, Object> bindVars = new MapBuilder().put("plu", String.valueOf(plu)).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return slices.hasNext();
     }
 
     @Override
     public Weight find(int plu) {
+        System.out.println(isPluExists(plu));
         if (isPluExists(plu)) {
             final String query = "WITH plu,weight\n" +
-                    "LET plu=(FOR v1 IN plu FILTER v1.plu == @plu RETURN v1)\n" +
-                    "FOR v IN 1..1 OUTBOUND plu[0]._id scale\n" +
+                    "LET plu=(FOR v1 IN plu FILTER v1._key == @plu RETURN v1)\n" +
+                    "FOR v,e IN 1..1 OUTBOUND plu[0]._id scale\n" +
                     "RETURN {'plu':plu[0]._key,'name':v.name,'madeIn':v.madeIn,'spec':v.spec,'grade':v.grade,'shelfLife':v.shelfLife,'retailPrice':v.retailPrice,'memberPrice':v.memberPrice,'vipPrice':v.vipPrice,'categoryId':v.categoryId,'brandId':v.brandId}";
-            final Map<String, Object> bindVars = new MapBuilder().put("plu", plu).get();
+            final Map<String, Object> bindVars = new MapBuilder().put("plu", String.valueOf(plu)).get();
             ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
             if (slices.hasNext()) {
                 try {
@@ -168,7 +169,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
 
         String brandId = weight.get("brandId").getAsString();
         String categoryId = weight.get("categoryId").getAsString();
-        return new Weight(plu, name, madeIn, spec, grade, shelfLife, null, null, null, categoryId, brandId);
+        return new Weight(plu, name, madeIn, spec, grade, shelfLife, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
     @Override

@@ -236,4 +236,21 @@ public class Weight {
     public int hashCode() {
         return plu != null ? plu.hashCode() : 0;
     }
+
+    @Override
+    public String toString() {
+        return "Weight{" +
+                "brandId='" + brandId + '\'' +
+                ", categoryId='" + categoryId + '\'' +
+                ", grade=" + grade +
+                ", plu=" + plu +
+                ", name=" + name +
+                ", spec=" + spec +
+                ", shelfLife=" + shelfLife +
+                ", retailPrice=" + retailPrice +
+                ", memberPrice=" + memberPrice +
+                ", vipPrice=" + vipPrice +
+                ", madeIn=" + madeIn +
+                '}';
+    }
 }

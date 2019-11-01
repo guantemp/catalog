@@ -125,6 +125,8 @@ public class ArangoDBWeightRepositoryTest {
 
     @Test
     public void find() {
+        Weight apple = weightRepository.find(1);
+        System.out.println(apple);
     }
 
     @Test
