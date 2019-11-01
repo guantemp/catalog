@@ -32,7 +32,6 @@ import catalog.hoprxi.scale.domain.model.weight_price.*;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.ArangoGraph;
-import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.entity.VertexEntity;
 import com.arangodb.model.VertexUpdateOptions;
@@ -199,7 +198,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
                 weightList.add(rebuild(slices.next()));
             } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 if (LOGGER.isDebugEnabled())
-                    LOGGER.debug("Can't rebuild sku", e);
+                    LOGGER.debug("Can't rebuild weight", e);
             }
         }
         return weightList.toArray(new Weight[0]);
@@ -207,14 +206,14 @@ public class ArangoDBWeightRepository implements WeightRepository {
 
     @Override
     public void remove(Plu plu) {
-        boolean exists = catalog.collection("weight").documentExists(String.valueOf(plu.plu()));
+        boolean exists = catalog.collection("plu").documentExists(String.valueOf(plu.plu()));
         if (!exists)
             return;
-        final String removeScale = "WITH weight,plu\n" +
-                "FOR v,e IN 1..1 OUTBOUND @startVertex scale REMOVE v IN plu REMOVE e IN scale";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "weight/" + plu.plu()).get();
-        catalog.query(removeScale, bindVars, null, VPackSlice.class);
-        catalog.graph("scale").vertexCollection("weight").deleteVertex(String.valueOf(plu));
+        final String remove = "WITH plu,weight\n" +
+                "FOR v,e IN 1..1 OUTBOUND @startVertex scale REMOVE v IN weight REMOVE e IN scale";
+        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "plu/" + plu.plu()).get();
+        catalog.query(remove, bindVars, null, VPackSlice.class);
+        catalog.graph("scale").vertexCollection("plu").deleteVertex(String.valueOf(plu));
     }
 
     @Override
@@ -271,19 +270,9 @@ public class ArangoDBWeightRepository implements WeightRepository {
         graph.edgeCollection("belong_scale").insertEdge(new BelongEdge(pluVertex.getId(), brandVertex.getId()));
     }
 
-    private void updateScaleEdge(ArangoDatabase arangoDatabase, DocumentEntity startVertex, Plu plu) {
-        final String query = "WITH weight,plu\n" +
-                "FOR v,e IN 1..1 OUTBOUND @startVertex scale FILTER v.plu != @plu REMOVE v IN plu REMOVE e IN scale RETURN v";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", startVertex.getId()).put("plu", plu.plu()).get();
-        ArangoCursor<VPackSlice> slices = arangoDatabase.query(query, bindVars, null, VPackSlice.class);
-        if (slices.hasNext()) {
-            //insertScaleEdge(arangoDatabase.graph("scale"), startVertex, plu);
-        }
-    }
-
     @Override
     public int size() {
-        final String query = " RETURN LENGTH(weight)";
+        final String query = "RETURN LENGTH(plu)";
         final ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
         if (cursor.hasNext())
             return cursor.next().getAsInt();

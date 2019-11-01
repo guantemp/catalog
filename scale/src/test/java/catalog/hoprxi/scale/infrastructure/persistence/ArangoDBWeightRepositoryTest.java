@@ -50,6 +50,7 @@ public class ArangoDBWeightRepositoryTest {
     @BeforeClass
     public static void setUpBeforeClass() {
         brandRepository.save(Brand.UNDEFINED);
+        brandRepository.save(new Brand("tw", "通威"));
 
         WeightRetailPrice retailPrice = new WeightRetailPrice(new WeightPrice(Money.of(4.99, currency), WeightUnit.KILOGRAM));
         WeightVipPrice vipPrice = WeightVipPrice.zero("vip", Locale.getDefault());
@@ -114,6 +115,7 @@ public class ArangoDBWeightRepositoryTest {
             weightRepository.remove(new Plu(21));
 
             brandRepository.remove(Brand.UNDEFINED.id());
+             brandRepository.remove("tw");
         }
     */
     @Test
@@ -160,17 +162,20 @@ public class ArangoDBWeightRepositoryTest {
 
     @Test
     public void save() {
-        Weight marbled = weightRepository.find(10);
+        Weight grass_carp = weightRepository.find(20);
         WeightRetailPrice retailPrice = new WeightRetailPrice(new WeightPrice(Money.of(65, currency), WeightUnit.KILOGRAM));
-        marbled.changeRetailPrice(retailPrice);
-        weightRepository.save(marbled);
-        marbled = weightRepository.find(10);
-        WeightPrice price = marbled.retailPrice().weightPrice().conversion(WeightUnit.FIVE_HUNDRED_GRAM);
+        grass_carp.changeRetailPrice(retailPrice);
+        grass_carp.moveToNewBrand("tw");
+        grass_carp.moveToNewCategory("cooked_food");
+        weightRepository.save(grass_carp);
+        grass_carp = weightRepository.find(20);
+        WeightPrice price = grass_carp.retailPrice().weightPrice().conversion(WeightUnit.FIVE_HUNDRED_GRAM);
         Assert.assertTrue(price.equals(new WeightPrice(Money.of(32.5, currency), WeightUnit.FIVE_HUNDRED_GRAM)));
     }
 
     @Test
     public void size() {
+        Assert.assertEquals(8, weightRepository.size());
     }
 
     @Test
