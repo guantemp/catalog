@@ -89,9 +89,9 @@ public class ArangoDBWeightRepository implements WeightRepository {
     public Weight find(int plu) {
         if (isPluExists(plu)) {
             final String query = "WITH plu,weight\n" +
-                    "LET plu=(FOR v1 IN plu FILTER v1._key == @plu RETURN v1)\n" +
-                    "FOR v,e IN 1..1 OUTBOUND plu[0]._id scale\n" +
-                    "RETURN {'plu':TO_NUMBER(plu[0]._key),'name':v.name,'madeIn':v.madeIn,'spec':v.spec,'grade':v.grade,'shelfLife':v.shelfLife,'retailPrice':v.retailPrice,'memberPrice':v.memberPrice,'vipPrice':v.vipPrice,'categoryId':v.categoryId,'brandId':v.brandId}";
+                    "FOR v1 IN plu FILTER v1._key == @plu\n" +
+                    "FOR v,e IN 1..1 OUTBOUND v1._id scale\n" +
+                    "RETURN {'plu':TO_NUMBER(v1._key),'name':v.name,'madeIn':v.madeIn,'spec':v.spec,'grade':v.grade,'shelfLife':v.shelfLife,'retailPrice':v.retailPrice,'memberPrice':v.memberPrice,'vipPrice':v.vipPrice,'categoryId':v.categoryId,'brandId':v.brandId}";
             final Map<String, Object> bindVars = new MapBuilder().put("plu", String.valueOf(plu)).get();
             ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
             if (slices.hasNext()) {
@@ -108,10 +108,10 @@ public class ArangoDBWeightRepository implements WeightRepository {
 
     @Override
     public Weight[] belongingToBrand(String brandId, int offset, int limit) {
-        final String query = "WITH brand,weight,plu\n" +
-                "FOR v,e IN 1..1 INBOUND @startVertex belong_scale LIMIT @offset,@limit\n" +
-                "LET plu = (FOR v1,e1 IN 1..1 OUTBOUND v._id scale RETURN v1)\n" +
-                "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
+        final String query = "WITH brand,plu,weight,\n" +
+                "FOR v IN 1..1 INBOUND @startVertex belong_scale LIMIT @offset,@limit\n" +
+                "FOR w IN 1..1 OUTBOUND v._id scale\n" +
+                "RETURN {'plu':TO_NUMBER(v._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "brand/" + brandId).put("offset", offset).put("limit", limit).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
@@ -119,10 +119,10 @@ public class ArangoDBWeightRepository implements WeightRepository {
 
     @Override
     public Weight[] belongingToCategory(String categoryId, int offset, int limit) {
-        final String query = "WITH category,weight,plu\n" +
-                "FOR v,e IN 1..1 INBOUND @startVertex belong_scale LIMIT @offset,@limit\n" +
-                "LET plu = (FOR v1,e1 IN 1..1 OUTBOUND v._id scale RETURN v1)\n" +
-                "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
+        final String query = "WITH category,plu,weight\n" +
+                "FOR v IN 1..1 INBOUND @startVertex belong_scale LIMIT @offset,@limit\n" +
+                "FOR w IN 1..1 OUTBOUND v._id scale\n" +
+                "RETURN {'plu':TO_NUMBER(v._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + categoryId).put("offset", offset).put("limit", limit).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
@@ -177,8 +177,8 @@ public class ArangoDBWeightRepository implements WeightRepository {
             return weights;
         final String query = "WITH plu,weight\n" +
                 "FOR p IN plu LIMIT @offset,@limit\n" +
-                "LET v =(FOR v IN 1..1 OUTBOUND p._id scale RETURN v)\n" +
-                "RETURN {'plu':TO_NUMBER(p._key),'name':v[0].name,'madeIn':v[0].madeIn,'spec':v[0].spec,'grade':v[0].grade,'shelfLife':v[0].shelfLife,'retailPrice':v[0].retailPrice,'memberPrice':v[0].memberPrice,'vipPrice':v[0].vipPrice,'categoryId':v[0].categoryId,'brandId':v[0].brandId}";
+                "FOR v IN 1..1 OUTBOUND p._id scale\n" +
+                "RETURN {'plu':TO_NUMBER(p._key),'name':v.name,'madeIn':v.madeIn,'spec':v.spec,'grade':v.grade,'shelfLife':v.shelfLife,'retailPrice':v.retailPrice,'memberPrice':v.memberPrice,'vipPrice':v.vipPrice,'categoryId':v.categoryId,'brandId':v.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("offset", offset).put("limit", limit).get();
         final ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         try {
@@ -281,10 +281,10 @@ public class ArangoDBWeightRepository implements WeightRepository {
 
     @Override
     public Weight[] fromMnemonic(String mnemonic) {
-        final String query = "WITH weight,plu\n" +
-                "FOR v IN weight FILTER v.name.mnemonic =~ @mnemonic\n" +
-                "LET plu = (FOR v1,e1 IN 1..1 OUTBOUND v._id scale RETURN v1)\n" +
-                "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
+        final String query = "WITH plu,weight\n" +
+                "FOR w IN weight FILTER w.name.mnemonic =~ @mnemonic\n" +
+                "FOR p IN 1..1 INBOUND w._id scale\n" +
+                "RETURN {'plu':TO_NUMBER(p._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("mnemonic", mnemonic).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
@@ -292,10 +292,10 @@ public class ArangoDBWeightRepository implements WeightRepository {
 
     @Override
     public Weight[] fromName(String name) {
-        final String query = "WITH weight,plu\n" +
-                "FOR v IN weight FILTER v.name.name =~ @name\n" +
-                "LET plu = (FOR v1,e1 IN 1..1 OUTBOUND v._id scale RETURN v1)\n" +
-                "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
+        final String query = "WITH plu,weight\n" +
+                "FOR w IN weight FILTER w.name.name =~ @name\n" +
+                "FOR p IN 1..1 INBOUND w._id scale\n" +
+                "RETURN {'plu':TO_NUMBER(p._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("name", name).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);

@@ -33,14 +33,20 @@ public class WeightPrice {
     private MonetaryAmount amount;
     private WeightUnit weightUnit;
 
+    public static final WeightPrice RMB_ZERO = new WeightPrice(Money.zero(Monetary.getCurrency(Locale.CHINA)), WeightUnit.KILOGRAM);
+    public static final WeightPrice USD_ZERO = new WeightPrice(Money.zero(Monetary.getCurrency(Locale.US)), WeightUnit.KILOGRAM);
+    public static final WeightPrice EUR_ZERO = new WeightPrice(Money.of(0, "EUR"), WeightUnit.KILOGRAM);
+
     public WeightPrice(MonetaryAmount amount, WeightUnit weightUnit) {
         setAmount(amount);
         setWeightUnit(weightUnit);
     }
 
     public static WeightPrice zero(Locale locale) {
-        if (locale == Locale.getDefault())
-            return ZERO;
+        if (locale == Locale.CHINA || locale == Locale.CHINESE || locale == Locale.SIMPLIFIED_CHINESE || locale == Locale.PRC)
+            return RMB_ZERO;
+        if (locale == Locale.US)
+            return USD_ZERO;
         return new WeightPrice(Money.zero(Monetary.getCurrency(locale)), WeightUnit.KILOGRAM);
     }
 
