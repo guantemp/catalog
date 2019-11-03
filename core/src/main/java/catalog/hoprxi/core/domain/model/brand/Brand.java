@@ -45,6 +45,10 @@ public class Brand {
     private static final int ID_MAX_LENGTH = 36;
     private Name name;
 
+    public Brand(String name) {
+        this(name, new Name(name), null);
+    }
+
     public Brand(String id, String name) {
         this(id, new Name(name), null);
     }
@@ -118,8 +122,7 @@ public class Brand {
     }
 
     private void setName(Name name) {
-        Objects.requireNonNull(name, "name required");
-        this.name = name;
+        this.name = Objects.requireNonNull(name, "name required");
     }
 
     @Override
