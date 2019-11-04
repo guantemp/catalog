@@ -108,7 +108,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
 
     @Override
     public Weight[] belongingToBrand(String brandId, int offset, int limit) {
-        final String query = "WITH brand,plu,weight,\n" +
+        final String query = "WITH brand,plu,weight\n" +
                 "FOR v IN 1..1 INBOUND @startVertex belong_scale LIMIT @offset,@limit\n" +
                 "FOR w IN 1..1 OUTBOUND v._id scale\n" +
                 "RETURN {'plu':TO_NUMBER(v._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";

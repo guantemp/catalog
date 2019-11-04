@@ -85,7 +85,7 @@ public class ArangoDBWeightRepositoryTest {
 
         retailPrice = new WeightRetailPrice(new WeightPrice(Money.of(35.505050, currency), WeightUnit.FIVE_HUNDRED_GRAM));
         memberPrice = new WeightMemberPrice(new WeightPrice(Money.of(65.99, currency), WeightUnit.KILOGRAM));
-        Weight tenderloin = new Weight(new Plu(13), new Name("里脊肉", "pig tenderloin"), null, Specification.UNDEFINED, Grade.QUALIFIED, ShelfLife.SAME_DAY,
+        Weight tenderloin = new Weight(new Plu(13), new Name("里脊肉(猪）", "pig tenderloin"), null, Specification.UNDEFINED, Grade.QUALIFIED, ShelfLife.SAME_DAY,
                 retailPrice, memberPrice, vipPrice, "meat", Brand.UNDEFINED.id());
         weightRepository.save(tenderloin);
 
@@ -124,6 +124,9 @@ public class ArangoDBWeightRepositoryTest {
 
     @Test
     public void isPluExists() {
+        Assert.assertTrue(weightRepository.isPluExists(10));
+        Assert.assertTrue(weightRepository.isPluExists(21));
+        Assert.assertFalse(weightRepository.isPluExists(22));
     }
 
     @Test
@@ -136,29 +139,46 @@ public class ArangoDBWeightRepositoryTest {
 
     @Test
     public void belongingToBrand() {
+        Weight[] weights = weightRepository.belongingToBrand(Brand.UNDEFINED.id(), 0, 5);
+        Assert.assertEquals(5, weights.length);
+        weights = weightRepository.belongingToBrand(Brand.UNDEFINED.id(), 7, 5);
+        Assert.assertEquals(1, weights.length);
+        weights = weightRepository.belongingToBrand(Brand.UNDEFINED.id(), 1, 3);
+        Assert.assertEquals(3, weights.length);
     }
 
     @Test
     public void belongingToCategory() {
+        Weight[] weights = weightRepository.belongingToCategory("meat", 0, 5);
+        Assert.assertEquals(4, weights.length);
+        weights = weightRepository.belongingToCategory("meat", 2, 5);
+        Assert.assertEquals(2, weights.length);
+        weights = weightRepository.belongingToCategory("meat", 4, 5);
+        Assert.assertEquals(0, weights.length);
+        weights = weightRepository.belongingToCategory("meat", 2, 2);
+        Assert.assertEquals(2, weights.length);
+        weights = weightRepository.belongingToCategory("meat", 4, 10);
+        Assert.assertEquals(0, weights.length);
     }
 
     @Test
     public void findAll() {
-        Weight[] weights = weightRepository.findAll(0, 4);
-        Assert.assertEquals(4, weights.length);
-        weights = weightRepository.findAll(1, 0);
-        Assert.assertEquals(0, weights.length);
-        weights = weightRepository.findAll(0, 11);
+        Weight[] weights = weightRepository.findAll(0, 10);
         Assert.assertEquals(8, weights.length);
-        weights = weightRepository.findAll(7, 2);
+        weights = weightRepository.findAll(0, 8);
+        Assert.assertEquals(8, weights.length);
+        weights = weightRepository.findAll(1, 8);
+        Assert.assertEquals(7, weights.length);
+        weights = weightRepository.findAll(1, 2);
+        Assert.assertEquals(2, weights.length);
+        weights = weightRepository.findAll(7, 4);
         Assert.assertEquals(1, weights.length);
-        weights = weightRepository.findAll(9, 2);
+        weights = weightRepository.findAll(7, 0);
         Assert.assertEquals(0, weights.length);
+        weights = weightRepository.findAll(4, 3);
+        Assert.assertEquals(3, weights.length);
     }
 
-    @Test
-    public void remove() {
-    }
 
     @Test
     public void save() {
@@ -180,9 +200,15 @@ public class ArangoDBWeightRepositoryTest {
 
     @Test
     public void fromMnemonic() {
+        Weight[] weights = weightRepository.fromMnemonic("^z");
+        Assert.assertEquals(4, weights.length);
     }
 
     @Test
     public void fromName() {
+        Weight[] weights = weightRepository.fromName("猪");
+        Assert.assertEquals(4, weights.length);
+        weights = weightRepository.fromName("^猪");
+        Assert.assertEquals(3, weights.length);
     }
 }
