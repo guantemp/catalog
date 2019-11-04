@@ -189,8 +189,15 @@ public class ArangoDBWeightRepositoryTest {
         grass_carp.moveToNewCategory("cooked_food");
         weightRepository.save(grass_carp);
         grass_carp = weightRepository.find(20);
+
         WeightPrice price = grass_carp.retailPrice().weightPrice().conversion(WeightUnit.FIVE_HUNDRED_GRAM);
         Assert.assertTrue(price.equals(new WeightPrice(Money.of(32.5, currency), WeightUnit.FIVE_HUNDRED_GRAM)));
+
+        price = grass_carp.retailPrice().weightPrice().conversion(WeightUnit.GRAM);
+        Assert.assertTrue(price.equals(new WeightPrice(Money.of(0.065, currency), WeightUnit.GRAM)));
+
+        price = grass_carp.retailPrice().weightPrice().conversion(WeightUnit.FIVE_HUNDRED_GRAM).conversion(WeightUnit.GRAM);
+        Assert.assertTrue(price.equals(new WeightPrice(Money.of(0.065, currency), WeightUnit.GRAM)));
     }
 
     @Test

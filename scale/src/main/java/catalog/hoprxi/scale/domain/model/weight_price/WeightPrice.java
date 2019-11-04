@@ -92,8 +92,7 @@ public class WeightPrice {
         if (this.weightUnit == weightUnit)
             return this;
         Number number = this.weightUnit.to(weightUnit);
-        amount = amount.divide(number);
-        return new WeightPrice(amount, weightUnit);
+        return new WeightPrice(amount.divide(number), weightUnit);
     }
 
     @Override
