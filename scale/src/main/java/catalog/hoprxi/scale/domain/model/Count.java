@@ -15,7 +15,6 @@
  */
 package catalog.hoprxi.scale.domain.model;
 
-import catalog.hoprxi.core.domain.DomainRegistry;
 import catalog.hoprxi.core.domain.Validator;
 import catalog.hoprxi.core.domain.model.*;
 import catalog.hoprxi.core.domain.model.brand.Brand;
@@ -24,10 +23,10 @@ import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
-import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
@@ -41,8 +40,6 @@ public class Count {
     // @Expose(serialize = false, deserialize = false)
     private String categoryId;
     private Grade grade;
-    @DocumentField(DocumentField.Type.KEY)
-    private String id;
     @Expose(serialize = false, deserialize = false)
     private Plu plu;
     private Name name;
@@ -53,42 +50,38 @@ public class Count {
     private VipPrice vipPrice;
     private ShelfLife shelfLife;
 
-    public Count(String id, Plu plu, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife,
+    public Count(Plu plu, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife,
                  RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
-        setId(id);
         setPlu(plu);
         setName(name);
+        setMadeIn(madeIn);
         setSpecification(spec);
         setGrade(grade);
-        setMadeIn(madeIn);
+        setShelfLife(shelfLife);
         setRetailPrice(retailPrice);
         setMemberPrice(memberPrice);
         setVipPrice(vipPrice);
-        setShelfLife(shelfLife);
         setCategoryId(categoryId);
         setBrandId(brandId);
     }
 
+
     private void setVipPrice(VipPrice vipPrice) {
-        if (vipPrice == null)
-            vipPrice = VipPrice.ZERO;
+        Objects.requireNonNull(vipPrice, "vipPrice required");
         if (vipPrice.price().unit() != Unit.PCS && vipPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("vipPrice unit must be consistent with retailPrice unit");
         this.vipPrice = vipPrice;
     }
 
     private void setMemberPrice(MemberPrice memberPrice) {
-        if (memberPrice == null)
-            memberPrice = MemberPrice.ZERO;
+        Objects.requireNonNull(memberPrice, "memberPrice required");
         if (memberPrice.price().unit() != Unit.PCS && memberPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("memberPrice unit must be consistent with retailPrice unit");
         this.memberPrice = memberPrice;
     }
 
     private void setRetailPrice(RetailPrice retailPrice) {
-        if (retailPrice == null)
-            retailPrice = RetailPrice.ZERO;
-        this.retailPrice = retailPrice;
+        this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
     }
 
     private void setShelfLife(ShelfLife shelfLife) {
@@ -123,11 +116,6 @@ public class Count {
         this.grade = grade;
     }
 
-    private void setId(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
-        this.id = id;
-    }
-
     private void setPlu(Plu plu) {
         this.plu = Objects.requireNonNull(plu, "plu required");
     }
@@ -140,6 +128,9 @@ public class Count {
         this.madeIn = Objects.requireNonNull(madeIn, "madeIn required");
     }
 
+    public Plu plu() {
+        return plu;
+    }
 
     public ShelfLife shelflife() {
         return shelfLife;
@@ -155,10 +146,6 @@ public class Count {
 
     public Grade grade() {
         return grade;
-    }
-
-    public String id() {
-        return id;
     }
 
     public Name name() {
@@ -181,7 +168,7 @@ public class Count {
     public void moveToNewCategory(String categoryId) {
         if (!this.categoryId.equals(categoryId) && Validator.isCategoryExist(categoryId)) {
             setCategoryId(categoryId);
-            catalog.hoprxi.core.domain.DomainRegistry.domainEventPublisher().publish(new SkuCategoryReallocated(id, categoryId));
+            //catalog.hoprxi.core.domain.DomainRegistry.domainEventPublisher().publish(new SkuCategoryReallocated(id, categoryId));
         }
     }
 
@@ -193,10 +180,9 @@ public class Count {
     public void moveToNewBrand(String brandId) {
         if (!this.brandId.equals(brandId) && Validator.isBrandExist(brandId)) {
             setBrandId(brandId);
-            DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
+            //DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
         }
     }
-
 
     @Override
     public boolean equals(Object o) {
@@ -205,22 +191,28 @@ public class Count {
 
         Count count = (Count) o;
 
-        return id != null ? id.equals(count.id) : count.id == null;
+        return plu != null ? plu.equals(count.plu) : count.plu == null;
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        return plu != null ? plu.hashCode() : 0;
     }
 
-
-    public Plu plu() {
-        return plu;
-    }
-
-    public void changePlu(Plu plu) {
-        Objects.requireNonNull(plu, "plu required");
-        if (!this.plu.equals(plu))
-            this.plu = plu;
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Count.class.getSimpleName() + "[", "]")
+                .add("brandId='" + brandId + "'")
+                .add("categoryId='" + categoryId + "'")
+                .add("grade=" + grade)
+                .add("plu=" + plu)
+                .add("name=" + name)
+                .add("madeIn=" + madeIn)
+                .add("spec=" + spec)
+                .add("retailPrice=" + retailPrice)
+                .add("memberPrice=" + memberPrice)
+                .add("vipPrice=" + vipPrice)
+                .add("shelfLife=" + shelfLife)
+                .toString();
     }
 }

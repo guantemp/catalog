@@ -16,8 +16,10 @@
 
 package catalog.hoprxi.core.domain.model.price;
 
+import catalog.hoprxi.core.domain.model.Unit;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /***
@@ -26,8 +28,14 @@ import java.util.Objects;
  * @version 0.0.1 2019/10/15
  */
 public class RetailPrice {
-    public static final RetailPrice ZERO = new RetailPrice(Price.ZERO);
     private Price price;
+
+    public static final RetailPrice RMB_ZERO = new RetailPrice(Price.zero(Locale.CHINA));
+    public static final RetailPrice USD_ZERO = new RetailPrice(Price.zero(Locale.US));
+
+    public static RetailPrice zero(Locale locale, Unit unit) {
+        return new RetailPrice(Price.zero(locale, unit));
+    }
 
     public RetailPrice(Price price) {
         setPrice(price);
@@ -59,5 +67,13 @@ public class RetailPrice {
     @Override
     public int hashCode() {
         return price != null ? price.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "RetailPrice{" +
+                "price=" + price +
+                ", name='" + Label.PRICE_RETAIL + '\'' +
+                '}';
     }
 }

@@ -29,7 +29,6 @@ import java.util.Objects;
  * @version 0.0.1 2019/10/25
  */
 public class WeightPrice {
-    private static final WeightPrice ZERO = new WeightPrice(Money.zero(Monetary.getCurrency(Locale.getDefault())), WeightUnit.KILOGRAM);
     private MonetaryAmount amount;
     private WeightUnit weightUnit;
 

@@ -16,8 +16,10 @@
 
 package catalog.hoprxi.core.domain.model.price;
 
+import catalog.hoprxi.core.domain.model.Unit;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /***
@@ -26,14 +28,20 @@ import java.util.Objects;
  * @version 0.0.1 2019/10/15
  */
 public class MemberPrice {
-    public static final MemberPrice ZERO = new MemberPrice(Price.ZERO);
     private static final int NAME_LENGTH = 64;
     private Price price;
     private String name;
 
+    public static final MemberPrice RMB_ZERO = new MemberPrice(Price.zero(Locale.CHINA));
+    public static final MemberPrice USD_ZERO = new MemberPrice(Price.zero(Locale.US));
+
     public MemberPrice(String name, Price price) {
         setName(name);
         setPrice(price);
+    }
+
+    public static MemberPrice zero(Locale locale, Unit unit) {
+        return new MemberPrice(Price.zero(locale, unit));
     }
 
     public MemberPrice(Price price) {
@@ -57,5 +65,13 @@ public class MemberPrice {
 
     public String name() {
         return name;
+    }
+
+    @Override
+    public String toString() {
+        return "MemberPrice{" +
+                "price=" + price +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

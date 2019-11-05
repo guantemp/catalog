@@ -68,7 +68,7 @@ public class Sku {
      *                                  if madeIn is null
      */
     public Sku(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-               Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String brandId, String categoryId) {
+               Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
@@ -78,23 +78,13 @@ public class Sku {
         setRetailPrice(retailPrice);
         setMemberPrice(memberPrice);
         setVipPrice(vipPrice);
-        setBrandId(brandId);
         setCategoryId(categoryId);
+        setBrandId(brandId);
     }
 
     public Sku(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
                Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
-        this(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
-    }
-
-    public Sku(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-               Grade grade, RetailPrice retailPrice) {
-        this(id, barcode, name, madeIn, spec, grade, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, Brand.UNDEFINED.id(), Category.UNDEFINED.id());
-    }
-
-    public Sku(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-               Grade grade, RetailPrice retailPrice, String brandId, String categoryId) {
-        this(id, barcode, name, madeIn, spec, grade, retailPrice, MemberPrice.ZERO, VipPrice.ZERO, brandId, categoryId);
+        this(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
     }
 
     private void setCategoryId(String categoryId) {
@@ -126,25 +116,21 @@ public class Sku {
 
 
     private void setVipPrice(VipPrice vipPrice) {
-        if (vipPrice == null)
-            vipPrice = VipPrice.ZERO;
+        Objects.requireNonNull(vipPrice, "vipPrice required");
         if (vipPrice.price().unit() != Unit.PCS && vipPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("vipPrice unit must be consistent with retailPrice unit");
         this.vipPrice = vipPrice;
     }
 
     private void setMemberPrice(MemberPrice memberPrice) {
-        if (memberPrice == null)
-            memberPrice = MemberPrice.ZERO;
+        Objects.requireNonNull(memberPrice, "memberPrice required");
         if (memberPrice.price().unit() != Unit.PCS && memberPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("memberPrice unit must be consistent with retailPrice unit");
         this.memberPrice = memberPrice;
     }
 
     private void setRetailPrice(RetailPrice retailPrice) {
-        if (retailPrice == null)
-            retailPrice = RetailPrice.ZERO;
-        this.retailPrice = retailPrice;
+        this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
     }
 
     private void setMadeIn(MadeIn madeIn) {

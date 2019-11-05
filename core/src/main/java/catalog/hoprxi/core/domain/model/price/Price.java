@@ -30,13 +30,22 @@ import java.util.Objects;
  * @version 0.0.1 2019/10/15
  */
 public class Price {
-    private static Money MONEY_ZERO = Money.zero(Monetary.getCurrency(Locale.getDefault()));
-    public static Price ZERO = new Price(MONEY_ZERO, Unit.PCS);
     private MonetaryAmount amount;
     private Unit unit;
 
+    public static final Price RMB_ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.CHINA)), Unit.PCS);
+    public static final Price USD_ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.US)), Unit.PCS);
+
     public static Price zero(Locale locale) {
+        if (locale == Locale.CHINA || locale == Locale.CHINESE || locale == Locale.SIMPLIFIED_CHINESE || locale == Locale.PRC)
+            return RMB_ZERO;
+        if (locale == Locale.US)
+            return USD_ZERO;
         return new Price(Money.zero(Monetary.getCurrency(locale)), Unit.PCS);
+    }
+
+    public static Price zero(Locale locale, Unit unit) {
+        return new Price(Money.zero(Monetary.getCurrency(locale)), unit);
     }
 
     public Price(MonetaryAmount amount, Unit unit) {
@@ -50,8 +59,7 @@ public class Price {
     }
 
     private void setAmount(MonetaryAmount amount) {
-        if (amount == null)
-            amount = MONEY_ZERO;
+        Objects.requireNonNull(amount, "amount required");
         if (amount.isNegative())
             throw new IllegalArgumentException("amount isn't negative");
         this.amount = amount;
@@ -81,5 +89,13 @@ public class Price {
         int result = amount != null ? amount.hashCode() : 0;
         result = 31 * result + (unit != null ? unit.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Price{" +
+                "amount=" + amount +
+                ", unit=" + unit +
+                '}';
     }
 }

@@ -16,8 +16,10 @@
 
 package catalog.hoprxi.core.domain.model.price;
 
+import catalog.hoprxi.core.domain.model.Unit;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /***
@@ -27,7 +29,6 @@ import java.util.Objects;
  */
 public class VipPrice {
     private static int NAME_LENGTH = 64;
-    public static VipPrice ZERO = new VipPrice(Price.ZERO);
     private Price price;
     private String name;
 
@@ -38,6 +39,13 @@ public class VipPrice {
 
     public VipPrice(Price price) {
         this(Label.PRICE_VIP, price);
+    }
+
+    public static final VipPrice RMB_ZERO = new VipPrice(Price.zero(Locale.CHINA));
+    public static final VipPrice USD_ZERO = new VipPrice(Price.zero(Locale.US));
+
+    public static VipPrice zero(Locale locale, Unit unit) {
+        return new VipPrice(Price.zero(locale, unit));
     }
 
     private void setPrice(Price price) {
@@ -57,5 +65,13 @@ public class VipPrice {
 
     public String name() {
         return name;
+    }
+
+    @Override
+    public String toString() {
+        return "VipPrice{" +
+                "price=" + price +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

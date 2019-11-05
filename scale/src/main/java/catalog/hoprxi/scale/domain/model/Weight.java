@@ -76,7 +76,7 @@ public class Weight {
     }
 
     private void setRetailPrice(WeightRetailPrice retailPrice) {
-        this.retailPrice = retailPrice;
+        this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
     }
 
     private void setMadeIn(MadeIn madeIn) {
@@ -216,7 +216,6 @@ public class Weight {
             //DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
         }
     }
-
 
     public void rename(Name name) {
         Objects.requireNonNull(name, "name required");
