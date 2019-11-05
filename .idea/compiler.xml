@@ -14,9 +14,9 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="core" target="1.8" />
-      <module name="java-velocypack-module-customize" target="1.7" />
-      <module name="scale" target="1.7" />
-      <module name="time-count" target="1.7" />
+      <module name="java-velocypack-module-customize" target="8" />
+      <module name="scale" target="8" />
+      <module name="time-count" target="8" />
     </bytecodeTargetLevel>
   </component>
 </project>

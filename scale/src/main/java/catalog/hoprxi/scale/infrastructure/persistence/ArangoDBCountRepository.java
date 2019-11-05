@@ -284,7 +284,7 @@ public class ArangoDBCountRepository implements CountRepository {
     @Override
     public Count[] fromName(String name) {
         final String query = "WITH count,plu\n" +
-                "FOR v IN count FILTER v.name.name =~ @name\n" +
+                "FOR v IN count FILTER v.name.name =~ @name || v.name.alias =~ @name \n" +
                 "LET plu = (FOR v1,e1 IN 1..1 OUTBOUND v._id scale RETURN v1)\n" +
                 "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
         final Map<String, Object> bindVars = new MapBuilder().put("name", name).get();

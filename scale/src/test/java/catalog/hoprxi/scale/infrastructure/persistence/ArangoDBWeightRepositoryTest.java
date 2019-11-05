@@ -61,7 +61,7 @@ public class ArangoDBWeightRepositoryTest {
 
         retailPrice = new WeightRetailPrice(new WeightPrice(Money.of(2.99, currency), WeightUnit.FIVE_HUNDRED_GRAM));
         vipPrice = new WeightVipPrice("vip", new WeightPrice(Money.of(4.99, currency), WeightUnit.KILOGRAM));
-        Weight apple1 = new Weight(new Plu(2), new Name("昭通苹果", "zhaotong apple"), new Domestic("云南省", "昭通市"), Specification.UNDEFINED, Grade.SUPERFINE, new ShelfLife(7),
+        Weight apple1 = new Weight(new Plu(2), new Name("昭通苹果", "zhaotong apple"), new Domestic("云南省", "昭通市"), Specification.UNDEFINED, Grade.SUPERFINE, new ShelfLife(10),
                 retailPrice, memberPrice, vipPrice, "fruits", Brand.UNDEFINED.id());
         weightRepository.save(apple1);
 
