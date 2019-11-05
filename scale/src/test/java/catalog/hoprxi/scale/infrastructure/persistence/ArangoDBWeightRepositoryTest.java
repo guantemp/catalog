@@ -18,11 +18,11 @@ package catalog.hoprxi.scale.infrastructure.persistence;
 
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
-import catalog.hoprxi.core.domain.model.ShelfLife;
 import catalog.hoprxi.core.domain.model.Specification;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.domain.model.madeIn.Domestic;
+import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
 import catalog.hoprxi.scale.domain.model.Plu;
 import catalog.hoprxi.scale.domain.model.Weight;

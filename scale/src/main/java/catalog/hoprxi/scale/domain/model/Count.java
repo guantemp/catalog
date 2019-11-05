@@ -16,13 +16,17 @@
 package catalog.hoprxi.scale.domain.model;
 
 import catalog.hoprxi.core.domain.Validator;
-import catalog.hoprxi.core.domain.model.*;
+import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.domain.model.Specification;
+import catalog.hoprxi.core.domain.model.Unit;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
+import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import com.arangodb.velocypack.annotations.Expose;
 
 import java.util.Objects;
@@ -125,7 +129,7 @@ public class Count {
     }
 
     private void setMadeIn(MadeIn madeIn) {
-        this.madeIn = Objects.requireNonNull(madeIn, "madeIn required");
+        this.madeIn = madeIn;
     }
 
     public Plu plu() {

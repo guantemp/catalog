@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model;
+package catalog.hoprxi.core.domain.model.shelfLife;
 
 import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;

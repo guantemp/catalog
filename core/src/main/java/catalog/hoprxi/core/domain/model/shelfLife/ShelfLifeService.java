@@ -14,7 +14,9 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model;
+package catalog.hoprxi.core.domain.model.shelfLife;
+
+import catalog.hoprxi.core.domain.model.Sku;
 
 import java.time.LocalDate;
 import java.util.Set;

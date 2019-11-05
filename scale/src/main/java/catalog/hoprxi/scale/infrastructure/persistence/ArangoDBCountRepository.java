@@ -16,8 +16,18 @@
 
 package catalog.hoprxi.scale.infrastructure.persistence;
 
-import catalog.hoprxi.core.domain.model.*;
+import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.domain.model.Specification;
+import catalog.hoprxi.core.domain.model.Unit;
+import catalog.hoprxi.core.domain.model.madeIn.Domestic;
+import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.price.MemberPrice;
+import catalog.hoprxi.core.domain.model.price.Price;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.VipPrice;
+import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBUtil;
 import catalog.hoprxi.scale.domain.model.Count;
 import catalog.hoprxi.scale.domain.model.CountRepository;
@@ -25,16 +35,16 @@ import catalog.hoprxi.scale.domain.model.Plu;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.ArangoGraph;
-import com.arangodb.entity.DocumentEntity;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.entity.VertexEntity;
-import com.arangodb.entity.VertexUpdateEntity;
+import com.arangodb.model.VertexUpdateOptions;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
-import mi.hoprxi.id.ObjectId;
+import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.money.MonetaryAmount;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -42,12 +52,13 @@ import java.util.List;
 import java.util.Map;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="wwc.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 2019-05-11
  */
 public class ArangoDBCountRepository implements CountRepository {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBCountRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBWeightRepository.class);
+    private static final VertexUpdateOptions UPDATE_OPTIONS = new VertexUpdateOptions().keepNull(false);
     private static Constructor<Name> nameConstructor;
 
     static {
@@ -63,29 +74,36 @@ public class ArangoDBCountRepository implements CountRepository {
     private ArangoDatabase catalog = ArangoDBUtil.getDatabase();
 
     @Override
-    public Count[] belongingToBrand(String brandId, int offset, int limit) {
-        return new Count[0];
+    public Plu nextPlu() {
+        return null;
     }
 
     @Override
-    public Count[] belongingToCategory(String categoryId, int offset, int limit) {
-        return new Count[0];
-    }
-
-    @Override
-    public Count find(String id) {
-        final String query = "WITH count,plu\n" +
-                "FOR v IN count FILTER v._key == @key\n" +
-                "LET plu = (FOR v1,e IN 1..1 OUTBOUND v._id scale RETURN v1)\n" +
-                "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
-        final Map<String, Object> bindVars = new MapBuilder().put("key", id).get();
+    public boolean isPluExists(int plu) {
+        if (plu < 0 || plu > 99999)
+            return false;
+        final String query = "FOR v IN plu FILTER v._key == @plu RETURN v";
+        final Map<String, Object> bindVars = new MapBuilder().put("plu", String.valueOf(plu)).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        if (slices.hasNext()) {
-            try {
-                return rebuild(slices.next());
-            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                if (LOGGER.isDebugEnabled())
-                    LOGGER.debug("Can't rebuild sku", e);
+        return slices.hasNext();
+    }
+
+    @Override
+    public Count find(int plu) {
+        if (isPluExists(plu)) {
+            final String query = "WITH plu,count\n" +
+                    "FOR v1 IN plu FILTER v1._key == @plu\n" +
+                    "FOR v,e IN 1..1 OUTBOUND v1._id scale\n" +
+                    "RETURN {'plu':TO_NUMBER(v1._key),'name':v.name,'madeIn':v.madeIn,'spec':v.spec,'grade':v.grade,'shelfLife':v.shelfLife,'retailPrice':v.retailPrice,'memberPrice':v.memberPrice,'vipPrice':v.vipPrice,'categoryId':v.categoryId,'brandId':v.brandId}";
+            final Map<String, Object> bindVars = new MapBuilder().put("plu", String.valueOf(plu)).get();
+            ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
+            if (slices.hasNext()) {
+                try {
+                    return rebuild(slices.next());
+                } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                    if (LOGGER.isDebugEnabled())
+                        LOGGER.debug("Can't rebuild sku", e);
+                }
             }
         }
         return null;
@@ -113,129 +131,132 @@ public class ArangoDBCountRepository implements CountRepository {
     }
 
     @Override
-    public String nextIdentity() {
-        return new ObjectId().id();
+    public Count[] belongingToBrand(String brandId, int offset, int limit) {
+        final String query = "WITH brand,plu,count\n" +
+                "FOR v IN 1..1 INBOUND @startVertex belong_scale LIMIT @offset,@limit\n" +
+                "FOR c IN 1..1 OUTBOUND v._id scale\n" +
+                "RETURN {'plu':TO_NUMBER(v._key),'name':c.name,'madeIn':c.madeIn,'spec':c.spec,'grade':c.grade,'shelfLife':c.shelfLife,'retailPrice':c.retailPrice,'memberPrice':c.memberPrice,'vipPrice':c.vipPrice,'categoryId':c.categoryId,'brandId':c.brandId}";
+        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "brand/" + brandId).put("offset", offset).put("limit", limit).get();
+        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
+        return transform(slices);
     }
 
     @Override
-    public int nextPlu() {
-        return 0;
+    public Count[] belongingToCategory(String categoryId, int offset, int limit) {
+        final String query = "WITH category,plu,weight\n" +
+                "FOR v IN 1..1 INBOUND @startVertex belong_scale LIMIT @offset,@limit\n" +
+                "FOR w IN 1..1 OUTBOUND v._id scale\n" +
+                "RETURN {'plu':TO_NUMBER(v._key),'name':c.name,'madeIn':c.madeIn,'spec':c.spec,'grade':c.grade,'shelfLife':c.shelfLife,'retailPrice':c.retailPrice,'memberPrice':c.memberPrice,'vipPrice':c.vipPrice,'categoryId':c.categoryId,'brandId':c.brandId}";
+        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + categoryId).put("offset", offset).put("limit", limit).get();
+        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
+        return transform(slices);
     }
 
     @Override
-    public void remove(String id) {
-        boolean exists = catalog.collection("weight").documentExists(id);
+    public void remove(Plu plu) {
+        boolean exists = catalog.collection("plu").documentExists(String.valueOf(plu.plu()));
         if (!exists)
             return;
-        final String removeScale = "WITH count,plu\n" +
-                "FOR v,e IN 1..1 OUTBOUND @startVertex scale REMOVE v IN plu REMOVE e IN scale";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "count/" + id).get();
-        catalog.query(removeScale, bindVars, null, VPackSlice.class);
-        catalog.graph("fresh").vertexCollection("count").deleteVertex(id);
+        final String remove = "WITH plu,count\n" +
+                "FOR v,e IN 1..1 OUTBOUND @startVertex scale REMOVE v IN weight REMOVE e IN scale";
+        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "plu/" + plu.plu()).get();
+        catalog.query(remove, bindVars, null, VPackSlice.class);
+        catalog.graph("scale").vertexCollection("plu").deleteVertex(String.valueOf(plu));
     }
 
     @Override
     public void save(Count count) {
-        boolean exists = catalog.collection("count").documentExists(count.id());
-        ArangoGraph graph = catalog.graph("fresh");
+        boolean exists = catalog.collection("plu").documentExists(String.valueOf(count.plu().plu()));
         if (exists) {
-            VertexUpdateEntity vertex = graph.vertexCollection("Count").updateVertex(count.id(), count);
-            updateScaleEdge(catalog, vertex, count.plu());
-            if (isBrandIdChanged(catalog, vertex, count.brandId()))
-                insertBelongEdgeOfBrand(graph, vertex, count.brandId());
+            ArangoGraph graph = catalog.graph("scale");
+            VertexEntity vertex = graph.vertexCollection("plu").getVertex(String.valueOf(count.plu().plu()), VertexEntity.class);
             if (isCategoryIdChanged(catalog, vertex, count.categoryId()))
                 insertBelongEdgeOfCategory(graph, vertex, count.categoryId());
+            if (isBrandIdChanged(catalog, vertex, count.brandId()))
+                insertBelongEdgeOfBrand(graph, vertex, count.brandId());
+            final String query = "WITH plu,count\n" +
+                    "FOR v,e IN 1..1 OUTBOUND @startVertex scale RETURN v._key";
+            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", vertex.getId()).get();
+            final ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
+            if (slices.hasNext()) {
+                graph.vertexCollection("count").updateVertex(slices.next().getAsString(), count, UPDATE_OPTIONS);
+            }
         } else {
-            VertexEntity vertex = graph.vertexCollection("Count").insertVertex(count);
-            insertScaleEdge(graph, vertex, count.plu());
-            insertBelongEdgeOfBrand(graph, vertex, count.brandId());
-            insertBelongEdgeOfCategory(graph, vertex, count.categoryId());
+            ArangoGraph graph = catalog.graph("scale");
+            VertexEntity vertexPlu = graph.vertexCollection("plu").insertVertex(count.plu());
+            VertexEntity vertexCount = graph.vertexCollection("count").insertVertex(count);
+            graph.edgeCollection("scale").insertEdge(new ScaleEdge(vertexPlu.getId(), vertexCount.getId()));
+            insertBelongEdgeOfCategory(graph, vertexPlu, count.categoryId());
+            insertBelongEdgeOfBrand(graph, vertexPlu, count.brandId());
         }
     }
 
-    private boolean isCategoryIdChanged(ArangoDatabase catalog, VertexUpdateEntity vertex, String categoryId) {
-        final String query = "WITH weight\n" +
-                "FOR v,e IN 1..1 OUTBOUND @startVertex belong_fresh FILTER v._id =~ '^category' && v._key != @categoryId REMOVE e IN belong_fresh RETURN e";
+    private boolean isCategoryIdChanged(ArangoDatabase catalog, VertexEntity vertex, String categoryId) {
+        final String query = "WITH plu\n" +
+                "FOR v,e IN 1..1 OUTBOUND @startVertex belong_scale FILTER v._id =~ '^category' && v._key != @categoryId REMOVE e IN belong_scale RETURN e";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", vertex.getId()).put("categoryId", categoryId).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return slices.hasNext();
     }
 
-    private boolean isBrandIdChanged(ArangoDatabase catalog, VertexUpdateEntity vertex, String brandId) {
-        final String query = "WITH weight\n" +
-                "FOR v,e IN 1..1 OUTBOUND @startVertex belong_fresh FILTER v._id =~ '^brand' && v._key != @brandId REMOVE e IN belong_fresh RETURN e";
+    private boolean isBrandIdChanged(ArangoDatabase catalog, VertexEntity vertex, String brandId) {
+        final String query = "WITH plu\n" +
+                "FOR v,e IN 1..1 OUTBOUND @startVertex belong_scale FILTER v._id =~ '^brand' && v._key != @brandId REMOVE e IN belong_scale RETURN e";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", vertex.getId()).put("brandId", brandId).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return slices.hasNext();
     }
 
-    private void updateScaleEdge(ArangoDatabase catalog, DocumentEntity vertex, Plu plu) {
-        final String query = "WITH count,plu\n" +
-                "FOR v,e IN 1..1 OUTBOUND @startVertex scale FILTER v.plu != @plu REMOVE v IN plu REMOVE e IN scale RETURN v";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", vertex.getId()).put("plu", plu.plu()).get();
-        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        if (slices.hasNext()) {
-            insertScaleEdge(catalog.graph("fresh"), vertex, plu);
-        }
-    }
-
-    private void insertBelongEdgeOfCategory(ArangoGraph graph, DocumentEntity vertex, String categoryId) {
+    private void insertBelongEdgeOfCategory(ArangoGraph graph, VertexEntity pluVertex, String categoryId) {
         VertexEntity categoryVertex = graph.vertexCollection("category").getVertex(categoryId, VertexEntity.class);
-        graph.edgeCollection("belong_fresh").insertEdge(new BelongEdge(vertex.getId(), categoryVertex.getId()));
+        graph.edgeCollection("belong_scale").insertEdge(new BelongEdge(pluVertex.getId(), categoryVertex.getId()));
     }
 
-    private void insertBelongEdgeOfBrand(ArangoGraph graph, DocumentEntity vertex, String brandId) {
+    private void insertBelongEdgeOfBrand(ArangoGraph graph, VertexEntity pluVertex, String brandId) {
         VertexEntity brandVertex = graph.vertexCollection("brand").getVertex(brandId, VertexEntity.class);
-        graph.edgeCollection("belong_fresh").insertEdge(new BelongEdge(vertex.getId(), brandVertex.getId()));
-    }
-
-    private void insertScaleEdge(ArangoGraph graph, DocumentEntity vertex, Plu plu) {
-        VertexEntity pluVertex = graph.vertexCollection("plu").insertVertex(plu);
-        graph.edgeCollection("scale").insertEdge(new ScaleEdge(vertex.getId(), pluVertex.getId()));
+        graph.edgeCollection("belong_scale").insertEdge(new BelongEdge(pluVertex.getId(), brandVertex.getId()));
     }
 
     private Count rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        String id = slice.get("id").getAsString();
-        Plu plu = new Plu(slice.get("plu").getAsInt());
+        Plu plu = new Plu(slice.get("plu").getAsNumber().intValue());
         Name name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());
-        Specification spec = Specification.rebulid(slice.get("spec").get("value").getAsString());
-        Unit unit = Unit.valueOf(slice.get("unit").getAsString());
-        Grade grade = Grade.valueOf(slice.get("grade").getAsString());
+        VPackSlice madeInSlice = slice.get("madeIn");
         MadeIn madeIn = null;
+        if (!madeInSlice.isNull()) {
+            String className = madeInSlice.get("_class").getAsString();
+            if (Domestic.class.getName().equals(className)) {
+                madeIn = new Domestic(madeInSlice.get("province").getAsString(), madeInSlice.get("city").getAsString());
+            } else if (Imported.class.getName().equals(className)) {
+                madeIn = new Imported(madeInSlice.get("country").getAsString());
+            }
+        }
+        Specification spec = Specification.rebulid(slice.get("spec").get("value").getAsString());
+        Grade grade = Grade.valueOf(slice.get("grade").getAsString());
         ShelfLife shelfLife = ShelfLife.rebuild(slice.get("shelfLife").get("days").getAsInt());
-        String brandId = slice.get("brandId").getAsString();
+
+        VPackSlice retailPriceSlice = slice.get("retailPrice");
+        VPackSlice amountSlice = retailPriceSlice.get("price").get("amount");
+        MonetaryAmount amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
+        Unit unit = Unit.valueOf(retailPriceSlice.get("price").get("unit").getAsString());
+        RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
+
+        VPackSlice memberPriceSlice = slice.get("memberPrice");
+        String priceName = memberPriceSlice.get("name").getAsString();
+        amountSlice = memberPriceSlice.get("price").get("amount");
+        amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
+        unit = Unit.valueOf(memberPriceSlice.get("price").get("unit").getAsString());
+        MemberPrice memberPrice = new MemberPrice(priceName, new Price(amount, unit));
+
+        VPackSlice vipPriceSlice = slice.get("vipPrice");
+        priceName = vipPriceSlice.get("name").getAsString();
+        amountSlice = vipPriceSlice.get("price").get("amount");
+        amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
+        unit = Unit.valueOf(vipPriceSlice.get("price").get("unit").getAsString());
+        VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
+
         String categoryId = slice.get("categoryId").getAsString();
-        return new Count(id, plu, name, madeIn, spec, grade, shelfLife, null, null, null, brandId, categoryId);
-    }
-
-    @Override
-    public boolean isPluExists(int plu) {
-        if (plu < 0 || plu > 99999)
-            return false;
-        final String query = "FOR v IN plu FILTER v.plu == @plu RETURN v";
-        final Map<String, Object> bindVars = new MapBuilder().put("plu", plu).get();
-        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        return slices.hasNext();
-    }
-
-    @Override
-    public int size() {
-        final String query = " RETURN LENGTH(count)";
-        final ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
-        if (cursor.hasNext())
-            return cursor.next().getAsInt();
-        return 0;
-    }
-
-    @Override
-    public Count[] fromMnemonic(String mnemonic) {
-        final String query = "WITH count,plu\n" +
-                "FOR v IN count FILTER v.name.mnemonic =~ @mnemonic\n" +
-                "LET plu = (FOR v1,e1 IN 1..1 OUTBOUND v._id scale RETURN v1)\n" +
-                "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
-        final Map<String, Object> bindVars = new MapBuilder().put("mnemonic", mnemonic).get();
-        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        return transform(slices);
+        String brandId = slice.get("brandId").getAsString();
+        return new Count(plu, name, madeIn, spec, grade, shelfLife, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
     private Count[] transform(ArangoCursor<VPackSlice> slices) {
@@ -252,6 +273,15 @@ public class ArangoDBCountRepository implements CountRepository {
     }
 
     @Override
+    public int size() {
+        final String query = "RETURN LENGTH(plu)";
+        final ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
+        if (cursor.hasNext())
+            return cursor.next().getAsInt();
+        return 0;
+    }
+
+    @Override
     public Count[] fromName(String name) {
         final String query = "WITH count,plu\n" +
                 "FOR v IN count FILTER v.name.name =~ @name\n" +
@@ -260,27 +290,6 @@ public class ArangoDBCountRepository implements CountRepository {
         final Map<String, Object> bindVars = new MapBuilder().put("name", name).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
-    }
-
-    @Override
-    public Count findPlu(int plu) {
-        if (isPluExists(plu)) {
-            final String query = "WITH count,plu\n" +
-                    "LET plu=(FOR v1 IN plu FILTER v1.plu == @plu RETURN v1)\n" +
-                    "FOR v IN 1..1 INBOUND plu[0]._id scale\n" +
-                    "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
-            final Map<String, Object> bindVars = new MapBuilder().put("plu", plu).get();
-            ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-            if (slices.hasNext()) {
-                try {
-                    return rebuild(slices.next());
-                } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                    if (LOGGER.isDebugEnabled())
-                        LOGGER.debug("Can't rebuild sku", e);
-                }
-            }
-        }
-        return null;
     }
 
     private static class ScaleEdge {

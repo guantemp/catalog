@@ -38,11 +38,12 @@ public interface CountRepository {
      */
     Count[] belongingToCategory(String categoryId, int offset, int limit);
 
+
     /**
-     * @param id
+     * @param plu
      * @return
      */
-    Count find(String id);
+    Count find(int plu);
 
     /**
      * @param offset
@@ -54,17 +55,12 @@ public interface CountRepository {
     /**
      * @return
      */
-    String nextIdentity();
+    Plu nextPlu();
 
     /**
-     * @return
+     * @param plu
      */
-    int nextPlu();
-
-    /**
-     * @param id
-     */
-    void remove(String id);
+    void remove(Plu plu);
 
     /**
      * @param count
@@ -83,20 +79,8 @@ public interface CountRepository {
     int size();
 
     /**
-     * @param mnemonic
-     * @return
-     */
-    Count[] fromMnemonic(String mnemonic);
-
-    /**
      * @param name
      * @return
      */
     Count[] fromName(String name);
-
-    /**
-     * @param plu
-     * @return
-     */
-    Count findPlu(int plu);
 }

@@ -19,11 +19,11 @@ package catalog.hoprxi.scale.infrastructure.persistence;
 
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
-import catalog.hoprxi.core.domain.model.ShelfLife;
 import catalog.hoprxi.core.domain.model.Specification;
 import catalog.hoprxi.core.domain.model.madeIn.Domestic;
 import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBUtil;
 import catalog.hoprxi.scale.domain.model.Plu;
 import catalog.hoprxi.scale.domain.model.Weight;
@@ -128,10 +128,10 @@ public class ArangoDBWeightRepository implements WeightRepository {
         return transform(slices);
     }
 
-    private Weight rebuild(VPackSlice weight) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        Plu plu = new Plu(weight.get("plu").getAsNumber().intValue());
-        Name name = nameConstructor.newInstance(weight.get("name").get("name").getAsString(), weight.get("name").get("mnemonic").getAsString(), weight.get("name").get("alias").getAsString());
-        VPackSlice madeInSlice = weight.get("madeIn");
+    private Weight rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+        Plu plu = new Plu(slice.get("plu").getAsNumber().intValue());
+        Name name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());
+        VPackSlice madeInSlice = slice.get("madeIn");
         MadeIn madeIn = null;
         if (!madeInSlice.isNull()) {
             String className = madeInSlice.get("_class").getAsString();
@@ -141,32 +141,32 @@ public class ArangoDBWeightRepository implements WeightRepository {
                 madeIn = new Imported(madeInSlice.get("country").getAsString());
             }
         }
-        Specification spec = Specification.rebulid(weight.get("spec").get("value").getAsString());
-        Grade grade = Grade.valueOf(weight.get("grade").getAsString());
-        ShelfLife shelfLife = ShelfLife.rebuild(weight.get("shelfLife").get("days").getAsInt());
+        Specification spec = Specification.rebulid(slice.get("spec").get("value").getAsString());
+        Grade grade = Grade.valueOf(slice.get("grade").getAsString());
+        ShelfLife shelfLife = ShelfLife.rebuild(slice.get("shelfLife").get("days").getAsInt());
 
-        VPackSlice retailPriceSlice = weight.get("retailPrice");
+        VPackSlice retailPriceSlice = slice.get("retailPrice");
         VPackSlice amountSlice = retailPriceSlice.get("weightPrice").get("amount");
         MonetaryAmount amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
         WeightUnit unit = WeightUnit.valueOf(retailPriceSlice.get("weightPrice").get("weightUnit").getAsString());
         WeightRetailPrice retailPrice = new WeightRetailPrice(new WeightPrice(amount, unit));
 
-        VPackSlice memberPriceSlice = weight.get("memberPrice");
+        VPackSlice memberPriceSlice = slice.get("memberPrice");
         String priceName = memberPriceSlice.get("name").getAsString();
         amountSlice = memberPriceSlice.get("weightPrice").get("amount");
         amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
         unit = WeightUnit.valueOf(memberPriceSlice.get("weightPrice").get("weightUnit").getAsString());
         WeightMemberPrice memberPrice = new WeightMemberPrice(priceName, new WeightPrice(amount, unit));
 
-        VPackSlice vipPriceSlice = weight.get("vipPrice");
+        VPackSlice vipPriceSlice = slice.get("vipPrice");
         priceName = vipPriceSlice.get("name").getAsString();
         amountSlice = vipPriceSlice.get("weightPrice").get("amount");
         amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
         unit = WeightUnit.valueOf(vipPriceSlice.get("weightPrice").get("weightUnit").getAsString());
         WeightVipPrice vipPrice = new WeightVipPrice(priceName, new WeightPrice(amount, unit));
 
-        String brandId = weight.get("brandId").getAsString();
-        String categoryId = weight.get("categoryId").getAsString();
+        String brandId = slice.get("brandId").getAsString();
+        String categoryId = slice.get("categoryId").getAsString();
         return new Weight(plu, name, madeIn, spec, grade, shelfLife, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
