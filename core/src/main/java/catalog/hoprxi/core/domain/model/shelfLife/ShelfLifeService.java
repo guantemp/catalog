@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.domain.model.shelfLife;
 
-import catalog.hoprxi.core.domain.model.Sku;
+import catalog.hoprxi.core.domain.model.Item;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -31,11 +31,11 @@ public class ShelfLifeService {
     private Set<OnSchedule> onScheduleSet = new TreeSet<>();
 
 
-    public boolean isOnSchedule(Sku sku, LocalDate dateOfManufacture) {
+    public boolean isOnSchedule(Item item, LocalDate dateOfManufacture) {
         return false;
     }
 
-    public boolean isOverdueCommodity(Sku sku, LocalDate dateOfManufacture) {
+    public boolean isOverdueCommodity(Item item, LocalDate dateOfManufacture) {
         return false;
     }
 

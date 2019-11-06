@@ -25,13 +25,13 @@ import java.time.LocalDateTime;
  * @since JDK8.0
  * @version 0.0.1 2019-05-02
  */
-public class SkuSpecificationChanged implements DomainEvent {
+public class ItemSpecificationChanged implements DomainEvent {
     private String id;
     private Specification spec;
     private LocalDateTime occurredOn;
     private int version;
 
-    public SkuSpecificationChanged(String id, Specification spec) {
+    public ItemSpecificationChanged(String id, Specification spec) {
         this.id = id;
         this.spec = spec;
         occurredOn = LocalDateTime.now();

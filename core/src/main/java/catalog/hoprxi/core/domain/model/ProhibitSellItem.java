@@ -13,12 +13,11 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package catalog.hoprxi.core.domain.model;
 
-import catalog.hoprxi.core.domain.DomainRegistry;
 import catalog.hoprxi.core.domain.Validator;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
+import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
@@ -26,12 +25,14 @@ import catalog.hoprxi.core.domain.model.price.VipPrice;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
+import java.util.Objects;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-07-13
+ * @version 0.0.1 builder 2019-06-19
  */
-public class ProhibitPurchaseAndSellSku {
+public class ProhibitSellItem {
     @Expose(serialize = false, deserialize = false)
     private Barcode barcode;
     private String brandId;
@@ -59,31 +60,47 @@ public class ProhibitPurchaseAndSellSku {
      * @param brandId
      * @param categoryId
      */
-    protected ProhibitPurchaseAndSellSku(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-                                         Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String brandId, String categoryId) {
+    protected ProhibitSellItem(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
+                               Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String brandId, String categoryId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
         setMadeIn(madeIn);
-        setRetailPrice(retailPrice);
-        setMemberPrice(memberPrice);
-        setVipPrice(vipPrice);
         setSpecification(spec);
         setGrade(grade);
         setBrandId(brandId);
         setCategoryId(categoryId);
     }
 
-    public Specification spec() {
-        return spec;
+    private void setBarcode(Barcode barcode) {
+        this.barcode = barcode;
+    }
+
+    private void setGrade(Grade grade) {
+        this.grade = grade;
+    }
+
+    private void setName(Name name) {
+        this.name = Objects.requireNonNull(name, "name required");
+    }
+
+    private void setMadeIn(MadeIn madeIn) {
+        this.madeIn = Objects.requireNonNull(madeIn, "madeIn required");
     }
 
     private void setCategoryId(String categoryId) {
-        this.categoryId = categoryId;
+        if (categoryId != null) {
+            categoryId = categoryId.trim();
+            if (Validator.isCategoryExist(categoryId)) {
+                this.categoryId = categoryId;
+                return;
+            }
+        }
+        this.categoryId = Category.UNDEFINED.id();
     }
 
     private void setBrandId(String brandId) {
-        this.brandId = brandId;
+        this.brandId = Objects.requireNonNull(brandId, "brand id required").trim();
     }
 
     private void setSpecification(Specification spec) {
@@ -94,41 +111,22 @@ public class ProhibitPurchaseAndSellSku {
         this.id = id;
     }
 
-    private void setVipPrice(VipPrice vipPrice) {
-        this.vipPrice = vipPrice;
+    /**
+     * @param name
+     */
+    public void rename(Name name) {
+        name = Objects.requireNonNull(name, "name required");
+        if (!this.name.equals(name)) {
+            this.name = name;
+        }
     }
 
-    private void setMemberPrice(MemberPrice memberPrice) {
-        this.memberPrice = memberPrice;
-    }
-
-    private void setRetailPrice(RetailPrice retailPrice) {
-        this.retailPrice = retailPrice;
-    }
-
-    public RetailPrice retailPrice() {
-        return retailPrice;
-    }
-
-    public MemberPrice memberPrice() {
-        return memberPrice;
-    }
-
-    public VipPrice vipPrice() {
-        return vipPrice;
-    }
-
+    /**
+     * @param categoryId
+     */
     public void moveToCategory(String categoryId) {
-        if (!this.categoryId.equals(categoryId) && Validator.isCategoryExist(categoryId)) {
+        if (!this.categoryId.equals(categoryId))
             setCategoryId(categoryId);
-        }
-    }
-
-    public void moveToNewBrand(String brandId) {
-        if (!this.brandId.equals(brandId) && Validator.isBrandExist(brandId)) {
-            setBrandId(brandId);
-            DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
-        }
     }
 
     public Barcode barcode() {
@@ -155,37 +153,32 @@ public class ProhibitPurchaseAndSellSku {
         return name;
     }
 
-    MadeIn madeIn() {
+    public Specification spec() {
+        return spec;
+    }
+
+    public MadeIn madeIn() {
         return madeIn;
     }
 
-    private void setBarcode(Barcode barcode) {
-        this.barcode = barcode;
+    public RetailPrice retailPrice() {
+        return retailPrice;
     }
 
-    private void setGrade(Grade grade) {
-        this.grade = grade;
+    public MemberPrice memberPrice() {
+        return memberPrice;
     }
 
-    private void setName(Name name) {
-        this.name = name;
+    public VipPrice vipPrice() {
+        return vipPrice;
     }
 
-    private void setMadeIn(MadeIn madeIn) {
-        this.madeIn = madeIn;
+    public Item permitSell() {
+        return new Item(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
-
-    public ProhibitSellSku permitPurchase() {
-        return new ProhibitSellSku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
-    }
-
-    public ProhibitPurchaseSku permitSales() {
-        return new ProhibitPurchaseSku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
-    }
-
-    public Sku permitPurchaseAndSales() {
-        return new Sku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
+    public ProhibitPurchaseAndSellItem prohibitPurchase() {
+        return new ProhibitPurchaseAndSellItem(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
     @Override
@@ -193,7 +186,7 @@ public class ProhibitPurchaseAndSellSku {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ProhibitPurchaseAndSellSku that = (ProhibitPurchaseAndSellSku) o;
+        ProhibitSellItem that = (ProhibitSellItem) o;
 
         return id != null ? id.equals(that.id) : that.id == null;
     }
@@ -205,7 +198,7 @@ public class ProhibitPurchaseAndSellSku {
 
     @Override
     public String toString() {
-        return "ProhibitPurchaseAndSellSku{" +
+        return "ProhibitSellSku{" +
                 "barcode=" + barcode +
                 ", brandId='" + brandId + '\'' +
                 ", categoryId='" + categoryId + '\'' +

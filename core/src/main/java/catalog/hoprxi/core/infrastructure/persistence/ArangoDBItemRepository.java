@@ -54,8 +54,8 @@ import java.util.Map;
  * @since JDK8.0
  * @version 0.0.2 builder 2018-06-04
  */
-public class ArangoDBSkuRepository implements SkuRepository {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBSkuRepository.class);
+public class ArangoDBItemRepository implements ItemRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBItemRepository.class);
     private static final VertexUpdateOptions UPDATE_OPTIONS = new VertexUpdateOptions().keepNull(false);
     private static Constructor<Name> nameConstructor;
 
@@ -72,11 +72,11 @@ public class ArangoDBSkuRepository implements SkuRepository {
     private ArangoDatabase catalog = ArangoDBUtil.getDatabase();
 
     @Override
-    public Sku[] belongToBrand(String brandId, int offset, int limit) {
-        final String query = "WITH brand,sku,barcode\n" +
+    public Item[] belongToBrand(String brandId, int offset, int limit) {
+        final String query = "WITH brand,item,barcode\n" +
                 "FOR s,b IN 1..1 INBOUND @startVertex belong LIMIT @offset,@limit\n" +
                 "LET barcode = (FOR v,e IN 1..1 OUTBOUND s._id has RETURN v)\n" +
-                "RETURN {'sku':s,'barcode':barcode[0].barcode}";
+                "RETURN {'item':s,'barcode':barcode[0].barcode}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "brand/" + brandId).put("offset", offset).put("limit", limit).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
@@ -84,22 +84,22 @@ public class ArangoDBSkuRepository implements SkuRepository {
 
 
     @Override
-    public Sku[] belongToCategory(String categoryId, long offset, int limit) {
-        final String query = "WITH category,belong,sku,has,barcode\n" +
+    public Item[] belongToCategory(String categoryId, long offset, int limit) {
+        final String query = "WITH category,belong,item,has,barcode\n" +
                 "FOR s,b IN 1..1 INBOUND @startVertex belong LIMIT @offset,@limit\n" +
                 "LET barcode = (FOR v,e IN 1..1 OUTBOUND s._id has RETURN v)\n" +
-                "RETURN {'sku':s,'barcode':barcode[0].barcode}";
+                "RETURN {'item':s,'barcode':barcode[0].barcode}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + categoryId).put("offset", offset).put("limit", limit).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
     }
 
     @Override
-    public Sku find(String id) {
-        final String query = "WITH sku,barcode\n" +
-                "FOR s IN sku FILTER s._key == @key \n" +
+    public Item find(String id) {
+        final String query = "WITH item,barcode\n" +
+                "FOR s IN item FILTER s._key == @key \n" +
                 "LET barcode = (FOR v,e IN 1..1 OUTBOUND s._id has RETURN v)\n" +
-                "RETURN {'sku':s,'barcode':barcode[0].barcode}";
+                "RETURN {'item':s,'barcode':barcode[0].barcode}";
         final Map<String, Object> bindVars = new MapBuilder().put("key", id).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         while (slices.hasNext()) {
@@ -107,32 +107,32 @@ public class ArangoDBSkuRepository implements SkuRepository {
                 return rebuild(slices.next());
             } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 if (LOGGER.isDebugEnabled())
-                    LOGGER.debug("Can't rebuild sku", e);
+                    LOGGER.debug("Can't rebuild item", e);
             }
         }
         return null;
     }
 
-    private Sku[] transform(ArangoCursor<VPackSlice> slices) {
-        List<Sku> skuList = new ArrayList<>();
+    private Item[] transform(ArangoCursor<VPackSlice> slices) {
+        List<Item> itemList = new ArrayList<>();
         while (slices.hasNext()) {
             try {
-                skuList.add(rebuild(slices.next()));
+                itemList.add(rebuild(slices.next()));
             } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 if (LOGGER.isDebugEnabled())
-                    LOGGER.debug("Can't rebuild sku", e);
+                    LOGGER.debug("Can't rebuild item", e);
             }
         }
-        return skuList.toArray(new Sku[skuList.size()]);
+        return itemList.toArray(new Item[itemList.size()]);
     }
 
-    private Sku rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+    private Item rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
         Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(slice.get("barcode").getAsString());
-        //Sku
-        VPackSlice sku = slice.get("sku");
-        String id = sku.get(DocumentField.Type.KEY.getSerializeName()).getAsString();
-        Name name = nameConstructor.newInstance(sku.get("name").get("name").getAsString(), sku.get("name").get("mnemonic").getAsString(), sku.get("name").get("alias").getAsString());
-        VPackSlice madeInSlice = sku.get("madeIn");
+        //item
+        VPackSlice item = slice.get("item");
+        String id = item.get(DocumentField.Type.KEY.getSerializeName()).getAsString();
+        Name name = nameConstructor.newInstance(item.get("name").get("name").getAsString(), item.get("name").get("mnemonic").getAsString(), item.get("name").get("alias").getAsString());
+        VPackSlice madeInSlice = item.get("madeIn");
         MadeIn madeIn = null;
         String className = madeInSlice.get("_class").getAsString();
         if (Domestic.class.getName().equals(className)) {
@@ -140,52 +140,52 @@ public class ArangoDBSkuRepository implements SkuRepository {
         } else if (Imported.class.getName().equals(className)) {
             madeIn = new Imported(madeInSlice.get("country").getAsString());
         }
-        Specification spec = new Specification(sku.get("spec").get("value").getAsString());
-        Grade grade = Grade.valueOf(sku.get("grade").getAsString());
+        Specification spec = new Specification(item.get("spec").get("value").getAsString());
+        Grade grade = Grade.valueOf(item.get("grade").getAsString());
 
-        VPackSlice retailPriceSlice = sku.get("retailPrice");
+        VPackSlice retailPriceSlice = item.get("retailPrice");
         VPackSlice amountSlice = retailPriceSlice.get("price").get("amount");
         MonetaryAmount amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
         Unit unit = Unit.valueOf(retailPriceSlice.get("price").get("unit").getAsString());
         RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
 
-        VPackSlice memberPriceSlice = sku.get("memberPrice");
+        VPackSlice memberPriceSlice = item.get("memberPrice");
         String priceName = memberPriceSlice.get("name").getAsString();
         amountSlice = memberPriceSlice.get("price").get("amount");
         amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
         unit = Unit.valueOf(memberPriceSlice.get("price").get("unit").getAsString());
         MemberPrice memberPrice = new MemberPrice(priceName, new Price(amount, unit));
 
-        VPackSlice vipPriceSlice = sku.get("vipPrice");
+        VPackSlice vipPriceSlice = item.get("vipPrice");
         priceName = vipPriceSlice.get("name").getAsString();
         amountSlice = vipPriceSlice.get("price").get("amount");
         amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
         unit = Unit.valueOf(vipPriceSlice.get("price").get("unit").getAsString());
         VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
 
-        String brandId = sku.get("brandId").getAsString();
-        String categoryId = sku.get("categoryId").getAsString();
-        return new Sku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, categoryId, brandId);
+        String brandId = item.get("brandId").getAsString();
+        String categoryId = item.get("categoryId").getAsString();
+        return new Item(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
     @Override
-    public Sku[] findAll(long offset, int limit) {
-        Sku[] skus = ArangoDBUtil.calculationCollectionSize(catalog, Sku.class, offset, limit);
-        if (skus.length == 0)
-            return skus;
-        final String query = "WITH sku,barcode\n" +
-                "FOR s IN sku LIMIT @offset,@limit\n" +
+    public Item[] findAll(long offset, int limit) {
+        Item[] items = ArangoDBUtil.calculationCollectionSize(catalog, Item.class, offset, limit);
+        if (items.length == 0)
+            return items;
+        final String query = "WITH item,barcode\n" +
+                "FOR s IN item LIMIT @offset,@limit\n" +
                 "LET barcode = (FOR v,e IN 1..1 OUTBOUND s._id has RETURN v)\n" +
-                "RETURN {'sku':s,'barcode':barcode[0].barcode}";
+                "RETURN {'item':s,'barcode':barcode[0].barcode}";
         final Map<String, Object> bindVars = new MapBuilder().put("offset", offset).put("limit", limit).get();
         final ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         try {
             for (int i = 0; slices.hasNext(); i++)
-                skus[i] = rebuild(slices.next());
+                items[i] = rebuild(slices.next());
         } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
             LOGGER.error("Can't rebuild weight", e);
         }
-        return skus;
+        return items;
     }
 
     @Override
@@ -195,37 +195,37 @@ public class ArangoDBSkuRepository implements SkuRepository {
 
     @Override
     public void remove(String id) {
-        boolean exists = catalog.collection("sku").documentExists(id);
+        boolean exists = catalog.collection("item").documentExists(id);
         if (exists) {
-            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "sku/" + id).get();
-            final String removeHas_2 = "WITH sku,has,barcode\n" +
+            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "item/" + id).get();
+            final String removeHas_2 = "WITH item,has,barcode\n" +
                     "FOR v,e IN 1..1 OUTBOUND @startVertex has REMOVE v IN barcode";
             catalog.query(removeHas_2, bindVars, null, VPackSlice.class);
-            catalog.graph("core").vertexCollection("sku").deleteVertex(id);
+            catalog.graph("core").vertexCollection("item").deleteVertex(id);
         }
     }
 
     @Override
-    public void save(Sku sku) {
-        boolean exists = catalog.collection("sku").documentExists(sku.id());
+    public void save(Item item) {
+        boolean exists = catalog.collection("item").documentExists(item.id());
         ArangoGraph graph = catalog.graph("core");
         if (exists) {
-            VertexUpdateEntity skuVertex = graph.vertexCollection("sku").updateVertex(sku.id(), sku, UPDATE_OPTIONS);
-            if (isBrandIdChanged(catalog, skuVertex, sku.brandId()))
-                insertBelongEdgeOfBrand(graph, skuVertex, sku.brandId());
-            if (isCategoryIdChanged(catalog, skuVertex, sku.categoryId()))
-                insertBelongEdgeOfCategory(graph, skuVertex, sku.categoryId());
-            updateBarcode(catalog, skuVertex, sku.barcode());
+            VertexUpdateEntity itemVertex = graph.vertexCollection("item").updateVertex(item.id(), item, UPDATE_OPTIONS);
+            if (isBrandIdChanged(catalog, itemVertex, item.brandId()))
+                insertBelongEdgeOfBrand(graph, itemVertex, item.brandId());
+            if (isCategoryIdChanged(catalog, itemVertex, item.categoryId()))
+                insertBelongEdgeOfCategory(graph, itemVertex, item.categoryId());
+            updateBarcode(catalog, itemVertex, item.barcode());
         } else {
-            VertexEntity skuVertex = graph.vertexCollection("sku").insertVertex(sku);
-            insertBelongEdgeOfBrand(graph, skuVertex, sku.brandId());
-            insertBelongEdgeOfCategory(graph, skuVertex, sku.categoryId());
-            insertHasEdgeOfBarcode(graph, skuVertex, sku.barcode());
+            VertexEntity itemVertex = graph.vertexCollection("item").insertVertex(item);
+            insertBelongEdgeOfBrand(graph, itemVertex, item.brandId());
+            insertBelongEdgeOfCategory(graph, itemVertex, item.categoryId());
+            insertHasEdgeOfBarcode(graph, itemVertex, item.barcode());
         }
     }
 
     private boolean isBrandIdChanged(ArangoDatabase arangoDatabase, DocumentEntity startVertex, String brandId) {
-        final String query = "WITH sku,belong\n" +
+        final String query = "WITH item,belong\n" +
                 "FOR v,e IN 1..1 OUTBOUND @startVertex belong FILTER v._id =~ '^brand' && v._key != @brandId REMOVE e IN belong RETURN e";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", startVertex.getId()).put("brandId", brandId).get();
         ArangoCursor<VPackSlice> slices = arangoDatabase.query(query, bindVars, null, VPackSlice.class);
@@ -233,25 +233,25 @@ public class ArangoDBSkuRepository implements SkuRepository {
     }
 
     private boolean isCategoryIdChanged(ArangoDatabase arangoDatabase, DocumentEntity startVertex, String categoryId) {
-        final String query = "WITH sku\n" +
+        final String query = "WITH item\n" +
                 "FOR v,e IN 1..1 OUTBOUND @startVertex belong FILTER v._id =~ '^category' && v._key != @categoryId REMOVE e IN belong RETURN e";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", startVertex.getId()).put("categoryId", categoryId).get();
         ArangoCursor<VPackSlice> slices = arangoDatabase.query(query, bindVars, null, VPackSlice.class);
         return slices.hasNext();
     }
 
-    private void insertBelongEdgeOfBrand(ArangoGraph graph, DocumentEntity skuVertex, String brandId) {
+    private void insertBelongEdgeOfBrand(ArangoGraph graph, DocumentEntity itemVertex, String brandId) {
         VertexEntity brandVertex = graph.vertexCollection("brand").getVertex(brandId, VertexEntity.class);
-        graph.edgeCollection("belong").insertEdge(new BelongEdge(skuVertex.getId(), brandVertex.getId()));
+        graph.edgeCollection("belong").insertEdge(new BelongEdge(itemVertex.getId(), brandVertex.getId()));
     }
 
-    private void insertBelongEdgeOfCategory(ArangoGraph graph, DocumentEntity skuVertex, String categoryId) {
+    private void insertBelongEdgeOfCategory(ArangoGraph graph, DocumentEntity itemVertex, String categoryId) {
         VertexEntity categoryVertex = graph.vertexCollection("category").getVertex(categoryId, VertexEntity.class);
-        graph.edgeCollection("belong").insertEdge(new BelongEdge(skuVertex.getId(), categoryVertex.getId()));
+        graph.edgeCollection("belong").insertEdge(new BelongEdge(itemVertex.getId(), categoryVertex.getId()));
     }
 
     private void updateBarcode(ArangoDatabase arangoDatabase, DocumentEntity startVertex, Barcode barcode) {
-        final String query = "WITH sku,barcode\n" +
+        final String query = "WITH item,barcode\n" +
                 "FOR v,e IN 1..1 OUTBOUND @startVertex has FILTER v.barcode != @barcode REMOVE v IN barcode REMOVE e IN has RETURN v";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", startVertex.getId()).put("barcode", barcode.barcode()).get();
         ArangoCursor<VPackSlice> slices = arangoDatabase.query(query, bindVars, null, VPackSlice.class);
@@ -264,7 +264,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
         private void updateBarcodeBook(ArangoDatabase arangoDatabase, DocumentEntity startVertex, EANUPCBarcode barcode) {
             Barcode[] barcodes = barcode.barcodes();
             //remove v not in barcodes and e in has
-            StringBuilder sb = new StringBuilder("WITH sku,has\n" +
+            StringBuilder sb = new StringBuilder("WITH item,has\n" +
                     "FOR v,e IN 1..1 OUTBOUND '").append(startVertex.getId()).append("' has FILTER v._id =~ '^barcode' && v.barcode NOT IN[");
             for (int i = barcodes.length - 1; i >= 0; i--) {
                 sb.append("'").append(barcodes[i].barcode()).append("'");
@@ -274,7 +274,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
             sb.append("] REMOVE e IN has REMOVE v IN barcode");
             arangoDatabase.query(sb.toString(), null, null, VPackSlice.class);
             //find existed
-            final String query = "WITH sku,has\n" +
+            final String query = "WITH item,has\n" +
                     "FOR v,e IN 1..1 OUTBOUND @startVertex has FILTER v._id =~ '^barcode' RETURN v";
             final Map<String, Object> bindVars = new MapBuilder().put("startVertex", startVertex.getId()).get();
             ArangoCursor<VPackSlice> slices = arangoDatabase.query(query, bindVars, null, VPackSlice.class);
@@ -315,14 +315,14 @@ public class ArangoDBSkuRepository implements SkuRepository {
     }
 
 
-    private void insertHasEdgeOfBarcode(ArangoGraph graph, DocumentEntity skuVertex, Barcode barcode) {
+    private void insertHasEdgeOfBarcode(ArangoGraph graph, DocumentEntity itemVertex, Barcode barcode) {
         VertexEntity barcodeVertex = graph.vertexCollection("barcode").insertVertex(barcode);
-        graph.edgeCollection("has").insertEdge(new HasEdge(skuVertex.getId(), barcodeVertex.getId()));
+        graph.edgeCollection("has").insertEdge(new HasEdge(itemVertex.getId(), barcodeVertex.getId()));
     }
 
     @Override
     public long size() {
-        final String query = " RETURN LENGTH(sku)";
+        final String query = " RETURN LENGTH(item)";
         final ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
         for (; cursor.hasNext(); ) {
             return cursor.next().getAsLong();
@@ -331,34 +331,34 @@ public class ArangoDBSkuRepository implements SkuRepository {
     }
 
     @Override
-    public Sku[] fromBarcode(String barcode) {
-        final String query = "WITH barcode,sku\n" +
+    public Item[] fromBarcode(String barcode) {
+        final String query = "WITH barcode,item\n" +
                 "FOR b IN barcode FILTER b.barcode =~ @barcode\n" +
-                "FOR sku,e IN 1..1 INBOUND b has\n" +
-                "LET barcode = (FOR v,h IN 1..1 OUTBOUND sku._id has RETURN v)\n" +
-                "RETURN {sku,'barcode':barcode[0].barcode}";
+                "FOR item,e IN 1..1 INBOUND b has\n" +
+                "LET barcode = (FOR v,h IN 1..1 OUTBOUND item._id has RETURN v)\n" +
+                "RETURN {item,'barcode':barcode[0].barcode}";
         final Map<String, Object> bindVars = new MapBuilder().put("barcode", barcode).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
     }
 
     @Override
-    public Sku[] fromMnemonic(String mnemonic) {
-        final String query = "WITH sku,barcode\n" +
-                "FOR s IN sku FILTER s.name.mnemonic =~ @mnemonic\n" +
+    public Item[] fromMnemonic(String mnemonic) {
+        final String query = "WITH item,barcode\n" +
+                "FOR s IN item FILTER s.name.mnemonic =~ @mnemonic\n" +
                 "LET barcode = (FOR v,h IN 1..1 OUTBOUND s._id has RETURN v)\n" +
-                "RETURN {'sku':s,'barcode':barcode[0].barcode}";
+                "RETURN {'item':s,'barcode':barcode[0].barcode}";
         final Map<String, Object> bindVars = new MapBuilder().put("mnemonic", mnemonic).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
     }
 
     @Override
-    public Sku[] fromName(String name) {
-        final String query = "WITH sku,barcode\n" +
-                "FOR s IN sku FILTER s.name.name =~ @name\n" +
+    public Item[] fromName(String name) {
+        final String query = "WITH item,barcode\n" +
+                "FOR s IN item FILTER s.name.name =~ @name\n" +
                 "LET barcode = (FOR v,h IN 1..1 OUTBOUND s._id has  RETURN v)\n" +
-                "RETURN {'sku':s,'barcode':barcode[0].barcode}";
+                "RETURN {'item':s,'barcode':barcode[0].barcode}";
         final Map<String, Object> bindVars = new MapBuilder().put("name", name).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);

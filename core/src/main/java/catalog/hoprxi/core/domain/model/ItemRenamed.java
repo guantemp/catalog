@@ -16,26 +16,29 @@
 
 package catalog.hoprxi.core.domain.model;
 
+
 import event.hoprxi.domain.model.DomainEvent;
 
 import java.time.LocalDateTime;
 
-/***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+/**
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
+ * @version 0.0.2 builder 2019-10-24
  * @since JDK8.0
- * @version 0.0.1 2019-05-02
  */
-public class SKuMadeInChanged implements DomainEvent {
-    private String id;
-    private String madeIn;
-    private long code;
+public class ItemRenamed implements DomainEvent {
+    private String name;
+    private String alias;
+    private String mnemonic;
     private LocalDateTime occurredOn;
+    private String id;
     private int version;
 
-    public SKuMadeInChanged(String id, long code, String madeIn) {
+    public ItemRenamed(String id, String name, String mnemonic, String alias) {
         this.id = id;
-        this.madeIn = madeIn;
-        this.code = code;
+        this.name = name;
+        this.mnemonic = mnemonic;
+        this.alias = alias;
         occurredOn = LocalDateTime.now();
         version = 1;
     }
@@ -50,11 +53,19 @@ public class SKuMadeInChanged implements DomainEvent {
         return version;
     }
 
-    public String id() {
-        return id;
+    public String name() {
+        return name;
     }
 
-    public String madeIn() {
-        return madeIn;
+    public String alias() {
+        return alias;
+    }
+
+    public String mnemonic() {
+        return mnemonic;
+    }
+
+    public String id() {
+        return id;
     }
 }

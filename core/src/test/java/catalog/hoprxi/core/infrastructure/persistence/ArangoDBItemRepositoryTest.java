@@ -47,8 +47,8 @@ import java.util.Locale;
  * @since JDK8.0
  * @version 0.0.1 builder 2018-06-05
  */
-public class ArangoDBSkuRepositoryTest {
-    private static SkuRepository skuRepository = new ArangoDBSkuRepository();
+public class ArangoDBItemRepositoryTest {
+    private static ItemRepository itemRepository = new ArangoDBItemRepository();
     private static BrandRepository brandRepository = new ArangoDBBrandRepository();
     private static CategoryRepository categoryRepository = new ArangoDBCategoryRepository();
     private static CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
@@ -79,84 +79,84 @@ public class ArangoDBSkuRepositoryTest {
         Barcode barcode = BarcodeGenerateServices.createMatchingBarcode("6907861191394");
         MadeIn madeIn = new Domestic("四川", "成都");
         RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.59, currency), Unit.HE));
-        Sku one = new Sku("one", barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "彩虹电热灭蚊香液"), madeIn,
+        Item one = new Item("one", barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "彩虹电热灭蚊香液"), madeIn,
                 new Specification("150ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
-        skuRepository.save(one);
+        itemRepository.save(one);
 
         retailPrice = new RetailPrice(new Price(Money.of(35.50, currency), Unit.HE));
-        Sku two = new Sku("two", new EAN_13("6907861181388"), new Name("彩虹电热灭蚊香液橙子香型2瓶装", "彩虹电热灭蚊香液2瓶装"), madeIn,
+        Item two = new Item("two", new EAN_13("6907861181388"), new Name("彩虹电热灭蚊香液橙子香型2瓶装", "彩虹电热灭蚊香液2瓶装"), madeIn,
                 new Specification("2*150ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
-        skuRepository.save(two);
+        itemRepository.save(two);
 
         retailPrice = new RetailPrice(new Price(Money.of(56.80, currency), Unit.HE));
         barcode = BarcodeGenerateServices.createMatchingBarcode("6907861181395");
-        Sku three = new Sku("three", barcode, new Name("彩虹电热灭蚊香液4瓶装（橙子+芒果香型）", "彩虹电热灭蚊香液4瓶装"), madeIn,
+        Item three = new Item("three", barcode, new Name("彩虹电热灭蚊香液4瓶装（橙子+芒果香型）", "彩虹电热灭蚊香液4瓶装"), madeIn,
                 new Specification("4*120ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
-        skuRepository.save(three);
+        itemRepository.save(three);
 
         madeIn = new Domestic("重庆市");
         retailPrice = new RetailPrice(new Price(Money.of(4.50, currency), Unit.HE));
         MemberPrice memberPrice = new MemberPrice(new Price(Money.of(3.96, currency), Unit.HE));
         VipPrice vipPrice = new VipPrice("PLUS价", new Price(Money.of(3.00, currency), Unit.HE));
-        Sku four = new Sku("four", new EAN_13("6942070284987"), new Name("天友南美酸奶", "天友南美酸奶"), madeIn,
+        Item four = new Item("four", new EAN_13("6942070284987"), new Name("天友南美酸奶", "天友南美酸奶"), madeIn,
                 new Specification("350ml"), Grade.QUALIFIED, retailPrice, memberPrice, vipPrice, food.id(), tianyou.id());
-        skuRepository.save(four);
+        itemRepository.save(four);
 
         retailPrice = new RetailPrice(new Price(Money.of(55.00, currency), Unit.TI));
         memberPrice = new MemberPrice(new Price(Money.of(50.00, currency), Unit.TI));
         vipPrice = new VipPrice("PLUS价", new Price(Money.of(48.00, currency), Unit.TI));
         barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240896");
-        Sku five = new Sku("five", barcode, new Name("天友纯牛奶", "天友纯牛奶"), madeIn,
+        Item five = new Item("five", barcode, new Name("天友纯牛奶", "天友纯牛奶"), madeIn,
                 new Specification("350ml"), Grade.QUALIFIED, retailPrice, memberPrice, vipPrice, food.id(), tianyou.id());
-        skuRepository.save(five);
+        itemRepository.save(five);
 
         retailPrice = new RetailPrice(new Price(Money.of(17.90, currency), Unit.PCS));
         vipPrice = new VipPrice("PLUS价", new Price(Money.of(15.50, currency), Unit.PCS));
-        Sku six = new Sku("six", new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), madeIn,
+        Item six = new Item("six", new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), madeIn,
                 new Specification("6*250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, vipPrice, food.id(), tianyou.id());
-        skuRepository.save(six);
+        itemRepository.save(six);
 
         barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240865");
-        Sku six_1 = new Sku("six_1", barcode, new Name("250ml天友纯牛奶(高钙）", "天友高钙纯牛奶"), madeIn,
+        Item six_1 = new Item("six_1", barcode, new Name("250ml天友纯牛奶(高钙）", "天友高钙纯牛奶"), madeIn,
                 new Specification("250ml"), Grade.QUALIFIED, RetailPrice.RMB_ZERO, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), tianyou.id());
-        skuRepository.save(six_1);
+        itemRepository.save(six_1);
 
         retailPrice = new RetailPrice(new Price(Money.of(2.5, currency), Unit.DAI));
         barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240889");
-        Sku six_2 = new Sku("six_2", barcode, new Name("250ml天友纯牛奶", "天友纯牛奶"), madeIn,
+        Item six_2 = new Item("six_2", barcode, new Name("250ml天友纯牛奶", "天友纯牛奶"), madeIn,
                 new Specification("250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), tianyou.id());
-        skuRepository.save(six_2);
+        itemRepository.save(six_2);
 
         madeIn = new Domestic("天津市");
         retailPrice = new RetailPrice(new Price(Money.of(2.5, currency), Unit.DAI));
-        Sku seven = new Sku("seven", new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), madeIn, new Specification("25g"),
+        Item seven = new Item("seven", new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), madeIn, new Specification("25g"),
                 Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), Brand.UNDEFINED.id());
-        skuRepository.save(seven);
+        itemRepository.save(seven);
 
         retailPrice = new RetailPrice(new Price(Money.of(4.80, currency), Unit.DAI));
-        Sku eight = new Sku("eight", new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), madeIn, new Specification("50g"),
+        Item eight = new Item("eight", new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), madeIn, new Specification("50g"),
                 Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), Brand.UNDEFINED.id());
-        skuRepository.save(eight);
+        itemRepository.save(eight);
 
         retailPrice = new RetailPrice(new Price(Money.of(6.90, currency), Unit.DAI));
-        Sku nine = new Sku("nine", new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), madeIn, new Specification("75g"),
+        Item nine = new Item("nine", new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), madeIn, new Specification("75g"),
                 Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), Brand.UNDEFINED.id());
-        skuRepository.save(nine);
+        itemRepository.save(nine);
 
         retailPrice = new RetailPrice(new Price(Money.of(5.00, currency), Unit.DUI));
-        Sku ten = new Sku("ten", new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic("四川", "绵阳"), new Specification("10粒缩卡装"),
+        Item ten = new Item("ten", new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic("四川", "绵阳"), new Specification("10粒缩卡装"),
                 Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), changhong.id());
-        skuRepository.save(ten);
+        itemRepository.save(ten);
 
         retailPrice = new RetailPrice(new Price(Money.of(3.50, currency), Unit.BEN));
-        Sku twelve = new Sku("twelve", new EAN_13("6925834037159"), new Name("车线本"), new Domestic("浙江", "仓南县"),
+        Item twelve = new Item("twelve", new EAN_13("6925834037159"), new Name("车线本"), new Domestic("浙江", "仓南县"),
                 Specification.UNDEFINED, Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
-        skuRepository.save(twelve);
+        itemRepository.save(twelve);
 
         retailPrice = new RetailPrice(new Price(Money.of(25.00, currency), Unit.HE));
-        Sku thirteen = new Sku(skuRepository.nextIdentity(), new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("泰国"),
+        Item thirteen = new Item(itemRepository.nextIdentity(), new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("泰国"),
                 new Specification("10片装"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
-        skuRepository.save(thirteen);
+        itemRepository.save(thirteen);
     }
 
     @AfterClass
@@ -173,132 +173,132 @@ public class ArangoDBSkuRepositoryTest {
         categoryRepository.remove("food");
         categoryRepository.remove("root");
 
-        skuRepository.remove("one");
-        skuRepository.remove("two");
-        skuRepository.remove("three");
-        skuRepository.remove("four");
-        skuRepository.remove("five");
-        skuRepository.remove("six");
-        skuRepository.remove("six_1");
-        skuRepository.remove("six_2");
-        skuRepository.remove("seven");
-        skuRepository.remove("eight");
-        skuRepository.remove("nine");
-        skuRepository.remove("ten");
-        skuRepository.remove("twelve");
+        itemRepository.remove("one");
+        itemRepository.remove("two");
+        itemRepository.remove("three");
+        itemRepository.remove("four");
+        itemRepository.remove("five");
+        itemRepository.remove("six");
+        itemRepository.remove("six_1");
+        itemRepository.remove("six_2");
+        itemRepository.remove("seven");
+        itemRepository.remove("eight");
+        itemRepository.remove("nine");
+        itemRepository.remove("ten");
+        itemRepository.remove("twelve");
 
-        for (Sku sku : skuRepository.fromBarcode("4547691239136"))
-            skuRepository.remove(sku.id());
+        for (Item item : itemRepository.fromBarcode("4547691239136"))
+            itemRepository.remove(item.id());
 
-        skuRepository.remove("twelve");
+        itemRepository.remove("twelve");
     }
 
     @Test
     public void belongToBrand() {
-        Sku[] skus = skuRepository.belongToBrand("caihong", 0, 3);
-        Assert.assertEquals(skus.length, 3);
-        skus = skuRepository.belongToBrand("caihong", 1, 3);
-        Assert.assertEquals(skus.length, 2);
-        skus = skuRepository.belongToBrand("caihong", 1, 1);
-        Assert.assertEquals(skus.length, 1);
-        skus = skuRepository.belongToBrand("caihong", 1, 0);
-        Assert.assertEquals(skus.length, 0);
+        Item[] skuses = itemRepository.belongToBrand("caihong", 0, 3);
+        Assert.assertEquals(skuses.length, 3);
+        skuses = itemRepository.belongToBrand("caihong", 1, 3);
+        Assert.assertEquals(skuses.length, 2);
+        skuses = itemRepository.belongToBrand("caihong", 1, 1);
+        Assert.assertEquals(skuses.length, 1);
+        skuses = itemRepository.belongToBrand("caihong", 1, 0);
+        Assert.assertEquals(skuses.length, 0);
     }
 
     @Test
     public void belongToCategory() {
-        Sku[] skus = skuRepository.belongToCategory("food", 0, 10);
-        Assert.assertEquals(skus.length, 8);
-        skus = skuRepository.belongToCategory("food", 2, 5);
-        Assert.assertEquals(skus.length, 5);
-        skus = skuRepository.belongToCategory("food", 5, 3);
-        Assert.assertEquals(skus.length, 3);
-        skus = skuRepository.belongToCategory("food", 3, 2);
-        Assert.assertEquals(skus.length, 2);
-        skus = skuRepository.belongToCategory("food", 0, 0);
-        Assert.assertEquals(skus.length, 0);
-        skus = skuRepository.belongToCategory("food", 7, 10);
-        Assert.assertEquals(skus.length, 1);
+        Item[] skuses = itemRepository.belongToCategory("food", 0, 10);
+        Assert.assertEquals(skuses.length, 8);
+        skuses = itemRepository.belongToCategory("food", 2, 5);
+        Assert.assertEquals(skuses.length, 5);
+        skuses = itemRepository.belongToCategory("food", 5, 3);
+        Assert.assertEquals(skuses.length, 3);
+        skuses = itemRepository.belongToCategory("food", 3, 2);
+        Assert.assertEquals(skuses.length, 2);
+        skuses = itemRepository.belongToCategory("food", 0, 0);
+        Assert.assertEquals(skuses.length, 0);
+        skuses = itemRepository.belongToCategory("food", 7, 10);
+        Assert.assertEquals(skuses.length, 1);
     }
 
     @Test
     public void find() {
-        Sku six = skuRepository.find("six_1");
+        Item six = itemRepository.find("six_1");
         Assert.assertNotNull(six);
-        Sku eight = skuRepository.find("eight");
+        Item eight = itemRepository.find("eight");
         Assert.assertNotNull(eight);
-        Sku nine = skuRepository.find("nine1");
+        Item nine = itemRepository.find("nine1");
         Assert.assertNull(nine);
     }
 
     @Test
     public void findAll() {
-        Sku[] skus = skuRepository.findAll(0, 25);
-        Assert.assertEquals(skus.length, 14);
-        skus = skuRepository.findAll(12, 25);
-        Assert.assertEquals(skus.length, 2);
-        skus = skuRepository.findAll(5, 5);
-        Assert.assertEquals(skus.length, 5);
+        Item[] skuses = itemRepository.findAll(0, 25);
+        Assert.assertEquals(skuses.length, 14);
+        skuses = itemRepository.findAll(12, 25);
+        Assert.assertEquals(skuses.length, 2);
+        skuses = itemRepository.findAll(5, 5);
+        Assert.assertEquals(skuses.length, 5);
     }
 
     @Test
     public void save() {
-        Sku ten = skuRepository.find("ten");
+        Item ten = itemRepository.find("ten");
         ten.rename(new Name("长虹5号碳性电池 ", "长虹1号"));
-        skuRepository.save(ten);
-        ten = skuRepository.find("ten");
+        itemRepository.save(ten);
+        ten = itemRepository.find("ten");
         Assert.assertEquals(ten.name(), new Name("长虹5号碳性电池", "长虹1号"));
 
-        Sku six = skuRepository.find("six_1");
+        Item six = itemRepository.find("six_1");
         Assert.assertNotNull(six);
         six.changeBarcode(new EAN_13("6923555240728"));
-        skuRepository.save(six);
+        itemRepository.save(six);
     }
 
     @Test
     public void size() {
-        Assert.assertEquals(skuRepository.size(), 14);
+        Assert.assertEquals(itemRepository.size(), 14);
     }
 
     @Test
     public void fromBarcode() {
-        Sku[] skus = skuRepository.fromBarcode("69235552");
-        Assert.assertEquals(skus.length, 3);
-        skus = skuRepository.fromBarcode("690");
-        Assert.assertEquals(skus.length, 3);
-        skus = skuRepository.fromBarcode("123465");
-        Assert.assertEquals(skus.length, 0);
-        skus = skuRepository.fromBarcode("4695");
-        Assert.assertEquals(skus.length, 1);
+        Item[] skuses = itemRepository.fromBarcode("69235552");
+        Assert.assertEquals(skuses.length, 3);
+        skuses = itemRepository.fromBarcode("690");
+        Assert.assertEquals(skuses.length, 3);
+        skuses = itemRepository.fromBarcode("123465");
+        Assert.assertEquals(skuses.length, 0);
+        skuses = itemRepository.fromBarcode("4695");
+        Assert.assertEquals(skuses.length, 1);
     }
 
     @Test
     public void fromMnemonic() {
-        Sku[] skus = skuRepository.fromMnemonic("^ch");
-        Assert.assertEquals(skus.length, 3);
-        skus = skuRepository.fromMnemonic("qd");
-        Assert.assertEquals(skus.length, 3);
-        skus = skuRepository.fromMnemonic("ch");
-        Assert.assertEquals(skus.length, 4);
-        skus = skuRepository.fromMnemonic("chetr");
-        Assert.assertEquals(skus.length, 0);
-        skus = skuRepository.fromMnemonic("ty");
-        Assert.assertEquals(skus.length, 5);
+        Item[] skuses = itemRepository.fromMnemonic("^ch");
+        Assert.assertEquals(skuses.length, 3);
+        skuses = itemRepository.fromMnemonic("qd");
+        Assert.assertEquals(skuses.length, 3);
+        skuses = itemRepository.fromMnemonic("ch");
+        Assert.assertEquals(skuses.length, 4);
+        skuses = itemRepository.fromMnemonic("chetr");
+        Assert.assertEquals(skuses.length, 0);
+        skuses = itemRepository.fromMnemonic("ty");
+        Assert.assertEquals(skuses.length, 5);
     }
 
     @Test
     public void fromName() {
-        Sku[] skus = skuRepository.fromName("彩虹");
-        Assert.assertEquals(skus.length, 3);
-        skus = skuRepository.fromName("^彩虹");
-        Assert.assertEquals(skus.length, 2);
-        skus = skuRepository.fromName("彩虹|长虹");
-        Assert.assertEquals(skus.length, 4);
-        skus = skuRepository.fromName("不知道");
-        Assert.assertEquals(skus.length, 0);
-        skus = skuRepository.fromName("天友|长虹|彩虹");
-        Assert.assertEquals(skus.length, 9);
-        skus = skuRepository.fromName("^天友|长虹|彩虹");
-        Assert.assertEquals(skus.length, 7);
+        Item[] skuses = itemRepository.fromName("彩虹");
+        Assert.assertEquals(skuses.length, 3);
+        skuses = itemRepository.fromName("^彩虹");
+        Assert.assertEquals(skuses.length, 2);
+        skuses = itemRepository.fromName("彩虹|长虹");
+        Assert.assertEquals(skuses.length, 4);
+        skuses = itemRepository.fromName("不知道");
+        Assert.assertEquals(skuses.length, 0);
+        skuses = itemRepository.fromName("天友|长虹|彩虹");
+        Assert.assertEquals(skuses.length, 9);
+        skuses = itemRepository.fromName("^天友|长虹|彩虹");
+        Assert.assertEquals(skuses.length, 7);
     }
 }

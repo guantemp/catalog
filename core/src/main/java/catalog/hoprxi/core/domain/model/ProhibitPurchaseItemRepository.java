@@ -23,41 +23,41 @@ import java.util.Collection;
  * @version 0.0.1 builder 2019-06-21
  */
 
-public interface ProhibitPurchaseSkuRepository {
+public interface ProhibitPurchaseItemRepository {
     /**
      * @param brandId
      * @return
      */
-    ProhibitPurchaseSku[] belongingToBrand(long brandId);
+    ProhibitPurchaseItem[] belongingToBrand(long brandId);
 
     /**
      * @param categoryId
      * @return
      */
-    ProhibitPurchaseSku[] belongingToCategory(long categoryId);
+    ProhibitPurchaseItem[] belongingToCategory(long categoryId);
 
     /**
      * @param id
      * @return
      */
-    ProhibitPurchaseSku find(long id);
+    ProhibitPurchaseItem find(long id);
 
     /**
      * @param low
      * @param high
      * @return
      */
-    Collection<ProhibitPurchaseSku> findAll(int low, int high);
+    Collection<ProhibitPurchaseItem> findAll(int low, int high);
 
     /**
      * @param sku
      */
-    void remove(ProhibitPurchaseSku sku);
+    void remove(ProhibitPurchaseItem sku);
 
     /**
      * @param sku
      */
-    void save(ProhibitPurchaseSku sku);
+    void save(ProhibitPurchaseItem sku);
 
     /**
      * @return
@@ -68,17 +68,17 @@ public interface ProhibitPurchaseSkuRepository {
      * @param barcode
      * @return
      */
-    Collection<ProhibitPurchaseSku> withBarcode(String barcode);
+    Collection<ProhibitPurchaseItem> withBarcode(String barcode);
 
     /**
      * @param mnemonicCode
      * @return
      */
-    Collection<ProhibitPurchaseSku> withMnemonicCode(String mnemonicCode);
+    Collection<ProhibitPurchaseItem> withMnemonicCode(String mnemonicCode);
 
     /**
      * @param name
      * @return
      */
-    Collection<ProhibitPurchaseSku> withName(String name);
+    Collection<ProhibitPurchaseItem> withName(String name);
 }

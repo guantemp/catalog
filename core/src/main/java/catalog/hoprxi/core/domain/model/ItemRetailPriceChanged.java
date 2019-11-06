@@ -16,27 +16,41 @@
 
 package catalog.hoprxi.core.domain.model;
 
-import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import event.hoprxi.domain.model.DomainEvent;
 
+import javax.money.MonetaryAmount;
 import java.time.LocalDateTime;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-05-02
+ * @version 0.0.1 2019/10/23
  */
-public class SkuBarcodeChanged implements DomainEvent {
+public class ItemRetailPriceChanged implements DomainEvent {
     private String id;
-    private Barcode barcode;
+    private MonetaryAmount amount;
+    private Unit unit;
     private LocalDateTime occurredOn;
     private int version;
 
-    public SkuBarcodeChanged(String id, Barcode barcode) {
+    public ItemRetailPriceChanged(String id, MonetaryAmount amount, Unit unit) {
         this.id = id;
-        this.barcode = barcode;
+        this.amount = amount;
+        this.unit = unit;
         occurredOn = LocalDateTime.now();
         version = 1;
+    }
+
+    public String id() {
+        return id;
+    }
+
+    public MonetaryAmount amount() {
+        return amount;
+    }
+
+    public Unit unit() {
+        return unit;
     }
 
     @Override
@@ -47,13 +61,5 @@ public class SkuBarcodeChanged implements DomainEvent {
     @Override
     public int version() {
         return version;
-    }
-
-    public String id() {
-        return id;
-    }
-
-    public Barcode barcode() {
-        return barcode;
     }
 }

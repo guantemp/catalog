@@ -25,15 +25,17 @@ import java.time.LocalDateTime;
  * @since JDK8.0
  * @version 0.0.1 2019-05-02
  */
-public class SkuBrandReallocated implements DomainEvent {
+public class ItemMadeInChanged implements DomainEvent {
     private String id;
-    private String brandId;
+    private String madeIn;
+    private long code;
     private LocalDateTime occurredOn;
     private int version;
 
-    public SkuBrandReallocated(String id, String brandId) {
+    public ItemMadeInChanged(String id, long code, String madeIn) {
         this.id = id;
-        this.brandId = brandId;
+        this.madeIn = madeIn;
+        this.code = code;
         occurredOn = LocalDateTime.now();
         version = 1;
     }
@@ -52,7 +54,7 @@ public class SkuBrandReallocated implements DomainEvent {
         return id;
     }
 
-    public String brandId() {
-        return brandId;
+    public String madeIn() {
+        return madeIn;
     }
 }

@@ -32,7 +32,7 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 builder 2019-06-19
  */
-public class ProhibitPurchaseSku {
+public class ProhibitPurchaseItem {
     @Expose(serialize = false, deserialize = false)
     private Barcode barcode;
     private String brandId;
@@ -61,8 +61,8 @@ public class ProhibitPurchaseSku {
      * @param brandId
      * @param categoryId
      */
-    protected ProhibitPurchaseSku(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-                                  Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String brandId, String categoryId) {
+    protected ProhibitPurchaseItem(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
+                                   Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String brandId, String categoryId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
@@ -134,7 +134,7 @@ public class ProhibitPurchaseSku {
         Objects.requireNonNull(barcode, "barcode required");
         if (!barcode.equals(this.barcode)) {
             this.barcode = barcode;
-            DomainRegistry.domainEventPublisher().publish(new SkuBarcodeChanged(id, barcode));
+            DomainRegistry.domainEventPublisher().publish(new ItemBarcodeChanged(id, barcode));
         }
     }
 
@@ -156,7 +156,7 @@ public class ProhibitPurchaseSku {
         Objects.requireNonNull(newMadeIn, "newMadeIn required");
         if (!newMadeIn.equals(this.madeIn)) {
             this.madeIn = newMadeIn;
-            DomainRegistry.domainEventPublisher().publish(new SKuMadeInChanged(id, madeIn.code(), madeIn.madeIn()));
+            DomainRegistry.domainEventPublisher().publish(new ItemMadeInChanged(id, madeIn.code(), madeIn.madeIn()));
         }
     }
 
@@ -167,7 +167,7 @@ public class ProhibitPurchaseSku {
         Objects.requireNonNull(retailPrice, "retailPrice required");
         if (this.retailPrice.equals(retailPrice)) {
             this.retailPrice = retailPrice;
-            DomainRegistry.domainEventPublisher().publish(new SkuRetailPriceChanged(id, retailPrice.price().amount(), retailPrice.price().unit()));
+            DomainRegistry.domainEventPublisher().publish(new ItemRetailPriceChanged(id, retailPrice.price().amount(), retailPrice.price().unit()));
         }
     }
 
@@ -180,7 +180,7 @@ public class ProhibitPurchaseSku {
             spec = Specification.UNDEFINED;
         if (!this.spec.equals(spec)) {
             this.spec = spec;
-            DomainRegistry.domainEventPublisher().publish(new SkuSpecificationChanged(id, spec));
+            DomainRegistry.domainEventPublisher().publish(new ItemSpecificationChanged(id, spec));
         }
     }
 
@@ -193,7 +193,7 @@ public class ProhibitPurchaseSku {
     public void moveToNewBrand(String brandId) {
         if (!this.brandId.equals(brandId) && Validator.isBrandExist(brandId)) {
             setBrandId(brandId);
-            DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
+            DomainRegistry.domainEventPublisher().publish(new ItemBrandReallocated(id, brandId));
         }
     }
 
@@ -234,7 +234,7 @@ public class ProhibitPurchaseSku {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ProhibitPurchaseSku that = (ProhibitPurchaseSku) o;
+        ProhibitPurchaseItem that = (ProhibitPurchaseItem) o;
 
         return id != null ? id.equals(that.id) : that.id == null;
     }
@@ -261,11 +261,11 @@ public class ProhibitPurchaseSku {
                 '}';
     }
 
-    public Sku permitPurchase() {
-        return new Sku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
+    public Item permitPurchase() {
+        return new Item(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
-    public ProhibitPurchaseAndSellSku prohibitSales() {
-        return new ProhibitPurchaseAndSellSku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
+    public ProhibitPurchaseAndSellItem prohibitSales() {
+        return new ProhibitPurchaseAndSellItem(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 }

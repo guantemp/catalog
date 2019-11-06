@@ -34,7 +34,7 @@ import java.util.Objects;
  * @version 0.0.2 builder 2019-10-23
  * @since JDK8.0
  */
-public class Sku {
+public class Item {
     private static final int ID_MAX_LENGTH = 36;
     @Expose(serialize = false, deserialize = false)
     private Barcode barcode;
@@ -67,8 +67,8 @@ public class Sku {
      *                                  if name is null
      *                                  if madeIn is null
      */
-    public Sku(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-               Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
+    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
+                Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
@@ -82,8 +82,8 @@ public class Sku {
         setBrandId(brandId);
     }
 
-    public Sku(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-               Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
+    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
+                Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
         this(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
     }
 
@@ -144,7 +144,7 @@ public class Sku {
         Objects.requireNonNull(barcode, "barcode required");
         if (!barcode.equals(this.barcode)) {
             this.barcode = barcode;
-            DomainRegistry.domainEventPublisher().publish(new SkuBarcodeChanged(id, barcode));
+            DomainRegistry.domainEventPublisher().publish(new ItemBarcodeChanged(id, barcode));
         }
     }
 
@@ -166,7 +166,7 @@ public class Sku {
         Objects.requireNonNull(newMadeIn, "newMadeIn required");
         if (!newMadeIn.equals(this.madeIn)) {
             this.madeIn = newMadeIn;
-            DomainRegistry.domainEventPublisher().publish(new SKuMadeInChanged(id, madeIn.code(), madeIn.madeIn()));
+            DomainRegistry.domainEventPublisher().publish(new ItemMadeInChanged(id, madeIn.code(), madeIn.madeIn()));
         }
     }
 
@@ -177,7 +177,7 @@ public class Sku {
         Objects.requireNonNull(retailPrice, "retailPrice required");
         if (this.retailPrice.equals(retailPrice)) {
             this.retailPrice = retailPrice;
-            DomainRegistry.domainEventPublisher().publish(new SkuRetailPriceChanged(id, retailPrice.price().amount(), retailPrice.price().unit()));
+            DomainRegistry.domainEventPublisher().publish(new ItemRetailPriceChanged(id, retailPrice.price().amount(), retailPrice.price().unit()));
         }
     }
 
@@ -190,7 +190,7 @@ public class Sku {
             spec = Specification.UNDEFINED;
         if (!this.spec.equals(spec)) {
             this.spec = spec;
-            DomainRegistry.domainEventPublisher().publish(new SkuSpecificationChanged(id, spec));
+            DomainRegistry.domainEventPublisher().publish(new ItemSpecificationChanged(id, spec));
         }
     }
 
@@ -207,7 +207,7 @@ public class Sku {
         Objects.requireNonNull(name, "name required");
         if (!this.name.equals(name)) {
             this.name = name;
-            DomainRegistry.domainEventPublisher().publish(new SkuRenamed(id, name.name(), name.mnemonic(), name.alias()));
+            DomainRegistry.domainEventPublisher().publish(new ItemRenamed(id, name.name(), name.mnemonic(), name.alias()));
         }
     }
 
@@ -219,7 +219,7 @@ public class Sku {
     public void moveToNewCategory(String categoryId) {
         if (!this.categoryId.equals(categoryId) && Validator.isCategoryExist(categoryId)) {
             setCategoryId(categoryId);
-            DomainRegistry.domainEventPublisher().publish(new SkuCategoryReallocated(id, categoryId));
+            DomainRegistry.domainEventPublisher().publish(new ItemCategoryReallocated(id, categoryId));
         }
     }
 
@@ -231,7 +231,7 @@ public class Sku {
     public void moveToNewBrand(String brandId) {
         if (!this.brandId.equals(brandId) && Validator.isBrandExist(brandId)) {
             setBrandId(brandId);
-            DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
+            DomainRegistry.domainEventPublisher().publish(new ItemBrandReallocated(id, brandId));
         }
     }
 
@@ -295,9 +295,9 @@ public class Sku {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Sku sku = (Sku) o;
+        Item item = (Item) o;
 
-        return id != null ? id.equals(sku.id) : sku.id == null;
+        return id != null ? id.equals(item.id) : item.id == null;
     }
 
     @Override
@@ -309,16 +309,16 @@ public class Sku {
         return unit;
     }
 
-    public ProhibitPurchaseSku prohibitPurchase() {
-        return new ProhibitPurchaseSku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
+    public ProhibitPurchaseItem prohibitPurchase() {
+        return new ProhibitPurchaseItem(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
-    public ProhibitSellSku prohibitSell() {
-        return new ProhibitSellSku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
+    public ProhibitSellItem prohibitSell() {
+        return new ProhibitSellItem(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
-    public ProhibitPurchaseAndSellSku prohibitPurchaseAndSell() {
-        return new ProhibitPurchaseAndSellSku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
+    public ProhibitPurchaseAndSellItem prohibitPurchaseAndSell() {
+        return new ProhibitPurchaseAndSellItem(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
     @Override

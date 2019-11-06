@@ -45,7 +45,7 @@ public class CoreSetup {
         arangoDB.createDatabase(databaseName);
         ArangoDatabase db = arangoDB.db(databaseName);
         //vertex
-        for (String s : new String[]{"brand", "category", "sku", "prohibit_sell_sku", "prohibit_purchase_sku", "prohibit_purchase_and_sell_sku", "barcode"}) {
+        for (String s : new String[]{"brand", "category", "item", "prohibit_sell_item", "prohibit_purchase_item", "prohibit_purchase_and_sell_item", "barcode"}) {
             CollectionCreateOptions options = new CollectionCreateOptions();
             options.keyOptions(true, KeyType.traditional, 1, 1);
             db.createCollection(s, options);
@@ -55,18 +55,18 @@ public class CoreSetup {
         //name.name
         index.add("name.name");
         SkiplistIndexOptions skiplistIndexOptions = new SkiplistIndexOptions().sparse(true);
-        db.collection("sku").ensureSkiplistIndex(index, skiplistIndexOptions);
-        db.collection("prohibit_sell_sku").ensureSkiplistIndex(index, skiplistIndexOptions);
-        db.collection("prohibit_purchase_sku").ensureSkiplistIndex(index, skiplistIndexOptions);
-        db.collection("prohibit_purchase_and_sell_sku").ensureSkiplistIndex(index, skiplistIndexOptions);
+        db.collection("item").ensureSkiplistIndex(index, skiplistIndexOptions);
+        db.collection("prohibit_sell_item").ensureSkiplistIndex(index, skiplistIndexOptions);
+        db.collection("prohibit_purchase_item").ensureSkiplistIndex(index, skiplistIndexOptions);
+        db.collection("prohibit_purchase_and_sell_item").ensureSkiplistIndex(index, skiplistIndexOptions);
         //name.mnemonic
         index.clear();
         index.add("name.mnemonic");
         skiplistIndexOptions = new SkiplistIndexOptions().sparse(true);
-        db.collection("sku").ensureSkiplistIndex(index, skiplistIndexOptions);
-        db.collection("prohibit_sell_sku").ensureSkiplistIndex(index, skiplistIndexOptions);
-        db.collection("prohibit_purchase_sku").ensureSkiplistIndex(index, skiplistIndexOptions);
-        db.collection("prohibit_purchase_and_sell_sku").ensureSkiplistIndex(index, skiplistIndexOptions);
+        db.collection("item").ensureSkiplistIndex(index, skiplistIndexOptions);
+        db.collection("prohibit_sell_item").ensureSkiplistIndex(index, skiplistIndexOptions);
+        db.collection("prohibit_purchase_item").ensureSkiplistIndex(index, skiplistIndexOptions);
+        db.collection("prohibit_purchase_and_sell_item").ensureSkiplistIndex(index, skiplistIndexOptions);
 
         index.clear();
         index.add("barcode");
@@ -83,8 +83,8 @@ public class CoreSetup {
         Collection<EdgeDefinition> edgeList = new ArrayList<>();
         edgeList.add(new EdgeDefinition().collection("designate").from("category").to("brand"));
         edgeList.add(new EdgeDefinition().collection("subordinate").from("category").to("category"));
-        edgeList.add(new EdgeDefinition().collection("belong").from("sku", "prohibit_sell_sku", "prohibit_purchase_sku", "prohibit_purchase_and_sell_sku").to("category", "brand"));
-        edgeList.add(new EdgeDefinition().collection("has").from("sku", "prohibit_sell_sku", "prohibit_purchase_sku", "prohibit_purchase_and_sell_sku", "category").to("barcode"));
+        edgeList.add(new EdgeDefinition().collection("belong").from("item", "prohibit_sell_item", "prohibit_purchase_item", "prohibit_purchase_and_sell_item").to("category", "brand"));
+        edgeList.add(new EdgeDefinition().collection("has").from("item", "prohibit_sell_item", "prohibit_purchase_item", "prohibit_purchase_and_sell_item", "category").to("barcode"));
         db.createGraph("core", edgeList);
         arangoDB.shutdown();
         logger.info("{} be created", databaseName);

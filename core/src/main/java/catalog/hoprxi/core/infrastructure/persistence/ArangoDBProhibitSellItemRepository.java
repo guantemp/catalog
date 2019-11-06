@@ -48,17 +48,17 @@ import java.util.Map;
  * @since JDK8.0
  * @version 0.0.1 builder 2018-06-29
  */
-public class ArangoDBProhibitSellSkuRepository implements ProhibitSellSkuRepository {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBProhibitSellSkuRepository.class);
+public class ArangoDBProhibitSellItemRepository implements ProhibitSellItemRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBProhibitSellItemRepository.class);
     private static final VertexUpdateOptions UPDATE_OPTIONS = new VertexUpdateOptions().keepNull(false);
     private static Constructor<Name> nameConstructor;
-    private static Constructor<ProhibitSellSku> stopSellSkuConstructor;
+    private static Constructor<ProhibitSellItem> stopSellSkuConstructor;
 
     static {
         try {
             nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class);
             nameConstructor.setAccessible(true);
-            stopSellSkuConstructor = ProhibitSellSku.class.getDeclaredConstructor(String.class, Barcode.class, Name.class, MadeIn.class, Unit.class, Specification.class,
+            stopSellSkuConstructor = ProhibitSellItem.class.getDeclaredConstructor(String.class, Barcode.class, Name.class, MadeIn.class, Unit.class, Specification.class,
                     Grade.class, ShelfLife.class, String.class, String.class);
             stopSellSkuConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
@@ -70,7 +70,7 @@ public class ArangoDBProhibitSellSkuRepository implements ProhibitSellSkuReposit
     private ArangoDatabase catalog = ArangoDBUtil.getDatabase();
 
     @Override
-    public ProhibitSellSku[] belongToBrand(String brandId) {
+    public ProhibitSellItem[] belongToBrand(String brandId) {
         final String query = "WITH brand,belong,stop_sell_sku,has,barcode,attribute\n" +
                 "FOR sku,e IN 1..1 INBOUND @startVertex belong LIMIT @offset,@limit\n" +
                 "LET attributes = (FOR a,h IN 1..1 OUTBOUND sku._id has FILTER h.distinguish==true RETURN a)\n" +
@@ -81,8 +81,8 @@ public class ArangoDBProhibitSellSkuRepository implements ProhibitSellSkuReposit
         return transform(slices);
     }
 
-    private ProhibitSellSku[] transform(ArangoCursor<VPackSlice> slices) {
-        List<ProhibitSellSku> skuList = new ArrayList<>();
+    private ProhibitSellItem[] transform(ArangoCursor<VPackSlice> slices) {
+        List<ProhibitSellItem> skuList = new ArrayList<>();
         while (slices.hasNext()) {
             try {
                 skuList.add(rebuild(slices.next()));
@@ -91,10 +91,10 @@ public class ArangoDBProhibitSellSkuRepository implements ProhibitSellSkuReposit
                     LOGGER.debug("Can't rebuild ProhibitSalesSku", e);
             }
         }
-        return skuList.toArray(new ProhibitSellSku[0]);
+        return skuList.toArray(new ProhibitSellItem[0]);
     }
 
-    private ProhibitSellSku rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+    private ProhibitSellItem rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
         Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(slice.get("barcode").getAsString());
         //Sku
         VPackSlice sku = slice.get("sku");
@@ -118,18 +118,18 @@ public class ArangoDBProhibitSellSkuRepository implements ProhibitSellSkuReposit
     }
 
     @Override
-    public ProhibitSellSku[] belongToCategory(String categoryId) {
-        return new ProhibitSellSku[0];
+    public ProhibitSellItem[] belongToCategory(String categoryId) {
+        return new ProhibitSellItem[0];
     }
 
     @Override
-    public ProhibitSellSku find(String id) {
+    public ProhibitSellItem find(String id) {
         return null;
     }
 
     @Override
-    public ProhibitSellSku[] findAll(long offset, int limit) {
-        return new ProhibitSellSku[0];
+    public ProhibitSellItem[] findAll(long offset, int limit) {
+        return new ProhibitSellItem[0];
     }
 
     @Override
@@ -138,7 +138,7 @@ public class ArangoDBProhibitSellSkuRepository implements ProhibitSellSkuReposit
     }
 
     @Override
-    public void save(ProhibitSellSku sku) {
+    public void save(ProhibitSellItem sku) {
         ArangoGraph graph = catalog.graph("core");
         boolean exists = catalog.collection("stop_sell_sku").documentExists(sku.id());
         if (exists) {
@@ -199,18 +199,18 @@ public class ArangoDBProhibitSellSkuRepository implements ProhibitSellSkuReposit
     }
 
     @Override
-    public ProhibitSellSku[] fromBarcode(String barcode) {
-        return new ProhibitSellSku[0];
+    public ProhibitSellItem[] fromBarcode(String barcode) {
+        return new ProhibitSellItem[0];
     }
 
     @Override
-    public ProhibitSellSku[] fromMnemonic(String mnemonic) {
-        return new ProhibitSellSku[0];
+    public ProhibitSellItem[] fromMnemonic(String mnemonic) {
+        return new ProhibitSellItem[0];
     }
 
     @Override
-    public ProhibitSellSku[] fromName(String name) {
-        return new ProhibitSellSku[0];
+    public ProhibitSellItem[] fromName(String name) {
+        return new ProhibitSellItem[0];
     }
 
     private static class HasEdge {

@@ -23,12 +23,20 @@ import java.time.LocalDateTime;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019/10/24
+ * @version 0.0.1 2019-05-02
  */
-public class SkuProhibitPurchased implements DomainEvent {
-    private LocalDateTime occurredOn;
+public class ItemCategoryReallocated implements DomainEvent {
     private String id;
+    private String categoryId;
+    private LocalDateTime occurredOn;
     private int version;
+
+    public ItemCategoryReallocated(String id, String categoryId) {
+        this.id = id;
+        this.categoryId = categoryId;
+        occurredOn = LocalDateTime.now();
+        version = 1;
+    }
 
     @Override
     public LocalDateTime occurredOn() {
@@ -38,5 +46,13 @@ public class SkuProhibitPurchased implements DomainEvent {
     @Override
     public int version() {
         return version;
+    }
+
+    public String id() {
+        return id;
+    }
+
+    public String categoryId() {
+        return categoryId;
     }
 }

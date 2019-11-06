@@ -18,34 +18,38 @@ package catalog.hoprxi.core.domain.model;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2019-06-21
+ * @version 0.0.2 builder 2018-06-04
  */
-
-public interface ProhibitSellSkuRepository {
+public interface ItemRepository {
     /**
      * @param brandId
      * @return
      */
-    ProhibitSellSku[] belongToBrand(String brandId);
+    Item[] belongToBrand(String brandId, int offset, int limit);
 
     /**
      * @param categoryId
      * @return
      */
-    ProhibitSellSku[] belongToCategory(String categoryId);
+    Item[] belongToCategory(String categoryId, long offset, int limit);
 
     /**
      * @param id
      * @return
      */
-    ProhibitSellSku find(String id);
+    Item find(String id);
 
     /**
      * @param offset
      * @param limit
      * @return
      */
-    ProhibitSellSku[] findAll(long offset, int limit);
+    Item[] findAll(long offset, int limit);
+
+    /**
+     * @return
+     */
+    String nextIdentity();
 
     /**
      * @param id
@@ -53,9 +57,9 @@ public interface ProhibitSellSkuRepository {
     void remove(String id);
 
     /**
-     * @param sku
+     * @param item
      */
-    void save(ProhibitSellSku sku);
+    void save(Item item);
 
     /**
      * @return
@@ -63,20 +67,20 @@ public interface ProhibitSellSkuRepository {
     long size();
 
     /**
-     * @param barcode
+     * @param barcode is support regular
      * @return
      */
-    ProhibitSellSku[] fromBarcode(String barcode);
+    Item[] fromBarcode(String barcode);
 
     /**
-     * @param mnemonic
+     * @param mnemonic is support regular
      * @return
      */
-    ProhibitSellSku[] fromMnemonic(String mnemonic);
+    Item[] fromMnemonic(String mnemonic);
 
     /**
-     * @param name
+     * @param name is support regular
      * @return
      */
-    ProhibitSellSku[] fromName(String name);
+    Item[] fromName(String name);
 }

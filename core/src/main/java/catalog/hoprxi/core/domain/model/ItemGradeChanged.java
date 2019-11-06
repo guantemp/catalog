@@ -25,15 +25,15 @@ import java.time.LocalDateTime;
  * @since JDK8.0
  * @version 0.0.1 2019-05-02
  */
-public class SkuCategoryReallocated implements DomainEvent {
+public class ItemGradeChanged implements DomainEvent {
     private String id;
-    private String categoryId;
+    private Grade grade;
     private LocalDateTime occurredOn;
     private int version;
 
-    public SkuCategoryReallocated(String id, String categoryId) {
+    public ItemGradeChanged(String id, Grade grade) {
         this.id = id;
-        this.categoryId = categoryId;
+        this.grade = grade;
         occurredOn = LocalDateTime.now();
         version = 1;
     }
@@ -52,7 +52,7 @@ public class SkuCategoryReallocated implements DomainEvent {
         return id;
     }
 
-    public String categoryId() {
-        return categoryId;
+    public Grade grade() {
+        return grade;
     }
 }
