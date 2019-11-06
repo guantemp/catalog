@@ -53,12 +53,39 @@ public class ArangoDBCountRepositoryTest {
     @BeforeClass
     public static void setUpBeforeClass() {
         brandRepository.save(Brand.UNDEFINED);
-        brandRepository.save(new Brand("tw", "董允坝"));
+        brandRepository.save(new Brand("dyb", "董允坝"));
 
         RetailPrice retailPrice = new RetailPrice(new Price(Money.of(4.99, currency), Unit.BA));
+        MemberPrice memberPrice = MemberPrice.RMB_ZERO;
+        VipPrice vipPrice = new VipPrice("plus会员价", new Price(Money.of(1.99, currency), Unit.BA));
         Count spinach = new Count(new Plu(3), new Name("菠菜", "又名：秋波"), new Domestic("泸洲", "江阳区"), null, Grade.QUALIFIED, ShelfLife.SAME_DAY,
-                retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, "vegetables", Brand.UNDEFINED.id());
+                retailPrice, memberPrice, vipPrice, "vegetables", "dyb");
         countRepository.save(spinach);
+
+        retailPrice = new RetailPrice(new Price(Money.of(0.99, currency), Unit.GENG));
+        memberPrice = new MemberPrice(new Price(Money.of(0.88, currency), Unit.GENG));
+        Count cucumber = new Count(new Plu(4), new Name("黄瓜"), new Domestic("泸洲", "合江县"), null, Grade.QUALIFIED, ShelfLife.SAME_DAY,
+                retailPrice, memberPrice, VipPrice.RMB_ZERO, "vegetables", Brand.UNDEFINED.id());
+        countRepository.save(cucumber);
+
+        retailPrice = new RetailPrice(new Price(Money.of(1.99, currency), Unit.GE));
+        memberPrice = new MemberPrice(new Price(Money.of(1.59, currency), Unit.GE));
+        Count pumpkin = new Count(new Plu(5), new Name("南瓜", "美国南瓜"), new Domestic("泸洲", "龙马潭区"), null, Grade.QUALIFIED, ShelfLife.SAME_DAY,
+                retailPrice, memberPrice, VipPrice.RMB_ZERO, "vegetables", Brand.UNDEFINED.id());
+        countRepository.save(pumpkin);
+
+        retailPrice = new RetailPrice(new Price(Money.of(2.99, currency), Unit.TIAO));
+        memberPrice = new MemberPrice(new Price(Money.of(1.59, currency), Unit.TIAO));
+        Count lettuce = new Count(new Plu(6), new Name("莴笋"), new Domestic("泸洲", "江阳区"), null, Grade.QUALIFIED, ShelfLife.SAME_DAY,
+                retailPrice, memberPrice, VipPrice.RMB_ZERO, "vegetables", "dyb");
+        countRepository.save(lettuce);
+
+        retailPrice = new RetailPrice(new Price(Money.of(0.99, currency), Unit.KUN));
+        vipPrice = new VipPrice("plus会员价", new Price(Money.of(0.49, currency), Unit.KUN));
+        Count radish = new Count(new Plu(7), new Name("长白萝卜"), new Domestic("泸洲", "江阳区"), null, Grade.QUALIFIED, ShelfLife.SAME_DAY,
+                retailPrice, MemberPrice.RMB_ZERO, vipPrice, "vegetables", "dyb");
+        countRepository.save(radish);
+
     }
 
     @AfterClass

@@ -45,12 +45,7 @@ public interface CountRepository {
      */
     Count find(int plu);
 
-    /**
-     * @param offset
-     * @param limit
-     * @return
-     */
-    Count[] findAll(int offset, int limit);
+    Count[] findAll();
 
     /**
      * @return

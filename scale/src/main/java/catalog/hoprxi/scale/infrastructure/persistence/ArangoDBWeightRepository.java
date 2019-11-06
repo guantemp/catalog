@@ -79,7 +79,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
     public boolean isPluExists(int plu) {
         if (plu < 0 || plu > 99999)
             return false;
-        final String query = "FOR v IN plu FILTER v._key == @plu RETURN v";
+        final String query = "FOR p IN plu FILTER p._key == @plu RETURN p";
         final Map<String, Object> bindVars = new MapBuilder().put("plu", String.valueOf(plu)).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return slices.hasNext();
@@ -87,20 +87,18 @@ public class ArangoDBWeightRepository implements WeightRepository {
 
     @Override
     public Weight find(int plu) {
-        if (isPluExists(plu)) {
-            final String query = "WITH plu,weight\n" +
-                    "FOR v1 IN plu FILTER v1._key == @plu\n" +
-                    "FOR v,e IN 1..1 OUTBOUND v1._id scale\n" +
-                    "RETURN {'plu':TO_NUMBER(v1._key),'name':v.name,'madeIn':v.madeIn,'spec':v.spec,'grade':v.grade,'shelfLife':v.shelfLife,'retailPrice':v.retailPrice,'memberPrice':v.memberPrice,'vipPrice':v.vipPrice,'categoryId':v.categoryId,'brandId':v.brandId}";
-            final Map<String, Object> bindVars = new MapBuilder().put("plu", String.valueOf(plu)).get();
-            ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-            if (slices.hasNext()) {
-                try {
-                    return rebuild(slices.next());
-                } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                    if (LOGGER.isDebugEnabled())
-                        LOGGER.debug("Can't rebuild sku", e);
-                }
+        final String query = "WITH plu,weight\n" +
+                "FOR p IN plu FILTER p._key == @plu\n" +
+                "FOR w IN 1..1 OUTBOUND p._id scale\n" +
+                "RETURN {'plu':TO_NUMBER(p._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
+        final Map<String, Object> bindVars = new MapBuilder().put("plu", String.valueOf(plu)).get();
+        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
+        if (slices.hasNext()) {
+            try {
+                return rebuild(slices.next());
+            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("Can't rebuild sku", e);
             }
         }
         return null;
@@ -109,8 +107,8 @@ public class ArangoDBWeightRepository implements WeightRepository {
     @Override
     public Weight[] belongingToBrand(String brandId, int offset, int limit) {
         final String query = "WITH brand,plu,weight\n" +
-                "FOR v IN 1..1 INBOUND @startVertex belong_scale LIMIT @offset,@limit\n" +
-                "FOR w IN 1..1 OUTBOUND v._id scale\n" +
+                "FOR v IN 1..1 INBOUND @startVertex belong_scale\n" +
+                "FOR w IN 1..1 OUTBOUND v._id scale FILTER w._id =~ '^weight' LIMIT @offset,@limit\n" +
                 "RETURN {'plu':TO_NUMBER(v._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "brand/" + brandId).put("offset", offset).put("limit", limit).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
@@ -120,8 +118,8 @@ public class ArangoDBWeightRepository implements WeightRepository {
     @Override
     public Weight[] belongingToCategory(String categoryId, int offset, int limit) {
         final String query = "WITH category,plu,weight\n" +
-                "FOR v IN 1..1 INBOUND @startVertex belong_scale LIMIT @offset,@limit\n" +
-                "FOR w IN 1..1 OUTBOUND v._id scale\n" +
+                "FOR v IN 1..1 INBOUND @startVertex belong_scale\n" +
+                "FOR w IN 1..1 OUTBOUND v._id scale FILTER w._id =~ '^weight' LIMIT @offset,@limit\n" +
                 "RETURN {'plu':TO_NUMBER(v._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + categoryId).put("offset", offset).put("limit", limit).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
@@ -177,8 +175,8 @@ public class ArangoDBWeightRepository implements WeightRepository {
             return weights;
         final String query = "WITH plu,weight\n" +
                 "FOR p IN plu LIMIT @offset,@limit\n" +
-                "FOR v IN 1..1 OUTBOUND p._id scale\n" +
-                "RETURN {'plu':TO_NUMBER(p._key),'name':v.name,'madeIn':v.madeIn,'spec':v.spec,'grade':v.grade,'shelfLife':v.shelfLife,'retailPrice':v.retailPrice,'memberPrice':v.memberPrice,'vipPrice':v.vipPrice,'categoryId':v.categoryId,'brandId':v.brandId}";
+                "FOR w IN 1..1 OUTBOUND p._id scale\n" +
+                "RETURN {'plu':TO_NUMBER(p._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("offset", offset).put("limit", limit).get();
         final ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         try {
@@ -201,7 +199,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
                     LOGGER.debug("Can't rebuild weight", e);
             }
         }
-        return weightList.toArray(new Weight[0]);
+        return weightList.toArray(new Weight[weightList.size()]);
     }
 
     @Override
@@ -227,7 +225,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
             if (isBrandIdChanged(catalog, vertex, weight.brandId()))
                 insertBelongEdgeOfBrand(graph, vertex, weight.brandId());
             final String query = "WITH plu,weight\n" +
-                    "FOR v,e IN 1..1 OUTBOUND @startVertex scale RETURN v._key";
+                    "FOR w IN 1..1 OUTBOUND @startVertex scale RETURN w._key";
             final Map<String, Object> bindVars = new MapBuilder().put("startVertex", vertex.getId()).get();
             final ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
             if (slices.hasNext()) {
@@ -272,7 +270,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
 
     @Override
     public int size() {
-        final String query = "RETURN LENGTH(plu)";
+        final String query = "RETURN LENGTH(weight)";
         final ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
         if (cursor.hasNext())
             return cursor.next().getAsInt();

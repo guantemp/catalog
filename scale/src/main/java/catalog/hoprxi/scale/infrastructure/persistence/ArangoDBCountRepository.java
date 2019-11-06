@@ -82,7 +82,7 @@ public class ArangoDBCountRepository implements CountRepository {
     public boolean isPluExists(int plu) {
         if (plu < 0 || plu > 99999)
             return false;
-        final String query = "FOR v IN plu FILTER v._key == @plu RETURN v";
+        final String query = "FOR p IN plu FILTER p._key == @plu RETURN p";
         final Map<String, Object> bindVars = new MapBuilder().put("plu", String.valueOf(plu)).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return slices.hasNext();
@@ -92,9 +92,9 @@ public class ArangoDBCountRepository implements CountRepository {
     public Count find(int plu) {
         if (isPluExists(plu)) {
             final String query = "WITH plu,count\n" +
-                    "FOR v1 IN plu FILTER v1._key == @plu\n" +
-                    "FOR v,e IN 1..1 OUTBOUND v1._id scale\n" +
-                    "RETURN {'plu':TO_NUMBER(v1._key),'name':v.name,'madeIn':v.madeIn,'spec':v.spec,'grade':v.grade,'shelfLife':v.shelfLife,'retailPrice':v.retailPrice,'memberPrice':v.memberPrice,'vipPrice':v.vipPrice,'categoryId':v.categoryId,'brandId':v.brandId}";
+                    "FOR p IN plu FILTER p._key == @plu\n" +
+                    "FOR c IN 1..1 OUTBOUND p._id scale\n" +
+                    "RETURN {'plu':TO_NUMBER(p._key),'name':c.name,'madeIn':c.madeIn,'spec':c.spec,'grade':c.grade,'shelfLife':c.shelfLife,'retailPrice':c.retailPrice,'memberPrice':c.memberPrice,'vipPrice':c.vipPrice,'categoryId':c.categoryId,'brandId':c.brandId}";
             final Map<String, Object> bindVars = new MapBuilder().put("plu", String.valueOf(plu)).get();
             ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
             if (slices.hasNext()) {
@@ -110,22 +110,21 @@ public class ArangoDBCountRepository implements CountRepository {
     }
 
     @Override
-    public Count[] findAll(int offset, int limit) {
-        Count[] counts = ArangoDBUtil.calculationCollectionSize(catalog, Count.class, offset, limit);
+    public Count[] findAll() {
+        Count[] counts = new Count[this.size()];
         if (counts.length == 0)
             return counts;
         final String query = "WITH count,plu\n" +
-                "FOR v IN weight LIMIT @offset,@limit\n" +
-                "LET plu = (FOR v1,e IN 1..1 OUTBOUND v._id scale RETURN v1)\n" +
-                "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
-        final Map<String, Object> bindVars = new MapBuilder().put("offset", offset).put("limit", limit).get();
-        final ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
+                "FOR p IN plu\n" +
+                "FOR c IN 1..1 OUTBOUND p._id scale\n" +
+                "RETURN {'plu':TO_NUMBER(p._key),'name':c.name,'madeIn':c.madeIn,'spec':c.spec,'grade':c.grade,'shelfLife':c.shelfLife,'retailPrice':c.retailPrice,'memberPrice':c.memberPrice,'vipPrice':c.vipPrice,'categoryId':c.categoryId,'brandId':c.brandId}";
+        final ArangoCursor<VPackSlice> slices = catalog.query(query, null, null, VPackSlice.class);
         try {
             for (int i = 0; slices.hasNext(); i++)
                 counts[i] = rebuild(slices.next());
         } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
             if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Can't rebuild weight", e);
+                LOGGER.debug("Can't rebuild count", e);
         }
         return counts;
     }
@@ -134,8 +133,8 @@ public class ArangoDBCountRepository implements CountRepository {
     public Count[] belongingToBrand(String brandId, int offset, int limit) {
         final String query = "WITH brand,plu,count\n" +
                 "FOR v IN 1..1 INBOUND @startVertex belong_scale LIMIT @offset,@limit\n" +
-                "FOR c IN 1..1 OUTBOUND v._id scale\n" +
-                "RETURN {'plu':TO_NUMBER(v._key),'name':c.name,'madeIn':c.madeIn,'spec':c.spec,'grade':c.grade,'shelfLife':c.shelfLife,'retailPrice':c.retailPrice,'memberPrice':c.memberPrice,'vipPrice':c.vipPrice,'categoryId':c.categoryId,'brandId':c.brandId}";
+                "FOR c IN 1..1 OUTBOUND c._id scale\n" +
+                "RETURN {'plu':TO_NUMBER(c._key),'name':c.name,'madeIn':c.madeIn,'spec':c.spec,'grade':c.grade,'shelfLife':c.shelfLife,'retailPrice':c.retailPrice,'memberPrice':c.memberPrice,'vipPrice':c.vipPrice,'categoryId':c.categoryId,'brandId':c.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "brand/" + brandId).put("offset", offset).put("limit", limit).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
@@ -145,7 +144,7 @@ public class ArangoDBCountRepository implements CountRepository {
     public Count[] belongingToCategory(String categoryId, int offset, int limit) {
         final String query = "WITH category,plu,weight\n" +
                 "FOR v IN 1..1 INBOUND @startVertex belong_scale LIMIT @offset,@limit\n" +
-                "FOR w IN 1..1 OUTBOUND v._id scale\n" +
+                "FOR w IN 1..1 OUTBOUND c._id scale\n" +
                 "RETURN {'plu':TO_NUMBER(v._key),'name':c.name,'madeIn':c.madeIn,'spec':c.spec,'grade':c.grade,'shelfLife':c.shelfLife,'retailPrice':c.retailPrice,'memberPrice':c.memberPrice,'vipPrice':c.vipPrice,'categoryId':c.categoryId,'brandId':c.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + categoryId).put("offset", offset).put("limit", limit).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
@@ -274,7 +273,7 @@ public class ArangoDBCountRepository implements CountRepository {
 
     @Override
     public int size() {
-        final String query = "RETURN LENGTH(plu)";
+        final String query = "RETURN LENGTH(count)";
         final ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
         if (cursor.hasNext())
             return cursor.next().getAsInt();
@@ -284,9 +283,9 @@ public class ArangoDBCountRepository implements CountRepository {
     @Override
     public Count[] fromName(String name) {
         final String query = "WITH count,plu\n" +
-                "FOR v IN count FILTER v.name.name =~ @name || v.name.alias =~ @name \n" +
-                "LET plu = (FOR v1,e1 IN 1..1 OUTBOUND v._id scale RETURN v1)\n" +
-                "RETURN {'id':v._key,'plu':plu[0].plu,'name':v.name,'spec':v.spec,'unit':v.unit,'grade':v.grade,'placeOfProduction':v.placeOfProduction,'shelfLife':v.shelfLife,'brandId':v.brandId,'categoryId':v.categoryId}";
+                "FOR c IN count FILTER c.name.name =~ @name || c.name.alias =~ @name || c.name.mnemonic =~ @name\n" +
+                "FOR p IN 1..1 INBOUND c._id scale\n" +
+                "RETURN {'plu':TO_NUMBER(p._key),'name':c.name,'spec':c.spec,'unit':c.unit,'grade':c.grade,'placeOfProduction':c.placeOfProduction,'shelfLife':c.shelfLife,'retailPrice':c.retailPrice,'memberPrice':c.memberPrice,'vipPrice':c.vipPrice,'categoryId':c.categoryId,'brandId':c.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("name", name).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);

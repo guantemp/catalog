@@ -135,6 +135,14 @@ public class ArangoDBWeightRepositoryTest {
         Assert.assertNotNull(apple);
         Weight tenderloin = weightRepository.find(13);
         System.out.println(tenderloin);
+        Weight crucian_carp = weightRepository.find(21);
+        Assert.assertNotNull(crucian_carp);
+        Weight weight = weightRepository.find(22);
+        Assert.assertNull(weight);
+        weight = weightRepository.find(25);
+        Assert.assertNull(weight);
+        weight = weightRepository.find(80);
+        Assert.assertNull(weight);
     }
 
     @Test

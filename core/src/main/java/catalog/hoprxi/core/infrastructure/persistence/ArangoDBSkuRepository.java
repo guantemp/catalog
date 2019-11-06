@@ -73,7 +73,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
 
     @Override
     public Sku[] belongToBrand(String brandId, int offset, int limit) {
-        final String query = "WITH brand,belong,sku,has,barcode\n" +
+        final String query = "WITH brand,sku,barcode\n" +
                 "FOR s,b IN 1..1 INBOUND @startVertex belong LIMIT @offset,@limit\n" +
                 "LET barcode = (FOR v,e IN 1..1 OUTBOUND s._id has RETURN v)\n" +
                 "RETURN {'sku':s,'barcode':barcode[0].barcode}";
@@ -165,7 +165,7 @@ public class ArangoDBSkuRepository implements SkuRepository {
 
         String brandId = sku.get("brandId").getAsString();
         String categoryId = sku.get("categoryId").getAsString();
-        return new Sku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
+        return new Sku(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
     @Override
