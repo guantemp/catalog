@@ -129,10 +129,16 @@ public class ArangoDBCountRepositoryTest {
         Assert.assertEquals(2, counts.length);
         counts = countRepository.belongingToBrand("dyb");
         Assert.assertEquals(3, counts.length);
+        counts = countRepository.belongingToBrand("dweyb");
+        Assert.assertEquals(0, counts.length);
     }
 
     @Test
     public void belongingToCategory() {
+        Count[] counts = countRepository.belongingToCategory("vegetables");
+        Assert.assertEquals(5, counts.length);
+        counts = countRepository.belongingToCategory("dyb");
+        Assert.assertEquals(0, counts.length);
     }
 
     @Test

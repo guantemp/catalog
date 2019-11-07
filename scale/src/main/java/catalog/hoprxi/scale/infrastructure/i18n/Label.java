@@ -33,6 +33,7 @@ public class Label extends NLS {
     public static String WEIGHT_UNIT_TON;
     public static String WEIGHT_UNIT_OUNCE;
     public static String WEIGHT_UNIT_POUND;
+    public static String WEIGHT_UNIT_CARAT;
 
     static {
         NLS.initializeMessages(BUNDLE_NAME, Label.class);

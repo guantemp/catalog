@@ -147,7 +147,24 @@ public enum WeightUnit {
         public String toString() {
             return Label.WEIGHT_UNIT_POUND;
         }
+    }, CARAT {
+        @Override
+        public Number to(WeightUnit unit) {
+            switch (unit) {
+                case GRAM:
+                    return new BigDecimal("0.2");
+                default:
+                    return 1;
+
+            }
+        }
+
+        @Override
+        public String toString() {
+            return Label.WEIGHT_UNIT_CARAT;
+        }
     };
+
 
     public abstract Number to(WeightUnit unit);
 
