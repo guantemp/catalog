@@ -33,6 +33,7 @@ import catalog.hoprxi.scale.domain.model.CountRepository;
 import catalog.hoprxi.scale.domain.model.Plu;
 import org.javamoney.moneta.Money;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -98,14 +99,28 @@ public class ArangoDBCountRepositoryTest {
 
     @Test
     public void isPluExists() {
+        Assert.assertTrue(countRepository.isPluExists(10));
+        Assert.assertTrue(countRepository.isPluExists(5));
+        Assert.assertFalse(countRepository.isPluExists(22));
+        Assert.assertFalse(countRepository.isPluExists(222));
     }
 
     @Test
     public void find() {
+        Count radish = countRepository.find(7);
+        Assert.assertNotNull(radish);
+        Count cucumber = countRepository.find(4);
+        Assert.assertNotNull(cucumber);
+        Count count = countRepository.find(1);
+        Assert.assertNull(count);
+        count = countRepository.find(21);
+        Assert.assertNull(count);
     }
 
     @Test
     public void findAll() {
+        Count[] counts = countRepository.findAll();
+        Assert.assertEquals(5, counts.length);
     }
 
     @Test

@@ -45,6 +45,9 @@ public interface CountRepository {
      */
     Count find(int plu);
 
+    /**
+     * @return
+     */
     Count[] findAll();
 
     /**

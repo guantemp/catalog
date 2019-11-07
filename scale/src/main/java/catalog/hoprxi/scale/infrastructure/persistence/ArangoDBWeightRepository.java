@@ -89,7 +89,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
     public Weight find(int plu) {
         final String query = "WITH plu,weight\n" +
                 "FOR p IN plu FILTER p._key == @plu\n" +
-                "FOR w IN 1..1 OUTBOUND p._id scale\n" +
+                "FOR w IN 1..1 OUTBOUND p._id scale FILTER w._id =~ '^weight/'\n" +
                 "RETURN {'plu':TO_NUMBER(p._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("plu", String.valueOf(plu)).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
@@ -108,7 +108,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
     public Weight[] belongingToBrand(String brandId, int offset, int limit) {
         final String query = "WITH brand,plu,weight\n" +
                 "FOR v IN 1..1 INBOUND @startVertex belong_scale\n" +
-                "FOR w IN 1..1 OUTBOUND v._id scale FILTER w._id =~ '^weight' LIMIT @offset,@limit\n" +
+                "FOR w IN 1..1 OUTBOUND v._id scale FILTER w._id =~ '^weight/' LIMIT @offset,@limit\n" +
                 "RETURN {'plu':TO_NUMBER(v._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "brand/" + brandId).put("offset", offset).put("limit", limit).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
@@ -119,7 +119,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
     public Weight[] belongingToCategory(String categoryId, int offset, int limit) {
         final String query = "WITH category,plu,weight\n" +
                 "FOR v IN 1..1 INBOUND @startVertex belong_scale\n" +
-                "FOR w IN 1..1 OUTBOUND v._id scale FILTER w._id =~ '^weight' LIMIT @offset,@limit\n" +
+                "FOR w IN 1..1 OUTBOUND v._id scale FILTER w._id =~ '^weight/' LIMIT @offset,@limit\n" +
                 "RETURN {'plu':TO_NUMBER(v._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + categoryId).put("offset", offset).put("limit", limit).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
@@ -174,8 +174,8 @@ public class ArangoDBWeightRepository implements WeightRepository {
         if (weights.length == 0)
             return weights;
         final String query = "WITH plu,weight\n" +
-                "FOR p IN plu LIMIT @offset,@limit\n" +
-                "FOR w IN 1..1 OUTBOUND p._id scale\n" +
+                "FOR p IN plu\n" +
+                "FOR w IN 1..1 OUTBOUND p._id scale FILTER w._id =~ '^weight/' LIMIT @offset,@limit\n" +
                 "RETURN {'plu':TO_NUMBER(p._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("offset", offset).put("limit", limit).get();
         final ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
