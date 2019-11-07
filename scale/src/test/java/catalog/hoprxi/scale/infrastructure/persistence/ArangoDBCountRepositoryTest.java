@@ -125,6 +125,10 @@ public class ArangoDBCountRepositoryTest {
 
     @Test
     public void belongingToBrand() {
+        Count[] counts = countRepository.belongingToBrand(Brand.UNDEFINED.id());
+        Assert.assertEquals(2, counts.length);
+        counts = countRepository.belongingToBrand("dyb");
+        Assert.assertEquals(3, counts.length);
     }
 
     @Test

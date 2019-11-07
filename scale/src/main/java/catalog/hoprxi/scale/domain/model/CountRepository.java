@@ -22,21 +22,19 @@ package catalog.hoprxi.scale.domain.model;
  * @version 0.0.1 2019-10-26
  */
 public interface CountRepository {
+
     /**
      * @param brandId
-     * @param offset
-     * @param limit
      * @return
      */
-    Count[] belongingToBrand(String brandId, int offset, int limit);
+    Count[] belongingToBrand(String brandId);
+
 
     /**
      * @param categoryId
-     * @param offset
-     * @param limit
      * @return
      */
-    Count[] belongingToCategory(String categoryId, int offset, int limit);
+    Count[] belongingToCategory(String categoryId);
 
 
     /**

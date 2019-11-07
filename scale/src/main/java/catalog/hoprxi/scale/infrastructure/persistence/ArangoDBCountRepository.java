@@ -128,23 +128,23 @@ public class ArangoDBCountRepository implements CountRepository {
     }
 
     @Override
-    public Count[] belongingToBrand(String brandId, int offset, int limit) {
+    public Count[] belongingToBrand(String brandId) {
         final String query = "WITH brand,plu,count\n" +
                 "FOR v IN 1..1 INBOUND @startVertex belong_scale\n" +
-                "FOR c IN 1..1 OUTBOUND v._id scale FILTER c._id =~ '^count/' LIMIT @offset,@limit\n" +
-                "RETURN {'plu':TO_NUMBER(c._key),'name':c.name,'madeIn':c.madeIn,'spec':c.spec,'grade':c.grade,'shelfLife':c.shelfLife,'retailPrice':c.retailPrice,'memberPrice':c.memberPrice,'vipPrice':c.vipPrice,'categoryId':c.categoryId,'brandId':c.brandId}";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "brand/" + brandId).put("offset", offset).put("limit", limit).get();
+                "FOR c IN 1..1 OUTBOUND v._id scale FILTER c._id =~ '^count/'\n" +
+                "RETURN {'plu':TO_NUMBER(v._key),'name':c.name,'madeIn':c.madeIn,'spec':c.spec,'grade':c.grade,'shelfLife':c.shelfLife,'retailPrice':c.retailPrice,'memberPrice':c.memberPrice,'vipPrice':c.vipPrice,'categoryId':c.categoryId,'brandId':c.brandId}";
+        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "brand/" + brandId).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
     }
 
     @Override
-    public Count[] belongingToCategory(String categoryId, int offset, int limit) {
+    public Count[] belongingToCategory(String categoryId) {
         final String query = "WITH category,plu,weight\n" +
                 "FOR v IN 1..1 INBOUND @startVertex belong_scale\n" +
-                "FOR c IN 1..1 OUTBOUND v._id scale FILTER c._id =~ '^weight/' LIMIT @offset,@limit\n" +
+                "FOR c IN 1..1 OUTBOUND v._id scale FILTER c._id =~ '^count/'\n" +
                 "RETURN {'plu':TO_NUMBER(v._key),'name':c.name,'madeIn':c.madeIn,'spec':c.spec,'grade':c.grade,'shelfLife':c.shelfLife,'retailPrice':c.retailPrice,'memberPrice':c.memberPrice,'vipPrice':c.vipPrice,'categoryId':c.categoryId,'brandId':c.brandId}";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + categoryId).put("offset", offset).put("limit", limit).get();
+        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + categoryId).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
     }
