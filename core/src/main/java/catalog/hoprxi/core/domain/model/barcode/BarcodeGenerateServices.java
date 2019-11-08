@@ -50,7 +50,7 @@ public class BarcodeGenerateServices {
      */
     public static Barcode[] inStoreEAN_8BarcodeGenerate(int start, int amount, String prefix) {
         if (start < 0)
-            throw new IllegalArgumentException("initiaVlaue is positive number");
+            throw new IllegalArgumentException("start is positive number");
         if (amount <= 0)
             throw new IllegalArgumentException("amount required larger zero");
         if (start + amount > 99999)
@@ -80,7 +80,7 @@ public class BarcodeGenerateServices {
      */
     public static Barcode[] inStoreEAN_13BarcodeGenerate(long start, int amount, String prefix) {
         if (start < 0l)
-            throw new IllegalArgumentException("initiaVlaue is positive number");
+            throw new IllegalArgumentException("start is positive number");
         if (amount <= 0)
             throw new IllegalArgumentException("amount required larger zero");
         if (start + amount > 9999999999l)

@@ -15,6 +15,7 @@
  */
 package catalog.hoprxi.core.domain.model.barcode;
 
+import java.util.BitSet;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +28,7 @@ import java.util.regex.Pattern;
 public abstract class Barcode {
     private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{7}$||^\\d{11}$||^\\d{12}$");
     protected CharSequence barcode;
+    protected BitSet bitSet;
 
     public Barcode(CharSequence barcode) {
         Objects.requireNonNull(barcode, "barcode is required");

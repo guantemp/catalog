@@ -91,6 +91,6 @@ public class UPC_E extends Barcode {
         if (barcode.length() == 8) {
             sb.append(barcode.charAt(7));
         }
-        return null;
+        return new UPC_A(sb.toString());
     }
 }
