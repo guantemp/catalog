@@ -152,13 +152,13 @@ public class ArangoDBCountRepository implements CountRepository {
     @Override
     public void remove(Plu plu) {
         boolean exists = catalog.collection("plu").documentExists(String.valueOf(plu.plu()));
-        if (!exists)
-            return;
-        final String remove = "WITH plu,count\n" +
-                "FOR v,e IN 1..1 OUTBOUND @startVertex scale REMOVE v IN weight REMOVE e IN scale";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "plu/" + plu.plu()).get();
-        catalog.query(remove, bindVars, null, VPackSlice.class);
-        catalog.graph("scale").vertexCollection("plu").deleteVertex(String.valueOf(plu));
+        if (exists) {
+            final String remove = "WITH plu,count\n" +
+                    "FOR v,e IN 1..1 OUTBOUND @startVertex scale REMOVE v IN count REMOVE e IN scale";
+            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "plu/" + plu.plu()).get();
+            catalog.query(remove, bindVars, null, VPackSlice.class);
+            catalog.graph("scale").vertexCollection("plu").deleteVertex(String.valueOf(plu.plu()));
+        }
     }
 
     @Override
@@ -219,7 +219,7 @@ public class ArangoDBCountRepository implements CountRepository {
         Name name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());
         VPackSlice madeInSlice = slice.get("madeIn");
         MadeIn madeIn = null;
-        if (!madeInSlice.isNull()) {
+        if (!madeInSlice.isNone() && !madeInSlice.isNull()) {
             String className = madeInSlice.get("_class").getAsString();
             if (Domestic.class.getName().equals(className)) {
                 madeIn = new Domestic(madeInSlice.get("province").getAsString(), madeInSlice.get("city").getAsString());
@@ -283,7 +283,7 @@ public class ArangoDBCountRepository implements CountRepository {
         final String query = "WITH count,plu\n" +
                 "FOR c IN count FILTER c.name.name =~ @name || c.name.alias =~ @name || c.name.mnemonic =~ @name\n" +
                 "FOR p IN 1..1 INBOUND c._id scale\n" +
-                "RETURN {'plu':TO_NUMBER(p._key),'name':c.name,'spec':c.spec,'unit':c.unit,'grade':c.grade,'placeOfProduction':c.placeOfProduction,'shelfLife':c.shelfLife,'retailPrice':c.retailPrice,'memberPrice':c.memberPrice,'vipPrice':c.vipPrice,'categoryId':c.categoryId,'brandId':c.brandId}";
+                "RETURN {'plu':TO_NUMBER(p._key),'name':c.name,'madeIn':c.madeIn,'spec':c.spec,'grade':c.grade,'shelfLife':c.shelfLife,'retailPrice':c.retailPrice,'memberPrice':c.memberPrice,'vipPrice':c.vipPrice,'categoryId':c.categoryId,'brandId':c.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("name", name).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);

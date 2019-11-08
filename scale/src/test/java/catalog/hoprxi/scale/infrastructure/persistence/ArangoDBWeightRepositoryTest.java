@@ -29,6 +29,7 @@ import catalog.hoprxi.scale.domain.model.Weight;
 import catalog.hoprxi.scale.domain.model.WeightRepository;
 import catalog.hoprxi.scale.domain.model.weight_price.*;
 import org.javamoney.moneta.Money;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -102,22 +103,21 @@ public class ArangoDBWeightRepositoryTest {
         weightRepository.save(crucian_carp);
     }
 
-    /*
-        @AfterClass
-        public static void teardown() {
-            weightRepository.remove(new Plu(1));
-            weightRepository.remove(new Plu(2));
-            weightRepository.remove(new Plu(10));
-            weightRepository.remove(new Plu(11));
-            weightRepository.remove(new Plu(12));
-            weightRepository.remove(new Plu(13));
-            weightRepository.remove(new Plu(20));
-            weightRepository.remove(new Plu(21));
+    @AfterClass
+    public static void teardown() {
+        weightRepository.remove(new Plu(1));
+        weightRepository.remove(new Plu(2));
+        weightRepository.remove(new Plu(10));
+        weightRepository.remove(new Plu(11));
+        weightRepository.remove(new Plu(12));
+        weightRepository.remove(new Plu(13));
+        weightRepository.remove(new Plu(20));
+        weightRepository.remove(new Plu(21));
 
-            brandRepository.remove(Brand.UNDEFINED.id());
-             brandRepository.remove("tw");
-        }
-    */
+        brandRepository.remove(Brand.UNDEFINED.id());
+        brandRepository.remove("tw");
+    }
+
     @Test
     public void nextPlu() {
     }
@@ -211,12 +211,6 @@ public class ArangoDBWeightRepositoryTest {
     @Test
     public void size() {
         Assert.assertEquals(8, weightRepository.size());
-    }
-
-    @Test
-    public void fromMnemonic() {
-        Weight[] weights = weightRepository.fromMnemonic("^z");
-        Assert.assertEquals(4, weights.length);
     }
 
     @Test

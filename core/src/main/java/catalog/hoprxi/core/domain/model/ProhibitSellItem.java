@@ -15,9 +15,7 @@
  */
 package catalog.hoprxi.core.domain.model;
 
-import catalog.hoprxi.core.domain.Validator;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
-import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
@@ -68,8 +66,11 @@ public class ProhibitSellItem {
         setMadeIn(madeIn);
         setSpecification(spec);
         setGrade(grade);
-        setBrandId(brandId);
+        setRetailPrice(retailPrice);
+        setMemberPrice(memberPrice);
+        setVipPrice(vipPrice);
         setCategoryId(categoryId);
+        setBrandId(brandId);
     }
 
     private void setBarcode(Barcode barcode) {
@@ -89,18 +90,29 @@ public class ProhibitSellItem {
     }
 
     private void setCategoryId(String categoryId) {
-        if (categoryId != null) {
-            categoryId = categoryId.trim();
-            if (Validator.isCategoryExist(categoryId)) {
-                this.categoryId = categoryId;
-                return;
-            }
-        }
-        this.categoryId = Category.UNDEFINED.id();
+        this.categoryId = categoryId;
     }
 
     private void setBrandId(String brandId) {
         this.brandId = Objects.requireNonNull(brandId, "brand id required").trim();
+    }
+
+    private void setVipPrice(VipPrice vipPrice) {
+        Objects.requireNonNull(vipPrice, "vipPrice required");
+        if (vipPrice.price().unit() != Unit.PCS && vipPrice.price().unit() != retailPrice.price().unit())
+            throw new IllegalArgumentException("vipPrice unit must be consistent with retailPrice unit");
+        this.vipPrice = vipPrice;
+    }
+
+    private void setMemberPrice(MemberPrice memberPrice) {
+        Objects.requireNonNull(memberPrice, "memberPrice required");
+        if (memberPrice.price().unit() != Unit.PCS && memberPrice.price().unit() != retailPrice.price().unit())
+            throw new IllegalArgumentException("memberPrice unit must be consistent with retailPrice unit");
+        this.memberPrice = memberPrice;
+    }
+
+    private void setRetailPrice(RetailPrice retailPrice) {
+        this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
     }
 
     private void setSpecification(Specification spec) {

@@ -80,12 +80,6 @@ public interface WeightRepository {
     int size();
 
     /**
-     * @param mnemonic
-     * @return
-     */
-    Weight[] fromMnemonic(String mnemonic);
-
-    /**
      * @param name
      * @return
      */

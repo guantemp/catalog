@@ -91,6 +91,14 @@ public class ArangoDBCountRepositoryTest {
 
     @AfterClass
     public static void teardown() {
+        countRepository.remove(new Plu(7));
+        countRepository.remove(new Plu(6));
+        countRepository.remove(new Plu(5));
+        countRepository.remove(new Plu(4));
+        countRepository.remove(new Plu(3));
+
+        brandRepository.remove("dyb");
+        brandRepository.remove(Brand.UNDEFINED.id());
     }
 
     @Test
@@ -99,7 +107,7 @@ public class ArangoDBCountRepositoryTest {
 
     @Test
     public void isPluExists() {
-        Assert.assertTrue(countRepository.isPluExists(10));
+        Assert.assertTrue(countRepository.isPluExists(4));
         Assert.assertTrue(countRepository.isPluExists(5));
         Assert.assertFalse(countRepository.isPluExists(22));
         Assert.assertFalse(countRepository.isPluExists(222));
@@ -142,18 +150,27 @@ public class ArangoDBCountRepositoryTest {
     }
 
     @Test
-    public void remove() {
-    }
-
-    @Test
     public void save() {
+        Count pumpkin = countRepository.find(5);
+        RetailPrice retailPrice = new RetailPrice(new Price(Money.of(2.99, currency), Unit.GE));
+        pumpkin.changeRetailPrice(retailPrice);
+        countRepository.save(pumpkin);
+        pumpkin = countRepository.find(5);
+        Assert.assertEquals(retailPrice, pumpkin.retailPrice());
     }
 
     @Test
     public void size() {
+        Assert.assertEquals(5, countRepository.size());
     }
 
     @Test
     public void fromName() {
+        Count[] counts = countRepository.fromName("瓜|萝卜");
+        Assert.assertEquals(3, counts.length);
+        counts = countRepository.fromName("菜");
+        Assert.assertEquals(1, counts.length);
+        counts = countRepository.fromName("噢菜");
+        Assert.assertEquals(0, counts.length);
     }
 }

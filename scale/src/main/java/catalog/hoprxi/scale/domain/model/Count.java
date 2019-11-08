@@ -88,6 +88,25 @@ public class Count {
         this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
     }
 
+    public void changeRetailPrice(RetailPrice retailPrice) {
+        if (retailPrice == null)
+            retailPrice = RetailPrice.RMB_ZERO;
+        if (!this.retailPrice.equals(retailPrice))
+            this.retailPrice = retailPrice;
+    }
+
+    public RetailPrice retailPrice() {
+        return retailPrice;
+    }
+
+    public MemberPrice memberPrice() {
+        return memberPrice;
+    }
+
+    public VipPrice vipPrice() {
+        return vipPrice;
+    }
+
     private void setShelfLife(ShelfLife shelfLife) {
         if (shelfLife == null)
             shelfLife = ShelfLife.SAME_DAY;

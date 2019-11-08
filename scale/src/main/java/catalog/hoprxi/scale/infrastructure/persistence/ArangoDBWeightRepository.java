@@ -131,7 +131,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
         Name name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());
         VPackSlice madeInSlice = slice.get("madeIn");
         MadeIn madeIn = null;
-        if (!madeInSlice.isNull()) {
+        if (!madeInSlice.isNone() && !madeInSlice.isNull()) {
             String className = madeInSlice.get("_class").getAsString();
             if (Domestic.class.getName().equals(className)) {
                 madeIn = new Domestic(madeInSlice.get("province").getAsString(), madeInSlice.get("city").getAsString());
@@ -205,13 +205,13 @@ public class ArangoDBWeightRepository implements WeightRepository {
     @Override
     public void remove(Plu plu) {
         boolean exists = catalog.collection("plu").documentExists(String.valueOf(plu.plu()));
-        if (!exists)
-            return;
-        final String remove = "WITH plu,weight\n" +
-                "FOR v,e IN 1..1 OUTBOUND @startVertex scale REMOVE v IN weight REMOVE e IN scale";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "plu/" + plu.plu()).get();
-        catalog.query(remove, bindVars, null, VPackSlice.class);
-        catalog.graph("scale").vertexCollection("plu").deleteVertex(String.valueOf(plu));
+        if (exists) {
+            final String remove = "WITH plu,weight\n" +
+                    "FOR v,e IN 1..1 OUTBOUND @startVertex scale REMOVE v IN weight REMOVE e IN scale";
+            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "plu/" + plu.plu()).get();
+            catalog.query(remove, bindVars, null, VPackSlice.class);
+            catalog.graph("scale").vertexCollection("plu").deleteVertex(String.valueOf(plu.plu()));
+        }
     }
 
     @Override
@@ -278,20 +278,9 @@ public class ArangoDBWeightRepository implements WeightRepository {
     }
 
     @Override
-    public Weight[] fromMnemonic(String mnemonic) {
-        final String query = "WITH plu,weight\n" +
-                "FOR w IN weight FILTER w.name.mnemonic =~ @mnemonic\n" +
-                "FOR p IN 1..1 INBOUND w._id scale\n" +
-                "RETURN {'plu':TO_NUMBER(p._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
-        final Map<String, Object> bindVars = new MapBuilder().put("mnemonic", mnemonic).get();
-        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        return transform(slices);
-    }
-
-    @Override
     public Weight[] fromName(String name) {
         final String query = "WITH plu,weight\n" +
-                "FOR w IN weight FILTER w.name.name =~ @name\n" +
+                "FOR w IN weight FILTER w.name.name =~ @name || w.name.alias =~ @name || w.name.mnemonic =~ @name\n" +
                 "FOR p IN 1..1 INBOUND w._id scale\n" +
                 "RETURN {'plu':TO_NUMBER(p._key),'name':w.name,'madeIn':w.madeIn,'spec':w.spec,'grade':w.grade,'shelfLife':w.shelfLife,'retailPrice':w.retailPrice,'memberPrice':w.memberPrice,'vipPrice':w.vipPrice,'categoryId':w.categoryId,'brandId':w.brandId}";
         final Map<String, Object> bindVars = new MapBuilder().put("name", name).get();
