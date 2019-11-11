@@ -16,7 +16,6 @@
 
 package catalog.hoprxi.core.domain.model.price;
 
-import catalog.hoprxi.core.domain.model.Unit;
 import org.javamoney.moneta.Money;
 
 import javax.money.Monetary;

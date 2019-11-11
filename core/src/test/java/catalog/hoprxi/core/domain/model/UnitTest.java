@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.domain.model;
 
+import catalog.hoprxi.core.domain.model.price.Unit;
 import org.junit.Test;
 
 /***

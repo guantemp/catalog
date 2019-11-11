@@ -23,6 +23,7 @@ import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.Unit;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
@@ -305,17 +306,10 @@ public class Item {
         return id != null ? id.hashCode() : 0;
     }
 
-    public ProhibitPurchaseItem prohibitPurchase() {
-        return new ProhibitPurchaseItem(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
-    }
-
     public ProhibitSellItem prohibitSell() {
         return new ProhibitSellItem(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
-    public ProhibitPurchaseAndSellItem prohibitPurchaseAndSell() {
-        return new ProhibitPurchaseAndSellItem(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
-    }
 
     @Override
     public String toString() {

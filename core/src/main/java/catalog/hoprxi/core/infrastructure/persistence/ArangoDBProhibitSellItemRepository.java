@@ -22,6 +22,7 @@ import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
 import catalog.hoprxi.core.domain.model.madeIn.Domestic;
 import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.price.Unit;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;

@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="core" />
+        <module name="show" />
         <module name="java-velocypack-module-customize" />
         <module name="time-count" />
         <module name="scale" />
@@ -16,6 +17,7 @@
       <module name="core" target="1.8" />
       <module name="java-velocypack-module-customize" target="1.7" />
       <module name="scale" target="1.8" />
+      <module name="show" target="1.7" />
       <module name="time-count" target="1.7" />
     </bytecodeTargetLevel>
   </component>

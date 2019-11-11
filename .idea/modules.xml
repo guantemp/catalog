@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/core/core.iml" filepath="$PROJECT_DIR$/core/core.iml" />
       <module fileurl="file://$PROJECT_DIR$/java-velocypack-module-customize/java-velocypack-module-customize.iml" filepath="$PROJECT_DIR$/java-velocypack-module-customize/java-velocypack-module-customize.iml" />
       <module fileurl="file://$PROJECT_DIR$/scale/scale.iml" filepath="$PROJECT_DIR$/scale/scale.iml" />
+      <module fileurl="file://$PROJECT_DIR$/show/show.iml" filepath="$PROJECT_DIR$/show/show.iml" />
       <module fileurl="file://$PROJECT_DIR$/time-count/time-count.iml" filepath="$PROJECT_DIR$/time-count/time-count.iml" />
     </modules>
   </component>

@@ -19,11 +19,13 @@ import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.Unit;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
@@ -189,10 +191,6 @@ public class ProhibitSellItem {
         return new Item(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
-    public ProhibitPurchaseAndSellItem prohibitPurchase() {
-        return new ProhibitPurchaseAndSellItem(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -210,18 +208,18 @@ public class ProhibitSellItem {
 
     @Override
     public String toString() {
-        return "ProhibitSellSku{" +
-                "barcode=" + barcode +
-                ", brandId='" + brandId + '\'' +
-                ", categoryId='" + categoryId + '\'' +
-                ", grade=" + grade +
-                ", id='" + id + '\'' +
-                ", name=" + name +
-                ", madeIn=" + madeIn +
-                ", retailPrice=" + retailPrice +
-                ", memberPrice=" + memberPrice +
-                ", vipPrice=" + vipPrice +
-                ", spec=" + spec +
-                '}';
+        return new StringJoiner(", ", ProhibitSellItem.class.getSimpleName() + "[", "]")
+                .add("barcode=" + barcode)
+                .add("brandId='" + brandId + "'")
+                .add("categoryId='" + categoryId + "'")
+                .add("grade=" + grade)
+                .add("id='" + id + "'")
+                .add("name=" + name)
+                .add("madeIn=" + madeIn)
+                .add("retailPrice=" + retailPrice)
+                .add("memberPrice=" + memberPrice)
+                .add("vipPrice=" + vipPrice)
+                .add("spec=" + spec)
+                .toString();
     }
 }

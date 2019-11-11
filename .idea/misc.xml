@@ -10,6 +10,7 @@
         <option value="$PROJECT_DIR$/java-velocypack-module-customize/pom.xml" />
         <option value="$PROJECT_DIR$/time-count/pom.xml" />
         <option value="$PROJECT_DIR$/scale/pom.xml" />
+        <option value="$PROJECT_DIR$/show/pom.xml" />
       </list>
     </option>
   </component>

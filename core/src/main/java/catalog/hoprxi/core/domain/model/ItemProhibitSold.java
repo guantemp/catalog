@@ -23,12 +23,18 @@ import java.time.LocalDateTime;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019/10/24
+ * @version 0.0.1 2019-11-11
  */
-public class ItemProhibitPurchased implements DomainEvent {
+public class ItemProhibitSold implements DomainEvent {
     private LocalDateTime occurredOn;
     private String id;
     private int version;
+
+    public ItemProhibitSold(String id) {
+        this.id = id;
+        occurredOn = LocalDateTime.now();
+        version = 1;
+    }
 
     @Override
     public LocalDateTime occurredOn() {

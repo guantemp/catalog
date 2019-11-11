@@ -16,7 +16,6 @@
 
 package catalog.hoprxi.core.domain.model.price;
 
-import catalog.hoprxi.core.domain.model.Unit;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 import java.util.Locale;

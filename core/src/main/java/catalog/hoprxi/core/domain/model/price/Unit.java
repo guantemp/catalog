@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.core.domain.model;
+package catalog.hoprxi.core.domain.model.price;
 
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;

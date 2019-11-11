@@ -16,42 +16,24 @@
 
 package catalog.hoprxi.core.domain.model;
 
-import catalog.hoprxi.core.domain.model.price.Unit;
 import event.hoprxi.domain.model.DomainEvent;
 
-import javax.money.MonetaryAmount;
 import java.time.LocalDateTime;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019/10/23
+ * @version 0.0.1 2019-11-11
  */
-public class ItemRetailPriceChanged implements DomainEvent {
-    private String id;
-    private MonetaryAmount amount;
-    private Unit unit;
+public class ItemPermitSold implements DomainEvent {
     private LocalDateTime occurredOn;
+    private String id;
     private int version;
 
-    public ItemRetailPriceChanged(String id, MonetaryAmount amount, Unit unit) {
+    public ItemPermitSold(String id) {
         this.id = id;
-        this.amount = amount;
-        this.unit = unit;
         occurredOn = LocalDateTime.now();
         version = 1;
-    }
-
-    public String id() {
-        return id;
-    }
-
-    public MonetaryAmount amount() {
-        return amount;
-    }
-
-    public Unit unit() {
-        return unit;
     }
 
     @Override
