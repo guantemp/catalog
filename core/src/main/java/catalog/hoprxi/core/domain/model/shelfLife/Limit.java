@@ -19,10 +19,22 @@ package catalog.hoprxi.core.domain.model.shelfLife;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-11-08
+ * @version 0.0.1 2019-11-11
  */
-public class Approach {
-    private String id;
-    private Limit limt;
-    private Rang rang;
+public class Limit {
+    private int onScheduleDays;
+    private int prohibitionSaleDays;
+
+    public Limit(int onScheduleDays, int prohibitionSaleDays) {
+        this.onScheduleDays = onScheduleDays;
+        this.prohibitionSaleDays = prohibitionSaleDays;
+    }
+
+    public boolean isProhibitionSale(int days) {
+        return false;
+    }
+
+    public boolean isOnSchedu(int days) {
+        return false;
+    }
 }

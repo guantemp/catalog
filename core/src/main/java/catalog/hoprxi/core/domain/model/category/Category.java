@@ -17,12 +17,10 @@ package catalog.hoprxi.core.domain.model.category;
 
 import catalog.hoprxi.core.domain.DomainRegistry;
 import catalog.hoprxi.core.domain.Validator;
-import catalog.hoprxi.core.domain.model.category.spec.SpecificationFamily;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import com.arangodb.entity.DocumentField;
 
 import java.awt.image.BufferedImage;
-import java.util.List;
 import java.util.Objects;
 
 /***
@@ -54,7 +52,6 @@ public class Category {
     private BufferedImage mark;
     private String name;
     private String parentId;
-    private List<SpecificationFamily> specificationFamily;
     private static final int NAME_MAX_LENGTH = 255;
     private static final int ID_MAX_LENGTH = 36;
     private static final int DESCRIPTION_MAX_LENGTH = 512;
@@ -94,15 +91,15 @@ public class Category {
         this.description = description;
     }
 
-    public static Category createRootCategory(String id, String name) {
+    public static Category createCategoryRoot(String id, String name) {
         return new Category(id, id, name);
     }
 
-    public static Category createRootCategory(String id, String name, String description) {
+    public static Category createCategoryRoot(String id, String name, String description) {
         return new Category(id, id, name, description, null);
     }
 
-    public static Category createRootCategory(String id, String name, String description, BufferedImage mark) {
+    public static Category createCategoryRoot(String id, String name, String description, BufferedImage mark) {
         return new Category(id, id, name, description, mark);
     }
 

@@ -14,15 +14,29 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.shelfLife;
+package catalog.hoprxi.core.domain.model;
+
+import event.hoprxi.domain.model.DomainEvent;
+
+import java.time.LocalDateTime;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-11-08
+ * @version 0.0.1 2019-11-11
  */
-public class Approach {
+public class ItemCreated implements DomainEvent {
     private String id;
-    private Limit limt;
-    private Rang rang;
+    private LocalDateTime occurredOn;
+    private int version;
+
+    @Override
+    public LocalDateTime occurredOn() {
+        return occurredOn;
+    }
+
+    @Override
+    public int version() {
+        return version;
+    }
 }

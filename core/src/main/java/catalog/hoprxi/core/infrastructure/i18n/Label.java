@@ -79,6 +79,8 @@ public class Label extends NLS {
     public static String PRICE_MEMBER;
     public static String PRICE_VIP;
 
+    public static String MADIN_SEPARATORS;
+
     static {
         NLS.initializeMessages(BUNDLE_NAME, Label.class);
     }

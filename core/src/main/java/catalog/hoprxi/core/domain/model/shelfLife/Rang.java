@@ -19,10 +19,20 @@ package catalog.hoprxi.core.domain.model.shelfLife;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-11-08
+ * @version 0.0.1 2019-11-11
  */
-public class Approach {
-    private String id;
-    private Limit limt;
-    private Rang rang;
+public class Rang {
+    private int maxDays;
+    private int minDays;
+
+    public Rang(int maxDays, int minDays) {
+        this.maxDays = maxDays;
+        this.minDays = minDays;
+    }
+
+    public boolean isRang(int days) {
+        if (days > minDays && days <= maxDays)
+            return true;
+        return false;
+    }
 }

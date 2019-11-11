@@ -16,6 +16,8 @@
 
 package catalog.hoprxi.core.domain.model.madeIn;
 
+import catalog.hoprxi.core.infrastructure.i18n.Label;
+
 import java.util.StringJoiner;
 
 /***
@@ -39,9 +41,7 @@ public class Domestic implements MadeIn {
 
     @Override
     public String madeIn() {
-        if (province.equals(city))
-            return city;
-        return province + "." + city;
+        return new StringJoiner(Label.MADIN_SEPARATORS).add(province).add(city).toString();
     }
 
     @Override

@@ -14,15 +14,21 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.shelfLife;
+package catalog.hoprxi.core.domain.model.madeIn;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-11-08
+ * @version 0.0.1 2019-11-11
  */
-public class Approach {
-    private String id;
-    private Limit limt;
-    private Rang rang;
+public class Local implements MadeIn {
+    @Override
+    public String madeIn() {
+        return null;
+    }
+
+    @Override
+    public long code() {
+        return 0;
+    }
 }

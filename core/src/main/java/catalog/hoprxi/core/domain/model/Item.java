@@ -28,6 +28,7 @@ import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /**
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
@@ -48,7 +49,6 @@ public class Item {
     private RetailPrice retailPrice;
     private MemberPrice memberPrice;
     private VipPrice vipPrice;
-    private Unit unit;
     private Specification spec;
 
     /**
@@ -85,6 +85,10 @@ public class Item {
     public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
                 Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
         this(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+    }
+
+    static Item reconstituteFromPersistence() {
+        return null;
     }
 
     private void setCategoryId(String categoryId) {
@@ -285,10 +289,6 @@ public class Item {
         this.name = Objects.requireNonNull(name, "name required");
     }
 
-    private void setUnit(Unit unit) {
-        this.unit = Objects.requireNonNull(unit, "unit required");
-    }
-
 
     @Override
     public boolean equals(Object o) {
@@ -305,10 +305,6 @@ public class Item {
         return id != null ? id.hashCode() : 0;
     }
 
-    public Unit unit() {
-        return unit;
-    }
-
     public ProhibitPurchaseItem prohibitPurchase() {
         return new ProhibitPurchaseItem(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
@@ -323,19 +319,18 @@ public class Item {
 
     @Override
     public String toString() {
-        return "Sku{" +
-                "barcode=" + barcode +
-                ", brandId='" + brandId + '\'' +
-                ", categoryId='" + categoryId + '\'' +
-                ", grade=" + grade +
-                ", id='" + id + '\'' +
-                ", name=" + name +
-                ", madeIn=" + madeIn +
-                ", retailPrice=" + retailPrice +
-                ", memeberPrice=" + memberPrice +
-                ", vipPrice=" + vipPrice +
-                ", unit=" + unit +
-                ", spec=" + spec +
-                '}';
+        return new StringJoiner(", ", Item.class.getSimpleName() + "[", "]")
+                .add("barcode=" + barcode)
+                .add("brandId='" + brandId + "'")
+                .add("categoryId='" + categoryId + "'")
+                .add("grade=" + grade)
+                .add("id='" + id + "'")
+                .add("name=" + name)
+                .add("madeIn=" + madeIn)
+                .add("retailPrice=" + retailPrice)
+                .add("memberPrice=" + memberPrice)
+                .add("vipPrice=" + vipPrice)
+                .add("spec=" + spec)
+                .toString();
     }
 }
