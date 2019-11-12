@@ -31,7 +31,6 @@ import mi.hoprxi.id.LongId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -125,10 +124,7 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
         String description = null;
         if (!slice.get("description").isNone())
             description = slice.get("description").getAsString();
-        BufferedImage mark = null;
-        if (!slice.get("mark").isNone())
-            mark = null;
-        return new Category(parentId, id, name, description, mark);
+        return new Category(parentId, id, name, description);
     }
 
     /*

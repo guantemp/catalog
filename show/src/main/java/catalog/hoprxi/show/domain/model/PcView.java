@@ -14,16 +14,12 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.category.spec;
+package catalog.hoprxi.show.domain.model;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-05-27
+ * @version 0.0.1 2019-11-11
  */
-public interface OrdinalSpecification extends Comparable<OrdinalSpecification> {
-    @Override
-    default int compareTo(OrdinalSpecification o) {
-        return 0;
-    }
+public class PcView {
 }

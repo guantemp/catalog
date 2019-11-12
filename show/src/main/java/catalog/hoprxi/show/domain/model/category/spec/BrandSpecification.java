@@ -14,15 +14,15 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.category.spec;
-
-import java.awt.image.BufferedImage;
+package catalog.hoprxi.show.domain.model.category.spec;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-05-27
+ * @version 0.0.1 2019-11-12
  */
-public interface IconSpecification {
-    BufferedImage icon();
+public class BrandSpecification extends Specification implements IconSpecification, OrdinalSpecification {
+    public BrandSpecification(String value) {
+        super(value);
+    }
 }

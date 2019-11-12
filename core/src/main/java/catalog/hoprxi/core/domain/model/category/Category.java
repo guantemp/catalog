@@ -49,7 +49,6 @@ public class Category {
     private String description;
     @DocumentField(DocumentField.Type.KEY)
     private String id;
-    private BufferedImage mark;
     private String name;
     private String parentId;
     private static final int NAME_MAX_LENGTH = 255;
@@ -57,32 +56,24 @@ public class Category {
     private static final int DESCRIPTION_MAX_LENGTH = 512;
 
     public Category(String parentId, String id, String name) {
-        this(parentId, id, name, null, null);
+        this(parentId, id, name, null);
     }
 
-    /**
-     * @see catalog.hoprxi.core.domain.model.category
-     */
-    public Category(String parentId, String id, String name, String description) {
-        this(parentId, id, name, description, null);
-    }
 
     /**
      * @param parentId
      * @param id
      * @param name
      * @param description
-     * @param mark
      * @throws IllegalArgumentException if parentId is null or length rang not in 1-36
      *                                  if id is null or length range not in [1-36]
      *                                  if name length range not in [1-256]
      *                                  if description not null and length range not in [0-512]
      */
-    public Category(String parentId, String id, String name, String description, BufferedImage mark) {
+    public Category(String parentId, String id, String name, String description) {
         setIdAndParentId(parentId, id);
         setName(name);
         setDescription(description);
-        this.mark = mark;
     }
 
     private void setDescription(String description) {
@@ -96,12 +87,9 @@ public class Category {
     }
 
     public static Category createCategoryRoot(String id, String name, String description) {
-        return new Category(id, id, name, description, null);
+        return new Category(id, id, name, description);
     }
 
-    public static Category createCategoryRoot(String id, String name, String description, BufferedImage mark) {
-        return new Category(id, id, name, description, mark);
-    }
 
     public String parentId() {
         return parentId;
@@ -140,13 +128,6 @@ public class Category {
      */
     public String id() {
         return id;
-    }
-
-    /**
-     * @return the mark
-     */
-    public BufferedImage mark() {
-        return mark;
     }
 
     /**
@@ -192,7 +173,7 @@ public class Category {
             throw new IllegalArgumentException("parentId length rang is 1-" + ID_MAX_LENGTH);
         if (!Validator.isCategoryExist(movedId))
             throw new InvalidCategoryIdException("parent id not exist");
-        if (!this.parentId.equals(movedId)) {
+        if (!id.equals(parentId) && !parentId.equals(movedId)) {
             this.parentId = movedId;
             //DomainRegistry.domainEventPublisher().publish(new CategoryRenamed(id, description));
         }
@@ -228,7 +209,6 @@ public class Category {
         return "Category{" +
                 "description='" + description + '\'' +
                 ", id='" + id + '\'' +
-                ", mark=" + mark +
                 ", name='" + name + '\'' +
                 ", parentId='" + parentId + '\'' +
                 '}';

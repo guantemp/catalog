@@ -69,12 +69,6 @@ public interface ProhibitSellItemRepository {
     ProhibitSellItem[] fromBarcode(String barcode);
 
     /**
-     * @param mnemonic
-     * @return
-     */
-    ProhibitSellItem[] fromMnemonic(String mnemonic);
-
-    /**
      * @param name
      * @return
      */

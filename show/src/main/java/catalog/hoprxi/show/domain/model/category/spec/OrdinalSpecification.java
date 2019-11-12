@@ -14,30 +14,16 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.category.spec;
-
-import java.util.Objects;
+package catalog.hoprxi.show.domain.model.category.spec;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-05-27
+ * @version 0.0.1 builder 2019-05-27
  */
-public abstract class Specification {
-    private String value;
-
-    /**
-     * @param value
-     * @throws IllegalArgumentException if value is null
-     */
-    public Specification(String value) {
-        value = Objects.requireNonNull(value, "value required").trim();
-        if (value.isEmpty() || value.length() > 128)
-            throw new IllegalArgumentException("value length range is[1-128]");
-        this.value = value;
-    }
-
-    public String value() {
-        return value;
+public interface OrdinalSpecification extends Comparable<OrdinalSpecification> {
+    @Override
+    default int compareTo(OrdinalSpecification o) {
+        return 0;
     }
 }

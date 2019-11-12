@@ -205,11 +205,6 @@ public class ArangoDBProhibitSellItemRepository implements ProhibitSellItemRepos
     }
 
     @Override
-    public ProhibitSellItem[] fromMnemonic(String mnemonic) {
-        return new ProhibitSellItem[0];
-    }
-
-    @Override
     public ProhibitSellItem[] fromName(String name) {
         return new ProhibitSellItem[0];
     }
