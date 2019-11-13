@@ -29,7 +29,7 @@ import java.math.BigDecimal;
 public enum WeightUnit {
     TON {
         @Override
-        public Number to(WeightUnit unit) {
+        public Number convert(WeightUnit unit) {
             switch (unit) {
                 case FIVE_HUNDRED_GRAM:
                     return 2000;
@@ -46,7 +46,7 @@ public enum WeightUnit {
         }
     }, KILOGRAM {
         @Override
-        public Number to(WeightUnit unit) {
+        public Number convert(WeightUnit unit) {
             switch (unit) {
                 case FIVE_HUNDRED_GRAM:
                     return 2;
@@ -63,7 +63,7 @@ public enum WeightUnit {
         }
     }, GRAM {
         @Override
-        public Number to(WeightUnit unit) {
+        public Number convert(WeightUnit unit) {
             switch (unit) {
                 case FIVE_HUNDRED_GRAM:
                     return 0.05;
@@ -80,7 +80,7 @@ public enum WeightUnit {
         }
     }, FIVE_HUNDRED_GRAM {
         @Override
-        public Number to(WeightUnit unit) {
+        public Number convert(WeightUnit unit) {
             switch (unit) {
                 case GRAM:
                     return 500;
@@ -97,7 +97,7 @@ public enum WeightUnit {
         }
     }, MILLIGRAM {
         @Override
-        public Number to(WeightUnit unit) {
+        public Number convert(WeightUnit unit) {
             switch (unit) {
                 case GRAM:
                     return 0.001;
@@ -114,7 +114,7 @@ public enum WeightUnit {
         }
     }, OUNCE {
         @Override
-        public Number to(WeightUnit unit) {
+        public Number convert(WeightUnit unit) {
             switch (unit) {
                 case GRAM:
                     return new BigDecimal("28.5");
@@ -132,7 +132,7 @@ public enum WeightUnit {
 
     }, POUND {
         @Override
-        public Number to(WeightUnit unit) {
+        public Number convert(WeightUnit unit) {
             switch (unit) {
                 case GRAM:
                     return new BigDecimal("453.59237");
@@ -149,7 +149,7 @@ public enum WeightUnit {
         }
     }, CARAT {
         @Override
-        public Number to(WeightUnit unit) {
+        public Number convert(WeightUnit unit) {
             switch (unit) {
                 case GRAM:
                     return new BigDecimal("0.2");
@@ -166,7 +166,7 @@ public enum WeightUnit {
     };
 
 
-    public abstract Number to(WeightUnit unit);
+    public abstract Number convert(WeightUnit unit);
 
     public WeightUnit of(String s) {
         for (WeightUnit unit : values()) {

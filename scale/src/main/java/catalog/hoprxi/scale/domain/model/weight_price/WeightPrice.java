@@ -87,10 +87,10 @@ public class WeightPrice {
         return result;
     }
 
-    public WeightPrice conversion(WeightUnit weightUnit) {
+    public WeightPrice convert(WeightUnit weightUnit) {
         if (this.weightUnit == weightUnit)
             return this;
-        Number number = this.weightUnit.to(weightUnit);
+        Number number = this.weightUnit.convert(weightUnit);
         return new WeightPrice(amount.divide(number), weightUnit);
     }
 

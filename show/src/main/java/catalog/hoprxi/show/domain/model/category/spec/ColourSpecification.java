@@ -16,6 +16,8 @@
 
 package catalog.hoprxi.show.domain.model.category.spec;
 
+import java.util.StringJoiner;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
@@ -24,5 +26,12 @@ package catalog.hoprxi.show.domain.model.category.spec;
 public class ColourSpecification extends Specification implements IconSpecification {
     public ColourSpecification(String value) {
         super(value);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", ColourSpecification.class.getSimpleName() + "[", "]")
+                .add("value='" + value + "'")
+                .toString();
     }
 }

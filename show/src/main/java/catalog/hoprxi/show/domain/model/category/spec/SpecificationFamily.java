@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.show.domain.model.category.spec;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -24,23 +25,36 @@ import java.util.Set;
  * @since JDK8.0
  * @version 0.0.2 builder 2019-11-12
  */
-public class SpecificationFamily implements Comparable<SpecificationFamily> {
+public class SpecificationFamily<E> implements Comparable<SpecificationFamily<E>> {
     private boolean multiSelect;
     private String name;
     private boolean required;
-    private Set<Specification> specs;
+    private Set<E> specs;
     private int ordinal;
 
-    public SpecificationFamily(String name, Set<Specification> specs, int ordinal, boolean required, boolean multiSelect) {
+    public SpecificationFamily(String name, Set<E> specs, int ordinal, boolean required, boolean multiSelect) {
         setName(name);
+        setSpecs(specs);
         this.required = required;
         this.multiSelect = multiSelect;
-        this.specs = specs;
+        setOrdinal(ordinal);
+    }
+
+    public static <E> SpecificationFamily createBlankSpecFamily(String name) {
+        return new SpecificationFamily<E>(name, new HashSet<E>(), 0, false, false);
+    }
+
+    private void setOrdinal(int ordinal) {
+        if (ordinal < 0 || ordinal > 9)
+            throw new IllegalArgumentException("ordinal rang is 0-9");
         this.ordinal = ordinal;
     }
 
-    public SpecificationFamily(String name, Set<Specification> specs) {
-        this(name, specs, 0, false, false);
+    private void setName(String name) {
+        name = Objects.requireNonNull(name, "name required").trim();
+        if (name.isEmpty() || name.length() > 32)
+            throw new IllegalArgumentException("name length rang is 1-32");
+        this.name = name;
     }
 
     @Override
@@ -48,25 +62,22 @@ public class SpecificationFamily implements Comparable<SpecificationFamily> {
         return ordinal == o.ordinal ? 0 : ordinal > o.ordinal ? 1 : -1;
     }
 
-    private void setName(String name) {
-        name = Objects.requireNonNull(name, "name required").trim();
-        if (name.length() > 32)
-            throw new IllegalArgumentException("name length must less than 32");
-        this.name = name;
+    public SpecificationFamily addSpec(E spec) {
+        specs.add(spec);
+        return new SpecificationFamily(name, specs, ordinal, required, multiSelect);
     }
 
     public boolean isMultiSelect() {
         return multiSelect;
     }
 
-    public SpecificationFamily addSpec(Specification spec) {
-        specs.add(spec);
-        return new SpecificationFamily(name, specs, ordinal, required, multiSelect);
+    public SpecificationFamily addSpec(Set<E> specs) {
+        this.specs.addAll(specs);
+        return new SpecificationFamily(name, this.specs, ordinal, required, multiSelect);
     }
 
-    public SpecificationFamily addSpec(Set<Specification> specs) {
-        this.specs.addAll(specs);
-        return new SpecificationFamily(name, specs, ordinal, required, multiSelect);
+    public Set<E> getSpecs() {
+        return specs;
     }
 
     public String name() {
@@ -77,4 +88,11 @@ public class SpecificationFamily implements Comparable<SpecificationFamily> {
         return required;
     }
 
+    private void setSpecs(Set<E> specs) {
+        this.specs = Objects.requireNonNull(specs, "specs required");
+    }
+
+    public int ordinal() {
+        return ordinal;
+    }
 }

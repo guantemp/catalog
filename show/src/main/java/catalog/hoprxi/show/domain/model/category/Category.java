@@ -19,7 +19,7 @@ package catalog.hoprxi.show.domain.model.category;
 import catalog.hoprxi.show.domain.model.category.spec.SpecificationFamily;
 
 import java.awt.image.BufferedImage;
-import java.util.List;
+import java.util.Set;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -29,5 +29,5 @@ import java.util.List;
 public class Category {
     private String id;
     private BufferedImage sign;
-    private List<SpecificationFamily> specFamilyList;
+    private Set<SpecificationFamily> specFamily;
 }

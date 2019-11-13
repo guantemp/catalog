@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  * @since JDK8.0
  * @version 0.0.1 builder 2019-10-24
  */
-public class TimeSku {
+public class Time {
     private long brandId;
     private long categoryId;
     private long id;
@@ -38,9 +38,9 @@ public class TimeSku {
     private Set<BufferedImage> pictures;
 
 
-    public TimeSku(long id, String name, String mnemonicCode,
-                   TimeUnit unit, long brandId, long categoryId,
-                   Set<BufferedImage> pictures) {
+    public Time(long id, String name, String mnemonicCode,
+                TimeUnit unit, long brandId, long categoryId,
+                Set<BufferedImage> pictures) {
         super();
         this.id = id;
         setName(name);

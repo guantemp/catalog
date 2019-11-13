@@ -17,6 +17,7 @@
 package catalog.hoprxi.show.domain.model.category.spec;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
@@ -24,7 +25,7 @@ import java.util.Objects;
  * @version 0.0.1 builder 2019-11-12
  */
 public class Specification {
-    private String value;
+    protected String value;
 
     /**
      * @param value
@@ -39,5 +40,27 @@ public class Specification {
 
     public String value() {
         return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Specification that = (Specification) o;
+
+        return value != null ? value.equals(that.value) : that.value == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return value != null ? value.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Specification.class.getSimpleName() + "[", "]")
+                .add("value='" + value + "'")
+                .toString();
     }
 }
