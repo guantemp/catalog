@@ -167,13 +167,14 @@ public enum WeightUnit {
 
 
     public abstract Number convert(WeightUnit unit);
-
-    public WeightUnit of(String s) {
+/*
+    public static WeightUnit of(String s) {
         for (WeightUnit unit : values()) {
             if (unit.toString().equals(s))
                 return unit;
         }
         return WeightUnit.KILOGRAM;
     }
+ */
 }
 

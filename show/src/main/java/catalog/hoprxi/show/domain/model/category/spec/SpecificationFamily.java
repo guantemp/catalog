@@ -19,6 +19,7 @@ package catalog.hoprxi.show.domain.model.category.spec;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
@@ -57,6 +58,12 @@ public class SpecificationFamily<E> implements Comparable<SpecificationFamily<E>
         this.name = name;
     }
 
+    private void setSpecs(Set<E> specs) {
+        if (specs == null)
+            specs = new HashSet<>();
+        this.specs = specs;
+    }
+
     @Override
     public int compareTo(SpecificationFamily o) {
         return ordinal == o.ordinal ? 0 : ordinal > o.ordinal ? 1 : -1;
@@ -76,7 +83,7 @@ public class SpecificationFamily<E> implements Comparable<SpecificationFamily<E>
         return new SpecificationFamily(name, this.specs, ordinal, required, multiSelect);
     }
 
-    public Set<E> getSpecs() {
+    public Set<E> specs() {
         return specs;
     }
 
@@ -88,11 +95,18 @@ public class SpecificationFamily<E> implements Comparable<SpecificationFamily<E>
         return required;
     }
 
-    private void setSpecs(Set<E> specs) {
-        this.specs = Objects.requireNonNull(specs, "specs required");
-    }
-
     public int ordinal() {
         return ordinal;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", SpecificationFamily.class.getSimpleName() + "[", "]")
+                .add("name='" + name + "'")
+                .add("specs=" + specs)
+                .add("ordinal=" + ordinal)
+                .add("multiSelect=" + multiSelect)
+                .add("required=" + required)
+                .toString();
     }
 }

@@ -16,7 +16,6 @@
 
 package catalog.hoprxi.show.domain.model.category.spec;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.HashSet;
@@ -28,38 +27,34 @@ import java.util.Set;
  * @version 0.0.1 2019-11-13
  */
 public class SpecificationFamilyTest {
-    private static SpecificationFamily<BrandSpecification> brand = SpecificationFamily.<BrandSpecification>createBlankSpecFamily("品牌");
-    private static SpecificationFamily<ColourSpecification> colour = SpecificationFamily.<BrandSpecification>createBlankSpecFamily("颜色");
+    @Test
+    public void test() {
+        Set<BrandSpecification> brandSpecs = new HashSet<>();
+        brandSpecs.add(new BrandSpecification("联想"));
+        brandSpecs.add(new BrandSpecification("dell"));
+        brandSpecs.add(new BrandSpecification("hp"));
+        brandSpecs.add(new BrandSpecification("华为"));
+        brandSpecs.add(new BrandSpecification("清华同方"));
+        SpecificationFamily<BrandSpecification> brandFamily = new SpecificationFamily("品牌", brandSpecs, 0, true, false);
+        System.out.println(brandFamily);
 
-    @BeforeClass
-    public static void setUpBeforeClass() {
-        Set<BrandSpecification> brands = new HashSet<>();
-        brands.add(new BrandSpecification("联想"));
-        brands.add(new BrandSpecification("dell"));
-        brands.add(new BrandSpecification("hp"));
-        brands.add(new BrandSpecification("华为"));
-        brands.add(new BrandSpecification("清华同方"));
-        brand = brand.addSpec(brands);
+
         Set<ColourSpecification> colours = new HashSet<>();
         colours.add(new ColourSpecification("稳重黑"));
         colours.add(new ColourSpecification("紫色魅惑"));
         colours.add(new ColourSpecification("激情红"));
         colours.add(new ColourSpecification("白色"));
-        colour = colour.addSpec(colours);
-    }
+        SpecificationFamily<ColourSpecification> colourFamily = new SpecificationFamily("颜色", colours, 1, false, true);
+        System.out.println(colourFamily);
 
-    @Test
-    public void test() {
-        Set<BrandSpecification> brands = brand.getSpecs();
-        System.out.println(brand.name());
-        for (BrandSpecification spec : brands) {
-            System.out.println(spec);
-        }
-        Set<ColourSpecification> colours = colour.getSpecs();
-        System.out.println(colour.name());
-        for (ColourSpecification spec : colours) {
-            System.out.println(spec);
-        }
+
+        Set<Specification> specifications = new HashSet<>();
+        specifications.add(new Specification("1920*1080"));
+        specifications.add(new Specification("2560*1440"));
+        specifications.add(new Specification("3250*1560"));
+        specifications.add(new Specification("1080*2300"));
+        SpecificationFamily<Specification> resolution_ratio = new SpecificationFamily("分辨率", specifications, 2, false, false);
+        System.out.println(resolution_ratio);
     }
 
 }
