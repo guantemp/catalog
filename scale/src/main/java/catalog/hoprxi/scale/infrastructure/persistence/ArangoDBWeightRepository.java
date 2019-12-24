@@ -98,7 +98,7 @@ public class ArangoDBWeightRepository implements WeightRepository {
                 return rebuild(slices.next());
             } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 if (LOGGER.isDebugEnabled())
-                    LOGGER.debug("Can't rebuild sku", e);
+                    LOGGER.debug("Can't rebuild weight", e);
             }
         }
         return null;
