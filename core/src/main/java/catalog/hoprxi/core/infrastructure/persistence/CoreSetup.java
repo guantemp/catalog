@@ -67,6 +67,14 @@ public class CoreSetup {
         db.collection("prohibit_sell_item").ensureSkiplistIndex(index, skiplistIndexOptions);
         db.collection("prohibit_purchase_item").ensureSkiplistIndex(index, skiplistIndexOptions);
         db.collection("prohibit_purchase_and_sell_item").ensureSkiplistIndex(index, skiplistIndexOptions);
+        //name.alias
+        index.clear();
+        index.add("name.alias");
+        skiplistIndexOptions = new SkiplistIndexOptions().sparse(true);
+        db.collection("item").ensureSkiplistIndex(index, skiplistIndexOptions);
+        db.collection("prohibit_sell_item").ensureSkiplistIndex(index, skiplistIndexOptions);
+        db.collection("prohibit_purchase_item").ensureSkiplistIndex(index, skiplistIndexOptions);
+        db.collection("prohibit_purchase_and_sell_item").ensureSkiplistIndex(index, skiplistIndexOptions);
 
         index.clear();
         index.add("barcode");
