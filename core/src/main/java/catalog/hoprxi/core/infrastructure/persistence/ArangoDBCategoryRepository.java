@@ -46,7 +46,7 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
 
     @Override
     public Category[] belongTo(String id) {
-        final String query = "WITH category,subordinate\n" +
+        final String query = "WITH category\n" +
                 "FOR v,e IN 1..1 OUTBOUND @startVertex subordinate RETURN v";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
         ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
@@ -91,7 +91,7 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
         if (exists) {
             VertexUpdateEntity vertex = graph.vertexCollection("category").replaceVertex(category.id(), category);
             //parentId is changed
-            final String query = "WITH category,subordinate\n" +
+            final String query = "WITH category\n" +
                     "FOR v,e IN 1..1 INBOUND @startVertex subordinate FILTER v._key != @parentId REMOVE e IN subordinate RETURN OLD";
             final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + category.id()).put("parentId", category.parentId()).get();
             ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);

@@ -45,7 +45,7 @@ public class Imported implements MadeIn {
 
     @Override
     public long code() {
-        return 0;
+        return 0l;
     }
 
     @Override

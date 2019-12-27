@@ -22,9 +22,10 @@ package catalog.hoprxi.core.domain.model.madeIn;
  * @version 0.0.1 2019-11-11
  */
 public class Local implements MadeIn {
+    private String countyArea;
     @Override
     public String madeIn() {
-        return null;
+        return countyArea;
     }
 
     @Override
