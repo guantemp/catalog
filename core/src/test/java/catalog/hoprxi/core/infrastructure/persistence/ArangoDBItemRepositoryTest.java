@@ -42,7 +42,7 @@ import java.util.Locale;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-06-05
+ * @version 0.0.1 builder 2019-06-05
  */
 public class ArangoDBItemRepositoryTest {
     private static ItemRepository itemRepository = new ArangoDBItemRepository();
@@ -76,7 +76,7 @@ public class ArangoDBItemRepositoryTest {
         Barcode barcode = BarcodeGenerateServices.createMatchingBarcode("6907861191394");
         MadeIn madeIn = new Domestic("四川", "成都");
         RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.59, currency), Unit.HE));
-        Item one = new Item("one", barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "彩虹电热灭蚊香液"), madeIn,
+        Item one = new Item("one", barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "150ml彩虹电热灭蚊香液"), madeIn,
                 new Specification("150ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
         itemRepository.save(one);
 
@@ -99,9 +99,9 @@ public class ArangoDBItemRepositoryTest {
                 new Specification("350ml"), Grade.QUALIFIED, retailPrice, memberPrice, vipPrice, food.id(), tianyou.id());
         itemRepository.save(four);
 
-        retailPrice = new RetailPrice(new Price(Money.of(55.00, currency), Unit.TI));
-        memberPrice = new MemberPrice(new Price(Money.of(50.00, currency), Unit.TI));
-        vipPrice = new VipPrice("PLUS价", new Price(Money.of(48.00, currency), Unit.TI));
+        retailPrice = new RetailPrice(new Price(Money.of(10.00, currency), Unit.TI));
+        memberPrice = new MemberPrice(new Price(Money.of(9.5, currency), Unit.TI));
+        vipPrice = new VipPrice("PLUS价", new Price(Money.of(8.8, currency), Unit.TI));
         barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240896");
         Item five = new Item("five", barcode, new Name("天友纯牛奶", "天友纯牛奶"), madeIn,
                 new Specification("350ml"), Grade.QUALIFIED, retailPrice, memberPrice, vipPrice, food.id(), tianyou.id());
@@ -114,13 +114,13 @@ public class ArangoDBItemRepositoryTest {
         itemRepository.save(six);
 
         barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240865");
-        Item six_1 = new Item("six_1", barcode, new Name("250ml天友纯牛奶(高钙）", "天友高钙纯牛奶"), madeIn,
+        Item six_1 = new Item("six_1", barcode, new Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶"), madeIn,
                 new Specification("250ml"), Grade.QUALIFIED, RetailPrice.RMB_ZERO, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), tianyou.id());
         itemRepository.save(six_1);
 
-        retailPrice = new RetailPrice(new Price(Money.of(2.5, currency), Unit.DAI));
+        retailPrice = new RetailPrice(new Price(Money.of(27.5, currency), Unit.DAI));
         barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240889");
-        Item six_2 = new Item("six_2", barcode, new Name("250ml天友纯牛奶", "天友纯牛奶"), madeIn,
+        Item six_2 = new Item("six_2", barcode, new Name("250ml天友纯牛奶", "250ml天友纯牛奶"), madeIn,
                 new Specification("250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), tianyou.id());
         itemRepository.save(six_2);
 
@@ -145,19 +145,19 @@ public class ArangoDBItemRepositoryTest {
                 Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), changhong.id());
         itemRepository.save(ten);
 
-        retailPrice = new RetailPrice(new Price(Money.of(3.50, currency), Unit.BEN));
+        retailPrice = new RetailPrice(new Price(Money.of(5, currency), Unit.BEN));
         Item twelve = new Item("twelve", new EAN_13("6925834037159"), new Name("车线本"), new Domestic("浙江", "仓南县"),
                 Specification.UNDEFINED, Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(twelve);
 
-        retailPrice = new RetailPrice(new Price(Money.of(25.00, currency), Unit.HE));
+        retailPrice = new RetailPrice(new Price(Money.of(32.00, currency), Unit.HE));
         Item thirteen = new Item(itemRepository.nextIdentity(), new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("泰国"),
                 new Specification("10片装"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(thirteen);
     }
 
     @AfterClass
-    public static void teardown() {
+    public static void teardownAfterClass() {
         brandRepository.remove(Brand.UNDEFINED.id());
         brandRepository.remove("caihong");
         brandRepository.remove("tianyou");
@@ -183,12 +183,12 @@ public class ArangoDBItemRepositoryTest {
         itemRepository.remove("nine");
         itemRepository.remove("ten");
         itemRepository.remove("twelve");
-
-        for (Item item : itemRepository.fromBarcode("4547691239136"))
+        for (Item item : itemRepository.fromBarcode("4547691239136")) {
             itemRepository.remove(item.id());
-
+        }
         itemRepository.remove("twelve");
     }
+
 
     @Test
     public void belongToBrand() {
@@ -259,14 +259,18 @@ public class ArangoDBItemRepositoryTest {
 
     @Test
     public void fromBarcode() {
-        Item[] skuses = itemRepository.fromBarcode("69235552");
-        Assert.assertEquals(skuses.length, 3);
-        skuses = itemRepository.fromBarcode("690");
-        Assert.assertEquals(skuses.length, 3);
-        skuses = itemRepository.fromBarcode("123465");
-        Assert.assertEquals(skuses.length, 0);
-        skuses = itemRepository.fromBarcode("4695");
-        Assert.assertEquals(skuses.length, 1);
+        Item[] items = itemRepository.fromBarcode("69235552");
+        Assert.assertEquals(items.length, 3);
+        items = itemRepository.fromBarcode("690");
+        Assert.assertEquals(items.length, 3);
+        items = itemRepository.fromBarcode("123465");
+        Assert.assertEquals(items.length, 0);
+        items = itemRepository.fromBarcode("4695");
+        Assert.assertEquals(items.length, 1);
+        items = itemRepository.fromBarcode("4547691239136");
+        Assert.assertEquals(items.length, 1);
+        for (Item item : items)
+            System.out.println(item);
     }
 
     @Test
@@ -285,17 +289,17 @@ public class ArangoDBItemRepositoryTest {
 
     @Test
     public void fromName() {
-        Item[] skuses = itemRepository.fromName("彩虹");
-        Assert.assertEquals(skuses.length, 3);
-        skuses = itemRepository.fromName("^彩虹");
-        Assert.assertEquals(skuses.length, 2);
-        skuses = itemRepository.fromName("彩虹|长虹");
-        Assert.assertEquals(skuses.length, 4);
-        skuses = itemRepository.fromName("不知道");
-        Assert.assertEquals(skuses.length, 0);
-        skuses = itemRepository.fromName("天友|长虹|彩虹");
-        Assert.assertEquals(skuses.length, 9);
-        skuses = itemRepository.fromName("^天友|长虹|彩虹");
-        Assert.assertEquals(skuses.length, 7);
+        Item[] items = itemRepository.fromName("彩虹");
+        Assert.assertEquals(items.length, 3);
+        items = itemRepository.fromName("^彩虹");
+        Assert.assertEquals(items.length, 2);
+        items = itemRepository.fromName("彩虹|长虹");
+        Assert.assertEquals(items.length, 4);
+        items = itemRepository.fromName("不知道");
+        Assert.assertEquals(items.length, 0);
+        items = itemRepository.fromName("天友|长虹|彩虹");
+        Assert.assertEquals(items.length, 9);
+        items = itemRepository.fromName("^天友|长虹|彩虹");
+        Assert.assertEquals(items.length, 7);
     }
 }

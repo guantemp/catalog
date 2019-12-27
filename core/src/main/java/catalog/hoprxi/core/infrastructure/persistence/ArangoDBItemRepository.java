@@ -49,7 +49,7 @@ import java.util.Map;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2018-06-04
+ * @version 0.0.2 builder 2019-06-04
  */
 public class ArangoDBItemRepository implements ItemRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBItemRepository.class);
@@ -70,11 +70,13 @@ public class ArangoDBItemRepository implements ItemRepository {
 
     @Override
     public Item[] belongToBrand(String brandId, int offset, int limit) {
-        final String query = "WITH brand,item,barcode\n" +
-                "FOR s,b IN 1..1 INBOUND @startVertex belong LIMIT @offset,@limit\n" +
-                "LET barcode = (FOR v,e IN 1..1 OUTBOUND s._id has RETURN v)\n" +
-                "RETURN {'item':s,'barcode':barcode[0].barcode}";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "brand/" + brandId).put("offset", offset).put("limit", limit).get();
+        final String query = "WITH brand,category,item,barcode\n" +
+                "FOR br IN brand FILTER br._key == @brandId\n" +
+                "FOR i IN 1..1 INBOUND br._id belong LIMIT @offset,@limit\n" +
+                "FOR b IN 1..1 OUTBOUND i._id has\n" +
+                //"FOR c IN 1..1 OUTBOUND i._id belong FILTER c._id =~ '^category'\n" +
+                "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice,'brandId':i.brandId,'categoryId':i.categoryId}";
+        final Map<String, Object> bindVars = new MapBuilder().put("brandId", brandId).put("offset", offset).put("limit", limit).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
     }
@@ -82,11 +84,13 @@ public class ArangoDBItemRepository implements ItemRepository {
 
     @Override
     public Item[] belongToCategory(String categoryId, long offset, int limit) {
-        final String query = "WITH category,belong,item,has,barcode\n" +
-                "FOR s,b IN 1..1 INBOUND @startVertex belong LIMIT @offset,@limit\n" +
-                "LET barcode = (FOR v,e IN 1..1 OUTBOUND s._id has RETURN v)\n" +
-                "RETURN {'item':s,'barcode':barcode[0].barcode}";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + categoryId).put("offset", offset).put("limit", limit).get();
+        final String query = "WITH brand,category,item,barcode\n" +
+                "FOR c IN category FILTER c._key == @categoryId\n" +
+                "FOR i IN 1..1 INBOUND c._id belong LIMIT @offset,@limit\n" +
+                "FOR b IN 1..1 OUTBOUND i._id has\n" +
+                //"FOR br IN 1..1 OUTBOUND i._id belong FILTER br._id =~ '^brand'\n" +
+                "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice,'brandId':i.brandId,'categoryId':i.categoryId}";
+        final Map<String, Object> bindVars = new MapBuilder().put("categoryId", categoryId).put("offset", offset).put("limit", limit).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
     }
@@ -94,9 +98,11 @@ public class ArangoDBItemRepository implements ItemRepository {
     @Override
     public Item find(String id) {
         final String query = "WITH item,barcode\n" +
-                "FOR s IN item FILTER s._key == @key \n" +
-                "LET barcode = (FOR v,e IN 1..1 OUTBOUND s._id has RETURN v)\n" +
-                "RETURN {'item':s,'barcode':barcode[0].barcode}";
+                "FOR i IN item FILTER i._key == @key\n" +
+                "FOR b IN 1..1 OUTBOUND i._id has\n" +
+                //"FOR c IN 1..1 OUTBOUND i._id belong FILTER c._id =~ '^category'\n" +
+                //"FOR br IN 1..1 OUTBOUND i._id belong FILTER br._id =~ '^brand'\n" +
+                "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice,'brandId':i.brandId,'categoryId':i.categoryId}";
         final Map<String, Object> bindVars = new MapBuilder().put("key", id).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         while (slices.hasNext()) {
@@ -125,11 +131,10 @@ public class ArangoDBItemRepository implements ItemRepository {
 
     private Item rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
         Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(slice.get("barcode").getAsString());
-        //item
-        VPackSlice item = slice.get("item");
-        String id = item.get(DocumentField.Type.KEY.getSerializeName()).getAsString();
-        Name name = nameConstructor.newInstance(item.get("name").get("name").getAsString(), item.get("name").get("mnemonic").getAsString(), item.get("name").get("alias").getAsString());
-        VPackSlice madeInSlice = item.get("madeIn");
+        //DocumentField.Type.KEY.getSerializeName()
+        String id = slice.get("id").getAsString();
+        Name name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());
+        VPackSlice madeInSlice = slice.get("madeIn");
         MadeIn madeIn = null;
         String className = madeInSlice.get("_class").getAsString();
         if (Domestic.class.getName().equals(className)) {
@@ -137,31 +142,31 @@ public class ArangoDBItemRepository implements ItemRepository {
         } else if (Imported.class.getName().equals(className)) {
             madeIn = new Imported(madeInSlice.get("country").getAsString());
         }
-        Specification spec = new Specification(item.get("spec").get("value").getAsString());
-        Grade grade = Grade.valueOf(item.get("grade").getAsString());
+        Specification spec = new Specification(slice.get("spec").get("value").getAsString());
+        Grade grade = Grade.valueOf(slice.get("grade").getAsString());
 
-        VPackSlice retailPriceSlice = item.get("retailPrice");
+        VPackSlice retailPriceSlice = slice.get("retailPrice");
         VPackSlice amountSlice = retailPriceSlice.get("price").get("amount");
         MonetaryAmount amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
         Unit unit = Unit.valueOf(retailPriceSlice.get("price").get("unit").getAsString());
         RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
 
-        VPackSlice memberPriceSlice = item.get("memberPrice");
+        VPackSlice memberPriceSlice = slice.get("memberPrice");
         String priceName = memberPriceSlice.get("name").getAsString();
         amountSlice = memberPriceSlice.get("price").get("amount");
         amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
         unit = Unit.valueOf(memberPriceSlice.get("price").get("unit").getAsString());
         MemberPrice memberPrice = new MemberPrice(priceName, new Price(amount, unit));
 
-        VPackSlice vipPriceSlice = item.get("vipPrice");
+        VPackSlice vipPriceSlice = slice.get("vipPrice");
         priceName = vipPriceSlice.get("name").getAsString();
         amountSlice = vipPriceSlice.get("price").get("amount");
         amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
         unit = Unit.valueOf(vipPriceSlice.get("price").get("unit").getAsString());
         VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
 
-        String brandId = item.get("brandId").getAsString();
-        String categoryId = item.get("categoryId").getAsString();
+        String brandId = slice.get("brandId").getAsString();
+        String categoryId = slice.get("categoryId").getAsString();
         return new Item(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
@@ -171,18 +176,59 @@ public class ArangoDBItemRepository implements ItemRepository {
         if (items.length == 0)
             return items;
         final String query = "WITH item,barcode\n" +
-                "FOR s IN item LIMIT @offset,@limit\n" +
-                "LET barcode = (FOR v,e IN 1..1 OUTBOUND s._id has RETURN v)\n" +
-                "RETURN {'item':s,'barcode':barcode[0].barcode}";
+                "FOR i IN item LIMIT @offset,@limit\n" +
+                "FOR b IN 1..1 OUTBOUND i._id has\n" +
+                //"FOR c IN 1..1 OUTBOUND i._id belong FILTER c._id =~ '^category'\n" +
+                //"FOR br IN 1..1 OUTBOUND i._id belong FILTER br._id =~ '^brand'\n" +
+                "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice,'brandId':i.brandId,'categoryId':i.categoryId}";
         final Map<String, Object> bindVars = new MapBuilder().put("offset", offset).put("limit", limit).get();
         final ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         try {
             for (int i = 0; slices.hasNext(); i++)
                 items[i] = rebuild(slices.next());
         } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-            LOGGER.error("Can't rebuild weight", e);
+            LOGGER.error("Can't rebuild item", e);
         }
         return items;
+    }
+
+    @Override
+    public Item[] fromBarcode(String barcode) {
+        final String query = "WITH brand,category,item,barcode\n" +
+                "FOR b IN barcode FILTER b.barcode =~ @barcode\n" +
+                "FOR i IN 1..1 INBOUND b._id has\n" +
+                //"FOR c IN 1..1 OUTBOUND i._id belong FILTER c._id =~ '^category'\n" +
+                //"FOR br IN 1..1 OUTBOUND i._id belong FILTER br._id =~ '^brand'\n" +
+                "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice,'brandId':i.brandId,'categoryId':i.categoryId}";
+        final Map<String, Object> bindVars = new MapBuilder().put("barcode", barcode).get();
+        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
+        return transform(slices);
+    }
+
+    @Override
+    public Item[] fromMnemonic(String mnemonic) {
+        final String query = "WITH brand,category,item,barcode\n" +
+                "FOR i IN item FILTER i.name.mnemonic =~ @mnemonic\n" +
+                "FOR b IN 1..1 OUTBOUND i._id has\n" +
+                //"FOR c IN 1..1 OUTBOUND i._id belong FILTER c._id =~ '^category'\n" +
+                //"FOR br IN 1..1 OUTBOUND i._id belong FILTER br._id =~ '^brand'\n" +
+                "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice,'brandId':i.brandId,'categoryId':i.categoryId}";
+        final Map<String, Object> bindVars = new MapBuilder().put("mnemonic", mnemonic).get();
+        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
+        return transform(slices);
+    }
+
+    @Override
+    public Item[] fromName(String name) {
+        final String query = "WITH brand,category,item,barcode\n" +
+                "FOR i IN item FILTER i.name.name =~ @name || i.name.alias =~ @name || i.name.mnemonic =~ @name\n" +
+                "FOR b IN 1..1 OUTBOUND i._id has\n" +
+                //"FOR c IN 1..1 OUTBOUND i._id belong FILTER c._id =~ '^category'\n" +
+                //"FOR br IN 1..1 OUTBOUND i._id belong FILTER br._id =~ '^brand'\n" +
+                "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice,'brandId':i.brandId,'categoryId':i.categoryId}";
+        final Map<String, Object> bindVars = new MapBuilder().put("name", name).get();
+        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
+        return transform(slices);
     }
 
     @Override
@@ -194,10 +240,10 @@ public class ArangoDBItemRepository implements ItemRepository {
     public void remove(String id) {
         boolean exists = catalog.collection("item").documentExists(id);
         if (exists) {
-            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "item/" + id).get();
-            final String removeHas_2 = "WITH item,has,barcode\n" +
+            final String removeBarcode = "WITH item,barcode\n" +
                     "FOR v,e IN 1..1 OUTBOUND @startVertex has REMOVE v IN barcode";
-            catalog.query(removeHas_2, bindVars, null, VPackSlice.class);
+            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "item/" + id).get();
+            catalog.query(removeBarcode, bindVars, null, VPackSlice.class);
             catalog.graph("core").vertexCollection("item").deleteVertex(id);
         }
     }
@@ -222,7 +268,7 @@ public class ArangoDBItemRepository implements ItemRepository {
     }
 
     private boolean isBrandIdChanged(ArangoDatabase arangoDatabase, DocumentEntity startVertex, String brandId) {
-        final String query = "WITH item,belong\n" +
+        final String query = "WITH item,brand\n" +
                 "FOR v,e IN 1..1 OUTBOUND @startVertex belong FILTER v._id =~ '^brand' && v._key != @brandId REMOVE e IN belong RETURN e";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", startVertex.getId()).put("brandId", brandId).get();
         ArangoCursor<VPackSlice> slices = arangoDatabase.query(query, bindVars, null, VPackSlice.class);
@@ -230,7 +276,7 @@ public class ArangoDBItemRepository implements ItemRepository {
     }
 
     private boolean isCategoryIdChanged(ArangoDatabase arangoDatabase, DocumentEntity startVertex, String categoryId) {
-        final String query = "WITH item\n" +
+        final String query = "WITH item,category\n" +
                 "FOR v,e IN 1..1 OUTBOUND @startVertex belong FILTER v._id =~ '^category' && v._key != @categoryId REMOVE e IN belong RETURN e";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", startVertex.getId()).put("categoryId", categoryId).get();
         ArangoCursor<VPackSlice> slices = arangoDatabase.query(query, bindVars, null, VPackSlice.class);
@@ -327,39 +373,6 @@ public class ArangoDBItemRepository implements ItemRepository {
         return 0l;
     }
 
-    @Override
-    public Item[] fromBarcode(String barcode) {
-        final String query = "WITH barcode,item\n" +
-                "FOR b IN barcode FILTER b.barcode =~ @barcode\n" +
-                "FOR item,e IN 1..1 INBOUND b has\n" +
-                "LET barcode = (FOR v,h IN 1..1 OUTBOUND item._id has RETURN v)\n" +
-                "RETURN {item,'barcode':barcode[0].barcode}";
-        final Map<String, Object> bindVars = new MapBuilder().put("barcode", barcode).get();
-        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        return transform(slices);
-    }
-
-    @Override
-    public Item[] fromMnemonic(String mnemonic) {
-        final String query = "WITH item,barcode\n" +
-                "FOR s IN item FILTER s.name.mnemonic =~ @mnemonic\n" +
-                "LET barcode = (FOR v,h IN 1..1 OUTBOUND s._id has RETURN v)\n" +
-                "RETURN {'item':s,'barcode':barcode[0].barcode}";
-        final Map<String, Object> bindVars = new MapBuilder().put("mnemonic", mnemonic).get();
-        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        return transform(slices);
-    }
-
-    @Override
-    public Item[] fromName(String name) {
-        final String query = "WITH item,barcode\n" +
-                "FOR s IN item FILTER s.name.name =~ @name\n" +
-                "LET barcode = (FOR v,h IN 1..1 OUTBOUND s._id has  RETURN v)\n" +
-                "RETURN {'item':s,'barcode':barcode[0].barcode}";
-        final Map<String, Object> bindVars = new MapBuilder().put("name", name).get();
-        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        return transform(slices);
-    }
 
     private static class HasEdge {
         @DocumentField(DocumentField.Type.FROM)
