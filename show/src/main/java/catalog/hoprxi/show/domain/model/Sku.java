@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,28 @@
 
 package catalog.hoprxi.show.domain.model;
 
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.price.MemberPrice;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.VipPrice;
+import com.arangodb.entity.DocumentField;
+
+import java.net.URL;
+import java.util.Set;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 2019-11-11
  */
 public class Sku {
+    private String categoryId;
+    @DocumentField(DocumentField.Type.KEY)
+    private String id;
+    private Name name;
+    private MadeIn madeIn;
+    private RetailPrice retailPrice;
+    private MemberPrice memberPrice;
+    private VipPrice vipPrice;
+    private Set<URL> imagesSet;
 }

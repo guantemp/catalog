@@ -14,30 +14,21 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.madeIn;
+package catalog.hoprxi.core.application;
 
-import java.util.Objects;
+import catalog.hoprxi.core.domain.model.Item;
+import catalog.hoprxi.core.domain.model.ItemRepository;
+import catalog.hoprxi.core.infrastructure.persistence.ArangoDBItemRepository;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-11-11
+ * @version 0.0.1 2020-01-10
  */
-public class Local implements MadeIn {
-    //合江县（本地生产标识到县/区）
-    private String county;
+public class ItemService {
+    private ItemRepository repository = new ArangoDBItemRepository();
 
-    public Local(String county) {
-        this.county = Objects.requireNonNull(county, "county required").trim();
-    }
-
-    @Override
-    public String madeIn() {
-        return county;
-    }
-
-    @Override
-    public long code() {
-        return 0;
+    public Item findItem(String id) {
+        return repository.find(id);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,18 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.show.domain.model.category.spec;
-
-import java.util.StringJoiner;
+package catalog.hoprxi.show.domain.model.category;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 2019-11-12
+ * @version 0.0.1 builder 2020-01-13
  */
-public class ColourSpecification extends Specification implements IconSpecification {
-    public ColourSpecification(String value) {
-        super(value);
-    }
+public interface SequenceAttr extends Comparable<SequenceAttr> {
+    byte sequence = (byte) 0;
 
     @Override
-    public String toString() {
-        return new StringJoiner(", ", ColourSpecification.class.getSimpleName() + "[", "]")
-                .add("value='" + value + "'")
-                .toString();
+    default int compareTo(SequenceAttr o) {
+        return sequence == o.sequence ? 0 : sequence > o.sequence ? 1 : -1;
     }
 }

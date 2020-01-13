@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.show.domain.model.category.spec;
+package catalog.hoprxi.show.domain.model.category;
 
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -24,14 +24,14 @@ import java.util.StringJoiner;
  * @since JDK8.0
  * @version 0.0.1 builder 2019-11-12
  */
-public class Specification {
+public class Attribute {
     protected String value;
 
     /**
      * @param value
      * @throws IllegalArgumentException if value is null
      */
-    public Specification(String value) {
+    public Attribute(String value) {
         value = Objects.requireNonNull(value, "value required").trim();
         if (value.isEmpty() || value.length() > 128)
             throw new IllegalArgumentException("value length range is[1-128]");
@@ -47,7 +47,7 @@ public class Specification {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Specification that = (Specification) o;
+        Attribute that = (Attribute) o;
 
         return value != null ? value.equals(that.value) : that.value == null;
     }
@@ -59,7 +59,7 @@ public class Specification {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", Specification.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", Attribute.class.getSimpleName() + "[", "]")
                 .add("value='" + value + "'")
                 .toString();
     }

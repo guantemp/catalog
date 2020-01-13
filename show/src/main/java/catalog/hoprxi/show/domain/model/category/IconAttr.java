@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,17 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.show.domain.model.category.spec;
+package catalog.hoprxi.show.domain.model.category;
+
+import java.net.URL;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 2019-11-12
+ * @version 0.0.1 builder 2020-01-13
  */
-public class SizeSpecification extends Specification implements OrdinalSpecification {
-    public SizeSpecification(String value) {
-        super(value);
+public interface IconAttr {
+    default URL icon() {
+        return null;
     }
 }

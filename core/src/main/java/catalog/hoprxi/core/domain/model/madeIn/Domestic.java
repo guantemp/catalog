@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package catalog.hoprxi.core.domain.model.madeIn;
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
+import java.util.Objects;
 import java.util.StringJoiner;
 
 /***
@@ -26,13 +27,13 @@ import java.util.StringJoiner;
  * @version 0.0.1 2019-08-28
  */
 public class Domestic implements MadeIn {
-    //合江县（本地生产标识到县/区） or 乐山（省/市级）
-    private String province;
-    private String city;
+    // 省/市级
+    private String province;//四川省
+    private String city;//乐山市
 
     public Domestic(String province, String city) {
-        this.province = province;
-        this.city = city;
+        this.province = Objects.requireNonNull(province, "province required").trim();
+        this.city = Objects.requireNonNull(city, "city required").trim();
     }
 
     public Domestic(String city) {

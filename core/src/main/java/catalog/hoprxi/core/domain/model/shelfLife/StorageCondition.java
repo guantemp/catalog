@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,12 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.show.domain.model.category.spec;
+package catalog.hoprxi.core.domain.model.shelfLife;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2019-05-27
+ * @version 0.0.1 2020-01-11
  */
-public interface OrdinalSpecification extends Comparable<OrdinalSpecification> {
-    @Override
-    default int compareTo(OrdinalSpecification o) {
-        return 0;
-    }
+public enum StorageCondition {
 }

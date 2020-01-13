@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,14 +101,14 @@ public class ArangoDBItemRepositoryTest {
 
         retailPrice = new RetailPrice(new Price(Money.of(10.00, currency), Unit.TI));
         memberPrice = new MemberPrice(new Price(Money.of(9.5, currency), Unit.TI));
-        vipPrice = new VipPrice("PLUS价", new Price(Money.of(8.8, currency), Unit.TI));
+        vipPrice = new VipPrice("PLUS", new Price(Money.of(8.8, currency), Unit.TI));
         barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240896");
         Item five = new Item("five", barcode, new Name("天友纯牛奶", "天友纯牛奶"), madeIn,
                 new Specification("350ml"), Grade.QUALIFIED, retailPrice, memberPrice, vipPrice, food.id(), tianyou.id());
         itemRepository.save(five);
 
         retailPrice = new RetailPrice(new Price(Money.of(17.90, currency), Unit.PCS));
-        vipPrice = new VipPrice("PLUS价", new Price(Money.of(15.50, currency), Unit.PCS));
+        vipPrice = new VipPrice("PLUS", new Price(Money.of(15.50, currency), Unit.PCS));
         Item six = new Item("six", new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), madeIn,
                 new Specification("6*250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, vipPrice, food.id(), tianyou.id());
         itemRepository.save(six);
