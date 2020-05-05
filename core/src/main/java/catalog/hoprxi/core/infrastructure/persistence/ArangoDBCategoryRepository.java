@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.persistence;
 
+import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import com.arangodb.ArangoCursor;
@@ -31,6 +32,8 @@ import mi.hoprxi.id.LongId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,11 +41,22 @@ import java.util.Map;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-05-26
+ * @version 0.0.1 builder 2020-05-05
  */
 public class ArangoDBCategoryRepository implements CategoryRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBBrandRepository.class);
     private ArangoDatabase catalog = ArangoDBUtil.getDatabase();
+    private static Constructor<Name> nameConstructor;
+
+    static {
+        try {
+            nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
+            nameConstructor.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("Not find Name class has such constructor", e);
+        }
+    }
 
     @Override
     public Category[] belongTo(String id) {
@@ -51,8 +65,12 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
         ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
         List<Category> list = new ArrayList<>();
-        while (cursor.hasNext())
-            list.add(rebuild(cursor.next()));
+        try {
+            while (cursor.hasNext())
+                list.add(rebuild(cursor.next()));
+        } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            LOGGER.debug("Can't rebuild category");
+        }
         return list.toArray(new Category[0]);
     }
 
@@ -60,7 +78,12 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
     public Category find(String id) {
         ArangoGraph graph = catalog.graph("core");
         VPackSlice slice = graph.vertexCollection("category").getVertex(id, VPackSlice.class);
-        return rebuild(slice);
+        try {
+            return rebuild(slice);
+        } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            LOGGER.debug("Can't rebuild brand");
+        }
+        return null;
     }
 
     @Override
@@ -78,10 +101,7 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
     public Category[] root() {
         final String query = "FOR d IN category FILTER d._key == d.parentId RETURN d";
         ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
-        List<Category> list = new ArrayList<>();
-        while (cursor.hasNext())
-            list.add(rebuild(cursor.next()));
-        return list.toArray(new Category[0]);
+        return transform(cursor);
     }
 
     @Override
@@ -115,16 +135,29 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
             graph.edgeCollection("subordinate").insertEdge(new Edge(from.getId(), to.getId()));
     }
 
-    private Category rebuild(VPackSlice slice) {
+    private Category rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
         if (slice == null)
             return null;
         String id = slice.get(DocumentField.Type.KEY.getSerializeName()).getAsString();
         String parentId = slice.get("parentId").getAsString();
-        String name = slice.get("name").getAsString();
+        Name name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());
         String description = null;
         if (!slice.get("description").isNone())
             description = slice.get("description").getAsString();
         return new Category(parentId, id, name, description);
+    }
+
+    private Category[] transform(ArangoCursor<VPackSlice> cursor) {
+        List<Category> categoryList = new ArrayList<>();
+        while (cursor.hasNext()) {
+            try {
+                categoryList.add(rebuild(cursor.next()));
+            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("Can't rebuild category", e);
+            }
+        }
+        return categoryList.toArray(new Category[categoryList.size()]);
     }
 
     /*

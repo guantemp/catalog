@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ public class BarcodeGenerateServicesTest {
 
     @Test
     public void inStoreEAN_8Generate() {
-        Barcode[] eans = BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(7542, 20, "20");
+        Barcode[] eans = BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(7542, 20, "23");
         for (Barcode e : eans)
             System.out.println(e);
     }
@@ -40,6 +40,13 @@ public class BarcodeGenerateServicesTest {
     @Test
     public void inStoreEAN_13Generate() {
         Barcode[] eans = BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(5678921, 20, "22");
+        for (Barcode e : eans)
+            System.out.println(e);
+    }
+
+    @Test
+    public void couponBarcodeGenerate() {
+        Barcode[] eans = BarcodeGenerateServices.couponBarcodeGenerate(325, 30);
         for (Barcode e : eans)
             System.out.println(e);
     }

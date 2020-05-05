@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.domain.model.category;
 
 
+import catalog.hoprxi.core.domain.model.Name;
 import event.hoprxi.domain.model.DomainEvent;
 
 import java.time.LocalDateTime;
@@ -24,10 +25,10 @@ import java.time.LocalDateTime;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-05-23
+ * @version 0.0.2 builder 2020-05-05
  */
 public class CategoryRenamed implements DomainEvent {
-    private String name;
+    private Name name;
     private LocalDateTime occurredOn;
     private String id;
     private int version;
@@ -36,8 +37,7 @@ public class CategoryRenamed implements DomainEvent {
      * @param id
      * @param name
      */
-    public CategoryRenamed(String id, String name) {
-        super();
+    public CategoryRenamed(String id, Name name) {
         this.id = id;
         this.name = name;
         this.occurredOn = LocalDateTime.now();
@@ -69,7 +69,7 @@ public class CategoryRenamed implements DomainEvent {
     /**
      * @return the name
      */
-    public String name() {
+    public Name name() {
         return name;
     }
 

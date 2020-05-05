@@ -30,7 +30,6 @@ import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import org.javamoney.moneta.Money;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -61,16 +60,16 @@ public class ArangoDBItemRepositoryTest {
         brandRepository.save(changhong);
 
         categoryRepository.save((Category.UNDEFINED));
-        Category root = Category.createCategoryRoot("root", "分类");
+        Category root = Category.createCategoryRoot("root", Name.of("分类"));
         categoryRepository.save(root);
-        Category food = new Category("root", "food", "食品", "可供人类食用或饮用的物质，包括加工食品，半成品和未加工食品，不包括烟草或只作药品用的物质");
+        Category food = new Category("root", "food", Name.of("食品"), "可供人类食用或饮用的物质，包括加工食品，半成品和未加工食品，不包括烟草或只作药品用的物质");
         categoryRepository.save(food);
-        Category chemicals = new Category("root", "chemicals", "日化", "日用化学品,指人们平日常用的科技化学制品,包括洗发水、沐浴露、护肤、护发、化妆品等等");
+        Category chemicals = new Category("root", "chemicals", Name.of("日化"), "日用化学品,指人们平日常用的科技化学制品,包括洗发水、沐浴露、护肤、护发、化妆品等等");
         categoryRepository.save(chemicals);
-        Category cosmetics = new Category("chemicals", "cosmetics", "化妆品",
+        Category cosmetics = new Category("chemicals", "cosmetics", Name.of("化妆品"),
                 "指以涂抹、喷洒或者其他类似方法，散布于人体表面的任何部位，如皮肤、毛发、指趾甲、唇齿等，以达到清洁、保养、美容、修饰和改变外观，或者修正人体气味，保持良好状态为目的的化学工业品或精细化工产品");
         categoryRepository.save(cosmetics);
-        Category skin = new Category("cosmetics", "skin", "肤用化妆品");
+        Category skin = new Category("cosmetics", "skin", Name.of("肤用化妆品"));
         categoryRepository.save(skin);
 
         Barcode barcode = BarcodeGenerateServices.createMatchingBarcode("6907861191394");
@@ -155,7 +154,7 @@ public class ArangoDBItemRepositoryTest {
                 new Specification("10片装"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(thirteen);
     }
-
+/*
     @AfterClass
     public static void teardownAfterClass() {
         brandRepository.remove(Brand.UNDEFINED.id());
@@ -188,7 +187,7 @@ public class ArangoDBItemRepositoryTest {
         }
         itemRepository.remove("twelve");
     }
-
+*/
 
     @Test
     public void belongToBrand() {

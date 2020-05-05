@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package catalog.hoprxi.core.domain.model.category;
 
 import catalog.hoprxi.core.domain.DomainRegistry;
 import catalog.hoprxi.core.domain.Validator;
+import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import com.arangodb.entity.DocumentField;
 
@@ -26,12 +27,12 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2019-05-23
+ * @version 0.0.2 builder 2020-05-05
  */
 public class Category {
-    public static final Category UNDEFINED = new Category("undefined", "undefined", Label.CATEGORY_UNDEFINED) {
+    public static final Category UNDEFINED = new Category("undefined", "undefined", Name.of(Label.CATEGORY_UNDEFINED)) {
         @Override
-        public void rename(String newName) {
+        public void rename(Name newName) {
         }
 
         @Override
@@ -49,13 +50,12 @@ public class Category {
     private String description;
     @DocumentField(DocumentField.Type.KEY)
     private String id;
-    private String name;
+    private Name name;
     private String parentId;
-    private static final int NAME_MAX_LENGTH = 255;
     private static final int ID_MAX_LENGTH = 36;
     private static final int DESCRIPTION_MAX_LENGTH = 512;
 
-    public Category(String parentId, String id, String name) {
+    public Category(String parentId, String id, Name name) {
         this(parentId, id, name, null);
     }
 
@@ -70,7 +70,7 @@ public class Category {
      *                                  if name length range not in [1-256]
      *                                  if description not null and length range not in [0-512]
      */
-    public Category(String parentId, String id, String name, String description) {
+    public Category(String parentId, String id, Name name, String description) {
         setIdAndParentId(parentId, id);
         setName(name);
         setDescription(description);
@@ -82,11 +82,11 @@ public class Category {
         this.description = description;
     }
 
-    public static Category createCategoryRoot(String id, String name) {
+    public static Category createCategoryRoot(String id, Name name) {
         return new Category(id, id, name);
     }
 
-    public static Category createCategoryRoot(String id, String name, String description) {
+    public static Category createCategoryRoot(String id, Name name, String description) {
         return new Category(id, id, name, description);
     }
 
@@ -133,7 +133,7 @@ public class Category {
     /**
      * @return the value
      */
-    public String name() {
+    public Name name() {
         return name;
     }
 
@@ -144,10 +144,7 @@ public class Category {
     /**
      * @param newName
      */
-    public void rename(String newName) {
-        newName = Objects.requireNonNull(newName, "newName required").trim();
-        if (newName.length() > NAME_MAX_LENGTH)
-            throw new IllegalArgumentException(" newName length is 1-" + NAME_MAX_LENGTH);
+    public void rename(Name newName) {
         if (!newName.equals(name)) {
             this.name = newName;
             DomainRegistry.domainEventPublisher().publish(new CategoryRenamed(id, newName));
@@ -156,10 +153,10 @@ public class Category {
 
     public void changeDescription(String description) {
         if (description != null && description.length() > DESCRIPTION_MAX_LENGTH)
-            throw new IllegalArgumentException("description length rang is 1-" + NAME_MAX_LENGTH);
+            throw new IllegalArgumentException("description length rang is 1-" + DESCRIPTION_MAX_LENGTH);
         if ((this.description == null && description != null) || (this.description != null && !this.description.equals(description))) {
             this.description = description;
-            DomainRegistry.domainEventPublisher().publish(new CategoryRenamed(id, description));
+            DomainRegistry.domainEventPublisher().publish(new CategoryDescriptionChanged(id, description));
         }
     }
 
@@ -182,11 +179,8 @@ public class Category {
     /**
      * @param name
      */
-    protected void setName(String name) {
-        name = Objects.requireNonNull(name, "name required.").trim();
-        if (name.length() > NAME_MAX_LENGTH)
-            throw new IllegalArgumentException("name length is 1-256");
-        this.name = name;
+    protected void setName(Name name) {
+        this.name = Objects.requireNonNull(name, "name required.");
     }
 
     @Override

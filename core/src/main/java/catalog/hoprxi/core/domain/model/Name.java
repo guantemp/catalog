@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,10 @@ public class Name {
         setName(name);
         this.mnemonic = mnemonic;
         setAlias(alias);
+    }
+
+    public static Name of(String name) {
+        return new Name(name);
     }
 
     /**
