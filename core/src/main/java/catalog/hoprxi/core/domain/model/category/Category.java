@@ -30,7 +30,7 @@ import java.util.Objects;
  * @version 0.0.2 builder 2020-05-05
  */
 public class Category {
-    public static final Category UNDEFINED = new Category("undefined", "undefined", Name.of(Label.CATEGORY_UNDEFINED)) {
+    public static final Category UNDEFINED = new Category("undefined", "undefined", new Name(Label.CATEGORY_UNDEFINED, "undefined")) {
         @Override
         public void rename(Name newName) {
         }
@@ -59,6 +59,10 @@ public class Category {
         this(parentId, id, name, null);
     }
 
+    public Category(String parentId, String id, String name) {
+        this(parentId, id, new Name(name), null);
+    }
+
 
     /**
      * @param parentId
@@ -76,6 +80,10 @@ public class Category {
         setDescription(description);
     }
 
+    public Category(String parentId, String id, String name, String description) {
+        this(parentId, id, new Name(name), null);
+    }
+
     private void setDescription(String description) {
         if (description != null && description.length() > DESCRIPTION_MAX_LENGTH)
             throw new IllegalArgumentException("description length rang is 1-" + DESCRIPTION_MAX_LENGTH);
@@ -86,7 +94,15 @@ public class Category {
         return new Category(id, id, name);
     }
 
+    public static Category createCategoryRoot(String id, String name) {
+        return new Category(id, id, name);
+    }
+
     public static Category createCategoryRoot(String id, Name name, String description) {
+        return new Category(id, id, name, description);
+    }
+
+    public static Category createCategoryRoot(String id, String name, String description) {
         return new Category(id, id, name, description);
     }
 

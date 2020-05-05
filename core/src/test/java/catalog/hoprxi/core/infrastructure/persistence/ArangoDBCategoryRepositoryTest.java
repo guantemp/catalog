@@ -47,12 +47,12 @@ public class ArangoDBCategoryRepositoryTest {
         repository.save(food);
         Category leisure_food = new Category("food", "leisure_food", Name.of("休闲食品"), "人们闲暇、休息时所吃的食品");
         repository.save(leisure_food);
-        Category dry_fruits = new Category("leisure_food", "dry_fruits", Name.of("干果"));
+        Category dry_fruits = new Category("leisure_food", "dry_fruits", "干果");
         repository.save(dry_fruits);
-        Category puffed_food = new Category("leisure_food", "puffed_food", Name.of("膨化食品"));
+        Category puffed_food = new Category("leisure_food", "puffed_food", "膨化食品");
         repository.save(puffed_food);
         //酒水
-        Category drinks = new Category("root", "drinks", Name.of("酒水"), "酒类和水类的统称，可指酒、水、饮料等液体可饮用的水");
+        Category drinks = new Category("root", "drinks", "酒水", "酒类和水类的统称，可指酒、水、饮料等液体可饮用的水");
         repository.save(drinks);
         Category liquor = new Category("drinks", "liquor", Name.of("白酒"), "以粮谷为主要原料，以大曲、小曲或麸曲及酒母等为糖化发酵剂，经蒸煮、糖化、发酵、蒸馏而制成的蒸馏酒");
         repository.save(liquor);
@@ -61,14 +61,14 @@ public class ArangoDBCategoryRepositoryTest {
         //fresh
         Category fresh = new Category("root", "fresh", Name.of("生鲜"), "指未经烹调、制作等深加工过程，只做必要保鲜和简单整理上架而出售的初级产品，以及面包、熟食等现场加工品类的商品的统称");
         repository.save(fresh);
-        Category fruit = new Category("fresh", "fruit", Name.of("水果"), "指可食用的多汁液且有甜味的植物果实的统称");
+        Category fruit = new Category("fresh", "fruit", "水果", "指可食用的多汁液且有甜味的植物果实的统称");
         repository.save(fruit);
         Category meat = new Category("fresh", "  meat", Name.of("肉类"), "指陆上肉食动物及其可食部分的附属品制成的食品的统称");
         repository.save(meat);
         //日化
         Category chemicals = new Category("root", "chemicals", Name.of("日化"), "日用化学品,指人们平日常用的科技化学制品,包括洗发水、沐浴露、护肤、护发、化妆品等等");
         repository.save(chemicals);
-        Category cosmetics = new Category("chemicals", "cosmetics", Name.of("化妆品"),
+        Category cosmetics = new Category("chemicals", "cosmetics", "化妆品",
                 "指以涂抹、喷洒或者其他类似方法，散布于人体表面的任何部位，如皮肤、毛发、指趾甲、唇齿等，以达到清洁、保养、美容、修饰和改变外观，或者修正人体气味，保持良好状态为目的的化学工业品或精细化工产品");
         repository.save(cosmetics);
         Category skin = new Category("cosmetics", "skin", Name.of("肤用化妆品"));

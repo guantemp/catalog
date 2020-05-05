@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import catalog.hoprxi.scale.domain.model.Weight;
 import catalog.hoprxi.scale.domain.model.WeightRepository;
 import catalog.hoprxi.scale.domain.model.weight_price.*;
 import org.javamoney.moneta.Money;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -102,7 +101,7 @@ public class ArangoDBWeightRepositoryTest {
                 retailPrice, memberPrice, vipPrice, "aquatic", Brand.UNDEFINED.id());
         weightRepository.save(crucian_carp);
     }
-
+/*
     @AfterClass
     public static void teardown() {
         weightRepository.remove(new Plu(1));
@@ -117,7 +116,7 @@ public class ArangoDBWeightRepositoryTest {
         brandRepository.remove(Brand.UNDEFINED.id());
         brandRepository.remove("tw");
     }
-
+*/
     @Test
     public void nextPlu() {
     }
