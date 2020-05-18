@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import java.util.Objects;
  * @version 0.0.1 builder 2019-04-29
  */
 public class Specification {
-    public static final Specification UNDEFINED = new Specification("/");
+    public static final Specification UNDEFINED = new Specification("");
     private String value;
 
     public Specification(String value) {
@@ -34,7 +34,7 @@ public class Specification {
     }
 
     public static Specification rebulid(String value) {
-        if (value.equals("/"))
+        if (value.equals(""))
             return UNDEFINED;
         return new Specification(value);
     }
