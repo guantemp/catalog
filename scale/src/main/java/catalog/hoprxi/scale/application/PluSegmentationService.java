@@ -22,4 +22,7 @@ package catalog.hoprxi.scale.application;
  * @version 0.0.1 2020-05-05
  */
 public class PluSegmentationService {
+    public int nextPlu(String categoryId) {
+        return 1;
+    }
 }
