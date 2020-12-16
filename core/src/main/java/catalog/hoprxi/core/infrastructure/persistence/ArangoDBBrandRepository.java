@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -124,7 +124,9 @@ public class ArangoDBBrandRepository implements BrandRepository {
     @Override
     public void remove(String id) {
         ArangoGraph graph = catalog.graph("core");
-        graph.vertexCollection("brand").deleteVertex(id);
+        boolean exists = catalog.collection("brand").documentExists(id);
+        if (exists)
+            graph.vertexCollection("brand").deleteVertex(id);
     }
 
     @Override

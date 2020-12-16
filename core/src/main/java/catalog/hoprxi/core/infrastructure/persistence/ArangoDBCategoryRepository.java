@@ -94,7 +94,9 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
     @Override
     public void remove(String id) {
         ArangoGraph graph = catalog.graph("core");
-        graph.vertexCollection("category").deleteVertex(id);
+        boolean exists = catalog.collection("category").documentExists(id);
+        if (exists)
+            graph.vertexCollection("category").deleteVertex(id);
     }
 
     @Override
