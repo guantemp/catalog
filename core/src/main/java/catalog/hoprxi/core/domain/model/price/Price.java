@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019/10/15
+ * @version 0.0.1 2019-10-15
  */
 public class Price {
     private MonetaryAmount amount;

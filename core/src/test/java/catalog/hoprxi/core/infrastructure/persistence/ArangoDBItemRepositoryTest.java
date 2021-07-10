@@ -189,7 +189,7 @@ public class ArangoDBItemRepositoryTest {
         itemRepository.remove("twelve");
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 2)
+    @Test(invocationCount = 4, threadPoolSize = 4)
     public void testBelongToBrand() {
         Item[] skuses = itemRepository.belongToBrand("caihong", 0, 3);
         Assert.assertEquals(skuses.length, 3);
@@ -201,7 +201,7 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertEquals(skuses.length, 0);
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 2)
+    @Test(invocationCount = 4, threadPoolSize = 4)
     public void testBelongToCategory() {
         Item[] skuses = itemRepository.belongToCategory("food", 0, 10);
         Assert.assertEquals(skuses.length, 8);
@@ -217,7 +217,7 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertEquals(skuses.length, 1);
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 2)
+    @Test(invocationCount = 4, threadPoolSize = 4)
     public void testFind() {
         Item six = itemRepository.find("six_1");
         Assert.assertNotNull(six);
@@ -227,7 +227,7 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertNull(nine);
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 2)
+    @Test(invocationCount = 4, threadPoolSize = 4)
     public void testFindAll() {
         Item[] skuses = itemRepository.findAll(0, 25);
         Assert.assertEquals(skuses.length, 14);
@@ -237,7 +237,7 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertEquals(skuses.length, 5);
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 2)
+    @Test(invocationCount = 4, threadPoolSize = 4)
     public void testFromBarcode() {
         Item[] items = itemRepository.fromBarcode("69235552");
         Assert.assertEquals(items.length, 3);
@@ -253,7 +253,7 @@ public class ArangoDBItemRepositoryTest {
             System.out.println(item);
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 2)
+    @Test(invocationCount = 4, threadPoolSize = 4)
     public void testFromMnemonic() {
         Item[] skuses = itemRepository.fromMnemonic("^ch");
         Assert.assertEquals(skuses.length, 3);
@@ -267,7 +267,7 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertEquals(skuses.length, 5);
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 2)
+    @Test(invocationCount = 4, threadPoolSize = 4)
     public void testFromName() {
         Item[] items = itemRepository.fromName("彩虹");
         Assert.assertEquals(items.length, 3);
@@ -297,7 +297,7 @@ public class ArangoDBItemRepositoryTest {
         itemRepository.save(six);
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 2)
+    @Test(invocationCount = 4, threadPoolSize = 4)
     public void testSize() {
         Assert.assertEquals(itemRepository.size(), 14);
     }
