@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,9 @@ import com.arangodb.entity.DocumentField;
 import com.arangodb.model.DocumentUpdateOptions;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
-import mi.hoprxi.id.LongId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import salt.hoprxi.id.LongId;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

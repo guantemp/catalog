@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,9 @@ import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
-import mi.hoprxi.id.LongId;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
+import salt.hoprxi.id.LongId;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>

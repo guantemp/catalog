@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 package catalog.hoprxi.core.infrastructure.i18n;
 
 
-import mi.hoprxi.util.NLS;
+import salt.hoprxi.utils.NLS;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-06-03
+ * @version 0.0.2 builder 2021-06-02
  */
 public class Label extends NLS {
     private static final String BUNDLE_NAME = "catalog.hoprxi.core.infrastructure.i18n.label"; //$NON-NLS-1$

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ public class ArangoDBUtil {
      */
     public static ArangoDB getResource() {
         ArangoDB.Builder builder = new ArangoDB.Builder();
-        builder.useProtocol(Protocol.VST).host("125.68.186.195", 8529);
+        builder.useProtocol(Protocol.VST).host("120.77.47.145", 8529);
         builder.registerModule(new VPackJdk8Module()).maxConnections(8).user("root").password("Qwe123465");
         ArangoDB arangoDB = builder.build();
         return arangoDB;

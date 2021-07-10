@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
+  ~ Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -33,35 +33,36 @@
       <maven.compiler.source>1.8</maven.compiler.source>
       <maven.compiler.target>1.8</maven.compiler.target>
 
-      <mi.hoprxi.version>1.0-SNAPSHOT</mi.hoprxi.version>
+      <hoprxi.version>1.0-SNAPSHOT</hoprxi.version>
   </properties>
 
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.11</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>event.hoprxi</groupId>
-      <artifactId>core</artifactId>
-        <version>${mi.hoprxi.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>mi.hoprxi</groupId>
-      <artifactId>util</artifactId>
-        <version>${mi.hoprxi.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>mi.hoprxi</groupId>
-      <artifactId>to</artifactId>
-        <version>${mi.hoprxi.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>mi.hoprxi</groupId>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>7.3.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>event.hoprxi</groupId>
+            <artifactId>core</artifactId>
+            <version>${hoprxi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>salt.hoprxi</groupId>
+            <artifactId>utils</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>salt.hoprxi</groupId>
       <artifactId>id</artifactId>
-        <version>${mi.hoprxi.version}</version>
+            <version>1.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.javamoney</groupId>

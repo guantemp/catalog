@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,18 +30,19 @@ import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import org.javamoney.moneta.Money;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import java.util.Locale;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2019-06-05
+ * @version 0.0.1 builder 2021-07-10
  */
 public class ArangoDBItemRepositoryTest {
     private static ItemRepository itemRepository = new ArangoDBItemRepository();
@@ -49,8 +50,8 @@ public class ArangoDBItemRepositoryTest {
     private static CategoryRepository categoryRepository = new ArangoDBCategoryRepository();
     private static CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
 
-    @BeforeClass
-    public static void setUpBeforeClass() {
+    @BeforeTest
+    public void setUp() {
         brandRepository.save(Brand.UNDEFINED);
         Brand caihong = new Brand("caihong", new Name("彩虹"));
         brandRepository.save(caihong);
@@ -154,9 +155,9 @@ public class ArangoDBItemRepositoryTest {
                 new Specification("10片装"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(thirteen);
     }
-/*
-    @AfterClass
-    public static void teardownAfterClass() {
+
+    @AfterTest
+    public void tearDown() {
         brandRepository.remove(Brand.UNDEFINED.id());
         brandRepository.remove("caihong");
         brandRepository.remove("tianyou");
@@ -187,10 +188,9 @@ public class ArangoDBItemRepositoryTest {
         }
         itemRepository.remove("twelve");
     }
-*/
 
-    @Test
-    public void belongToBrand() {
+    @Test(invocationCount = 4, threadPoolSize = 2)
+    public void testBelongToBrand() {
         Item[] skuses = itemRepository.belongToBrand("caihong", 0, 3);
         Assert.assertEquals(skuses.length, 3);
         skuses = itemRepository.belongToBrand("caihong", 1, 3);
@@ -201,8 +201,8 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertEquals(skuses.length, 0);
     }
 
-    @Test
-    public void belongToCategory() {
+    @Test(invocationCount = 4, threadPoolSize = 2)
+    public void testBelongToCategory() {
         Item[] skuses = itemRepository.belongToCategory("food", 0, 10);
         Assert.assertEquals(skuses.length, 8);
         skuses = itemRepository.belongToCategory("food", 2, 5);
@@ -217,8 +217,8 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertEquals(skuses.length, 1);
     }
 
-    @Test
-    public void find() {
+    @Test(invocationCount = 4, threadPoolSize = 2)
+    public void testFind() {
         Item six = itemRepository.find("six_1");
         Assert.assertNotNull(six);
         Item eight = itemRepository.find("eight");
@@ -227,8 +227,8 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertNull(nine);
     }
 
-    @Test
-    public void findAll() {
+    @Test(invocationCount = 4, threadPoolSize = 2)
+    public void testFindAll() {
         Item[] skuses = itemRepository.findAll(0, 25);
         Assert.assertEquals(skuses.length, 14);
         skuses = itemRepository.findAll(12, 25);
@@ -237,27 +237,8 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertEquals(skuses.length, 5);
     }
 
-    @Test
-    public void save() {
-        Item ten = itemRepository.find("ten");
-        ten.rename(new Name("长虹5号碳性电池 ", "长虹1号"));
-        itemRepository.save(ten);
-        ten = itemRepository.find("ten");
-        Assert.assertEquals(ten.name(), new Name("长虹5号碳性电池", "长虹1号"));
-
-        Item six = itemRepository.find("six_1");
-        Assert.assertNotNull(six);
-        six.changeBarcode(new EAN_13("6923555240728"));
-        itemRepository.save(six);
-    }
-
-    @Test
-    public void size() {
-        Assert.assertEquals(itemRepository.size(), 14);
-    }
-
-    @Test
-    public void fromBarcode() {
+    @Test(invocationCount = 4, threadPoolSize = 2)
+    public void testFromBarcode() {
         Item[] items = itemRepository.fromBarcode("69235552");
         Assert.assertEquals(items.length, 3);
         items = itemRepository.fromBarcode("690");
@@ -272,8 +253,8 @@ public class ArangoDBItemRepositoryTest {
             System.out.println(item);
     }
 
-    @Test
-    public void fromMnemonic() {
+    @Test(invocationCount = 4, threadPoolSize = 2)
+    public void testFromMnemonic() {
         Item[] skuses = itemRepository.fromMnemonic("^ch");
         Assert.assertEquals(skuses.length, 3);
         skuses = itemRepository.fromMnemonic("qd");
@@ -286,8 +267,8 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertEquals(skuses.length, 5);
     }
 
-    @Test
-    public void fromName() {
+    @Test(invocationCount = 4, threadPoolSize = 2)
+    public void testFromName() {
         Item[] items = itemRepository.fromName("彩虹");
         Assert.assertEquals(items.length, 3);
         items = itemRepository.fromName("^彩虹");
@@ -300,5 +281,24 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertEquals(items.length, 9);
         items = itemRepository.fromName("^天友|长虹|彩虹");
         Assert.assertEquals(items.length, 7);
+    }
+
+    @Test
+    public void testSave() {
+        Item ten = itemRepository.find("ten");
+        ten.rename(new Name("长虹5号碳性电池 ", "长虹1号"));
+        itemRepository.save(ten);
+        ten = itemRepository.find("ten");
+        Assert.assertEquals(ten.name(), new Name("长虹5号碳性电池", "长虹1号"));
+
+        Item six = itemRepository.find("six_1");
+        Assert.assertNotNull(six);
+        six.changeBarcode(new EAN_13("6923555240728"));
+        itemRepository.save(six);
+    }
+
+    @Test(invocationCount = 4, threadPoolSize = 2)
+    public void testSize() {
+        Assert.assertEquals(itemRepository.size(), 14);
     }
 }
