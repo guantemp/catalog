@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ public class GradeTest {
 
     @Test
     public void of() {
-        Assert.assertEquals(Grade.SECOND_LEVEL, Grade.of("二级"));
+        Assert.assertEquals(Grade.SECOND_LEVEL, Grade.of("二等品"));
         Assert.assertEquals(Grade.QUALIFIED, Grade.of("合格品"));
     }
 }
