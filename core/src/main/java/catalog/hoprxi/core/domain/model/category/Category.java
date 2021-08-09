@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,13 +21,13 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import com.arangodb.entity.DocumentField;
 
-import java.awt.image.BufferedImage;
+import java.net.URI;
 import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2020-05-05
+ * @version 0.0.3 builder 2021-08-08
  */
 public class Category {
     public static final Category UNDEFINED = new Category("undefined", "undefined", new Name(Label.CATEGORY_UNDEFINED, "undefined")) {
@@ -40,20 +40,21 @@ public class Category {
         }
 
         @Override
-        public void changeMark(BufferedImage mark) {
+        public void changeIcon(URI icon) {
         }
 
         @Override
         public void moveTo(String movedId) {
         }
     };
+    private static final int ID_MAX_LENGTH = 36;
+    private static final int DESCRIPTION_MAX_LENGTH = 512;
     private String description;
     @DocumentField(DocumentField.Type.KEY)
     private String id;
     private Name name;
     private String parentId;
-    private static final int ID_MAX_LENGTH = 36;
-    private static final int DESCRIPTION_MAX_LENGTH = 512;
+    private URI icon;
 
     public Category(String parentId, String id, Name name) {
         this(parentId, id, name, null);
@@ -63,32 +64,36 @@ public class Category {
         this(parentId, id, new Name(name), null);
     }
 
-
-    /**
-     * @param parentId
-     * @param id
-     * @param name
-     * @param description
-     * @throws IllegalArgumentException if parentId is null or length rang not in 1-36
-     *                                  if id is null or length range not in [1-36]
-     *                                  if name length range not in [1-256]
-     *                                  if description not null and length range not in [0-512]
-     */
     public Category(String parentId, String id, Name name, String description) {
-        setIdAndParentId(parentId, id);
-        setName(name);
-        setDescription(description);
+        this(parentId, id, name, description, null);
     }
 
     public Category(String parentId, String id, String name, String description) {
         this(parentId, id, new Name(name), null);
     }
 
-    private void setDescription(String description) {
-        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH)
-            throw new IllegalArgumentException("description length rang is 1-" + DESCRIPTION_MAX_LENGTH);
-        this.description = description;
+    public Category(String parentId, String id, String name, String description, URI icon) {
+        this(parentId, id, new Name(name), description, icon);
     }
+
+    /**
+     * @param parentId
+     * @param id
+     * @param name
+     * @param description
+     * @param icon
+     * @throws IllegalArgumentException if parentId is null or length rang not in 1-36
+     *                                  if id is null or length range not in [1-36]
+     *                                  if name length range not in [1-256]
+     *                                  if description not null and length range not in [0-512]
+     */
+    public Category(String parentId, String id, Name name, String description, URI icon) {
+        setIdAndParentId(parentId, id);
+        setName(name);
+        setDescription(description);
+        this.icon = icon;
+    }
+
 
     public static Category createCategoryRoot(String id, Name name) {
         return new Category(id, id, name);
@@ -106,9 +111,14 @@ public class Category {
         return new Category(id, id, name, description);
     }
 
+    public static Category createCategoryRoot(String id, Name name, String description, URI icon) {
+        return new Category(id, id, name, description, icon);
+    }
 
-    public String parentId() {
-        return parentId;
+    private void setDescription(String description) {
+        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH)
+            throw new IllegalArgumentException("description length rang is 1-" + DESCRIPTION_MAX_LENGTH);
+        this.description = description;
     }
 
     private void setIdAndParentId(String parentId, String id) {
@@ -128,8 +138,12 @@ public class Category {
     private void setId(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         if (id.isEmpty() || id.length() > ID_MAX_LENGTH)
-            throw new IllegalArgumentException("id length range is 1-" + ID_MAX_LENGTH);
+            throw new IllegalArgumentException("id length range is 1-" + ID_MAX_LENGTH + "char");
         this.id = id;
+    }
+
+    public String parentId() {
+        return parentId;
     }
 
     /**
@@ -151,6 +165,10 @@ public class Category {
      */
     public Name name() {
         return name;
+    }
+
+    public URI icon() {
+        return icon;
     }
 
     public boolean isRoot() {
@@ -176,8 +194,8 @@ public class Category {
         }
     }
 
-    public void changeMark(BufferedImage mark) {
-
+    public void changeIcon(URI icon) {
+        this.icon = icon;
     }
 
     public void moveTo(String movedId) {
@@ -219,8 +237,9 @@ public class Category {
         return "Category{" +
                 "description='" + description + '\'' +
                 ", id='" + id + '\'' +
-                ", name='" + name + '\'' +
+                ", name=" + name +
                 ", parentId='" + parentId + '\'' +
+                ", icon=" + icon +
                 '}';
     }
 }

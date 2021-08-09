@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,9 +36,9 @@ import java.io.IOException;
  * @since JDK8.0
  * @version 0.0.1 2020-01-10
  */
-@WebServlet(urlPatterns = {"/items"}, name = "items", asyncSupported = false)
+@WebServlet(urlPatterns = {"/items/*"}, name = "items", asyncSupported = false)
 public class ItemServlet extends HttpServlet {
-    private ItemRepository itemRepository = new ArangoDBItemRepository();
+    private ItemRepository itemRepository = new ArangoDBItemRepository("catalog");
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
