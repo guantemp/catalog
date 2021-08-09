@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,12 +29,12 @@ import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository
  */
 public class Validator {
     public static boolean isCategoryExist(String id) {
-        ValidatorCategoryId validatorCategoryId = new ValidatorCategoryId(new ArangoDBCategoryRepository());
+        ValidatorCategoryId validatorCategoryId = new ValidatorCategoryId(new ArangoDBCategoryRepository("catalog"));
         return validatorCategoryId.isIdExist(id);
     }
 
     public static boolean isBrandExist(String id) {
-        ValidatorBrandId validatorBrandId = new ValidatorBrandId(new ArangoDBBrandRepository());
+        ValidatorBrandId validatorBrandId = new ValidatorBrandId(new ArangoDBBrandRepository("catalog"));
         return validatorBrandId.isIdExist(id);
     }
 }

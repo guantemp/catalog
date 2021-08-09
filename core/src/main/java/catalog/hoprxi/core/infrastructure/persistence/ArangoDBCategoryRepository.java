@@ -45,7 +45,6 @@ import java.util.Map;
  */
 public class ArangoDBCategoryRepository implements CategoryRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBBrandRepository.class);
-    private ArangoDatabase catalog = ArangoDBUtil.getDatabase();
     private static Constructor<Name> nameConstructor;
 
     static {
@@ -56,6 +55,12 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug("Not find Name class has such constructor", e);
         }
+    }
+
+    private ArangoDatabase catalog;
+
+    public ArangoDBCategoryRepository(String databaseName) {
+        this.catalog = ArangoDBUtil.getResource().db(databaseName);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import java.net.URL;
  */
 public class BrandAppService {
 
-    private BrandRepository repository = new ArangoDBBrandRepository();
+    private BrandRepository repository = new ArangoDBBrandRepository("catalog");
 
     public Brand createBrand(CreateBrandCommand command) {
         Name name = new Name(command.getName(), command.getAlias());

@@ -21,24 +21,23 @@ import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
-import org.junit.*;
-import org.junit.rules.ExpectedException;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 import salt.hoprxi.id.LongId;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2019-05-28
+ * @version 0.0.1 builder 2021-08-09
  */
 public class ArangoDBCategoryRepositoryTest {
-    private static CategoryRepository repository = new ArangoDBCategoryRepository();
-    private static BrandRepository brandRepository = new ArangoDBBrandRepository();
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    private static CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
+    private static BrandRepository brandRepository = new ArangoDBBrandRepository("catalog");
 
     @BeforeClass
-    public static void setUpBeforeClass() {
+    public void beforeClass() {
         repository.save(Category.UNDEFINED);
         Category root = Category.createCategoryRoot("root", Name.of("分类"));
         repository.save(root);
@@ -80,7 +79,7 @@ public class ArangoDBCategoryRepositoryTest {
         //Category Shampoo = new Category("skin_skin", "Shampoo", "洗发水");
         //repository.save(Shampoo);
 
-        /*BrandSpec
+    /*
         Brand lancome = new Brand("lancome", "兰蔻");
         Brand shiseido = new Brand("shiseido", "资生堂");
         brandRepository.save(lancome);
@@ -89,11 +88,11 @@ public class ArangoDBCategoryRepositoryTest {
                 .with(new BrandSpecification(shiseido.toBrandDescriptor()))
                 .with(new BrandSpecification(lancome.toBrandDescriptor()))
                 .build();
-                */
+         */
     }
 
     @AfterClass
-    public static void tearDown() {
+    public void afterClass() {
         repository.remove("medicine");
         repository.remove("skin");
         repository.remove("cosmetics");
@@ -116,8 +115,8 @@ public class ArangoDBCategoryRepositoryTest {
         repository.remove(Category.UNDEFINED.id());
     }
 
-    @Test
-    public void belongTo() {
+    @Test(priority = 3)
+    public void testBelongTo() {
         Category[] sub = repository.belongTo("root");
         Assert.assertEquals(3, sub.length);
         sub = repository.belongTo(Category.UNDEFINED.id());
@@ -128,26 +127,24 @@ public class ArangoDBCategoryRepositoryTest {
         Assert.assertEquals(2, sub.length);
     }
 
-
-    @Test
-    public void root() {
-        Category[] roots = repository.root();
-        Assert.assertEquals(2, roots.length);
+    @Test(dependsOnMethods = {"testNextIdentity"})
+    public void testFind() {
     }
 
     @Test
-    public void nextIdentity() {
+    public void testNextIdentity() {
         String id = String.valueOf(LongId.generate());
         Assert.assertNotNull(id);
     }
 
     @Test
-    public void remove() {
+    public void testRoot() {
+        Category[] roots = repository.root();
+        Assert.assertEquals(2, roots.length);
     }
 
-
-    @Test
-    public void save() {
+    @Test(priority = 1, expectedExceptions = InvalidCategoryIdException.class)
+    public void testSave() {
         Category fresh = repository.find("fresh");
         fresh.moveTo("food");
         repository.save(fresh);
@@ -166,7 +163,7 @@ public class ArangoDBCategoryRepositoryTest {
         Assert.assertEquals(medicine.description(), "消毒药水");
         Assert.assertEquals(medicine.name().name(), "医用");
 
-        thrown.expect(InvalidCategoryIdException.class);
+
         medicine.moveTo("hy");
     }
 }

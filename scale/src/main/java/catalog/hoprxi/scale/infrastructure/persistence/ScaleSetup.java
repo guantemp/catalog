@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ public class ScaleSetup {
     }
 
     public static void createCategory() {
-        CategoryRepository categoryRepository = new ArangoDBCategoryRepository();
+        CategoryRepository categoryRepository = new ArangoDBCategoryRepository("catalog");
         Category root = Category.createCategoryRoot("fresh", "生鲜", "指未经烹调、制作等深加工过程，只做必要保鲜和简单整理上架而出售的初级产品");
         categoryRepository.save(root);
         Category fruits = new Category("fresh", "fruits", "水果", "指多汁且主要味觉为甜味和酸味，可食用的植物果实");

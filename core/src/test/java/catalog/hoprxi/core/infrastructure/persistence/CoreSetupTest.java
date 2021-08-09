@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,17 @@
 
 package catalog.hoprxi.core.infrastructure.persistence;
 
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-04-29
+ * @version 0.0.1 builder 2021-08-09
  */
 public class CoreSetupTest {
 
     @Test
-    public void setup() {
+    public void testSetup() {
         CoreSetup.setup("catalog");
     }
 }

@@ -48,7 +48,6 @@ import java.util.Map;
  */
 public class ArangoDBBrandRepository implements BrandRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBBrandRepository.class);
-    private ArangoDatabase catalog = ArangoDBUtil.getDatabase();
     private static final DocumentUpdateOptions updateOptions = new DocumentUpdateOptions().serializeNull(false);
     private static Constructor<Name> nameConstructor;
 
@@ -61,6 +60,13 @@ public class ArangoDBBrandRepository implements BrandRepository {
                 LOGGER.debug("Not find Name class has such constructor", e);
         }
     }
+
+    private ArangoDatabase catalog;
+
+    public ArangoDBBrandRepository(String databaseName) {
+        this.catalog = ArangoDBUtil.getResource().db(databaseName);
+    }
+
 
     @Override
     public Brand find(String id) {

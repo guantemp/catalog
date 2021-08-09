@@ -66,7 +66,11 @@ public class ArangoDBItemRepository implements ItemRepository {
         }
     }
 
-    private ArangoDatabase catalog = ArangoDBUtil.getDatabase();
+    private ArangoDatabase catalog;
+
+    public ArangoDBItemRepository(String databaseName) {
+        this.catalog = ArangoDBUtil.getResource().db(databaseName);
+    }
 
     @Override
     public Item[] belongToBrand(String brandId, int offset, int limit) {

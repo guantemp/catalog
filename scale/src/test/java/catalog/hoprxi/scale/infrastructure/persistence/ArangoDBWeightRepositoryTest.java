@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ import java.util.Locale;
  */
 public class ArangoDBWeightRepositoryTest {
     private static WeightRepository weightRepository = new ArangoDBWeightRepository();
-    private static BrandRepository brandRepository = new ArangoDBBrandRepository();
+    private static BrandRepository brandRepository = new ArangoDBBrandRepository("catalog");
     private static CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
 
     @BeforeClass

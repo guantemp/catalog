@@ -45,9 +45,9 @@ import java.util.Locale;
  * @version 0.0.1 builder 2021-07-10
  */
 public class ArangoDBItemRepositoryTest {
-    private static ItemRepository itemRepository = new ArangoDBItemRepository();
-    private static BrandRepository brandRepository = new ArangoDBBrandRepository();
-    private static CategoryRepository categoryRepository = new ArangoDBCategoryRepository();
+    private static ItemRepository itemRepository = new ArangoDBItemRepository("catalog");
+    private static BrandRepository brandRepository = new ArangoDBBrandRepository("catalog");
+    private static CategoryRepository categoryRepository = new ArangoDBCategoryRepository("catalog");
     private static CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
 
     @BeforeTest

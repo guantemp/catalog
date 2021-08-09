@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,16 @@ public class CoreSetup {
 
     public static void setup(String databaseName) {
         ArangoDB arangoDB = ArangoDBUtil.getResource();
+        /*
+        System.out.println(arangoDB.getUser(databaseName));
+        if (arangoDB.getUser(databaseName) != null) {
+            arangoDB.deleteUser(databaseName);
+        }
+        PasswordService ps = new PasswordService();
+        String password = ps.generateStrongPassword();
+        arangoDB.createUser(databaseName, password);
+        arangoDB = ArangoDBUtil.getResource("120.77.47.145", 8529, databaseName, password);
+        */
         if (arangoDB.db(databaseName).exists()) {
             arangoDB.db(databaseName).drop();
             logger.info("{} be discarded", databaseName);

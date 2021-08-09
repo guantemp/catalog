@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,32 +13,35 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+
 package catalog.hoprxi.core.infrastructure.persistence;
 
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Year;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2019-05-28
+ * @version 0.0.1 builder 2021-08-09
  */
 public class ArangoDBBrandRepositoryTest {
-    private static BrandRepository repository = new ArangoDBBrandRepository();
+    private static BrandRepository repository = new ArangoDBBrandRepository("catalog");
 
     @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
+    public void beforeClass() throws MalformedURLException {
         repository.save(Brand.UNDEFINED);
 
         URL logo = new URL("https://www.hikvision.com/cn/images/logo.png");
@@ -64,7 +67,7 @@ public class ArangoDBBrandRepositoryTest {
     }
 
     @AfterClass
-    public static void teardown() {
+    public void afterClass() {
         repository.remove("HIKVISION");
         repository.remove("@hua");
         repository.remove("dsppa");
@@ -85,7 +88,7 @@ public class ArangoDBBrandRepositoryTest {
         assertEquals(brands.length, 3);
     }
 
-    @Test
+    @Test(priority = 1)
     public void testFindAll() {
         Brand[] brands = repository.findAll(0, 5);
         assertEquals(brands.length, 5);
@@ -97,7 +100,7 @@ public class ArangoDBBrandRepositoryTest {
         assertEquals(brands.length, 0);
     }
 
-    @Test
+    @Test(priority = 3)
     public void testSave() {
         Brand brand = repository.find("myis");
         assertEquals(new Name("官的"), brand.name());
@@ -105,7 +108,10 @@ public class ArangoDBBrandRepositoryTest {
         repository.save(brand);
         brand = repository.find("myis");
         assertEquals(new Name("官响环", "没情商"), brand.name());
+    }
 
-
+    @Test(priority = 3)
+    public void testSize() {
+        assertEquals(repository.size(), 5);
     }
 }
