@@ -21,6 +21,8 @@ import com.arangodb.ArangoDatabase;
 import com.arangodb.Protocol;
 import com.arangodb.velocypack.VPackSlice;
 import com.arangodb.velocypack.module.jdk8.VPackJdk8Module;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import java.lang.reflect.Array;
 
@@ -30,13 +32,16 @@ import java.lang.reflect.Array;
  * @version 0.0.1 2018-06-16
  */
 public class ArangoDBUtil {
+    private static final Config config = ConfigFactory.load("core").getConfig("database");
+
     /**
      * @return
      */
     public static ArangoDB getResource() {
+        System.out.println(config);
         ArangoDB.Builder builder = new ArangoDB.Builder();
-        builder.useProtocol(Protocol.VST).host("120.77.47.145", 8529);
-        builder.registerModule(new VPackJdk8Module()).maxConnections(8).user("root").password("Qwe123465");
+        builder.useProtocol(Protocol.VST).host(config.getString("arangodb3.host"), config.getInt("arangodb3.port"));
+        builder.registerModule(new VPackJdk8Module()).maxConnections(8).user(config.getString("arangodb3.user")).password(config.getString("arangodb3.password"));
         ArangoDB arangoDB = builder.build();
         return arangoDB;
     }
