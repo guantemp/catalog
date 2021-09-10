@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,9 @@ package catalog.hoprxi;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
+import javax.servlet.ServletException;
+import java.io.IOException;
+
 
 /**
  * Unit test for simple App.
@@ -28,7 +30,7 @@ public class AppTest {
      * Rigorous Test :-)
      */
     @Test
-    public void shouldAnswerWithTrue() {
-        assertTrue(true);
+    public void shouldAnswerWithTrue() throws IOException, ServletException {
+        App.main(new String[0]);
     }
 }

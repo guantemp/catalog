@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,13 @@ public enum Unit {
         public String toString() {
             return Label.UNIT_BEN;
         }
-    }, DAI {
+    }, DA {
+        @Override
+        public String toString() {
+            return Label.UNIT_DAI;
+        }
+    },
+    DAI {
         @Override
         public String toString() {
             return Label.UNIT_DAI;
