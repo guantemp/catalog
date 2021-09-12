@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,19 +39,11 @@ public class Brand {
         public void changeAbout(AboutBrand newAbout) {
         }
     };
+    private static final int ID_MAX_LENGTH = 36;
     private AboutBrand about;
     @DocumentField(DocumentField.Type.KEY)
     private String id;
-    private static final int ID_MAX_LENGTH = 36;
     private Name name;
-
-    public Brand(String name) {
-        this(name, new Name(name), null);
-    }
-
-    public Brand(String id, String name) {
-        this(id, new Name(name), null);
-    }
 
     /**
      * @param id
@@ -59,6 +51,14 @@ public class Brand {
      */
     public Brand(String id, Name name) {
         this(id, name, null);
+    }
+
+    public Brand(String name) {
+        this(name, new Name(name), null);
+    }
+
+    public Brand(String id, String name) {
+        this(id, new Name(name), null);
     }
 
     /**

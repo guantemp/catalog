@@ -16,6 +16,7 @@
 
 package catalog.hoprxi;
 
+import catalog.hoprxi.core.webapp.BrandServlet;
 import catalog.hoprxi.core.webapp.UnitServlet;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
@@ -27,8 +28,6 @@ import io.undertow.servlet.api.ServletContainer;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-
-import static io.undertow.servlet.Servlets.servlet;
 
 /**
  * Hello world!
@@ -59,12 +58,12 @@ public class App {
                 .setContextPath("/core")
                 .setDeploymentName("app.war")
                 .addServlets(
-                        servlet("unitServlet", UnitServlet.class)
-                                .addInitParam("message", "Hello World")
-                                .addMapping("/*"),
                         Servlets.servlet("unitServlet", UnitServlet.class)
                                 .addInitParam("message", "Hello World")
-                                .addMapping("/v1/units"));
+                                .addMapping("/v1/units"),
+
+                        Servlets.servlet("brandServlet", BrandServlet.class)
+                                .addMapping("/v1/brands/*"));
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentManager manager = container.addDeployment(servletBuilder);
         manager.deploy();

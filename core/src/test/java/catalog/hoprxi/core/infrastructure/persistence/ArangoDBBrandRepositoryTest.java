@@ -20,7 +20,6 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -55,8 +54,8 @@ public class ArangoDBBrandRepositoryTest {
                 "以技术创新为基础，提供端到端的视频监控解决方案、系统及服务，为城市运营、企业管理、个人消费者生活创造价值。");
         Brand hua = new Brand("@hua", new Name("大华", "@hua"), ab);
         repository.save(hua);
-//http://www.dsppa.com/u/152821636329592181241-8365-211-43.png
-        logo = new URL("https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=1888447927,2202248847&fm=15&gp=0.jpg");
+
+        logo = new URL("http://20702897.s21i.faiusr.com/4/ABUIABAEGAAgm4Xc_gUojMuX9AEw4gE4VQ.png");
         ab = new AboutBrand(new URL(" http://www.dsppa.com/"), logo, Year.of(1988), "广州市迪士普音响科技有限公司（以下简称“迪士普企业”）始创于1988年，" +
                 "是一家集公共广播系统、智能无纸化会议系统、电子教学系统和政务大厅协同办公系统的研发、生产和销售为一体的大型国家级高新技术企业");
         Brand dsppa = new Brand("dsppa", new Name("迪士普", "dsppa"), ab);
@@ -66,15 +65,16 @@ public class ArangoDBBrandRepositoryTest {
         repository.save(my);
     }
 
-    @AfterClass
-    public void afterClass() {
-        repository.remove("HIKVISION");
-        repository.remove("@hua");
-        repository.remove("dsppa");
-        repository.remove("myis");
-        repository.remove(Brand.UNDEFINED.id());
-    }
-
+    /*
+        @AfterClass
+        public void afterClass() {
+            repository.remove("HIKVISION");
+            repository.remove("@hua");
+            repository.remove("dsppa");
+            repository.remove("myis");
+            repository.remove(Brand.UNDEFINED.id());
+        }
+    */
     @Test
     public void testFind() {
         Brand brand = repository.find("HIKVISION");
