@@ -34,7 +34,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
-        <hoprxi.version>1.0-SNAPSHOT</hoprxi.version>
+        <hoprxi.event.version>1.0-SNAPSHOT</hoprxi.event.version>
     </properties>
 
     <dependencies>
@@ -53,7 +53,7 @@
         <dependency>
             <groupId>event.hoprxi</groupId>
             <artifactId>core</artifactId>
-            <version>${hoprxi.version}</version>
+            <version>${hoprxi.event.version}</version>
         </dependency>
         <dependency>
             <groupId>salt.hoprxi</groupId>
@@ -106,127 +106,118 @@
     <build>
         <resources>
             <resource>
-                <directory>src/main/java</directory>
-                <includes>
-                    <include>**/*.properties</include>
-                </includes>
-                <filtering>true</filtering>
-            </resource>
-            <resource>
                 <directory>src/main/resource</directory>
                 <includes>
-                    <include>**/*.conf</include><!-- <include>**</include> -->
+                    <include>**/*.conf</include>
                 </includes>
             </resource>
         </resources>
-        <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
-            <plugins>
-                <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
-                <plugin>
-                    <artifactId>maven-clean-plugin</artifactId>
-                    <version>3.1.0</version>
-                </plugin>
-                <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
-                <!-- maven资源文件复制插件 -->
-                <plugin>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.0.2</version>
-                    <executions>
-                        <execution>
-                            <id>copy-config</id>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>copy-resources</goal>
-                            </goals>
-                            <configuration>
-                                <outputDirectory>${project.build.directory}/classes/resources</outputDirectory>
-                                <resources>
-                                    <resource>
-                                        <directory>src/main/resources</directory>
-                                        <includes>
-                                            <exclude>**/*.xml</exclude>
-                                            <exclude>**/*.conf</exclude>
-                                            <exclude>**/*.properties</exclude>
-                                        </includes>
-                                        <filtering>true</filtering>
-                                    </resource>
-                                </resources>
-                                <encoding>UTF-8</encoding>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.0</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.22.1</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.0.2</version>
-                    <configuration>
-                        <!--这些配置将写入到MANIFEST.MF文件中-->
-                        <archive>
-                            <!--指定程序入口-->
-                            <manifest>
-                                <addClasspath>true</addClasspath>
-                                <classpathPrefix>lib/</classpathPrefix>
-                                <mainClass>catalog.hoprxi.App</mainClass>
-                            </manifest>
-                            <!-- (配置文件外置目录) -->
-                            <manifestEntries>
-                                <Class-Path>config/</Class-Path>
-                            </manifestEntries>
-                        </archive>
-                        <excludes>
-                            <exclude>**/*.xml</exclude>
-                            <exclude>**/*.conf</exclude>
-                            <exclude>**/*.properties</exclude>
-                            <exclude>**/*/*.json</exclude>
-                        </excludes>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-install-plugin</artifactId>
-                    <version>2.5.2</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-deploy-plugin</artifactId>
-                    <version>2.8.2</version>
-                </plugin>
-                <!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
-                <plugin>
-                    <artifactId>maven-site-plugin</artifactId>
-                    <version>3.7.1</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-project-info-reports-plugin</artifactId>
-                    <version>3.0.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-dependency-plugin</artifactId>
-                    <executions>
-                        <execution>
-                            <id>copy-dependencies</id>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>copy-dependencies</goal>
-                            </goals>
-                            <configuration>
-                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                                <!-- 是否不包含间接依赖 -->
-                                <excludeTransitive>false</excludeTransitive>
-                                <!-- 忽略版本 -->
-                                <stripVersion>false</stripVersion>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
+        <!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
+        <plugins>
+            <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.1.0</version>
+            </plugin>
+            <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
+            <!-- maven资源文件复制插件 -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.0.2</version>
+                <executions>
+                    <execution>
+                        <id>copy-config</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/conf</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources</directory>
+                                    <includes>
+                                        <exclude>**/*.conf</exclude>
+                                        <exclude>**/*.properties</exclude>
+                                    </includes>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                            <encoding>UTF-8</encoding>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.1</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <!--  主程序  -->
+                            <mainClass>catalog.hoprxi.App</mainClass>
+                            <!--把第三方jar放到打包后jar文件中的manifest的classpath中，即maven-dependency中的依赖-->
+                            <addClasspath>true</addClasspath>
+                            <!--第三方jar将打包到lib目录下，classpath的前缀是lib/-->
+                            <classpathPrefix>lib/</classpathPrefix>
+                        </manifest>
+                        <!--(配置文件外置目录) -->
+                        <manifestEntries>
+                            <Class-Path>conf/</Class-Path>
+                        </manifestEntries>
+                        <!--
+                                                <excludes>
+                                                    <exclude>**/*.xml</exclude>
+                                                    <exclude>**/*.conf</exclude>
+                                                    <exclude>**/*.properties</exclude>
+                                                    <exclude>**/*/*.json</exclude>
+                                                </excludes>
+                        -->
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.5.2</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.2</version>
+            </plugin>
+            <!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
+            <plugin>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.7.1</version>
+            </plugin>
+        </plugins>
     </build>
 </project>

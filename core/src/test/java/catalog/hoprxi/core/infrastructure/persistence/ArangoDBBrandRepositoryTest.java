@@ -56,13 +56,15 @@ public class ArangoDBBrandRepositoryTest {
         repository.save(hua);
 
         logo = new URL("http://20702897.s21i.faiusr.com/4/ABUIABAEGAAgm4Xc_gUojMuX9AEw4gE4VQ.png");
-        ab = new AboutBrand(new URL(" http://www.dsppa.com/"), logo, Year.of(1988), "广州市迪士普音响科技有限公司（以下简称“迪士普企业”）始创于1988年，" +
-                "是一家集公共广播系统、智能无纸化会议系统、电子教学系统和政务大厅协同办公系统的研发、生产和销售为一体的大型国家级高新技术企业");
+        ab = new AboutBrand(new URL(" http://www.dsppa.com/"), logo, Year.of(1988), "广州市迪士普音响科技有限公司始创于1988年，是一家集公共广播系统、智能无纸化会议系统、电子教学系统和政务大厅协同办公系统的研发、生产和销售为一体的大型国家级高新技术企业");
         Brand dsppa = new Brand("dsppa", new Name("迪士普", "dsppa"), ab);
         repository.save(dsppa);
 
         Brand my = new Brand("myis", new Name("官的"));
         repository.save(my);
+
+        Brand chenguang = new Brand("chenguang", new Name("晨光", "M&G"));
+        repository.save(chenguang);
     }
 
     /*
@@ -72,6 +74,7 @@ public class ArangoDBBrandRepositoryTest {
             repository.remove("@hua");
             repository.remove("dsppa");
             repository.remove("myis");
+             repository.remove("chenguang");
             repository.remove(Brand.UNDEFINED.id());
         }
     */
@@ -93,11 +96,11 @@ public class ArangoDBBrandRepositoryTest {
         Brand[] brands = repository.findAll(0, 5);
         assertEquals(brands.length, 5);
         brands = repository.findAll(1, 5);
-        assertEquals(brands.length, 4);
+        assertEquals(brands.length, 5);
         brands = repository.findAll(4, 5);
-        assertEquals(brands.length, 1);
+        assertEquals(brands.length, 2);
         brands = repository.findAll(5, 5);
-        assertEquals(brands.length, 0);
+        assertEquals(brands.length, 1);
     }
 
     @Test(priority = 3)
@@ -112,6 +115,6 @@ public class ArangoDBBrandRepositoryTest {
 
     @Test(priority = 3)
     public void testSize() {
-        assertEquals(repository.size(), 5);
+        assertEquals(repository.size(), 6);
     }
 }

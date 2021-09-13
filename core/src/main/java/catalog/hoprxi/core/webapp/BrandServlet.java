@@ -39,7 +39,9 @@ import java.time.Year;
  * @version 0.0.1 builder 2021-09-10
  */
 public class BrandServlet extends HttpServlet {
-    private static final BrandRepository brandRepository = new ArangoDBBrandRepository("catalog");
+    private static final int OFFSET = 0;
+    private static final int LIMIT = 20;
+    private final BrandRepository brandRepository = new ArangoDBBrandRepository("catalog");
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -50,33 +52,25 @@ public class BrandServlet extends HttpServlet {
         String pathInfo = req.getPathInfo();
         generator.writeStartObject();
         if (pathInfo != null) {
-            String id = pathInfo.substring(1, pathInfo.length());
+            String id = pathInfo.substring(1);
             Brand brand = brandRepository.find(id);
             if (brand != null) {
                 generator.writeObjectFieldStart("brand");
-                generator.writeStringField("id", brand.id());
-                generator.writeObjectFieldStart("name");
-                generator.writeStringField("name", brand.name().name());
-                generator.writeStringField("mnemonic", brand.name().mnemonic());
-                generator.writeStringField("alias", brand.name().alias());
+                responseBrand(generator, brand);
                 generator.writeEndObject();
-                generator.writeObjectFieldStart("about");
-                generator.writeStringField("homepage", brand.about().homepage().toString());
-                generator.writeStringField("logo", brand.about().logo().toString());
-                generator.writeNumberField("since", brand.about().since().getValue());
-                generator.writeStringField("story", brand.about().story());
-                generator.writeEndObject();
-                generator.writeEndObject();
+            } else {
+                //resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                generator.writeNumberField("code", 204);
+                generator.writeStringField("message", "Not find");
             }
         } else {
-            int offset = NumberHelper.intOf(req.getParameter("offset"), 0);
-            int limit = NumberHelper.intOf(req.getParameter("limit"), 15);
-            Brand[] brands = brandRepository.findAll(offset, limit);
-            for (Brand brand : brands) {
-
-            }
+            int offset = NumberHelper.intOf(req.getParameter("offset"), OFFSET);
+            int limit = NumberHelper.intOf(req.getParameter("limit"), LIMIT);
+            generator.writeNumberField("total", brandRepository.size());
             generator.writeNumberField("offset", offset);
             generator.writeNumberField("limit", limit);
+            Brand[] brands = brandRepository.findAll(offset, limit);
+            responseBrands(generator, brands);
         }
         generator.writeEndObject();
         generator.flush();
@@ -84,7 +78,7 @@ public class BrandServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String name = null, alias = null, story = null;
         URL logo = null, homepage = null;
         Year since = null;
@@ -120,15 +114,44 @@ public class BrandServlet extends HttpServlet {
         CreateBrandCommand createBrandCommand = new CreateBrandCommand(name, alias, homepage, logo, since, story);
         BrandAppService brandAppService = new BrandAppService();
         Brand brand = brandAppService.createBrand(createBrandCommand);
+        resp.setContentType("application/json; charset=UTF-8");
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPut(req, resp);
+        resp.setContentType("application/json; charset=UTF-8");
+        resp.setStatus(HttpServletResponse.SC_CREATED);
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         super.doDelete(req, resp);
+    }
+
+    private void responseBrand(JsonGenerator generator, Brand brand) throws IOException {
+        generator.writeStringField("id", brand.id());
+        generator.writeObjectFieldStart("name");
+        generator.writeStringField("name", brand.name().name());
+        generator.writeStringField("mnemonic", brand.name().mnemonic());
+        generator.writeStringField("alias", brand.name().alias());
+        generator.writeEndObject();
+        if (brand.about() != null) {
+            generator.writeObjectFieldStart("about");
+            generator.writeStringField("homepage", brand.about().homepage().toString());
+            generator.writeStringField("logo", brand.about().logo().toString());
+            generator.writeNumberField("since", brand.about().since().getValue());
+            generator.writeStringField("story", brand.about().story());
+            generator.writeEndObject();
+        }
+    }
+
+    private void responseBrands(JsonGenerator generator, Brand[] brands) throws IOException {
+        generator.writeArrayFieldStart("brands");
+        for (Brand brand : brands) {
+            generator.writeStartObject();
+            responseBrand(generator, brand);
+            generator.writeEndObject();
+        }
+        generator.writeEndArray();
     }
 }
