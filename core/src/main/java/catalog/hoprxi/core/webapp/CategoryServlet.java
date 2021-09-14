@@ -16,7 +16,16 @@
 
 package catalog.hoprxi.core.webapp;
 
+import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -27,9 +36,53 @@ import java.io.IOException;
  * @since JDK8.0
  * @version 0.0.1 builder 2021-09-13
  */
+@WebServlet(urlPatterns = {"v1/categories/*"}, name = "categories", asyncSupported = false)
 public class CategoryServlet extends HttpServlet {
+    private final CategoryRepository categoryRepository = new ArangoDBCategoryRepository("catalog");
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doGet(req, resp);
+        String pathInfo = req.getPathInfo();
+        //String[] fileds = req.getParameter("fileds").split(",");
+        resp.setContentType("application/json; charset=UTF-8");
+        JsonFactory jasonFactory = new JsonFactory();
+        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
+                .setPrettyPrinter(new DefaultPrettyPrinter());
+        generator.writeStartObject();
+        if (pathInfo != null) {
+            String[] parameters = pathInfo.split("/");
+            Category category = categoryRepository.find(parameters[1]);
+            if (category != null) {
+                responseCategory(generator, category);
+            } else {
+
+            }
+        } else {
+
+        }
+        generator.writeEndObject();
+        generator.flush();
+        generator.close();
+    }
+
+    private void responseCategory(JsonGenerator generator, Category category) throws IOException {
+        generator.writeStringField("id", category.id());
+        generator.writeStringField("parentId", category.parentId());
+        generator.writeObjectFieldStart("name");
+        generator.writeStringField("name", category.name().name());
+        generator.writeStringField("mnemonic", category.name().mnemonic());
+        generator.writeStringField("alias", category.name().alias());
+        generator.writeEndObject();
+        generator.writeStringField("description", category.description());
+        if (category.icon() != null)
+            generator.writeStringField("icon", category.icon().getFragment());
+    }
+
+    private void responseCategories(JsonGenerator generator, Category[] categories) throws IOException {
+        for (Category category : categories) {
+            generator.writeStartObject();
+            responseCategory(generator, category);
+            generator.writeEndObject();
+        }
     }
 }

@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import salt.hoprxi.utils.NumberHelper;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,6 +39,7 @@ import java.time.Year;
  * @since JDK8.0
  * @version 0.0.1 builder 2021-09-10
  */
+@WebServlet(urlPatterns = {"v1/brands/*"}, name = "brands", asyncSupported = false)
 public class BrandServlet extends HttpServlet {
     private static final int OFFSET = 0;
     private static final int LIMIT = 20;
@@ -45,11 +47,11 @@ public class BrandServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String pathInfo = req.getPathInfo();
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
                 .setPrettyPrinter(new DefaultPrettyPrinter());
-        String pathInfo = req.getPathInfo();
         generator.writeStartObject();
         if (pathInfo != null) {
             String id = pathInfo.substring(1);

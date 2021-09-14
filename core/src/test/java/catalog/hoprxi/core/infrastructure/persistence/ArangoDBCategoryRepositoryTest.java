@@ -17,12 +17,10 @@
 package catalog.hoprxi.core.infrastructure.persistence;
 
 import catalog.hoprxi.core.domain.model.Name;
-import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import salt.hoprxi.id.LongId;
@@ -34,7 +32,6 @@ import salt.hoprxi.id.LongId;
  */
 public class ArangoDBCategoryRepositoryTest {
     private static CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
-    private static BrandRepository brandRepository = new ArangoDBBrandRepository("catalog");
 
     @BeforeClass
     public void beforeClass() {
@@ -90,7 +87,7 @@ public class ArangoDBCategoryRepositoryTest {
                 .build();
          */
     }
-
+/*
     @AfterClass
     public void afterClass() {
         repository.remove("medicine");
@@ -114,7 +111,7 @@ public class ArangoDBCategoryRepositoryTest {
         repository.remove("root");
         repository.remove(Category.UNDEFINED.id());
     }
-
+*/
     @Test(priority = 3)
     public void testBelongTo() {
         Category[] sub = repository.belongTo("root");

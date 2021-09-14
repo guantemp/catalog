@@ -57,11 +57,11 @@ public class Category {
     private URI icon;
 
     public Category(String parentId, String id, Name name) {
-        this(parentId, id, name, null);
+        this(parentId, id, name, "");
     }
 
     public Category(String parentId, String id, String name) {
-        this(parentId, id, new Name(name), null);
+        this(parentId, id, new Name(name), "");
     }
 
     public Category(String parentId, String id, Name name, String description) {
@@ -69,7 +69,7 @@ public class Category {
     }
 
     public Category(String parentId, String id, String name, String description) {
-        this(parentId, id, new Name(name), null);
+        this(parentId, id, new Name(name), description);
     }
 
     public Category(String parentId, String id, String name, String description, URI icon) {
@@ -117,7 +117,7 @@ public class Category {
 
     private void setDescription(String description) {
         if (description != null && description.length() > DESCRIPTION_MAX_LENGTH)
-            throw new IllegalArgumentException("description length rang is 1-" + DESCRIPTION_MAX_LENGTH);
+            throw new IllegalArgumentException("description length rang is 0-" + DESCRIPTION_MAX_LENGTH);
         this.description = description;
     }
 

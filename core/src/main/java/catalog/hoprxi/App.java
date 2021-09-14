@@ -17,6 +17,7 @@
 package catalog.hoprxi;
 
 import catalog.hoprxi.core.webapp.BrandServlet;
+import catalog.hoprxi.core.webapp.CategoryServlet;
 import catalog.hoprxi.core.webapp.UnitServlet;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
@@ -59,11 +60,12 @@ public class App {
                 .setDeploymentName("app.war")
                 .addServlets(
                         Servlets.servlet("unitServlet", UnitServlet.class)
-                                .addInitParam("message", "Hello World")
+                                //.addInitParam("message", "Hello World")
                                 .addMapping("/v1/units"),
-
                         Servlets.servlet("brandServlet", BrandServlet.class)
-                                .addMapping("/v1/brands/*"));
+                                .addMapping("/v1/brands/*"),
+                        Servlets.servlet("categoryServlet", CategoryServlet.class)
+                                .addMapping("/v1/categories/*"));
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentManager manager = container.addDeployment(servletBuilder);
         manager.deploy();
