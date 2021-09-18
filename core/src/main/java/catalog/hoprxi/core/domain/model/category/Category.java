@@ -47,7 +47,7 @@ public class Category {
         public void moveTo(String movedId) {
         }
     };
-    private static final int ID_MAX_LENGTH = 36;
+    private static final int ID_MAX_LENGTH = 48;
     private static final int DESCRIPTION_MAX_LENGTH = 512;
     private String description;
     @DocumentField(DocumentField.Type.KEY)

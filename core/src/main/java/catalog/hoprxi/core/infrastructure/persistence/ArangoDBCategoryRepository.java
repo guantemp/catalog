@@ -86,7 +86,7 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
         try {
             return rebuild(slice);
         } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
-            LOGGER.debug("Can't rebuild brand");
+            LOGGER.debug("Can't rebuild category");
         }
         return null;
     }
@@ -117,7 +117,7 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
         boolean exists = catalog.collection("category").documentExists(category.id());
         if (exists) {
             VertexUpdateEntity vertex = graph.vertexCollection("category").replaceVertex(category.id(), category);
-            //parentId is changed
+            //if parentId is changed
             final String query = "WITH category\n" +
                     "FOR v,e IN 1..1 INBOUND @startVertex subordinate FILTER v._key != @parentId REMOVE e IN subordinate RETURN OLD";
             final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + category.id()).put("parentId", category.parentId()).get();

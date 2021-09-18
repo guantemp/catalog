@@ -34,10 +34,15 @@ public enum Unit {
         public String toString() {
             return Label.UNIT_BEN;
         }
+    }, CHUAN {
+        @Override
+        public String toString() {
+            return Label.UNIT_CHUAN;
+        }
     }, DA {
         @Override
         public String toString() {
-            return Label.UNIT_DAI;
+            return Label.UNIT_DA;
         }
     },
     DAI {
@@ -209,6 +214,16 @@ public enum Unit {
         @Override
         public String toString() {
             return Label.UNIT_WANG;
+        }
+    }, PAN {
+        @Override
+        public String toString() {
+            return Label.UNIT_PAN;
+        }
+    }, LIANG {
+        @Override
+        public String toString() {
+            return Label.UNIT_LIANG;
         }
     };
 

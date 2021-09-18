@@ -31,11 +31,13 @@ public class Label extends NLS {
 
     public static String UNIT_BEI;
     public static String UNIT_BEN;
+    public static String UNIT_CHUAN;
     public static String UNIT_DA;
     public static String UNIT_DAI;
     public static String UNIT_DUI;
     public static String UNIT_HE;
     public static String UNIT_JIAN;
+    public static String UNIT_PAN;
     public static String UNIT_PING;
     public static String UNIT_TAO;
     public static String UNIT_ZHI_LIFE;
@@ -66,8 +68,6 @@ public class Label extends NLS {
     public static String UNIT_LI;
     public static String UNIT_FENG;
     public static String UNIT_WANG;
-    public static String UNIT_CHUAN;
-    public static String UNIT_PAN;
     public static String UNIT_LIANG;
 
     public static String GRADE_ONE_LEVEL;

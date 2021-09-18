@@ -53,16 +53,50 @@ public class CategoryServlet extends HttpServlet {
             String[] parameters = pathInfo.split("/");
             Category category = categoryRepository.find(parameters[1]);
             if (category != null) {
-                responseCategory(generator, category);
+                if (parameters.length > 2 && parameters[2] != null) {
+                    switch (parameters[2]) {
+                        case "parent":
+                            category = categoryRepository.find(category.parentId());
+                            responseCategory(generator, category);
+                            break;
+                        case "children":
+                            generator.writeArrayFieldStart("categories");
+                            responseChildren(generator, category);
+                            generator.writeEndArray();
+                            break;
+                    }
+                } else {
+                    responseCategory(generator, category);
+                }
             } else {
-
+                generator.writeNumberField("code", 204);
+                generator.writeStringField("message", "Not find");
             }
         } else {
-
+            Category[] roots = categoryRepository.root();
+            generator.writeArrayFieldStart("categories");
+            for (Category root : roots) {
+                responseChildren(generator, root);
+            }
+            generator.writeEndArray();
         }
         generator.writeEndObject();
         generator.flush();
         generator.close();
+    }
+
+    private void responseChildren(JsonGenerator generator, Category category) throws IOException {
+        generator.writeStartObject();
+        responseCategory(generator, category);
+        Category[] children = categoryRepository.belongTo(category.id());
+        if (children.length > 1) {
+            generator.writeArrayFieldStart("children");
+            for (Category child : children) {
+                this.responseChildren(generator, child);
+            }
+            generator.writeEndArray();
+        }
+        generator.writeEndObject();
     }
 
     private void responseCategory(JsonGenerator generator, Category category) throws IOException {
@@ -76,13 +110,5 @@ public class CategoryServlet extends HttpServlet {
         generator.writeStringField("description", category.description());
         if (category.icon() != null)
             generator.writeStringField("icon", category.icon().getFragment());
-    }
-
-    private void responseCategories(JsonGenerator generator, Category[] categories) throws IOException {
-        for (Category category : categories) {
-            generator.writeStartObject();
-            responseCategory(generator, category);
-            generator.writeEndObject();
-        }
     }
 }

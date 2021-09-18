@@ -63,7 +63,7 @@ public class ArangoDBBrandRepositoryTest {
         Brand my = new Brand("myis", new Name("官的"));
         repository.save(my);
 
-        Brand chenguang = new Brand("chenguang", new Name("晨光", "M&G"));
+        Brand chenguang = new Brand("chengguang", new Name("晨光", "M&G"));
         repository.save(chenguang);
     }
 
