@@ -37,6 +37,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
@@ -65,6 +66,7 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
 
     @Override
     public Category[] belongTo(String id) {
+        id = Objects.requireNonNull(id, "id required").trim();
         final String query = "WITH category\n" +
                 "FOR v,e IN 1..1 OUTBOUND @startVertex subordinate RETURN v";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
@@ -80,7 +82,25 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
     }
 
     @Override
+    public Category[] belongTo(String id, int depth) {
+        id = Objects.requireNonNull(id, "id required").trim();
+        final String query = "WITH category\n" +
+                "FOR v,e IN 1..@depth OUTBOUND @startVertex subordinate RETURN v";
+        final Map<String, Object> bindVars = new MapBuilder().put("depth", depth).put("startVertex", "category/" + id).get();
+        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+        List<Category> list = new ArrayList<>();
+        try {
+            while (cursor.hasNext())
+                list.add(rebuild(cursor.next()));
+        } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            LOGGER.debug("Can't rebuild category");
+        }
+        return list.toArray(new Category[0]);
+    }
+
+    @Override
     public Category find(String id) {
+        id = Objects.requireNonNull(id, "id required").trim();
         ArangoGraph graph = catalog.graph("core");
         VPackSlice slice = graph.vertexCollection("category").getVertex(id, VPackSlice.class);
         try {
@@ -98,6 +118,7 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
 
     @Override
     public void remove(String id) {
+        id = Objects.requireNonNull(id, "id required").trim();
         ArangoGraph graph = catalog.graph("core");
         boolean exists = catalog.collection("category").documentExists(id);
         if (exists)

@@ -31,7 +31,7 @@ import salt.hoprxi.id.LongId;
  * @version 0.0.1 builder 2021-08-09
  */
 public class ArangoDBCategoryRepositoryTest {
-    private static CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
+    private static final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
 
     @BeforeClass
     public void beforeClass() {
@@ -54,20 +54,24 @@ public class ArangoDBCategoryRepositoryTest {
         repository.save(liquor);
         Category wine = new Category("drinks", "wine", Name.of("葡萄酒"), "以葡萄为原料酿造的一种果酒。其酒精度高于啤酒而低于白酒。营养丰富，保健作用明显。");
         repository.save(wine);
+        Category Yellow_wine = new Category("drinks", "Yellow_wine", Name.of("黄酒"), "以稻米、黍米、黑米、玉米、小麦等为原料，经过蒸料，拌以麦曲、米曲或酒药，进行糖化和发酵酿制而成的各类酒");
+        repository.save(Yellow_wine);
         //日化
         Category chemicals = new Category("root", "chemicals", Name.of("日化"), "日用化学品,指人们平日常用的科技化学制品,包括洗发水、沐浴露、护肤、护发、化妆品等等");
         repository.save(chemicals);
         Category cosmetics = new Category("chemicals", "cosmetics", "化妆品",
                 "指以涂抹、喷洒或者其他类似方法，散布于人体表面的任何部位，如皮肤、毛发、指趾甲、唇齿等，以达到清洁、保养、美容、修饰和改变外观，或者修正人体气味，保持良好状态为目的的化学工业品或精细化工产品");
         repository.save(cosmetics);
-        Category skin = new Category("cosmetics", "skin", Name.of("肤用化妆品"));
-        repository.save(skin);
-        Category medicine = new Category("skin", "medicine", Name.of("药用"));
-        repository.save(medicine);
-        Category Shampoo = new Category("chemicals", "Shampoo", "洗发水");
-        repository.save(Shampoo);
+        Category washing = new Category("chemicals", "washing", Name.of("洗涤用品"));
+        repository.save(washing);
+        Category oral_hygiene = new Category("chemicals", "oral_hygiene", Name.of("口腔用品"));
+        repository.save(oral_hygiene);
+        Category clean = new Category("chemicals", "clean", "清洁/卫生用品");
+        repository.save(clean);
+        Category hari = new Category("chemicals", "hari", "洗/护发用品");
+        repository.save(hari);
         //will move to drinks sub and rename
-        Category beer = new Category("skin", "beer", Name.of("啤酒"));
+        Category beer = new Category("washing", "beer", Name.of("      个人保健用卫生制剂"));
         repository.save(beer);
         //粮油
         Category grain_oil = new Category("root", "grain_oil", Name.of("粮油"), "对谷类、豆类等粮食和油料及其加工成品和半成品的统称");
@@ -163,23 +167,62 @@ public class ArangoDBCategoryRepositoryTest {
     /*
         @AfterClass
         public void afterClass() {
-            repository.remove("medicine");
-            repository.remove("skin");
-            repository.remove("cosmetics");
-            repository.remove("chemicals");
-
-            repository.remove("meat");
-            repository.remove("fruit");
-            repository.remove("fresh");
-
-            repository.remove("wine");
-            repository.remove("liquor");
-            repository.remove("drinks");
-
             repository.remove("puffed_food");
             repository.remove("dry_fruits");
             repository.remove("leisure_food");
             repository.remove("food");
+
+            repository.remove("wine");
+            repository.remove("Yellow_wine");
+            repository.remove("liquor");
+            repository.remove("beer");
+            repository.remove("drinks");
+
+            repository.remove("washing");
+            repository.remove("oral_hygiene");
+            repository.remove("clean");
+            repository.remove("hari");
+            repository.remove("cosmetics");
+            repository.remove("chemicals");
+
+            repository.remove("fine_dried_noodles");
+            repository.remove("instant_noodles");
+            repository.remove("bread_cake ");
+            repository.remove("flour");
+            repository.remove("blended_oil");
+            repository.remove("sunflower_seed_oil");
+            repository.remove("corn_oil ");
+            repository.remove("peanut_oil");
+            repository.remove("olive_oil");
+            repository.remove("soybean_oil");
+            repository.remove("rapeseed_oil");
+            repository.remove("rice_flour");
+            repository.remove("oil");
+            repository.remove("grain_and_oil_products");
+            repository.remove("grain_oil");
+
+            repository.remove("chicken_essence_and_monosodium_glutamate");
+            repository.remove("salt");
+            repository.remove("flavoring");
+            repository.remove("seasoning_oil");
+            repository.remove("vinegar");
+            repository.remove("soy_sauce");
+            repository.remove("sauce");
+            repository.remove("condiment");
+
+            repository.remove("meat");
+            repository.remove("fruit");
+            repository.remove("driedFish");
+            repository.remove("marineShrimp");
+            repository.remove("freshwaterOther ");
+            repository.remove("freshwaterCrabs");
+            repository.remove("freshwaterFish");
+            repository.remove("poultry");
+            repository.remove("pork");
+            repository.remove("cookedFood");
+            repository.remove("aquatic");
+            repository.remove("vegetables");
+            repository.remove("fresh");
 
             repository.remove("root");
             repository.remove(Category.UNDEFINED.id());
@@ -189,12 +232,30 @@ public class ArangoDBCategoryRepositoryTest {
     public void testBelongTo() {
         Category[] sub = repository.belongTo("root");
         Assert.assertEquals(5, sub.length);
+        for (Category category : sub)
+            this.children(category);
+        /*
         sub = repository.belongTo(Category.UNDEFINED.id());
         Assert.assertEquals(0, sub.length);
         sub = repository.belongTo("leisure_food");
         Assert.assertEquals(2, sub.length);
         sub = repository.belongTo("fresh");
         Assert.assertEquals(5, sub.length);
+         */
+    }
+
+    private void children(Category category) {
+        Category[] children = repository.belongTo(category.id());
+        for (Category child : children)
+            children(child);
+    }
+
+    @Test(priority = 2)
+    public void testBelongToDepth() {
+        //Category[] sub = repository.belongTo("root",2);
+        //Assert.assertEquals(22, sub.length);
+        Category[] sub = repository.belongTo("root", 3);
+        Assert.assertEquals(38, sub.length);
     }
 
     @Test(dependsOnMethods = {"testNextIdentity"})
@@ -216,23 +277,22 @@ public class ArangoDBCategoryRepositoryTest {
     @Test(priority = 1, expectedExceptions = InvalidCategoryIdException.class)
     public void testSave() {
         Category beer = repository.find("beer");
+        Assert.assertEquals(beer.parentId(), "washing");
         beer.moveTo("drinks");
         repository.save(beer);
+        beer = repository.find("beer");
+        Assert.assertEquals(beer.parentId(), "drinks");
+        Assert.assertEquals(beer.name().name(), "个人保健用卫生制剂");
+
+        beer.rename(Name.of("      啤酒"));
+        beer.changeDescription("是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
+        repository.save(beer);
+        beer = repository.find("beer");
+        Assert.assertEquals(beer.description(), "是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
+        Assert.assertEquals(beer.name().name(), "啤酒");
+        beer.moveTo("hy");
 
         Category leisure_food = repository.find("leisure_food");
         Assert.assertNotNull(leisure_food);
-        Category medicine = repository.find("medicine");
-        medicine.moveTo("chemicals");
-        repository.save(medicine);
-        medicine = repository.find("medicine");
-        Assert.assertEquals(medicine.parentId(), "chemicals");
-        medicine.rename(Name.of("      个人保健用卫生制剂"));
-        medicine.changeDescription("清洁制剂、驱虫");
-        repository.save(medicine);
-        medicine = repository.find("medicine");
-        Assert.assertEquals(medicine.description(), "清洁制剂、驱虫");
-        Assert.assertEquals(medicine.name().name(), "个人保健用卫生制剂");
-
-        medicine.moveTo("hy");
     }
 }

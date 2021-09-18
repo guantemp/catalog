@@ -32,6 +32,13 @@ public interface CategoryRepository {
 
     /**
      * @param id
+     * @param depth
+     * @return
+     */
+    Category[] belongTo(String id, int depth);
+
+    /**
+     * @param id
      * @return
      */
     Category find(String id);
