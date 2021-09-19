@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,13 @@ package catalog.hoprxi.core.domain.model.barcode;
 
 import java.util.BitSet;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 2019-04-22
+ * @version 0.0.2 2021-09-19
  */
 public abstract class Barcode {
-    private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{7}$||^\\d{11}$||^\\d{12}$");
     protected CharSequence barcode;
     protected BitSet bitSet;
 
@@ -35,39 +32,6 @@ public abstract class Barcode {
         if (!checkFeature(barcode))
             throw new IllegalArgumentException("Invalid barcode");
         this.barcode = barcode;
-    }
-
-    /**
-     * @param barcode
-     * @return
-     */
-    public static boolean checkChecksum(CharSequence barcode) {
-        try {
-            int checksum = computeChecksum(barcode.subSequence(0, barcode.length() - 1));
-            return checksum == barcode.charAt(barcode.length() - 1) - '0';
-        } catch (InvalidBarcodeException e) {
-            return false;
-        }
-    }
-
-    /**
-     * @param barcode
-     * @return
-     * @throws InvalidBarcodeException
-     */
-    public static int computeChecksum(CharSequence barcode) throws InvalidBarcodeException {
-        Matcher matcher = BARCODE_PATTERN.matcher(barcode);
-        if (!matcher.matches()) {
-            throw new InvalidBarcodeException("error barcode format");
-        }
-        int sum = 0;
-        for (int i = 0, j = barcode.length() - 1, k = j; i <= j; i++, k--) {
-            if (i % 2 == 0)
-                sum += 3 * (barcode.charAt(k) - '0');// i=0,2,4,6....
-            else
-                sum += (barcode.charAt(k) - '0');// i=1,3,5,7...
-        }
-        return (10 - sum % 10) % 10;
     }
 
     public CharSequence barcode() {

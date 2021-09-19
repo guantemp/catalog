@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import java.util.StringJoiner;
  * @since JDK8.0
  */
 public class Item {
-    private static final int ID_MAX_LENGTH = 36;
+    private static final int ID_MAX_LENGTH = 48;
     @Expose(serialize = false, deserialize = false)
     private Barcode barcode;
     private String brandId;
@@ -62,8 +62,8 @@ public class Item {
      * @param retailPrice
      * @param memberPrice
      * @param vipPrice
-     * @param brandId
      * @param categoryId
+     * @param brandId
      * @throws IllegalArgumentException if id is null or id length range not in [1-36]
      *                                  if name is null
      *                                  if madeIn is null

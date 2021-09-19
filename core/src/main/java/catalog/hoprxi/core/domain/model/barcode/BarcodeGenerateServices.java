@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ public class BarcodeGenerateServices {
         try {
             for (int i = 0; i < amount; i++) {
                 StringBuilder sb = new StringBuilder(prefix).append(EAN_8_DECIMAL_FORMAT.format(start));
-                int checkSum = Barcode.computeChecksum(sb);
+                int checkSum = EanUcc.computeChecksum(sb);
                 ean_8s[i] = new EAN_8(sb.append(checkSum));
                 start += 1;
             }
@@ -92,7 +92,7 @@ public class BarcodeGenerateServices {
         try {
             for (int i = 0; i < amount; i++) {
                 StringBuilder sb = new StringBuilder(prefix).append(EAN_13_DECIMAL_FORMAT.format(start));
-                int checkSum = Barcode.computeChecksum(sb);
+                int checkSum = EanUcc.computeChecksum(sb);
                 ean_13s[i] = new EAN_13(sb.append(checkSum));
                 start += 1;
             }
@@ -119,7 +119,7 @@ public class BarcodeGenerateServices {
         try {
             for (int i = 0; i < amount; i++) {
                 StringBuilder sb = new StringBuilder(prefix).append(EAN_13_DECIMAL_FORMAT.format(start));
-                int checkSum = Barcode.computeChecksum(sb);
+                int checkSum = EanUcc.computeChecksum(sb);
                 ean_13s[i] = new EAN_13(sb.append(checkSum));
                 start += 1;
             }

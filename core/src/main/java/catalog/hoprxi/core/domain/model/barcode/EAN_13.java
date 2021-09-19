@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@
 package catalog.hoprxi.core.domain.model.barcode;
 
 import java.util.StringJoiner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -26,7 +24,6 @@ import java.util.regex.Pattern;
  * @version 0.0.1 2019-04-22
  */
 public class EAN_13 extends Barcode {
-    private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{13}$");
 
     public EAN_13(CharSequence barcode) {
         super(barcode);
@@ -34,10 +31,7 @@ public class EAN_13 extends Barcode {
 
     @Override
     public boolean checkFeature(CharSequence barcode) {
-        Matcher matcher = BARCODE_PATTERN.matcher(barcode);
-        if (matcher.matches())
-            return checkChecksum(barcode);
-        return false;
+        return EanUcc.checkChecksum(barcode);
     }
 
     @Override
