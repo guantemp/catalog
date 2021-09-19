@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.domain.model.barcode;
 
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /***
@@ -26,12 +27,26 @@ import org.testng.annotations.Test;
  */
 public class BarcodeGenerateServicesTest {
 
-    @Test
-    public void getTheMatchingEANUPCBarcode() {
+    @Test(expectedExceptions = InvalidBarcodeException.class)
+    public static void testIsbn() {
+        ISBN isbn = new ISBN("9787512423046");
+        Assert.assertNotNull(isbn);
+        isbn = new ISBN("2200056789272");
+    }
+
+    @Test(expectedExceptions = InvalidBarcodeException.class)
+    public static void testISSN() {
+        ISSN issn = new ISSN("2200056789272");
     }
 
     @Test
-    public void inStoreEAN_8Generate() {
+    public void testCreateMatchingEANUPCBarcode() {
+        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode("2200056789296");
+        System.out.println(barcode);
+    }
+
+    @Test
+    public void testInStoreEAN_8Generate() {
         Barcode[] eans = BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(7542, 20, "23");
         for (Barcode e : eans)
             System.out.println(e);
@@ -39,14 +54,14 @@ public class BarcodeGenerateServicesTest {
 
 
     @Test
-    public void inStoreEAN_13Generate() {
+    public void testInStoreEAN_13Generate() {
         Barcode[] eans = BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(5678921, 20, "22");
         for (Barcode e : eans)
             System.out.println(e);
     }
 
     @Test
-    public void couponBarcodeGenerate() {
+    public void testCouponBarcodeGenerate() {
         Barcode[] eans = BarcodeGenerateServices.couponBarcodeGenerate(325, 30);
         for (Barcode e : eans)
             System.out.println(e);

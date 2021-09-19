@@ -83,17 +83,17 @@ public class ArangoDBCategoryRepositoryTest {
         Category grain_and_oil_products = new Category("grain_oil", "grain_and_oil_products", new Name("粮油制品", "grain_and_oil_products"));
         repository.save(grain_and_oil_products);
         //食用油
-        Category rapeseed_oil = new Category("oil", "rapeseed_oil", new Name("菜籽油", "rapeseed_oil"));
+        Category rapeseed_oil = new Category("oil", "rapeseed_oil", new Name("菜籽油", "rapeseed_oil"), "用油菜籽榨出来的一种食用油。是我国主要食用油之一");
         repository.save(rapeseed_oil);
         Category soybean_oil = new Category("oil", "soybean_oil", Name.of("大豆油"));
         repository.save(soybean_oil);
         Category peanut_oil = new Category("oil", " peanut_oil", Name.of("花生油"));
         repository.save(peanut_oil);
-        Category corn_oil = new Category("oil", " corn_oil", new Name("玉米油", " corn_oil"));
+        Category corn_oil = new Category("oil", " corn_oil", new Name("玉米油", " corn_oil"), "又叫粟米油、玉米胚芽油，它是从玉米胚芽中提炼出的油");
         repository.save(corn_oil);
         Category olive_oil = new Category("oil", " olive_oil", Name.of("橄榄油"));
         repository.save(olive_oil);
-        Category sunflower_seed_oil = new Category("oil", " sunflower_seed_oil", new Name("葵花籽油", " sunflower_seed_oil"));
+        Category sunflower_seed_oil = new Category("oil", " sunflower_seed_oil", new Name("葵花籽油", " sunflower_seed_oil"), "又叫葵瓜子，是向日葵的果实。它的子仁中含脂肪30%-45%，最多的可达60%。葵花子油颜色金黄，澄清透明，气味清香，是一种重要的食用油。");
         repository.save(sunflower_seed_oil);
         Category blended_oil = new Category("oil", " blended_oil", Name.of("调和油"));
         repository.save(blended_oil);
@@ -102,7 +102,7 @@ public class ArangoDBCategoryRepositoryTest {
         repository.save(bread_cake);
         Category flour = new Category("grain_oil", "flour", Name.of("面粉"));
         repository.save(flour);
-        Category instant_noodles = new Category("grain_and_oil_products", "instant_noodles", Name.of("方便面"));
+        Category instant_noodles = new Category("grain_and_oil_products", "instant_noodles", Name.of("方便面"), "是一种可在短时间之内用热水泡熟食用的面制食品。");
         repository.save(instant_noodles);
         Category fine_dried_noodles = new Category("grain_oil", "fine_dried_noodles", Name.of("挂面"));
         repository.save(fine_dried_noodles);
@@ -111,7 +111,7 @@ public class ArangoDBCategoryRepositoryTest {
         repository.save(condiment);
         Category sauce = new Category("condiment", "sauce", Name.of("调味汁"));
         repository.save(sauce);
-        Category soy_sauce = new Category("sauce", "soy_sauce", new Name("酱油", "soy_sauce"));
+        Category soy_sauce = new Category("sauce", "soy_sauce", new Name("酱油", "soy_sauce"), "用大豆或脱脂大豆或黑豆、小麦或麸皮，加入水、食盐酿造而成的液体调味品，色泽呈红褐色，有独特酱香，滋味鲜美，有助于促进食欲。");
         repository.save(soy_sauce);
         Category vinegar = new Category("sauce", " vinegar", Name.of("醋"));
         repository.save(vinegar);
@@ -123,34 +123,6 @@ public class ArangoDBCategoryRepositoryTest {
         repository.save(salt);
         Category chicken_essence_monosodium_glutamate = new Category("flavoring", "chicken_essence_and_monosodium_glutamate", Name.of("鸡精/味精"));
         repository.save(chicken_essence_monosodium_glutamate);
-        //生鲜
-        Category fresh = new Category("fresh", "fresh", new Name("生鲜", "fresh"), "未经烹调、制作等深加工过程，只做必要保鲜和简单整理上架而出售的初级产品，以及面包、熟食等现场加工品类商品的统称");
-        repository.save(fresh);
-        Category fruit = new Category("fresh", "fruit", new Name("水果", "fruit"), "可食用的多汁液且有甜味的植物果实的统称");
-        repository.save(fruit);
-        Category meat = new Category("fresh", "  meat", new Name("肉类", "meat"), "陆上肉食动物及其可食部分的附属品制成的食品的统称");
-        repository.save(meat);
-        Category vegetables = new Category("fresh", "  vegetables", new Name("蔬菜", "vegetables"), "可以做菜吃的草本植物");
-        repository.save(vegetables);
-        Category aquatic = new Category("fresh", "  aquatic", new Name("水产品", "aquatic"), "水产品是海洋和淡水渔业生产的动植物及其加工产品的统称");
-        repository.save(aquatic);
-        Category cookedFood = new Category("fresh", "  cookedFood", new Name("熟食", "cookedFood"), "是经过加工或焯水处理后的原料通过配好的卤汁、红油凉拌、熏烤、油炸等制作而成的菜肴");
-        repository.save(cookedFood);
-        //子类
-        Category pork = new Category("meat", "  pork", new Name("猪肉", "pork"), "猪肉及分割品");
-        repository.save(pork);
-        Category poultry = new Category("meat", "  poultry", new Name("禽类", "poultry"));
-        repository.save(poultry);
-        Category freshwaterFish = new Category("aquatic", "freshwaterFish", new Name("淡水鱼", "freshwaterFish"));
-        repository.save(freshwaterFish);
-        Category freshwaterCrabs = new Category("aquatic", "freshwaterCrabs", new Name("淡水蟹", "freshwaterCrabs"));
-        repository.save(freshwaterCrabs);
-        Category freshwaterOther = new Category("aquatic", "freshwaterOther", new Name("其它淡水类", "freshwaterOther"));
-        repository.save(freshwaterOther);
-        Category marineShrimp = new Category("aquatic", "marineShrimp", new Name("海水虾", "marineShrimp"));
-        repository.save(marineShrimp);
-        Category driedFish = new Category("aquatic", " driedFish", new Name("鱼干", "driedFish"));
-        repository.save(driedFish);
     /*
         Brand lancome = new Brand("lancome", "兰蔻");
         Brand shiseido = new Brand("shiseido", "资生堂");
@@ -270,7 +242,7 @@ public class ArangoDBCategoryRepositoryTest {
     @Test
     public void testRoot() {
         Category[] roots = repository.root();
-        Assert.assertEquals(3, roots.length);
+        Assert.assertEquals(2, roots.length);
     }
 
     @Test(priority = 1, expectedExceptions = InvalidCategoryIdException.class)
@@ -289,6 +261,7 @@ public class ArangoDBCategoryRepositoryTest {
         beer = repository.find("beer");
         Assert.assertEquals(beer.description(), "是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
         Assert.assertEquals(beer.name().name(), "啤酒");
+
         beer.moveTo("hy");
 
         Category leisure_food = repository.find("leisure_food");

@@ -21,7 +21,7 @@ import java.util.StringJoiner;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 2019-04-22
+ * @version 0.0.2 2021-09-19
  */
 public class EAN_13 extends Barcode {
 

@@ -16,32 +16,25 @@
 
 package catalog.hoprxi.core.domain.model.barcode;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 2019-04-22
+ * @version 0.0.2 2021-09-19
  */
 public class UPC_A extends Barcode {
-    private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{12}$");
-
-    @Override
-    public boolean checkFeature(CharSequence barcode) {
-        Matcher matcher = BARCODE_PATTERN.matcher(barcode);
-        if (matcher.matches())
-            return EanUcc.checkChecksum(barcode);
-        return false;
-    }
 
     public UPC_A(CharSequence barcode) {
         super(barcode);
     }
 
+    @Override
+    public boolean checkFeature(CharSequence barcode) {
+        String tempBarcode = "0" + barcode;
+        return EanUcc.checkChecksum(tempBarcode);
+    }
+
     public UPC_E toUPC_E() {
-        StringBuffer result = new StringBuffer();
-        result.append(barcode.charAt(0));
+        StringBuilder result = new StringBuilder(barcode.charAt(0));
         if (barcode.charAt(0) != '0' && barcode.charAt(0) != '1') {
             throw new InvalidBarcodeException("[UPCA] Invalid Number System,  only 0 & 1 are valid (" + barcode.charAt(0) + ").");
         } else if ("000".equals(barcode.subSequence(3, 6)) || "100".equals(barcode.subSequence(3, 6)) || "200".equals(barcode.subSequence(3, 6))) {

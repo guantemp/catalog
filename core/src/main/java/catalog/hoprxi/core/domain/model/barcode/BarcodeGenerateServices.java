@@ -37,6 +37,8 @@ public class BarcodeGenerateServices {
     public static Barcode createMatchingBarcode(CharSequence barcode) {
         if (barcode.length() == 8)
             return new EAN_8(barcode);
+        if (barcode.length() == 12)
+            return new UPC_A(barcode);
         if (barcode.length() == 13)
             return new EAN_13(barcode);
         throw new InvalidBarcodeException("Not invalid barcode");
@@ -51,7 +53,7 @@ public class BarcodeGenerateServices {
     public static Barcode[] inStoreEAN_8BarcodeGenerate(int start, int amount, String prefix) {
         if (start < 0)
             throw new IllegalArgumentException("start is positive number");
-        if (amount <= 0)
+        if (amount < 0)
             throw new IllegalArgumentException("amount required larger zero");
         if (start + amount > 99999)
             throw new IllegalArgumentException("sum(start,amount) must less than or equal to 99999");
@@ -72,6 +74,10 @@ public class BarcodeGenerateServices {
         return ean_8s;
     }
 
+    public static Barcode[] inStoreEAN_8BarcodeGenerateWithFilter(int start, int amount, String prefix, int[] filter) {
+        return new Barcode[0];
+    }
+
     /**
      * @param start  rang is 0-999999999999
      * @param amount
@@ -81,7 +87,7 @@ public class BarcodeGenerateServices {
     public static Barcode[] inStoreEAN_13BarcodeGenerate(long start, int amount, String prefix) {
         if (start < 0l)
             throw new IllegalArgumentException("start is positive number");
-        if (amount <= 0)
+        if (amount < 0)
             throw new IllegalArgumentException("amount required larger zero");
         if (start + amount > 9999999999l)
             throw new IllegalArgumentException("sum(start,amount) must less than or equal to  9999999999");

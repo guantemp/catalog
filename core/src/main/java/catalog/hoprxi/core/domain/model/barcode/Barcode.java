@@ -39,4 +39,19 @@ public abstract class Barcode {
     }
 
     public abstract boolean checkFeature(CharSequence barcode);
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Barcode)) return false;
+
+        Barcode barcode1 = (Barcode) o;
+
+        return barcode != null ? barcode.equals(barcode1.barcode) : barcode1.barcode == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return barcode != null ? barcode.hashCode() : 0;
+    }
 }

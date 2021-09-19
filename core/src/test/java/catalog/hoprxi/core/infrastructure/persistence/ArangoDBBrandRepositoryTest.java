@@ -82,7 +82,6 @@ public class ArangoDBBrandRepositoryTest {
     public void testFind() {
         Brand brand = repository.find("HIKVISION");
         assertNotNull(brand);
-        System.out.println(brand);
         Brand[] brands = repository.findByName("康威");
         assertEquals(brands.length, 1);
         brands = repository.findByName("康威|@hua");
