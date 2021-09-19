@@ -21,7 +21,7 @@ import catalog.hoprxi.core.infrastructure.i18n.Label;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2019-05-14
+ * @version 0.0.2 builder 2021-09-19
  */
 public enum Unit {
     BEI {
@@ -227,7 +227,11 @@ public enum Unit {
         }
     };
 
-    public Unit of(String s) {
+    /**
+     * @param s
+     * @return
+     */
+    public static Unit of(String s) {
         for (Unit unit : values()) {
             if (unit.toString().equals(s))
                 return unit;

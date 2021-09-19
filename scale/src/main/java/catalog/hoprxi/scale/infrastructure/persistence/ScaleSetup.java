@@ -15,11 +15,11 @@
  */
 package catalog.hoprxi.scale.infrastructure.persistence;
 
+import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBUtil;
-import catalog.hoprxi.core.infrastructure.persistence.CoreSetup;
 import com.arangodb.ArangoDB;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.EdgeDefinition;
@@ -35,7 +35,7 @@ import java.util.Collection;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 2019-05-04
+ * @version 0.0.2 2021-09-19
  */
 
 public class ScaleSetup {
@@ -43,11 +43,13 @@ public class ScaleSetup {
 
     public static void setup(String databaseName) {
         ArangoDB arangoDB = ArangoDBUtil.getResource();
+        /*
         if (arangoDB.db(databaseName).exists()) {
             arangoDB.db(databaseName).drop();
             logger.info("{} be discarded", databaseName);
         }
         CoreSetup.setup(databaseName);
+        */
         ArangoDatabase db = arangoDB.db(databaseName);
         //vertex
         for (String s : new String[]{"weight", "count", "plu"}) {
@@ -87,20 +89,34 @@ public class ScaleSetup {
     }
 
     public static void createCategory() {
-        CategoryRepository categoryRepository = new ArangoDBCategoryRepository("catalog");
-        Category root = Category.createCategoryRoot("fresh", "生鲜", "指未经烹调、制作等深加工过程，只做必要保鲜和简单整理上架而出售的初级产品");
-        categoryRepository.save(root);
-        Category fruits = new Category("fresh", "fruits", "水果", "指多汁且主要味觉为甜味和酸味，可食用的植物果实");
-        categoryRepository.save(fruits);
-        Category vegetables = new Category("fresh", "vegetables", "蔬菜", "指可以做菜、烹饪成为食品的一类植物或菌类");
-        categoryRepository.save(vegetables);
-        Category freshMeat = new Category("fresh", "meat", "肉类", "包含冷鲜肉和热鲜肉");
-        categoryRepository.save(freshMeat);
-        Category cooked_food = new Category("fresh", "cooked_food", "熟食", "是经过加工或焯水处理后的原料通过配好的卤汁、红油凉拌、熏烤、油炸等制作而成的菜肴。");
-        categoryRepository.save(cooked_food);
-        Category aquatic = new Category("fresh", "aquatic", "水产", "指江、河、湖、海里出产的经济动、植物的统称。可分为活鲜水产、冰鲜水产、冷冻水产、水发水、水产干货");
-        categoryRepository.save(aquatic);
-        Category dried_foods = new Category("fresh", "dried_foods", "干货", "泛指用风干、晾晒等方法去除了水分的调味品、食品");
-        categoryRepository.save(dried_foods);
+        CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
+        //生鲜
+        Category fresh = new Category("fresh", "fresh", new Name("生鲜", "fresh"), "未经烹调、制作等深加工过程，只做必要保鲜和简单整理上架而出售的初级产品，以及面包、熟食等现场加工品类商品的统称");
+        repository.save(fresh);
+        Category fruit = new Category("fresh", "fruit", new Name("水果", "fruit"), "可食用的多汁液且有甜味的植物果实的统称");
+        repository.save(fruit);
+        Category meat = new Category("fresh", "  meat", new Name("肉类", "meat"), "陆上肉食动物及其可食部分的附属品制成的食品的统称");
+        repository.save(meat);
+        Category vegetables = new Category("fresh", "  vegetables", new Name("蔬菜", "vegetables"), "可以做菜吃的草本植物");
+        repository.save(vegetables);
+        Category aquatic = new Category("fresh", "  aquatic", new Name("水产品", "aquatic"), "水产品是海洋和淡水渔业生产的动植物及其加工产品的统称");
+        repository.save(aquatic);
+        Category cookedFood = new Category("fresh", "  cookedFood", new Name("熟食", "cookedFood"), "是经过加工或焯水处理后的原料通过配好的卤汁、红油凉拌、熏烤、油炸等制作而成的菜肴");
+        repository.save(cookedFood);
+        //子类
+        Category pork = new Category("meat", "  pork", new Name("猪肉", "pork"), "猪肉及分割品");
+        repository.save(pork);
+        Category poultry = new Category("meat", "  poultry", new Name("禽类", "poultry"));
+        repository.save(poultry);
+        Category freshwaterFish = new Category("aquatic", "freshwaterFish", new Name("淡水鱼", "freshwaterFish"));
+        repository.save(freshwaterFish);
+        Category freshwaterCrabs = new Category("aquatic", "freshwaterCrabs", new Name("淡水蟹", "freshwaterCrabs"));
+        repository.save(freshwaterCrabs);
+        Category freshwaterOther = new Category("aquatic", "freshwaterOther", new Name("其它淡水类", "freshwaterOther"));
+        repository.save(freshwaterOther);
+        Category marineShrimp = new Category("aquatic", "marineShrimp", new Name("海水虾", "marineShrimp"));
+        repository.save(marineShrimp);
+        Category driedFish = new Category("aquatic", " driedFish", new Name("鱼干", "driedFish"));
+        repository.save(driedFish);
     }
 }

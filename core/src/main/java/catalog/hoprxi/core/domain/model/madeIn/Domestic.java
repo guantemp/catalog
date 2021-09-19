@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,8 @@ public class Domestic implements MadeIn {
 
     @Override
     public String madeIn() {
-        return new StringJoiner(Label.MADIN_SEPARATORS).add(province).add(city).toString();
+        return province + Label.MADIN_SEPARATORS + city;
+        //return new StringJoiner(Label.MADIN_SEPARATORS).add(province).add(city).toString();
     }
 
     @Override

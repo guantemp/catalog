@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,9 @@
 package catalog.hoprxi.core.domain.model;
 
 import catalog.hoprxi.core.domain.model.price.Unit;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -28,6 +30,7 @@ public class UnitTest {
     @Test
     public void name() {
         for (Unit unit : Unit.values())
-            System.out.println("Unit: " + unit.toString());
+            System.out.println(unit.name() + ": " + unit);
+        Assert.assertEquals(Unit.BEN, Unit.of("本"));
     }
 }

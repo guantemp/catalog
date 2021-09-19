@@ -69,7 +69,7 @@ public class Name {
     private void setAlias(String alias) {
         if (alias != null && alias.length() > 256)
             throw new IllegalArgumentException("alias length rang is 0-256");
-        this.alias = alias;
+        this.alias = alias.trim();
     }
 
     public String name() {

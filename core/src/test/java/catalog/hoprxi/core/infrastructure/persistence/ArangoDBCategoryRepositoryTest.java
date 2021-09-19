@@ -36,10 +36,10 @@ public class ArangoDBCategoryRepositoryTest {
     @BeforeClass
     public void beforeClass() {
         repository.save(Category.UNDEFINED);
-        Category root = Category.createCategoryRoot("root", Name.of("分类"));
+        Category root = Category.createCategoryRoot("root", new Name("分类", "root"));
         repository.save(root);
         //食品
-        Category food = new Category("root", "food", Name.of("食品"), "可供人类食用或饮用的物质，包括加工食品，半成品和未加工食品，不包括烟草或只作药品用的物质");
+        Category food = new Category("root", "food", new Name("食品", "food"), "可供人类食用或饮用的物质，包括加工食品，半成品和未加工食品，不包括烟草或只作药品用的物质");
         repository.save(food);
         Category leisure_food = new Category("food", "leisure_food", Name.of("休闲食品"), "人们闲暇、休息时所吃的食品");
         repository.save(leisure_food);
@@ -57,7 +57,7 @@ public class ArangoDBCategoryRepositoryTest {
         Category Yellow_wine = new Category("drinks", "Yellow_wine", Name.of("黄酒"), "以稻米、黍米、黑米、玉米、小麦等为原料，经过蒸料，拌以麦曲、米曲或酒药，进行糖化和发酵酿制而成的各类酒");
         repository.save(Yellow_wine);
         //日化
-        Category chemicals = new Category("root", "chemicals", Name.of("日化"), "日用化学品,指人们平日常用的科技化学制品,包括洗发水、沐浴露、护肤、护发、化妆品等等");
+        Category chemicals = new Category("root", "chemicals", new Name("日化", "chemicals"), "日用化学品,指人们平日常用的科技化学制品,包括洗发水、沐浴露、护肤、护发、化妆品等等");
         repository.save(chemicals);
         Category cosmetics = new Category("chemicals", "cosmetics", "化妆品",
                 "指以涂抹、喷洒或者其他类似方法，散布于人体表面的任何部位，如皮肤、毛发、指趾甲、唇齿等，以达到清洁、保养、美容、修饰和改变外观，或者修正人体气味，保持良好状态为目的的化学工业品或精细化工产品");
@@ -76,24 +76,24 @@ public class ArangoDBCategoryRepositoryTest {
         //粮油
         Category grain_oil = new Category("root", "grain_oil", Name.of("粮油"), "对谷类、豆类等粮食和油料及其加工成品和半成品的统称");
         repository.save(grain_oil);
-        Category rice_flour = new Category("grain_oil", "rice_flour", Name.of("米/面/杂粮"));
+        Category rice_flour = new Category("grain_oil", "rice_flour", new Name("米/面/杂粮", "rice_flour"));
         repository.save(rice_flour);
         Category oil = new Category("grain_oil", "oil", Name.of("食用油"));
         repository.save(oil);
-        Category grain_and_oil_products = new Category("grain_oil", "grain_and_oil_products", Name.of("粮油制品"));
+        Category grain_and_oil_products = new Category("grain_oil", "grain_and_oil_products", new Name("粮油制品", "grain_and_oil_products"));
         repository.save(grain_and_oil_products);
         //食用油
-        Category rapeseed_oil = new Category("oil", "rapeseed_oil", Name.of("菜籽油"));
+        Category rapeseed_oil = new Category("oil", "rapeseed_oil", new Name("菜籽油", "rapeseed_oil"));
         repository.save(rapeseed_oil);
         Category soybean_oil = new Category("oil", "soybean_oil", Name.of("大豆油"));
         repository.save(soybean_oil);
         Category peanut_oil = new Category("oil", " peanut_oil", Name.of("花生油"));
         repository.save(peanut_oil);
-        Category corn_oil = new Category("oil", " corn_oil", Name.of("玉米油"));
+        Category corn_oil = new Category("oil", " corn_oil", new Name("玉米油", " corn_oil"));
         repository.save(corn_oil);
         Category olive_oil = new Category("oil", " olive_oil", Name.of("橄榄油"));
         repository.save(olive_oil);
-        Category sunflower_seed_oil = new Category("oil", " sunflower_seed_oil", Name.of("葵花籽油"));
+        Category sunflower_seed_oil = new Category("oil", " sunflower_seed_oil", new Name("葵花籽油", " sunflower_seed_oil"));
         repository.save(sunflower_seed_oil);
         Category blended_oil = new Category("oil", " blended_oil", Name.of("调和油"));
         repository.save(blended_oil);
@@ -111,11 +111,11 @@ public class ArangoDBCategoryRepositoryTest {
         repository.save(condiment);
         Category sauce = new Category("condiment", "sauce", Name.of("调味汁"));
         repository.save(sauce);
-        Category soy_sauce = new Category("sauce", "soy_sauce", Name.of("酱油"));
+        Category soy_sauce = new Category("sauce", "soy_sauce", new Name("酱油", "soy_sauce"));
         repository.save(soy_sauce);
         Category vinegar = new Category("sauce", " vinegar", Name.of("醋"));
         repository.save(vinegar);
-        Category seasoning_oil = new Category("sauce", " seasoning_oil", Name.of("调味油"));
+        Category seasoning_oil = new Category("sauce", " seasoning_oil", new Name("调味油", " seasoning_oil"));
         repository.save(seasoning_oil);
         Category flavoring = new Category("condiment", "flavoring", Name.of("调味料"));
         repository.save(flavoring);
@@ -124,34 +124,33 @@ public class ArangoDBCategoryRepositoryTest {
         Category chicken_essence_monosodium_glutamate = new Category("flavoring", "chicken_essence_and_monosodium_glutamate", Name.of("鸡精/味精"));
         repository.save(chicken_essence_monosodium_glutamate);
         //生鲜
-        Category fresh = new Category("fresh", "fresh", Name.of("生鲜"), "未经烹调、制作等深加工过程，只做必要保鲜和简单整理上架而出售的初级产品，以及面包、熟食等现场加工品类商品的统称");
+        Category fresh = new Category("fresh", "fresh", new Name("生鲜", "fresh"), "未经烹调、制作等深加工过程，只做必要保鲜和简单整理上架而出售的初级产品，以及面包、熟食等现场加工品类商品的统称");
         repository.save(fresh);
-        Category fruit = new Category("fresh", "fruit", "水果", "可食用的多汁液且有甜味的植物果实的统称");
+        Category fruit = new Category("fresh", "fruit", new Name("水果", "fruit"), "可食用的多汁液且有甜味的植物果实的统称");
         repository.save(fruit);
-        Category meat = new Category("fresh", "  meat", Name.of("肉类"), "陆上肉食动物及其可食部分的附属品制成的食品的统称");
+        Category meat = new Category("fresh", "  meat", new Name("肉类", "meat"), "陆上肉食动物及其可食部分的附属品制成的食品的统称");
         repository.save(meat);
-        Category vegetables = new Category("fresh", "  vegetables", Name.of("蔬菜"), "可以做菜吃的草本植物");
+        Category vegetables = new Category("fresh", "  vegetables", new Name("蔬菜", "vegetables"), "可以做菜吃的草本植物");
         repository.save(vegetables);
-        Category aquatic = new Category("fresh", "  aquatic", Name.of("水产品"), "水产品是海洋和淡水渔业生产的动植物及其加工产品的统称");
+        Category aquatic = new Category("fresh", "  aquatic", new Name("水产品", "aquatic"), "水产品是海洋和淡水渔业生产的动植物及其加工产品的统称");
         repository.save(aquatic);
-        Category cookedFood = new Category("fresh", "  cookedFood", Name.of("熟食"), "是经过加工或焯水处理后的原料通过配好的卤汁、红油凉拌、熏烤、油炸等制作而成的菜肴");
+        Category cookedFood = new Category("fresh", "  cookedFood", new Name("熟食", "cookedFood"), "是经过加工或焯水处理后的原料通过配好的卤汁、红油凉拌、熏烤、油炸等制作而成的菜肴");
         repository.save(cookedFood);
         //子类
-        Category pork = new Category("meat", "  pork", Name.of("猪肉"), "猪肉及分割品");
+        Category pork = new Category("meat", "  pork", new Name("猪肉", "pork"), "猪肉及分割品");
         repository.save(pork);
-        Category poultry = new Category("meat", "  poultry", Name.of("禽类"));
+        Category poultry = new Category("meat", "  poultry", new Name("禽类", "poultry"));
         repository.save(poultry);
-        Category freshwaterFish = new Category("aquatic", "freshwaterFish", Name.of("淡水鱼"));
+        Category freshwaterFish = new Category("aquatic", "freshwaterFish", new Name("淡水鱼", "freshwaterFish"));
         repository.save(freshwaterFish);
-        Category freshwaterCrabs = new Category("aquatic", "freshwaterCrabs", Name.of("淡水蟹"));
+        Category freshwaterCrabs = new Category("aquatic", "freshwaterCrabs", new Name("淡水蟹", "freshwaterCrabs"));
         repository.save(freshwaterCrabs);
-        Category freshwaterOther = new Category("aquatic", "freshwaterOther", Name.of("其它淡水类"));
+        Category freshwaterOther = new Category("aquatic", "freshwaterOther", new Name("其它淡水类", "freshwaterOther"));
         repository.save(freshwaterOther);
-        Category marineShrimp = new Category("aquatic", "marineShrimp", Name.of("海水虾"));
+        Category marineShrimp = new Category("aquatic", "marineShrimp", new Name("海水虾", "marineShrimp"));
         repository.save(marineShrimp);
-        Category driedFish = new Category("aquatic", " driedFish", Name.of("鱼干"));
+        Category driedFish = new Category("aquatic", " driedFish", new Name("鱼干", "driedFish"));
         repository.save(driedFish);
-
     /*
         Brand lancome = new Brand("lancome", "兰蔻");
         Brand shiseido = new Brand("shiseido", "资生堂");
