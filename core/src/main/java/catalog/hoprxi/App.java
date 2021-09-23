@@ -16,9 +16,18 @@
 
 package catalog.hoprxi;
 
+import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.price.Price;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.Unit;
 import catalog.hoprxi.core.webapp.BrandServlet;
 import catalog.hoprxi.core.webapp.CategoryServlet;
+import catalog.hoprxi.core.webapp.ItemServlet;
 import catalog.hoprxi.core.webapp.UnitServlet;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.handlers.PathHandler;
@@ -26,46 +35,65 @@ import io.undertow.servlet.Servlets;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
+import org.javamoney.moneta.Money;
+import org.javamoney.moneta.format.CurrencyStyle;
 
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
+import javax.money.format.AmountFormatQueryBuilder;
+import javax.money.format.MonetaryAmountFormat;
+import javax.money.format.MonetaryFormats;
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * Hello world!
  */
 public class App {
     public static void main(String[] args) throws IOException, ServletException {
-/*
-        System.out.println("Hello World!");
+        CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
+        MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
+                .set(CurrencyStyle.SYMBOL).set("pattern", "¤ #,##0.00###")//"#,##0.00### ¤"
+                .build());
+        RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.55419, currency), Unit.DAI));
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(System.out, JsonEncoding.UTF8)
                 .setPrettyPrinter(new DefaultPrettyPrinter());
         generator.writeStartObject();
-        generator.writeNumberField("offset",0);
-        generator.writeNumberField("limit",15);
-        generator.writeNumberField("total",Unit.values().length);
+        generator.writeNumberField("offset", 0);
+        generator.writeNumberField("limit", 15);
+        generator.writeNumberField("total", Unit.values().length);
         generator.writeArrayFieldStart("units");
         for (Unit unit : Unit.values()) {
             generator.writeString(unit.toString());
         }
         generator.writeEndArray();
+        generator.writeObjectField("grade", Grade.QUALIFIED.toString());
+        generator.writeObjectFieldStart("retailPrice");
+        generator.writeStringField("value", format.format(retailPrice.price().amount()));
+        generator.writeStringField("unit", retailPrice.price().unit().toString());
+        generator.writeEndObject();
+        generator.writeStringField("retailPrice", format.format(retailPrice.price().amount()) + "/" + retailPrice.price().unit().toString());
+        generator.writeEndObject();
         generator.flush();
         generator.close();
-        generator.flush();
-        generator.close();
-*/
+
         DeploymentInfo servletBuilder = Servlets.deployment()
                 .setClassLoader(App.class.getClassLoader())
                 .setContextPath("/core")
-                .setDeploymentName("app.war")
+                .setDeploymentName("catalog.war")
                 .addServlets(
                         Servlets.servlet("unitServlet", UnitServlet.class)
-                                //.addInitParam("message", "Hello World")
                                 .addMapping("/v1/units"),
                         Servlets.servlet("brandServlet", BrandServlet.class)
                                 .addMapping("/v1/brands/*"),
                         Servlets.servlet("categoryServlet", CategoryServlet.class)
-                                .addMapping("/v1/categories/*"));
+                                .addMapping("/v1/categories/*"),
+                        Servlets.servlet("itemServlet", ItemServlet.class)
+                                .addInitParam("database", "arangodb3")
+                                .addInitParam("databaseName", "catalog")
+                                .addMapping("/v1/items/*"));
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentManager manager = container.addDeployment(servletBuilder);
         manager.deploy();

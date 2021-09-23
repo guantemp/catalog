@@ -158,8 +158,10 @@ public class Item {
      */
     public void changeGrade(Grade grade) {
         if (grade != null) {
-            if (this.grade != grade)
+            if (this.grade != grade) {
                 this.grade = grade;
+                DomainRegistry.domainEventPublisher().publish(new ItemGradeChanged(id, grade));
+            }
         }
     }
 
@@ -274,6 +276,10 @@ public class Item {
 
     public Name name() {
         return name;
+    }
+
+    public MadeIn madeIn() {
+        return madeIn;
     }
 
     private void setBarcode(Barcode barcode) {

@@ -31,7 +31,6 @@ import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import org.javamoney.moneta.Money;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -155,7 +154,7 @@ public class ArangoDBItemRepositoryTest {
                 new Specification("10片装"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(thirteen);
     }
-
+/*
     @AfterTest
     public void tearDown() {
         brandRepository.remove(Brand.UNDEFINED.id());
@@ -188,20 +187,20 @@ public class ArangoDBItemRepositoryTest {
         }
         itemRepository.remove("twelve");
     }
+ */
+@Test(invocationCount = 1, threadPoolSize = 1)
+public void testBelongToBrand() {
+    Item[] skuses = itemRepository.belongToBrand("caihong", 0, 3);
+    Assert.assertEquals(skuses.length, 3);
+    skuses = itemRepository.belongToBrand("caihong", 1, 3);
+    Assert.assertEquals(skuses.length, 2);
+    skuses = itemRepository.belongToBrand("caihong", 1, 1);
+    Assert.assertEquals(skuses.length, 1);
+    skuses = itemRepository.belongToBrand("caihong", 1, 0);
+    Assert.assertEquals(skuses.length, 0);
+}
 
-    @Test(invocationCount = 4, threadPoolSize = 4)
-    public void testBelongToBrand() {
-        Item[] skuses = itemRepository.belongToBrand("caihong", 0, 3);
-        Assert.assertEquals(skuses.length, 3);
-        skuses = itemRepository.belongToBrand("caihong", 1, 3);
-        Assert.assertEquals(skuses.length, 2);
-        skuses = itemRepository.belongToBrand("caihong", 1, 1);
-        Assert.assertEquals(skuses.length, 1);
-        skuses = itemRepository.belongToBrand("caihong", 1, 0);
-        Assert.assertEquals(skuses.length, 0);
-    }
-
-    @Test(invocationCount = 4, threadPoolSize = 4)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testBelongToCategory() {
         Item[] skuses = itemRepository.belongToCategory("food", 0, 10);
         Assert.assertEquals(skuses.length, 8);
@@ -217,7 +216,7 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertEquals(skuses.length, 1);
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 4)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFind() {
         Item six = itemRepository.find("six_1");
         Assert.assertNotNull(six);
@@ -227,7 +226,7 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertNull(nine);
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 4)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFindAll() {
         Item[] skuses = itemRepository.findAll(0, 25);
         Assert.assertEquals(skuses.length, 14);
@@ -237,7 +236,7 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertEquals(skuses.length, 5);
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 4)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFromBarcode() {
         Item[] items = itemRepository.fromBarcode("69235552");
         Assert.assertEquals(items.length, 3);
@@ -253,7 +252,7 @@ public class ArangoDBItemRepositoryTest {
             System.out.println(item);
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 4)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFromMnemonic() {
         Item[] skuses = itemRepository.fromMnemonic("^ch");
         Assert.assertEquals(skuses.length, 3);
@@ -267,7 +266,7 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertEquals(skuses.length, 5);
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 4)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFromName() {
         Item[] items = itemRepository.fromName("彩虹");
         Assert.assertEquals(items.length, 3);
@@ -297,7 +296,7 @@ public class ArangoDBItemRepositoryTest {
         itemRepository.save(six);
     }
 
-    @Test(invocationCount = 4, threadPoolSize = 4)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testSize() {
         Assert.assertEquals(itemRepository.size(), 14);
     }

@@ -20,6 +20,7 @@ import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 import java.util.Locale;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -27,17 +28,16 @@ import java.util.Objects;
  * @version 0.0.1 2019-10-15
  */
 public class RetailPrice {
-    private Price price;
-
     public static final RetailPrice RMB_ZERO = new RetailPrice(Price.zero(Locale.CHINA));
     public static final RetailPrice USD_ZERO = new RetailPrice(Price.zero(Locale.US));
-
-    public static RetailPrice zero(Locale locale, Unit unit) {
-        return new RetailPrice(Price.zero(locale, unit));
-    }
+    private Price price;
 
     public RetailPrice(Price price) {
         setPrice(price);
+    }
+
+    public static RetailPrice zero(Locale locale, Unit unit) {
+        return new RetailPrice(Price.zero(locale, unit));
     }
 
     private void setPrice(Price price) {
@@ -69,9 +69,8 @@ public class RetailPrice {
 
     @Override
     public String toString() {
-        return "RetailPrice{" +
-                "price=" + price +
-                ", name='" + Label.PRICE_RETAIL + '\'' +
-                '}';
+        return new StringJoiner(", ", RetailPrice.class.getSimpleName() + "[", "]")
+                .add("price=" + price).add("name=" + Label.PRICE_RETAIL)
+                .toString();
     }
 }
