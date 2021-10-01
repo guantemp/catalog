@@ -20,9 +20,7 @@ import catalog.hoprxi.core.domain.model.Item;
 import catalog.hoprxi.core.domain.model.ItemRepository;
 import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBItemRepository;
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import org.javamoney.moneta.format.CurrencyStyle;
 import salt.hoprxi.utils.NumberHelper;
@@ -39,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Optional;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -67,6 +66,7 @@ public class ItemServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
+        long start = System.currentTimeMillis();
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
@@ -85,11 +85,33 @@ public class ItemServlet extends HttpServlet {
         } else {
             int offset = NumberHelper.intOf(req.getParameter("offset"), OFFSET);
             int limit = NumberHelper.intOf(req.getParameter("limit"), LIMIT);
+            String barcode = Optional.ofNullable(req.getParameter("barcode")).orElse("");
+            String name = Optional.ofNullable(req.getParameter("name")).orElse("");
+            String categoryId = Optional.ofNullable(req.getParameter("cid")).orElse("");
+            String brandId = Optional.ofNullable(req.getParameter("bid")).orElse("");
+            System.out.println(name);
             generator.writeNumberField("total", repository.size());
             generator.writeNumberField("offset", offset);
             generator.writeNumberField("limit", limit);
-            Item[] items = repository.findAll(offset, limit);
-            responseItems(generator, items);
+            generator.writeArrayFieldStart("items");
+            if (!barcode.isEmpty() && !name.isEmpty()) {
+                Item[] items = repository.fromBarcode(barcode);
+                responseItems(generator, items);
+            } else if (!barcode.isEmpty() || !name.isEmpty()) {
+                if (!barcode.isEmpty()) {
+                    Item[] items = repository.fromBarcode(barcode);
+                    responseItems(generator, items);
+                }
+                if (!name.isEmpty()) {
+                    Item[] items = repository.fromName(name);
+                    responseItems(generator, items);
+                }
+            } else {
+                Item[] items = repository.findAll(offset, limit);
+                responseItems(generator, items);
+            }
+            generator.writeEndArray();
+            generator.writeNumberField("execution time", System.currentTimeMillis() - start);
         }
         generator.writeEndObject();
         generator.flush();
@@ -128,17 +150,34 @@ public class ItemServlet extends HttpServlet {
     }
 
     private void responseItems(JsonGenerator generator, Item[] items) throws IOException {
-        generator.writeArrayFieldStart("items");
         for (Item item : items) {
             generator.writeStartObject();
             responseItem(generator, item);
             generator.writeEndObject();
         }
-        generator.writeEndArray();
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String name = null, alias = null, barcode = null, brandId = null, categoryId = null, spec = null, grade = null, madeIn = null;
+        Number retailPrice = null, memberPrice = null, vipPrice = null;
+        JsonFactory jasonFactory = new JsonFactory();
+        JsonParser parser = jasonFactory.createParser(req.getInputStream());
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "name":
+                        name = parser.getValueAsString();
+                        break;
+                    case "alias":
+                        alias = parser.getValueAsString();
+                        break;
 
+                }
+            }
+        }
     }
 }

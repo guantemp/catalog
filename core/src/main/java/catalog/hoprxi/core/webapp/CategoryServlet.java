@@ -44,6 +44,7 @@ public class CategoryServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
         //String[] fileds = req.getParameter("fileds").split(",");
+        long start = System.currentTimeMillis();
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
@@ -80,6 +81,7 @@ public class CategoryServlet extends HttpServlet {
             }
             generator.writeEndArray();
         }
+        generator.writeNumberField("execution time", System.currentTimeMillis() - start);
         generator.writeEndObject();
         generator.flush();
         generator.close();

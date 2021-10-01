@@ -79,7 +79,8 @@ public class App {
         generator.flush();
         generator.close();
 
-        DeploymentInfo servletBuilder = Servlets.deployment()
+        ServletContainer container = ServletContainer.Factory.newInstance();
+        DeploymentInfo deploymentInfo = Servlets.deployment()
                 .setClassLoader(App.class.getClassLoader())
                 .setContextPath("/core")
                 .setDeploymentName("catalog.war")
@@ -94,11 +95,10 @@ public class App {
                                 .addInitParam("database", "arangodb3")
                                 .addInitParam("databaseName", "catalog")
                                 .addMapping("/v1/items/*"));
-        ServletContainer container = ServletContainer.Factory.newInstance();
-        DeploymentManager manager = container.addDeployment(servletBuilder);
+        DeploymentManager manager = container.addDeployment(deploymentInfo);
         manager.deploy();
         PathHandler path = Handlers.path(Handlers.redirect("/core"))
-                .addPrefixPath(servletBuilder.getContextPath(), manager.start());
+                .addPrefixPath(deploymentInfo.getContextPath(), manager.start());
 
         Undertow server = Undertow.builder()
                 .addHttpListener(80, "0.0.0.0")

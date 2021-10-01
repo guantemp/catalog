@@ -27,6 +27,10 @@ import java.util.StringJoiner;
  * @version 0.0.1 2019-08-28
  */
 public class Domestic implements MadeIn {
+    public static final Domestic BEI_JING = new Domestic("北京市", "北京市");
+    public static final Domestic TIAN_JIN = new Domestic("天津市", "天津市");
+    public static final Domestic SHANG_HAI = new Domestic("上海市", "上海市");
+    public static final Domestic CHONG_QING = new Domestic("重庆市", "重庆市");
     // 省/市级
     private String province;//四川省
     private String city;//乐山市
@@ -34,10 +38,6 @@ public class Domestic implements MadeIn {
     public Domestic(String province, String city) {
         this.province = Objects.requireNonNull(province, "province required").trim();
         this.city = Objects.requireNonNull(city, "city required").trim();
-    }
-
-    public Domestic(String city) {
-        this(city, city);
     }
 
     @Override

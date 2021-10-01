@@ -90,11 +90,10 @@ public class ArangoDBItemRepositoryTest {
                 new Specification("4*120ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
         itemRepository.save(three);
 
-        madeIn = new Domestic("重庆市");
         retailPrice = new RetailPrice(new Price(Money.of(4.50, currency), Unit.HE));
         MemberPrice memberPrice = new MemberPrice(new Price(Money.of(3.96, currency), Unit.HE));
         VipPrice vipPrice = new VipPrice("PLUS价", new Price(Money.of(3.00, currency), Unit.HE));
-        Item four = new Item("four", new EAN_13("6942070284987"), new Name("天友南美酸奶", "天友南美酸奶"), madeIn,
+        Item four = new Item("four", new EAN_13("6942070284987"), new Name("天友南美酸奶", "天友南美酸奶"), Domestic.CHONG_QING,
                 new Specification("350ml"), Grade.QUALIFIED, retailPrice, memberPrice, vipPrice, food.id(), tianyou.id());
         itemRepository.save(four);
 
@@ -102,40 +101,39 @@ public class ArangoDBItemRepositoryTest {
         memberPrice = new MemberPrice(new Price(Money.of(9.5, currency), Unit.TI));
         vipPrice = new VipPrice("PLUS", new Price(Money.of(8.8, currency), Unit.TI));
         barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240896");
-        Item five = new Item("five", barcode, new Name("天友纯牛奶", "天友纯牛奶"), madeIn,
+        Item five = new Item("five", barcode, new Name("天友纯牛奶", "天友纯牛奶"), Domestic.CHONG_QING,
                 new Specification("350ml"), Grade.QUALIFIED, retailPrice, memberPrice, vipPrice, food.id(), tianyou.id());
         itemRepository.save(five);
 
         retailPrice = new RetailPrice(new Price(Money.of(17.90, currency), Unit.PCS));
         vipPrice = new VipPrice("PLUS", new Price(Money.of(15.50, currency), Unit.PCS));
-        Item six = new Item("six", new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), madeIn,
+        Item six = new Item("six", new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), Domestic.CHONG_QING,
                 new Specification("6*250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, vipPrice, food.id(), tianyou.id());
         itemRepository.save(six);
 
         barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240865");
-        Item six_1 = new Item("six_1", barcode, new Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶"), madeIn,
+        Item six_1 = new Item("six_1", barcode, new Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶"), Domestic.CHONG_QING,
                 new Specification("250ml"), Grade.QUALIFIED, RetailPrice.RMB_ZERO, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), tianyou.id());
         itemRepository.save(six_1);
 
         retailPrice = new RetailPrice(new Price(Money.of(27.5, currency), Unit.DAI));
         barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240889");
-        Item six_2 = new Item("six_2", barcode, new Name("250ml天友纯牛奶", "250ml天友纯牛奶"), madeIn,
+        Item six_2 = new Item("six_2", barcode, new Name("250ml天友纯牛奶", "250ml天友纯牛奶"), Domestic.CHONG_QING,
                 new Specification("250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), tianyou.id());
         itemRepository.save(six_2);
 
-        madeIn = new Domestic("天津市");
         retailPrice = new RetailPrice(new Price(Money.of(2.5, currency), Unit.DAI));
-        Item seven = new Item("seven", new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), madeIn, new Specification("25g"),
+        Item seven = new Item("seven", new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), Domestic.TIAN_JIN, new Specification("25g"),
                 Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), Brand.UNDEFINED.id());
         itemRepository.save(seven);
 
         retailPrice = new RetailPrice(new Price(Money.of(4.80, currency), Unit.DAI));
-        Item eight = new Item("eight", new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), madeIn, new Specification("50g"),
+        Item eight = new Item("eight", new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), Domestic.TIAN_JIN, new Specification("50g"),
                 Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), Brand.UNDEFINED.id());
         itemRepository.save(eight);
 
         retailPrice = new RetailPrice(new Price(Money.of(6.90, currency), Unit.DAI));
-        Item nine = new Item("nine", new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), madeIn, new Specification("75g"),
+        Item nine = new Item("nine", new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), Domestic.TIAN_JIN, new Specification("75g"),
                 Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), Brand.UNDEFINED.id());
         itemRepository.save(nine);
 
