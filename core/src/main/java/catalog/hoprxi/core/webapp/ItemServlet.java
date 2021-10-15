@@ -120,12 +120,12 @@ public class ItemServlet extends HttpServlet {
 
     private void responseItemView(JsonGenerator generator, ItemView itemView) throws IOException {
         generator.writeStringField("id", itemView.id());
+        generator.writeStringField("barcode", (String) itemView.barcode().barcode());
         generator.writeObjectFieldStart("name");
         generator.writeStringField("name", itemView.name().name());
         generator.writeStringField("mnemonic", itemView.name().mnemonic());
         generator.writeStringField("alias", itemView.name().alias());
         generator.writeEndObject();
-        generator.writeStringField("barcode", (String) itemView.barcode().barcode());
         generator.writeObjectField("spec", itemView.spec().value());
         generator.writeObjectFieldStart("madeIn");
         generator.writeNumberField("code", itemView.madeIn().code());
