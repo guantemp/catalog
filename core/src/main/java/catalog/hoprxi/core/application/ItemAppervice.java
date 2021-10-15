@@ -16,29 +16,19 @@
 
 package catalog.hoprxi.core.application;
 
-import catalog.hoprxi.core.application.command.CreateBrandCommand;
-import catalog.hoprxi.core.domain.model.category.Category;
-import catalog.hoprxi.core.domain.model.category.CategoryRepository;
-import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
-
+import catalog.hoprxi.core.domain.model.Item;
+import catalog.hoprxi.core.domain.model.ItemRepository;
+import catalog.hoprxi.core.infrastructure.persistence.ArangoDBItemRepository;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2021-08-08
+ * @version 0.0.1 2020-01-10
  */
-public class CategoryApplicationService {
-    private final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
+public class ItemAppervice {
+    private ItemRepository repository = new ArangoDBItemRepository("catalog");
 
-    public Category create(CreateBrandCommand command) {
-        return null;
-    }
-
-    public Category createRoot(CreateBrandCommand command) {
-        return null;
-    }
-
-    public boolean isExistes(String id) {
-        return repository.find(id) != null;
+    public Item findItem(String id) {
+        return repository.find(id);
     }
 }

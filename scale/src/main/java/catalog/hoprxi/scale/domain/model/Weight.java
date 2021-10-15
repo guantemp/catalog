@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package catalog.hoprxi.scale.domain.model;
 
-import catalog.hoprxi.core.domain.Validator;
+import catalog.hoprxi.core.domain.CategoryValidatorService;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
@@ -105,14 +105,14 @@ public class Weight {
 
     private void setCategoryId(String categoryId) {
         categoryId = Objects.requireNonNull(categoryId, "categoryId required").trim();
-        if (!categoryId.equals(Category.UNDEFINED.id()) && !Validator.isCategoryExist(categoryId))
+        if (!categoryId.equals(Category.UNDEFINED.id()) && !CategoryValidatorService.isCategoryExist(categoryId))
             throw new IllegalArgumentException("categoryId isn't effective");
         this.categoryId = categoryId;
     }
 
     private void setBrandId(String brandId) {
         brandId = Objects.requireNonNull(brandId, "brandId required").trim();
-        if (!brandId.equals(Brand.UNDEFINED.id()) && !Validator.isBrandExist(brandId))
+        if (!brandId.equals(Brand.UNDEFINED.id()) && !CategoryValidatorService.isBrandExist(brandId))
             throw new IllegalArgumentException("brandId isn't effective");
         this.brandId = brandId;
     }
@@ -199,9 +199,9 @@ public class Weight {
      *                                  categoryId is not valid
      */
     public void moveToNewCategory(String categoryId) {
-        if (!this.categoryId.equals(categoryId) && Validator.isCategoryExist(categoryId)) {
+        if (!this.categoryId.equals(categoryId) && CategoryValidatorService.isCategoryExist(categoryId)) {
             setCategoryId(categoryId);
-            //catalog.hoprxi.core.domain.DomainRegistry.domainEventPublisher().publish(new SkuCategoryReallocated(id, categoryId));
+            //catalog.hoprxi.core.util.DomainRegistry.domainEventPublisher().publish(new SkuCategoryReallocated(id, categoryId));
         }
     }
 
@@ -211,7 +211,7 @@ public class Weight {
      *                                  brandId is not valid
      */
     public void moveToNewBrand(String brandId) {
-        if (!this.brandId.equals(brandId) && Validator.isBrandExist(brandId)) {
+        if (!this.brandId.equals(brandId) && CategoryValidatorService.isBrandExist(brandId)) {
             setBrandId(brandId);
             //DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
         }

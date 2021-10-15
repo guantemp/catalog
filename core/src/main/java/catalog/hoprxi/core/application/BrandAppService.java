@@ -22,8 +22,10 @@ import catalog.hoprxi.core.application.command.RenameBrandCommand;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
+import catalog.hoprxi.core.domain.model.brand.BrandCreated;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
+import catalog.hoprxi.core.util.DomainRegistry;
 
 import java.net.URL;
 
@@ -41,6 +43,8 @@ public class BrandAppService {
         AboutBrand about = new AboutBrand(command.getLogo(), command.getHomepage(), command.getSince(), command.getStory());
         Brand brand = new Brand(repository.nextIdentity(), name, about);
         repository.save(brand);
+        DomainRegistry.domainEventPublisher().publish(new BrandCreated());
+        //发送领域事件
         return brand;
     }
 

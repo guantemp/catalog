@@ -15,10 +15,10 @@
  */
 package catalog.hoprxi.core.domain.model.category;
 
-import catalog.hoprxi.core.domain.DomainRegistry;
-import catalog.hoprxi.core.domain.Validator;
+import catalog.hoprxi.core.domain.CategoryValidatorService;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
+import catalog.hoprxi.core.util.DomainRegistry;
 import com.arangodb.entity.DocumentField;
 
 import java.net.URI;
@@ -130,7 +130,7 @@ public class Category {
         parentId = Objects.requireNonNull(parentId, "parentId required").trim();
         if (parentId.isEmpty() || parentId.length() > ID_MAX_LENGTH)
             throw new IllegalArgumentException("parentId length rang is 1-" + ID_MAX_LENGTH + "char");
-        if (!id.equals(parentId) && !Validator.isCategoryExist(parentId))
+        if (!id.equals(parentId) && !CategoryValidatorService.isCategoryExist(parentId))
             throw new InvalidCategoryIdException("parent id not exist");
         this.parentId = parentId;
     }
@@ -202,7 +202,7 @@ public class Category {
         movedId = Objects.requireNonNull(movedId, "parentId required").trim();
         if (movedId.isEmpty() || movedId.length() > ID_MAX_LENGTH)
             throw new IllegalArgumentException("parentId length rang is 1-" + ID_MAX_LENGTH);
-        if (!Validator.isCategoryExist(movedId))
+        if (!CategoryValidatorService.isCategoryExist(movedId))
             throw new InvalidCategoryIdException("parent id not exist");
         if (!id.equals(parentId) && !parentId.equals(movedId)) {
             this.parentId = movedId;

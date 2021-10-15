@@ -15,8 +15,7 @@
  */
 package catalog.hoprxi.core.domain.model;
 
-import catalog.hoprxi.core.domain.DomainRegistry;
-import catalog.hoprxi.core.domain.Validator;
+import catalog.hoprxi.core.domain.CategoryValidatorService;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
@@ -25,6 +24,7 @@ import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.Unit;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
+import catalog.hoprxi.core.util.DomainRegistry;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
 
@@ -94,14 +94,14 @@ public class Item {
 
     private void setCategoryId(String categoryId) {
         categoryId = Objects.requireNonNull(categoryId, "categoryId required").trim();
-        if (!categoryId.equals(Category.UNDEFINED.id()) && !Validator.isCategoryExist(categoryId))
+        if (!categoryId.equals(Category.UNDEFINED.id()) && !CategoryValidatorService.isCategoryExist(categoryId))
             throw new IllegalArgumentException("categoryId isn't effective");
         this.categoryId = categoryId;
     }
 
     private void setBrandId(String brandId) {
         brandId = Objects.requireNonNull(brandId, "brandId required").trim();
-        if (!brandId.equals(Brand.UNDEFINED.id()) && !Validator.isBrandExist(brandId))
+        if (!brandId.equals(Brand.UNDEFINED.id()) && !CategoryValidatorService.isBrandExist(brandId))
             throw new IllegalArgumentException("brandId isn't effective");
         this.brandId = brandId;
     }
@@ -224,7 +224,7 @@ public class Item {
      *                                  categoryId is not valid
      */
     public void moveToNewCategory(String categoryId) {
-        if (!this.categoryId.equals(categoryId) && Validator.isCategoryExist(categoryId)) {
+        if (!this.categoryId.equals(categoryId) && CategoryValidatorService.isCategoryExist(categoryId)) {
             setCategoryId(categoryId);
             DomainRegistry.domainEventPublisher().publish(new ItemCategoryReallocated(id, categoryId));
         }
@@ -236,7 +236,7 @@ public class Item {
      *                                  brandId is not valid
      */
     public void moveToNewBrand(String brandId) {
-        if (!this.brandId.equals(brandId) && Validator.isBrandExist(brandId)) {
+        if (!this.brandId.equals(brandId) && CategoryValidatorService.isBrandExist(brandId)) {
             setBrandId(brandId);
             DomainRegistry.domainEventPublisher().publish(new ItemBrandReallocated(id, brandId));
         }

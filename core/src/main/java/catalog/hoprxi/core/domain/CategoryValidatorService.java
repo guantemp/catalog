@@ -27,7 +27,7 @@ import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository
  * @since JDK8.0
  * @version 0.0.1 2019-08-27
  */
-public class Validator {
+public class CategoryValidatorService {
     public static boolean isCategoryExist(String id) {
         ValidatorCategoryId validatorCategoryId = new ValidatorCategoryId(new ArangoDBCategoryRepository("catalog"));
         return validatorCategoryId.isIdExist(id);

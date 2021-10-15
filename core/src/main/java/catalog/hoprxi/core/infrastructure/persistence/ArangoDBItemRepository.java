@@ -73,33 +73,6 @@ public class ArangoDBItemRepository implements ItemRepository {
     }
 
     @Override
-    public Item[] belongToBrand(String brandId, int offset, int limit) {
-        final String query = "WITH brand,category,item,barcode\n" +
-                "FOR br IN brand FILTER br._key == @brandId\n" +
-                "FOR i IN 1..1 INBOUND br._id belong LIMIT @offset,@limit\n" +
-                "FOR b IN 1..1 OUTBOUND i._id has\n" +
-                //"FOR c IN 1..1 OUTBOUND i._id belong FILTER c._id =~ '^category'\n" +
-                "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice,'brandId':i.brandId,'categoryId':i.categoryId}";
-        final Map<String, Object> bindVars = new MapBuilder().put("brandId", brandId).put("offset", offset).put("limit", limit).get();
-        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        return transform(slices);
-    }
-
-
-    @Override
-    public Item[] belongToCategory(String categoryId, long offset, int limit) {
-        final String query = "WITH brand,category,item,barcode\n" +
-                "FOR c IN category FILTER c._key == @categoryId\n" +
-                "FOR i IN 1..1 INBOUND c._id belong LIMIT @offset,@limit\n" +
-                "FOR b IN 1..1 OUTBOUND i._id has\n" +
-                //"FOR br IN 1..1 OUTBOUND i._id belong FILTER br._id =~ '^brand'\n" +
-                "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice,'brandId':i.brandId,'categoryId':i.categoryId}";
-        final Map<String, Object> bindVars = new MapBuilder().put("categoryId", categoryId).put("offset", offset).put("limit", limit).get();
-        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        return transform(slices);
-    }
-
-    @Override
     public Item find(String id) {
         final String query = "WITH item,barcode\n" +
                 "FOR i IN item FILTER i._key == @key\n" +
@@ -172,28 +145,6 @@ public class ArangoDBItemRepository implements ItemRepository {
         String brandId = slice.get("brandId").getAsString();
         String categoryId = slice.get("categoryId").getAsString();
         return new Item(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, categoryId, brandId);
-    }
-
-    @Override
-    public Item[] findAll(long offset, int limit) {
-        Item[] items = ArangoDBUtil.calculationCollectionSize(catalog, Item.class, offset, limit);
-        if (items.length == 0)
-            return items;
-        final String query = "WITH item,barcode\n" +
-                "FOR i IN item LIMIT @offset,@limit\n" +
-                "FOR b IN 1..1 OUTBOUND i._id has\n" +
-                //"FOR c IN 1..1 OUTBOUND i._id belong FILTER c._id =~ '^category'\n" +
-                //"FOR br IN 1..1 OUTBOUND i._id belong FILTER br._id =~ '^brand'\n" +
-                "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice,'brandId':i.brandId,'categoryId':i.categoryId}";
-        final Map<String, Object> bindVars = new MapBuilder().put("offset", offset).put("limit", limit).get();
-        final ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        try {
-            for (int i = 0; slices.hasNext(); i++)
-                items[i] = rebuild(slices.next());
-        } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-            LOGGER.error("Can't rebuild item", e);
-        }
-        return items;
     }
 
     @Override
@@ -366,17 +317,6 @@ public class ArangoDBItemRepository implements ItemRepository {
         VertexEntity barcodeVertex = graph.vertexCollection("barcode").insertVertex(barcode);
         graph.edgeCollection("has").insertEdge(new HasEdge(itemVertex.getId(), barcodeVertex.getId()));
     }
-
-    @Override
-    public long size() {
-        final String query = " RETURN LENGTH(item)";
-        final ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
-        for (; cursor.hasNext(); ) {
-            return cursor.next().getAsLong();
-        }
-        return 0l;
-    }
-
 
     private static class HasEdge {
         @DocumentField(DocumentField.Type.FROM)

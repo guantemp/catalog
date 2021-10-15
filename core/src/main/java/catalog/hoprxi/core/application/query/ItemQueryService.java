@@ -13,51 +13,50 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.core.domain.model;
+
+package catalog.hoprxi.core.application.query;
+
+import catalog.hoprxi.core.infrastructure.view.ItemView;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2019-06-04
+ * @version 0.0.1 builder 2021-10-15
  */
-public interface ItemRepository {
-
+public interface ItemQueryService {
     /**
-     * @param id
+     * @param brandId
      * @return
      */
-    Item find(String id);
+    ItemView[] belongToBrand(String brandId, int offset, int limit);
+
+    /**
+     * @param categoryId
+     * @return
+     */
+    ItemView[] belongToCategory(String categoryId, long offset, int limit);
+
+    /**
+     * @param offset
+     * @param limit
+     * @return
+     */
+    ItemView[] findAll(long offset, int limit);
 
     /**
      * @return
      */
-    String nextIdentity();
-
-    /**
-     * @param id
-     */
-    void remove(String id);
-
-    /**
-     * @param item
-     */
-    void save(Item item);
+    long size();
 
     /**
      * @param barcode is support regular
      * @return
      */
-    Item[] fromBarcode(String barcode);
-
-    /**
-     * @param mnemonic is support regular
-     * @return
-     */
-    Item[] fromMnemonic(String mnemonic);
+    ItemView[] fromBarcode(String barcode);
 
     /**
      * @param name is support regular
      * @return
      */
-    Item[] fromName(String name);
+    ItemView[] fromName(String name);
 }

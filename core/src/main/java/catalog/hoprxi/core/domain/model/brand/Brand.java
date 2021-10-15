@@ -16,9 +16,9 @@
 package catalog.hoprxi.core.domain.model.brand;
 
 
-import catalog.hoprxi.core.domain.DomainRegistry;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
+import catalog.hoprxi.core.util.DomainRegistry;
 import com.arangodb.entity.DocumentField;
 
 import java.util.Objects;

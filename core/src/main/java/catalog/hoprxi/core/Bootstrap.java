@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,16 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.core.domain;
 
-
-import event.hoprxi.domain.model.DomainEventPublisher;
-import event.hoprxi.infrastruture.simple.SimpleDomainEventPublisher;
+package catalog.hoprxi.core;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-07-05
+ * @version 0.0.1 builder 2021-10-03
  */
-public class DomainRegistry {
-    public static DomainEventPublisher domainEventPublisher() {
-        return SimpleDomainEventPublisher.instance();
-    }
+public class Bootstrap {
+    public static final void start() {
 
+    }
 }

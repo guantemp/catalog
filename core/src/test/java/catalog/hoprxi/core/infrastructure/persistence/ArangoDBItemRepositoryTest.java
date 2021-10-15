@@ -186,33 +186,6 @@ public class ArangoDBItemRepositoryTest {
         itemRepository.remove("twelve");
     }
  */
-@Test(invocationCount = 1, threadPoolSize = 1)
-public void testBelongToBrand() {
-    Item[] skuses = itemRepository.belongToBrand("caihong", 0, 3);
-    Assert.assertEquals(skuses.length, 3);
-    skuses = itemRepository.belongToBrand("caihong", 1, 3);
-    Assert.assertEquals(skuses.length, 2);
-    skuses = itemRepository.belongToBrand("caihong", 1, 1);
-    Assert.assertEquals(skuses.length, 1);
-    skuses = itemRepository.belongToBrand("caihong", 1, 0);
-    Assert.assertEquals(skuses.length, 0);
-}
-
-    @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testBelongToCategory() {
-        Item[] skuses = itemRepository.belongToCategory("food", 0, 10);
-        Assert.assertEquals(skuses.length, 8);
-        skuses = itemRepository.belongToCategory("food", 2, 5);
-        Assert.assertEquals(skuses.length, 5);
-        skuses = itemRepository.belongToCategory("food", 5, 3);
-        Assert.assertEquals(skuses.length, 3);
-        skuses = itemRepository.belongToCategory("food", 3, 2);
-        Assert.assertEquals(skuses.length, 2);
-        skuses = itemRepository.belongToCategory("food", 0, 0);
-        Assert.assertEquals(skuses.length, 0);
-        skuses = itemRepository.belongToCategory("food", 7, 10);
-        Assert.assertEquals(skuses.length, 1);
-    }
 
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFind() {
@@ -292,10 +265,5 @@ public void testBelongToBrand() {
         Assert.assertNotNull(six);
         six.changeBarcode(new EAN_13("6923555240728"));
         itemRepository.save(six);
-    }
-
-    @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testSize() {
-        Assert.assertEquals(itemRepository.size(), 14);
     }
 }
