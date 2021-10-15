@@ -58,8 +58,14 @@ public class ArangoDBItemQueryServiceTest {
         Assert.assertEquals(skuses.length, 1);
     }
 
-    @Test
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFindAll() {
+        ItemView[] skuses = itemQueryService.findAll(0, 25);
+        Assert.assertEquals(skuses.length, 14);
+        skuses = itemQueryService.findAll(12, 25);
+        Assert.assertEquals(skuses.length, 2);
+        skuses = itemQueryService.findAll(5, 5);
+        Assert.assertEquals(skuses.length, 5);
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1)
@@ -67,11 +73,46 @@ public class ArangoDBItemQueryServiceTest {
         Assert.assertEquals(itemQueryService.size(), 14);
     }
 
-    @Test
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFromBarcode() {
+        ItemView[] items = itemQueryService.fromBarcode("69235552");
+        Assert.assertEquals(items.length, 3);
+        items = itemQueryService.fromBarcode("690");
+        Assert.assertEquals(items.length, 3);
+        items = itemQueryService.fromBarcode("123465");
+        Assert.assertEquals(items.length, 0);
+        items = itemQueryService.fromBarcode("4695");
+        Assert.assertEquals(items.length, 1);
+        items = itemQueryService.fromBarcode("4547691239136");
+        Assert.assertEquals(items.length, 1);
+        for (ItemView item : items)
+            System.out.println(item);
     }
 
-    @Test
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFromName() {
+        ItemView[] items = itemQueryService.fromName("彩虹");
+        Assert.assertEquals(items.length, 3);
+        items = itemQueryService.fromName("^彩虹");
+        Assert.assertEquals(items.length, 2);
+        items = itemQueryService.fromName("彩虹|长虹");
+        Assert.assertEquals(items.length, 4);
+        items = itemQueryService.fromName("不知道");
+        Assert.assertEquals(items.length, 0);
+        items = itemQueryService.fromName("天友|长虹|彩虹");
+        Assert.assertEquals(items.length, 9);
+        items = itemQueryService.fromName("^天友|长虹|彩虹");
+        Assert.assertEquals(items.length, 7);
+
+        ItemView[] skuses = itemQueryService.fromName("^ch");
+        Assert.assertEquals(skuses.length, 3);
+        skuses = itemQueryService.fromName("qd");
+        Assert.assertEquals(skuses.length, 3);
+        skuses = itemQueryService.fromName("ch");
+        Assert.assertEquals(skuses.length, 4);
+        skuses = itemQueryService.fromName("chetr");
+        Assert.assertEquals(skuses.length, 0);
+        skuses = itemQueryService.fromName("ty");
+        Assert.assertEquals(skuses.length, 5);
     }
 }

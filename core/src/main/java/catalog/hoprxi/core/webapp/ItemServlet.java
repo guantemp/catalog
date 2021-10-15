@@ -16,10 +16,10 @@
 
 package catalog.hoprxi.core.webapp;
 
-import catalog.hoprxi.core.domain.model.Item;
-import catalog.hoprxi.core.domain.model.ItemRepository;
+import catalog.hoprxi.core.application.query.ItemQueryService;
 import catalog.hoprxi.core.domain.model.price.Price;
-import catalog.hoprxi.core.infrastructure.persistence.ArangoDBItemRepository;
+import catalog.hoprxi.core.infrastructure.query.ArangoDBItemQueryService;
+import catalog.hoprxi.core.infrastructure.view.ItemView;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import org.javamoney.moneta.format.CurrencyStyle;
@@ -52,14 +52,14 @@ public class ItemServlet extends HttpServlet {
             .build());
     private static final int OFFSET = 0;
     private static final int LIMIT = 20;
-    private ItemRepository repository;
+    private ItemQueryService itemQueryService;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         if (config != null) {
             String database = config.getInitParameter("database");
             String databaseName = config.getInitParameter("databaseName");
-            repository = new ArangoDBItemRepository(databaseName);
+            itemQueryService = new ArangoDBItemQueryService(databaseName);
         }
     }
 
@@ -74,9 +74,9 @@ public class ItemServlet extends HttpServlet {
         generator.writeStartObject();
         if (pathInfo != null) {
             String id = pathInfo.substring(1);
-            Item item = repository.find(id);
-            if (item != null) {
-                responseItem(generator, item);
+            ItemView itemView = itemQueryService.find(id);
+            if (itemView != null) {
+                responseItemView(generator, itemView);
             } else {
                 //resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
                 generator.writeNumberField("code", 204);
@@ -90,24 +90,24 @@ public class ItemServlet extends HttpServlet {
             String categoryId = Optional.ofNullable(req.getParameter("cid")).orElse("");
             String brandId = Optional.ofNullable(req.getParameter("bid")).orElse("");
             System.out.println(name);
-            generator.writeNumberField("total", repository.size());
+            generator.writeNumberField("total", itemQueryService.size());
             generator.writeNumberField("offset", offset);
             generator.writeNumberField("limit", limit);
             generator.writeArrayFieldStart("items");
             if (!barcode.isEmpty() && !name.isEmpty()) {
-                Item[] items = repository.fromBarcode(barcode);
+                ItemView[] items = itemQueryService.fromBarcode(barcode);
                 responseItems(generator, items);
             } else if (!barcode.isEmpty() || !name.isEmpty()) {
                 if (!barcode.isEmpty()) {
-                    Item[] items = repository.fromBarcode(barcode);
+                    ItemView[] items = itemQueryService.fromBarcode(barcode);
                     responseItems(generator, items);
                 }
                 if (!name.isEmpty()) {
-                    Item[] items = repository.fromName(name);
+                    ItemView[] items = itemQueryService.fromName(name);
                     responseItems(generator, items);
                 }
             } else {
-                Item[] items = repository.findAll(offset, limit);
+                ItemView[] items = itemQueryService.findAll(offset, limit);
                 responseItems(generator, items);
             }
             generator.writeEndArray();
@@ -118,41 +118,49 @@ public class ItemServlet extends HttpServlet {
         generator.close();
     }
 
-    private void responseItem(JsonGenerator generator, Item item) throws IOException {
-        generator.writeStringField("id", item.id());
+    private void responseItemView(JsonGenerator generator, ItemView itemView) throws IOException {
+        generator.writeStringField("id", itemView.id());
         generator.writeObjectFieldStart("name");
-        generator.writeStringField("name", item.name().name());
-        generator.writeStringField("mnemonic", item.name().mnemonic());
-        generator.writeStringField("alias", item.name().alias());
+        generator.writeStringField("name", itemView.name().name());
+        generator.writeStringField("mnemonic", itemView.name().mnemonic());
+        generator.writeStringField("alias", itemView.name().alias());
         generator.writeEndObject();
-        generator.writeStringField("barcode", (String) item.barcode().barcode());
-        generator.writeObjectField("grade", item.grade().toString());
-        generator.writeObjectField("spec", item.spec().value());
+        generator.writeStringField("barcode", (String) itemView.barcode().barcode());
+        generator.writeObjectField("spec", itemView.spec().value());
         generator.writeObjectFieldStart("madeIn");
-        generator.writeNumberField("code", item.madeIn().code());
-        generator.writeStringField("madeIn", item.madeIn().madeIn());
+        generator.writeNumberField("code", itemView.madeIn().code());
+        generator.writeStringField("madeIn", itemView.madeIn().madeIn());
+        generator.writeEndObject();
+        generator.writeObjectField("grade", itemView.grade().toString());
+        generator.writeObjectFieldStart("category");
+        generator.writeStringField("id", itemView.categoryView().id());
+        generator.writeStringField("name", itemView.categoryView().name());
+        generator.writeEndObject();
+        generator.writeObjectFieldStart("brand");
+        generator.writeStringField("id", itemView.brandView().id());
+        generator.writeStringField("name", itemView.brandView().name());
         generator.writeEndObject();
         generator.writeObjectFieldStart("retailPrice");
-        Price price = item.retailPrice().price();
+        Price price = itemView.retailPrice().price();
         generator.writeStringField("amount", MONETARY_AMOUNT_FORMAT.format(price.amount()));
         generator.writeStringField("unit", price.unit().toString());
         generator.writeEndObject();
         generator.writeObjectFieldStart("memberPrice");
-        price = item.memberPrice().price();
+        price = itemView.memberPrice().price();
         generator.writeStringField("amount", MONETARY_AMOUNT_FORMAT.format(price.amount()));
         generator.writeStringField("unit", price.unit().toString());
         generator.writeEndObject();
         generator.writeObjectFieldStart("vipPrice");
-        price = item.vipPrice().price();
+        price = itemView.vipPrice().price();
         generator.writeStringField("amount", MONETARY_AMOUNT_FORMAT.format(price.amount()));
         generator.writeStringField("unit", price.unit().toString());
         generator.writeEndObject();
     }
 
-    private void responseItems(JsonGenerator generator, Item[] items) throws IOException {
-        for (Item item : items) {
+    private void responseItems(JsonGenerator generator, ItemView[] itemViews) throws IOException {
+        for (ItemView itemView : itemViews) {
             generator.writeStartObject();
-            responseItem(generator, item);
+            responseItemView(generator, itemView);
             generator.writeEndObject();
         }
     }

@@ -18,7 +18,7 @@ package catalog.hoprxi.core.domain.model;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2019-06-04
+ * @version 0.1.0 builder 2021-10-15
  */
 public interface ItemRepository {
 
@@ -42,22 +42,4 @@ public interface ItemRepository {
      * @param item
      */
     void save(Item item);
-
-    /**
-     * @param barcode is support regular
-     * @return
-     */
-    Item[] fromBarcode(String barcode);
-
-    /**
-     * @param mnemonic is support regular
-     * @return
-     */
-    Item[] fromMnemonic(String mnemonic);
-
-    /**
-     * @param name is support regular
-     * @return
-     */
-    Item[] fromName(String name);
 }

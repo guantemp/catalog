@@ -26,6 +26,11 @@ import catalog.hoprxi.core.infrastructure.view.ItemView;
  */
 public class ElasticSearchItemQueryService implements ItemQueryService {
     @Override
+    public ItemView find(String id) {
+        return null;
+    }
+
+    @Override
     public ItemView[] belongToBrand(String brandId, int offset, int limit) {
         return new ItemView[0];
     }

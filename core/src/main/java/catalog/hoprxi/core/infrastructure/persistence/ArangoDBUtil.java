@@ -77,12 +77,17 @@ public class ArangoDBUtil {
      * @return
      */
     public static <T> T[] calculationCollectionSize(ArangoDatabase arangoDatabase, Class<T> t, long offset, int limit) {
+        return calculationCollectionSize(arangoDatabase, t, t.getSimpleName().toLowerCase(), offset, limit);
+
+    }
+
+    public static <T> T[] calculationCollectionSize(ArangoDatabase arangoDatabase, Class<T> t, String collectionName, long offset, int limit) {
         if (offset < 0l)
             offset = 0l;
         if (limit < 0)
             limit = 0;
         long count = 0;
-        final String countQuery = " RETURN LENGTH(" + t.getSimpleName().toLowerCase() + ")";
+        final String countQuery = " RETURN LENGTH(" + collectionName + ")";
         final ArangoCursor<VPackSlice> countCursor = arangoDatabase.query(countQuery, null, null, VPackSlice.class);
         for (; countCursor.hasNext(); ) {
             count = countCursor.next().getAsLong();

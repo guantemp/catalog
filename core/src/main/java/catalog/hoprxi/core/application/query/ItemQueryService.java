@@ -25,6 +25,12 @@ import catalog.hoprxi.core.infrastructure.view.ItemView;
  */
 public interface ItemQueryService {
     /**
+     * @param id
+     * @return
+     */
+    ItemView find(String id);
+
+    /**
      * @param brandId
      * @return
      */

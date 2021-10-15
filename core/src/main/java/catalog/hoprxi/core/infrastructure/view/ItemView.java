@@ -53,7 +53,7 @@ public class ItemView {
         this.spec = spec;
     }
 
-    public Barcode getBarcode() {
+    public Barcode barcode() {
         return barcode;
     }
 
@@ -61,7 +61,7 @@ public class ItemView {
         this.barcode = barcode;
     }
 
-    public BrandView getBrandView() {
+    public BrandView brandView() {
         return brandView;
     }
 
@@ -69,7 +69,7 @@ public class ItemView {
         this.brandView = brandView;
     }
 
-    public CategoryView getCategoryView() {
+    public CategoryView categoryView() {
         return categoryView;
     }
 
@@ -77,7 +77,7 @@ public class ItemView {
         this.categoryView = categoryView;
     }
 
-    public Grade getGrade() {
+    public Grade grade() {
         return grade;
     }
 
@@ -85,7 +85,7 @@ public class ItemView {
         this.grade = grade;
     }
 
-    public String getId() {
+    public String id() {
         return id;
     }
 
@@ -93,7 +93,7 @@ public class ItemView {
         this.id = id;
     }
 
-    public Name getName() {
+    public Name name() {
         return name;
     }
 
@@ -101,7 +101,7 @@ public class ItemView {
         this.name = name;
     }
 
-    public MadeIn getMadeIn() {
+    public MadeIn madeIn() {
         return madeIn;
     }
 
@@ -109,7 +109,7 @@ public class ItemView {
         this.madeIn = madeIn;
     }
 
-    public RetailPrice getRetailPrice() {
+    public RetailPrice retailPrice() {
         return retailPrice;
     }
 
@@ -117,7 +117,7 @@ public class ItemView {
         this.retailPrice = retailPrice;
     }
 
-    public MemberPrice getMemberPrice() {
+    public MemberPrice memberPrice() {
         return memberPrice;
     }
 
@@ -125,7 +125,7 @@ public class ItemView {
         this.memberPrice = memberPrice;
     }
 
-    public VipPrice getVipPrice() {
+    public VipPrice vipPrice() {
         return vipPrice;
     }
 
@@ -133,7 +133,7 @@ public class ItemView {
         this.vipPrice = vipPrice;
     }
 
-    public Specification getSpec() {
+    public Specification spec() {
         return spec;
     }
 
@@ -150,11 +150,11 @@ public class ItemView {
             this.name = name;
         }
 
-        public String getId() {
+        public String id() {
             return id;
         }
 
-        public String getName() {
+        public String name() {
             return name;
         }
     }
@@ -168,11 +168,11 @@ public class ItemView {
             this.name = name;
         }
 
-        public String getId() {
+        public String id() {
             return id;
         }
 
-        public String getName() {
+        public String name() {
             return name;
         }
     }

@@ -197,62 +197,6 @@ public class ArangoDBItemRepositoryTest {
         Assert.assertNull(nine);
     }
 
-    @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testFindAll() {
-        Item[] skuses = itemRepository.findAll(0, 25);
-        Assert.assertEquals(skuses.length, 14);
-        skuses = itemRepository.findAll(12, 25);
-        Assert.assertEquals(skuses.length, 2);
-        skuses = itemRepository.findAll(5, 5);
-        Assert.assertEquals(skuses.length, 5);
-    }
-
-    @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testFromBarcode() {
-        Item[] items = itemRepository.fromBarcode("69235552");
-        Assert.assertEquals(items.length, 3);
-        items = itemRepository.fromBarcode("690");
-        Assert.assertEquals(items.length, 3);
-        items = itemRepository.fromBarcode("123465");
-        Assert.assertEquals(items.length, 0);
-        items = itemRepository.fromBarcode("4695");
-        Assert.assertEquals(items.length, 1);
-        items = itemRepository.fromBarcode("4547691239136");
-        Assert.assertEquals(items.length, 1);
-        for (Item item : items)
-            System.out.println(item);
-    }
-
-    @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testFromMnemonic() {
-        Item[] skuses = itemRepository.fromMnemonic("^ch");
-        Assert.assertEquals(skuses.length, 3);
-        skuses = itemRepository.fromMnemonic("qd");
-        Assert.assertEquals(skuses.length, 3);
-        skuses = itemRepository.fromMnemonic("ch");
-        Assert.assertEquals(skuses.length, 4);
-        skuses = itemRepository.fromMnemonic("chetr");
-        Assert.assertEquals(skuses.length, 0);
-        skuses = itemRepository.fromMnemonic("ty");
-        Assert.assertEquals(skuses.length, 5);
-    }
-
-    @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testFromName() {
-        Item[] items = itemRepository.fromName("彩虹");
-        Assert.assertEquals(items.length, 3);
-        items = itemRepository.fromName("^彩虹");
-        Assert.assertEquals(items.length, 2);
-        items = itemRepository.fromName("彩虹|长虹");
-        Assert.assertEquals(items.length, 4);
-        items = itemRepository.fromName("不知道");
-        Assert.assertEquals(items.length, 0);
-        items = itemRepository.fromName("天友|长虹|彩虹");
-        Assert.assertEquals(items.length, 9);
-        items = itemRepository.fromName("^天友|长虹|彩虹");
-        Assert.assertEquals(items.length, 7);
-    }
-
     @Test
     public void testSave() {
         Item ten = itemRepository.find("ten");
