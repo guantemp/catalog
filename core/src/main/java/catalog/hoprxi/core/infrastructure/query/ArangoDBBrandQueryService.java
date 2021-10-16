@@ -13,37 +13,38 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.core.infrastructure.persistence;
 
+package catalog.hoprxi.core.infrastructure.query;
 
+import catalog.hoprxi.core.application.query.BrandQueryService;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
-import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import com.arangodb.ArangoCollection;
+import catalog.hoprxi.core.infrastructure.persistence.ArangoDBUtil;
+import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
-import com.arangodb.ArangoGraph;
 import com.arangodb.entity.DocumentField;
-import com.arangodb.model.DocumentUpdateOptions;
+import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import salt.hoprxi.id.LongId;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Year;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 2019-05-14
+ * @version 0.0.1 builder 2021-10-16
  */
-public class ArangoDBBrandRepository implements BrandRepository {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBBrandRepository.class);
-    private static final DocumentUpdateOptions updateOptions = new DocumentUpdateOptions().serializeNull(false);
+public class ArangoDBBrandQueryService implements BrandQueryService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBBrandQueryService.class);
     private static Constructor<Name> nameConstructor;
 
     static {
@@ -58,21 +59,46 @@ public class ArangoDBBrandRepository implements BrandRepository {
 
     private ArangoDatabase catalog;
 
-    public ArangoDBBrandRepository(String databaseName) {
+    public ArangoDBBrandQueryService(String databaseName) {
         this.catalog = ArangoDBUtil.getResource().db(databaseName);
     }
 
+    @Override
+    public Brand[] findAll(int offset, int limit) {
+        Brand[] brands = ArangoDBUtil.calculationCollectionSize(catalog, Brand.class, offset, limit);
+        if (brands.length == 0)
+            return brands;
+        final String query = "FOR v IN brand LIMIT @offset,@limit RETURN v";
+        final Map<String, Object> bindVars = new MapBuilder().put("offset", offset).put("limit", limit).get();
+        final ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+        try {
+            for (int i = 0; cursor.hasNext(); i++) {
+                brands[i] = rebuild(cursor.next());
+            }
+        } catch (MalformedURLException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("Can't rebuild brand", e);
+        }
+        return brands;
+    }
 
     @Override
-    public Brand find(String id) {
-        ArangoGraph graph = catalog.graph("core");
-        VPackSlice slice = graph.vertexCollection("brand").getVertex(id, VPackSlice.class);
-        try {
-            return rebuild(slice);
-        } catch (MalformedURLException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-            LOGGER.debug("Can't rebuild brand");
+    public int size() {
+        int count = 0;
+        final String countQuery = " RETURN LENGTH(brand)";
+        final ArangoCursor<VPackSlice> countCursor = catalog.query(countQuery, null, null, VPackSlice.class);
+        if (countCursor.hasNext()) {
+            count = countCursor.next().getAsInt();
         }
-        return null;
+        return count;
+    }
+
+    @Override
+    public Brand[] findByName(String name) {
+        final String query = "FOR v IN brand FILTER v.name.name =~ @name || v.name.alias =~ @name ||v.name.mnemonic =~ @name RETURN v";
+        final Map<String, Object> bindVars = new MapBuilder().put("name", name).get();
+        final ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+        return transform(cursor);
     }
 
     private Brand rebuild(VPackSlice slice) throws MalformedURLException, IllegalAccessException, InvocationTargetException, InstantiationException {
@@ -98,27 +124,16 @@ public class ArangoDBBrandRepository implements BrandRepository {
         return new Brand(id, name, null);
     }
 
-    @Override
-    public String nextIdentity() {
-        return String.valueOf(LongId.generate());
-    }
-
-    @Override
-    public void remove(String id) {
-        ArangoGraph graph = catalog.graph("core");
-        boolean exists = catalog.collection("brand").documentExists(id);
-        if (exists)
-            graph.vertexCollection("brand").deleteVertex(id);
-    }
-
-    @Override
-    public void save(Brand brand) {
-        ArangoCollection collection = catalog.collection("brand");
-        boolean exists = collection.documentExists(brand.id());
-        if (exists) {
-            collection.updateDocument(brand.id(), brand, updateOptions);
-        } else {
-            collection.insertDocument(brand);
+    private Brand[] transform(ArangoCursor<VPackSlice> cursor) {
+        List<Brand> brandList = new ArrayList<>();
+        while (cursor.hasNext()) {
+            try {
+                brandList.add(rebuild(cursor.next()));
+            } catch (IllegalAccessException | InstantiationException | InvocationTargetException | MalformedURLException e) {
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("Can't rebuild brand", e);
+            }
         }
+        return brandList.toArray(new Brand[brandList.size()]);
     }
 }

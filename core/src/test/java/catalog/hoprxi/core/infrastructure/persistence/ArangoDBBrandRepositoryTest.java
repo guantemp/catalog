@@ -82,25 +82,8 @@ public class ArangoDBBrandRepositoryTest {
     public void testFind() {
         Brand brand = repository.find("HIKVISION");
         assertNotNull(brand);
-        Brand[] brands = repository.findByName("康威");
-        assertEquals(brands.length, 1);
-        brands = repository.findByName("康威|@hua");
-        assertEquals(brands.length, 2);
-        brands = repository.findByName("康威|dh|dsp");
-        assertEquals(brands.length, 3);
     }
 
-    @Test(priority = 1)
-    public void testFindAll() {
-        Brand[] brands = repository.findAll(0, 5);
-        assertEquals(brands.length, 5);
-        brands = repository.findAll(1, 5);
-        assertEquals(brands.length, 5);
-        brands = repository.findAll(4, 5);
-        assertEquals(brands.length, 2);
-        brands = repository.findAll(5, 5);
-        assertEquals(brands.length, 1);
-    }
 
     @Test(priority = 3)
     public void testSave() {
@@ -110,10 +93,5 @@ public class ArangoDBBrandRepositoryTest {
         repository.save(brand);
         brand = repository.find("myis");
         assertEquals(new Name("官响环", "没情商"), brand.name());
-    }
-
-    @Test(priority = 3)
-    public void testSize() {
-        assertEquals(repository.size(), 6);
     }
 }

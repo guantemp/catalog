@@ -13,33 +13,32 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.core.domain.model.brand;
+
+package catalog.hoprxi.core.application.query;
+
+import catalog.hoprxi.core.domain.model.brand.Brand;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2019-05-15
+ * @version 0.0.1 builder 2021-10-16
  */
-public interface BrandRepository {
-
+public interface BrandQueryService {
     /**
-     * @param id
+     * @param offset
+     * @param limit
      * @return
      */
-    Brand find(String id);
+    Brand[] findAll(int offset, int limit);
+
+    /**
+     * @param name is support regular
+     * @return
+     */
+    Brand[] findByName(String name);
 
     /**
      * @return
      */
-    String nextIdentity();
-
-    /**
-     * @param id
-     */
-    void remove(String id);
-
-    /**
-     * @param brand
-     */
-    void save(Brand brand);
+    int size();
 }

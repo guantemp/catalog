@@ -18,9 +18,11 @@ package catalog.hoprxi.core.webapp;
 
 import catalog.hoprxi.core.application.BrandAppService;
 import catalog.hoprxi.core.application.command.CreateBrandCommand;
+import catalog.hoprxi.core.application.query.BrandQueryService;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
+import catalog.hoprxi.core.infrastructure.query.ArangoDBBrandQueryService;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import salt.hoprxi.utils.NumberHelper;
@@ -43,7 +45,8 @@ import java.time.Year;
 public class BrandServlet extends HttpServlet {
     private static final int OFFSET = 0;
     private static final int LIMIT = 20;
-    private final BrandRepository brandRepository = new ArangoDBBrandRepository("catalog");
+    private final BrandRepository repository = new ArangoDBBrandRepository("catalog");
+    private final BrandQueryService query = new ArangoDBBrandQueryService("catalog");
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -55,7 +58,7 @@ public class BrandServlet extends HttpServlet {
         generator.writeStartObject();
         if (pathInfo != null) {
             String id = pathInfo.substring(1);
-            Brand brand = brandRepository.find(id);
+            Brand brand = repository.find(id);
             if (brand != null) {
                 generator.writeObjectFieldStart("brand");
                 responseBrand(generator, brand);
@@ -68,10 +71,10 @@ public class BrandServlet extends HttpServlet {
         } else {
             int offset = NumberHelper.intOf(req.getParameter("offset"), OFFSET);
             int limit = NumberHelper.intOf(req.getParameter("limit"), LIMIT);
-            generator.writeNumberField("total", brandRepository.size());
+            generator.writeNumberField("total", query.size());
             generator.writeNumberField("offset", offset);
             generator.writeNumberField("limit", limit);
-            Brand[] brands = brandRepository.findAll(offset, limit);
+            Brand[] brands = query.findAll(offset, limit);
             responseBrands(generator, brands);
         }
         generator.writeEndObject();
