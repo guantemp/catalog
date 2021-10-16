@@ -39,8 +39,8 @@ public class ArangoDBUtil {
      */
     public static ArangoDB getResource() {
         ArangoDB.Builder builder = new ArangoDB.Builder();
-        builder.useProtocol(Protocol.VST).host(config.getString("arangodb3.host"), config.getInt("arangodb3.port"));
-        builder.registerModule(new VPackJdk8Module()).maxConnections(8).user(config.getString("arangodb3.user")).password(config.getString("arangodb3.password"));
+        builder.useProtocol(Protocol.VST).host(config.getString("arangodb.host"), config.getInt("arangodb.port"));
+        builder.registerModule(new VPackJdk8Module()).maxConnections(8).user(config.getString("arangodb.user")).password(config.getString("arangodb.password"));
         ArangoDB arangoDB = builder.build();
         return arangoDB;
     }

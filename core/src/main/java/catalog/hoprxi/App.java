@@ -92,7 +92,7 @@ public class App {
                         Servlets.servlet("categoryServlet", CategoryServlet.class)
                                 .addMapping("/v1/categories/*"),
                         Servlets.servlet("itemServlet", ItemServlet.class)
-                                .addInitParam("database", "arangodb3")
+                                .addInitParam("database", "arangodb")
                                 .addInitParam("databaseName", "catalog")
                                 .addMapping("/v1/items/*"));
         DeploymentManager manager = container.addDeployment(deploymentInfo);

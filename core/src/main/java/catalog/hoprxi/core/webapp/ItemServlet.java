@@ -36,8 +36,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -45,7 +47,7 @@ import java.util.Optional;
  * @version 0.0.1 builder 2021-09-19
  */
 @WebServlet(urlPatterns = {"v1/items/*"}, name = "items", asyncSupported = false, initParams = {
-        @WebInitParam(name = "database", value = "arangodb3"), @WebInitParam(name = "databaseName", value = "catalog")})
+        @WebInitParam(name = "database", value = "arangodb"), @WebInitParam(name = "databaseName", value = "catalog")})
 public class ItemServlet extends HttpServlet {
     private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.CHINA)
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
@@ -59,7 +61,11 @@ public class ItemServlet extends HttpServlet {
         if (config != null) {
             String database = config.getInitParameter("database");
             String databaseName = config.getInitParameter("databaseName");
-            itemQueryService = new ArangoDBItemQueryService(databaseName);
+            switch (database) {
+                case "arangodb":
+                default:
+                    itemQueryService = new ArangoDBItemQueryService(databaseName);
+            }
         }
     }
 
@@ -94,21 +100,22 @@ public class ItemServlet extends HttpServlet {
             generator.writeNumberField("offset", offset);
             generator.writeNumberField("limit", limit);
             generator.writeArrayFieldStart("items");
-            if (!barcode.isEmpty() && !name.isEmpty()) {
-                ItemView[] items = itemQueryService.fromBarcode(barcode);
-                responseItems(generator, items);
-            } else if (!barcode.isEmpty() || !name.isEmpty()) {
+            if (!barcode.isEmpty() || !name.isEmpty()) {
+                Set<ItemView> itemViewSet = new HashSet<>();
                 if (!barcode.isEmpty()) {
-                    ItemView[] items = itemQueryService.fromBarcode(barcode);
-                    responseItems(generator, items);
+                    ItemView[] itemViews = itemQueryService.fromBarcode(barcode);
+                    for (ItemView itemView : itemViews)
+                        itemViewSet.add(itemView);
                 }
                 if (!name.isEmpty()) {
-                    ItemView[] items = itemQueryService.fromName(name);
-                    responseItems(generator, items);
+                    ItemView[] itemViews = itemQueryService.fromName(name);
+                    for (ItemView itemView : itemViews)
+                        itemViewSet.add(itemView);
                 }
+                responseItems(generator, itemViewSet.toArray(new ItemView[itemViewSet.size()]));
             } else {
-                ItemView[] items = itemQueryService.findAll(offset, limit);
-                responseItems(generator, items);
+                ItemView[] itemViews = itemQueryService.findAll(offset, limit);
+                responseItems(generator, itemViews);
             }
             generator.writeEndArray();
             generator.writeNumberField("execution time", System.currentTimeMillis() - start);

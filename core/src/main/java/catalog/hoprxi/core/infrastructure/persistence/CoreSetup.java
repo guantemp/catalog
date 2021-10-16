@@ -38,7 +38,7 @@ public class CoreSetup {
 
     public static void setup(String databaseName) {
         ArangoDB arangoDB = ArangoDBUtil.getResource();
-        /*
+/*
         System.out.println(arangoDB.getUser(databaseName));
         if (arangoDB.getUser(databaseName) != null) {
             arangoDB.deleteUser(databaseName);
@@ -47,12 +47,17 @@ public class CoreSetup {
         String password = ps.generateStrongPassword();
         arangoDB.createUser(databaseName, password);
         arangoDB = ArangoDBUtil.getResource("120.77.47.145", 8529, databaseName, password);
-        */
+        for(UserEntity userEntity:arangoDB.getUsers())
+        System.out.println(userEntity);
+        UserCreateOptions options=new UserCreateOptions();
+   */
         if (arangoDB.db(databaseName).exists()) {
             arangoDB.db(databaseName).drop();
             logger.info("{} be discarded", databaseName);
         }
         arangoDB.createDatabase(databaseName);
+
+
         ArangoDatabase db = arangoDB.db(databaseName);
         //vertex
         for (String s : new String[]{"brand", "category", "item", "prohibit_sell_item", "prohibit_purchase_item", "prohibit_purchase_and_sell_item", "barcode"}) {
