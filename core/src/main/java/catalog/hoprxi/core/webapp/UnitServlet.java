@@ -35,7 +35,7 @@ import java.io.IOException;
  * @since JDK8.0
  * @version 0.0.1 builder 2021-09-09
  */
-@WebServlet(urlPatterns = {"v1//units"}, name = "unit", asyncSupported = false, initParams = {
+@WebServlet(urlPatterns = {"v1/units"}, name = "unit", asyncSupported = false, initParams = {
         @WebInitParam(name = "expire", value = "5*60*1000")})
 public class UnitServlet extends HttpServlet {
     @Override
