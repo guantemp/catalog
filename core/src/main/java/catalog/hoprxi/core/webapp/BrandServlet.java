@@ -51,6 +51,7 @@ public class BrandServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
+        long start = System.currentTimeMillis();
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
@@ -77,6 +78,7 @@ public class BrandServlet extends HttpServlet {
             Brand[] brands = query.findAll(offset, limit);
             responseBrands(generator, brands);
         }
+        generator.writeNumberField("execution time", System.currentTimeMillis() - start);
         generator.writeEndObject();
         generator.flush();
         generator.close();
@@ -119,11 +121,23 @@ public class BrandServlet extends HttpServlet {
         CreateBrandCommand createBrandCommand = new CreateBrandCommand(name, alias, homepage, logo, since, story);
         BrandAppService brandAppService = new BrandAppService();
         Brand brand = brandAppService.createBrand(createBrandCommand);
+        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
+                .setPrettyPrinter(new DefaultPrettyPrinter());
         resp.setContentType("application/json; charset=UTF-8");
+        generator.writeObjectFieldStart("brand");
+        responseBrand(generator, brand);
+        generator.writeEndObject();
+        generator.flush();
+        generator.close();
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String pathInfo = req.getPathInfo();
+        if (pathInfo != null) {
+            String id = pathInfo.substring(1);
+            Brand brand = repository.find(id);
+        }
         resp.setContentType("application/json; charset=UTF-8");
         resp.setStatus(HttpServletResponse.SC_CREATED);
     }

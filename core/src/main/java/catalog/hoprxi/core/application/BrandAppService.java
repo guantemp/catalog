@@ -27,8 +27,6 @@ import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
 import catalog.hoprxi.core.util.DomainRegistry;
 
-import java.net.URL;
-
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
@@ -48,16 +46,8 @@ public class BrandAppService {
         return brand;
     }
 
-    public Brand brand(String name, String alias, URL logo) {
-        return null;
-    }
-
     public boolean isExistes(String id) {
         return repository.find(id) != null;
-    }
-
-    public Brand brand(String id) {
-        return repository.find(id);
     }
 
     public void rename(RenameBrandCommand rename) {

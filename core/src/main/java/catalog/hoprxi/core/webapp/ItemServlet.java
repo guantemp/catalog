@@ -17,7 +17,9 @@
 package catalog.hoprxi.core.webapp;
 
 import catalog.hoprxi.core.application.query.ItemQueryService;
+import catalog.hoprxi.core.domain.model.ItemRepository;
 import catalog.hoprxi.core.domain.model.price.Price;
+import catalog.hoprxi.core.infrastructure.persistence.ArangoDBItemRepository;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBItemQueryService;
 import catalog.hoprxi.core.infrastructure.view.ItemView;
 import com.fasterxml.jackson.core.*;
@@ -54,7 +56,8 @@ public class ItemServlet extends HttpServlet {
             .build());
     private static final int OFFSET = 0;
     private static final int LIMIT = 20;
-    private ItemQueryService itemQueryService;
+    private ItemQueryService queryService;
+    private ItemRepository repository;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -64,7 +67,8 @@ public class ItemServlet extends HttpServlet {
             switch (database) {
                 case "arangodb":
                 default:
-                    itemQueryService = new ArangoDBItemQueryService(databaseName);
+                    queryService = new ArangoDBItemQueryService(databaseName);
+                    repository = new ArangoDBItemRepository(databaseName);
             }
         }
     }
@@ -80,7 +84,7 @@ public class ItemServlet extends HttpServlet {
         generator.writeStartObject();
         if (pathInfo != null) {
             String id = pathInfo.substring(1);
-            ItemView itemView = itemQueryService.find(id);
+            ItemView itemView = queryService.find(id);
             if (itemView != null) {
                 responseItemView(generator, itemView);
             } else {
@@ -95,29 +99,38 @@ public class ItemServlet extends HttpServlet {
             String name = Optional.ofNullable(req.getParameter("name")).orElse("");
             String categoryId = Optional.ofNullable(req.getParameter("cid")).orElse("");
             String brandId = Optional.ofNullable(req.getParameter("bid")).orElse("");
-            System.out.println(name);
-            generator.writeNumberField("total", itemQueryService.size());
             generator.writeNumberField("offset", offset);
             generator.writeNumberField("limit", limit);
-            generator.writeArrayFieldStart("items");
-            if (!barcode.isEmpty() || !name.isEmpty()) {
+            if (!brandId.isEmpty() || !categoryId.isEmpty()) {
+                if (!brandId.isEmpty()) {
+                    ItemView[] itemViews = queryService.belongToBrand(brandId, offset, limit);
+                    generator.writeNumberField("total", itemViews.length);
+                    responseItemViews(generator, itemViews);
+                }
+                if (!categoryId.isEmpty()) {
+                    ItemView[] itemViews = queryService.belongToCategory(categoryId, offset, limit);
+                    generator.writeNumberField("total", itemViews.length);
+                    responseItemViews(generator, itemViews);
+                }
+            } else if (!barcode.isEmpty() || !name.isEmpty()) {
                 Set<ItemView> itemViewSet = new HashSet<>();
                 if (!barcode.isEmpty()) {
-                    ItemView[] itemViews = itemQueryService.fromBarcode(barcode);
+                    ItemView[] itemViews = queryService.fromBarcode(barcode);
                     for (ItemView itemView : itemViews)
                         itemViewSet.add(itemView);
                 }
                 if (!name.isEmpty()) {
-                    ItemView[] itemViews = itemQueryService.fromName(name);
+                    ItemView[] itemViews = queryService.fromName(name);
                     for (ItemView itemView : itemViews)
                         itemViewSet.add(itemView);
                 }
-                responseItems(generator, itemViewSet.toArray(new ItemView[itemViewSet.size()]));
+                responseItemViews(generator, itemViewSet.toArray(new ItemView[itemViewSet.size()]));
             } else {
-                ItemView[] itemViews = itemQueryService.findAll(offset, limit);
-                responseItems(generator, itemViews);
+                generator.writeNumberField("total", queryService.size());
+                ItemView[] itemViews = queryService.findAll(offset, limit);
+                responseItemViews(generator, itemViews);
             }
-            generator.writeEndArray();
+
             generator.writeNumberField("execution time", System.currentTimeMillis() - start);
         }
         generator.writeEndObject();
@@ -164,12 +177,14 @@ public class ItemServlet extends HttpServlet {
         generator.writeEndObject();
     }
 
-    private void responseItems(JsonGenerator generator, ItemView[] itemViews) throws IOException {
+    private void responseItemViews(JsonGenerator generator, ItemView[] itemViews) throws IOException {
+        generator.writeArrayFieldStart("items");
         for (ItemView itemView : itemViews) {
             generator.writeStartObject();
             responseItemView(generator, itemView);
             generator.writeEndObject();
         }
+        generator.writeEndArray();
     }
 
     @Override
