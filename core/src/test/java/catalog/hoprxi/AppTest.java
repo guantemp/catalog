@@ -16,10 +16,26 @@
 
 package catalog.hoprxi;
 
+import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.price.Price;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.Unit;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import org.javamoney.moneta.Money;
+import org.javamoney.moneta.format.CurrencyStyle;
 import org.junit.Test;
 
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
+import javax.money.format.AmountFormatQueryBuilder;
+import javax.money.format.MonetaryAmountFormat;
+import javax.money.format.MonetaryFormats;
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.Locale;
 
 
 /**
@@ -32,5 +48,31 @@ public class AppTest {
     @Test
     public void shouldAnswerWithTrue() throws IOException, ServletException {
         App.main(new String[0]);
+        CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
+        MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
+                .set(CurrencyStyle.SYMBOL).set("pattern", "¤ #,##0.00###")//"#,##0.00### ¤"
+                .build());
+        RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.55419, currency), Unit.DAI));
+        JsonFactory jasonFactory = new JsonFactory();
+        JsonGenerator generator = jasonFactory.createGenerator(System.out, JsonEncoding.UTF8)
+                .setPrettyPrinter(new DefaultPrettyPrinter());
+        generator.writeStartObject();
+        generator.writeNumberField("offset", 0);
+        generator.writeNumberField("limit", 15);
+        generator.writeNumberField("total", Unit.values().length);
+        generator.writeArrayFieldStart("units");
+        for (Unit unit : Unit.values()) {
+            generator.writeString(unit.toString());
+        }
+        generator.writeEndArray();
+        generator.writeObjectField("grade", Grade.QUALIFIED.toString());
+        generator.writeObjectFieldStart("retailPrice");
+        generator.writeStringField("value", format.format(retailPrice.price().amount()));
+        generator.writeStringField("unit", retailPrice.price().unit().toString());
+        generator.writeEndObject();
+        generator.writeStringField("retailPrice", format.format(retailPrice.price().amount()) + "/" + retailPrice.price().unit().toString());
+        generator.writeEndObject();
+        generator.flush();
+        generator.close();
     }
 }

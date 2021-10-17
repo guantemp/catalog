@@ -38,10 +38,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -109,6 +107,14 @@ public class ItemServlet extends HttpServlet {
                 }
                 if (!categoryId.isEmpty()) {
                     ItemView[] itemViews = queryService.belongToCategory(categoryId, offset, limit);
+                    if (!barcode.isEmpty() || !name.isEmpty()) {
+                        itemViews = Arrays.stream(itemViews)
+                                .filter(b -> Pattern.compile(barcode).matcher(b.barcode().barcode()).matches())
+                                .filter(n -> Pattern.compile(name).matcher(n.name().name()).matches())
+                                .filter(n -> Pattern.compile(name).matcher(n.name().mnemonic()).matches())
+                                .filter(n -> Pattern.compile(name).matcher(n.name().alias()).matches())
+                                .toArray(ItemView[]::new);
+                    }
                     generator.writeNumberField("total", itemViews.length);
                     responseItemViews(generator, itemViews);
                 }
