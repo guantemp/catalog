@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.application.query;
 
-import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.infrastructure.view.CategoryTreeView;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -24,18 +24,7 @@ import catalog.hoprxi.core.domain.model.category.Category;
  * @version 0.0.1 builder 2021-10-16
  */
 public interface CategoryQueryService {
-    /**
-     * find sub category
-     *
-     * @param id
-     * @return
-     */
-    Category[] belongTo(String id);
+    CategoryTreeView[] root();
 
-    /**
-     * @param id
-     * @param depth
-     * @return
-     */
-    Category[] belongTo(String id, int depth);
+    CategoryTreeView root(String rootId);
 }

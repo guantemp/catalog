@@ -16,10 +16,26 @@
 
 package catalog.hoprxi.core.infrastructure.view;
 
+import catalog.hoprxi.core.domain.model.category.Category;
+
+import java.util.HashMap;
+import java.util.Map;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2021-10-16
  */
 public class CategoryTreeView {
+    private Map<String, Category> categoryMap = new HashMap<>();
+    private String rootId;
+
+    public CategoryTreeView(Category root) {
+        this.rootId = root.id();
+        categoryMap.put(root().id(), root);
+    }
+
+    public Category root() {
+        return categoryMap.get(rootId);
+    }
 }

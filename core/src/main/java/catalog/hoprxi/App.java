@@ -30,20 +30,12 @@ import io.undertow.servlet.api.ServletContainer;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.regex.Pattern;
 
 /**
  * Hello world!
  */
 public class App {
     public static void main(String[] args) throws IOException, ServletException {
-        String[] test = {"69832423", "69821412", "697234", "998541", "69841", "市政府撒的", "9782"};
-        long start = System.currentTimeMillis();
-        String[] result = Arrays.stream(test).filter(s -> Pattern.compile("^698\\d*").matcher(s).matches()).toArray(String[]::new);
-        for (String s : result)
-            System.out.println(s);
-        System.out.println("excel： " + (System.currentTimeMillis() - start));
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentInfo deploymentInfo = Servlets.deployment()
                 .setClassLoader(App.class.getClassLoader())

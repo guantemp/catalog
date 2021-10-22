@@ -16,47 +16,11 @@
 
 package catalog.hoprxi.core.infrastructure.query;
 
-import catalog.hoprxi.core.application.query.ItemQueryService;
-import catalog.hoprxi.core.infrastructure.view.ItemView;
-
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2021-10-15
  */
-public class ElasticSearchItemQueryService implements ItemQueryService {
-    @Override
-    public ItemView find(String id) {
-        return null;
-    }
+public class ElasticSearchItemQueryService {
 
-    @Override
-    public ItemView[] belongToBrand(String brandId, int offset, int limit) {
-        return new ItemView[0];
-    }
-
-    @Override
-    public ItemView[] belongToCategory(String categoryId, long offset, int limit) {
-        return new ItemView[0];
-    }
-
-    @Override
-    public ItemView[] findAll(long offset, int limit) {
-        return new ItemView[0];
-    }
-
-    @Override
-    public long size() {
-        return 0;
-    }
-
-    @Override
-    public ItemView[] fromBarcode(String barcode) {
-        return new ItemView[0];
-    }
-
-    @Override
-    public ItemView[] fromName(String name) {
-        return new ItemView[0];
-    }
 }

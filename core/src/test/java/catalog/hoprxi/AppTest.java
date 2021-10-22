@@ -35,7 +35,9 @@ import javax.money.format.MonetaryAmountFormat;
 import javax.money.format.MonetaryFormats;
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 
 /**
@@ -47,7 +49,13 @@ public class AppTest {
      */
     @Test
     public void shouldAnswerWithTrue() throws IOException, ServletException {
-        App.main(new String[0]);
+        String[] test = {"69832423", "69821412", "697234", "998541", "69841", "市政府撒的", "9782"};
+        long start = System.currentTimeMillis();
+        String[] result = Arrays.stream(test).filter(s -> Pattern.compile("^698\\d*").matcher(s).matches()).toArray(String[]::new);
+        for (String s : result)
+            System.out.println(s);
+        System.out.println("pattern:" + Pattern.compile(".*?.*?").matcher("45n").matches());
+        System.out.println("excel： " + (System.currentTimeMillis() - start));
         CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
         MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
                 .set(CurrencyStyle.SYMBOL).set("pattern", "¤ #,##0.00###")//"#,##0.00### ¤"

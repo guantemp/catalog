@@ -54,6 +54,7 @@ public class ItemServlet extends HttpServlet {
             .build());
     private static final int OFFSET = 0;
     private static final int LIMIT = 20;
+    private static final String PRE_SUFFIX = ".*?";
     private ItemQueryService queryService;
     private ItemRepository repository;
 
@@ -102,17 +103,27 @@ public class ItemServlet extends HttpServlet {
             if (!brandId.isEmpty() || !categoryId.isEmpty()) {
                 if (!brandId.isEmpty()) {
                     ItemView[] itemViews = queryService.belongToBrand(brandId, offset, limit);
+                    if (!barcode.isEmpty() || !name.isEmpty()) {
+                        Pattern namePattern = Pattern.compile(PRE_SUFFIX + name + PRE_SUFFIX);
+                        itemViews = Arrays.stream(itemViews)
+                                .filter(b -> Pattern.compile(PRE_SUFFIX + barcode + PRE_SUFFIX).matcher(b.barcode().barcode()).matches())
+                                .filter(n -> namePattern.matcher(n.name().name()).matches())
+                                .filter(n -> namePattern.matcher(n.name().mnemonic()).matches())
+                                .filter(n -> namePattern.matcher(n.name().alias()).matches())
+                                .toArray(ItemView[]::new);
+                    }
                     generator.writeNumberField("total", itemViews.length);
                     responseItemViews(generator, itemViews);
                 }
                 if (!categoryId.isEmpty()) {
                     ItemView[] itemViews = queryService.belongToCategory(categoryId, offset, limit);
                     if (!barcode.isEmpty() || !name.isEmpty()) {
+                        Pattern namePattern = Pattern.compile(PRE_SUFFIX + name + PRE_SUFFIX);
                         itemViews = Arrays.stream(itemViews)
-                                .filter(b -> Pattern.compile(barcode).matcher(b.barcode().barcode()).matches())
-                                .filter(n -> Pattern.compile(name).matcher(n.name().name()).matches())
-                                .filter(n -> Pattern.compile(name).matcher(n.name().mnemonic()).matches())
-                                .filter(n -> Pattern.compile(name).matcher(n.name().alias()).matches())
+                                .filter(b -> Pattern.compile(PRE_SUFFIX + barcode + PRE_SUFFIX).matcher(b.barcode().barcode()).matches())
+                                .filter(n -> namePattern.matcher(n.name().name()).matches())
+                                .filter(n -> namePattern.matcher(n.name().mnemonic()).matches())
+                                .filter(n -> namePattern.matcher(n.name().alias()).matches())
                                 .toArray(ItemView[]::new);
                     }
                     generator.writeNumberField("total", itemViews.length);
