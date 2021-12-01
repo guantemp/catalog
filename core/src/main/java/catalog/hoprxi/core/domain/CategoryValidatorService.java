@@ -17,24 +17,29 @@
 package catalog.hoprxi.core.domain;
 
 
-import catalog.hoprxi.core.domain.model.brand.ValidatorBrandId;
-import catalog.hoprxi.core.domain.model.category.ValidatorCategoryId;
+import catalog.hoprxi.core.domain.model.brand.ValidatorBrand;
+import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-08-27
+ * @version 0.0.2 2021-10-23
  */
 public class CategoryValidatorService {
-    public static boolean isCategoryExist(String id) {
-        ValidatorCategoryId validatorCategoryId = new ValidatorCategoryId(new ArangoDBCategoryRepository("catalog"));
-        return validatorCategoryId.isIdExist(id);
+    private static final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
+
+    public static boolean isCategoryExist(String categoryId) {
+        if (categoryId.equals(Category.UNDEFINED.id()))
+            return true;
+        Category category = repository.find(categoryId);
+        return category != null;
     }
 
     public static boolean isBrandExist(String id) {
-        ValidatorBrandId validatorBrandId = new ValidatorBrandId(new ArangoDBBrandRepository("catalog"));
-        return validatorBrandId.isIdExist(id);
+        ValidatorBrand validatorBrand = new ValidatorBrand(new ArangoDBBrandRepository("catalog"));
+        return validatorBrand.isExist(id);
     }
 }

@@ -16,15 +16,23 @@
 
 package catalog.hoprxi.core.application.query;
 
-import catalog.hoprxi.core.infrastructure.view.CategoryTreeView;
+import catalog.hoprxi.core.domain.model.category.Category;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2021-10-16
+ * @version 0.0.1 builder 2021-12-01
  */
 public interface CategoryQueryService {
-    CategoryTreeView[] root();
+    Category[] root();
 
-    CategoryTreeView root(String rootId);
+    Category root(String rootId);
+
+    Category[] children(String parentId);
+
+    Category[] descendants(String parentId);
+
+    Category[] silblings(String id);
+
+    Category[] path(String id);
 }

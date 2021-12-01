@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,28 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.category;
+package catalog.hoprxi.core.domain.model.brand;
 
 import java.util.Objects;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2019-08-26
+ * @version 0.0.1 2019-08-28
  */
-public class ValidatorCategoryId {
-    private CategoryRepository repository;
+public class ValidatorBrand {
+    private BrandRepository repository;
 
-    public ValidatorCategoryId(CategoryRepository repository) {
+    public ValidatorBrand(BrandRepository repository) {
         this.repository = Objects.requireNonNull(repository, "repository required");
     }
 
-    /**
-     * @param id
-     * @return
-     */
-    public boolean isIdExist(String id) {
-        if (id.equals(Category.UNDEFINED.id()))
+    public boolean isExist(String id) {
+        if (id.equals(Brand.UNDEFINED.id()))
             return true;
-        Category category = repository.find(id);
-        return category != null;
+        Brand brand = repository.find(id);
+        //Brand brand = repository.find(parentId);
+        // return brand == null ? false : true;
+        return brand != null;
     }
 }

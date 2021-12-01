@@ -30,6 +30,7 @@
     <orderEntry type="library" name="Maven: event.hoprxi:core:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:utils:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.25" level="project" />
+    <orderEntry type="library" name="Maven: salt.hoprxi:tree:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:id:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:to:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:crypto:1.0-SNAPSHOT" level="project" />

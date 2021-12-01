@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,22 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.brand;
+package catalog.hoprxi.core.domain;
 
-import java.util.Objects;
+import catalog.hoprxi.core.domain.model.brand.BrandRepository;
+import catalog.hoprxi.core.domain.model.brand.ValidatorBrand;
+import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-08-28
+ * @version 0.0.1 builder 2021-10-23
  */
-public class ValidatorBrandId {
-    private BrandRepository repository;
+public class BrandValidatorService {
+    private static final BrandRepository repository = new ArangoDBBrandRepository("catalog");
 
-    public ValidatorBrandId(BrandRepository repository) {
-        this.repository = Objects.requireNonNull(repository, "repository required");
-    }
-
-    public boolean isIdExist(String id) {
-        if (id.equals(Brand.UNDEFINED.id()))
-            return true;
-        Brand brand = repository.find(id);
-        //Brand brand = repository.find(parentId);
-        // return brand == null ? false : true;
-        return brand != null;
+    public static boolean isBrandExist(String id) {
+        ValidatorBrand validatorBrand = new ValidatorBrand(repository);
+        return validatorBrand.isExist(id);
     }
 }
