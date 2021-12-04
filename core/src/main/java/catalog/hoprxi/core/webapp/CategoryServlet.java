@@ -65,6 +65,8 @@ public class CategoryServlet extends HttpServlet {
                             responseChildren(generator, category);
                             generator.writeEndArray();
                             break;
+                        case "descendants":
+                            break;
                     }
                 } else {
                     responseCategory(generator, category);

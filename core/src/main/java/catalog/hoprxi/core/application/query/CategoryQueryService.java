@@ -26,11 +26,7 @@ import catalog.hoprxi.core.domain.model.category.Category;
 public interface CategoryQueryService {
     Category[] root();
 
-    Category root(String rootId);
-
-    Category[] children(String parentId);
-
-    Category[] descendants(String parentId);
+    Category[] children(String id);
 
     Category[] silblings(String id);
 

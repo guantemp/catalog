@@ -118,6 +118,19 @@ public class ArangoDBItemQueryService implements ItemQueryService {
         return transform(slices);
     }
 
+
+    public ItemView[] belongToCategoryDescendants(String categoryId, long offset, int limit) {
+        final String query = "WITH brand,category,item,barcode\n" +
+                "FOR c IN category FILTER c._key == @categoryId\n" +
+                "FOR i IN 1..1 INBOUND c._id belong LIMIT @offset,@limit\n" +
+                "FOR b IN 1..1 OUTBOUND i._id has\n" +
+                "FOR br IN 1..1 OUTBOUND i._id belong FILTER br._id =~ '^brand'\n" +
+                "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'brand':{'id':br._key,'name':br.name.name},'category':{'id':c._key,'name':c.name.name},'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice}";
+        final Map<String, Object> bindVars = new MapBuilder().put("categoryId", categoryId).put("offset", offset).put("limit", limit).get();
+        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, new AqlQueryOptions().cache(true), VPackSlice.class);
+        return transform(slices);
+    }
+
     @Override
     public ItemView[] findAll(long offset, int limit) {
         ItemView[] itemViews = ArangoDBUtil.calculationCollectionSize(catalog, ItemView.class, "item", offset, limit);

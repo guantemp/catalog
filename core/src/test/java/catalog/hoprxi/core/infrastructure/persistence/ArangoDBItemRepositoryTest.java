@@ -60,7 +60,7 @@ public class ArangoDBItemRepositoryTest {
         brandRepository.save(changhong);
 
         categoryRepository.save((Category.UNDEFINED));
-        Category root = Category.createCategoryRoot("root", new Name("分类", "root"));
+        Category root = Category.root("root", new Name("分类", "root"));
         categoryRepository.save(root);
         Category food = new Category("root", "food", new Name("食品", "food"), "可供人类食用或饮用的物质，包括加工食品，半成品和未加工食品，不包括烟草或只作药品用的物质");
         categoryRepository.save(food);

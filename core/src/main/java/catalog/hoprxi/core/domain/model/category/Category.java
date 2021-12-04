@@ -95,23 +95,23 @@ public class Category {
     }
 
 
-    public static Category createCategoryRoot(String id, Name name) {
+    public static Category root(String id, Name name) {
         return new Category(id, id, name);
     }
 
-    public static Category createCategoryRoot(String id, String name) {
+    public static Category root(String id, String name) {
         return new Category(id, id, name);
     }
 
-    public static Category createCategoryRoot(String id, Name name, String description) {
+    public static Category root(String id, Name name, String description) {
         return new Category(id, id, name, description);
     }
 
-    public static Category createCategoryRoot(String id, String name, String description) {
+    public static Category root(String id, String name, String description) {
         return new Category(id, id, name, description);
     }
 
-    public static Category createCategoryRoot(String id, Name name, String description, URI icon) {
+    public static Category root(String id, Name name, String description, URI icon) {
         return new Category(id, id, name, description, icon);
     }
 

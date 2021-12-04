@@ -36,7 +36,7 @@ public class ArangoDBCategoryRepositoryTest {
     @BeforeClass
     public void beforeClass() {
         repository.save(Category.UNDEFINED);
-        Category root = Category.createCategoryRoot("root", new Name("分类", "root"));
+        Category root = Category.root("root", new Name("分类", "root"));
         repository.save(root);
         //食品
         Category food = new Category("root", "food", new Name("食品", "food"), "可供人类食用或饮用的物质，包括加工食品，半成品和未加工食品，不包括烟草或只作药品用的物质");
@@ -93,7 +93,7 @@ public class ArangoDBCategoryRepositoryTest {
         repository.save(corn_oil);
         Category olive_oil = new Category("oil", " olive_oil", Name.of("橄榄油"));
         repository.save(olive_oil);
-        Category sunflower_seed_oil = new Category("oil", " sunflower_seed_oil", new Name("葵花籽油", " sunflower_seed_oil"), "又叫葵瓜子，是向日葵的果实。它的子仁中含脂肪30%-45%，最多的可达60%。葵花子油颜色金黄，澄清透明，气味清香，是一种重要的食用油。");
+        Category sunflower_seed_oil = new Category("oil", " sunflower_seed_oil", new Name("葵花籽油", " sunflower_seed_oil"), "是向日葵的果实。它的子仁中含脂肪30%-45%，最多的可达60%。葵花子油颜色金黄，澄清透明，气味清香，是一种重要的食用油。");
         repository.save(sunflower_seed_oil);
         Category blended_oil = new Category("oil", " blended_oil", Name.of("调和油"));
         repository.save(blended_oil);

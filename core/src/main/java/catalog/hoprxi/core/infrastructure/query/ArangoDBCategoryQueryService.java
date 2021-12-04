@@ -17,11 +17,24 @@
 package catalog.hoprxi.core.infrastructure.query;
 
 import catalog.hoprxi.core.application.query.CategoryQueryService;
+import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.infrastructure.persistence.ArangoDBUtil;
+import com.arangodb.ArangoCursor;
+import com.arangodb.ArangoDatabase;
+import com.arangodb.entity.DocumentField;
+import com.arangodb.util.MapBuilder;
+import com.arangodb.velocypack.VPackSlice;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import salt.hoprxi.tree.Tree;
 
-import java.util.HashMap;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -29,35 +42,117 @@ import java.util.Map;
  * @version 0.0.1 builder 2021-12-01
  */
 public class ArangoDBCategoryQueryService implements CategoryQueryService {
-    private static final Map<String, Tree<Category>> cache = new HashMap<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBCategoryQueryService.class);
+    private static Tree<Category>[] trees;
+    private static Constructor<Name> nameConstructor;
+
+    static {
+        try {
+            nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
+            nameConstructor.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("Not find Name class has such constructor", e);
+        }
+    }
+
+    private ArangoDatabase catalog;
+
+    public ArangoDBCategoryQueryService(String databaseName) {
+        this.catalog = ArangoDBUtil.getResource().db(databaseName);
+        this.refresh();
+    }
+
+    public void refresh() {
+        final String query = "FOR d IN category FILTER d._key == d.parentId RETURN d";
+        ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
+        List<Category> list = new ArrayList<>();
+        while (cursor.hasNext()) {
+            try {
+                list.add(rebuild(cursor.next()));
+            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("Can't rebuild category", e);
+            }
+        }
+        trees = new Tree[list.size()];
+        for (int i = 0, j = list.size(); i < j; i++) {
+            trees[i] = new Tree<>(list.get(i));
+        }
+    }
 
     @Override
     public Category[] root() {
-        return new Category[0];
+        Category[] categories = new Category[trees.length];
+        for (int i = 0, j = trees.length; i < j; i++) {
+            categories[i] = trees[i].root();
+        }
+        return categories;
     }
 
     @Override
-    public Category root(String rootId) {
-        return null;
-    }
+    public Category[] children(String id) {
 
-    @Override
-    public Category[] children(String parentId) {
-        return new Category[0];
-    }
-
-    @Override
-    public Category[] descendants(String parentId) {
-        return new Category[0];
+        id = Objects.requireNonNull(id, "id required").trim();
+        final String query = "WITH category\n" +
+                "FOR v,e IN 1..1 OUTBOUND @startVertex subordinate RETURN v";
+        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
+        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+        List<Category> list = new ArrayList<>();
+        try {
+            while (cursor.hasNext())
+                list.add(rebuild(cursor.next()));
+        } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            LOGGER.debug("Can't rebuild category");
+        }
+        return list.toArray(new Category[list.size()]);
     }
 
     @Override
     public Category[] silblings(String id) {
-        return new Category[0];
+        id = Objects.requireNonNull(id, "id required").trim();
+        final String query = "WITH category\n" +
+                "FOR p IN 1..1 INBOUND @startVertex subordinate\n" +
+                "FOR v IN 1..1 OUTBOUND p._id subordinate RETURN v";
+        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
+        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+        List<Category> list = new ArrayList<>();
+        try {
+            while (cursor.hasNext())
+                list.add(rebuild(cursor.next()));
+        } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            LOGGER.debug("Can't rebuild category");
+        }
+        return list.toArray(new Category[list.size()]);
     }
 
     @Override
     public Category[] path(String id) {
         return new Category[0];
+    }
+
+    private Category rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+        if (slice == null)
+            return null;
+        String id = slice.get(DocumentField.Type.KEY.getSerializeName()).getAsString();
+        String parentId = slice.get("parentId").getAsString();
+        Name name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());
+        String description = null;
+        if (!slice.get("description").isNone())
+            description = slice.get("description").getAsString();
+        return new Category(parentId, id, name, description);
+    }
+
+    private Category[] fill(ArangoCursor<VPackSlice> cursor) {
+        List<Category> categoryList = new ArrayList<>();
+        while (cursor.hasNext()) {
+            try {
+                categoryList.add(rebuild(cursor.next()));
+            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("Can't rebuild category", e);
+            }
+        }
+        return categoryList.toArray(new Category[categoryList.size()]);
     }
 }
