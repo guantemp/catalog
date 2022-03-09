@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,11 +83,18 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
 
     @Override
     public Category[] root() {
-        Category[] categories = new Category[trees.length];
-        for (int i = 0, j = trees.length; i < j; i++) {
-            categories[i] = trees[i].root();
+        final String query = "FOR d IN category FILTER d._key == d.parentId RETURN d";
+        ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
+        List<Category> list = new ArrayList<>();
+        while (cursor.hasNext()) {
+            try {
+                list.add(rebuild(cursor.next()));
+            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("Can't rebuild category", e);
+            }
         }
-        return categories;
+        return list.toArray(new Category[list.size()]);
     }
 
     @Override

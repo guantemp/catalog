@@ -14,40 +14,36 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.query;
+package catalog.hoprxi.core.application.query;
 
-import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.domain.model.category.Category;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import salt.hoprxi.tree.Tree;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2021-12-03
+ * @version 0.0.1 builder 2022-03-09
  */
-public class ArangoDBCategoryQueryServiceTest {
-    private CategoryQueryService query = new ArangoDBCategoryQueryService("catalog");
+public class ArangoDBCategoryQueryServiceProxy implements CategoryQueryService {
+    private static Tree<Category>[] trees;
 
-    @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testRoot() {
-        Assert.assertEquals(2, query.root().length);
-        for (Category c : query.root()) {
-            System.out.println(c);
-        }
+    @Override
+    public Category[] root() {
+        return new Category[0];
     }
 
-    @Test(priority = 2)
-    public void testChildren() {
-        Category[] sub = query.children("root");
-        Assert.assertEquals(5, sub.length);
+    @Override
+    public Category[] children(String id) {
+        return new Category[0];
     }
 
-    @Test
-    public void testSilblings() {
+    @Override
+    public Category[] silblings(String id) {
+        return new Category[0];
     }
 
-    @Test
-    public void testPath() {
+    @Override
+    public Category[] path(String id) {
+        return new Category[0];
     }
 }
