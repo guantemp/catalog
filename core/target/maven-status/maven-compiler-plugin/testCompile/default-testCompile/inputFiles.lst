@@ -1,0 +1,11 @@
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\ArangoDBBrandQueryServiceTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\CoreSetupTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\AppTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\domain\model\barcode\BarcodeGenerateServicesTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\i18n\LabelTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\domain\model\UnitTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\ArangoDBCategoryRepositoryTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\ArangoDBItemRepositoryTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\domain\model\GradeTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\ArangoDBBrandRepositoryTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\ArangoDBItemQueryServiceTest.java
