@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import java.util.Objects;
  * @version 0.0.3 builder 2021-08-08
  */
 public class Category {
-    public static final Category UNDEFINED = new Category("undefined", "undefined", new Name(Label.CATEGORY_UNDEFINED, "undefined")) {
+    public static final Category UNDEFINED = new Category("undefined", "undefined", new Name(Label.CATEGORY_UNDEFINED, "undefined"), "undefined") {
         @Override
         public void rename(Name newName) {
         }

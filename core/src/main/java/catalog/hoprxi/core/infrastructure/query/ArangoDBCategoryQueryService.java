@@ -22,8 +22,6 @@ import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBUtil;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
-import com.arangodb.ArangoGraph;
-import com.arangodb.entity.DocumentField;
 import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
 import org.slf4j.Logger;
@@ -91,16 +89,25 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
 
     @Override
     public Category[] children(String id) {
+        Category temp = new Category(id, id, "temp");
+        for (Tree<Category> t : trees) {
+            if (t.has(temp)) {
+                System.out.println(t.value(temp));
+            }
+        }
         id = Objects.requireNonNull(id, "id required").trim();
         final String query = "WITH category\n" +
-                "FOR v,e IN 1..1 OUTBOUND @startVertex subordinate RETURN v";
+                "FOR i,s in 1..1 OUTBOUND @startVertex subordinate\n" +
+                "LET sub =  (FOR v,e in 1..1 OUTBOUND i._id subordinate RETURN e)\n" +
+                "RETURN {'_key':i._key,'parentId':i.parentId,'name':i.name,'description':i.description,'has': sub == [] ? false : true}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
         ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
-        return this.transform(cursor);
+        Category[] categories = this.transform(cursor);
+        return categories;
     }
 
     @Override
-    public Category[] silblings(String id) {
+    public Category[] siblings(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         final String query = "WITH category\n" +
                 "FOR p IN 1..1 INBOUND @startVertex subordinate\n" +
@@ -123,15 +130,21 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     @Override
     public Category find(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
-        ArangoGraph graph = catalog.graph("core");
-        VPackSlice slice = graph.vertexCollection("category").getVertex(id, VPackSlice.class);
-        return rebuild(slice);
+        final String query = "WITH category\n" +
+                "FOR i IN category FILTER i._key == @key\n" +
+                "LET sub =  (FOR v,e in 1..1 OUTBOUND i._id subordinate RETURN e)\n" +
+                "RETURN {'_key':i._key,'parentId':i.parentId,'name':i.name,'description':i.description,'has': sub == [] ? false : true}";
+        final Map<String, Object> bindVars = new MapBuilder().put("key", id).get();
+        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
+        while (slices.hasNext())
+            return rebuild(slices.next());
+        return null;
     }
 
     private Category rebuild(VPackSlice slice) {
         if (slice == null)
             return null;
-        String id = slice.get(DocumentField.Type.KEY.getSerializeName()).getAsString();
+        String id = slice.get("_key").getAsString();
         String parentId = slice.get("parentId").getAsString();
         Name name = null;
         try {
@@ -143,6 +156,8 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         String description = null;
         if (!slice.get("description").isNone())
             description = slice.get("description").getAsString();
+        // if (!slice.get("has").isNone())
+        // System.out.println(slice.get("has").getAsBoolean());
         return name == null ? null : new Category(parentId, id, name, description);
     }
 
@@ -153,5 +168,29 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
             categoryList.add(rebuild(cursor.next()));
         }
         return categoryList.toArray(new Category[categoryList.size()]);
+    }
+
+    private class CategoryWrap {
+        private Category category;
+        private boolean leaf;
+        private boolean sibling;
+
+        public CategoryWrap(Category category, boolean leaf, boolean silbling) {
+            this.category = category;
+            this.leaf = leaf;
+            this.sibling = silbling;
+        }
+
+        public Category getCategory() {
+            return category;
+        }
+
+        public boolean isLeaf() {
+            return leaf;
+        }
+
+        public boolean isSibling() {
+            return sibling;
+        }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -204,7 +204,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
 
     private ItemView rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
         Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(slice.get("barcode").getAsString());
-        //DocumentField.Type.KEY.getSerializeName()
+
         String id = slice.get("id").getAsString();
         Name name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());
         VPackSlice madeInSlice = slice.get("madeIn");

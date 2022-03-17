@@ -28,7 +28,7 @@ public interface CategoryQueryService {
 
     Category[] children(String id);
 
-    Category[] silblings(String id);
+    Category[] siblings(String id);
 
     Category[] descendants(String id);
 
