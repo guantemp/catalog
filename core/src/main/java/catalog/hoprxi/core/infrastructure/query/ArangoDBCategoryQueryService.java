@@ -18,8 +18,8 @@ package catalog.hoprxi.core.infrastructure.query;
 
 import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.domain.model.Name;
-import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBUtil;
+import catalog.hoprxi.core.infrastructure.view.CategoryView;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.util.MapBuilder;
@@ -42,9 +42,8 @@ import java.util.Objects;
  */
 public class ArangoDBCategoryQueryService implements CategoryQueryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBCategoryQueryService.class);
-    private static Tree<Category>[] trees;
+    private static Tree<CategoryView>[] trees;
     private static Constructor<Name> nameConstructor;
-    private static CategoryQueryService categoryQueryService;
 
     static {
         try {
@@ -70,7 +69,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     public void refresh() {
         final String query = "FOR d IN category FILTER d._key == d.parentId RETURN d";
         ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
-        List<Category> list = new ArrayList<>();
+        List<CategoryView> list = new ArrayList<>();
         while (cursor.hasNext()) {
             list.add(rebuild(cursor.next()));
         }
@@ -81,20 +80,23 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     }
 
     @Override
-    public Category[] root() {
+    public CategoryView[] root() {
         final String query = "FOR d IN category FILTER d._key == d.parentId RETURN d";
         ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
         return this.transform(cursor);
     }
 
     @Override
-    public Category[] children(String id) {
-        Category temp = new Category(id, id, "temp");
-        for (Tree<Category> t : trees) {
+    public CategoryView[] children(String id) {
+/*
+        CategoryView temp = new CategoryView(id, id, "temp");
+        for (Tree<CategoryView> t : trees) {
             if (t.has(temp)) {
                 System.out.println(t.value(temp));
             }
         }
+
+ */
         id = Objects.requireNonNull(id, "id required").trim();
         final String query = "WITH category\n" +
                 "FOR i,s in 1..1 OUTBOUND @startVertex subordinate\n" +
@@ -102,12 +104,12 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                 "RETURN {'_key':i._key,'parentId':i.parentId,'name':i.name,'description':i.description,'has': sub == [] ? false : true}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
         ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
-        Category[] categories = this.transform(cursor);
+        CategoryView[] categories = this.transform(cursor);
         return categories;
     }
 
     @Override
-    public Category[] siblings(String id) {
+    public CategoryView[] siblings(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         final String query = "WITH category\n" +
                 "FOR p IN 1..1 INBOUND @startVertex subordinate\n" +
@@ -118,17 +120,17 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     }
 
     @Override
-    public Category[] descendants(String id) {
-        return new Category[0];
+    public CategoryView[] descendants(String id) {
+        return new CategoryView[0];
     }
 
     @Override
-    public Category[] path(String id) {
-        return new Category[0];
+    public CategoryView[] path(String id) {
+        return new CategoryView[0];
     }
 
     @Override
-    public Category find(String id) {
+    public CategoryView find(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         final String query = "WITH category\n" +
                 "FOR i IN category FILTER i._key == @key\n" +
@@ -141,7 +143,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         return null;
     }
 
-    private Category rebuild(VPackSlice slice) {
+    private CategoryView rebuild(VPackSlice slice) {
         if (slice == null)
             return null;
         String id = slice.get("_key").getAsString();
@@ -156,41 +158,18 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         String description = null;
         if (!slice.get("description").isNone())
             description = slice.get("description").getAsString();
-        // if (!slice.get("has").isNone())
-        // System.out.println(slice.get("has").getAsBoolean());
-        return name == null ? null : new Category(parentId, id, name, description);
+        boolean isLeaf = false;
+        if (!slice.get("has").isNone())
+            isLeaf = slice.get("has").getAsBoolean();
+        return name == null ? null : new CategoryView(parentId, id, name, description, isLeaf, false, null);
     }
 
 
-    private Category[] transform(ArangoCursor<VPackSlice> cursor) {
-        List<Category> categoryList = new ArrayList<>();
+    private CategoryView[] transform(ArangoCursor<VPackSlice> cursor) {
+        List<CategoryView> list = new ArrayList<>();
         while (cursor.hasNext()) {
-            categoryList.add(rebuild(cursor.next()));
+            list.add(rebuild(cursor.next()));
         }
-        return categoryList.toArray(new Category[categoryList.size()]);
-    }
-
-    private class CategoryWrap {
-        private Category category;
-        private boolean leaf;
-        private boolean sibling;
-
-        public CategoryWrap(Category category, boolean leaf, boolean silbling) {
-            this.category = category;
-            this.leaf = leaf;
-            this.sibling = silbling;
-        }
-
-        public Category getCategory() {
-            return category;
-        }
-
-        public boolean isLeaf() {
-            return leaf;
-        }
-
-        public boolean isSibling() {
-            return sibling;
-        }
+        return list.toArray(new CategoryView[list.size()]);
     }
 }

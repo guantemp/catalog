@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query;
 
 import catalog.hoprxi.core.application.query.CategoryQueryService;
-import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.infrastructure.view.CategoryView;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -32,20 +32,20 @@ public class ArangoDBCategoryQueryServiceTest {
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testRoot() {
         Assert.assertEquals(2, query.root().length);
-        for (Category c : query.root()) {
+        for (CategoryView c : query.root()) {
             System.out.println(c);
         }
     }
 
     @Test(priority = 2)
     public void testChildren() {
-        Category[] sub = query.children("root");
+        CategoryView[] sub = query.children("root");
         //Assert.assertEquals(5, sub.length);
     }
 
     @Test(priority = 2)
     public void testFind() {
-        Category root = query.find("root");
+        CategoryView root = query.find("root");
         Assert.assertTrue(root.isRoot());
     }
 
