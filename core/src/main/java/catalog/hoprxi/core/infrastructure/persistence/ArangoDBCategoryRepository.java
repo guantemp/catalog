@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
         }
     }
 
-    private ArangoDatabase catalog;
+    private final ArangoDatabase catalog;
 
     public ArangoDBCategoryRepository(String databaseName) {
         this.catalog = ArangoDBUtil.getResource().db(databaseName);
@@ -185,7 +185,7 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
                     LOGGER.debug("Can't rebuild category", e);
             }
         }
-        return categoryList.toArray(new Category[categoryList.size()]);
+        return categoryList.toArray(new Category[0]);
     }
 
     /*
@@ -207,14 +207,22 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
 
     private static class Edge {
         @DocumentField(DocumentField.Type.FROM)
-        private String from;
+        private final String from;
 
         @DocumentField(DocumentField.Type.TO)
-        private String to;
+        private final String to;
 
         public Edge(String from, String to) {
             this.from = from;
             this.to = to;
+        }
+
+        public String from() {
+            return from;
+        }
+
+        public String to() {
+            return to;
         }
     }
 }

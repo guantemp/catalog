@@ -63,7 +63,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
         }
     }
 
-    private ArangoDatabase catalog;
+    private final ArangoDatabase catalog;
 
     public ArangoDBItemQueryService(String databaseName) {
         this.catalog = ArangoDBUtil.getResource().db(databaseName);
@@ -79,7 +79,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
                 "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'brand':{'id':br._key,'name':br.name.name},'category':{'id':c._key,'name':c.name.name},'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice}";
         final Map<String, Object> bindVars = new MapBuilder().put("key", id).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        while (slices.hasNext()) {
+        if (slices.hasNext()) {
             try {
                 return rebuild(slices.next());
             } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
@@ -157,10 +157,10 @@ public class ArangoDBItemQueryService implements ItemQueryService {
     public long size() {
         final String query = " RETURN LENGTH(item)";
         final ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
-        for (; cursor.hasNext(); ) {
+        if (cursor.hasNext()) {
             return cursor.next().getAsLong();
         }
-        return 0l;
+        return 0L;
     }
 
     @Override
@@ -199,7 +199,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
                     LOGGER.debug("Can't rebuild item", e);
             }
         }
-        return itemList.toArray(new ItemView[itemList.size()]);
+        return itemList.toArray(new ItemView[0]);
     }
 
     private ItemView rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {

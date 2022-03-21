@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
  * @version 0.0.1 builder 2021-12-03
  */
 public class ArangoDBCategoryQueryServiceTest {
-    private CategoryQueryService query = new ArangoDBCategoryQueryService("catalog");
+    private final CategoryQueryService query = new ArangoDBCategoryQueryService("catalog");
 
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testRoot() {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -304,7 +304,7 @@ public class Item {
 
         Item item = (Item) o;
 
-        return id != null ? id.equals(item.id) : item.id == null;
+        return Objects.equals(id, item.id);
     }
 
     @Override

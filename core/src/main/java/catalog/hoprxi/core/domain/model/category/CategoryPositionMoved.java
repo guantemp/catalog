@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,10 @@ import java.time.LocalDateTime;
  * @version 0.0.1 2019/10/7
  */
 public class CategoryPositionMoved implements DomainEvent {
-    private LocalDateTime occurredOn;
-    private String id;
-    private String movedId;
-    private int version;
+    private final LocalDateTime occurredOn;
+    private final String id;
+    private final String movedId;
+    private final int version;
 
     public CategoryPositionMoved(String id, String movedId) {
         this.id = id;

@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import salt.hoprxi.tree.Tree;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2021-12-01
+ * @version 0.0.1 builder 2022-03-21
  */
 public class ArangoDBCategoryQueryService implements CategoryQueryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBCategoryQueryService.class);
@@ -55,7 +56,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         }
     }
 
-    private ArangoDatabase catalog;
+    private final ArangoDatabase catalog;
 
     public ArangoDBCategoryQueryService(String databaseName) {
         this.catalog = ArangoDBUtil.getResource().db(databaseName);
@@ -66,6 +67,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         return new ArangoDBCategoryQueryService(databaseName);
     }
 
+    @SuppressWarnings({"unchecked", "hiding"})
     public void refresh() {
         final String query = "FOR d IN category FILTER d._key == d.parentId RETURN d";
         ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
@@ -73,7 +75,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         while (cursor.hasNext()) {
             list.add(rebuild(cursor.next()));
         }
-        trees = new Tree[list.size()];
+        trees = (Tree<CategoryView>[]) Array.newInstance(Tree.class, list.size());
         for (int i = 0, j = list.size(); i < j; i++) {
             trees[i] = new Tree<>(list.get(i));
         }
@@ -104,8 +106,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                 "RETURN {'_key':i._key,'parentId':i.parentId,'name':i.name,'description':i.description,'has': sub == [] ? false : true}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
         ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
-        CategoryView[] categories = this.transform(cursor);
-        return categories;
+        return transform(cursor);
     }
 
     @Override
@@ -138,7 +139,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                 "RETURN {'_key':i._key,'parentId':i.parentId,'name':i.name,'description':i.description,'has': sub == [] ? false : true}";
         final Map<String, Object> bindVars = new MapBuilder().put("key", id).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        while (slices.hasNext())
+        if (slices.hasNext())
             return rebuild(slices.next());
         return null;
     }
@@ -170,6 +171,6 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         while (cursor.hasNext()) {
             list.add(rebuild(cursor.next()));
         }
-        return list.toArray(new CategoryView[list.size()]);
+        return list.toArray(new CategoryView[0]);
     }
 }

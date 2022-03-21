@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ public class ArangoDBBrandQueryService implements BrandQueryService {
         }
     }
 
-    private ArangoDatabase catalog;
+    private final ArangoDatabase catalog;
 
     public ArangoDBBrandQueryService(String databaseName) {
         this.catalog = ArangoDBUtil.getResource().db(databaseName);
@@ -134,6 +134,6 @@ public class ArangoDBBrandQueryService implements BrandQueryService {
                     LOGGER.debug("Can't rebuild brand", e);
             }
         }
-        return brandList.toArray(new Brand[brandList.size()]);
+        return brandList.toArray(new Brand[0]);
     }
 }

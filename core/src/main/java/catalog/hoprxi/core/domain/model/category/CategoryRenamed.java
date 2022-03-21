@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,10 @@ import java.time.LocalDateTime;
  * @version 0.0.2 builder 2020-05-05
  */
 public class CategoryRenamed implements DomainEvent {
-    private Name name;
-    private LocalDateTime occurredOn;
-    private String id;
-    private int version;
+    private final Name name;
+    private final LocalDateTime occurredOn;
+    private final String id;
+    private final int version;
 
     /**
      * @param id

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,11 +39,8 @@ import org.slf4j.LoggerFactory;
 import salt.hoprxi.id.LongId;
 
 import javax.money.MonetaryAmount;
-import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 /***
@@ -66,10 +63,10 @@ public class ArangoDBItemRepository implements ItemRepository {
         }
     }
 
-    private ArangoDatabase catalog;
+    private final ArangoDatabase catalog;
 
     public ArangoDBItemRepository(String databaseName) {
-        this.catalog = ArangoDBUtil.getResource().db(databaseName);
+        catalog = ArangoDBUtil.getResource().db(databaseName);
     }
 
     @Override
@@ -82,7 +79,7 @@ public class ArangoDBItemRepository implements ItemRepository {
                 "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice,'brandId':i.brandId,'categoryId':i.categoryId}";
         final Map<String, Object> bindVars = new MapBuilder().put("key", id).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
-        while (slices.hasNext()) {
+        if (slices.hasNext()) {
             try {
                 return rebuild(slices.next());
             } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
@@ -91,19 +88,6 @@ public class ArangoDBItemRepository implements ItemRepository {
             }
         }
         return null;
-    }
-
-    private Item[] transform(ArangoCursor<VPackSlice> slices) {
-        List<Item> itemList = new ArrayList<>();
-        while (slices.hasNext()) {
-            try {
-                itemList.add(rebuild(slices.next()));
-            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                if (LOGGER.isDebugEnabled())
-                    LOGGER.debug("Can't rebuild item", e);
-            }
-        }
-        return itemList.toArray(new Item[itemList.size()]);
     }
 
     private Item rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
@@ -219,7 +203,26 @@ public class ArangoDBItemRepository implements ItemRepository {
         }
     }
 
+    private void insertHasEdgeOfBarcode(ArangoGraph graph, DocumentEntity itemVertex, Barcode barcode) {
+        VertexEntity barcodeVertex = graph.vertexCollection("barcode").insertVertex(barcode);
+        graph.edgeCollection("has").insertEdge(new HasEdge(itemVertex.getId(), barcodeVertex.getId()));
+    }
+
     /*
+
+    private Item[] transform(ArangoCursor<VPackSlice> slices) {
+        List<Item> itemList = new ArrayList<>();
+        while (slices.hasNext()) {
+            try {
+                itemList.add(rebuild(slices.next()));
+            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("Can't rebuild item", e);
+            }
+        }
+        return itemList.toArray(new Item[0]);
+    }
+
         private void updateBarcodeBook(ArangoDatabase arangoDatabase, DocumentEntity startVertex, EANUPCBarcode barcode) {
             Barcode[] barcodes = barcode.barcodes();
             //remove v not in barcodes and e in has
@@ -251,7 +254,7 @@ public class ArangoDBItemRepository implements ItemRepository {
             }
         }
 
-         */
+
     private <T> T[] fromArrayRemoveRepeat(Class<T> type, T[] source, T[] repeat) {
         int i = 0;
         T[] temp = (T[]) Array.newInstance(type, source.length);
@@ -272,18 +275,13 @@ public class ArangoDBItemRepository implements ItemRepository {
         System.arraycopy(temp, 0, result, 0, i);
         return result;
     }
-
-
-    private void insertHasEdgeOfBarcode(ArangoGraph graph, DocumentEntity itemVertex, Barcode barcode) {
-        VertexEntity barcodeVertex = graph.vertexCollection("barcode").insertVertex(barcode);
-        graph.edgeCollection("has").insertEdge(new HasEdge(itemVertex.getId(), barcodeVertex.getId()));
-    }
+ */
 
     private static class HasEdge {
         @DocumentField(DocumentField.Type.FROM)
-        private String from;
+        private final String from;
         @DocumentField(DocumentField.Type.TO)
-        private String to;
+        private final String to;
 
         private HasEdge(String from, String to) {
             this.from = from;
@@ -293,9 +291,9 @@ public class ArangoDBItemRepository implements ItemRepository {
 
     private static class BelongEdge {
         @DocumentField(DocumentField.Type.FROM)
-        private String from;
+        private final String from;
         @DocumentField(DocumentField.Type.TO)
-        private String to;
+        private final String to;
 
         private BelongEdge(String from, String to) {
             this.from = from;
