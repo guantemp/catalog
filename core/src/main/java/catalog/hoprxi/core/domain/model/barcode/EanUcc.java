@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2021-09-19
  */
 public class EanUcc {
-    private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{7}$||^\\d{11}$||^\\d{12}$");
+    private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{7}$|^\\d{11}$|^\\d{12}$");
 
     /**
      * @param barcode
@@ -34,9 +34,9 @@ public class EanUcc {
     public static boolean checkChecksum(CharSequence barcode) {
         try {
             int checksum = computeChecksum(barcode.subSequence(0, barcode.length() - 1));
-            return checksum == barcode.charAt(barcode.length() - 1) - '0';
+            return checksum != barcode.charAt(barcode.length() - 1) - '0';
         } catch (InvalidBarcodeException e) {
-            return false;
+            return true;
         }
     }
 

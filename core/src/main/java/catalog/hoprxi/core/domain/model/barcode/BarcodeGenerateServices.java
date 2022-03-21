@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,11 +85,11 @@ public class BarcodeGenerateServices {
      * @return
      */
     public static Barcode[] inStoreEAN_13BarcodeGenerate(long start, int amount, String prefix) {
-        if (start < 0l)
+        if (start < 0L)
             throw new IllegalArgumentException("start is positive number");
         if (amount < 0)
             throw new IllegalArgumentException("amount required larger zero");
-        if (start + amount > 9999999999l)
+        if (start + amount > 9999999999L)
             throw new IllegalArgumentException("sum(start,amount) must less than or equal to  9999999999");
         Matcher matcher = IN_STORE_PREFIX.matcher(prefix);
         if (!matcher.matches())
@@ -114,11 +114,11 @@ public class BarcodeGenerateServices {
      * @return
      */
     public static Barcode[] couponBarcodeGenerate(long start, int amount) {
-        if (start < 0l)
+        if (start < 0L)
             throw new IllegalArgumentException("start is positive number");
         if (amount <= 0)
             return new EAN_13[0];
-        if (start + amount > 9999999999l)
+        if (start + amount > 9999999999L)
             throw new IllegalArgumentException("sum(start,amount) must less than or equal to  9999999999");
         EAN_13[] ean_13s = new EAN_13[amount];
         String prefix = "99";

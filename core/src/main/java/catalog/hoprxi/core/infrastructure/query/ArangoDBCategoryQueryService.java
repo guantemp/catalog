@@ -63,10 +63,6 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         this.refresh();
     }
 
-    public static ArangoDBCategoryQueryService getInstance(String databaseName) {
-        return new ArangoDBCategoryQueryService(databaseName);
-    }
-
     @SuppressWarnings({"unchecked", "hiding"})
     public void refresh() {
         final String query = "FOR d IN category FILTER d._key == d.parentId RETURN d";
@@ -97,7 +93,6 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                 System.out.println(t.value(temp));
             }
         }
-
  */
         id = Objects.requireNonNull(id, "id required").trim();
         final String query = "WITH category\n" +

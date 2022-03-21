@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import java.util.Objects;
  * @version 0.0.1 2019-08-28
  */
 public class ValidatorBrand {
-    private BrandRepository repository;
+    private final BrandRepository repository;
 
     public ValidatorBrand(BrandRepository repository) {
         this.repository = Objects.requireNonNull(repository, "repository required");

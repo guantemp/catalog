@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,11 +36,11 @@ public class UPC_E extends Barcode {
         Matcher matcher = BARCODE_PATTERN.matcher(barcode);
         if (matcher.matches())
             return EanUcc.checkChecksum(barcode);
-        return false;
+        return true;
     }
 
     public UPC_A toUPC_A() {
-        StringBuilder sb = new StringBuilder(barcode.charAt(0));
+        StringBuilder sb = new StringBuilder().append(barcode.charAt(0));
         switch (barcode.charAt(6)) {
             case '0':
             case '1':

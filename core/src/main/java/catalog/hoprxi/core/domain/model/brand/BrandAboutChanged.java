@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,13 +30,13 @@ import java.util.Objects;
  */
 
 public class BrandAboutChanged implements DomainEvent {
-    private URL logo;
-    private Year since;
-    private String story;
-    private URL homePage;
-    private String id;
-    private LocalDateTime occurredOn;
-    private int version;
+    private final URL logo;
+    private final Year since;
+    private final String story;
+    private final URL homePage;
+    private final String id;
+    private final LocalDateTime occurredOn;
+    private final int version;
 
     public BrandAboutChanged(String id, URL logo, URL homePage, Year since, String story) {
         super();
@@ -46,6 +46,7 @@ public class BrandAboutChanged implements DomainEvent {
         this.since = since;
         this.story = story;
         this.version = 1;
+        this.occurredOn = LocalDateTime.now();
     }
 
     @Override

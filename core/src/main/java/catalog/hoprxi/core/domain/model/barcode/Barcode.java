@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ public abstract class Barcode {
 
     public Barcode(CharSequence barcode) {
         Objects.requireNonNull(barcode, "barcode is required");
-        if (!checkFeature(barcode))
+        if (checkFeature(barcode))
             throw new IllegalArgumentException("Invalid barcode");
         this.barcode = barcode;
     }
@@ -47,7 +47,7 @@ public abstract class Barcode {
 
         Barcode barcode1 = (Barcode) o;
 
-        return barcode != null ? barcode.equals(barcode1.barcode) : barcode1.barcode == null;
+        return Objects.equals(barcode, barcode1.barcode);
     }
 
     @Override

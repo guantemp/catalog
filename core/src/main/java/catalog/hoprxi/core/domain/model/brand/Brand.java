@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,7 +97,7 @@ public class Brand {
 
         Brand brand = (Brand) o;
 
-        return id != null ? id.equals(brand.id) : brand.id == null;
+        return Objects.equals(id, brand.id);
     }
 
     @Override
