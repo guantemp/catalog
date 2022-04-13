@@ -115,11 +115,6 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     }
 
     @Override
-    public CategoryView[] searchName(String name) {
-        return new CategoryView[0];
-    }
-
-    @Override
     public CategoryView[] children(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         CategoryView[] children = new CategoryView[0];
@@ -143,7 +138,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     }
 
     private CategoryView[] queryChildren(String id) {
-        final String query = "WITH category\n" +
+        final String query = "WITH category,subordinate\n" +
                 "FOR c,s in 1..1 OUTBOUND @startVertex subordinate\n" +
                 "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
                 "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
@@ -153,9 +148,14 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     }
 
     @Override
+    public CategoryView[] descendants(String id) {
+        return new CategoryView[0];
+    }
+
+    @Override
     public CategoryView[] siblings(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
-        final String query = "WITH category\n" +
+        final String query = "WITH category,subordinate\n" +
                 "FOR p IN 1..1 INBOUND @startVertex subordinate\n" +
                 "FOR v IN 1..1 OUTBOUND p._id subordinate RETURN v";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
@@ -164,7 +164,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     }
 
     @Override
-    public CategoryView[] descendants(String id) {
+    public CategoryView[] searchName(String name) {
         return new CategoryView[0];
     }
 
