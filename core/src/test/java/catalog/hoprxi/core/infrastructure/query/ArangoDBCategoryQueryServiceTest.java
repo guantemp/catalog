@@ -29,24 +29,35 @@ import org.testng.annotations.Test;
 public class ArangoDBCategoryQueryServiceTest {
     private final CategoryQueryService query = new ArangoDBCategoryQueryService("catalog");
 
-    @Test(invocationCount = 1, threadPoolSize = 1)
+    @Test(priority = 1, invocationCount = 1, threadPoolSize = 2)
     public void testRoot() {
         Assert.assertEquals(2, query.root().length);
-        for (CategoryView c : query.root()) {
-            System.out.println(c);
-        }
     }
 
     @Test(priority = 2)
     public void testChildren() {
-        CategoryView[] sub = query.children("root");
+        //CategoryView[] sub = query.children("root");
         //Assert.assertEquals(5, sub.length);
     }
 
-    @Test(priority = 2)
+    @Test(priority = 2, invocationCount = 6)
     public void testFind() {
         CategoryView root = query.find("root");
         Assert.assertTrue(root.isRoot());
+        root = query.find(" undefined");
+        Assert.assertTrue(root.isRoot());
+        CategoryView grain_oil = query.find("grain_oil");
+        Assert.assertNotNull(grain_oil);
+        grain_oil = query.find("grain_oil");
+        Assert.assertNotNull(grain_oil);
+        CategoryView oil = query.find("oil");
+        Assert.assertNotNull(oil);
+        CategoryView corn_oil = query.find("corn_oil");
+        Assert.assertNotNull(corn_oil);
+        CategoryView sunflower_seed_oil = query.find("sunflower_seed_oil");
+        Assert.assertNotNull(sunflower_seed_oil);
+        sunflower_seed_oil = query.find("sunflower_seed_oil");
+        Assert.assertNotNull(sunflower_seed_oil);
     }
 
     @Test

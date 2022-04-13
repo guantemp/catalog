@@ -24,6 +24,8 @@ import catalog.hoprxi.core.infrastructure.view.CategoryView;
  * @version 0.0.1 builder 2021-12-01
  */
 public interface CategoryQueryService {
+    CategoryView find(String id);
+
     CategoryView[] root();
 
     CategoryView[] children(String id);
@@ -33,6 +35,4 @@ public interface CategoryQueryService {
     CategoryView[] descendants(String id);
 
     CategoryView[] path(String id);
-
-    CategoryView find(String id);
 }

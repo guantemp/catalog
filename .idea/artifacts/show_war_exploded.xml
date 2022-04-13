@@ -44,7 +44,6 @@
           <element id="library" level="project" name="Maven: io.projectreactor:reactor-core:3.3.18.RELEASE" />
           <element id="library" level="project" name="Maven: org.reactivestreams:reactive-streams:1.0.3" />
           <element id="library" level="project" name="Maven: salt.hoprxi:to:1.0-SNAPSHOT" />
-          <element id="library" level="project" name="Maven: salt.hoprxi:tree:1.0-SNAPSHOT" />
           <element id="library" level="project" name="Maven: salt.hoprxi:id:1.0-SNAPSHOT" />
           <element id="library" level="project" name="Maven: salt.hoprxi:crypto:1.0-SNAPSHOT" />
           <element id="library" level="project" name="Maven: org.mindrot:jbcrypt:0.4" />

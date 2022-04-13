@@ -19,6 +19,8 @@ package catalog.hoprxi.core.infrastructure.view;
 import catalog.hoprxi.core.domain.model.Name;
 
 import java.net.URI;
+import java.util.Objects;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -26,17 +28,18 @@ import java.net.URI;
  * @version 0.0.1 builder 2022-03-20
  */
 public class CategoryView {
+    private static final String PLACEHOLDER = "placeholder";
+    private final String id;
     private String description;
-    private String id;
-    private Name name;
+    private final Name name;
     private String parentId;
     private URI icon;
     private boolean isLeaf;
     private boolean hasSibling;
 
     public CategoryView(String parentId, String id, Name name, String description, boolean isLeaf, boolean hasSibling, URI icon) {
+        this.id = Objects.requireNonNull(id, "id required");
         this.description = description;
-        this.id = id;
         this.name = name;
         this.parentId = parentId;
         this.icon = icon;
@@ -44,23 +47,18 @@ public class CategoryView {
         this.hasSibling = hasSibling;
     }
 
-    public CategoryView(String parentId, String id, Name name) {
-        this.id = id;
-        this.name = name;
+    public CategoryView(String parentId, String id, String name) {
+        this.id = Objects.requireNonNull(id, "id required");
+        this.name = Name.of(name);
         this.parentId = parentId;
     }
 
-    public CategoryView(String description, String id, Name name, String parentId, boolean isLeaf, boolean hasSibling) {
-        this.description = description;
-        this.id = id;
-        this.name = name;
-        this.parentId = parentId;
-        this.isLeaf = isLeaf;
-        this.hasSibling = hasSibling;
+    public static CategoryView createIdentifiableCategoryView(String id) {
+        return new CategoryView(id, id, PLACEHOLDER);
     }
 
     public boolean isRoot() {
-        return parentId.equals(id);
+        return id.equals(parentId);
     }
 
     public String getDescription() {
@@ -81,6 +79,10 @@ public class CategoryView {
 
     public String getParentId() {
         return parentId;
+    }
+
+    public void setParentId(String parentId) {
+        this.parentId = parentId;
     }
 
     public URI getIcon() {
@@ -114,11 +116,24 @@ public class CategoryView {
 
         CategoryView that = (CategoryView) o;
 
-        return id != null ? id.equals(that.id) : that.id == null;
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
         return id != null ? id.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", CategoryView.class.getSimpleName() + "[", "]")
+                .add("parentId='" + parentId + "'")
+                .add("id='" + id + "'")
+                .add("name=" + name)
+                .add("description='" + description + "'")
+                .add("icon=" + icon)
+                .add("isLeaf=" + isLeaf)
+                .add("hasSibling=" + hasSibling)
+                .toString();
     }
 }

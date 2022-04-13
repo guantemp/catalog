@@ -70,7 +70,6 @@
     <orderEntry type="library" name="Maven: io.projectreactor:reactor-core:3.3.18.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.reactivestreams:reactive-streams:1.0.3" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:to:1.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: salt.hoprxi:tree:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:id:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:crypto:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.mindrot:jbcrypt:0.4" level="project" />
