@@ -30,6 +30,8 @@ public interface CategoryQueryService {
 
     CategoryView[] children(String id);
 
+    CategoryView[] searchName(String name);
+
     CategoryView[] siblings(String id);
 
     CategoryView[] descendants(String id);

@@ -115,6 +115,11 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     }
 
     @Override
+    public CategoryView[] searchName(String name) {
+        return new CategoryView[0];
+    }
+
+    @Override
     public CategoryView[] children(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         CategoryView[] children = new CategoryView[0];
