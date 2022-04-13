@@ -29,18 +29,28 @@ import org.testng.annotations.Test;
 public class ArangoDBCategoryQueryServiceTest {
     private final CategoryQueryService query = new ArangoDBCategoryQueryService("catalog");
 
-    @Test(priority = 1, invocationCount = 1, threadPoolSize = 2)
+    @Test(invocationCount = 2)
     public void testRoot() {
         Assert.assertEquals(2, query.root().length);
     }
 
-    @Test(priority = 2)
+    @Test(priority = 2, invocationCount = 5, threadPoolSize = 2)
     public void testChildren() {
-        //CategoryView[] sub = query.children("root");
-        //Assert.assertEquals(5, sub.length);
+        CategoryView[] sub = query.children("root");
+        Assert.assertEquals(5, sub.length);
+        sub = query.children("food");
+        for (CategoryView c : sub)
+            System.out.println(c);
+        sub = query.children("grain_oil");
+        for (CategoryView c : sub)
+            System.out.println(c);
+        sub = query.children("oil");
+        Assert.assertEquals(7, sub.length);
+        sub = query.children("leisure_food");
+        Assert.assertEquals(2, sub.length);
     }
 
-    @Test(priority = 2, invocationCount = 6)
+    @Test(priority = 2, invocationCount = 4)
     public void testFind() {
         CategoryView root = query.find("root");
         Assert.assertTrue(root.isRoot());

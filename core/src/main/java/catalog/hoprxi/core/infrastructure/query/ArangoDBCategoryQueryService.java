@@ -63,6 +63,31 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     }
 
     @Override
+    public CategoryView[] root() {
+        if (trees != null) {
+            CategoryView[] categoryViews = new CategoryView[trees.length];
+            for (int i = 0, j = trees.length; i < j; i++) {
+                categoryViews[i] = trees[i].root();
+            }
+            return categoryViews;
+        } else {
+            synchronized (ArangoDBCategoryQueryService.class) {
+                final String query = "WITH category\n" +
+                        "FOR c IN category FILTER c._key == c.parentId\n" +
+                        "LET SUB = (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e )\n" +
+                        "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
+                ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
+                CategoryView[] categoryViews = transform(cursor);
+                trees = new Tree[categoryViews.length];
+                for (int i = 0, j = categoryViews.length; i < j; i++) {
+                    trees[i] = Tree.root(categoryViews[i]);
+                }
+                return categoryViews;
+            }
+        }
+    }
+
+    @Override
     public CategoryView find(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
@@ -72,8 +97,8 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         }
         final String query = "WITH category\n" +
                 "FOR c in category FILTER c._key == @key\n" +
-                "LET sub = (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e )\n" +
-                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':sub == []}";
+                "LET SUB = (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e )\n" +
+                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
         final Map<String, Object> bindVars = new MapBuilder().put("key", id).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         if (slices.hasNext()) {
@@ -90,63 +115,33 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     }
 
     @Override
-    public CategoryView[] root() {
-        if (trees != null) {
-            CategoryView[] categoryViews = new CategoryView[trees.length];
-            for (int i = 0, j = trees.length; i < j; i++) {
-                categoryViews[i] = trees[i].root();
-            }
-            return categoryViews;
-        } else {
-            synchronized (ArangoDBCategoryQueryService.class) {
-                final String query = "WITH category\n" +
-                        "FOR c IN category FILTER c._key == c.parentId\n" +
-                        "LET sub = (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e )\n" +
-                        "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':sub == []}";
-                ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
-                CategoryView[] categoryViews = transform(cursor);
-                trees = new Tree[categoryViews.length];
-                for (int i = 0, j = categoryViews.length; i < j; i++) {
-                    trees[i] = Tree.root(categoryViews[i]);
-                }
-                return categoryViews;
-            }
-        }
-    }
-
-    @Override
     public CategoryView[] children(String id) {
-        CategoryView[] result = new CategoryView[0];
-        CategoryView temp = new CategoryView(id, id, "temp");
-        boolean global = false;
-        for (int i = 0, j = trees.length; i < j; i++) {
-            Tree<CategoryView> t = trees[i];
-            if (t.has(temp)) {
-                global = true;
-                if (!t.value(temp).isLeaf()) {
-                    CategoryView[] children = t.children(temp);
-                    if (children.length >= 1) {
-                        result = children;
-                    } else {
-                        result = queryChildren(id);
-                        for (CategoryView view : result)
-                            t.addChild(temp, view);
+        id = Objects.requireNonNull(id, "id required").trim();
+        CategoryView[] children = new CategoryView[0];
+        CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
+        for (Tree<CategoryView> t : trees) {
+            if (t.has(identifiable)) {
+                if (!t.value(identifiable).isLeaf()) {
+                    children = t.children(identifiable);
+                    if (children.length < 1) {
+                        synchronized (ArangoDBCategoryQueryService.class) {
+                            children = queryChildren(id);
+                        }
+                        for (CategoryView c : children)
+                            t.addChild(identifiable, c);
+                        break;
                     }
                 }
             }
         }
-        if (!global) {
-            CategoryView self = find(id);
-        }
-        return result;
+        return children;
     }
 
     private CategoryView[] queryChildren(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
         final String query = "WITH category\n" +
-                "FOR c,s in 1..1 OUTBOUND @key subordinate\n" +
+                "FOR c,s in 1..1 OUTBOUND @startVertex subordinate\n" +
                 "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
-                "RETURN {'_key':i._key,'parentId':i.parentId,'name':i.name,'description':i.description,'leaf':sub == []}";
+                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
         ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(cursor);
