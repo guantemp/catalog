@@ -149,7 +149,33 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
 
     @Override
     public CategoryView[] descendants(String id) {
-        return new CategoryView[0];
+        id = Objects.requireNonNull(id, "id required").trim();
+        CategoryView[] descendants = new CategoryView[0];
+        CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
+        for (Tree<CategoryView> t : trees) {
+            if (t.has(identifiable)) {
+                if (!t.value(identifiable).isLeaf()) {
+                    descendants = t.descendants(identifiable);
+                    if (descendants.length < 1) {
+                        synchronized (ArangoDBCategoryQueryService.class) {
+                            descendants = queryAndFillDescendants(t, id);
+                        }
+                    }
+                }
+            }
+        }
+        return descendants;
+    }
+
+    private CategoryView[] queryAndFillDescendants(Tree<CategoryView> t, String id) {
+        final String query = "WITH category,subordinate\n" +
+                "FOR c,s in 1..1 OUTBOUND @startVertex subordinate\n" +
+                "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
+                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
+        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
+        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+        CategoryView[] categoryViews = transform(cursor);
+        return categoryViews;
     }
 
     @Override
@@ -170,7 +196,14 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
 
     @Override
     public CategoryView[] path(String id) {
-        return new CategoryView[0];
+        id = Objects.requireNonNull(id, "id required").trim();
+        CategoryView[] path = new CategoryView[0];
+        CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
+        for (Tree<CategoryView> t : trees) {
+            if (t.has(identifiable))
+                path = t.path(identifiable);
+        }
+        return path;
     }
 
     @SuppressWarnings({"unchecked", "hiding"})
