@@ -30,14 +30,15 @@ import java.util.StringJoiner;
 public class CategoryView {
     private static final String PLACEHOLDER = "placeholder";
     private final String id;
-    private String description;
     private final Name name;
+    private String description;
     private String parentId;
     private URI icon;
     private boolean isLeaf;
     private boolean hasSibling;
+    private int depth = 0;
 
-    public CategoryView(String parentId, String id, Name name, String description, boolean isLeaf, boolean hasSibling, URI icon) {
+    public CategoryView(String parentId, String id, Name name, String description, URI icon, boolean isLeaf, boolean hasSibling) {
         this.id = Objects.requireNonNull(id, "id required");
         this.description = description;
         this.name = name;

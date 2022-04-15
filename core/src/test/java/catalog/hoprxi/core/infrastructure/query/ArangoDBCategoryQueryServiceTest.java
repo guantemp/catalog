@@ -34,7 +34,7 @@ public class ArangoDBCategoryQueryServiceTest {
         Assert.assertEquals(2, query.root().length);
     }
 
-    @Test(priority = 2, invocationCount = 5, threadPoolSize = 1)
+    @Test(priority = 3, invocationCount = 5, threadPoolSize = 1)
     public void testChildren() {
         CategoryView[] sub = query.children("root");
         Assert.assertEquals(5, sub.length);
@@ -53,7 +53,7 @@ public class ArangoDBCategoryQueryServiceTest {
         Assert.assertEquals(7, sub.length);
     }
 
-    @Test(priority = 2, invocationCount = 2)
+    @Test(priority = 3, invocationCount = 2)
     public void testFind() {
         CategoryView root = query.find("root");
         Assert.assertTrue(root.isRoot());
@@ -73,9 +73,13 @@ public class ArangoDBCategoryQueryServiceTest {
         Assert.assertNotNull(sunflower_seed_oil);
     }
 
-    @Test
+    @Test(priority = 2, invocationCount = 2)
     public void testDescendants() {
-        // Category[] sub = query.descendants("root");
+        CategoryView[] sub = query.descendants("root");
+        System.out.println(sub.length);
+        for (CategoryView c : sub)
+            System.out.println("c:" + c);
+
         //Assert.assertEquals(43, sub.length);
     }
 

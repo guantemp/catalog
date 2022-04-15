@@ -30,6 +30,7 @@ import salt.hoprxi.cache.application.Tree;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +44,7 @@ import java.util.Objects;
  */
 public class ArangoDBCategoryQueryService implements CategoryQueryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBCategoryQueryService.class);
+    private static final int DESCENDANT_DEPTH = 3;
     private static Tree<CategoryView>[] trees;
     private static Constructor<Name> nameConstructor;
 
@@ -76,7 +78,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                         "FOR c IN category FILTER c._key == c.parentId\n" +
                         "LET SUB = (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e )\n" +
                         "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
-                ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
+                ArangoCursor<VPackSlice> cursor = catalog.query(query, VPackSlice.class);
                 CategoryView[] categoryViews = transform(cursor);
                 trees = new Tree[categoryViews.length];
                 for (int i = 0, j = categoryViews.length; i < j; i++) {
@@ -100,7 +102,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                 "LET SUB = (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e )\n" +
                 "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
         final Map<String, Object> bindVars = new MapBuilder().put("key", id).get();
-        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
+        ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, VPackSlice.class);
         if (slices.hasNext()) {
             identifiable = rebuild(slices.next());
             CategoryView parent = CategoryView.createIdentifiableCategoryView(identifiable.getParentId());
@@ -143,7 +145,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                 "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
                 "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
-        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, VPackSlice.class);
         return transform(cursor);
     }
 
@@ -158,7 +160,9 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                     descendants = t.descendants(identifiable);
                     if (descendants.length < 1) {
                         synchronized (ArangoDBCategoryQueryService.class) {
-                            descendants = queryAndFillDescendants(t, id);
+                            queryAndFillDescendants(t, id);
+                            descendants = t.descendants(identifiable);
+                            break;
                         }
                     }
                 }
@@ -167,15 +171,27 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         return descendants;
     }
 
-    private CategoryView[] queryAndFillDescendants(Tree<CategoryView> t, String id) {
+    private void queryAndFillDescendants(Tree<CategoryView> t, String id) {
         final String query = "WITH category,subordinate\n" +
-                "FOR c,s in 1..1 OUTBOUND @startVertex subordinate\n" +
+                "FOR c,s,p in 1..@depth OUTBOUND @startVertex subordinate\n" +
                 "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
-                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
-        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == [],'depth':LENGTH(p.edges)}";
+        final Map<String, Object> bindVars = new MapBuilder().put("depth", DESCENDANT_DEPTH).put("startVertex", "category/" + id).get();
+        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, VPackSlice.class);
         CategoryView[] categoryViews = transform(cursor);
-        return categoryViews;
+        for (CategoryView v : categoryViews) {
+            t.addChild(CategoryView.createIdentifiableCategoryView(v.getParentId()), v);
+            try {
+                Field depth = v.getClass().getDeclaredField("depth");
+                depth.setAccessible(true);
+                if ((int) depth.get(v) == DESCENDANT_DEPTH && !v.isLeaf()) {
+                    queryAndFillDescendants(t, v.getId());
+                }
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("Can't get categoryView depth");
+            }
+        }
     }
 
     @Override
@@ -212,7 +228,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                 "FOR c IN category FILTER c._key == c.parentId\n" +
                 "LET sub = (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e )\n" +
                 "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':sub == []}";
-        ArangoCursor<VPackSlice> cursor = catalog.query(query, null, null, VPackSlice.class);
+        ArangoCursor<VPackSlice> cursor = catalog.query(query, VPackSlice.class);
         CategoryView[] categoryViews = transform(cursor);
         trees = (Tree<CategoryView>[]) Array.newInstance(Tree.class, categoryViews.length);
         for (int i = 0, j = categoryViews.length; i < j; i++) {
@@ -230,11 +246,22 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
             name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());
         } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
             if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Can't rebuild category");
+                LOGGER.debug("Can't rebuild categoryView");
         }
         String description = slice.get("description").getAsString();
         boolean isLeaf = slice.get("leaf").getAsBoolean();
-        return name == null ? null : new CategoryView(parentId, id, name, description, isLeaf, false, null);
+        CategoryView result = new CategoryView(parentId, id, name, description, null, isLeaf, false);
+        if (!slice.get("depth").isNone()) {
+            try {
+                Field depth = result.getClass().getDeclaredField("depth");
+                depth.setAccessible(true);// 添加访问权限，才能访问私有属性， 不然会报错
+                depth.set(result, slice.get("depth").getAsInt());
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                if (LOGGER.isDebugEnabled())
+                    LOGGER.debug("Can't set categoryView private depth");
+            }
+        }
+        return result;
     }
 
 

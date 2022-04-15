@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,6 +66,9 @@ public class CategoryServlet extends HttpServlet {
                             generator.writeEndArray();
                             break;
                         case "descendants":
+                            generator.writeArrayFieldStart("categories");
+                            responseDescendants(generator, category);
+                            generator.writeEndArray();
                             break;
                     }
                 } else {
@@ -87,6 +90,9 @@ public class CategoryServlet extends HttpServlet {
         generator.writeEndObject();
         generator.flush();
         generator.close();
+    }
+
+    private void responseDescendants(JsonGenerator generator, Category category) {
     }
 
     private void responseChildren(JsonGenerator generator, Category category) throws IOException {
