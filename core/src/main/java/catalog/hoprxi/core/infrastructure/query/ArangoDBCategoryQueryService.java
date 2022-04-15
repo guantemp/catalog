@@ -184,7 +184,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
             try {
                 Field depth = v.getClass().getDeclaredField("depth");
                 depth.setAccessible(true);
-                if ((int) depth.get(v) == DESCENDANT_DEPTH && !v.isLeaf()) {
+                if (!v.isLeaf() && (int) depth.get(v) == DESCENDANT_DEPTH) {
                     queryAndFillDescendants(t, v.getId());
                 }
             } catch (NoSuchFieldException | IllegalAccessException e) {

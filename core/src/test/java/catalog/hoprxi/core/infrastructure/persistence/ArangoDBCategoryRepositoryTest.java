@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import salt.hoprxi.id.LongId;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -64,6 +63,10 @@ public class ArangoDBCategoryRepositoryTest {
         repository.save(cosmetics);
         Category washing = new Category("chemicals", "washing", Name.of("洗涤用品"));
         repository.save(washing);
+        Category soap = new Category("washing", "soap", Name.of("肥皂"));
+        repository.save(soap);
+        Category washing_liquid = new Category("washing", "washing_liquid", Name.of("洗衣液"));
+        repository.save(washing_liquid);
         Category oral_hygiene = new Category("chemicals", "oral_hygiene", Name.of("口腔用品"));
         repository.save(oral_hygiene);
         Category clean = new Category("chemicals", "clean", "清洁/卫生用品");
@@ -150,6 +153,9 @@ public class ArangoDBCategoryRepositoryTest {
             repository.remove("drinks");
 
             repository.remove("washing");
+             repository.remove("soap");
+              repository.remove(" washing_liquid");
+              repository.remove("oral_hygiene");
             repository.remove("oral_hygiene");
             repository.remove("clean");
             repository.remove("hari");
@@ -226,16 +232,18 @@ public class ArangoDBCategoryRepositoryTest {
         //Category[] sub = repository.belongTo("root",2);
         //Assert.assertEquals(22, sub.length);
         Category[] sub = repository.belongTo("root", 3);
-        Assert.assertEquals(38, sub.length);
+        Assert.assertEquals(43, sub.length);
     }
 
     @Test(dependsOnMethods = {"testNextIdentity"})
     public void testFind() {
+        Category instant_noodles = repository.find("instant_noodles");
+        Assert.assertNotNull(instant_noodles);
     }
 
     @Test
     public void testNextIdentity() {
-        String id = String.valueOf(LongId.generate());
+        String id = repository.nextIdentity();
         Assert.assertNotNull(id);
     }
 

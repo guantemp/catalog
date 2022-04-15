@@ -73,7 +73,7 @@ public class ArangoDBCategoryQueryServiceTest {
         Assert.assertNotNull(sunflower_seed_oil);
     }
 
-    @Test(priority = 2, invocationCount = 2)
+    @Test(priority = 2, invocationCount = 2, dependsOnMethods = {"testRoot"})
     public void testDescendants() {
         CategoryView[] sub = query.descendants("root");
         System.out.println(sub.length);
