@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import salt.hoprxi.cache.application.Tree;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -185,7 +184,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                 Field depth = v.getClass().getDeclaredField("depth");
                 depth.setAccessible(true);
                 if (!v.isLeaf() && (int) depth.get(v) == DESCENDANT_DEPTH) {
-                    queryAndFillDescendants(t, v.getId());
+                    queryAndFillDescendants(t, v.getId());//recursion
                 }
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 if (LOGGER.isDebugEnabled())
@@ -197,17 +196,43 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     @Override
     public CategoryView[] siblings(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
-        final String query = "WITH category,subordinate\n" +
-                "FOR p IN 1..1 INBOUND @startVertex subordinate\n" +
-                "FOR v IN 1..1 OUTBOUND p._id subordinate RETURN v";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
-        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
-        return this.transform(cursor);
+        CategoryView[] siblings = new CategoryView[0];
+        CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
+        for (Tree<CategoryView> t : trees) {
+            if (t.has(identifiable)) {
+                if (!t.value(identifiable).isLeaf()) {
+                    siblings = t.siblings(identifiable);
+                    if (siblings.length < 1) {
+                        synchronized (ArangoDBCategoryQueryService.class) {
+                            final String query = "WITH category,subordinate\n" +
+                                    "FOR c in 1..1 INBOUND @startVertex subordinate\n" +
+                                    "FOR s in 1..1 OUTBOUND c._id subordinate\n" +
+                                    "LET SUB =  (FOR v,e in 1..1 OUTBOUND s._id subordinate RETURN e)\n" +
+                                    "RETURN {'_key':s._key,'parentId':s.parentId,'name':s.name,'description':s.description,'leaf':SUB == []}";
+                            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
+                            ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+                            siblings = this.transform(cursor);
+                            for (CategoryView s : siblings)
+                                t.addChild(CategoryView.createIdentifiableCategoryView(s.getParentId()), s);
+                            siblings = t.siblings(identifiable);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return siblings;
     }
 
     @Override
-    public CategoryView[] searchName(String name) {
-        return new CategoryView[0];
+    public CategoryView[] searchName(String regularExpression) {
+        final String query = "WITH category,subordinate\n" +
+                "FOR c IN category FILTER c.name.name =~ @regularExpression || c.name.alias =~ @regularExpression || c.name.mnemonic =~ @regularExpression\n" +
+                "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
+                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
+        final Map<String, Object> bindVars = new MapBuilder().put("regularExpression", regularExpression).get();
+        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+        return transform(cursor);
     }
 
     @Override
@@ -216,23 +241,35 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         CategoryView[] path = new CategoryView[0];
         CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
-            if (t.has(identifiable))
+            if (t.has(identifiable)) {
                 path = t.path(identifiable);
+                if (path.length < 1) {
+                    synchronized (ArangoDBCategoryQueryService.class) {
+                        final String query = "WITH category,subordinate\n" +
+                                "FOR c,subordinate IN INBOUND SHORTEST_PATH @startVertex TO @targetVertex GRAPH core\n" +
+                                "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
+                                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
+                        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).put("startVertex", "category/" + t.root().getId()).get();
+                        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+                        path = transform(cursor);
+                        for (int i = path.length - 1; i >= 0; i--) {
+                            t.addChild(CategoryView.createIdentifiableCategoryView(path[i].getParentId()), path[i]);
+                        }
+                        path = t.path(identifiable);
+                        break;
+                    }
+                }
+            }
         }
         return path;
     }
 
     @SuppressWarnings({"unchecked", "hiding"})
     public void refresh() {
-        final String query = "WITH category\n" +
-                "FOR c IN category FILTER c._key == c.parentId\n" +
-                "LET sub = (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e )\n" +
-                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':sub == []}";
-        ArangoCursor<VPackSlice> cursor = catalog.query(query, VPackSlice.class);
-        CategoryView[] categoryViews = transform(cursor);
-        trees = (Tree<CategoryView>[]) Array.newInstance(Tree.class, categoryViews.length);
-        for (int i = 0, j = categoryViews.length; i < j; i++) {
-            trees[i] = Tree.root(categoryViews[i]);
+        trees = null;
+        root();
+        for (Tree<CategoryView> t : trees) {
+            descendants(t.root().getId());
         }
     }
 

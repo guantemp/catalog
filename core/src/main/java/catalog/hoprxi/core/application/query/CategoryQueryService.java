@@ -45,7 +45,7 @@ public interface CategoryQueryService {
      */
     CategoryView[] descendants(String id);
 
-    CategoryView[] searchName(String name);
+    CategoryView[] searchName(String regularExpression);
 
     CategoryView[] siblings(String id);
 

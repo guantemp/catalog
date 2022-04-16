@@ -29,12 +29,12 @@ import org.testng.annotations.Test;
 public class ArangoDBCategoryQueryServiceTest {
     private final CategoryQueryService query = new ArangoDBCategoryQueryService("catalog");
 
-    @Test(invocationCount = 2)
+    @Test(invocationCount = 1)
     public void testRoot() {
         Assert.assertEquals(2, query.root().length);
     }
 
-    @Test(priority = 3, invocationCount = 5, threadPoolSize = 1)
+    @Test(priority = 3, invocationCount = 3, threadPoolSize = 1)
     public void testChildren() {
         CategoryView[] sub = query.children("root");
         Assert.assertEquals(5, sub.length);
@@ -42,15 +42,16 @@ public class ArangoDBCategoryQueryServiceTest {
         Assert.assertEquals(3, sub.length);
         sub = query.children("grain_oil");
         Assert.assertEquals(5, sub.length);
-        //for (CategoryView c : sub)
-        //    System.out.println(c);
         sub = query.children("oil");
         Assert.assertEquals(7, sub.length);
         sub = query.children("leisure_food");
         Assert.assertEquals(2, sub.length);
+        //测试新对象持有同一个缓存tree
         CategoryQueryService multiple = new ArangoDBCategoryQueryService("catalog");
         sub = multiple.children("oil");
         Assert.assertEquals(7, sub.length);
+        sub = multiple.children("flour");
+        Assert.assertEquals(0, sub.length);
     }
 
     @Test(priority = 3, invocationCount = 2)
@@ -75,21 +76,39 @@ public class ArangoDBCategoryQueryServiceTest {
 
     @Test(priority = 2, invocationCount = 2, dependsOnMethods = {"testRoot"})
     public void testDescendants() {
-        CategoryView[] sub = query.descendants("root");
-        System.out.println(sub.length);
-        for (CategoryView c : sub)
-            System.out.println("c:" + c);
-
-        //Assert.assertEquals(43, sub.length);
+        CategoryView[] descendants = query.descendants("root");
+        Assert.assertEquals(43, descendants.length);
+        descendants = query.descendants("oil");
+        Assert.assertEquals(7, descendants.length);
+        descendants = query.descendants("grain_oil");
+        Assert.assertEquals(14, descendants.length);
+        descendants = query.descendants(" chemicals");
+        Assert.assertEquals(8, descendants.length);
+        descendants = query.descendants(" dairy");
+        Assert.assertEquals(0, descendants.length);
     }
 
-    @Test
+    @Test(invocationCount = 2, dependsOnMethods = {"testDescendants"})
     public void testSilblings() {
-        // Category[] sub = query.descendants("root");
-        //Assert.assertEquals(43, sub.length);
+        CategoryView[] sub = query.siblings("grain_oil");
+        for (CategoryView c : sub)
+            System.out.println("grain_oil sibling:" + c);
+        sub = query.siblings("oil");
+        for (CategoryView c : sub)
+            System.out.println("oil sibling:" + c);
     }
 
-    @Test
+    @Test(invocationCount = 1, dependsOnMethods = {"testRoot"})
     public void testPath() {
+        CategoryView[] sub = query.path("rapeseed_oil");
+        for (CategoryView c : sub)
+            System.out.println("rapeseed_oil path:" + c);
+    }
+
+    @Test(invocationCount = 1, dependsOnMethods = {"testRoot"})
+    public void testSearchName() {
+        CategoryView[] sub = query.searchName("食品");
+        for (CategoryView c : sub)
+            System.out.println("search:" + c);
     }
 }
