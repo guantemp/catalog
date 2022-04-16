@@ -200,23 +200,21 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
             if (t.has(identifiable)) {
-                if (!t.value(identifiable).isLeaf()) {
-                    siblings = t.siblings(identifiable);
-                    if (siblings.length < 1) {
-                        synchronized (ArangoDBCategoryQueryService.class) {
-                            final String query = "WITH category,subordinate\n" +
-                                    "FOR c in 1..1 INBOUND @startVertex subordinate\n" +
-                                    "FOR s in 1..1 OUTBOUND c._id subordinate\n" +
-                                    "LET SUB =  (FOR v,e in 1..1 OUTBOUND s._id subordinate RETURN e)\n" +
-                                    "RETURN {'_key':s._key,'parentId':s.parentId,'name':s.name,'description':s.description,'leaf':SUB == []}";
-                            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
-                            ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
-                            siblings = this.transform(cursor);
-                            for (CategoryView s : siblings)
-                                t.addChild(CategoryView.createIdentifiableCategoryView(s.getParentId()), s);
-                            siblings = t.siblings(identifiable);
-                            break;
-                        }
+                siblings = t.siblings(identifiable);
+                if (siblings.length < 1) {
+                    synchronized (ArangoDBCategoryQueryService.class) {
+                        final String query = "WITH category,subordinate\n" +
+                                "FOR c in 1..1 INBOUND @startVertex subordinate\n" +
+                                "FOR s in 1..1 OUTBOUND c._id subordinate\n" +
+                                "LET SUB =  (FOR v,e in 1..1 OUTBOUND s._id subordinate RETURN e)\n" +
+                                "RETURN {'_key':s._key,'parentId':s.parentId,'name':s.name,'description':s.description,'leaf':SUB == []}";
+                        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
+                        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+                        siblings = this.transform(cursor);
+                        for (CategoryView s : siblings)
+                            t.addChild(CategoryView.createIdentifiableCategoryView(s.getParentId()), s);
+                        siblings = t.siblings(identifiable);
+                        break;
                     }
                 }
             }

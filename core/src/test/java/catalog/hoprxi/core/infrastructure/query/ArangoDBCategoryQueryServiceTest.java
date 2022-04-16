@@ -90,12 +90,17 @@ public class ArangoDBCategoryQueryServiceTest {
 
     @Test(invocationCount = 2, dependsOnMethods = {"testDescendants"})
     public void testSilblings() {
-        CategoryView[] sub = query.siblings("grain_oil");
-        for (CategoryView c : sub)
-            System.out.println("grain_oil sibling:" + c);
-        sub = query.siblings("oil");
-        for (CategoryView c : sub)
-            System.out.println("oil sibling:" + c);
+        CategoryView[] siblings = query.siblings("grain_oil");
+        Assert.assertEquals(4, siblings.length);
+        siblings = query.siblings("oil");
+        Assert.assertEquals(4, siblings.length);
+        siblings = query.siblings("corn_oil");
+        // for (CategoryView c : siblings)
+        //     System.out.println("sibling:" + c);
+        Assert.assertEquals(6, siblings.length);
+        siblings = query.siblings("root");
+        Assert.assertEquals(0, siblings.length);
+
     }
 
     @Test(invocationCount = 1, dependsOnMethods = {"testRoot"})
