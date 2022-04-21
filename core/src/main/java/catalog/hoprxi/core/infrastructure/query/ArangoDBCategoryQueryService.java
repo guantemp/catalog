@@ -262,6 +262,16 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         return path;
     }
 
+    @Override
+    public int depth(String id) {
+        CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
+        for (Tree<CategoryView> t : trees) {
+            if (t.has(identifiable))
+                return t.depth(identifiable);
+        }
+        return 0;
+    }
+
     @SuppressWarnings({"unchecked", "hiding"})
     public void refresh() {
         trees = null;

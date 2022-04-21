@@ -50,4 +50,6 @@ public interface CategoryQueryService {
     CategoryView[] siblings(String id);
 
     CategoryView[] path(String id);
+
+    int depth(String id);
 }

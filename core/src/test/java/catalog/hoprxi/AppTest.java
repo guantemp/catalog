@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +52,8 @@ public class AppTest {
         String[] test = {"69832423", "69821412", "697234", "998541", "69841", "市政府撒的", "9782"};
         long start = System.currentTimeMillis();
         String[] result = Arrays.stream(test).filter(s -> Pattern.compile("^698\\d*").matcher(s).matches()).toArray(String[]::new);
+        //result="/".split("/");
+        System.out.println(result.length);
         for (String s : result)
             System.out.println(s);
         System.out.println("pattern:" + Pattern.compile(".*?.*?").matcher("45n").matches());
@@ -60,7 +62,7 @@ public class AppTest {
         MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
                 .set(CurrencyStyle.SYMBOL).set("pattern", "¤ #,##0.00###")//"#,##0.00### ¤"
                 .build());
-        RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.55419, currency), Unit.DAI));
+        RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.2, currency), Unit.DAI));
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(System.out, JsonEncoding.UTF8)
                 .setPrettyPrinter(new DefaultPrettyPrinter());
