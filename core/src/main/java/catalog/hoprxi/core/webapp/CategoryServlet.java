@@ -57,9 +57,7 @@ public class CategoryServlet extends HttpServlet {
                 if (view != null) {
                     responseCategoryView(generator, view);
                 } else {//not find
-                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    generator.writeNumberField("code", 01204);
-                    generator.writeStringField("message", "Not find category(id=" + parameters[1] + ")");
+                    responseNotFind(resp, generator, parameters[1]);
                 }
             } else if (parameters.length > 2 && parameters[2] != null) {
                 switch (parameters[2]) {
@@ -70,8 +68,17 @@ public class CategoryServlet extends HttpServlet {
                     case "path":
                         CategoryView[] path = categoryQueryService.path(parameters[1]);
                         responsePath(generator, path);
+                        break;
                     case "children":
+                        CategoryView view = categoryQueryService.find(parameters[1]);
+                        if (view == null)
+                            responseNotFind(resp, generator, parameters[1]);
+                        else
+                            responseChildren(generator, view);
+                        break;
                     case "descendants":
+                        responseDescendants(generator, parameters[1]);
+                        break;
                 }
             }
         } else {//all category
@@ -87,6 +94,15 @@ public class CategoryServlet extends HttpServlet {
         generator.writeEndObject();
         generator.flush();
         generator.close();
+    }
+
+    private void responseDescendants(JsonGenerator generator, String parameter) {
+    }
+
+    private void responseNotFind(HttpServletResponse resp, JsonGenerator generator, String id) throws IOException {
+        resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        generator.writeNumberField("code", 01204);
+        generator.writeStringField("message", "Not find category(id=" + id + ")");
     }
 
     private void responsePath(JsonGenerator generator, CategoryView[] views) throws IOException {
@@ -108,8 +124,18 @@ public class CategoryServlet extends HttpServlet {
             generator.writeStringField("icon", view.getIcon().getFragment());
     }
 
-    private void responseChildren(JsonGenerator generator, CategoryView[] view) {
-
+    private void responseChildren(JsonGenerator generator, CategoryView view) throws IOException {
+        generator.writeStartObject();
+        responseCategoryView(generator, view);
+        CategoryView[] children = categoryQueryService.children(view.getId());
+        if (children.length >= 1) {
+            generator.writeArrayFieldStart("children");
+            for (CategoryView child : children) {
+                responseCategoryView(generator, child);
+            }
+            generator.writeEndArray();
+        }
+        generator.writeEndObject();
     }
 
     @Override

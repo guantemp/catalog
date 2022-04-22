@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,8 +39,8 @@ public class ArangoDBUtil {
      */
     public static ArangoDB getResource() {
         ArangoDB.Builder builder = new ArangoDB.Builder();
-        builder.useProtocol(Protocol.VST).host(config.getString("arangodb.host"), config.getInt("arangodb.port"));
-        builder.registerModule(new VPackJdk8Module()).maxConnections(8).user(config.getString("arangodb.user")).password(config.getString("arangodb.password"));
+        builder.useProtocol(Protocol.VST).host(config.getString("arangodb_write.host"), config.getInt("arangodb_write.port"));
+        builder.registerModule(new VPackJdk8Module()).maxConnections(8).user(config.getString("arangodb_write.user")).password(config.getString("arangodb_write.password"));
         ArangoDB arangoDB = builder.build();
         return arangoDB;
     }
@@ -89,7 +89,7 @@ public class ArangoDBUtil {
         long count = 0;
         final String countQuery = " RETURN LENGTH(" + collectionName + ")";
         final ArangoCursor<VPackSlice> countCursor = arangoDatabase.query(countQuery, null, null, VPackSlice.class);
-        for (; countCursor.hasNext(); ) {
+        while (countCursor.hasNext()) {
             count = countCursor.next().getAsLong();
         }
         int difference = (int) (count - offset);

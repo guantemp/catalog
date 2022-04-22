@@ -203,6 +203,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                 siblings = t.siblings(identifiable);
                 if (siblings.length < 1) {
                     synchronized (ArangoDBCategoryQueryService.class) {
+                        System.out.println("sibling");
                         final String query = "WITH category,subordinate\n" +
                                 "FOR c in 1..1 INBOUND @startVertex subordinate\n" +
                                 "FOR s in 1..1 OUTBOUND c._id subordinate\n" +
