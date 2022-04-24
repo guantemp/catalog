@@ -20,7 +20,7 @@ import catalog.hoprxi.core.application.query.BrandQueryService;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
-import catalog.hoprxi.core.infrastructure.persistence.ArangoDBUtil;
+import catalog.hoprxi.core.infrastructure.ArangoDBUtil;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.entity.DocumentField;

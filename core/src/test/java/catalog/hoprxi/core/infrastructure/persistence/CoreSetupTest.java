@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.persistence;
 
+import catalog.hoprxi.core.infrastructure.CoreSetup;
 import org.testng.annotations.Test;
 
 /***

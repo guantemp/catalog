@@ -17,6 +17,8 @@
 package catalog.hoprxi.core.webapp;
 
 import catalog.hoprxi.core.application.query.CategoryQueryService;
+import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBCategoryQueryService;
 import catalog.hoprxi.core.infrastructure.view.CategoryView;
 import com.fasterxml.jackson.core.JsonEncoding;
@@ -39,6 +41,7 @@ import java.io.IOException;
 @WebServlet(urlPatterns = {"v1/categories/*"}, name = "categories", asyncSupported = false)
 public class CategoryServlet extends HttpServlet {
     private final CategoryQueryService categoryQueryService = new ArangoDBCategoryQueryService("catalog");
+    private final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -67,14 +70,18 @@ public class CategoryServlet extends HttpServlet {
                         break;
                     case "path":
                         CategoryView[] path = categoryQueryService.path(parameters[1]);
-                        responsePath(generator, path);
+                        for (CategoryView view : path) {
+                            responseCategoryView(generator, view);
+                        }
                         break;
                     case "children":
                         CategoryView view = categoryQueryService.find(parameters[1]);
                         if (view == null)
                             responseNotFind(resp, generator, parameters[1]);
-                        else
+                        else {
+
                             responseChildren(generator, view);
+                        }
                         break;
                     case "descendants":
                         responseDescendants(generator, parameters[1]);
@@ -105,12 +112,6 @@ public class CategoryServlet extends HttpServlet {
         generator.writeStringField("message", "Not find category(id=" + id + ")");
     }
 
-    private void responsePath(JsonGenerator generator, CategoryView[] views) throws IOException {
-        for (CategoryView view : views) {
-            responseCategoryView(generator, view);
-        }
-    }
-
     private void responseCategoryView(JsonGenerator generator, CategoryView view) throws IOException {
         generator.writeStringField("id", view.getId());
         generator.writeStringField("parentId", view.getParentId());
@@ -125,17 +126,17 @@ public class CategoryServlet extends HttpServlet {
     }
 
     private void responseChildren(JsonGenerator generator, CategoryView view) throws IOException {
-        generator.writeStartObject();
         responseCategoryView(generator, view);
         CategoryView[] children = categoryQueryService.children(view.getId());
         if (children.length >= 1) {
             generator.writeArrayFieldStart("children");
             for (CategoryView child : children) {
+                generator.writeStartObject();
                 responseCategoryView(generator, child);
+                generator.writeEndObject();
             }
             generator.writeEndArray();
         }
-        generator.writeEndObject();
     }
 
     @Override

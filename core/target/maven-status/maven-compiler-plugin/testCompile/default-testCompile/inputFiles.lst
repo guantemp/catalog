@@ -6,6 +6,7 @@ E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\i18n\
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\domain\model\UnitTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\ArangoDBCategoryRepositoryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\ArangoDBItemRepositoryTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\ArangoDBCategoryQueryServiceTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\domain\model\GradeTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\ArangoDBBrandRepositoryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\ArangoDBItemQueryServiceTest.java

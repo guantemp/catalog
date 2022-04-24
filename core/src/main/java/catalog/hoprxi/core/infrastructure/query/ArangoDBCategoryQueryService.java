@@ -18,7 +18,7 @@ package catalog.hoprxi.core.infrastructure.query;
 
 import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.domain.model.Name;
-import catalog.hoprxi.core.infrastructure.persistence.ArangoDBUtil;
+import catalog.hoprxi.core.infrastructure.ArangoDBUtil;
 import catalog.hoprxi.core.infrastructure.view.CategoryView;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
@@ -61,6 +61,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
 
     public ArangoDBCategoryQueryService(String databaseName) {
         catalog = ArangoDBUtil.getResource().db(databaseName);
+        root();
     }
 
     @Override

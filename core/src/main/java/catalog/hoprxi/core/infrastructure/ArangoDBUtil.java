@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.core.infrastructure.persistence;
+package catalog.hoprxi.core.infrastructure;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;

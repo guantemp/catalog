@@ -17,7 +17,7 @@
 package catalog.hoprxi;
 
 import catalog.hoprxi.core.webapp.BrandServlet;
-import catalog.hoprxi.core.webapp.CategoryServlet1;
+import catalog.hoprxi.core.webapp.CategoryServlet;
 import catalog.hoprxi.core.webapp.ItemServlet;
 import catalog.hoprxi.core.webapp.UnitServlet;
 import io.undertow.Handlers;
@@ -46,7 +46,7 @@ public class App {
                                 .addMapping("/v1/units"),
                         Servlets.servlet("brandServlet", BrandServlet.class)
                                 .addMapping("/v1/brands/*"),
-                        Servlets.servlet("categoryServlet", CategoryServlet1.class)
+                        Servlets.servlet("categoryServlet", CategoryServlet.class)
                                 .addMapping("/v1/categories/*"),
                         Servlets.servlet("itemServlet", ItemServlet.class)
                                 .addInitParam("database", "arangodb")

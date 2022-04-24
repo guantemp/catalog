@@ -38,7 +38,7 @@ import java.io.IOException;
  * @since JDK8.0
  * @version 0.0.1 builder 2021-09-13
  */
-@WebServlet(urlPatterns = {"v1/categories/*"}, name = "categories", asyncSupported = false)
+@WebServlet(urlPatterns = {"v1/categories1/*"}, name = "categories1", asyncSupported = false)
 public class CategoryServlet1 extends HttpServlet {
     private final CategoryRepository categoryRepository = new ArangoDBCategoryRepository("catalog");
     private final CategoryQueryService categoryQueryService = new ArangoDBCategoryQueryService("catalog");
