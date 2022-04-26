@@ -61,7 +61,6 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
 
     public ArangoDBCategoryQueryService(String databaseName) {
         catalog = ArangoDBUtil.getResource().db(databaseName);
-        root();
     }
 
     @Override

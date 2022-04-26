@@ -47,10 +47,12 @@ public class CategoryServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         //String[] fileds = req.getParameter("fileds").split(",");
         long start = System.currentTimeMillis();
+        CategoryView[] roots = categoryQueryService.root();
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
-        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
-                .setPrettyPrinter(new DefaultPrettyPrinter());
+        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).setPrettyPrinter(new DefaultPrettyPrinter());
+        if (req.getParameter("pretty") != null)
+            generator.setPrettyPrinter(null);
         generator.writeStartObject();
         String pathInfo = req.getPathInfo();
         if (pathInfo != null) {
@@ -70,8 +72,8 @@ public class CategoryServlet extends HttpServlet {
                         break;
                     case "path":
                         CategoryView[] path = categoryQueryService.path(parameters[1]);
-                        for (CategoryView view : path) {
-                            responseCategoryView(generator, view);
+                        for (CategoryView p : path) {
+                            responseCategoryView(generator, p);
                         }
                         break;
                     case "children":
@@ -79,23 +81,31 @@ public class CategoryServlet extends HttpServlet {
                         if (view == null)
                             responseNotFind(resp, generator, parameters[1]);
                         else {
-
                             responseChildren(generator, view);
                         }
                         break;
                     case "descendants":
-                        responseDescendants(generator, parameters[1]);
+                        CategoryView[] descendants = categoryQueryService.descendants(parameters[1]);
+                        String currentParentId = parameters[1];
+                        for (CategoryView d : descendants) {
+                            responseDescendants(generator, currentParentId, d);
+                        }
                         break;
                 }
             }
         } else {//all category
-            CategoryView[] views = categoryQueryService.root();
             generator.writeArrayFieldStart("categories");
-            for (CategoryView root : views) {
-                //responseChildren(generator, root);
+            for (CategoryView root : roots) {
+                generator.writeStartObject();
+                CategoryView[] descendants = categoryQueryService.descendants(root.getId());
+                String currentParentId = root.getId();
+                for (CategoryView d : descendants) {
+                    responseDescendants(generator, currentParentId, d);
+                }
+                responseDescendants(generator, currentParentId, root);
+                generator.writeEndObject();
             }
             generator.writeEndArray();
-
         }
         generator.writeNumberField("execution time", System.currentTimeMillis() - start);
         generator.writeEndObject();
@@ -103,7 +113,17 @@ public class CategoryServlet extends HttpServlet {
         generator.close();
     }
 
-    private void responseDescendants(JsonGenerator generator, String parameter) {
+    private void responseDescendants(JsonGenerator generator, String parentId, CategoryView view) throws IOException {
+        if (parentId.equals(view.getParentId())) {
+            responseCategoryView(generator, view);
+        } else {
+            generator.writeArrayFieldStart("children");
+            parentId = view.getParentId();
+            generator.writeStartObject();
+            responseDescendants(generator, parentId, view);
+            generator.writeEndObject();
+            generator.writeEndArray();
+        }
     }
 
     private void responseNotFind(HttpServletResponse resp, JsonGenerator generator, String id) throws IOException {
