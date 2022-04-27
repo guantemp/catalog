@@ -28,7 +28,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2021-08-08
+ * @version 0.0.2 builder 2022-04-27
  */
 public class CategoryAppService {
     private final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
@@ -41,7 +41,10 @@ public class CategoryAppService {
     }
 
     public Category createRoot(CreateCategoryCommand command) {
-        return null;
+        Objects.requireNonNull(command, "command required");
+        Category root = Category.root(repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
+        repository.save(root);
+        return root;
     }
 
     public boolean isExistes(String id) {

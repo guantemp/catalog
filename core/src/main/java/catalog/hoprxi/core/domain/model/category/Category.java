@@ -235,10 +235,10 @@ public class Category {
     @Override
     public String toString() {
         return "Category{" +
-                "description='" + description + '\'' +
+                ", parentId='" + parentId + '\'' +
                 ", id='" + id + '\'' +
                 ", name=" + name +
-                ", parentId='" + parentId + '\'' +
+                "description='" + description + '\'' +
                 ", icon=" + icon +
                 '}';
     }

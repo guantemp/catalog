@@ -25,7 +25,9 @@ import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebInitParam;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -37,10 +39,19 @@ import java.io.IOException;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-04-18
  */
-@WebServlet(urlPatterns = {"v1/categories/*"}, name = "categories", asyncSupported = false)
+@WebServlet(urlPatterns = {"v1/categories/*"}, name = "categories", asyncSupported = false, initParams = {
+        @WebInitParam(name = "database", value = "arangodb"), @WebInitParam(name = "databaseName", value = "catalog")})
 public class CategoryServlet extends HttpServlet {
     private final CategoryQueryService categoryQueryService = new ArangoDBCategoryQueryService("catalog");
     private final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        if (config != null) {
+            String database = config.getInitParameter("database");
+            String databaseName = config.getInitParameter("databaseName");
+        }
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -57,11 +68,15 @@ public class CategoryServlet extends HttpServlet {
         if (pathInfo != null) {
             String[] parameters = pathInfo.split("/");
             if (parameters.length == 2) {
-                CategoryView view = categoryQueryService.find(parameters[1]);
-                if (view != null) {
-                    responseCategoryView(generator, view);
-                } else {//not find
-                    responseNotFind(resp, generator, parameters[1]);
+                if (parameters[1].equals("_search")) {//search
+
+                } else {
+                    CategoryView view = categoryQueryService.find(parameters[1]);
+                    if (view != null) {
+                        responseCategoryView(generator, view);
+                    } else {//not find
+                        responseNotFind(resp, generator, parameters[1]);
+                    }
                 }
             } else if (parameters.length > 2 && parameters[2] != null) {
                 switch (parameters[2]) {
