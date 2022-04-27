@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,24 +18,9 @@ package catalog.hoprxi.core.domain.model.category;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2019-05-26
+ * @version 0.0.2 builder 2022-04-27
  */
 public interface CategoryRepository {
-
-    /**
-     * find sub category
-     *
-     * @param id
-     * @return
-     */
-    Category[] belongTo(String id);
-
-    /**
-     * @param id
-     * @param depth
-     * @return
-     */
-    Category[] belongTo(String id, int depth);
 
     /**
      * @param id
@@ -56,7 +41,7 @@ public interface CategoryRepository {
     void remove(String id);
 
     /**
-     * @return
+     * @return category root
      */
     Category[] root();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,13 @@
 
 package catalog.hoprxi.core.application;
 
-import catalog.hoprxi.core.application.command.CreateBrandCommand;
+import catalog.hoprxi.core.application.command.CreateCategoryCommand;
+import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
+
+import java.util.Objects;
 
 
 /***
@@ -30,11 +33,14 @@ import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository
 public class CategoryAppService {
     private final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
 
-    public Category create(CreateBrandCommand command) {
-        return null;
+    public Category create(CreateCategoryCommand command) {
+        Objects.requireNonNull(command, "command required");
+        Category category = new Category(command.getParentId(), repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
+        repository.save(category);
+        return category;
     }
 
-    public Category createRoot(CreateBrandCommand command) {
+    public Category createRoot(CreateCategoryCommand command) {
         return null;
     }
 

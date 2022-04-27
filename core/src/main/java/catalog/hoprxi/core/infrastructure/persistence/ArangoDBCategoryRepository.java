@@ -43,7 +43,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2020-05-05
+ * @version 0.0.2 builder 2022-04-27
  */
 public class ArangoDBCategoryRepository implements CategoryRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBBrandRepository.class);
@@ -65,7 +65,7 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
         this.catalog = ArangoDBUtil.getResource().db(databaseName);
     }
 
-    @Override
+  /*
     public Category[] belongTo(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         final String query = "WITH category\n" +
@@ -98,6 +98,7 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
         }
         return list.toArray(new Category[0]);
     }
+   */
 
     @Override
     public Category find(String id) {

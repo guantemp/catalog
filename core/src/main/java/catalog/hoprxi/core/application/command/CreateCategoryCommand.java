@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,12 +28,14 @@ public class CreateCategoryCommand {
     private String name;
     private String alias;
     private URI logo;
+    private String description;
 
-    public CreateCategoryCommand(String parentId, String name, String alias, URI logo) {
+    public CreateCategoryCommand(String parentId, String name, String alias, String description, URI logo) {
         this.parentId = parentId;
         this.name = name;
         this.alias = alias;
         this.logo = logo;
+        this.description = description;
     }
 
     public String getParentId() {
@@ -66,5 +68,13 @@ public class CreateCategoryCommand {
 
     public void setLogo(URI logo) {
         this.logo = logo;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

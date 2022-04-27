@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2021-08-09
+ * @version 0.0.2 builder 2022-04-27
  */
 public class ArangoDBCategoryRepositoryTest {
     private static final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
@@ -205,35 +205,6 @@ public class ArangoDBCategoryRepositoryTest {
             repository.remove(Category.UNDEFINED.id());
         }
     */
-    @Test(priority = 3)
-    public void testBelongTo() {
-        Category[] sub = repository.belongTo("root");
-        Assert.assertEquals(5, sub.length);
-        for (Category category : sub)
-            this.children(category);
-        /*
-        sub = repository.belongTo(Category.UNDEFINED.id());
-        Assert.assertEquals(0, sub.length);
-        sub = repository.belongTo("leisure_food");
-        Assert.assertEquals(2, sub.length);
-        sub = repository.belongTo("fresh");
-        Assert.assertEquals(5, sub.length);
-         */
-    }
-
-    private void children(Category category) {
-        Category[] children = repository.belongTo(category.id());
-        for (Category child : children)
-            children(child);
-    }
-
-    @Test(priority = 2)
-    public void testBelongToDepth() {
-        //Category[] sub = repository.belongTo("root",2);
-        //Assert.assertEquals(22, sub.length);
-        Category[] sub = repository.belongTo("root", 3);
-        Assert.assertEquals(43, sub.length);
-    }
 
     @Test(dependsOnMethods = {"testNextIdentity"})
     public void testFind() {
