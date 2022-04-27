@@ -65,41 +65,6 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
         this.catalog = ArangoDBUtil.getResource().db(databaseName);
     }
 
-  /*
-    public Category[] belongTo(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
-        final String query = "WITH category\n" +
-                "FOR v,e IN 1..1 OUTBOUND @startVertex subordinate RETURN v";
-        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
-        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
-        List<Category> list = new ArrayList<>();
-        try {
-            while (cursor.hasNext())
-                list.add(rebuild(cursor.next()));
-        } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
-            LOGGER.debug("Can't rebuild category");
-        }
-        return list.toArray(new Category[0]);
-    }
-
-    @Override
-    public Category[] belongTo(String id, int depth) {
-        id = Objects.requireNonNull(id, "id required").trim();
-        final String query = "WITH category\n" +
-                "FOR v,e IN 1..@depth OUTBOUND @startVertex subordinate RETURN v";
-        final Map<String, Object> bindVars = new MapBuilder().put("depth", depth).put("startVertex", "category/" + id).get();
-        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
-        List<Category> list = new ArrayList<>();
-        try {
-            while (cursor.hasNext())
-                list.add(rebuild(cursor.next()));
-        } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
-            LOGGER.debug("Can't rebuild category");
-        }
-        return list.toArray(new Category[0]);
-    }
-   */
-
     @Override
     public Category find(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
