@@ -51,13 +51,13 @@ public class CategoryServlet extends HttpServlet {
             String database = config.getInitParameter("database");
             String databaseName = config.getInitParameter("databaseName");
         }
+        categoryQueryService.root();
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         //String[] fileds = req.getParameter("fileds").split(",");
         long start = System.currentTimeMillis();
-        CategoryView[] roots = categoryQueryService.root();
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
@@ -109,6 +109,7 @@ public class CategoryServlet extends HttpServlet {
                 }
             }
         } else {//all category
+            CategoryView[] roots = categoryQueryService.root();
             generator.writeArrayFieldStart("categories");
             for (CategoryView root : roots) {
                 generator.writeStartObject();
@@ -178,6 +179,25 @@ public class CategoryServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doDelete(req, resp);
+        long start = System.currentTimeMillis();
+        resp.setContentType("application/json; charset=UTF-8");
+        JsonFactory jasonFactory = new JsonFactory();
+        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
+        if (req.getParameter("pretty") != null)
+            generator.useDefaultPrettyPrinter();
+        generator.writeStartObject();
+        String pathInfo = req.getPathInfo();
+        if (pathInfo != null) {
+            String[] parameters = pathInfo.split("/");
+            if (parameters.length == 2) {
+                repository.remove(parameters[1]);
+                generator.writeNumberField("code", 1204);
+                generator.writeStringField("message", "Susecc delete category");
+            }
+        }
+        generator.writeNumberField("execution time", System.currentTimeMillis() - start);
+        generator.writeEndObject();
+        generator.flush();
+        generator.close();
     }
 }
