@@ -64,7 +64,6 @@ catalog\hoprxi\core\domain\model\brand\BrandRepository.class
 catalog\hoprxi\core\domain\model\Grade$3.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBProhibitSellItemRepository$BelongEdge.class
 catalog\hoprxi\core\domain\model\price\Unit$34.class
-catalog\hoprxi\core\webapp\CategoryServlet1.class
 catalog\hoprxi\core\domain\model\price\Unit$29.class
 catalog\hoprxi\core\domain\model\category\CategoryRenamed.class
 catalog\hoprxi\core\domain\model\price\Unit$33.class
@@ -111,7 +110,6 @@ catalog\hoprxi\core\domain\model\ItemMemberPriceChaned.class
 catalog\hoprxi\core\domain\model\price\Unit$16.class
 catalog\hoprxi\core\infrastructure\i18n\Label.class
 catalog\hoprxi\core\domain\model\ItemGradeChanged.class
-catalog\hoprxi\core\infrastructure\persistence\CoreSetup.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBProhibitSellItemRepository$HasEdge.class
 catalog\hoprxi\core\application\command\CreateItemCommand.class
 catalog\hoprxi\core\domain\model\price\Unit$19.class
@@ -129,7 +127,6 @@ catalog\hoprxi\core\domain\model\price\Unit.class
 catalog\hoprxi\core\application\CategoryAppService.class
 catalog\hoprxi\core\domain\model\price\Unit$25.class
 catalog\hoprxi\core\domain\model\ProhibitSellItemRepository.class
-catalog\hoprxi\core\infrastructure\persistence\ArangoDBUtil.class
 catalog\hoprxi\core\domain\model\price\Unit$15.class
 catalog\hoprxi\core\domain\model\shelfLife\StorageCondition.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBItemRepository$HasEdge.class
