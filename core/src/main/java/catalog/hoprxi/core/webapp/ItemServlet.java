@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ import javax.money.format.AmountFormatQueryBuilder;
 import javax.money.format.MonetaryAmountFormat;
 import javax.money.format.MonetaryFormats;
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebInitParam;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -46,7 +45,7 @@ import java.util.regex.Pattern;
  * @since JDK8.0
  * @version 0.0.1 builder 2021-09-19
  */
-@WebServlet(urlPatterns = {"v1/items/*"}, name = "items", asyncSupported = false, initParams = {
+@WebServlet(urlPatterns = {"v1/items/*"}, name = "items", asyncSupported = true, initParams = {
         @WebInitParam(name = "database", value = "arangodb"), @WebInitParam(name = "databaseName", value = "catalog")})
 public class ItemServlet extends HttpServlet {
     private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.CHINA)
@@ -59,12 +58,15 @@ public class ItemServlet extends HttpServlet {
     private ItemRepository repository;
 
     @Override
-    public void init(ServletConfig config) throws ServletException {
+    public void init(ServletConfig config) {
         if (config != null) {
             String database = config.getInitParameter("database");
             String databaseName = config.getInitParameter("databaseName");
             switch (database) {
                 case "arangodb":
+                    break;
+                case "mysql":
+                    break;
                 default:
                     queryService = new ArangoDBItemQueryService(databaseName);
                     repository = new ArangoDBItemRepository(databaseName);
@@ -73,7 +75,7 @@ public class ItemServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         long start = System.currentTimeMillis();
         resp.setContentType("application/json; charset=UTF-8");
@@ -138,10 +140,9 @@ public class ItemServlet extends HttpServlet {
                 }
                 if (!name.isEmpty()) {
                     ItemView[] itemViews = queryService.fromName(name);
-                    for (ItemView itemView : itemViews)
-                        itemViewSet.add(itemView);
+                    itemViewSet.addAll(Arrays.asList(itemViews));
                 }
-                responseItemViews(generator, itemViewSet.toArray(new ItemView[itemViewSet.size()]));
+                responseItemViews(generator, itemViewSet.toArray(new ItemView[0]));
             } else {
                 generator.writeNumberField("total", queryService.size());
                 ItemView[] itemViews = queryService.findAll(offset, limit);
@@ -205,7 +206,7 @@ public class ItemServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String name = null, alias = null, barcode = null, brandId = null, categoryId = null, spec = null, grade = null, madeIn = null;
         Number retailPrice = null, memberPrice = null, vipPrice = null;
         JsonFactory jasonFactory = new JsonFactory();
@@ -226,5 +227,9 @@ public class ItemServlet extends HttpServlet {
                 }
             }
         }
+        validate(name, alias);
+    }
+
+    private void validate(String name, String alias) {
     }
 }

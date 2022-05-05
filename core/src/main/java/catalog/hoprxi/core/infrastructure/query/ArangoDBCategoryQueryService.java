@@ -211,7 +211,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                                 "RETURN {'_key':s._key,'parentId':s.parentId,'name':s.name,'description':s.description,'leaf':SUB == []}";
                         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
                         ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
-                        siblings = this.transform(cursor);
+                        siblings = transform(cursor);
                         for (CategoryView s : siblings)
                             t.addChild(CategoryView.createIdentifiableCategoryView(s.getParentId()), s);
                         siblings = t.siblings(identifiable);
