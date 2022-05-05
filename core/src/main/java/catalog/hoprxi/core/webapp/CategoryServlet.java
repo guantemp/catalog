@@ -21,9 +21,7 @@ import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBCategoryQueryService;
 import catalog.hoprxi.core.infrastructure.view.CategoryView;
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.*;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -39,7 +37,7 @@ import java.io.IOException;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-04-18
  */
-@WebServlet(urlPatterns = {"v1/categories/*"}, name = "categories", asyncSupported = false, initParams = {
+@WebServlet(urlPatterns = {"v1/categories/*"}, name = "categories", asyncSupported = true, initParams = {
         @WebInitParam(name = "database", value = "arangodb"), @WebInitParam(name = "databaseName", value = "catalog")})
 public class CategoryServlet extends HttpServlet {
     private final CategoryQueryService categoryQueryService = new ArangoDBCategoryQueryService("catalog");
@@ -56,7 +54,7 @@ public class CategoryServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        //String[] fileds = req.getParameter("fileds").split(",");
+        //String[] fields = req.getParameter("fields").split(",");
         long start = System.currentTimeMillis();
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
@@ -173,12 +171,34 @@ public class CategoryServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPost(req, resp);
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String name = null, alias = null, description = null, url, parentId = null;
+        JsonFactory jasonFactory = new JsonFactory();
+        JsonParser parser = jasonFactory.createParser(req.getInputStream());
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "name":
+                        name = parser.getValueAsString();
+                        break;
+                    case "alias":
+                        alias = parser.getValueAsString();
+                        break;
+                }
+            }
+        }
+        validate(parentId, name, alias, description);
+    }
+
+    private void validate(String parentId, String name, String alias, String description) {
+
     }
 
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         long start = System.currentTimeMillis();
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
@@ -191,8 +211,8 @@ public class CategoryServlet extends HttpServlet {
             String[] parameters = pathInfo.split("/");
             if (parameters.length == 2) {
                 repository.remove(parameters[1]);
-                generator.writeNumberField("code", 1204);
-                generator.writeStringField("message", "Susecc delete category");
+                generator.writeNumberField("code", 1201);
+                generator.writeStringField("message", "Success delete category");
             }
         }
         generator.writeNumberField("execution time", System.currentTimeMillis() - start);
