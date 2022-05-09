@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -40,6 +41,7 @@ import java.io.IOException;
 @WebServlet(urlPatterns = {"v1/categories/*"}, name = "categories", asyncSupported = true, initParams = {
         @WebInitParam(name = "database", value = "arangodb"), @WebInitParam(name = "databaseName", value = "catalog")})
 public class CategoryServlet extends HttpServlet {
+    private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
     private final CategoryQueryService categoryQueryService = new ArangoDBCategoryQueryService("catalog");
     private final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
 
@@ -89,19 +91,19 @@ public class CategoryServlet extends HttpServlet {
                         }
                         break;
                     case "children":
-                        CategoryView view = categoryQueryService.find(parameters[1]);
-                        if (view == null)
+                        CategoryView parent = categoryQueryService.find(parameters[1]);
+                        if (parent == null)
                             responseNotFind(resp, generator, parameters[1]);
                         else {
-                            responseChildren(generator, view);
+                            responseChildren(generator, parent);
                         }
                         break;
                     case "descendants":
-                        CategoryView self = categoryQueryService.find(parameters[1]);
-                        if (self == null)
+                        CategoryView senior = categoryQueryService.find(parameters[1]);
+                        if (senior == null)
                             responseNotFind(resp, generator, parameters[1]);
                         else {
-                            responseDescendants(generator, self);
+                            responseDescendants(generator, senior);
                         }
                         break;
                 }
@@ -124,7 +126,7 @@ public class CategoryServlet extends HttpServlet {
 
     private void responseNotFind(HttpServletResponse resp, JsonGenerator generator, String id) throws IOException {
         resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        generator.writeNumberField("code", 1204);
+        generator.writeNumberField("code", 1001);
         generator.writeStringField("message", "Not find category(id=" + id + ")");
     }
 
@@ -172,7 +174,8 @@ public class CategoryServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String name = null, alias = null, description = null, url, parentId = null;
+        String name = null, alias = null, description = null, logo = null, parentId = null;
+        boolean root = false;
         JsonFactory jasonFactory = new JsonFactory();
         JsonParser parser = jasonFactory.createParser(req.getInputStream());
         while (!parser.isClosed()) {
@@ -181,20 +184,65 @@ public class CategoryServlet extends HttpServlet {
                 String fieldName = parser.getCurrentName();
                 parser.nextToken();
                 switch (fieldName) {
+                    case "root":
+                        root = true;
+                        break;
+                    case "parentId":
+                        parentId = parser.getValueAsString();
+                        break;
                     case "name":
                         name = parser.getValueAsString();
                         break;
                     case "alias":
                         alias = parser.getValueAsString();
                         break;
+                    case "description":
+                        description = parser.getValueAsString();
+                        break;
+                    case "logo":
+                        logo = parser.getValueAsString();
+                        break;
                 }
             }
         }
-        validate(parentId, name, alias, description);
+        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
+        validateParentId(generator, root, parentId);
     }
 
-    private void validate(String parentId, String name, String alias, String description) {
+    private boolean validateParentId(JsonGenerator generator, boolean root, String parentId) throws IOException {
+        if (!root && (parentId == null || parentId.isEmpty())) {
+            generator.writeStartObject();
+            generator.writeStringField("code", "10_05_01");
+            generator.writeStringField("message", "ParenId Not find category(parentId=" + parentId + ")");
+            generator.writeEndObject();
+        } else if (false) {
+            generator.writeStartObject();
+            generator.writeStringField("code", "10_05_02");
+            generator.writeStringField("message", "Not find category(id=" + parentId + ")");
+            generator.writeEndObject();
+        }
+        return true;
+    }
 
+    private boolean validate(JsonGenerator generator, boolean root, String parentId, String name, String alias, String description, String uri) throws IOException {
+
+        if (name == null || name.isEmpty()) {
+            generator.writeNumberField("code", 1006);
+            generator.writeStringField("message", "Not find name(name=" + name + ")");
+        }
+        if (alias != null && alias.length() > 256) {
+            generator.writeNumberField("code", 1007);
+            generator.writeStringField("message", "Not find name(name=" + name + ")");
+        }
+        if (description != null && description.length() > 512) {
+            generator.writeNumberField("code", 1008);
+            generator.writeStringField("message", "Not find name(name=" + name + ")");
+        }
+        if (uri != null && !URI_REGEX.matcher(uri).matches()) {
+            generator.writeNumberField("code", 1009);
+            generator.writeStringField("message", "Not find name(name=" + name + ")");
+        }
+        return true;
     }
 
     @Override
@@ -211,7 +259,7 @@ public class CategoryServlet extends HttpServlet {
             String[] parameters = pathInfo.split("/");
             if (parameters.length == 2) {
                 repository.remove(parameters[1]);
-                generator.writeNumberField("code", 1201);
+                generator.writeNumberField("code", 1004);
                 generator.writeStringField("message", "Success delete category");
             }
         }

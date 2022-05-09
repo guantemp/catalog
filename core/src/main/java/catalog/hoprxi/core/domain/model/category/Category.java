@@ -27,7 +27,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.3 builder 2021-08-08
+ * @version 0.0.3 builder 2022-08-09
  */
 public class Category {
     public static final Category UNDEFINED = new Category("undefined", "undefined", new Name(Label.CATEGORY_UNDEFINED, "undefined"), "undefined") {
@@ -61,7 +61,7 @@ public class Category {
     }
 
     public Category(String parentId, String id, String name) {
-        this(parentId, id, new Name(name), "");
+        this(parentId, id, Name.of(name), "");
     }
 
     public Category(String parentId, String id, Name name, String description) {
@@ -73,7 +73,7 @@ public class Category {
     }
 
     public Category(String parentId, String id, String name, String description, URI icon) {
-        this(parentId, id, new Name(name), description, icon);
+        this(parentId, id, Name.of(name), description, icon);
     }
 
     /**

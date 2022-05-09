@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,10 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2019-10-07
+ * @version 0.0.3 builder 2022-05-09
  */
 public class Name {
+    private static final int MAX_LENGTH = 256;
     private String name;
     private String mnemonic;
     private String alias;
@@ -37,10 +38,6 @@ public class Name {
         setName(name);
         this.mnemonic = mnemonic;
         setAlias(alias);
-    }
-
-    public static Name of(String name) {
-        return new Name(name);
     }
 
     /**
@@ -62,14 +59,19 @@ public class Name {
         this(name, name);
     }
 
+    public static Name of(String name) {
+        return new Name(name);
+    }
+
     public String alias() {
         return alias;
     }
 
     private void setAlias(String alias) {
-        if (alias != null && alias.length() > 256)
+        alias = Objects.requireNonNull(alias, "alias required").trim();
+        if (alias.length() > MAX_LENGTH)
             throw new IllegalArgumentException("alias length rang is 0-256");
-        this.alias = alias.trim();
+        this.alias = alias;
     }
 
     public String name() {
@@ -78,7 +80,7 @@ public class Name {
 
     private void setName(String name) {
         name = Objects.requireNonNull(name, "name required").trim();
-        if (name.length() > 256)
+        if (name.length() > MAX_LENGTH)
             throw new IllegalArgumentException("name length rang is 0-256");
         this.name = name;
     }
@@ -94,9 +96,9 @@ public class Name {
 
         Name name1 = (Name) o;
 
-        if (name != null ? !name.equals(name1.name) : name1.name != null) return false;
-        if (mnemonic != null ? !mnemonic.equals(name1.mnemonic) : name1.mnemonic != null) return false;
-        return alias != null ? alias.equals(name1.alias) : name1.alias == null;
+        if (!Objects.equals(name, name1.name)) return false;
+        if (!Objects.equals(mnemonic, name1.mnemonic)) return false;
+        return Objects.equals(alias, name1.alias);
     }
 
     @Override
