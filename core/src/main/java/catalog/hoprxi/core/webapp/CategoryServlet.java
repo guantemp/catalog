@@ -212,11 +212,13 @@ public class CategoryServlet extends HttpServlet {
     private boolean validateParentId(JsonGenerator generator, boolean root, String parentId) throws IOException {
         if (!root && (parentId == null || parentId.isEmpty())) {
             generator.writeStartObject();
+            generator.writeStringField("status", "FAIL");
             generator.writeStringField("code", "10_05_01");
             generator.writeStringField("message", "ParenId Not find category(parentId=" + parentId + ")");
             generator.writeEndObject();
         } else if (false) {
             generator.writeStartObject();
+            generator.writeStringField("status", "FAIL");
             generator.writeStringField("code", "10_05_02");
             generator.writeStringField("message", "Not find category(id=" + parentId + ")");
             generator.writeEndObject();
