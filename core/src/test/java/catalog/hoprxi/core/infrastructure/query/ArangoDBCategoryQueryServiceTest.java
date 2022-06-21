@@ -74,7 +74,7 @@ public class ArangoDBCategoryQueryServiceTest {
         Assert.assertNotNull(sunflower_seed_oil);
     }
 
-    @Test(priority = 2, invocationCount = 2, dependsOnMethods = {"testRoot"})
+    @Test(invocationCount = 2, dependsOnMethods = {"testRoot"})
     public void testDescendants() {
         CategoryView[] descendants = query.descendants("root");
         Assert.assertEquals(43, descendants.length);

@@ -29,13 +29,12 @@ import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
 
 import javax.servlet.ServletException;
-import java.io.IOException;
 
 /**
  * Hello world!
  */
 public class App {
-    public static void main(String[] args) throws IOException, ServletException {
+    public static void main(String[] args) throws ServletException {
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentInfo deploymentInfo = Servlets.deployment()
                 .setClassLoader(App.class.getClassLoader())

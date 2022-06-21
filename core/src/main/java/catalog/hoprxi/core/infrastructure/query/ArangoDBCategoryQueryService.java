@@ -72,19 +72,17 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
             }
             return categoryViews;
         } else {
-            synchronized (ArangoDBCategoryQueryService.class) {
-                final String query = "WITH category\n" +
-                        "FOR c IN category FILTER c._key == c.parentId\n" +
-                        "LET SUB = (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e )\n" +
-                        "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
-                ArangoCursor<VPackSlice> cursor = catalog.query(query, VPackSlice.class);
-                CategoryView[] categoryViews = transform(cursor);
-                trees = new Tree[categoryViews.length];
-                for (int i = 0, j = categoryViews.length; i < j; i++) {
-                    trees[i] = Tree.root(categoryViews[i]);
-                }
-                return categoryViews;
+            final String query = "WITH category\n" +
+                    "FOR c IN category FILTER c._key == c.parentId\n" +
+                    "LET SUB = (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e )\n" +
+                    "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
+            ArangoCursor<VPackSlice> cursor = catalog.query(query, VPackSlice.class);
+            CategoryView[] categoryViews = transform(cursor);
+            trees = new Tree[categoryViews.length];
+            for (int i = 0, j = categoryViews.length; i < j; i++) {
+                trees[i] = Tree.root(categoryViews[i]);
             }
+            return categoryViews;
         }
     }
 
@@ -125,13 +123,11 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                 if (!t.value(identifiable).isLeaf()) {
                     children = t.children(identifiable);
                     if (children.length < 1) {
-                        synchronized (ArangoDBCategoryQueryService.class) {
-                            children = queryChildren(id);
-                        }
-                        for (CategoryView c : children)
-                            t.addChild(identifiable, c);
-                        break;
+                        children = queryChildren(id);
                     }
+                    for (CategoryView c : children)
+                        t.addChild(identifiable, c);
+                    break;
                 }
             }
         }
@@ -158,11 +154,9 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                 if (!t.value(identifiable).isLeaf()) {
                     descendants = t.descendants(identifiable);
                     if (descendants.length < 1) {
-                        synchronized (ArangoDBCategoryQueryService.class) {
-                            queryAndFillDescendants(t, id);
-                            descendants = t.descendants(identifiable);
-                            break;
-                        }
+                        queryAndFillDescendants(t, id);
+                        descendants = t.descendants(identifiable);
+                        break;
                     }
                 }
             }
@@ -202,21 +196,18 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
             if (t.has(identifiable)) {
                 siblings = t.siblings(identifiable);
                 if (siblings.length < 1) {
-                    synchronized (ArangoDBCategoryQueryService.class) {
-                        System.out.println("sibling");
-                        final String query = "WITH category,subordinate\n" +
-                                "FOR c in 1..1 INBOUND @startVertex subordinate\n" +
-                                "FOR s in 1..1 OUTBOUND c._id subordinate\n" +
-                                "LET SUB =  (FOR v,e in 1..1 OUTBOUND s._id subordinate RETURN e)\n" +
-                                "RETURN {'_key':s._key,'parentId':s.parentId,'name':s.name,'description':s.description,'leaf':SUB == []}";
-                        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
-                        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
-                        siblings = transform(cursor);
-                        for (CategoryView s : siblings)
-                            t.addChild(CategoryView.createIdentifiableCategoryView(s.getParentId()), s);
-                        siblings = t.siblings(identifiable);
-                        break;
-                    }
+                    final String query = "WITH category,subordinate\n" +
+                            "FOR c in 1..1 INBOUND @startVertex subordinate\n" +
+                            "FOR s in 1..1 OUTBOUND c._id subordinate\n" +
+                            "LET SUB =  (FOR v,e in 1..1 OUTBOUND s._id subordinate RETURN e)\n" +
+                            "RETURN {'_key':s._key,'parentId':s.parentId,'name':s.name,'description':s.description,'leaf':SUB == []}";
+                    final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
+                    ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+                    siblings = transform(cursor);
+                    for (CategoryView s : siblings)
+                        t.addChild(CategoryView.createIdentifiableCategoryView(s.getParentId()), s);
+                    siblings = t.siblings(identifiable);
+                    break;
                 }
             }
         }
@@ -243,20 +234,17 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
             if (t.has(identifiable)) {
                 path = t.path(identifiable);
                 if (path.length < 1) {
-                    synchronized (ArangoDBCategoryQueryService.class) {
-                        final String query = "WITH category,subordinate\n" +
-                                "FOR c,subordinate IN INBOUND SHORTEST_PATH @startVertex TO @targetVertex GRAPH core\n" +
-                                "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
-                                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
-                        final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).put("startVertex", "category/" + t.root().getId()).get();
-                        ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
-                        path = transform(cursor);
-                        for (int i = path.length - 1; i >= 0; i--) {
-                            t.addChild(CategoryView.createIdentifiableCategoryView(path[i].getParentId()), path[i]);
-                        }
-                        path = t.path(identifiable);
-                        break;
+                    final String query = "WITH category,subordinate\n" +
+                            "FOR c,subordinate IN INBOUND SHORTEST_PATH @startVertex TO @targetVertex GRAPH core\n" +
+                            "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
+                            "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'leaf':SUB == []}";
+                    final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).put("startVertex", "category/" + t.root().getId()).get();
+                    ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
+                    path = transform(cursor);
+                    for (int i = path.length - 1; i >= 0; i--) {
+                        t.addChild(CategoryView.createIdentifiableCategoryView(path[i].getParentId()), path[i]);
                     }
+                    path = t.path(identifiable);
                 }
             }
         }

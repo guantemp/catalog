@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,12 +70,10 @@ public class Label extends NLS {
     public static String UNIT_WANG;
     public static String UNIT_LIANG;
 
-    public static String GRADE_ONE_LEVEL;
-    public static String GRADE_QUALIFIED;
-    public static String GRADE_SECOND_LEVEL;
-    public static String GRADE_THREE_LEVEL;
-    public static String GRADE_UNQUALIFIED;
-    public static String GRADE_SUPERFINE;
+    public static String ONE_LEVEL_GRADE;
+    public static String QUALIFIED_GRADE;
+    public static String UNQUALIFIED_GRADE;
+    public static String PREMIUM_GRADE;
 
     public static String PRICE_RETAIL;
     public static String PRICE_MEMBER;

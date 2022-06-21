@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,19 @@
 package catalog.hoprxi.core.domain.model;
 
 import org.junit.Assert;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-04-28
+ * @version 0.0.1 builder 2022-06-21
  */
 public class GradeTest {
 
     @Test
-    public void of() {
-        Assert.assertEquals(Grade.SECOND_LEVEL, Grade.of("二等品"));
+    public void testOf() {
+        Assert.assertEquals(Grade.ONE_LEVEL, Grade.of("一等品"));
+        Assert.assertEquals(Grade.PREMIUM, Grade.of("优等品"));
         Assert.assertEquals(Grade.QUALIFIED, Grade.of("合格品"));
     }
 }

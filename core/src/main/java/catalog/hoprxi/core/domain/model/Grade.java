@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,32 +27,22 @@ public enum Grade {
     ONE_LEVEL {
         @Override
         public String toString() {
-            return Label.GRADE_ONE_LEVEL;
+            return Label.ONE_LEVEL_GRADE;
         }
     }, QUALIFIED {
         @Override
         public String toString() {
-            return Label.GRADE_QUALIFIED;
-        }
-    }, SECOND_LEVEL {
-        @Override
-        public String toString() {
-            return Label.GRADE_SECOND_LEVEL;
+            return Label.QUALIFIED_GRADE;
         }
     }, UNQUALIFIED {
         @Override
         public String toString() {
-            return Label.GRADE_UNQUALIFIED;
+            return Label.UNQUALIFIED_GRADE;
         }
-    }, THREE_LEVEL {
+    }, PREMIUM {
         @Override
         public String toString() {
-            return Label.GRADE_THREE_LEVEL;
-        }
-    }, SUPERFINE {
-        @Override
-        public String toString() {
-            return Label.GRADE_SUPERFINE;
+            return Label.PREMIUM_GRADE;
         }
     };
 
