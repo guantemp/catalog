@@ -39,7 +39,7 @@ public class ArangoDBCategoryQueryServiceTest {
         CategoryView[] sub = query.children("root");
         Assert.assertEquals(5, sub.length);
         sub = query.children("food");
-        Assert.assertEquals(3, sub.length);
+        Assert.assertEquals(1, sub.length);
         sub = query.children("grain_oil");
         Assert.assertEquals(5, sub.length);
         sub = query.children("oil");
@@ -77,7 +77,7 @@ public class ArangoDBCategoryQueryServiceTest {
     @Test(invocationCount = 2, dependsOnMethods = {"testRoot"})
     public void testDescendants() {
         CategoryView[] descendants = query.descendants("root");
-        Assert.assertEquals(43, descendants.length);
+        Assert.assertEquals(40, descendants.length);
         descendants = query.descendants("oil");
         Assert.assertEquals(7, descendants.length);
         descendants = query.descendants("grain_oil");

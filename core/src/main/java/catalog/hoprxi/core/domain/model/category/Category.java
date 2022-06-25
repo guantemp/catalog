@@ -15,6 +15,7 @@
  */
 package catalog.hoprxi.core.domain.model.category;
 
+import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.CategoryValidatorService;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
@@ -57,11 +58,11 @@ public class Category {
     private URI icon;
 
     public Category(String parentId, String id, Name name) {
-        this(parentId, id, name, "");
+        this(parentId, id, name, null);
     }
 
     public Category(String parentId, String id, String name) {
-        this(parentId, id, Name.of(name), "");
+        this(parentId, id, Name.of(name), null);
     }
 
     public Category(String parentId, String id, Name name, String description) {
@@ -226,6 +227,10 @@ public class Category {
         Category category = (Category) o;
 
         return Objects.equals(id, category.id);
+    }
+
+    public CategoryView toView() {
+        return new CategoryView(parentId, id, name, description, icon, false, false);
     }
 
     @Override

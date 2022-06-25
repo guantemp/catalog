@@ -35,6 +35,7 @@ import salt.hoprxi.id.LongId;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -139,7 +140,10 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
         String description = null;
         if (!slice.get("description").isNone())
             description = slice.get("description").getAsString();
-        return new Category(parentId, id, name, description);
+        URI icon = null;
+        if (!slice.get("icon").isNone())
+            icon = URI.create(slice.get("icon").getAsString());
+        return new Category(parentId, id, name, description, icon);
     }
 
     private Category[] transform(ArangoCursor<VPackSlice> cursor) {

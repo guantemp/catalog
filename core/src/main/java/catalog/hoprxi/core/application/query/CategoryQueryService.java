@@ -41,7 +41,7 @@ public interface CategoryQueryService {
 
     /**
      * @param id
-     * @return
+     * @return descendants include self
      */
     CategoryView[] descendants(String id);
 

@@ -20,8 +20,8 @@ import catalog.hoprxi.core.application.CategoryAppService;
 import catalog.hoprxi.core.application.command.CategoryCreateCommand;
 import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
-import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBCategoryQueryService;
 import com.fasterxml.jackson.core.*;
@@ -210,15 +210,24 @@ public class CategoryServlet extends HttpServlet {
                 }
             }
         }
-        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
-        generator.writeStartObject();
-        if (!validParentId(generator, root, parentId)) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        }
-        generator.writeEndObject();
-
         CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(logo));
-        Category category = APP_SERVICE.create(command);
+        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
+        try {
+            CategoryView view = null;
+            if (root)
+                view = APP_SERVICE.createRoot(command);
+            else
+                view = APP_SERVICE.create(command);
+            generator.writeStartObject();
+            responseCategoryView(generator, view);
+            generator.writeEndObject();
+        } catch (InvalidCategoryIdException e) {
+            generator.writeStartObject();
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_01");
+            generator.writeStringField("message", "ParenId is not valid");
+            generator.writeEndObject();
+        }
         generator.flush();
         generator.close();
     }

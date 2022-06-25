@@ -57,6 +57,7 @@ public class AppTest {
         for (String s : result)
             System.out.println(s);
         System.out.println("pattern:" + Pattern.compile(".*?.*?").matcher("45n").matches());
+        System.out.println("undefined");
         CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
         MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
                 .set(CurrencyStyle.SYMBOL).set("pattern", "¤ #,##0.0000")//"#,##0.00### ¤"
@@ -87,5 +88,6 @@ public class AppTest {
         generator.writeEndObject();
         generator.flush();
         generator.close();
+
     }
 }
