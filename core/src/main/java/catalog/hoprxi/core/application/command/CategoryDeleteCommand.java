@@ -14,21 +14,21 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.processor;
-
-
-import catalog.hoprxi.core.application.command.Command;
+package catalog.hoprxi.core.application.command;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2022-06-24
+ * @version 0.0.1 builder 2022-06-24
  */
-public interface Processor<T extends Command> {
-    /**
-     * @param command
-     */
-    void processor(T command);
+public class CategoryDeleteCommand implements Command {
+    String id;
 
-    void undo();
+    public CategoryDeleteCommand(String id) {
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
+    }
 }

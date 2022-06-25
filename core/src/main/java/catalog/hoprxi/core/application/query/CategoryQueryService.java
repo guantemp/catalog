@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.application.query;
 
-import catalog.hoprxi.core.infrastructure.view.CategoryView;
+import catalog.hoprxi.core.application.view.CategoryView;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>

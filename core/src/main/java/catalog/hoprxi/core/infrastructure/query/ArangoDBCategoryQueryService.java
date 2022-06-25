@@ -17,9 +17,9 @@
 package catalog.hoprxi.core.infrastructure.query;
 
 import catalog.hoprxi.core.application.query.CategoryQueryService;
+import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.ArangoDBUtil;
-import catalog.hoprxi.core.infrastructure.view.CategoryView;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.util.MapBuilder;

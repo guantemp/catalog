@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.application;
 
-import catalog.hoprxi.core.application.command.CreateCategoryCommand;
+import catalog.hoprxi.core.application.command.CategoryCreateCommand;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
@@ -33,21 +33,17 @@ import java.util.Objects;
 public class CategoryAppService {
     private final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
 
-    public Category create(CreateCategoryCommand command) {
+    public Category create(CategoryCreateCommand command) {
         Objects.requireNonNull(command, "command required");
         Category category = new Category(command.getParentId(), repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
         repository.save(category);
         return category;
     }
 
-    public Category createRoot(CreateCategoryCommand command) {
+    public Category createRoot(CategoryCreateCommand command) {
         Objects.requireNonNull(command, "command required");
         Category root = Category.root(repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
         repository.save(root);
         return root;
-    }
-
-    public boolean isExistes(String id) {
-        return repository.find(id) != null;
     }
 }

@@ -16,11 +16,14 @@
 
 package catalog.hoprxi.core.webapp;
 
+import catalog.hoprxi.core.application.CategoryAppService;
+import catalog.hoprxi.core.application.command.CategoryCreateCommand;
 import catalog.hoprxi.core.application.query.CategoryQueryService;
+import catalog.hoprxi.core.application.view.CategoryView;
+import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBCategoryQueryService;
-import catalog.hoprxi.core.infrastructure.view.CategoryView;
 import com.fasterxml.jackson.core.*;
 
 import javax.servlet.ServletConfig;
@@ -31,6 +34,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URI;
 import java.util.regex.Pattern;
 
 /***
@@ -42,6 +46,7 @@ import java.util.regex.Pattern;
         @WebInitParam(name = "database", value = "arangodb"), @WebInitParam(name = "databaseName", value = "catalog")})
 public class CategoryServlet extends HttpServlet {
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
+    private static final CategoryAppService APP_SERVICE = new CategoryAppService();
     private final CategoryQueryService categoryQueryService = new ArangoDBCategoryQueryService("catalog");
     private final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
 
@@ -61,8 +66,8 @@ public class CategoryServlet extends HttpServlet {
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
-        if (req.getParameter("pretty") != null)
-            generator.useDefaultPrettyPrinter();
+        //if (req.getParameter("pretty") != null)
+        generator.useDefaultPrettyPrinter();
         generator.writeStartObject();
         String pathInfo = req.getPathInfo();
         if (pathInfo != null) {
@@ -206,45 +211,71 @@ public class CategoryServlet extends HttpServlet {
             }
         }
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
-        validateParentId(generator, root, parentId);
+        generator.writeStartObject();
+        if (!validParentId(generator, root, parentId)) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        }
+        generator.writeEndObject();
+
+        CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(logo));
+        Category category = APP_SERVICE.create(command);
+        generator.flush();
+        generator.close();
     }
 
-    private boolean validateParentId(JsonGenerator generator, boolean root, String parentId) throws IOException {
+    private boolean validParentId(JsonGenerator generator, boolean root, String parentId) throws IOException {
         if (!root && (parentId == null || parentId.isEmpty())) {
             generator.writeStartObject();
             generator.writeStringField("status", "FAIL");
             generator.writeStringField("code", "10_05_01");
-            generator.writeStringField("message", "ParenId Not find category(parentId=" + parentId + ")");
+            generator.writeStringField("message", "ParenId is required");
             generator.writeEndObject();
-        } else if (false) {
-            generator.writeStartObject();
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validName(JsonGenerator generator, String name) throws IOException {
+        if (name == null || name.isEmpty()) {
             generator.writeStringField("status", "FAIL");
             generator.writeStringField("code", "10_05_02");
-            generator.writeStringField("message", "Not find category(id=" + parentId + ")");
-            generator.writeEndObject();
+            generator.writeStringField("message", "name is required");
+            return false;
         }
         return true;
     }
 
     private boolean validate(JsonGenerator generator, boolean root, String parentId, String name, String alias, String description, String uri) throws IOException {
-
+        boolean result = true;
+        if (!root && (parentId == null || parentId.isEmpty())) {
+            generator.writeStartObject();
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_01");
+            generator.writeStringField("message", "ParenId is required");
+            generator.writeEndObject();
+            result = false;
+        }
         if (name == null || name.isEmpty()) {
-            generator.writeNumberField("code", 1006);
-            generator.writeStringField("message", "Not find name(name=" + name + ")");
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_02");
+            generator.writeStringField("message", "name is required");
         }
         if (alias != null && alias.length() > 256) {
-            generator.writeNumberField("code", 1007);
-            generator.writeStringField("message", "Not find name(name=" + name + ")");
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_03");
+            generator.writeStringField("message", "alias length rang is 1-256");
         }
         if (description != null && description.length() > 512) {
-            generator.writeNumberField("code", 1008);
-            generator.writeStringField("message", "Not find name(name=" + name + ")");
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_04");
+            generator.writeStringField("message", "description length rang is 1-512");
         }
         if (uri != null && !URI_REGEX.matcher(uri).matches()) {
-            generator.writeNumberField("code", 1009);
-            generator.writeStringField("message", "Not find name(name=" + name + ")");
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_05");
+            generator.writeStringField("message", "description length rang is 1-512");
         }
-        return true;
+        return result;
     }
 
     @Override

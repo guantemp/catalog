@@ -23,6 +23,7 @@ import catalog.hoprxi.core.domain.model.price.Unit;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import org.javamoney.moneta.Money;
 import org.javamoney.moneta.format.CurrencyStyle;
@@ -50,19 +51,18 @@ public class AppTest {
     @Test
     public void shouldAnswerWithTrue() throws IOException, ServletException {
         String[] test = {"69832423", "69821412", "697234", "998541", "69841", "市政府撒的", "9782"};
-        long start = System.currentTimeMillis();
         String[] result = Arrays.stream(test).filter(s -> Pattern.compile("^698\\d*").matcher(s).matches()).toArray(String[]::new);
         //result="/".split("/");
         System.out.println(result.length);
         for (String s : result)
             System.out.println(s);
         System.out.println("pattern:" + Pattern.compile(".*?.*?").matcher("45n").matches());
-        System.out.println("excel： " + (System.currentTimeMillis() - start));
         CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
         MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
-                .set(CurrencyStyle.SYMBOL).set("pattern", "¤ #,##0.00###")//"#,##0.00### ¤"
+                .set(CurrencyStyle.SYMBOL).set("pattern", "¤ #,##0.0000")//"#,##0.00### ¤"
                 .build());
-        RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.2, currency), Unit.DAI));
+        RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.203, currency), Unit.DAI));
+        TreeNode node = null;
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(System.out, JsonEncoding.UTF8)
                 .setPrettyPrinter(new DefaultPrettyPrinter());
@@ -81,6 +81,9 @@ public class AppTest {
         generator.writeStringField("unit", retailPrice.price().unit().toString());
         generator.writeEndObject();
         generator.writeStringField("retailPrice", format.format(retailPrice.price().amount()) + "/" + retailPrice.price().unit().toString());
+        //generator.write
+        generator.writeFieldName("test");
+        generator.writeRawValue("{\"name\":\"Mahesh\", \"age\":21}");
         generator.writeEndObject();
         generator.flush();
         generator.close();

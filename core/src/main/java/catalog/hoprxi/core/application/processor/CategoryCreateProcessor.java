@@ -14,25 +14,33 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain;
+package catalog.hoprxi.core.application.processor;
 
-
+import catalog.hoprxi.core.application.command.CategoryCreateCommand;
+import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 
+import java.util.Objects;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 2021-10-23
+ * @version 0.0.1 builder 2022-06-24
  */
-public class CategoryValidatorService {
-    private static final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
+public class CategoryCreateProcessor implements Processor<CategoryCreateCommand> {
 
-    public static boolean isCategoryExist(String categoryId) {
-        if (categoryId.equals(Category.UNDEFINED.id()))
-            return true;
-        Category category = repository.find(categoryId);
-        return category != null;
+    @Override
+    public void processor(CategoryCreateCommand command) {
+        Objects.requireNonNull(command, "command required");
+        final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
+        Category category = new Category(command.getParentId(), repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
+        repository.save(category);
+    }
+
+    @Override
+    public void undo() {
+        //final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
     }
 }

@@ -17,20 +17,26 @@
 package catalog.hoprxi.core.application.command;
 
 import java.net.URI;
+import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2021-08-08
+ * @version 0.0.1 builder 2022-06-24
  */
-public class CreateCategoryCommand {
+public class CategoryCreateCommand implements Command {
     private String parentId;
     private String name;
     private String alias;
     private URI logo;
     private String description;
 
-    public CreateCategoryCommand(String parentId, String name, String alias, String description, URI logo) {
+    public CategoryCreateCommand(String parentId, String name) {
+        this.parentId = Objects.requireNonNull(parentId, "parentId required");
+        this.name = Objects.requireNonNull(name, "name required");
+    }
+
+    public CategoryCreateCommand(String parentId, String name, String alias, String description, URI logo) {
         this.parentId = parentId;
         this.name = name;
         this.alias = alias;
@@ -76,5 +82,25 @@ public class CreateCategoryCommand {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CategoryCreateCommand)) return false;
+
+        CategoryCreateCommand that = (CategoryCreateCommand) o;
+
+        if (!Objects.equals(parentId, that.parentId)) return false;
+        if (!Objects.equals(name, that.name)) return false;
+        return Objects.equals(alias, that.alias);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = parentId != null ? parentId.hashCode() : 0;
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (alias != null ? alias.hashCode() : 0);
+        return result;
     }
 }

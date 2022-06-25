@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ import java.io.IOException;
         @WebInitParam(name = "expire", value = "5*60*1000")})
 public class UnitServlet extends HttpServlet {
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)

@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query;
 
 import catalog.hoprxi.core.application.query.CategoryQueryService;
-import catalog.hoprxi.core.infrastructure.view.CategoryView;
+import catalog.hoprxi.core.application.view.CategoryView;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

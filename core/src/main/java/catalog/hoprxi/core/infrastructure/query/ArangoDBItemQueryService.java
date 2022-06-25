@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query;
 
 import catalog.hoprxi.core.application.query.ItemQueryService;
+import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
@@ -27,7 +28,6 @@ import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.infrastructure.ArangoDBUtil;
-import catalog.hoprxi.core.infrastructure.view.ItemView;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.model.AqlQueryOptions;

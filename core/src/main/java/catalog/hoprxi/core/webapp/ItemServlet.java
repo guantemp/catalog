@@ -17,11 +17,11 @@
 package catalog.hoprxi.core.webapp;
 
 import catalog.hoprxi.core.application.query.ItemQueryService;
+import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.ItemRepository;
 import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBItemRepository;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBItemQueryService;
-import catalog.hoprxi.core.infrastructure.view.ItemView;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import org.javamoney.moneta.format.CurrencyStyle;

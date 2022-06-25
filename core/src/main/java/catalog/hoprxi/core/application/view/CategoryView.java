@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.view;
+package catalog.hoprxi.core.application.view;
 
 import catalog.hoprxi.core.domain.model.Name;
 

@@ -82,10 +82,11 @@ public class Category {
      * @param name
      * @param description
      * @param icon
-     * @throws IllegalArgumentException if parentId is null or length rang not in 1-36
-     *                                  if id is null or length range not in [1-36]
-     *                                  if name length range not in [1-256]
-     *                                  if description not null and length range not in [0-512]
+     * @throws IllegalArgumentException   if length rang not in 1-36
+     *                                    if id is null or length range not in [1-36]
+     *                                    if name length range not in [1-256]
+     *                                    if description not null and length range not in [0-512]
+     * @throws InvalidCategoryIdException if parentId  not exists
      */
     public Category(String parentId, String id, Name name, String description, URI icon) {
         setIdAndParentId(parentId, id);
