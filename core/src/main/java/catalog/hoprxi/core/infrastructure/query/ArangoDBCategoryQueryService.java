@@ -76,7 +76,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
             final String query = "WITH category\n" +
                     "FOR c IN category FILTER c._key == c.parentId\n" +
                     "LET SUB = (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e )\n" +
-                    "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'icon':c.icon,'leaf':SUB == []}";
+                    "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'icon':c.icon.string,'leaf':SUB == []}";
             ArangoCursor<VPackSlice> cursor = catalog.query(query, VPackSlice.class);
             CategoryView[] categoryViews = transform(cursor);
             trees = new Tree[categoryViews.length];
@@ -98,7 +98,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         final String query = "WITH category\n" +
                 "FOR c in category FILTER c._key == @key\n" +
                 "LET SUB = (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e )\n" +
-                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'icon':c.icon,'leaf':SUB == []}";
+                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'icon':c.icon.string,'leaf':SUB == []}";
         final Map<String, Object> bindVars = new MapBuilder().put("key", id).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, VPackSlice.class);
         if (slices.hasNext()) {
@@ -139,7 +139,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         final String query = "WITH category,subordinate\n" +
                 "FOR c,s in 1..1 OUTBOUND @startVertex subordinate\n" +
                 "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
-                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'icon':c.icon,'leaf':SUB == []}";
+                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'icon':c.icon.string,'leaf':SUB == []}";
         final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
         ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, VPackSlice.class);
         return transform(cursor);
@@ -169,7 +169,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         final String query = "WITH category,subordinate\n" +
                 "FOR c,s,p in 1..@depth OUTBOUND @startVertex subordinate\n" +
                 "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
-                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'icon':c.icon,'leaf':SUB == [],'depth':LENGTH(p.edges)}";
+                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'icon':c.icon.string,'leaf':SUB == [],'depth':LENGTH(p.edges)}";
         final Map<String, Object> bindVars = new MapBuilder().put("depth", DESCENDANT_DEPTH).put("startVertex", "category/" + id).get();
         ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, VPackSlice.class);
         CategoryView[] categoryViews = transform(cursor);
@@ -201,7 +201,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                             "FOR c in 1..1 INBOUND @startVertex subordinate\n" +
                             "FOR s in 1..1 OUTBOUND c._id subordinate\n" +
                             "LET SUB =  (FOR v,e in 1..1 OUTBOUND s._id subordinate RETURN e)\n" +
-                            "RETURN {'_key':s._key,'parentId':s.parentId,'name':s.name,'description':s.description,'icon':c.icon,'leaf':SUB == []}";
+                            "RETURN {'_key':s._key,'parentId':s.parentId,'name':s.name,'description':s.description,'icon':c.icon.string,'leaf':SUB == []}";
                     final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).get();
                     ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
                     siblings = transform(cursor);
@@ -220,7 +220,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         final String query = "WITH category,subordinate\n" +
                 "FOR c IN category FILTER c.name.name =~ @regularExpression || c.name.alias =~ @regularExpression || c.name.mnemonic =~ @regularExpression\n" +
                 "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
-                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'icon':c.icon,'leaf':SUB == []}";
+                "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'icon':c.icon.string,'leaf':SUB == []}";
         final Map<String, Object> bindVars = new MapBuilder().put("regularExpression", regularExpression).get();
         ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(cursor);
@@ -238,7 +238,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                     final String query = "WITH category,subordinate\n" +
                             "FOR c,subordinate IN INBOUND SHORTEST_PATH @startVertex TO @targetVertex GRAPH core\n" +
                             "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
-                            "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'icon':c.icon,'leaf':SUB == []}";
+                            "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'icon':c.icon.string,'leaf':SUB == []}";
                     final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).put("startVertex", "category/" + t.root().getId()).get();
                     ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
                     path = transform(cursor);
@@ -284,7 +284,6 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                 LOGGER.debug("Can't rebuild categoryView");
         }
         String description = null;
-        System.out.println(name.toString() + slice.get("description").isIllegal());
         if (!slice.get("description").isNull())
             description = slice.get("description").getAsString();
         URI icon = null;

@@ -244,7 +244,7 @@ public class Category {
                 ", parentId='" + parentId + '\'' +
                 ", id='" + id + '\'' +
                 ", name=" + name +
-                "description='" + description + '\'' +
+                ", description='" + description + '\'' +
                 ", icon=" + icon +
                 '}';
     }

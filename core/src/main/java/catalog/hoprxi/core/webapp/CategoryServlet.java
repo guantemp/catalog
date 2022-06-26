@@ -144,9 +144,11 @@ public class CategoryServlet extends HttpServlet {
         generator.writeStringField("mnemonic", view.getName().mnemonic());
         generator.writeStringField("alias", view.getName().alias());
         generator.writeEndObject();
-        generator.writeStringField("description", view.getDescription());
+        if (view.getDescription() != null)
+            generator.writeStringField("description", view.getDescription());
+        System.out.println(view.getIcon().toASCIIString());
         if (view.getIcon() != null)
-            generator.writeStringField("icon", view.getIcon().getFragment());
+            generator.writeStringField("icon", view.getIcon().toString());
     }
 
     private void responseChildren(JsonGenerator generator, CategoryView view) throws IOException {
@@ -189,9 +191,6 @@ public class CategoryServlet extends HttpServlet {
                 String fieldName = parser.getCurrentName();
                 parser.nextToken();
                 switch (fieldName) {
-                    case "root":
-                        root = true;
-                        break;
                     case "parentId":
                         parentId = parser.getValueAsString();
                         break;
@@ -213,11 +212,7 @@ public class CategoryServlet extends HttpServlet {
         CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(logo));
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
         try {
-            CategoryView view = null;
-            if (root)
-                view = APP_SERVICE.createRoot(command);
-            else
-                view = APP_SERVICE.create(command);
+            CategoryView view = APP_SERVICE.create(command);
             generator.writeStartObject();
             responseCategoryView(generator, view);
             generator.writeEndObject();

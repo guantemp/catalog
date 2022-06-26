@@ -85,7 +85,7 @@ public class ArangoDBCategoryQueryServiceTest {
         for (CategoryView c : descendants)
             System.out.println("descendants:" + c);
         descendants = query.descendants(" chemicals");
-        Assert.assertEquals(8, descendants.length);
+        Assert.assertEquals(7, descendants.length);
         descendants = query.descendants(" dairy");
         Assert.assertEquals(0, descendants.length);
     }
