@@ -82,8 +82,8 @@ public class ArangoDBCategoryQueryServiceTest {
         Assert.assertEquals(7, descendants.length);
         descendants = query.descendants("grain_oil");
         Assert.assertEquals(14, descendants.length);
-        for (CategoryView c : descendants)
-            System.out.println("descendants:" + c);
+        //for (CategoryView c : descendants)
+        //System.out.println("descendants:" + c);
         descendants = query.descendants(" chemicals");
         Assert.assertEquals(7, descendants.length);
         descendants = query.descendants(" dairy");
@@ -106,15 +106,22 @@ public class ArangoDBCategoryQueryServiceTest {
 
     @Test(invocationCount = 1, dependsOnMethods = {"testRoot"})
     public void testPath() {
-        CategoryView[] sub = query.path("rapeseed_oil");
-        for (CategoryView c : sub)
+        CategoryView[] path = query.path("rapeseed_oil");
+        Assert.assertEquals(4, path.length);
+        path = query.path("instant_noodles");
+        Assert.assertEquals(4, path.length);
+        path = query.path("liquor");
+        Assert.assertEquals(3, path.length);
+        path = query.path("root");
+        Assert.assertEquals(1, path.length);
+        for (CategoryView c : path)
             System.out.println("rapeseed_oil path:" + c);
     }
 
     @Test(invocationCount = 1, dependsOnMethods = {"testRoot"})
     public void testSearchName() {
-        CategoryView[] sub = query.searchName("食品");
-        for (CategoryView c : sub)
+        CategoryView[] result = query.searchName("食品");
+        for (CategoryView c : result)
             System.out.println("search:" + c);
     }
 }

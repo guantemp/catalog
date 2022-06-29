@@ -182,7 +182,6 @@ public class CategoryServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String name = null, alias = null, description = null, logo = null, parentId = null;
-        boolean root = false;
         JsonFactory jasonFactory = new JsonFactory();
         JsonParser parser = jasonFactory.createParser(req.getInputStream());
         while (!parser.isClosed()) {

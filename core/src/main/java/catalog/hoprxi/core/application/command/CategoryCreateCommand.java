@@ -31,14 +31,9 @@ public class CategoryCreateCommand implements Command {
     private URI logo;
     private String description;
 
-    public CategoryCreateCommand(String parentId, String name) {
-        this.parentId = Objects.requireNonNull(parentId, "parentId required");
-        this.name = Objects.requireNonNull(name, "name required");
-    }
-
     public CategoryCreateCommand(String parentId, String name, String alias, String description, URI logo) {
-        this.parentId = parentId;
-        this.name = name;
+        this.parentId = Objects.requireNonNull(parentId, "parentId required").trim();
+        this.name = Objects.requireNonNull(name, "name required").trim();
         this.alias = alias;
         this.logo = logo;
         this.description = description;
