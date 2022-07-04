@@ -19,31 +19,40 @@ package catalog.hoprxi.core.application.command;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-06-24
+ * @version 0.0.1 builder 2022-07-04
  */
-public class CategoryDeleteCommand implements Command {
+public class CategoryChangDescriptionCommand implements Command {
     private String id;
+    private String description;
 
-    public CategoryDeleteCommand(String id) {
+    public CategoryChangDescriptionCommand(String id, String description) {
         this.id = id;
+        this.description = description;
     }
 
     public String id() {
         return id;
     }
 
+    public String description() {
+        return description;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CategoryDeleteCommand)) return false;
+        if (!(o instanceof CategoryChangDescriptionCommand)) return false;
 
-        CategoryDeleteCommand that = (CategoryDeleteCommand) o;
+        CategoryChangDescriptionCommand that = (CategoryChangDescriptionCommand) o;
 
-        return id != null ? id.equals(that.id) : that.id == null;
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        return description != null ? description.equals(that.description) : that.description == null;
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        return result;
     }
 }

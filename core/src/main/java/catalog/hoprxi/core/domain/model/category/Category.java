@@ -190,14 +190,17 @@ public class Category {
     public void changeDescription(String description) {
         if (description != null && description.length() > DESCRIPTION_MAX_LENGTH)
             throw new IllegalArgumentException("description length rang is 1-" + DESCRIPTION_MAX_LENGTH);
-        if ((this.description == null && description != null) || (this.description != null && !this.description.equals(description))) {
+        if ((description == null && this.description != null) || (description != null && !description.equals(this.description))) {
             this.description = description;
             DomainRegistry.domainEventPublisher().publish(new CategoryDescriptionChanged(id, description));
         }
     }
 
     public void changeIcon(URI icon) {
-        this.icon = icon;
+        if ((icon == null && this.icon != null) || (icon != null && !icon.equals(this.icon))) {
+            this.icon = icon;
+            DomainRegistry.domainEventPublisher().publish(new CategoryIconChanged(id, icon));
+        }
     }
 
     public void moveTo(String movedId) {

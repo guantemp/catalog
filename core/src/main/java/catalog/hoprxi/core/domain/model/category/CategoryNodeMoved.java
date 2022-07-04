@@ -14,36 +14,45 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.command;
+package catalog.hoprxi.core.domain.model.category;
+
+import event.hoprxi.domain.model.DomainEvent;
+
+import java.time.LocalDateTime;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-06-24
+ * @version 0.0.1 2019/10/7
  */
-public class CategoryDeleteCommand implements Command {
-    private String id;
+public class CategoryNodeMoved implements DomainEvent {
+    private final LocalDateTime occurredOn;
+    private final String id;
+    private final String movedId;
+    private final int version;
 
-    public CategoryDeleteCommand(String id) {
+    public CategoryNodeMoved(String id, String movedId) {
         this.id = id;
+        this.movedId = movedId;
+        this.occurredOn = LocalDateTime.now();
+        this.version = 1;
+    }
+
+    @Override
+    public LocalDateTime occurredOn() {
+        return null;
+    }
+
+    @Override
+    public int version() {
+        return 0;
     }
 
     public String id() {
         return id;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CategoryDeleteCommand)) return false;
-
-        CategoryDeleteCommand that = (CategoryDeleteCommand) o;
-
-        return id != null ? id.equals(that.id) : that.id == null;
-    }
-
-    @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+    public String movedId() {
+        return movedId;
     }
 }

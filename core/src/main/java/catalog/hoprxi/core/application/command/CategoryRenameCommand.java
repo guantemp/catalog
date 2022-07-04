@@ -14,45 +14,43 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.category;
+package catalog.hoprxi.core.application.command;
 
-import event.hoprxi.domain.model.DomainEvent;
-
-import java.time.LocalDateTime;
+import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019/10/7
+ * @version 0.0.1 builder 2022-07-04
  */
-public class CategoryPositionMoved implements DomainEvent {
-    private final LocalDateTime occurredOn;
-    private final String id;
-    private final String movedId;
-    private final int version;
+public class CategoryRenameCommand implements Command {
+    private String id;
+    private String name;
+    private String alias;
 
-    public CategoryPositionMoved(String id, String movedId) {
-        this.id = id;
-        this.movedId = movedId;
-        this.occurredOn = LocalDateTime.now();
-        this.version = 1;
+    public CategoryRenameCommand(String id, String name, String alias) {
+        setId(id);
+        setName(name);
+        this.alias = alias;
     }
 
-    @Override
-    public LocalDateTime occurredOn() {
-        return null;
+    public void setId(String id) {
+        this.id = Objects.requireNonNull(id, "id required").trim();
     }
 
-    @Override
-    public int version() {
-        return 0;
+    public void setName(String name) {
+        this.name = Objects.requireNonNull(name, "name required").trim();
     }
 
     public String id() {
         return id;
     }
 
-    public String movedId() {
-        return movedId;
+    public String name() {
+        return name;
+    }
+
+    public String alias() {
+        return alias;
     }
 }

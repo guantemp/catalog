@@ -17,6 +17,8 @@
 package catalog.hoprxi.core.application;
 
 import catalog.hoprxi.core.application.command.CategoryCreateCommand;
+import catalog.hoprxi.core.application.command.CategoryDeleteCommand;
+import catalog.hoprxi.core.application.command.Command;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
@@ -24,6 +26,7 @@ import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 
 import java.util.Objects;
+import java.util.Set;
 
 
 /***
@@ -42,6 +45,15 @@ public class CategoryAppService {
                 : new Category(command.getParentId(), repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
         repository.save(category);
         return category.toView();
+    }
+
+    public void delete(CategoryDeleteCommand delete) {
+        Objects.requireNonNull(delete, "delete command required");
+        repository.remove(delete.id());
+    }
+
+    public CategoryView update(Set<Command> commands) {
+        return null;
     }
 
 }

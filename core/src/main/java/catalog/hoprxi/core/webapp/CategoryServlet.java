@@ -18,11 +18,10 @@ package catalog.hoprxi.core.webapp;
 
 import catalog.hoprxi.core.application.CategoryAppService;
 import catalog.hoprxi.core.application.command.CategoryCreateCommand;
+import catalog.hoprxi.core.application.command.CategoryDeleteCommand;
 import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
-import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
-import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBCategoryQueryService;
 import com.fasterxml.jackson.core.*;
 
@@ -48,7 +47,6 @@ public class CategoryServlet extends HttpServlet {
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
     private static final CategoryAppService APP_SERVICE = new CategoryAppService();
     private final CategoryQueryService categoryQueryService = new ArangoDBCategoryQueryService("catalog");
-    private final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -208,6 +206,7 @@ public class CategoryServlet extends HttpServlet {
                 }
             }
         }
+        //valid
         CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(logo));
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
         try {
@@ -294,7 +293,7 @@ public class CategoryServlet extends HttpServlet {
         if (pathInfo != null) {
             String[] parameters = pathInfo.split("/");
             if (parameters.length == 2) {
-                repository.remove(parameters[1]);
+                APP_SERVICE.delete(new CategoryDeleteCommand(parameters[1]));
                 generator.writeNumberField("code", 1004);
                 generator.writeStringField("message", "Success delete category");
             }
@@ -303,5 +302,10 @@ public class CategoryServlet extends HttpServlet {
         generator.writeEndObject();
         generator.flush();
         generator.close();
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        super.doPut(req, resp);
     }
 }

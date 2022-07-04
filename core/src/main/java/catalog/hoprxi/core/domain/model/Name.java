@@ -68,7 +68,9 @@ public class Name {
     }
 
     private void setAlias(String alias) {
-        alias = Objects.requireNonNull(alias, "alias required").trim();
+        if (alias == null)
+            alias = this.name;
+        alias = alias.trim();
         if (alias.length() > MAX_LENGTH)
             throw new IllegalArgumentException("alias length rang is 0-256");
         this.alias = alias;

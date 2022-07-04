@@ -14,18 +14,33 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.command;
+package catalog.hoprxi.core.domain.model.category;
+
+import event.hoprxi.domain.model.DomainEvent;
+
+import java.net.URI;
+import java.time.LocalDateTime;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-06-24
+ * @version 0.0.1 builder 2022-07-04
  */
-public class CategoryDeleteCommand implements Command {
-    private String id;
+public class CategoryIconChanged implements DomainEvent {
+    private final URI icon;
+    private final LocalDateTime occurredOn;
+    private final String id;
+    private final int version;
 
-    public CategoryDeleteCommand(String id) {
+    public CategoryIconChanged(String id, URI icon) {
         this.id = id;
+        this.icon = icon;
+        this.version = 1;
+        this.occurredOn = LocalDateTime.now();
+    }
+
+    public URI icon() {
+        return icon;
     }
 
     public String id() {
@@ -33,17 +48,12 @@ public class CategoryDeleteCommand implements Command {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CategoryDeleteCommand)) return false;
-
-        CategoryDeleteCommand that = (CategoryDeleteCommand) o;
-
-        return id != null ? id.equals(that.id) : that.id == null;
+    public LocalDateTime occurredOn() {
+        return occurredOn;
     }
 
     @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+    public int version() {
+        return version;
     }
 }
