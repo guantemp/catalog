@@ -24,6 +24,8 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.net.URI;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
@@ -244,6 +246,7 @@ public class ArangoDBCategoryRepositoryTest {
         Category leisure_food = repository.find("leisure_food");
         Assert.assertNotNull(leisure_food);
         leisure_food.changeDescription(null);
+        leisure_food.changeIcon(URI.create("https://gitee.com/static/images/logo-black.svg?t=158106664"));
         System.out.println(leisure_food);
         repository.save(leisure_food);
         leisure_food = repository.find("leisure_food");

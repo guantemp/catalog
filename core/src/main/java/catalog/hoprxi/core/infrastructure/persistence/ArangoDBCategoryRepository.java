@@ -142,7 +142,7 @@ public class ArangoDBCategoryRepository implements CategoryRepository {
             description = slice.get("description").getAsString();
         URI icon = null;
         if (!slice.get("icon").isNone())
-            icon = URI.create(slice.get("icon").getAsString());
+            icon = URI.create(slice.get("icon").get("string").getAsString());
         return new Category(parentId, id, name, description, icon);
     }
 

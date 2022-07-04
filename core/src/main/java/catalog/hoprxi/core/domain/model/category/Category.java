@@ -196,6 +196,9 @@ public class Category {
         }
     }
 
+    /**
+     * @param icon
+     */
     public void changeIcon(URI icon) {
         if ((icon == null && this.icon != null) || (icon != null && !icon.equals(this.icon))) {
             this.icon = icon;
