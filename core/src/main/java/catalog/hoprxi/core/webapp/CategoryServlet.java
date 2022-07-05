@@ -17,8 +17,7 @@
 package catalog.hoprxi.core.webapp;
 
 import catalog.hoprxi.core.application.CategoryAppService;
-import catalog.hoprxi.core.application.command.CategoryCreateCommand;
-import catalog.hoprxi.core.application.command.CategoryDeleteCommand;
+import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
@@ -34,6 +33,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /***
@@ -200,7 +201,7 @@ public class CategoryServlet extends HttpServlet {
                     case "description":
                         description = parser.getValueAsString();
                         break;
-                    case "logo":
+                    case "icon":
                         logo = parser.getValueAsString();
                         break;
                 }
@@ -208,11 +209,17 @@ public class CategoryServlet extends HttpServlet {
         }
         //valid
         CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(logo));
-        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
+        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
         try {
             CategoryView view = APP_SERVICE.create(command);
             generator.writeStartObject();
-            responseCategoryView(generator, view);
+            if (view != null) {
+                responseCategoryView(generator, view);
+            } else {
+                generator.writeStringField("status", "FAIL");
+                generator.writeStringField("code", "10_05_01");
+                generator.writeStringField("message", "Do nothing");
+            }
             generator.writeEndObject();
         } catch (InvalidCategoryIdException e) {
             generator.writeStartObject();
@@ -285,9 +292,7 @@ public class CategoryServlet extends HttpServlet {
         long start = System.currentTimeMillis();
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
-        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
-        if (req.getParameter("pretty") != null)
-            generator.useDefaultPrettyPrinter();
+        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
         generator.writeStartObject();
         String pathInfo = req.getPathInfo();
         if (pathInfo != null) {
@@ -306,6 +311,62 @@ public class CategoryServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPut(req, resp);
+        String name = null, alias = null, description = null, logo = null, parentId = null, id = null;
+        Set<Command> commands = new HashSet<>();
+        JsonFactory jasonFactory = new JsonFactory();
+        JsonParser parser = jasonFactory.createParser(req.getInputStream());
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "id":
+                        id = parser.getValueAsString();
+                        break;
+                    case "parentId":
+                        parentId = parser.getValueAsString();
+                        commands.add(new CategoryMoveNodeCommand(id, parentId));
+                        break;
+                    case "name":
+                        name = parser.getValueAsString();
+                        commands.add(new CategoryRenameCommand(id, name, alias));
+                        break;
+                    case "alias":
+                        alias = parser.getValueAsString();
+                        commands.add(new CategoryRenameCommand(id, name, alias));
+                        break;
+                    case "description":
+                        description = parser.getValueAsString();
+                        commands.add(new CategoryChangeDescriptionCommand(id, description));
+                        break;
+                    case "icon":
+                        logo = parser.getValueAsString();
+                        commands.add(new CategoryChangeIconCommand(id, URI.create(logo)));
+                        break;
+                }
+            }
+        }
+        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
+        try {
+            CategoryView view = APP_SERVICE.update(id, commands);
+            generator.writeStartObject();
+            if (view != null) {
+                responseCategoryView(generator, view);
+            } else {
+                generator.writeStringField("status", "FAIL");
+                generator.writeStringField("code", "10_05_01");
+                generator.writeStringField("message", "Do nothing");
+            }
+            generator.writeEndObject();
+        } catch (InvalidCategoryIdException e) {
+            generator.writeStartObject();
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_02");
+            generator.writeStringField("message", "Id not exists");
+            generator.writeEndObject();
+        }
+        generator.flush();
+        generator.close();
     }
 }

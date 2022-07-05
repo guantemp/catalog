@@ -55,14 +55,11 @@ public class CategoryMoveNodeCommand implements Command {
 
         CategoryMoveNodeCommand that = (CategoryMoveNodeCommand) o;
 
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        return parentId != null ? parentId.equals(that.parentId) : that.parentId == null;
+        return id != null ? id.equals(that.id) : that.id == null;
     }
 
     @Override
     public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (parentId != null ? parentId.hashCode() : 0);
-        return result;
+        return id != null ? id.hashCode() : 0;
     }
 }

@@ -16,13 +16,12 @@
 
 package catalog.hoprxi.core.application;
 
-import catalog.hoprxi.core.application.command.CategoryCreateCommand;
-import catalog.hoprxi.core.application.command.CategoryDeleteCommand;
-import catalog.hoprxi.core.application.command.Command;
+import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 
 import java.util.Objects;
@@ -52,8 +51,28 @@ public class CategoryAppService {
         repository.remove(delete.id());
     }
 
-    public CategoryView update(Set<Command> commands) {
-        return null;
+    public CategoryView update(String id, Set<Command> commands) {
+        Category category = repository.find(id);
+        if (category == null)
+            throw new InvalidCategoryIdException("Id not exists");
+        for (Command command : commands) {
+            switch (command.getClass().getSimpleName()) {
+                case "CategoryRenameCommand":
+                    CategoryRenameCommand rename = (CategoryRenameCommand) command;
+                    category.rename(new Name(rename.name(), rename.alias()));
+                    break;
+                case "CategoryChangeDescriptionCommand":
+                    CategoryChangeDescriptionCommand changeDescription = (CategoryChangeDescriptionCommand) command;
+                    category.changeDescription(changeDescription.description());
+                    break;
+                case "CategoryChangeIconCommand":
+                    CategoryChangeIconCommand changeIcon = (CategoryChangeIconCommand) command;
+                    category.changeIcon(changeIcon.icon());
+                    break;
+            }
+            repository.save(category);
+        }
+        return category.toView();
     }
 
 }

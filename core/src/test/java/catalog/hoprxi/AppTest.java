@@ -24,7 +24,6 @@ import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.TreeNode;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import org.javamoney.moneta.Money;
 import org.javamoney.moneta.format.CurrencyStyle;
 import org.junit.Test;
@@ -60,13 +59,12 @@ public class AppTest {
         System.out.println("undefined");
         CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
         MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
-                .set(CurrencyStyle.SYMBOL).set("pattern", "¤ #,##0.0000")//"#,##0.00### ¤"
+                .set(CurrencyStyle.SYMBOL).set("pattern", "¤#,##0.0000")//"#,##0.00### ¤"
                 .build());
         RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.203, currency), Unit.DAI));
         TreeNode node = null;
         JsonFactory jasonFactory = new JsonFactory();
-        JsonGenerator generator = jasonFactory.createGenerator(System.out, JsonEncoding.UTF8)
-                .setPrettyPrinter(new DefaultPrettyPrinter());
+        JsonGenerator generator = jasonFactory.createGenerator(System.out, JsonEncoding.UTF8).useDefaultPrettyPrinter();
         generator.writeStartObject();
         generator.writeNumberField("offset", 0);
         generator.writeNumberField("limit", 15);
@@ -83,9 +81,9 @@ public class AppTest {
         generator.writeEndObject();
         generator.writeStringField("retailPrice", format.format(retailPrice.price().amount()) + "/" + retailPrice.price().unit().toString());
         //generator.write
-        generator.writeFieldName("test");
-        generator.writeRawValue("{\"name\":\"Mahesh\", \"age\":21}");
-        generator.writeEndObject();
+        StringBuilder sb = new StringBuilder("\n\"name\" : ");
+        sb.append("\"guantemp\",").append('\n').append("\"age\" : ").append(21);
+        generator.writeRaw(sb.toString());
         generator.flush();
         generator.close();
 

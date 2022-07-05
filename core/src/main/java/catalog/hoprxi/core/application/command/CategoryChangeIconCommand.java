@@ -16,43 +16,43 @@
 
 package catalog.hoprxi.core.application.command;
 
+import java.net.URI;
+import java.util.Objects;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-07-04
+ * @version 0.0.1 builder 2022-07-05
  */
-public class CategoryChangDescriptionCommand implements Command {
+public class CategoryChangeIconCommand implements Command {
     private String id;
-    private String description;
+    private URI icon;
 
-    public CategoryChangDescriptionCommand(String id, String description) {
-        this.id = id;
-        this.description = description;
+    public CategoryChangeIconCommand(String id, URI icon) {
+        this.id = Objects.requireNonNull(id, "id required").trim();
+        this.icon = icon;
+    }
+
+    public URI icon() {
+        return icon;
     }
 
     public String id() {
         return id;
     }
 
-    public String description() {
-        return description;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CategoryChangDescriptionCommand)) return false;
+        if (!(o instanceof CategoryChangeIconCommand)) return false;
 
-        CategoryChangDescriptionCommand that = (CategoryChangDescriptionCommand) o;
+        CategoryChangeIconCommand that = (CategoryChangeIconCommand) o;
 
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        return description != null ? description.equals(that.description) : that.description == null;
+        return id != null ? id.equals(that.id) : that.id == null;
     }
 
     @Override
     public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (description != null ? description.hashCode() : 0);
-        return result;
+        return id != null ? id.hashCode() : 0;
     }
 }

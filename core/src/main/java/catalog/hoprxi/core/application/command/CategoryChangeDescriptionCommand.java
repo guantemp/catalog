@@ -16,52 +16,36 @@
 
 package catalog.hoprxi.core.application.command;
 
-import java.util.Objects;
-
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2022-07-04
  */
-public class CategoryRenameCommand implements Command {
+public class CategoryChangeDescriptionCommand implements Command {
     private String id;
-    private String name;
-    private String alias;
+    private String description;
 
-    public CategoryRenameCommand(String id, String name, String alias) {
-        setId(id);
-        setName(name);
-        this.alias = alias;
-    }
-
-    public void setId(String id) {
-        this.id = Objects.requireNonNull(id, "id required").trim();
-    }
-
-    public void setName(String name) {
-        this.name = Objects.requireNonNull(name, "name required").trim();
+    public CategoryChangeDescriptionCommand(String id, String description) {
+        this.id = id;
+        this.description = description;
     }
 
     public String id() {
         return id;
     }
 
-    public String name() {
-        return name;
-    }
-
-    public String alias() {
-        return alias;
+    public String description() {
+        return description;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CategoryRenameCommand)) return false;
+        if (!(o instanceof CategoryChangeDescriptionCommand)) return false;
 
-        CategoryRenameCommand that = (CategoryRenameCommand) o;
+        CategoryChangeDescriptionCommand that = (CategoryChangeDescriptionCommand) o;
 
-        return Objects.equals(id, that.id);
+        return id != null ? id.equals(that.id) : that.id == null;
     }
 
     @Override
