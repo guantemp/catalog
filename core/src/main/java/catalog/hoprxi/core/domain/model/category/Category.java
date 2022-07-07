@@ -33,7 +33,8 @@ import java.util.Objects;
 public class Category {
     public static final Category UNDEFINED = new Category("undefined", "undefined", new Name(Label.CATEGORY_UNDEFINED, "undefined"), "undefined") {
         @Override
-        public void rename(Name newName) {
+        public void rename(String newName, String newAlias) {
+
         }
 
         @Override
@@ -177,13 +178,11 @@ public class Category {
         return parentId.equals(id);
     }
 
-    /**
-     * @param newName
-     */
-    public void rename(Name newName) {
-        if (!newName.equals(name)) {
-            this.name = newName;
-            DomainRegistry.domainEventPublisher().publish(new CategoryRenamed(id, newName));
+    public void rename(String newName, String newAlias) {
+        Name temp = name.rename(newName, newAlias);
+        if (temp != name) {
+            name = temp;
+            DomainRegistry.domainEventPublisher().publish(new CategoryRenamed(id, name));
         }
     }
 

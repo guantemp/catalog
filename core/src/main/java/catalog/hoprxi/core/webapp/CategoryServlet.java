@@ -33,8 +33,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /***
@@ -61,7 +61,6 @@ public class CategoryServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         //String[] fields = req.getParameter("fields").split(",");
-        long start = System.currentTimeMillis();
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
@@ -122,7 +121,6 @@ public class CategoryServlet extends HttpServlet {
             }
             generator.writeEndArray();
         }
-        generator.writeNumberField("execution time", System.currentTimeMillis() - start);
         generator.writeEndObject();
         generator.flush();
         generator.close();
@@ -145,7 +143,7 @@ public class CategoryServlet extends HttpServlet {
         generator.writeEndObject();
         if (view.getDescription() != null)
             generator.writeStringField("description", view.getDescription());
-        System.out.println(view.getIcon().toASCIIString());
+        //System.out.println(view.getIcon().toASCIIString());
         if (view.getIcon() != null)
             generator.writeStringField("icon", view.getIcon().toString());
     }
@@ -311,9 +309,8 @@ public class CategoryServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String name = null, alias = null, description = null, logo = null, parentId = null, id = null;
-        Set<Command> commands = new HashSet<>();
         JsonFactory jasonFactory = new JsonFactory();
+        String name = null, alias = null, description = null, icon = null, parentId = null, id = null;
         JsonParser parser = jasonFactory.createParser(req.getInputStream());
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();
@@ -326,27 +323,32 @@ public class CategoryServlet extends HttpServlet {
                         break;
                     case "parentId":
                         parentId = parser.getValueAsString();
-                        commands.add(new CategoryMoveNodeCommand(id, parentId));
                         break;
                     case "name":
                         name = parser.getValueAsString();
-                        commands.add(new CategoryRenameCommand(id, name, alias));
                         break;
                     case "alias":
                         alias = parser.getValueAsString();
-                        commands.add(new CategoryRenameCommand(id, name, alias));
                         break;
                     case "description":
                         description = parser.getValueAsString();
-                        commands.add(new CategoryChangeDescriptionCommand(id, description));
                         break;
                     case "icon":
-                        logo = parser.getValueAsString();
-                        commands.add(new CategoryChangeIconCommand(id, URI.create(logo)));
+                        icon = parser.getValueAsString();
                         break;
                 }
             }
         }
+        List<Command> commands = new ArrayList<>();
+        if (parentId != null)
+            commands.add(new CategoryMoveNodeCommand(id, parentId));
+        if (name != null || alias != null)
+            commands.add(new CategoryRenameCommand(id, name, alias));
+        if (description != null)
+            commands.add(new CategoryChangeDescriptionCommand(id, description));
+        if (icon != null)
+            commands.add(new CategoryChangeIconCommand(id, URI.create(icon)));
+        resp.setContentType("application/json; charset=UTF-8");
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
         try {
             CategoryView view = APP_SERVICE.update(id, commands);
@@ -361,9 +363,7 @@ public class CategoryServlet extends HttpServlet {
             generator.writeEndObject();
         } catch (InvalidCategoryIdException e) {
             generator.writeStartObject();
-            generator.writeStringField("status", "FAIL");
-            generator.writeStringField("code", "10_05_02");
-            generator.writeStringField("message", "Id not exists");
+            responseNotFind(resp, generator, id);
             generator.writeEndObject();
         }
         generator.flush();

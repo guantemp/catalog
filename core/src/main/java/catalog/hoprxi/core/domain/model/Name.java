@@ -69,7 +69,7 @@ public class Name {
 
     private void setAlias(String alias) {
         if (alias == null)
-            alias = this.name;
+            alias = name;
         alias = alias.trim();
         if (alias.length() > MAX_LENGTH)
             throw new IllegalArgumentException("alias length rang is 0-256");
@@ -89,6 +89,14 @@ public class Name {
 
     public String mnemonic() {
         return mnemonic;
+    }
+
+    public Name rename(String name, String alias) {
+        if (this.name.equals(name) && this.alias.equals(alias))
+            return this;
+        if (name == null && alias != null)
+            return new Name(this.name, alias);
+        return new Name(name, alias);
     }
 
     @Override

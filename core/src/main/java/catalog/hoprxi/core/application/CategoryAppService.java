@@ -24,8 +24,8 @@ import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 
 /***
@@ -51,15 +51,16 @@ public class CategoryAppService {
         repository.remove(delete.id());
     }
 
-    public CategoryView update(String id, Set<Command> commands) {
+    public CategoryView update(String id, List<Command> commands) {
         Category category = repository.find(id);
         if (category == null)
             throw new InvalidCategoryIdException("Id not exists");
         for (Command command : commands) {
+            System.out.println(command);
             switch (command.getClass().getSimpleName()) {
                 case "CategoryRenameCommand":
                     CategoryRenameCommand rename = (CategoryRenameCommand) command;
-                    category.rename(new Name(rename.name(), rename.alias()));
+                    category.rename(rename.name(), rename.alias());
                     break;
                 case "CategoryChangeDescriptionCommand":
                     CategoryChangeDescriptionCommand changeDescription = (CategoryChangeDescriptionCommand) command;

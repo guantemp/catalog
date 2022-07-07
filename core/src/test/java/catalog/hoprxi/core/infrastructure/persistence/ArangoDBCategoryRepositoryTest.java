@@ -236,8 +236,9 @@ public class ArangoDBCategoryRepositoryTest {
         Assert.assertEquals(beer.parentId(), "drinks");
         Assert.assertEquals(beer.name().name(), "个人保健用卫生制剂");
 
-        beer.rename(new Name("      啤酒    ", null));
+        beer.rename("      啤酒    ", null);
         beer.changeDescription("是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
+        beer.rename(null, "杂皮");
         repository.save(beer);
         beer = repository.find("beer");
         Assert.assertEquals(beer.description(), "是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");

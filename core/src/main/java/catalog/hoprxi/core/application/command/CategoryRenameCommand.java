@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.application.command;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -67,5 +68,14 @@ public class CategoryRenameCommand implements Command {
     @Override
     public int hashCode() {
         return id != null ? id.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", CategoryRenameCommand.class.getSimpleName() + "[", "]")
+                .add("id='" + id + "'")
+                .add("name='" + name + "'")
+                .add("alias='" + alias + "'")
+                .toString();
     }
 }
