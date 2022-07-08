@@ -60,7 +60,7 @@ public class Bootstrap {
                 .addPrefixPath(deploymentInfo.getContextPath(), manager.start());
 
         Undertow server = Undertow.builder()
-                .addHttpListener(8080, "0.0.0.0")
+                .addHttpListener(80, "0.0.0.0")
                 .setHandler(path)
                 .build();
         server.start();

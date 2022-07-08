@@ -23,7 +23,6 @@ import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBItemRepository;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBItemQueryService;
 import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import org.javamoney.moneta.format.CurrencyStyle;
 import salt.hoprxi.utils.NumberHelper;
 
@@ -52,7 +51,7 @@ public class ItemServlet extends HttpServlet {
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
             .build());
     private static final int OFFSET = 0;
-    private static final int LIMIT = 20;
+    private static final int LIMIT = 50;
     private static final String PRE_SUFFIX = ".*?";
     private ItemQueryService queryService;
     private ItemRepository repository;
@@ -77,11 +76,9 @@ public class ItemServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
-        long start = System.currentTimeMillis();
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
-        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
-                .setPrettyPrinter(new DefaultPrettyPrinter());
+        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
         generator.writeStartObject();
         if (pathInfo != null) {
             String id = pathInfo.substring(1);
@@ -148,8 +145,6 @@ public class ItemServlet extends HttpServlet {
                 ItemView[] itemViews = queryService.findAll(offset, limit);
                 responseItemViews(generator, itemViews);
             }
-
-            generator.writeNumberField("execution time", System.currentTimeMillis() - start);
         }
         generator.writeEndObject();
         generator.flush();

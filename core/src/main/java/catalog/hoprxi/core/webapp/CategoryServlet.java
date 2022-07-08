@@ -25,7 +25,6 @@ import catalog.hoprxi.core.infrastructure.query.ArangoDBCategoryQueryService;
 import com.fasterxml.jackson.core.*;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebInitParam;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -50,7 +49,7 @@ public class CategoryServlet extends HttpServlet {
     private final CategoryQueryService categoryQueryService = new ArangoDBCategoryQueryService("catalog");
 
     @Override
-    public void init(ServletConfig config) throws ServletException {
+    public void init(ServletConfig config) {
         if (config != null) {
             String database = config.getInitParameter("database");
             String databaseName = config.getInitParameter("databaseName");
@@ -59,20 +58,18 @@ public class CategoryServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         //String[] fields = req.getParameter("fields").split(",");
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
-        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
-        //if (req.getParameter("pretty") != null)
-        generator.useDefaultPrettyPrinter();
+        JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
         generator.writeStartObject();
         String pathInfo = req.getPathInfo();
         if (pathInfo != null) {
             String[] parameters = pathInfo.split("/");
             if (parameters.length == 2) {
                 if (parameters[1].equals("_search")) {//search
-
+                    System.out.println(12);
                 } else {
                     CategoryView view = categoryQueryService.find(parameters[1]);
                     if (view != null) {
@@ -178,7 +175,7 @@ public class CategoryServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String name = null, alias = null, description = null, logo = null, parentId = null;
+        String name = null, alias = null, description = null, icon = null, parentId = null;
         JsonFactory jasonFactory = new JsonFactory();
         JsonParser parser = jasonFactory.createParser(req.getInputStream());
         while (!parser.isClosed()) {
@@ -200,13 +197,13 @@ public class CategoryServlet extends HttpServlet {
                         description = parser.getValueAsString();
                         break;
                     case "icon":
-                        logo = parser.getValueAsString();
+                        icon = parser.getValueAsString();
                         break;
                 }
             }
         }
         //valid
-        CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(logo));
+        CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(icon));
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
         try {
             CategoryView view = APP_SERVICE.create(command);
@@ -308,7 +305,7 @@ public class CategoryServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         JsonFactory jasonFactory = new JsonFactory();
         String name = null, alias = null, description = null, icon = null, parentId = null, id = null;
         JsonParser parser = jasonFactory.createParser(req.getInputStream());
@@ -357,7 +354,7 @@ public class CategoryServlet extends HttpServlet {
                 responseCategoryView(generator, view);
             } else {
                 generator.writeStringField("status", "FAIL");
-                generator.writeStringField("code", "10_05_01");
+                generator.writeStringField("code", "10_05_03");
                 generator.writeStringField("message", "Do nothing");
             }
             generator.writeEndObject();

@@ -31,16 +31,12 @@ public class CategoryRenameCommand implements Command {
 
     public CategoryRenameCommand(String id, String name, String alias) {
         setId(id);
-        setName(name);
+        this.name = name;
         this.alias = alias;
     }
 
-    public void setId(String id) {
+    private void setId(String id) {
         this.id = Objects.requireNonNull(id, "id required").trim();
-    }
-
-    public void setName(String name) {
-        this.name = Objects.requireNonNull(name, "name required").trim();
     }
 
     public String id() {

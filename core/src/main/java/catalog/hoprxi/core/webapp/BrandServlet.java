@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,9 @@
 package catalog.hoprxi.core.webapp;
 
 import catalog.hoprxi.core.application.BrandAppService;
+import catalog.hoprxi.core.application.command.BrandChangeAboutCommand;
+import catalog.hoprxi.core.application.command.CategoryRenameCommand;
+import catalog.hoprxi.core.application.command.Command;
 import catalog.hoprxi.core.application.command.CreateBrandCommand;
 import catalog.hoprxi.core.application.query.BrandQueryService;
 import catalog.hoprxi.core.domain.model.brand.Brand;
@@ -35,6 +38,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URL;
 import java.time.Year;
+import java.util.ArrayList;
+import java.util.List;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -44,14 +49,13 @@ import java.time.Year;
 @WebServlet(urlPatterns = {"v1/brands/*"}, name = "brands", asyncSupported = false)
 public class BrandServlet extends HttpServlet {
     private static final int OFFSET = 0;
-    private static final int LIMIT = 20;
+    private static final int LIMIT = 50;
     private final BrandRepository repository = new ArangoDBBrandRepository("catalog");
     private final BrandQueryService query = new ArangoDBBrandQueryService("catalog");
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
-        long start = System.currentTimeMillis();
         resp.setContentType("application/json; charset=UTF-8");
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
@@ -78,7 +82,6 @@ public class BrandServlet extends HttpServlet {
             Brand[] brands = query.findAll(offset, limit);
             responseBrands(generator, brands);
         }
-        generator.writeNumberField("execution time", System.currentTimeMillis() - start);
         generator.writeEndObject();
         generator.flush();
         generator.close();
@@ -133,11 +136,47 @@ public class BrandServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo();
-        if (pathInfo != null) {
-            String id = pathInfo.substring(1);
-            Brand brand = repository.find(id);
+        String name = null, alias = null, story = null, id = null;
+        URL logo = null, homepage = null;
+        Year since = null;
+        JsonFactory jasonFactory = new JsonFactory();
+        JsonParser parser = jasonFactory.createParser(req.getInputStream());
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "id":
+                        id = parser.getValueAsString();
+                        break;
+                    case "name":
+                        name = parser.getValueAsString();
+                        break;
+                    case "alias":
+                        alias = parser.getValueAsString();
+                        break;
+                    case "story":
+                        story = parser.getValueAsString();
+                        break;
+                    case "homepage":
+                        homepage = parser.readValueAs(URL.class);
+                        break;
+                    case "logo":
+                        logo = parser.readValueAs(URL.class);
+                        break;
+                    case "since":
+                        since = parser.readValueAs(Year.class);
+                        break;
+                }
+            }
         }
+        List<Command> commands = new ArrayList<>();
+        if (name != null || alias != null)
+            commands.add(new CategoryRenameCommand(id, name, alias));
+        if (story != null)
+            commands.add(new BrandChangeAboutCommand(id, logo, homepage, since, story));
+
         resp.setContentType("application/json; charset=UTF-8");
         resp.setStatus(HttpServletResponse.SC_CREATED);
     }

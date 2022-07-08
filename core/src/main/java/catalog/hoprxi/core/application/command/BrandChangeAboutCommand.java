@@ -16,10 +16,15 @@
 
 package catalog.hoprxi.core.application.command;
 
+import java.net.URL;
+import java.time.Year;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 2019-05-19
  */
-public class BrandChangeAboutCommand {
+public class BrandChangeAboutCommand implements Command {
+    public BrandChangeAboutCommand(String id, URL logo, URL homepage, Year since, String story) {
+    }
 }

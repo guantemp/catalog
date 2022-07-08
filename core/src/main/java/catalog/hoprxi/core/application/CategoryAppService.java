@@ -56,7 +56,6 @@ public class CategoryAppService {
         if (category == null)
             throw new InvalidCategoryIdException("Id not exists");
         for (Command command : commands) {
-            System.out.println(command);
             switch (command.getClass().getSimpleName()) {
                 case "CategoryRenameCommand":
                     CategoryRenameCommand rename = (CategoryRenameCommand) command;
