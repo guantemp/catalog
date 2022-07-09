@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import java.time.Year;
  * @since JDK8.0
  * @version 0.0.1 2019-05-14
  */
-public class CreateBrandCommand implements Command {
+public class BrandCreateCommand implements Command {
     private String name;
     private String alias;
     private URL logo;
@@ -32,7 +32,7 @@ public class CreateBrandCommand implements Command {
     private String story;
     private URL homepage;
 
-    public CreateBrandCommand(String name, String alias, URL homepage, URL logo, Year since, String story) {
+    public BrandCreateCommand(String name, String alias, URL homepage, URL logo, Year since, String story) {
         this.name = name;
         this.alias = alias;
         this.logo = logo;

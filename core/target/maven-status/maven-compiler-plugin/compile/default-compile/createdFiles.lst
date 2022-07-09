@@ -96,7 +96,6 @@ catalog\hoprxi\core\domain\model\price\Unit$3.class
 catalog\hoprxi\core\domain\model\ItemRetailPriceChanged.class
 catalog\hoprxi\core\domain\model\barcode\EAN_13.class
 catalog\hoprxi\core\domain\model\category\Category$1.class
-catalog\hoprxi\core\application\command\CreateBrandCommand.class
 catalog\hoprxi\core\domain\model\price\VipPrice.class
 catalog\hoprxi\core\domain\model\price\Unit$36.class
 catalog\hoprxi\core\domain\CategoryValidatorService.class

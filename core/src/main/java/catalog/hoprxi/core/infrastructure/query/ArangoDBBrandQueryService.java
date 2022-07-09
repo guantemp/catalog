@@ -28,6 +28,8 @@ import com.arangodb.util.MapBuilder;
 import com.arangodb.velocypack.VPackSlice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import salt.hoprxi.cache.Cache;
+import salt.hoprxi.cache.CacheFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -46,6 +48,7 @@ import java.util.Map;
 public class ArangoDBBrandQueryService implements BrandQueryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBBrandQueryService.class);
     private static Constructor<Name> nameConstructor;
+    private static Cache<String, Brand> cache = CacheFactory.buildCache("brand");
 
     static {
         try {

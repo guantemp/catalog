@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,19 +28,19 @@ import catalog.hoprxi.scale.domain.model.Count;
 import catalog.hoprxi.scale.domain.model.CountRepository;
 import catalog.hoprxi.scale.domain.model.Plu;
 import org.javamoney.moneta.Money;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import java.util.Locale;
 
 /***
- * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-11-05
+ * @version 0.0.1 builder 2022-07-09
  */
 public class ArangoDBCountRepositoryTest {
     private static CountRepository countRepository = new ArangoDBCountRepository();

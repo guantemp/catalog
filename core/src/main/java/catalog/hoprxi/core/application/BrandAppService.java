@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.application;
 
 import catalog.hoprxi.core.application.command.BrandChangeAboutCommand;
-import catalog.hoprxi.core.application.command.CreateBrandCommand;
+import catalog.hoprxi.core.application.command.BrandCreateCommand;
 import catalog.hoprxi.core.application.command.RenameBrandCommand;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
@@ -36,7 +36,7 @@ public class BrandAppService {
 
     private BrandRepository repository = new ArangoDBBrandRepository("catalog");
 
-    public Brand createBrand(CreateBrandCommand command) {
+    public Brand createBrand(BrandCreateCommand command) {
         Name name = new Name(command.getName(), command.getAlias());
         AboutBrand about = new AboutBrand(command.getLogo(), command.getHomepage(), command.getSince(), command.getStory());
         Brand brand = new Brand(repository.nextIdentity(), name, about);

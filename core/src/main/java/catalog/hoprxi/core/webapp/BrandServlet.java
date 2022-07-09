@@ -18,9 +18,9 @@ package catalog.hoprxi.core.webapp;
 
 import catalog.hoprxi.core.application.BrandAppService;
 import catalog.hoprxi.core.application.command.BrandChangeAboutCommand;
+import catalog.hoprxi.core.application.command.BrandCreateCommand;
 import catalog.hoprxi.core.application.command.CategoryRenameCommand;
 import catalog.hoprxi.core.application.command.Command;
-import catalog.hoprxi.core.application.command.CreateBrandCommand;
 import catalog.hoprxi.core.application.query.BrandQueryService;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
@@ -30,6 +30,7 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import salt.hoprxi.utils.NumberHelper;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -44,7 +45,7 @@ import java.util.List;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2021-09-10
+ * @version 0.0.2 builder 2022-07-10
  */
 @WebServlet(urlPatterns = {"v1/brands/*"}, name = "brands", asyncSupported = false)
 public class BrandServlet extends HttpServlet {
@@ -52,6 +53,11 @@ public class BrandServlet extends HttpServlet {
     private static final int LIMIT = 50;
     private final BrandRepository repository = new ArangoDBBrandRepository("catalog");
     private final BrandQueryService query = new ArangoDBBrandQueryService("catalog");
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -69,7 +75,6 @@ public class BrandServlet extends HttpServlet {
                 responseBrand(generator, brand);
                 generator.writeEndObject();
             } else {
-                //resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
                 generator.writeNumberField("code", 204);
                 generator.writeStringField("message", "Not find");
             }
@@ -121,9 +126,9 @@ public class BrandServlet extends HttpServlet {
                 }
             }
         }
-        CreateBrandCommand createBrandCommand = new CreateBrandCommand(name, alias, homepage, logo, since, story);
+        BrandCreateCommand brandCreateCommand = new BrandCreateCommand(name, alias, homepage, logo, since, story);
         BrandAppService brandAppService = new BrandAppService();
-        Brand brand = brandAppService.createBrand(createBrandCommand);
+        Brand brand = brandAppService.createBrand(brandCreateCommand);
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
                 .setPrettyPrinter(new DefaultPrettyPrinter());
         resp.setContentType("application/json; charset=UTF-8");

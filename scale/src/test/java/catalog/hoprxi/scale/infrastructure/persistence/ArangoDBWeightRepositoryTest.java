@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.scale.infrastructure.persistence;
 
+
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
@@ -29,18 +30,18 @@ import catalog.hoprxi.scale.domain.model.Weight;
 import catalog.hoprxi.scale.domain.model.WeightRepository;
 import catalog.hoprxi.scale.domain.model.weight_price.*;
 import org.javamoney.moneta.Money;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import java.util.Locale;
 
 /***
- * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019/10/30
+ * @version 0.0.1 builder 2022-07-09
  */
 public class ArangoDBWeightRepositoryTest {
     private static WeightRepository weightRepository = new ArangoDBWeightRepository();
@@ -61,7 +62,7 @@ public class ArangoDBWeightRepositoryTest {
 
         retailPrice = new WeightRetailPrice(new WeightPrice(Money.of(2.99, currency), WeightUnit.FIVE_HUNDRED_GRAM));
         vipPrice = new WeightVipPrice("vip", new WeightPrice(Money.of(4.99, currency), WeightUnit.KILOGRAM));
-        Weight apple1 = new Weight(new Plu(2), new Name("昭通苹果", "zhaotong apple"), new Domestic("云南省", "昭通市"), Specification.UNDEFINED, Grade.SUPERFINE, new ShelfLife(10),
+        Weight apple1 = new Weight(new Plu(2), new Name("昭通苹果", "zhaotong apple"), new Domestic("云南省", "昭通市"), Specification.UNDEFINED, Grade.PREMIUM, new ShelfLife(10),
                 retailPrice, memberPrice, vipPrice, "fruits", Brand.UNDEFINED.id());
         weightRepository.save(apple1);
 
@@ -101,22 +102,23 @@ public class ArangoDBWeightRepositoryTest {
                 retailPrice, memberPrice, vipPrice, "aquatic", Brand.UNDEFINED.id());
         weightRepository.save(crucian_carp);
     }
-/*
-    @AfterClass
-    public static void teardown() {
-        weightRepository.remove(new Plu(1));
-        weightRepository.remove(new Plu(2));
-        weightRepository.remove(new Plu(10));
-        weightRepository.remove(new Plu(11));
-        weightRepository.remove(new Plu(12));
-        weightRepository.remove(new Plu(13));
-        weightRepository.remove(new Plu(20));
-        weightRepository.remove(new Plu(21));
 
-        brandRepository.remove(Brand.UNDEFINED.id());
-        brandRepository.remove("tw");
-    }
-*/
+    /*
+        @AfterClass
+        public static void teardown() {
+            weightRepository.remove(new Plu(1));
+            weightRepository.remove(new Plu(2));
+            weightRepository.remove(new Plu(10));
+            weightRepository.remove(new Plu(11));
+            weightRepository.remove(new Plu(12));
+            weightRepository.remove(new Plu(13));
+            weightRepository.remove(new Plu(20));
+            weightRepository.remove(new Plu(21));
+
+            brandRepository.remove(Brand.UNDEFINED.id());
+            brandRepository.remove("tw");
+        }
+    */
     @Test
     public void nextPlu() {
     }

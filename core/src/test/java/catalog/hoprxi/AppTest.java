@@ -26,29 +26,27 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.TreeNode;
 import org.javamoney.moneta.Money;
 import org.javamoney.moneta.format.CurrencyStyle;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import javax.money.format.AmountFormatQueryBuilder;
 import javax.money.format.MonetaryAmountFormat;
 import javax.money.format.MonetaryFormats;
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-
-/**
- * Unit test for simple App.
+/***
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @since JDK8.0
+ * @version 0.0.1 builder 2022-07-09
  */
 public class AppTest {
-    /**
-     * Rigorous Test :-)
-     */
+
     @Test
-    public void shouldAnswerWithTrue() throws IOException, ServletException {
+    public void testMain() throws IOException {
         String[] test = {"69832423", "69821412", "697234", "998541", "69841", "市政府撒的", "9782"};
         String[] result = Arrays.stream(test).filter(s -> Pattern.compile("^698\\d*").matcher(s).matches()).toArray(String[]::new);
         //result="/".split("/");
@@ -88,4 +86,5 @@ public class AppTest {
         generator.close();
 
     }
+
 }
