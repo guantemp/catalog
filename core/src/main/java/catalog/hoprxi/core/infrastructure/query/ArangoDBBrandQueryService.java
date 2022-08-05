@@ -48,7 +48,7 @@ import java.util.Map;
 public class ArangoDBBrandQueryService implements BrandQueryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBBrandQueryService.class);
     private static Constructor<Name> nameConstructor;
-    private static Cache<String, Brand> cache = CacheFactory.buildCache("brand");
+    private static Cache<String, Brand> cache = CacheFactory.build("brand");
 
     static {
         try {

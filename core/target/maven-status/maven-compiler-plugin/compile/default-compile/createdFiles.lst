@@ -14,6 +14,7 @@ catalog\hoprxi\core\domain\model\price\Unit$24.class
 catalog\hoprxi\core\application\BrandAppService.class
 catalog\hoprxi\core\Bootstrap.class
 catalog\hoprxi\core\domain\model\Grade$4.class
+catalog\hoprxi\core\application\view\ItemView.class
 catalog\hoprxi\core\domain\model\ItemProhibitSold.class
 catalog\hoprxi\core\domain\model\madeIn\Province.class
 catalog\hoprxi\core\domain\model\price\Unit$12.class
@@ -22,8 +23,12 @@ catalog\hoprxi\core\domain\model\price\Unit$32.class
 catalog\hoprxi\core\domain\model\Grade$1.class
 catalog\hoprxi\core\domain\model\barcode\Barcode.class
 catalog\hoprxi\core\domain\model\price\Unit$21.class
+catalog\hoprxi\core\application\command\CategoryChangeDescriptionCommand.class
 catalog\hoprxi\core\domain\model\price\Unit$9.class
+catalog\hoprxi\core\application\processor\CategoryCreateProcessor.class
+catalog\hoprxi\core\application\command\CategoryMoveNodeCommand.class
 catalog\hoprxi\core\domain\model\barcode\UPC_A.class
+catalog\hoprxi\core\application\view\ItemView$BrandView.class
 catalog\hoprxi\core\domain\BrandValidatorService.class
 catalog\hoprxi\core\infrastructure\query\ArangoDBItemQueryService.class
 catalog\hoprxi\core\application\command\Command.class
@@ -38,10 +43,12 @@ catalog\hoprxi\core\domain\model\barcode\EanUcc.class
 catalog\hoprxi\core\domain\model\ItemBarcodeChanged.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBCategoryRepository$Edge.class
 catalog\hoprxi\core\domain\model\price\Unit$18.class
+catalog\hoprxi\core\domain\model\category\CategoryNodeMoved.class
 catalog\hoprxi\core\domain\model\price\Unit$28.class
 catalog\hoprxi\core\domain\model\ItemMadeInChanged.class
 catalog\hoprxi\core\domain\model\price\Unit$35.class
 catalog\hoprxi\core\domain\model\price\Unit$5.class
+catalog\hoprxi\core\infrastructure\ArangoDBUtil.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBCategoryRepository.class
 catalog\hoprxi\core\domain\model\barcode\UPC_E.class
 catalog\hoprxi\core\webapp\BrandServlet.class
@@ -50,9 +57,11 @@ catalog\hoprxi\core\domain\model\ProhibitSellItem.class
 catalog\hoprxi\core\application\ItemAppervice.class
 catalog\hoprxi\core\domain\model\madeIn\Domestic.class
 catalog\hoprxi\core\webapp\ItemServlet.class
+catalog\hoprxi\core\infrastructure\CoreSetup.class
 catalog\hoprxi\core\domain\model\price\MemberPrice.class
 catalog\hoprxi\core\domain\model\madeIn\Imported.class
 catalog\hoprxi\core\domain\model\price\Unit$22.class
+catalog\hoprxi\core\application\command\CategoryDeleteCommand.class
 catalog\hoprxi\core\domain\model\category\CategoryRepository.class
 catalog\hoprxi\core\domain\model\price\Unit$11.class
 catalog\hoprxi\core\domain\model\price\Unit$17.class
@@ -69,11 +78,13 @@ catalog\hoprxi\core\domain\model\price\Unit$23.class
 catalog\hoprxi\core\webapp\UnitServlet.class
 catalog\hoprxi\core\application\command\RenameBrandCommand.class
 catalog\hoprxi\core\domain\model\price\Unit$13.class
+catalog\hoprxi\core\application\command\BrandChangeAboutCommand.class
 catalog\hoprxi\core\domain\model\price\Price.class
 catalog\hoprxi\core\util\DomainRegistry.class
 catalog\hoprxi\core\domain\model\price\Unit$30.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBItemRepository$1.class
 catalog\hoprxi\core\domain\model\brand\Brand.class
+catalog\hoprxi\core\application\view\ItemView$CategoryView.class
 catalog\hoprxi\core\domain\model\ItemCreated.class
 catalog\hoprxi\core\domain\model\price\Unit$8.class
 catalog\hoprxi\core\domain\model\Grade$2.class
@@ -84,6 +95,7 @@ catalog\hoprxi\App.class
 catalog\hoprxi\core\domain\model\barcode\EAN_8.class
 catalog\hoprxi\core\domain\model\price\Unit$10.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBProhibitSellItemRepository.class
+catalog\hoprxi\core\application\command\BrandCreateCommand.class
 catalog\hoprxi\core\domain\model\price\Unit$20.class
 catalog\hoprxi\core\domain\model\price\Unit$40.class
 catalog\hoprxi\core\domain\model\ItemPermitSold.class
@@ -94,8 +106,10 @@ catalog\hoprxi\core\infrastructure\query\ArangoDBBrandQueryService.class
 catalog\hoprxi\core\domain\model\Specification.class
 catalog\hoprxi\core\domain\model\price\Unit$3.class
 catalog\hoprxi\core\domain\model\ItemRetailPriceChanged.class
+catalog\hoprxi\core\application\command\CategoryChangeIconCommand.class
 catalog\hoprxi\core\domain\model\barcode\EAN_13.class
 catalog\hoprxi\core\domain\model\category\Category$1.class
+catalog\hoprxi\core\application\command\CategoryCreateCommand.class
 catalog\hoprxi\core\domain\model\price\VipPrice.class
 catalog\hoprxi\core\domain\model\price\Unit$36.class
 catalog\hoprxi\core\domain\CategoryValidatorService.class
@@ -110,6 +124,7 @@ catalog\hoprxi\core\domain\model\price\Unit$19.class
 catalog\hoprxi\core\domain\model\price\Unit$39.class
 catalog\hoprxi\core\webapp\CategoryServlet.class
 catalog\hoprxi\core\domain\model\price\Unit$38.class
+catalog\hoprxi\core\application\command\CategoryRenameCommand.class
 catalog\hoprxi\core\domain\model\brand\BrandAboutChanged.class
 catalog\hoprxi\core\domain\model\price\Unit$6.class
 catalog\hoprxi\core\domain\model\ItemRenamed.class
@@ -128,6 +143,7 @@ catalog\hoprxi\core\infrastructure\query\ArangoDBCategoryQueryService.class
 catalog\hoprxi\core\domain\model\barcode\ISSN.class
 catalog\hoprxi\core\domain\model\price\Unit$14.class
 catalog\hoprxi\core\application\query\CategoryQueryService.class
+catalog\hoprxi\core\domain\model\category\CategoryIconChanged.class
 catalog\hoprxi\core\domain\model\price\Unit$37.class
 catalog\hoprxi\core\domain\model\category\Category.class
 catalog\hoprxi\core\domain\model\price\Unit$7.class
@@ -135,6 +151,7 @@ catalog\hoprxi\core\domain\model\shelfLife\ShelfLifeService$OnSchedule.class
 catalog\hoprxi\core\domain\model\price\Unit$26.class
 catalog\hoprxi\core\domain\model\price\Unit$1.class
 catalog\hoprxi\core\domain\model\price\Unit$31.class
+catalog\hoprxi\core\application\view\CategoryView.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBItemRepository$BelongEdge.class
 catalog\hoprxi\core\domain\model\madeIn\MadeIn.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBBrandRepository.class

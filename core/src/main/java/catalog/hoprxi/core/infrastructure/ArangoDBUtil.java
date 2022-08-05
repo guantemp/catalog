@@ -29,10 +29,16 @@ import java.lang.reflect.Array;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2018-06-16
+ * @version 0.0.2200-08-04
  */
 public class ArangoDBUtil {
-    private static final Config config = ConfigFactory.load("core").getConfig("database");
+    private static final Config config;
+
+    static {
+        Config cache = ConfigFactory.load("core");
+        Config units = ConfigFactory.load("database");
+        config = cache.withFallback(units);
+    }
 
     /**
      * @return
@@ -41,8 +47,7 @@ public class ArangoDBUtil {
         ArangoDB.Builder builder = new ArangoDB.Builder();
         builder.useProtocol(Protocol.VST).host(config.getString("arangodb_write.host"), config.getInt("arangodb_write.port"));
         builder.registerModule(new VPackJdk8Module()).maxConnections(8).user(config.getString("arangodb_write.user")).password(config.getString("arangodb_write.password"));
-        ArangoDB arangoDB = builder.build();
-        return arangoDB;
+        return builder.build();
     }
 
     /**
@@ -56,8 +61,7 @@ public class ArangoDBUtil {
         ArangoDB.Builder builder = new ArangoDB.Builder();
         builder.useProtocol(Protocol.VST).host(host, port);
         builder.registerModule(new VPackJdk8Module()).maxConnections(8).user(user).password(password);
-        ArangoDB arangoDB = builder.build();
-        return arangoDB;
+        return builder.build();
     }
 
     /**
@@ -81,9 +85,10 @@ public class ArangoDBUtil {
 
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T[] calculationCollectionSize(ArangoDatabase arangoDatabase, Class<T> t, String collectionName, long offset, int limit) {
-        if (offset < 0l)
-            offset = 0l;
+        if (offset < 0L)
+            offset = 0L;
         if (limit < 0)
             limit = 0;
         long count = 0;
@@ -95,7 +100,7 @@ public class ArangoDBUtil {
         int difference = (int) (count - offset);
         if (difference <= 0)
             return (T[]) Array.newInstance(t, 0);
-        int capacity = difference >= limit ? limit : difference;
+        int capacity = Math.min(difference, limit);
         return (T[]) Array.newInstance(t, capacity);
     }
 }
