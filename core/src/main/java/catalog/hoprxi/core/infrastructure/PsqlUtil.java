@@ -32,7 +32,7 @@ import java.util.Properties;
  * @version 0.0.1 builder 2022-08-25
  */
 public class PsqlUtil {
-    private static final Config config = ConfigFactory.load("hikari");
+    private static final Config config = ConfigFactory.load("database");
     private static HikariDataSource hikariDataSource;
 
     public static Connection getConnection(String databaseName) throws SQLException {

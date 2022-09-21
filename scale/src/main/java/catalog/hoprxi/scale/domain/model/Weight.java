@@ -15,6 +15,7 @@
  */
 package catalog.hoprxi.scale.domain.model;
 
+import catalog.hoprxi.core.domain.BrandValidatorService;
 import catalog.hoprxi.core.domain.CategoryValidatorService;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
@@ -112,7 +113,7 @@ public class Weight {
 
     private void setBrandId(String brandId) {
         brandId = Objects.requireNonNull(brandId, "brandId required").trim();
-        if (!brandId.equals(Brand.UNDEFINED.id()) && !CategoryValidatorService.isBrandExist(brandId))
+        if (!brandId.equals(Brand.UNDEFINED.id()) && !BrandValidatorService.isBrandExist(brandId))
             throw new IllegalArgumentException("brandId isn't effective");
         this.brandId = brandId;
     }
@@ -211,7 +212,7 @@ public class Weight {
      *                                  brandId is not valid
      */
     public void moveToNewBrand(String brandId) {
-        if (!this.brandId.equals(brandId) && CategoryValidatorService.isBrandExist(brandId)) {
+        if (!this.brandId.equals(brandId) && BrandValidatorService.isBrandExist(brandId)) {
             setBrandId(brandId);
             //DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
         }

@@ -20,18 +20,31 @@ package catalog.hoprxi.core.domain;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
+import catalog.hoprxi.core.infrastructure.persistence.PsqlCategoryRepository;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 2021-10-23
+ * @version 0.0.3 2022-09-21
  */
 public class CategoryValidatorService {
-    private static final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
+    private static CategoryRepository repository;
+
+    static {
+        Config config = ConfigFactory.load("database");
+        String provider = config.hasPath("") ? config.getString("") : "psql";
+        switch ((provider)) {
+            case "psql":
+                repository = new PsqlCategoryRepository("catalog");
+            case "arangoDB":
+                repository = new ArangoDBCategoryRepository("catalog");
+        }
+    }
 
     public static boolean isCategoryExist(String categoryId) {
-        if (categoryId.equals(Category.UNDEFINED.id()))
-            return true;
+        if (categoryId.equals(Category.UNDEFINED.id())) return true;
         Category category = repository.find(categoryId);
         return category != null;
     }
