@@ -1,0 +1,36 @@
+{
+    "write": "postgresql_write",
+    "read": "postgresql_read",
+    "postgresql_write": {
+        "dataSourceClassName": "org.postgresql.ds.PGSimpleDataSource",
+        "host": "120.77.47.145",
+        "port": "5432",
+        "user": "postgres",
+        "password": "Qwe123465",
+        "maximumPoolSize": 5
+    },
+    "postgresql_read": {
+        "dataSourceClassName": "org.postgresql.ds.PGSimpleDataSource",
+        "host": "120.77.47.145",
+        "port": "5432",
+        "user": "postgres",
+        "password": "Qwe123465",
+        "maximumPoolSize": 5
+    },
+    "mysql": {
+        "jdbcUrl": "jdbc:mysql://localhost:3306/simpsons",
+        "username": "test",
+        "password": "test",
+        "maximumPoolSize": 5,
+        "dataSource.cachePrepStmts": true,
+        "dataSource.prepStmtCacheSize": 250,
+        "dataSource.prepStmtCacheSqlLimit": 2048,
+        "dataSource.useServerPrepStmts": true,
+        "dataSource.useLocalSessionState": true,
+        "dataSource.rewriteBatchedStatements": true,
+        "dataSource.cacheResultSetMetadata": true,
+        "dataSource.cacheServerConfiguration": true,
+        "dataSource.elideSetAutoCommits": true,
+        "dataSource.maintainTimeStats": false
+    }
+}
