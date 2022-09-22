@@ -30,9 +30,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
 
@@ -51,7 +53,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
             nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
             nameConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
-            LOGGER.error("Not find Name class has such constructor", e);
+            LOGGER.error("Name class no such constructor", e);
         }
     }
 
@@ -63,6 +65,30 @@ public class PsqlCategoryRepository implements CategoryRepository {
 
     @Override
     public Category find(String id) {
+        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+            final String findSql = "select id,parent_id,name,description,icon from category where id=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(findSql);
+            preparedStatement.setLong(1, Long.parseLong(id));
+            ResultSet rs = preparedStatement.executeQuery();
+            return rebuild(rs);
+        } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
+                 IllegalAccessException e) {
+            LOGGER.error("Can't rebuild category with (id = {})", id, e);
+        }
+        return null;
+    }
+
+    private Category rebuild(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        if (rs.next()) {
+            String id = rs.getString("id");
+            if (id.equals(Category.UNDEFINED.id()))
+                return Category.UNDEFINED;
+            String parent_id = rs.getString("parent_id");
+            Name name = toName(rs.getString("name"));
+            String description = rs.getString("description");
+            URI icon = URI.create(rs.getString("icon"));
+            return new Category(parent_id, id, name, description, icon);
+        }
         return null;
     }
 
@@ -110,6 +136,13 @@ public class PsqlCategoryRepository implements CategoryRepository {
 
     @Override
     public Category[] root() {
+        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+            final String rootSql = "select id,parent_id,name,description,logo-uri from category where id = parent_id";
+            PreparedStatement preparedStatement = connection.prepareStatement(rootSql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+        } catch (SQLException e) {
+            LOGGER.error("Not save brand", e);
+        }
         return new Category[0];
     }
 

@@ -16,8 +16,8 @@
 
 package catalog.hoprxi.core.domain;
 
+import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import catalog.hoprxi.core.domain.model.brand.ValidatorBrand;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.PsqlBrandRepository;
 import com.typesafe.config.Config;
@@ -35,7 +35,7 @@ public class BrandValidatorService {
         Config config = ConfigFactory.load("database");
         String provider = config.hasPath("") ? config.getString("") : "psql";
         switch ((provider)) {
-            case "psql":
+            case "postgresql":
                 repository = new PsqlBrandRepository("catalog");
             case "arangoDB":
                 repository = new ArangoDBBrandRepository("catalog");
@@ -43,7 +43,9 @@ public class BrandValidatorService {
     }
 
     public static boolean isBrandExist(String id) {
-        ValidatorBrand validatorBrand = new ValidatorBrand(repository);
-        return validatorBrand.isExist(id);
+        if (id.equals(Brand.UNDEFINED.id()))
+            return true;
+        Brand brand = repository.find(id);
+        return brand != null;
     }
 }

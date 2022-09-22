@@ -54,7 +54,7 @@ public class PsqlBrandRepository implements BrandRepository {
             nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
             nameConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
-            LOGGER.error("Not find Name class has such constructor", e);
+            LOGGER.error("Name class no such constructor", e);
         }
     }
 
@@ -74,7 +74,7 @@ public class PsqlBrandRepository implements BrandRepository {
             return rebuild(rs);
         } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
                  IllegalAccessException e) {
-            LOGGER.error("Can't rebuild brand", id, e);
+            LOGGER.error("Can't rebuild brand with (id = {})", id, e);
         }
         return null;
     }
