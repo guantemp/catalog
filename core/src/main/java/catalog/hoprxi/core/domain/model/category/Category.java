@@ -31,7 +31,7 @@ import java.util.Objects;
  * @version 0.0.3 builder 2022-08-09
  */
 public class Category {
-    public static final Category UNDEFINED = new Category("undefined", "undefined", new Name(Label.CATEGORY_UNDEFINED, "undefined"), "undefined") {
+    public static final Category UNDEFINED = new Category("-1", "-1", new Name(Label.CATEGORY_UNDEFINED, "undefined"), "undefined") {
         @Override
         public void rename(String newName, String newAlias) {
 

@@ -161,7 +161,7 @@ public class PsqlBrandRepository implements BrandRepository {
             preparedStatement.setLong(1, Long.parseLong(id));
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            LOGGER.error("Not save brand", e);
+            LOGGER.error("Can't remove brand(id={})", id, e);
         }
     }
 
@@ -183,7 +183,7 @@ public class PsqlBrandRepository implements BrandRepository {
             preparedStatement.setObject(5, about);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            LOGGER.error("Not save brand", e);
+            LOGGER.error("Can't save brand{}", brand, e);
         }
     }
 

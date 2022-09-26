@@ -32,10 +32,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Objects;
 
 /***
@@ -150,20 +147,48 @@ public class PsqlCategoryRepository implements CategoryRepository {
     public void save(Category category) {
         PGobject name = new PGobject();
         name.setType("jsonb");
-        PGobject about = new PGobject();
-        about.setType("jsonb");
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            name.setValue(toJson(category.name()));
-            final String replaceInto = "insert into category (parentId,id,name,description,icon) values (?,?,?,?,?,?) on conflict(id) do update set name=?,about=?";
-            PreparedStatement preparedStatement = connection.prepareStatement(replaceInto);
-            preparedStatement.setLong(1, Long.parseLong(category.id()));
-            preparedStatement.setObject(2, name);
-            preparedStatement.setObject(3, about);
-            preparedStatement.setObject(4, name);
-            preparedStatement.setObject(5, about);
-            preparedStatement.executeUpdate();
+            final String isExistsSql = "select id,name from category where id=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(isExistsSql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+
+            } else {
+                if (category.isRoot()) {
+                    final String insertRoot = "insert into category (id,parent_id,name,description,logo_uri,root_id,\"left\",\"right\") values (?,?,?,?,?,?,1,2)";
+                    PreparedStatement ps1 = connection.prepareStatement(insertRoot);
+                    ps1.setLong(1, Long.parseLong(category.id()));
+                    ps1.setLong(2, Long.parseLong(category.parentId()));
+                    name.setValue(toJson(category.name()));
+                    ps1.setObject(3, name);
+                    ps1.setString(4, category.description());
+                    ps1.setString(5, category.icon().toASCIIString());
+                    ps1.setLong(6, Long.parseLong(category.id()));
+                    ps1.executeUpdate();
+                } else {
+                    final String brotherOfTheSameNameSql = "select \"right\",root_id from category where id=?";
+                    PreparedStatement ps2 = connection.prepareStatement(brotherOfTheSameNameSql);
+                    ps2.setLong(1, Long.parseLong(category.parentId()));
+                    ResultSet rs1 = ps2.executeQuery();
+                    if (rs1.next()) {
+                        int right = rs1.getInt("right");
+                        long root_id = rs1.getLong("root_id");
+                        Statement statement = connection.createStatement();
+                        connection.setAutoCommit(false);
+                        statement.addBatch("update catgory set right=right+2 where right>=" + right);
+                        statement.addBatch("update catgory set left=left+2 where left>" + right);
+                        StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,description,logo_uri,root_id,\"left\",\"right\") values(")
+                                .append(category.id()).append(category.parentId()).append(toJson(category.name())).append(category.description())
+                                .append(category.icon().toASCIIString()).append(root_id).append(right).append(right + 1);
+                        statement.addBatch(insertSql.toString());
+                        statement.executeBatch();
+                        connection.commit();
+                        connection.setAutoCommit(true);
+                    }
+                }
+            }
         } catch (SQLException e) {
-            LOGGER.error("Not save brand", e);
+            LOGGER.error("Can't save category{}", category, e);
         }
     }
 

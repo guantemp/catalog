@@ -55,7 +55,7 @@ public class ArangoDBCategoryRepositoryTest {
         repository.save(liquor);
         Category wine = new Category("drinks", "wine", Name.of("葡萄酒"), "以葡萄为原料酿造的一种果酒。其酒精度高于啤酒而低于白酒。营养丰富，保健作用明显。");
         repository.save(wine);
-        Category Yellow_wine = new Category("drinks", "Yellow_wine", Name.of("黄酒"), "以稻米、黍米、黑米、玉米、小麦等为原料，经过蒸料，拌以麦曲、米曲或酒药，进行糖化和发酵酿制而成的各类酒");
+        Category Yellow_wine = new Category("drinks", "yellow_wine", Name.of("黄酒"), "以稻米、黍米、黑米、玉米、小麦等为原料，经过蒸料，拌以麦曲、米曲或酒药，进行糖化和发酵酿制而成的各类酒");
         repository.save(Yellow_wine);
         //日化
         Category chemicals = new Category("root", "chemicals", new Name("日化", "chemicals"), "日用化学品,指人们平日常用的科技化学制品,包括洗发水、沐浴露、护肤、护发、化妆品等等");
