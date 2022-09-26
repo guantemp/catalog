@@ -96,33 +96,33 @@ public class PsqlCategoryRepositoryTest {
         repository.save(olive_oil);
         Category sunflower_seed_oil = new Category("496796322118291492", "496796322118291499", new Name("葵花籽油", " sunflower_seed_oil"), "是向日葵的果实。它的子仁中含脂肪30%-45%，最多的可达60%。葵花子油颜色金黄，澄清透明，气味清香，是一种重要的食用油。");
         repository.save(sunflower_seed_oil);
-        Category blended_oil = new Category("496796322118291492", "496796322118291500", new Name("调和油", "blended_oil"));
+        Category blended_oil = new Category("496796322118291492", "496796322118291700", new Name("调和油", "blended_oil"));
         repository.save(blended_oil);
         //制品
-        Category bread_cake = new Category("grain_and_oil_products", "bread_cake", Name.of("面包/蛋糕"));
+        Category bread_cake = new Category("grain_and_oil_products", "bread_cake", new Name("面包/蛋糕"));
         repository.save(bread_cake);
-        Category flour = new Category("grain_oil", "flour", Name.of("面粉"));
+        Category flour = new Category("grain_oil", "flour", new Name("面粉"));
         repository.save(flour);
-        Category instant_noodles = new Category("grain_and_oil_products", "instant_noodles", Name.of("方便面"), "是一种可在短时间之内用热水泡熟食用的面制食品。");
+        Category instant_noodles = new Category("grain_and_oil_products", "instant_noodles", new Name("方便面"), "是一种可在短时间之内用热水泡熟食用的面制食品。");
         repository.save(instant_noodles);
-        Category fine_dried_noodles = new Category("grain_oil", "fine_dried_noodles", Name.of("挂面"));
+        Category fine_dried_noodles = new Category("grain_oil", "fine_dried_noodles", new Name("挂面"));
         repository.save(fine_dried_noodles);
         //调味品
-        Category condiment = new Category("root", "condiment", Name.of("调味品"), "对谷类、豆类等粮食和油料及其加工成品和半成品的统称");
+        Category condiment = new Category("root", "condiment", new Name("调味品"), "对谷类、豆类等粮食和油料及其加工成品和半成品的统称");
         repository.save(condiment);
-        Category sauce = new Category("condiment", "sauce", Name.of("调味汁"));
+        Category sauce = new Category("condiment", "sauce", new Name("调味汁"));
         repository.save(sauce);
         Category soy_sauce = new Category("sauce", "soy_sauce", new Name("酱油", "soy_sauce"), "用大豆或脱脂大豆或黑豆、小麦或麸皮，加入水、食盐酿造而成的液体调味品，色泽呈红褐色，有独特酱香，滋味鲜美，有助于促进食欲。");
         repository.save(soy_sauce);
-        Category vinegar = new Category("sauce", " vinegar", Name.of("醋"));
+        Category vinegar = new Category("sauce", " vinegar", new Name("醋"));
         repository.save(vinegar);
         Category seasoning_oil = new Category("sauce", " seasoning_oil", new Name("调味油", " seasoning_oil"));
         repository.save(seasoning_oil);
-        Category flavoring = new Category("condiment", "flavoring", Name.of("调味料"));
+        Category flavoring = new Category("condiment", "flavoring", new Name("调味料"));
         repository.save(flavoring);
-        Category salt = new Category("flavoring", "salt", Name.of("盐"));
+        Category salt = new Category("flavoring", "salt", new Name("盐"));
         repository.save(salt);
-        Category chicken_essence_monosodium_glutamate = new Category("flavoring", "chicken_essence_and_monosodium_glutamate", Name.of("鸡精/味精"));
+        Category chicken_essence_monosodium_glutamate = new Category("flavoring", "chicken_essence_and_monosodium_glutamate", new Name("鸡精/味精"));
         repository.save(chicken_essence_monosodium_glutamate);
     /*
         Brand lancome = new Brand("lancome", "兰蔻");
