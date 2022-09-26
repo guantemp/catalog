@@ -81,22 +81,22 @@ public class PsqlCategoryRepositoryTest {
         repository.save(rice_flour);
         Category oil = new Category("496796322118291490", "496796322118291492", new Name("食用油", "oil"));
         repository.save(oil);
-        Category grain_and_oil_products = new Category("496796322118291490", "grain_and_oil_products", new Name("粮油制品", "grain_and_oil_products"));
+        Category grain_and_oil_products = new Category("496796322118291490", "496796322118291493", new Name("粮油制品", "grain_and_oil_products"));
         repository.save(grain_and_oil_products);
         //食用油
-        Category rapeseed_oil = new Category("oil", "rapeseed_oil", new Name("菜籽油", "rapeseed_oil"), "用油菜籽榨出来的一种食用油。是我国主要食用油之一");
+        Category rapeseed_oil = new Category("496796322118291492", "496796322118291494", new Name("菜籽油", "rapeseed_oil"), "用油菜籽榨出来的一种食用油。是我国主要食用油之一");
         repository.save(rapeseed_oil);
-        Category soybean_oil = new Category("oil", "soybean_oil", Name.of("大豆油"));
+        Category soybean_oil = new Category("496796322118291492", "496796322118291495", new Name("大豆油", "soybean_oil"));
         repository.save(soybean_oil);
-        Category peanut_oil = new Category("oil", " peanut_oil", Name.of("花生油"));
+        Category peanut_oil = new Category("496796322118291492", " 496796322118291496", new Name("花生油", " peanut_oil"));
         repository.save(peanut_oil);
-        Category corn_oil = new Category("oil", " corn_oil", new Name("玉米油", " corn_oil"), "又叫粟米油、玉米胚芽油，它是从玉米胚芽中提炼出的油");
+        Category corn_oil = new Category("496796322118291492", "496796322118291497", new Name("玉米油", " corn_oil"), "又叫粟米油、玉米胚芽油，它是从玉米胚芽中提炼出的油");
         repository.save(corn_oil);
-        Category olive_oil = new Category("oil", " olive_oil", Name.of("橄榄油"));
+        Category olive_oil = new Category("496796322118291492", "496796322118291498", new Name("橄榄油", " olive_oil "));
         repository.save(olive_oil);
-        Category sunflower_seed_oil = new Category("oil", " sunflower_seed_oil", new Name("葵花籽油", " sunflower_seed_oil"), "是向日葵的果实。它的子仁中含脂肪30%-45%，最多的可达60%。葵花子油颜色金黄，澄清透明，气味清香，是一种重要的食用油。");
+        Category sunflower_seed_oil = new Category("496796322118291492", "496796322118291499", new Name("葵花籽油", " sunflower_seed_oil"), "是向日葵的果实。它的子仁中含脂肪30%-45%，最多的可达60%。葵花子油颜色金黄，澄清透明，气味清香，是一种重要的食用油。");
         repository.save(sunflower_seed_oil);
-        Category blended_oil = new Category("oil", " blended_oil", Name.of("调和油"));
+        Category blended_oil = new Category("496796322118291492", "496796322118291500", new Name("调和油", "blended_oil"));
         repository.save(blended_oil);
         //制品
         Category bread_cake = new Category("grain_and_oil_products", "bread_cake", Name.of("面包/蛋糕"));
