@@ -98,7 +98,7 @@ public class ArangoDBCategoryRepositoryTest {
         repository.save(corn_oil);
         Category olive_oil = new Category("oil", " olive_oil", Name.of("橄榄油"));
         repository.save(olive_oil);
-        Category sunflower_seed_oil = new Category("oil", " sunflower_seed_oil", new Name("葵花籽油", " sunflower_seed_oil"), "是向日葵的果实。它的子仁中含脂肪30%-45%，最多的可达60%。葵花子油颜色金黄，澄清透明，气味清香，是一种重要的食用油。");
+        Category sunflower_seed_oil = new Category("oil", " sunflower_seed_oil", new Name("葵花籽油", " sunflower_seed_oil"), "是向日葵的果实。它的子仁中含脂肪30%-45%，最多的可达60%。葵花子油颜色金黄，澄清透明，气味清香，是一种重要的食用油。", URI.create("https://inews.gtimg.com/newsapp_bt/0/13781122372/1000"));
         repository.save(sunflower_seed_oil);
         Category blended_oil = new Category("oil", " blended_oil", Name.of("调和油"));
         repository.save(blended_oil);
@@ -212,6 +212,7 @@ public class ArangoDBCategoryRepositoryTest {
     public void testFind() {
         Category instant_noodles = repository.find("instant_noodles");
         Assert.assertNotNull(instant_noodles);
+        System.out.println(repository.find("instant_noodles"));
     }
 
     @Test

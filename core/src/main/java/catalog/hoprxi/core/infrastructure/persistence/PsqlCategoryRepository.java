@@ -33,6 +33,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /***
@@ -78,8 +80,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     private Category rebuild(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
         if (rs.next()) {
             String id = rs.getString("id");
-            if (id.equals(Category.UNDEFINED.id()))
-                return Category.UNDEFINED;
+            if (id.equals(Category.UNDEFINED.id())) return Category.UNDEFINED;
             String parent_id = rs.getString("parent_id");
             Name name = toName(rs.getString("name"));
             String description = rs.getString("description");
@@ -127,18 +128,33 @@ public class PsqlCategoryRepository implements CategoryRepository {
             preparedStatement.setLong(1, Long.parseLong(id));
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            LOGGER.error("Not save brand", e);
+            LOGGER.error("Can't remove category with (id = {})", id, e);
         }
     }
 
     @Override
     public Category[] root() {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String rootSql = "select id,parent_id,name,description,logo-uri from category where id = parent_id";
+            List<Category> categoryList = new ArrayList<>();
+            final String rootSql = "select id,parent_id,name,description,logo_uri from category where id = parent_id";
             PreparedStatement preparedStatement = connection.prepareStatement(rootSql);
             ResultSet resultSet = preparedStatement.executeQuery();
-        } catch (SQLException e) {
-            LOGGER.error("Not save brand", e);
+            while (resultSet.next()) {
+                String id = resultSet.getString("id");
+                if (id.equals(Category.UNDEFINED.id())) {
+                    categoryList.add(Category.UNDEFINED);
+                    continue;
+                }
+                String parent_id = resultSet.getString("parent_id");
+                Name name = toName(resultSet.getString("name"));
+                String description = resultSet.getString("description");
+                URI icon = resultSet.getString("logo_uri") == null ? null : URI.create(resultSet.getString("logo_uri"));
+                categoryList.add(new Category(parent_id, id, name, description, icon));
+            }
+            return categoryList.toArray(new Category[0]);
+        } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
+                 IllegalAccessException e) {
+            LOGGER.error("Can't rebuild category", e);
         }
         return new Category[0];
     }
@@ -179,10 +195,15 @@ public class PsqlCategoryRepository implements CategoryRepository {
                         connection.setAutoCommit(false);
                         statement.addBatch("update category set \"right\"=\"right\"+2 where \"right\">=" + right + " and root_id=" + root_id);
                         statement.addBatch("update category set \"left\"= \"left\"+2 where \"left\">" + right + " and root_id=" + root_id);
-                        StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,description,logo_uri,root_id,\"left\",\"right\") values(")
-                                .append(category.id()).append(",").append(category.parentId()).append(",'").append(toJson(category.name())).append("','")
-                                .append(category.description()).append("','").append(category.icon() == null ? null : category.icon().toASCIIString())
-                                .append("',").append(root_id).append(",").append(right).append(",").append(right + 1).append(")");
+                        StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,root_id,\"left\",\"right\",description,logo_uri) values(").append(category.id()).append(",").append(category.parentId()).append(",'").append(toJson(category.name())).append("',").append(root_id).append(",").append(right).append(",").append(right + 1).append(",");
+                        if (category.description() != null)
+                            insertSql.append("'").append(category.description()).append("'");
+                        else insertSql.append((String) null);
+                        insertSql.append(",");
+                        if (category.icon() != null)
+                            insertSql.append("'").append(category.icon().toASCIIString()).append("'");
+                        else insertSql.append((String) null);
+                        insertSql.append(")");
                         statement.addBatch(insertSql.toString());
                         statement.executeBatch();
                         connection.commit();

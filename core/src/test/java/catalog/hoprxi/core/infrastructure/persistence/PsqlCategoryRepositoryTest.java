@@ -19,8 +19,11 @@ package catalog.hoprxi.core.infrastructure.persistence;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import java.net.URI;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -35,7 +38,6 @@ public class PsqlCategoryRepositoryTest {
         repository.save(Category.UNDEFINED);
         Category root = Category.root("496796322118291457", new Name("分类", "root"));
         repository.save(root);
-
         //食品
         Category food = new Category("496796322118291457", "496796322118291460", new Name("食品", "food"), "可供人类食用或饮用的物质，包括加工食品，半成品和未加工食品，不包括烟草或只作药品用的物质");
         repository.save(food);
@@ -62,9 +64,9 @@ public class PsqlCategoryRepositoryTest {
         repository.save(cosmetics);
         Category washing = new Category("496796322118291480", "496796322118291482", new Name("洗涤用品", "washing"));
         repository.save(washing);
-        Category soap = new Category("496796322118291482", "496796322118291483", new Name("肥皂", "soap"));
+        Category soap = new Category("496796322118291482", "496796322118291483", new Name("肥皂", "soap"), "脂肪酸金属盐的总称");
         repository.save(soap);
-        Category washing_liquid = new Category("496796322118291482", "496796322118291484", new Name("洗衣液", "washing_liquid"));
+        Category washing_liquid = new Category("496796322118291482", "496796322118291484", new Name("洗衣液", "washing_liquid"), "多采用非离子型表面活性剂，PH接近中性，对皮肤温和，并且排入自然界后，降解较洗衣粉快");
         repository.save(washing_liquid);
         Category oral_hygiene = new Category("496796322118291480", "496796322118291485", new Name("口腔用品", "oral_hygiene"));
         repository.save(oral_hygiene);
@@ -93,11 +95,11 @@ public class PsqlCategoryRepositoryTest {
         repository.save(peanut_oil);
         Category corn_oil = new Category("496796322118291492", "496796322118291497", new Name("玉米油", " corn_oil"), "又叫粟米油、玉米胚芽油，它是从玉米胚芽中提炼出的油");
         repository.save(corn_oil);
-        Category olive_oil = new Category("496796322118291492", "496796322118291498", new Name("橄榄油", " olive_oil "));
+        Category olive_oil = new Category("496796322118291492", "496796322118291498", new Name("橄榄油", " olive_oil "), "由新鲜的油橄榄果实直接冷榨而成的，不经加热和化学处理，保留了天然营养成分，橄榄油被认为是迄今所发现的油脂中最适合人体营养的油脂");
         repository.save(olive_oil);
         Category sunflower_seed_oil = new Category("496796322118291492", "496796322118291499", new Name("葵花籽油", " sunflower_seed_oil"), "是向日葵的果实。它的子仁中含脂肪30%-45%，最多的可达60%。葵花子油颜色金黄，澄清透明，气味清香，是一种重要的食用油。");
         repository.save(sunflower_seed_oil);
-        Category blended_oil = new Category("496796322118291492", "496796322118291700", new Name("调和油", "blended_oil"));
+        Category blended_oil = new Category("496796322118291492", "496796322118291700", new Name("调和油", "blended_oil"), "根据使用需要，将两种以上经精炼的油脂（香味油除外）按比例调配制成的食用油");
         repository.save(blended_oil);
         //制品
         Category bread_cake = new Category("496796322118291493", "49581450261846020", new Name("面包/蛋糕", "bread_cake"));
@@ -113,7 +115,7 @@ public class PsqlCategoryRepositoryTest {
         repository.save(condiment);
         Category sauce = new Category("49581450261846035", "49581450261846040", new Name("调味汁", "sauce"));
         repository.save(sauce);
-        Category soy_sauce = new Category("49581450261846040", "49581450261846041", new Name("酱油", "soy_sauce"), "用大豆或脱脂大豆或黑豆、小麦或麸皮，加入水、食盐酿造而成的液体调味品，色泽呈红褐色，有独特酱香，滋味鲜美，有助于促进食欲。");
+        Category soy_sauce = new Category("49581450261846040", "49581450261846041", new Name("酱油", "soy_sauce"), "用大豆或脱脂大豆或黑豆、小麦或麸皮，加入水、食盐酿造而成的液体调味品，色泽呈红褐色，有独特酱香，滋味鲜美，有助于促进食欲。", URI.create("https://inews.gtimg.com/newsapp_bt/0/13781122372/1000"));
         repository.save(soy_sauce);
         Category vinegar = new Category("49581450261846040", "49581450261846042", new Name("醋", " vinegar"));
         repository.save(vinegar);
@@ -139,6 +141,15 @@ public class PsqlCategoryRepositoryTest {
 
     @Test
     public void testFind() {
+        Category instant_noodles = repository.find("49581450261846022");
+        Assert.assertNotNull(instant_noodles);
+        System.out.println(repository.find("49581450261846041"));
+    }
+
+    @Test
+    public void testNextIdentity() {
+        String id = repository.nextIdentity();
+        Assert.assertNotNull(id);
     }
 
     @Test
@@ -147,6 +158,8 @@ public class PsqlCategoryRepositoryTest {
 
     @Test
     public void testRoot() {
+        Category[] roots = repository.root();
+        Assert.assertEquals(2, roots.length);
     }
 
     @Test

@@ -104,6 +104,5 @@ public class AppTest {
                 .append("dxgdfger").append("','").append(URI.create("https://www.example.com:8081/?k1=1&k1=2&k2=3&%E5%90%8D%E5%AD%97=%E5%BC%A0%E4%B8%89").toASCIIString())
                 .append("',").append(-1).append(",").append(2).append(",").append(2 + 1).append(")");
         System.out.println(insertSql);
-        URI.create("");
     }
 }
