@@ -85,7 +85,7 @@ public class PsqlBrandRepository implements BrandRepository {
             if (Brand.UNDEFINED.id().equals(id))
                 return Brand.UNDEFINED;
             Name name = toName(resultSet.getString("name"));
-            AboutBrand about = toAbout(resultSet.getString("about"));
+            AboutBrand about = toAboutBrand(resultSet.getString("about"));
             return new Brand(id, name, about);
         }
         return null;
@@ -116,7 +116,7 @@ public class PsqlBrandRepository implements BrandRepository {
         return nameConstructor.newInstance(name, mnemonic, alias);
     }
 
-    private AboutBrand toAbout(String json) throws IOException {
+    private AboutBrand toAboutBrand(String json) throws IOException {
         if (json == null)
             return null;
         String story = null;
@@ -174,6 +174,7 @@ public class PsqlBrandRepository implements BrandRepository {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             name.setValue(toJson(brand.name()));
             about.setValue(toJson(brand.about()));
+            //insert into brand (id,name,about) values (?,?::jsonb,?::jsonb)
             final String replaceInto = "insert into brand (id,name,about) values (?,?,?) on conflict(id) do update set name=?,about=?";
             PreparedStatement preparedStatement = connection.prepareStatement(replaceInto);
             preparedStatement.setLong(1, Long.parseLong(brand.id()));

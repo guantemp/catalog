@@ -184,31 +184,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                     ps1.setLong(6, Long.parseLong(category.id()));
                     ps1.executeUpdate();
                 } else {
-                    final String parentSql = "select \"right\",root_id from category where id=?";
-                    PreparedStatement ps2 = connection.prepareStatement(parentSql);
-                    ps2.setLong(1, Long.parseLong(category.parentId()));
-                    ResultSet rs1 = ps2.executeQuery();
-                    if (rs1.next()) {
-                        int right = rs1.getInt("right");
-                        long root_id = rs1.getLong("root_id");
-                        Statement statement = connection.createStatement();
-                        connection.setAutoCommit(false);
-                        statement.addBatch("update category set \"right\"=\"right\"+2 where \"right\">=" + right + " and root_id=" + root_id);
-                        statement.addBatch("update category set \"left\"= \"left\"+2 where \"left\">" + right + " and root_id=" + root_id);
-                        StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,root_id,\"left\",\"right\",description,logo_uri) values(").append(category.id()).append(",").append(category.parentId()).append(",'").append(toJson(category.name())).append("',").append(root_id).append(",").append(right).append(",").append(right + 1).append(",");
-                        if (category.description() != null)
-                            insertSql.append("'").append(category.description()).append("'");
-                        else insertSql.append((String) null);
-                        insertSql.append(",");
-                        if (category.icon() != null)
-                            insertSql.append("'").append(category.icon().toASCIIString()).append("'");
-                        else insertSql.append((String) null);
-                        insertSql.append(")");
-                        statement.addBatch(insertSql.toString());
-                        statement.executeBatch();
-                        connection.commit();
-                        connection.setAutoCommit(true);
-                    }
+                    insertNewCategory(category, connection);
                 }
             }
         } catch (SQLException e) {
@@ -216,6 +192,43 @@ public class PsqlCategoryRepository implements CategoryRepository {
         }
     }
 
+    /**
+     * @param category
+     * @param connection
+     * @throws SQLException
+     */
+    private void insertNewCategory(Category category, Connection connection) throws SQLException {
+        final String parentSql = "select \"right\",root_id from category where id=?";
+        PreparedStatement ps = connection.prepareStatement(parentSql);
+        ps.setLong(1, Long.parseLong(category.parentId()));
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            int right = rs.getInt("right");
+            long root_id = rs.getLong("root_id");
+            Statement statement = connection.createStatement();
+            connection.setAutoCommit(false);
+            statement.addBatch("update category set \"right\"=\"right\"+2 where \"right\">=" + right + " and root_id=" + root_id);
+            statement.addBatch("update category set \"left\"= \"left\"+2 where \"left\">" + right + " and root_id=" + root_id);
+            StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,root_id,\"left\",\"right\",description,logo_uri) values(").append(category.id()).append(",").append(category.parentId()).append(",'").append(toJson(category.name())).append("',").append(root_id).append(",").append(right).append(",").append(right + 1).append(",");
+            if (category.description() != null)
+                insertSql.append("'").append(category.description()).append("'");
+            else insertSql.append((String) null);
+            insertSql.append(",");
+            if (category.icon() != null)
+                insertSql.append("'").append(category.icon().toASCIIString()).append("'");
+            else insertSql.append((String) null);
+            insertSql.append(")");
+            statement.addBatch(insertSql.toString());
+            statement.executeBatch();
+            connection.commit();
+            connection.setAutoCommit(true);
+        }
+    }
+
+    /**
+     * @param name
+     * @return
+     */
     private String toJson(Name name) {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         JsonFactory jasonFactory = new JsonFactory();
