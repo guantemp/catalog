@@ -24,6 +24,7 @@ import com.arangodb.entity.DocumentField;
 
 import java.net.URI;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
@@ -125,24 +126,16 @@ public class Category {
     }
 
     private void setIdAndParentId(String parentId, String id) {
-        setId(id);
-        setParentId(parentId);
-    }
-
-    private void setParentId(String parentId) {
+        id = Objects.requireNonNull(id, "id required").trim();
+        if (id.isEmpty() || id.length() > ID_MAX_LENGTH)
+            throw new IllegalArgumentException("id length range is 1-" + ID_MAX_LENGTH + "char");
+        this.id = id;
         parentId = Objects.requireNonNull(parentId, "parentId required").trim();
         if (parentId.isEmpty() || parentId.length() > ID_MAX_LENGTH)
             throw new IllegalArgumentException("parentId length rang is 1-" + ID_MAX_LENGTH + "char");
         if (!id.equals(parentId) && !CategoryValidatorService.isCategoryExist(parentId))
             throw new InvalidCategoryIdException("parent id not exist");
         this.parentId = parentId;
-    }
-
-    private void setId(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
-        if (id.isEmpty() || id.length() > ID_MAX_LENGTH)
-            throw new IllegalArgumentException("id length range is 1-" + ID_MAX_LENGTH + "char");
-        this.id = id;
     }
 
     public String parentId() {
@@ -245,12 +238,12 @@ public class Category {
 
     @Override
     public String toString() {
-        return "Category{" +
-                ", parentId='" + parentId + '\'' +
-                ", id='" + id + '\'' +
-                ", name=" + name +
-                ", description='" + description + '\'' +
-                ", icon=" + icon +
-                '}';
+        return new StringJoiner(", ", Category.class.getSimpleName() + "[", "]")
+                .add("description='" + description + "'")
+                .add("id='" + id + "'")
+                .add("name=" + name)
+                .add("parentId='" + parentId + "'")
+                .add("icon=" + icon)
+                .toString();
     }
 }

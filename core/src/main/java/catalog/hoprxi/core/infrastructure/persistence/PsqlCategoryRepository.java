@@ -63,7 +63,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     @Override
     public Category find(String id) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String findSql = "select id,parent_id,name,description,icon from category where id=?";
+            final String findSql = "select id,parent_id,name,description,logo_uri from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, Long.parseLong(id));
             ResultSet rs = preparedStatement.executeQuery();
@@ -83,7 +83,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
             String parent_id = rs.getString("parent_id");
             Name name = toName(rs.getString("name"));
             String description = rs.getString("description");
-            URI icon = URI.create(rs.getString("icon"));
+            URI icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri"));
             return new Category(parent_id, id, name, description, icon);
         }
         return null;
@@ -147,9 +147,11 @@ public class PsqlCategoryRepository implements CategoryRepository {
     public void save(Category category) {
         PGobject name = new PGobject();
         name.setType("jsonb");
+
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             final String isExistsSql = "select id,name from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(isExistsSql);
+            preparedStatement.setLong(1, Long.parseLong(category.id()));
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
 
@@ -162,12 +164,12 @@ public class PsqlCategoryRepository implements CategoryRepository {
                     name.setValue(toJson(category.name()));
                     ps1.setObject(3, name);
                     ps1.setString(4, category.description());
-                    ps1.setString(5, category.icon().toASCIIString());
+                    ps1.setString(5, category.icon() == null ? null : category.icon().toASCIIString());
                     ps1.setLong(6, Long.parseLong(category.id()));
                     ps1.executeUpdate();
                 } else {
-                    final String brotherOfTheSameNameSql = "select \"right\",root_id from category where id=?";
-                    PreparedStatement ps2 = connection.prepareStatement(brotherOfTheSameNameSql);
+                    final String parentSql = "select \"right\",root_id from category where id=?";
+                    PreparedStatement ps2 = connection.prepareStatement(parentSql);
                     ps2.setLong(1, Long.parseLong(category.parentId()));
                     ResultSet rs1 = ps2.executeQuery();
                     if (rs1.next()) {
@@ -175,11 +177,12 @@ public class PsqlCategoryRepository implements CategoryRepository {
                         long root_id = rs1.getLong("root_id");
                         Statement statement = connection.createStatement();
                         connection.setAutoCommit(false);
-                        statement.addBatch("update catgory set right=right+2 where right>=" + right);
-                        statement.addBatch("update catgory set left=left+2 where left>" + right);
+                        statement.addBatch("update category set \"right\"=\"right\"+2 where \"right\">=" + right + " and root_id=" + root_id);
+                        statement.addBatch("update category set \"left\"= \"left\"+2 where \"left\">" + right + " and root_id=" + root_id);
                         StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,description,logo_uri,root_id,\"left\",\"right\") values(")
-                                .append(category.id()).append(category.parentId()).append(toJson(category.name())).append(category.description())
-                                .append(category.icon().toASCIIString()).append(root_id).append(right).append(right + 1);
+                                .append(category.id()).append(",").append(category.parentId()).append(",'").append(toJson(category.name())).append("','")
+                                .append(category.description()).append("','").append(category.icon() == null ? null : category.icon().toASCIIString())
+                                .append("',").append(root_id).append(",").append(right).append(",").append(right + 1).append(")");
                         statement.addBatch(insertSql.toString());
                         statement.executeBatch();
                         connection.commit();

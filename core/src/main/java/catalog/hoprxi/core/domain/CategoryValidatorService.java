@@ -34,12 +34,14 @@ public class CategoryValidatorService {
 
     static {
         Config config = ConfigFactory.load("database");
-        String provider = config.hasPath("") ? config.getString("") : "psql";
+        String provider = config.hasPath("provider") ? config.getString("provider") : "postgresql";
         switch ((provider)) {
-            case "psql":
+            case "postgresql":
                 repository = new PsqlCategoryRepository("catalog");
+                break;
             case "arangoDB":
                 repository = new ArangoDBCategoryRepository("catalog");
+                break;
         }
     }
 
