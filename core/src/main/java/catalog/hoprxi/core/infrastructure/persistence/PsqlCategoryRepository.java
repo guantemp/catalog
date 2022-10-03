@@ -123,10 +123,24 @@ public class PsqlCategoryRepository implements CategoryRepository {
     @Override
     public void remove(String id) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String removeSql = "delete from brand where id=?";
+            final String removeSql = "select \"left\",\"right\",root_id from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
             preparedStatement.setLong(1, Long.parseLong(id));
-            preparedStatement.executeUpdate();
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                int right = resultSet.getInt("right");
+                int left = resultSet.getInt("left");
+                int offset = right - left + 1;
+                long rootId = resultSet.getLong("root_id");
+                Statement statement = connection.createStatement();
+                connection.setAutoCommit(false);
+                statement.addBatch("delete from category where \"left\">=" + left + " and \"right\"<=" + right + " and root_id=" + rootId);
+                statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and root_id=" + rootId);
+                statement.addBatch("update category set \"right\"= \"right\"-" + offset + "where \"right\">" + right + " and root_id=" + rootId);
+                statement.executeBatch();
+                connection.commit();
+                connection.setAutoCommit(true);
+            }
         } catch (SQLException e) {
             LOGGER.error("Can't remove category with (id = {})", id, e);
         }
@@ -163,14 +177,24 @@ public class PsqlCategoryRepository implements CategoryRepository {
     public void save(Category category) {
         PGobject name = new PGobject();
         name.setType("jsonb");
-
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String isExistsSql = "select id,name from category where id=?";
+            final String isExistsSql = "select id,parent_id from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(isExistsSql);
             preparedStatement.setLong(1, Long.parseLong(category.id()));
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
+                if (category.parentId().equals(resultSet.getString("parent_id"))) {
+                    String updateSql = "update category set name=?,description=?,logo_uri=? where id=?";
+                    PreparedStatement ps1 = connection.prepareStatement(updateSql);
+                    name.setValue(toJson(category.name()));
+                    ps1.setObject(1, name);
+                    ps1.setString(2, category.description());
+                    ps1.setString(3, category.icon() == null ? null : category.icon().toASCIIString());
+                    ps1.setLong(4, Long.parseLong(category.id()));
+                    ps1.executeUpdate();
+                } else {
 
+                }
             } else {
                 if (category.isRoot()) {
                     final String insertRoot = "insert into category (id,parent_id,name,description,logo_uri,root_id,\"left\",\"right\") values (?,?,?,?,?,?,1,2)";
