@@ -132,8 +132,8 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 int left = resultSet.getInt("left");
                 int offset = right - left + 1;
                 long rootId = resultSet.getLong("root_id");
-                Statement statement = connection.createStatement();
                 connection.setAutoCommit(false);
+                Statement statement = connection.createStatement();
                 statement.addBatch("delete from category where \"left\">=" + left + " and \"right\"<=" + right + " and root_id=" + rootId);
                 statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and root_id=" + rootId);
                 statement.addBatch("update category set \"right\"= \"right\"-" + offset + "where \"right\">" + right + " and root_id=" + rootId);
@@ -142,7 +142,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 connection.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            LOGGER.error("Can't remove category with (id = {})", id, e);
+            LOGGER.error("Can't remove category(id = {}) and children", id, e);
         }
     }
 
@@ -228,12 +228,12 @@ public class PsqlCategoryRepository implements CategoryRepository {
         ResultSet rs = ps.executeQuery();
         if (rs.next()) {
             int right = rs.getInt("right");
-            long root_id = rs.getLong("root_id");
-            Statement statement = connection.createStatement();
+            long rootId = rs.getLong("root_id");
             connection.setAutoCommit(false);
-            statement.addBatch("update category set \"right\"=\"right\"+2 where \"right\">=" + right + " and root_id=" + root_id);
-            statement.addBatch("update category set \"left\"= \"left\"+2 where \"left\">" + right + " and root_id=" + root_id);
-            StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,root_id,\"left\",\"right\",description,logo_uri) values(").append(category.id()).append(",").append(category.parentId()).append(",'").append(toJson(category.name())).append("',").append(root_id).append(",").append(right).append(",").append(right + 1).append(",");
+            Statement statement = connection.createStatement();
+            statement.addBatch("update category set \"right\"=\"right\"+2 where \"right\">=" + right + " and root_id=" + rootId);
+            statement.addBatch("update category set \"left\"= \"left\"+2 where \"left\">" + right + " and root_id=" + rootId);
+            StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,root_id,\"left\",\"right\",description,logo_uri) values(").append(category.id()).append(",").append(category.parentId()).append(",'").append(toJson(category.name())).append("',").append(rootId).append(",").append(right).append(",").append(right + 1).append(",");
             if (category.description() != null)
                 insertSql.append("'").append(category.description()).append("'");
             else insertSql.append((String) null);
