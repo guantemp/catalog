@@ -20,7 +20,9 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
-import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +33,6 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +66,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     @Override
     public Category find(String id) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String findSql = "select id,parent_id,name,description,logo_uri from category where id=?";
+            final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, Long.parseLong(id));
             ResultSet rs = preparedStatement.executeQuery();
@@ -82,37 +83,12 @@ public class PsqlCategoryRepository implements CategoryRepository {
             String id = rs.getString("id");
             if (id.equals(Category.UNDEFINED.id())) return Category.UNDEFINED;
             String parent_id = rs.getString("parent_id");
-            Name name = toName(rs.getString("name"));
+            Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
             String description = rs.getString("description");
             URI icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri"));
             return new Category(parent_id, id, name, description, icon);
         }
         return null;
-    }
-
-    private Name toName(String json) throws IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        String name = null, alias = null, mnemonic = null;
-        JsonFactory jasonFactory = new JsonFactory();
-        JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
-        while (!parser.isClosed()) {
-            JsonToken jsonToken = parser.nextToken();
-            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
-                String fieldName = parser.getCurrentName();
-                parser.nextToken();
-                switch (fieldName) {
-                    case "name":
-                        name = parser.getValueAsString();
-                        break;
-                    case "alias":
-                        alias = parser.getValueAsString();
-                        break;
-                    case "mnemonic":
-                        mnemonic = parser.getValueAsString();
-                        break;
-                }
-            }
-        }
-        return nameConstructor.newInstance(name, mnemonic, alias);
     }
 
     @Override
@@ -150,23 +126,23 @@ public class PsqlCategoryRepository implements CategoryRepository {
     public Category[] root() {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             List<Category> categoryList = new ArrayList<>();
-            final String rootSql = "select id,parent_id,name,description,logo_uri from category where id = parent_id";
+            final String rootSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri from category where id = parent_id";
             PreparedStatement preparedStatement = connection.prepareStatement(rootSql);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                String id = resultSet.getString("id");
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                String id = rs.getString("id");
                 if (id.equals(Category.UNDEFINED.id())) {
                     categoryList.add(Category.UNDEFINED);
                     continue;
                 }
-                String parent_id = resultSet.getString("parent_id");
-                Name name = toName(resultSet.getString("name"));
-                String description = resultSet.getString("description");
-                URI icon = resultSet.getString("logo_uri") == null ? null : URI.create(resultSet.getString("logo_uri"));
+                String parent_id = rs.getString("parent_id");
+                Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
+                String description = rs.getString("description");
+                URI icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri"));
                 categoryList.add(new Category(parent_id, id, name, description, icon));
             }
             return categoryList.toArray(new Category[0]);
-        } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
+        } catch (SQLException | InvocationTargetException | InstantiationException |
                  IllegalAccessException e) {
             LOGGER.error("Can't rebuild category", e);
         }
@@ -178,7 +154,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         PGobject name = new PGobject();
         name.setType("jsonb");
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String isExistsSql = "select id,parent_id from category where id=?";
+            final String isExistsSql = "select id,parent_id,\"left\",\"right\",root_id from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(isExistsSql);
             preparedStatement.setLong(1, Long.parseLong(category.id()));
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -193,7 +169,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                     ps1.setLong(4, Long.parseLong(category.id()));
                     ps1.executeUpdate();
                 } else {
-
+                    //insertMovedCategory(connection, category, resultSet.getInt("left"), resultSet.getInt("right"), resultSet.getLong("root_id"));
                 }
             } else {
                 if (category.isRoot()) {
@@ -214,6 +190,29 @@ public class PsqlCategoryRepository implements CategoryRepository {
         } catch (SQLException e) {
             LOGGER.error("Can't save category{}", category, e);
         }
+    }
+
+    private void insertMovedCategory(Connection connection, Category category, int left, int right, long rootId) throws SQLException {
+        int offset = right - left + 1;
+        connection.setAutoCommit(false);
+        Statement statement = connection.createStatement();
+        statement.addBatch("create table category_temp (id bigint not null)");
+        statement.addBatch("insert into category_temp(id) select id from category where \"left\">=" + left + " and \"right\"<=" + right + " and root_id=" + rootId);
+        statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and root_id=" + rootId);
+        StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,root_id,\"left\",\"right\",description,logo_uri) values(").append(category.id()).append(",").append(category.parentId()).append(",'").append(toJson(category.name())).append("',").append(rootId).append(",").append(right).append(",").append(right + 1).append(",");
+        if (category.description() != null)
+            insertSql.append("'").append(category.description()).append("'");
+        else insertSql.append((String) null);
+        insertSql.append(",");
+        if (category.icon() != null)
+            insertSql.append("'").append(category.icon().toASCIIString()).append("'");
+        else insertSql.append((String) null);
+        insertSql.append(")");
+        statement.addBatch(insertSql.toString());
+        statement.addBatch("truncate table category_temp");
+        statement.executeBatch();
+        connection.commit();
+        connection.setAutoCommit(true);
     }
 
     /**

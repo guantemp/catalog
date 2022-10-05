@@ -170,5 +170,32 @@ public class PsqlCategoryRepositoryTest {
 
     @Test
     public void testSave() {
+        Category beer = repository.find("496796322118291488");
+        Assert.assertEquals(beer.parentId(), "496796322118291482");//washing
+        beer.moveTo("496796322118291470");//drinks
+        repository.save(beer);
+        beer = repository.find("496796322118291488");
+        Assert.assertEquals(beer.parentId(), "496796322118291470");//drinks
+        Assert.assertEquals(beer.name().name(), "个人保健用卫生制剂");
+
+        beer.rename("      啤酒    ", null);
+        beer.changeDescription("是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
+        beer.rename(null, "杂皮");
+        repository.save(beer);
+        beer = repository.find("beer");
+        Assert.assertEquals(beer.description(), "是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
+        Assert.assertEquals(beer.name().name(), "啤酒");
+
+        Category leisure_food = repository.find("leisure_food");
+        Assert.assertNotNull(leisure_food);
+        leisure_food.changeDescription(null);
+        leisure_food.changeIcon(URI.create("https://gitee.com/static/images/logo-black.svg?t=158106664"));
+        System.out.println(leisure_food);
+        repository.save(leisure_food);
+        leisure_food = repository.find("leisure_food");
+        Assert.assertNull(leisure_food.description());
+
+        //异常必须要最后，后面语句不会被执行
+        beer.moveTo("hy");
     }
 }
