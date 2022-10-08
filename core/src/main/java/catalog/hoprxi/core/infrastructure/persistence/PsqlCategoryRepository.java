@@ -192,24 +192,38 @@ public class PsqlCategoryRepository implements CategoryRepository {
         }
     }
 
-    private void insertMovedCategory(Connection connection, Category category, int left, int right, long rootId) throws SQLException {
+    private void moveCategory(Connection connection, Category category, int left, int right, long rootId) throws SQLException {
         int offset = right - left + 1;
+        int parentLeft = 1, parentOffset = 0;
+        long parentRootId = -1L;
+        final String targetSql = "select \"left\",\"right\",root_id from category where id=?";
+        PreparedStatement ps = connection.prepareStatement(targetSql);
+        ps.setLong(1, Long.parseLong(category.parentId()));
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            parentLeft = rs.getInt("left");
+            parentRootId = rs.getLong("root_id");
+            parentOffset = rs.getInt("right") - offset;//队尾
+            //parentOffset = rs.getInt("left") - offset;//队首
+        }
         connection.setAutoCommit(false);
         Statement statement = connection.createStatement();
-        statement.addBatch("create table category_temp (id bigint not null)");
-        statement.addBatch("insert into category_temp(id) select id from category where \"left\">=" + left + " and \"right\"<=" + right + " and root_id=" + rootId);
+        //将需要移动的记录 left, right 值置为负值,并设置新的树形系列（root_id)
+        statement.addBatch("update category set \"left\"=0-\"left\",\"right\"=0-\"right\",root_id=" + parentRootId + " where left>=" + left + " and right<=" + right);
+        statement.addBatch("update category set parent_id=" + category.parentId() + " where id=" + category.id());
+        //将被移动记录后面的记录往前移, 填充空缺位置
         statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and root_id=" + rootId);
-        StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,root_id,\"left\",\"right\",description,logo_uri) values(").append(category.id()).append(",").append(category.parentId()).append(",'").append(toJson(category.name())).append("',").append(rootId).append(",").append(right).append(",").append(right + 1).append(",");
-        if (category.description() != null)
-            insertSql.append("'").append(category.description()).append("'");
-        else insertSql.append((String) null);
-        insertSql.append(",");
-        if (category.icon() != null)
-            insertSql.append("'").append(category.icon().toASCIIString()).append("'");
-        else insertSql.append((String) null);
-        insertSql.append(")");
-        statement.addBatch(insertSql.toString());
-        statement.addBatch("truncate table category_temp");
+        statement.addBatch("update category set \"right\"= \"right\"-" + offset + " where \"right\">" + right + " and root_id=" + rootId);
+        //被移动到父类 留出移动项目的空间
+        if (parentRootId == rootId && parentLeft > left) {//本树型中父节点在移动节点后的位置被前移,在被移动节点前的不变
+            statement.addBatch("update category set \"left\"= \"left\"+" + offset + " where \"left\">" + (parentLeft - offset) + " and root_id=" + parentRootId);
+            statement.addBatch("update category set \"right\"= \"right\"+" + offset + " where \"right\">" + (parentLeft - offset) + " and root_id=" + parentRootId);
+        } else {
+            statement.addBatch("update category set \"left\"= \"left\"+" + offset + " where \"left\">" + parentLeft + " and root_id=" + parentRootId);
+            statement.addBatch("update category set \"right\"= \"right\"+" + offset + " where \"right\">" + parentLeft + " and root_id=" + parentRootId);
+        }
+        //将负值记录填充到正确位置,对首位置：left - parentLeft - 1，队尾位置left-parentOffset + 1
+        statement.addBatch("update category set \"left\"=0-\"left\"-" + (left - parentOffset + 1) + ",\"right\"=0-\"right\"-" + (left - parentOffset + 1) + " where left<0");
         statement.executeBatch();
         connection.commit();
         connection.setAutoCommit(true);
