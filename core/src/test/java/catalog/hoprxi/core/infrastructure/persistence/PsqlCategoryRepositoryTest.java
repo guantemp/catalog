@@ -19,6 +19,7 @@ package catalog.hoprxi.core.infrastructure.persistence;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -146,7 +147,7 @@ public class PsqlCategoryRepositoryTest {
         Assert.assertNotNull(repository.find("496796322118291499"));//葵花籽油
         Assert.assertNotNull(repository.find("496796322118291471"));//白酒
         Assert.assertNull(repository.find("49581450261946041"));
-        System.out.println(repository.find("49581450261846041"));
+        //System.out.println(repository.find("49581450261846041"));
     }
 
     @Test
@@ -157,9 +158,9 @@ public class PsqlCategoryRepositoryTest {
 
     @Test(priority = 3)
     public void testRemove() {
-        repository.remove("49581450261846040");
-        Assert.assertNull(repository.find("49581450261846042"));
-        Assert.assertNull(repository.find("49581450261846043"));
+        repository.remove("496796322118291493");
+        Assert.assertNull(repository.find("49581450261846020"));
+        Assert.assertNull(repository.find("49581450261846022"));
     }
 
     @Test
@@ -168,7 +169,7 @@ public class PsqlCategoryRepositoryTest {
         Assert.assertEquals(2, roots.length);
     }
 
-    @Test
+    @Test(priority = 1, expectedExceptions = InvalidCategoryIdException.class)
     public void testSave() {
         Category beer = repository.find("496796322118291488");
         Assert.assertEquals(beer.parentId(), "496796322118291482");//washing
@@ -182,20 +183,20 @@ public class PsqlCategoryRepositoryTest {
         beer.changeDescription("是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
         beer.rename(null, "杂皮");
         repository.save(beer);
-        beer = repository.find("beer");
+        beer = repository.find("496796322118291488");
         Assert.assertEquals(beer.description(), "是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
         Assert.assertEquals(beer.name().name(), "啤酒");
 
-        Category leisure_food = repository.find("leisure_food");
+        Category leisure_food = repository.find("496796322118291461");
         Assert.assertNotNull(leisure_food);
         leisure_food.changeDescription(null);
         leisure_food.changeIcon(URI.create("https://gitee.com/static/images/logo-black.svg?t=158106664"));
-        System.out.println(leisure_food);
+        //System.out.println(leisure_food);
         repository.save(leisure_food);
-        leisure_food = repository.find("leisure_food");
+        leisure_food = repository.find("496796322118291461");
         Assert.assertNull(leisure_food.description());
 
         //异常必须要最后，后面语句不会被执行
-        beer.moveTo("hy");
+        beer.moveTo("12458763225");
     }
 }
