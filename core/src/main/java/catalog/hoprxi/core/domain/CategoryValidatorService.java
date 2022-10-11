@@ -20,7 +20,7 @@ package catalog.hoprxi.core.domain;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
-import catalog.hoprxi.core.infrastructure.persistence.PsqlCategoryRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgres.PsqlCategoryRepository;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -49,5 +49,9 @@ public class CategoryValidatorService {
         if (categoryId.equals(Category.UNDEFINED.id())) return true;
         Category category = repository.find(categoryId);
         return category != null;
+    }
+
+    public static boolean isCurrentCategoryDescendant(String currentId, String descendantId) {
+        return false;
     }
 }

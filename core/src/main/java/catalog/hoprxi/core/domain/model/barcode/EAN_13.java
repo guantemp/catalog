@@ -31,7 +31,7 @@ public class EAN_13 extends Barcode {
 
     @Override
     public boolean checkFeature(CharSequence barcode) {
-        return EanUcc.checkChecksum(barcode);
+        return EanCheckService.checkChecksum(barcode);
     }
 
     @Override

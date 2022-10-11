@@ -35,7 +35,7 @@ public class UPC_E extends Barcode {
     public boolean checkFeature(CharSequence barcode) {
         Matcher matcher = BARCODE_PATTERN.matcher(barcode);
         if (matcher.matches())
-            return EanUcc.checkChecksum(barcode);
+            return EanCheckService.checkChecksum(barcode);
         return true;
     }
 

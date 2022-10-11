@@ -50,12 +50,23 @@ public class BarcodeGenerateServicesTest {
         Barcode[] eans = BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(7542, 20, "23");
         for (Barcode e : eans)
             System.out.println(e);
+
     }
 
+    @Test
+    public void testInStoreEAN_8GenerateWithFilter() {
+        Barcode[] eans = BarcodeGenerateServices.inStoreEAN_8BarcodeGenerateWithFilter(212, 2, "22", new int[]{4});
+        for (Barcode e : eans)
+            System.out.println(e);
+    }
 
     @Test
     public void testInStoreEAN_13Generate() {
-        Barcode[] eans = BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(5678921, 20, "22");
+        Barcode[] eans = BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(5678921, 20, "21");
+        for (Barcode e : eans)
+            System.out.println(e);
+        eans = BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(214, 10, "20", new int[]{4});
+        System.out.println("Filter number 4(mantissa):");
         for (Barcode e : eans)
             System.out.println(e);
     }
@@ -63,6 +74,10 @@ public class BarcodeGenerateServicesTest {
     @Test
     public void testCouponBarcodeGenerate() {
         Barcode[] eans = BarcodeGenerateServices.couponBarcodeGenerate(325, 30);
+        for (Barcode e : eans)
+            System.out.println(e);
+        System.out.println("Filter number 4(mantissa):");
+        eans = BarcodeGenerateServices.couponBarcodeGenerate(110, 5, new int[]{4});
         for (Barcode e : eans)
             System.out.println(e);
     }

@@ -203,8 +203,10 @@ public class Category {
         if (movedId.isEmpty() || movedId.length() > ID_MAX_LENGTH)
             throw new IllegalArgumentException("parentId length rang is 1-" + ID_MAX_LENGTH);
         if (!CategoryValidatorService.isCategoryExist(movedId))
-            throw new InvalidCategoryIdException("parent id not exist");
-        if (!id.equals(parentId) && !parentId.equals(movedId)) {
+            throw new InvalidCategoryIdException("move to id not exist");
+        if (CategoryValidatorService.isCurrentCategoryDescendant(id, movedId))
+            throw new InvalidCategoryIdException("Can’t move to its descendant node");
+        if (!movedId.equals(UNDEFINED.id()) && !id.equals(parentId) && !parentId.equals(movedId)) {
             this.parentId = movedId;
             //DomainRegistry.domainEventPublisher().publish(new CategoryRenamed(id, description));
         }

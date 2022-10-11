@@ -30,7 +30,7 @@ public class UPC_A extends Barcode {
     @Override
     public boolean checkFeature(CharSequence barcode) {
         String tempBarcode = "0" + barcode;
-        return EanUcc.checkChecksum(tempBarcode);
+        return EanCheckService.checkChecksum(tempBarcode);
     }
 
     public UPC_E toUPC_E() {
