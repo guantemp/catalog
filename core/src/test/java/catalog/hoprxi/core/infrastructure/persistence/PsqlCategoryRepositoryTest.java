@@ -171,6 +171,7 @@ public class PsqlCategoryRepositoryTest {
 
     @Test(priority = 1, expectedExceptions = InvalidCategoryIdException.class)
     public void testSave() {
+
         Category beer = repository.find("496796322118291488");
         Assert.assertEquals(beer.parentId(), "496796322118291482");//washing
         beer.moveTo("496796322118291470");//drinks
@@ -195,6 +196,10 @@ public class PsqlCategoryRepositoryTest {
         repository.save(leisure_food);
         leisure_food = repository.find("496796322118291461");
         Assert.assertNull(leisure_food.description());
+
+        Category grain_and_oil_products = repository.find("49581450261846057");//调味料
+        grain_and_oil_products.moveTo("49581450261846040");//调味汁
+        repository.save(grain_and_oil_products);
 
         //异常必须要最后，后面语句不会被执行
         beer.moveTo("12458763225");

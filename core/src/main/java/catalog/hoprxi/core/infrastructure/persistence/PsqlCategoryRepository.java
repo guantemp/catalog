@@ -66,7 +66,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     @Override
     public Category find(String id) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri from category where id=?";
+            final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, Long.parseLong(id));
             ResultSet rs = preparedStatement.executeQuery();
@@ -99,7 +99,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     @Override
     public void remove(String id) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String removeSql = "select \"left\",\"right\",root_id from category where id=?";
+            final String removeSql = "select \"left\",\"right\",root_id from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
             preparedStatement.setLong(1, Long.parseLong(id));
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -154,7 +154,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         PGobject name = new PGobject();
         name.setType("jsonb");
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String isExistsSql = "select id,parent_id,\"left\",\"right\",root_id from category where id=?";
+            final String isExistsSql = "select id,parent_id,\"left\",\"right\",root_id from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(isExistsSql);
             preparedStatement.setLong(1, Long.parseLong(category.id()));
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -207,7 +207,6 @@ public class PsqlCategoryRepository implements CategoryRepository {
             if (targetRootId == rootId && targetRight > right)
                 targetRight = targetRight - offset;
         }
-
         connection.setAutoCommit(false);
         Statement statement = connection.createStatement();
         //需要移动的节点及子节点 left, right 值置为负值,归属到新的树形（root_id),移动节点的顶点parent_id设置为新的父节点的id值
@@ -226,7 +225,8 @@ public class PsqlCategoryRepository implements CategoryRepository {
         statement.addBatch("update category set \"left\"= \"left\"+" + offset + " where \"left\">" + targetRight + " and root_id=" + targetRootId);
         statement.addBatch("update category set \"right\"= \"right\"+" + offset + " where \"right\">=" + targetRight + " and root_id=" + targetRootId);
         //将负值记录填充到正确位置,队尾位置
-        statement.addBatch("update category set \"left\"=0-\"left\"-(" + (left - targetRight) + "),\"right\"=0-\"right\"-(" + (right - targetRight - 1) + ") where \"left\"<0");
+        statement.addBatch("update category set \"left\"=0-\"left\"-(" + (left - targetRight) + "),\"right\"=0-\"right\"-(" + (left - targetRight) + ") where \"left\"<0");
+        //System.out.println("update category set \"left\"=0-\"left\"-(" + (left - targetRight) + "),\"right\"=0-\"right\"-(" + (left - targetRight) + ") where \"left\"<0");
         statement.executeBatch();
         connection.commit();
         connection.setAutoCommit(true);
