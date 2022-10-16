@@ -1,5 +1,5 @@
 {
-    "provider": "postgresql",
+    "provider": "arangodb",
     "write": "postgresql_write",
     "read": "postgresql_read",
     "arangodb_write": {

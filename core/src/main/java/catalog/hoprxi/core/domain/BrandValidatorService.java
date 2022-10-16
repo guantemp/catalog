@@ -33,11 +33,11 @@ public class BrandValidatorService {
 
     static {
         Config config = ConfigFactory.load("database");
-        String provider = config.hasPath("") ? config.getString("") : "psql";
+        String provider = config.hasPath("provider") ? config.getString("provider") : "postgresql";
         switch ((provider)) {
             case "postgresql":
                 repository = new PsqlBrandRepository("catalog");
-            case "arangoDB":
+            case "arangodb":
                 repository = new ArangoDBBrandRepository("catalog");
         }
     }

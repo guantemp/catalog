@@ -67,7 +67,7 @@ public class PsqlBrandRepository implements BrandRepository {
     @Override
     public Brand find(String id) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String findSql = "select id,name,about from brand where id=?";
+            final String findSql = "select id,name,about from brand where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, Long.parseLong(id));
             ResultSet rs = preparedStatement.executeQuery();
@@ -176,13 +176,13 @@ public class PsqlBrandRepository implements BrandRepository {
             about.setValue(toJson(brand.about()));
             //insert into brand (id,name,about) values (?,?::jsonb,?::jsonb)
             final String replaceInto = "insert into brand (id,name,about) values (?,?,?) on conflict(id) do update set name=?,about=?";
-            PreparedStatement preparedStatement = connection.prepareStatement(replaceInto);
-            preparedStatement.setLong(1, Long.parseLong(brand.id()));
-            preparedStatement.setObject(2, name);
-            preparedStatement.setObject(3, about);
-            preparedStatement.setObject(4, name);
-            preparedStatement.setObject(5, about);
-            preparedStatement.executeUpdate();
+            PreparedStatement ps = connection.prepareStatement(replaceInto);
+            ps.setLong(1, Long.parseLong(brand.id()));
+            ps.setObject(2, name);
+            ps.setObject(3, about);
+            ps.setObject(4, name);
+            ps.setObject(5, about);
+            ps.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error("Can't save brand{}", brand, e);
         }

@@ -39,7 +39,7 @@ public class CategoryValidatorService {
             case "postgresql":
                 repository = new PsqlCategoryRepository("catalog");
                 break;
-            case "arangoDB":
+            case "arangodb":
                 repository = new ArangoDBCategoryRepository("catalog");
                 break;
         }

@@ -19,11 +19,17 @@ package catalog.hoprxi.core.infrastructure.persistence.postgres;
 import catalog.hoprxi.core.domain.model.Item;
 import catalog.hoprxi.core.domain.model.ItemRepository;
 import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import salt.hoprxi.id.LongId;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -59,10 +65,10 @@ public class PsqlItemRepository implements ItemRepository {
     @Override
     public Item find(String id) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri from item where id=? limit 1";
-            PreparedStatement preparedStatement = connection.prepareStatement(findSql);
-            preparedStatement.setLong(1, Long.parseLong(id));
-            ResultSet rs = preparedStatement.executeQuery();
+            final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias from item where id=? limit 1";
+            PreparedStatement ps = connection.prepareStatement(findSql);
+            ps.setLong(1, Long.parseLong(id));
+            ResultSet rs = ps.executeQuery();
             return rebuild(rs);
         } catch (SQLException e) {
             LOGGER.error("Can't rebuild item with (id = {})", id, e);
@@ -86,6 +92,46 @@ public class PsqlItemRepository implements ItemRepository {
 
     @Override
     public void save(Item item) {
+        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+            //insert into brand (id,name,about) values (?,?::jsonb,?::jsonb)
+            final String replaceInto = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,specs,retailPrice,memberPrice,vipPrice) " +
+                    "values (?,?::jsonb,?,?,?,?,?,?::jsonb,?::jsonb,?::jsonb,?::jsonb) " +
+                    "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brandId=?,grade=?,made_in=?::jsonb,specs=?,retailPrice=?::jsonb,memberPrice=?::jsonb,vipPrice=?::jsonb";
+            PreparedStatement ps = connection.prepareStatement(replaceInto);
+            ps.setLong(1, Long.parseLong(item.id()));
+            ps.setString(2, toJson(item.name()));
+            ps.setString(3, String.valueOf(item.barcode().barcode()));
+            ps.setString(4, item.categoryId());
+            ps.setString(5, item.brandId());
+            ps.setString(6, item.grade().name());
+            ps.setString(7, item.madeIn().toString());
+            ps.setString(8, item.spec().value());
+            ps.setString(9, (String) item.barcode().barcode());
+            ps.setString(10, (String) item.barcode().barcode());
+            ps.setString(11, (String) item.barcode().barcode());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Can't save brand{}", item, e);
+        }
+    }
 
+    private String toJson(Name name) {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        JsonFactory jasonFactory = new JsonFactory();
+        try (JsonGenerator generator = jasonFactory.createGenerator(output, JsonEncoding.UTF8)) {
+            generator.writeStartObject();
+            generator.writeStringField("name", name.name());
+            generator.writeStringField("mnemonic", name.mnemonic());
+            generator.writeStringField("alias", name.alias());
+            generator.writeEndObject();
+            generator.flush();
+        } catch (IOException e) {
+            LOGGER.error("Not write name as json", e);
+        }
+        return output.toString();
+    }
+
+    private String tojson(Price price) {
+        return "";
     }
 }

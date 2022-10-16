@@ -15,7 +15,6 @@
  */
 package catalog.hoprxi.core.domain.model.barcode;
 
-import java.util.BitSet;
 import java.util.Objects;
 
 /***
@@ -25,7 +24,6 @@ import java.util.Objects;
  */
 public abstract class Barcode {
     protected CharSequence barcode;
-    protected BitSet bitSet;
 
     public Barcode(CharSequence barcode) {
         Objects.requireNonNull(barcode, "barcode is required");

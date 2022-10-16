@@ -29,7 +29,7 @@ import java.util.Objects;
 public class VipPrice {
     public static final VipPrice RMB_ZERO = new VipPrice(Price.zero(Locale.CHINA));
     public static final VipPrice USD_ZERO = new VipPrice(Price.zero(Locale.US));
-    private static int NAME_LENGTH = 64;
+    private static final int NAME_MAX_LENGTH = 64;
     private Price price;
     private String name;
 
@@ -52,8 +52,8 @@ public class VipPrice {
 
     private void setName(String name) {
         name = Objects.requireNonNull(name, "name required").trim();
-        if (name.isEmpty() || name.length() > NAME_LENGTH)
-            throw new IllegalArgumentException("name length rang is 1-" + NAME_LENGTH);
+        if (name.isEmpty() || name.length() > NAME_MAX_LENGTH)
+            throw new IllegalArgumentException("name length rang is 1-" + NAME_MAX_LENGTH);
         this.name = name;
     }
 
