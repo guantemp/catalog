@@ -95,7 +95,14 @@ public class PsqlItemRepository implements ItemRepository {
 
     @Override
     public void remove(String id) {
-
+        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+            final String removeSql = "delete from item where id=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
+            preparedStatement.setLong(1, Long.parseLong(id));
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Can't remove from item(id={})", id, e);
+        }
     }
 
     @Override

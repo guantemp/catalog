@@ -16,9 +16,11 @@
 
 package catalog.hoprxi;
 
+import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.Unit;
+import com.fasterxml.jackson.core.*;
 import org.javamoney.moneta.Money;
 import org.javamoney.moneta.format.CurrencyStyle;
 import org.testng.annotations.Test;
@@ -31,6 +33,7 @@ import javax.money.format.MonetaryFormats;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -51,13 +54,12 @@ public class AppTest {
         for (String s : result)
             System.out.println(s);
         System.out.println("pattern:" + Pattern.compile(".*?.*?").matcher("45n").matches());
-        System.out.println("undefined");
         CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
         MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
                 .set(CurrencyStyle.SYMBOL).set("pattern", "¤#,##0.0000")//"#,##0.00### ¤"
                 .build());
         RetailPrice retailPrice = new RetailPrice(new Price(Money.of(10.00, currency), Unit.DAI));
-       /*
+
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(System.out, JsonEncoding.UTF8).useDefaultPrettyPrinter();
         generator.writeStartObject();
@@ -80,10 +82,9 @@ public class AppTest {
         sb.append("\"guantemp\",").append('\n').append("\"age\" : ").append(21);
         generator.writeRaw(sb.toString());
         generator.flush();
-        generator.close();
-*/
-        System.out.println("moeny:" + new BigDecimal("1E+1").toPlainString());
-/*
+
+        System.out.println("money:" + new BigDecimal("1E+1").toPlainString());
+
         String name = null, alias = null, mnemonic = null;
         JsonParser parser = jasonFactory.createParser("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"alias\":\"我想改变\"}".getBytes(StandardCharsets.UTF_8));
         JsonToken jsonToken;
@@ -109,7 +110,6 @@ public class AppTest {
         System.out.println(mnemonic);
         System.out.println(alias);
 
- */
 
         StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,description,logo_uri,root_id,\"left\",\"right\") values(")
                 .append(-1).append(",").append(-1).append(",'").append("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"alias\":\"我想改变\"}").append("','")
