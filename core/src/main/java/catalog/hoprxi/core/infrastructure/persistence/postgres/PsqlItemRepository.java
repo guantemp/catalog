@@ -73,7 +73,11 @@ public class PsqlItemRepository implements ItemRepository {
     @Override
     public Item find(String id) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String findSql = "select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias from item where id=? limit 1";
+            final String findSql = "select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,barcode,category_id," +
+                    "brand_id,grade,made_in,specs,retail_price::jsonb->>'number' as retail_price_number,retail_price::jsonb->>'currencyCode' as retail_price_currencyCode,retail_price::jsonb->>'unit' as retail_price_unit" +
+                    ",member_price::jsonb ->> 'name' as member_price_name, member_price::jsonb -> 'price' ->> 'number' as member_price_number, member_price::jsonb -> 'price' ->> 'currencyCode' as member_price_currencyCode, member_price::jsonb -> 'price' ->> 'unit' as member_price_unit" +
+                    ", vip_price::jsonb ->> 'name' as vip_price_name, vip_price::jsonb -> 'price' ->> 'number' as vip_price_number, vip_price::jsonb -> 'price' ->> 'currencyCode' as vip_price_currencyCode, vip_price::jsonb -> 'price' ->> 'unit' as vip_price_unit " +
+                    "from item where id=? limit 1";
             PreparedStatement ps = connection.prepareStatement(findSql);
             ps.setLong(1, Long.parseLong(id));
             ResultSet rs = ps.executeQuery();
@@ -108,9 +112,9 @@ public class PsqlItemRepository implements ItemRepository {
     @Override
     public void save(Item item) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String replaceInto = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,specs,retailPrice,memberPrice,vipPrice) " +
+            final String replaceInto = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,specs,retail_price,member_price,vip_price) " +
                     "values (?,?::jsonb,?,?,?,?::grade,?::jsonb,?,?::jsonb,?::jsonb,?::jsonb) " +
-                    "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,specs=?,retailPrice=?::jsonb,memberPrice=?::jsonb,vipPrice=?::jsonb";
+                    "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,specs=?,retail_price=?::jsonb,member_price=?::jsonb,vip_price=?::jsonb";
             PreparedStatement ps = connection.prepareStatement(replaceInto);
             ps.setLong(1, Long.parseLong(item.id()));
             ps.setString(2, toJson(item.name()));
