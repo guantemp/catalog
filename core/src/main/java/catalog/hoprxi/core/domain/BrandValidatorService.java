@@ -37,8 +37,10 @@ public class BrandValidatorService {
         switch ((provider)) {
             case "postgresql":
                 repository = new PsqlBrandRepository("catalog");
+                break;
             case "arangodb":
                 repository = new ArangoDBBrandRepository("catalog");
+                break;
         }
     }
 

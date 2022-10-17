@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.domain.model.madeIn;
 
+import java.util.Objects;
 import java.util.StringJoiner;
 
 /***
@@ -25,10 +26,14 @@ import java.util.StringJoiner;
  */
 public class Imported implements MadeIn {
     // 进口（国家或地区,如：美国）
-    private String country;
+    private final String country;
 
     public Imported(String country) {
-        this.country = country;
+        this.country = Objects.requireNonNull(country, "country required");
+    }
+
+    public String country() {
+        return country;
     }
 
     @Override
@@ -41,11 +46,6 @@ public class Imported implements MadeIn {
         return new StringJoiner(", ", Imported.class.getSimpleName() + "[", "]")
                 .add("country='" + country + "'")
                 .toString();
-    }
-
-    @Override
-    public long code() {
-        return 0l;
     }
 
     @Override

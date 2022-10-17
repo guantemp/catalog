@@ -31,9 +31,19 @@ public class Domestic implements MadeIn {
     public static final Domestic TIAN_JIN = new Domestic("天津市", "天津市");
     public static final Domestic SHANG_HAI = new Domestic("上海市", "上海市");
     public static final Domestic CHONG_QING = new Domestic("重庆市", "重庆市");
+
     // 省/市级
-    private String province;//四川省
-    private String city;//乐山市
+    private final String province;//四川省
+    private final String city;//乐山市
+    private long code;
+
+    public String province() {
+        return province;
+    }
+
+    public String city() {
+        return city;
+    }
 
     public Domestic(String province, String city) {
         this.province = Objects.requireNonNull(province, "province required").trim();
@@ -44,11 +54,6 @@ public class Domestic implements MadeIn {
     public String madeIn() {
         return province + Label.MADIN_SEPARATORS + city;
         //return new StringJoiner(Label.MADIN_SEPARATORS).add(province).add(city).toString();
-    }
-
-    @Override
-    public long code() {
-        return 0;
     }
 
     @Override

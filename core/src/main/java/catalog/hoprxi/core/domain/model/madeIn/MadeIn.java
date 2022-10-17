@@ -24,5 +24,9 @@ package catalog.hoprxi.core.domain.model.madeIn;
 public interface MadeIn {
     String madeIn();
 
-    long code();
+    default long code() {
+        return 0L;
+    }
+
+    ;
 }

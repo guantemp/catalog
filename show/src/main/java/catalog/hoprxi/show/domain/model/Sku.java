@@ -17,7 +17,6 @@
 package catalog.hoprxi.show.domain.model;
 
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
-import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
 import com.arangodb.entity.DocumentField;

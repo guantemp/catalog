@@ -16,14 +16,24 @@
 
 package catalog.hoprxi;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import catalog.hoprxi.core.domain.model.price.Price;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.Unit;
+import org.javamoney.moneta.Money;
+import org.javamoney.moneta.format.CurrencyStyle;
 import org.testng.annotations.Test;
 
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
+import javax.money.format.AmountFormatQueryBuilder;
+import javax.money.format.MonetaryAmountFormat;
+import javax.money.format.MonetaryFormats;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -34,7 +44,6 @@ public class AppTest {
 
     @Test
     public void testMain() throws IOException {
-        /*
         String[] test = {"69832423", "69821412", "697234", "998541", "69841", "市政府撒的", "9782"};
         String[] result = Arrays.stream(test).filter(s -> Pattern.compile("^698\\d*").matcher(s).matches()).toArray(String[]::new);
         //result="/".split("/");
@@ -47,8 +56,8 @@ public class AppTest {
         MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
                 .set(CurrencyStyle.SYMBOL).set("pattern", "¤#,##0.0000")//"#,##0.00### ¤"
                 .build());
-        RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.203, currency), Unit.DAI));
-        TreeNode node = null;
+        RetailPrice retailPrice = new RetailPrice(new Price(Money.of(10.00, currency), Unit.DAI));
+       /*
         JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(System.out, JsonEncoding.UTF8).useDefaultPrettyPrinter();
         generator.writeStartObject();
@@ -60,7 +69,7 @@ public class AppTest {
             generator.writeString(unit.toString());
         }
         generator.writeEndArray();
-        generator.writeObjectField("grade", Grade.QUALIFIED.toString());
+        generator.writeObjectField("grade", Grade.QUALIFIED.name());
         generator.writeObjectFieldStart("retailPrice");
         generator.writeStringField("value", format.format(retailPrice.price().amount()));
         generator.writeStringField("unit", retailPrice.price().unit().toString());
@@ -72,8 +81,9 @@ public class AppTest {
         generator.writeRaw(sb.toString());
         generator.flush();
         generator.close();
-         */
-        JsonFactory jasonFactory = new JsonFactory();
+*/
+        System.out.println("moeny:" + new BigDecimal("1E+1").toPlainString());
+/*
         String name = null, alias = null, mnemonic = null;
         JsonParser parser = jasonFactory.createParser("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"alias\":\"我想改变\"}".getBytes(StandardCharsets.UTF_8));
         JsonToken jsonToken;
@@ -98,6 +108,8 @@ public class AppTest {
         System.out.println("namtrhrtuyretuyrwte" + name);
         System.out.println(mnemonic);
         System.out.println(alias);
+
+ */
 
         StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,description,logo_uri,root_id,\"left\",\"right\") values(")
                 .append(-1).append(",").append(-1).append(",'").append("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"alias\":\"我想改变\"}").append("','")
