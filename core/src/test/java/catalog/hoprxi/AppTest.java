@@ -17,6 +17,7 @@
 package catalog.hoprxi;
 
 import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.Unit;
@@ -31,6 +32,8 @@ import javax.money.format.AmountFormatQueryBuilder;
 import javax.money.format.MonetaryAmountFormat;
 import javax.money.format.MonetaryFormats;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -46,7 +49,7 @@ import java.util.regex.Pattern;
 public class AppTest {
 
     @Test
-    public void testMain() throws IOException {
+    public void testMain() throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         String[] test = {"69832423", "69821412", "697234", "998541", "69841", "市政府撒的", "9782"};
         String[] result = Arrays.stream(test).filter(s -> Pattern.compile("^698\\d*").matcher(s).matches()).toArray(String[]::new);
         //result="/".split("/");
@@ -116,5 +119,9 @@ public class AppTest {
                 .append("dxgdfger").append("','").append(URI.create("https://www.example.com:8081/?k1=1&k1=2&k2=3&%E5%90%8D%E5%AD%97=%E5%BC%A0%E4%B8%89").toASCIIString())
                 .append("',").append(-1).append(",").append(2).append(",").append(2 + 1).append(")");
         System.out.println("update category set \"left\"=0-\"left\"-" + (5 - 4 - 1) + ",\"right\"=0-\"right\"-" + (5 - 4 - 1) + " where left<0");
+
+        Constructor<Name> nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
+        nameConstructor.setAccessible(true);
+        System.out.println(nameConstructor.newInstance("中文变量", "3252", "dsgfd"));
     }
 }

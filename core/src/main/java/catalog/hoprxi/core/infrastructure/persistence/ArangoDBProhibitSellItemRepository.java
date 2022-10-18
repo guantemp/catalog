@@ -71,7 +71,6 @@ public class ArangoDBProhibitSellItemRepository implements ProhibitSellItemRepos
 
     private ArangoDatabase catalog = ArangoDBUtil.getDatabase();
 
-    @Override
     public ProhibitSellItem[] belongToBrand(String brandId) {
         final String query = "WITH brand,belong,stop_sell_sku,has,barcode,attribute\n" +
                 "FOR sku,e IN 1..1 INBOUND @startVertex belong LIMIT @offset,@limit\n" +
@@ -119,7 +118,6 @@ public class ArangoDBProhibitSellItemRepository implements ProhibitSellItemRepos
         return stopSellSkuConstructor.newInstance(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
     }
 
-    @Override
     public ProhibitSellItem[] belongToCategory(String categoryId) {
         return new ProhibitSellItem[0];
     }
@@ -129,7 +127,6 @@ public class ArangoDBProhibitSellItemRepository implements ProhibitSellItemRepos
         return null;
     }
 
-    @Override
     public ProhibitSellItem[] findAll(long offset, int limit) {
         return new ProhibitSellItem[0];
     }
@@ -140,21 +137,21 @@ public class ArangoDBProhibitSellItemRepository implements ProhibitSellItemRepos
     }
 
     @Override
-    public void save(ProhibitSellItem sku) {
+    public void save(ProhibitSellItem item) {
         ArangoGraph graph = catalog.graph("core");
-        boolean exists = catalog.collection("stop_sell_sku").documentExists(sku.id());
+        boolean exists = catalog.collection("stop_sell_sku").documentExists(item.id());
         if (exists) {
-            VertexUpdateEntity skuVertex = graph.vertexCollection("stop_sell_sku").updateVertex(sku.id(), sku, UPDATE_OPTIONS);
-            if (isBrandIdChanged(catalog, skuVertex, sku.brandId()))
-                insertBrandWithBelongEdge(graph, skuVertex, sku.brandId());
-            if (isCategoryIdChanged(catalog, skuVertex, sku.categoryId()))
-                insertCategoryWithBelongEdge(graph, skuVertex, sku.categoryId());
-            updateBarcodeBook(catalog, skuVertex, sku.barcode());
+            VertexUpdateEntity skuVertex = graph.vertexCollection("stop_sell_sku").updateVertex(item.id(), item, UPDATE_OPTIONS);
+            if (isBrandIdChanged(catalog, skuVertex, item.brandId()))
+                insertBrandWithBelongEdge(graph, skuVertex, item.brandId());
+            if (isCategoryIdChanged(catalog, skuVertex, item.categoryId()))
+                insertCategoryWithBelongEdge(graph, skuVertex, item.categoryId());
+            updateBarcodeBook(catalog, skuVertex, item.barcode());
         } else {
-            VertexEntity skuVertex = graph.vertexCollection("stop_sell_sku").insertVertex(sku);
-            insertBrandWithBelongEdge(graph, skuVertex, sku.brandId());
-            insertCategoryWithBelongEdge(graph, skuVertex, sku.categoryId());
-            insertBarcodeWithHasEdge(graph, skuVertex, sku.barcode());
+            VertexEntity skuVertex = graph.vertexCollection("stop_sell_sku").insertVertex(item);
+            insertBrandWithBelongEdge(graph, skuVertex, item.brandId());
+            insertCategoryWithBelongEdge(graph, skuVertex, item.categoryId());
+            insertBarcodeWithHasEdge(graph, skuVertex, item.barcode());
         }
     }
 
@@ -195,17 +192,14 @@ public class ArangoDBProhibitSellItemRepository implements ProhibitSellItemRepos
 
     }
 
-    @Override
     public long size() {
         return 0;
     }
 
-    @Override
     public ProhibitSellItem[] fromBarcode(String barcode) {
         return new ProhibitSellItem[0];
     }
 
-    @Override
     public ProhibitSellItem[] fromName(String name) {
         return new ProhibitSellItem[0];
     }

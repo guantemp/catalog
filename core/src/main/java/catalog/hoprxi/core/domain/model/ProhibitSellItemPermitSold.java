@@ -25,12 +25,12 @@ import java.time.LocalDateTime;
  * @since JDK8.0
  * @version 0.0.1 2019-11-11
  */
-public class ItemPermitSold implements DomainEvent {
+public class ProhibitSellItemPermitSold implements DomainEvent {
     private LocalDateTime occurredOn;
     private String id;
     private int version;
 
-    public ItemPermitSold(String id) {
+    public ProhibitSellItemPermitSold(String id) {
         this.id = id;
         occurredOn = LocalDateTime.now();
         version = 1;

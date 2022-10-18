@@ -18,22 +18,10 @@ package catalog.hoprxi.core.domain.model;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2019-06-21
+ * @version 0.0.2 builder 2022-10-18
  */
 
 public interface ProhibitSellItemRepository {
-    /**
-     * @param brandId
-     * @return
-     */
-    ProhibitSellItem[] belongToBrand(String brandId);
-
-    /**
-     * @param categoryId
-     * @return
-     */
-    ProhibitSellItem[] belongToCategory(String categoryId);
-
     /**
      * @param id
      * @return
@@ -41,36 +29,12 @@ public interface ProhibitSellItemRepository {
     ProhibitSellItem find(String id);
 
     /**
-     * @param offset
-     * @param limit
-     * @return
-     */
-    ProhibitSellItem[] findAll(long offset, int limit);
-
-    /**
      * @param id
      */
     void remove(String id);
 
     /**
-     * @param sku
+     * @param item
      */
-    void save(ProhibitSellItem sku);
-
-    /**
-     * @return
-     */
-    long size();
-
-    /**
-     * @param barcode
-     * @return
-     */
-    ProhibitSellItem[] fromBarcode(String barcode);
-
-    /**
-     * @param name
-     * @return
-     */
-    ProhibitSellItem[] fromName(String name);
+    void save(ProhibitSellItem item);
 }
