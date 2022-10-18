@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.persistence.postgres;
+package catalog.hoprxi.core.infrastructure.persistence.postgresql;
 
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;

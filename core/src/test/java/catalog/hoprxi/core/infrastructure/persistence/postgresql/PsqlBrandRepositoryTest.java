@@ -20,7 +20,6 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import catalog.hoprxi.core.infrastructure.persistence.postgres.PsqlBrandRepository;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 

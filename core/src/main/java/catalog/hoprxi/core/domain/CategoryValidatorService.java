@@ -20,7 +20,7 @@ package catalog.hoprxi.core.domain;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
-import catalog.hoprxi.core.infrastructure.persistence.postgres.PsqlCategoryRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.persistence.postgres;
+package catalog.hoprxi.core.infrastructure.persistence.postgresql;
 
 import catalog.hoprxi.core.domain.model.*;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
@@ -30,7 +30,8 @@ import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import org.javamoney.moneta.Money;
-import org.testng.annotations.AfterMethod;
+import org.testng.Assert;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -157,58 +158,52 @@ public class PsqlItemRepositoryTest {
         itemRepository.save(thirteen);
     }
 
-    /*
     @AfterTest
     public void tearDown() {
+        itemRepository.remove("52496163982907400");
+        itemRepository.remove("52496163982907401");
+        itemRepository.remove("52496163982907402");
+        itemRepository.remove("52496163982907403");
+        itemRepository.remove("52496163982907404");
+        itemRepository.remove("52496163982907405");
+        itemRepository.remove("52496321492179000");
+        itemRepository.remove("52496321492179001");
+        itemRepository.remove("52496321492179002");
+        itemRepository.remove("52496321492179003");
+        itemRepository.remove("52496321492179004");
+        itemRepository.remove("52496321492179005");
+        itemRepository.remove("52496321492179006");
+
         brandRepository.remove(Brand.UNDEFINED.id());
-        brandRepository.remove("caihong");
-        brandRepository.remove("tianyou");
-        brandRepository.remove("changjhong");
+        brandRepository.remove("52495569395175425");
+        brandRepository.remove("52495569395175426");
+        brandRepository.remove("52495569395175427");
 
         categoryRepository.remove(Category.UNDEFINED.id());
-        categoryRepository.remove("skin");
-        categoryRepository.remove("cosmetics");
-        categoryRepository.remove("chemicals");
-        categoryRepository.remove("food");
-        categoryRepository.remove("root");
-
-        itemRepository.remove("one");
-        itemRepository.remove("two");
-        itemRepository.remove("three");
-        itemRepository.remove("four");
-        itemRepository.remove("five");
-        itemRepository.remove("six");
-        itemRepository.remove("six_1");
-        itemRepository.remove("six_2");
-        itemRepository.remove("seven");
-        itemRepository.remove("eight");
-        itemRepository.remove("nine");
-        itemRepository.remove("ten");
-        itemRepository.remove("twelve");
-        for (Item item : itemRepository.fromBarcode("4547691239136")) {
-            itemRepository.remove(item.id());
-        }
-        itemRepository.remove("twelve");
-    }
- */
-
-    @AfterMethod
-    public void tearDown() {
+        categoryRepository.remove("52495569397272593");
+        categoryRepository.remove("52495569397272594");
+        categoryRepository.remove("52495569397272595");
+        categoryRepository.remove("52495569397272596");
+        categoryRepository.remove("52495569397272597");
+        categoryRepository.remove("52495569397272598");
+        categoryRepository.remove("52495569397272599");
     }
 
-    @Test
-    public void testFind() {
-    }
-
-    @Test
-    public void testNextIdentity() {
-    }
-
-    @Test
-    public void testRemove() {
-    }
 
     @Test
     public void testSave() {
+        Item ten = itemRepository.find("52496321492179005");
+        ten.rename(new Name("长虹5号碳性电池 ", "长虹1号"));
+        itemRepository.save(ten);
+        ten = itemRepository.find("52496321492179005");
+        Assert.assertEquals(ten.name(), new Name("长虹5号碳性电池", "长虹1号"));
+
+        Item six = itemRepository.find("52496321492179000");
+        Assert.assertNotNull(six);
+        six.changeBarcode(new EAN_13("6923555240728"));
+        itemRepository.save(six);
+        six = itemRepository.find("52496321492179000");
+        Assert.assertEquals(six.barcode(), BarcodeGenerateServices.createMatchingBarcode("6923555240728"));
+        System.out.println(six);
     }
 }

@@ -14,31 +14,30 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.persistence.postgres;
+package catalog.hoprxi.core.infrastructure.persistence.postgresql;
 
-import catalog.hoprxi.core.domain.model.Item;
-import catalog.hoprxi.core.domain.model.ItemRepository;
-import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.domain.model.*;
+import catalog.hoprxi.core.domain.model.barcode.Barcode;
+import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
 import catalog.hoprxi.core.domain.model.madeIn.Domestic;
 import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
-import catalog.hoprxi.core.domain.model.price.MemberPrice;
-import catalog.hoprxi.core.domain.model.price.Price;
-import catalog.hoprxi.core.domain.model.price.RetailPrice;
-import catalog.hoprxi.core.domain.model.price.VipPrice;
+import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.*;
+import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import salt.hoprxi.id.LongId;
 
+import javax.money.MonetaryAmount;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -81,14 +80,68 @@ public class PsqlItemRepository implements ItemRepository {
             PreparedStatement ps = connection.prepareStatement(findSql);
             ps.setLong(1, Long.parseLong(id));
             ResultSet rs = ps.executeQuery();
-            return rebuild(rs);
-        } catch (SQLException e) {
+            if (rs.next())
+                return rebuild(rs);
+        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
+                 IOException e) {
             LOGGER.error("Can't rebuild item with (id = {})", id, e);
         }
         return null;
     }
 
-    private Item rebuild(ResultSet rs) {
+    private Item rebuild(ResultSet rs) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
+        String id = rs.getString("id");
+        Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
+        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(rs.getString("barcode"));
+        String categoryId = rs.getString("category_id");
+        String brandId = rs.getString("brand_id");
+        Grade grade = Grade.valueOf(rs.getString("grade"));
+        MadeIn madeIn = toMadeIn(rs.getString("made_in"));
+        Specification spec = new Specification(rs.getString("specs"));
+        MonetaryAmount amount = Money.of(rs.getBigDecimal("retail_price_number"), rs.getString("retail_price_currencyCode"));
+        Unit unit = Unit.valueOf(rs.getString("retail_price_unit"));
+        RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
+        String priceName = rs.getString("member_price_name");
+        amount = Money.of(rs.getBigDecimal("member_price_number"), rs.getString("member_price_currencyCode"));
+        unit = Unit.valueOf(rs.getString("member_price_unit"));
+        MemberPrice memberPrice = new MemberPrice(priceName, new Price(amount, unit));
+        priceName = rs.getString("vip_price_name");
+        amount = Money.of(rs.getBigDecimal("vip_price_number"), rs.getString("vip_price_currencyCode"));
+        unit = Unit.valueOf(rs.getString("vip_price_unit"));
+        VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
+        return new Item(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, categoryId, brandId);
+    }
+
+    private MadeIn toMadeIn(String json) throws IOException {
+        String _class = null, province = null, city = null, country = null;
+        JsonFactory jasonFactory = new JsonFactory();
+        JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "_class":
+                        _class = parser.getValueAsString();
+                        break;
+                    case "province":
+                        province = parser.getValueAsString();
+                        break;
+                    case "city":
+                        city = parser.getValueAsString();
+                        break;
+                    case "country":
+                        country = parser.getValueAsString();
+                        break;
+                }
+            }
+        }
+        if (Domestic.class.getName().equals(_class)) {
+            return new Domestic(province, city);
+        } else if (Imported.class.getName().equals(_class)) {
+            return new Imported(country);
+        }
         return null;
     }
 

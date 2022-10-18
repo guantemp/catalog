@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.persistence.postgres;
+package catalog.hoprxi.core.infrastructure.persistence.postgresql;
 
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
@@ -73,6 +73,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
                  IllegalAccessException e) {
             LOGGER.error("Can't rebuild category with (id = {})", id, e);
+            System.out.println(e);
         }
         return null;
     }

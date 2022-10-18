@@ -19,7 +19,7 @@ package catalog.hoprxi.core.domain;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
-import catalog.hoprxi.core.infrastructure.persistence.postgres.PsqlBrandRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 

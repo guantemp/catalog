@@ -20,7 +20,6 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
-import catalog.hoprxi.core.infrastructure.persistence.postgres.PsqlCategoryRepository;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
