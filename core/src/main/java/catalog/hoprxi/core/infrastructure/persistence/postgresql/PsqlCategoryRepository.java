@@ -73,7 +73,6 @@ public class PsqlCategoryRepository implements CategoryRepository {
         } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
                  IllegalAccessException e) {
             LOGGER.error("Can't rebuild category with (id = {})", id, e);
-            System.out.println(e);
         }
         return null;
     }

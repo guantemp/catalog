@@ -1,0 +1,151 @@
+/*
+ * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+package catalog.hoprxi.core.infrastructure.query.postgresql;
+
+import catalog.hoprxi.core.application.query.BrandQueryService;
+import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.domain.model.brand.AboutBrand;
+import catalog.hoprxi.core.domain.model.brand.Brand;
+import catalog.hoprxi.core.infrastructure.PsqlUtil;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import salt.hoprxi.cache.Cache;
+import salt.hoprxi.cache.CacheFactory;
+
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.Year;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+/***
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @since JDK8.0
+ * @version 0.0.1 builder 2022-10-18
+ */
+public class PsqlBrandQueryService implements BrandQueryService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlBrandQueryService.class);
+    private static Constructor<Name> nameConstructor;
+    private static Cache<String, Brand> cache = CacheFactory.build("brand");
+
+    static {
+        try {
+            nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
+            nameConstructor.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("Not find Name class has such constructor", e);
+        }
+    }
+
+    private final String databaseName;
+
+    public PsqlBrandQueryService(String databaseName) {
+        this.databaseName = Objects.requireNonNull(databaseName, "The databaseName parameter is required");
+    }
+
+    @Override
+    public Brand[] findAll(int offset, int limit) {
+        return new Brand[0];
+    }
+
+    @Override
+    public Brand[] findByName(String name) {
+        final String query = "select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,about from brand " +
+                "where name::jsonb->>'name' ~ ? union select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,about from brand " +
+                "where name::jsonb->>'mnemonic' ~ ? union select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,about from brand " +
+                "where name::jsonb->>'alias' ~ ?";
+        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, name);
+            preparedStatement.setString(3, name);
+            ResultSet rs = preparedStatement.executeQuery();
+            return transform(rs);
+        } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
+                 IllegalAccessException e) {
+            LOGGER.error("Can't rebuild brand with (name = {})", name, e);
+        }
+        return new Brand[0];
+    }
+
+    private Brand[] transform(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        List<Brand> brandList = new ArrayList<>();
+        while (rs.next()) {
+            brandList.add(rebuild(rs));
+        }
+        return brandList.toArray(new Brand[0]);
+    }
+
+    private Brand rebuild(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        String id = rs.getString("id");
+        if (Brand.UNDEFINED.id().equals(id))
+            return Brand.UNDEFINED;
+        Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
+        AboutBrand about = toAboutBrand(rs.getString("about"));
+        return new Brand(id, name, about);
+    }
+
+    private AboutBrand toAboutBrand(String json) throws IOException {
+        if (json == null)
+            return null;
+        String story = null;
+        Year since = null;
+        URL homepage = null, logo = null;
+        JsonFactory jasonFactory = new JsonFactory();
+        JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME == jsonToken) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "story":
+                        story = parser.getValueAsString();
+                        break;
+                    case "since":
+                        since = Year.of(parser.getIntValue());
+                        break;
+                    case "homepage":
+                        homepage = new URL(parser.getValueAsString());
+                        break;
+                    case "logo":
+                        logo = new URL(parser.getValueAsString());
+                        break;
+                }
+            }
+        }
+        return new AboutBrand(homepage, logo, since, story);
+    }
+
+    @Override
+    public int size() {
+        return 0;
+    }
+}
