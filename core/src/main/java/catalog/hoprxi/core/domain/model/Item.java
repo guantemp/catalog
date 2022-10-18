@@ -89,10 +89,6 @@ public class Item {
         this(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
     }
 
-    static Item reconstituteFromPersistence() {
-        return null;
-    }
-
     private void setCategoryId(String categoryId) {
         categoryId = Objects.requireNonNull(categoryId, "categoryId required").trim();
         if (!categoryId.equals(Category.UNDEFINED.id()) && !CategoryValidatorService.isCategoryExist(categoryId))
@@ -143,13 +139,26 @@ public class Item {
         this.madeIn = madeIn;
     }
 
+    private void setBarcode(Barcode barcode) {
+        this.barcode = Objects.requireNonNull(barcode, "barcode required");
+    }
+
+    private void setGrade(Grade grade) {
+        if (null == grade)
+            grade = Grade.QUALIFIED;
+        this.grade = grade;
+    }
+
+    private void setName(Name name) {
+        this.name = Objects.requireNonNull(name, "name required");
+    }
+
     /**
      * @param barcode
      */
     public void changeBarcode(Barcode barcode) {
-        Objects.requireNonNull(barcode, "barcode required");
-        if (!barcode.equals(this.barcode)) {
-            this.barcode = barcode;
+        if (!this.barcode.equals(barcode)) {
+            setBarcode(barcode);
             DomainRegistry.domainEventPublisher().publish(new ItemBarcodeChanged(id, barcode));
         }
     }
@@ -158,22 +167,20 @@ public class Item {
      * @param grade
      */
     public void changeGrade(Grade grade) {
-        if (grade != null) {
-            if (this.grade != grade) {
-                this.grade = grade;
-                DomainRegistry.domainEventPublisher().publish(new ItemGradeChanged(id, grade));
-            }
+        if (this.grade != grade) {
+            setGrade(grade);
+            DomainRegistry.domainEventPublisher().publish(new ItemGradeChanged(id, grade));
         }
     }
 
     /**
-     * @param newMadeIn
+     * @param madeIn
      * @throws IllegalArgumentException if newMadeIn is <CODE>NULL</CODE>
      */
-    public void changeMadeIn(MadeIn newMadeIn) {
-        Objects.requireNonNull(newMadeIn, "newMadeIn required");
-        if (!newMadeIn.equals(this.madeIn)) {
-            this.madeIn = newMadeIn;
+    public void changeMadeIn(MadeIn madeIn) {
+        Objects.requireNonNull(madeIn, "newMadeIn required");
+        if (!this.madeIn.equals(madeIn)) {
+            this.madeIn = madeIn;
             DomainRegistry.domainEventPublisher().publish(new ItemMadeInChanged(id, madeIn.code(), madeIn.madeIn()));
         }
     }
@@ -183,9 +190,25 @@ public class Item {
      */
     public void changeRetailPrice(RetailPrice retailPrice) {
         Objects.requireNonNull(retailPrice, "retailPrice required");
-        if (this.retailPrice.equals(retailPrice)) {
+        if (!this.retailPrice.equals(retailPrice)) {
             this.retailPrice = retailPrice;
             DomainRegistry.domainEventPublisher().publish(new ItemRetailPriceChanged(id, retailPrice.price().amount(), retailPrice.price().unit()));
+        }
+    }
+
+    public void changeMemberPrice(MemberPrice memberPrice) {
+        Objects.requireNonNull(memberPrice, "memberPrice required");
+        if (!this.memberPrice.equals(memberPrice)) {
+            setMemberPrice(memberPrice);
+            DomainRegistry.domainEventPublisher().publish(new ItemMemberPriceChaned(id, memberPrice.name(), memberPrice.price().amount(), memberPrice.price().unit()));
+        }
+    }
+
+    public void changeVipPrice(VipPrice vipPrice) {
+        Objects.requireNonNull(vipPrice, "vipPrice required");
+        if (!this.vipPrice.equals(vipPrice)) {
+            setVipPrice(vipPrice);
+            DomainRegistry.domainEventPublisher().publish(new ItemVipPriceChaned(id, vipPrice.name(), vipPrice.price().amount(), vipPrice.price().unit()));
         }
     }
 
@@ -194,17 +217,10 @@ public class Item {
      * @throws IllegalArgumentException if spec is <CODE>NULL</CODE>
      */
     public void changeSpecification(Specification spec) {
-        if (spec == null)
-            spec = Specification.UNDEFINED;
         if (!this.spec.equals(spec)) {
-            this.spec = spec;
+            setSpecification(spec);
             DomainRegistry.domainEventPublisher().publish(new ItemSpecificationChanged(id, spec));
         }
-    }
-
-
-    public Specification spec() {
-        return spec;
     }
 
     /**
@@ -225,7 +241,8 @@ public class Item {
      *                                  categoryId is not valid
      */
     public void moveToNewCategory(String categoryId) {
-        if (!this.categoryId.equals(categoryId) && CategoryValidatorService.isCategoryExist(categoryId)) {
+        categoryId = Objects.requireNonNull(categoryId, "categoryId required").trim();
+        if (!this.categoryId.equals(categoryId)) {
             setCategoryId(categoryId);
             DomainRegistry.domainEventPublisher().publish(new ItemCategoryReallocated(id, categoryId));
         }
@@ -237,7 +254,8 @@ public class Item {
      *                                  brandId is not valid
      */
     public void moveToNewBrand(String brandId) {
-        if (!this.brandId.equals(brandId) && BrandValidatorService.isBrandExist(brandId)) {
+        brandId = Objects.requireNonNull(brandId, "brandId required").trim();
+        if (!this.brandId.equals(brandId)) {
             setBrandId(brandId);
             DomainRegistry.domainEventPublisher().publish(new ItemBrandReallocated(id, brandId));
         }
@@ -283,20 +301,9 @@ public class Item {
         return madeIn;
     }
 
-    private void setBarcode(Barcode barcode) {
-        this.barcode = Objects.requireNonNull(barcode, "barcode required");
+    public Specification spec() {
+        return spec;
     }
-
-    private void setGrade(Grade grade) {
-        if (null == grade)
-            grade = Grade.QUALIFIED;
-        this.grade = grade;
-    }
-
-    private void setName(Name name) {
-        this.name = Objects.requireNonNull(name, "name required");
-    }
-
 
     @Override
     public boolean equals(Object o) {

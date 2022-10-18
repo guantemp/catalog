@@ -31,7 +31,6 @@ import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import org.javamoney.moneta.Money;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -157,7 +156,7 @@ public class PsqlItemRepositoryTest {
                 new Specification("10片装"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(thirteen);
     }
-
+/*
     @AfterTest
     public void tearDown() {
         itemRepository.remove("52496163982907400");
@@ -189,6 +188,8 @@ public class PsqlItemRepositoryTest {
         categoryRepository.remove("52495569397272599");
     }
 
+ */
+
 
     @Test
     public void testSave() {
@@ -201,6 +202,10 @@ public class PsqlItemRepositoryTest {
         Item six = itemRepository.find("52496321492179000");
         Assert.assertNotNull(six);
         six.changeBarcode(new EAN_13("6923555240728"));
+        six.changeRetailPrice(new RetailPrice(new Price(Money.of(39.9, currency), Unit.TI)));
+        six.changeGrade(Grade.PREMIUM);
+        six.moveToNewCategory("52495569397272598");
+        System.out.println(six);
         itemRepository.save(six);
         six = itemRepository.find("52496321492179000");
         Assert.assertEquals(six.barcode(), BarcodeGenerateServices.createMatchingBarcode("6923555240728"));

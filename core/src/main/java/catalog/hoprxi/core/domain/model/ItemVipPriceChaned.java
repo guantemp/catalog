@@ -25,14 +25,24 @@ import java.time.LocalDateTime;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-11-11
+ * @version 0.0.1 2022-10-18
  */
 public class ItemVipPriceChaned implements DomainEvent {
     private String id;
+    private String name;
     private MonetaryAmount amount;
     private Unit unit;
     private LocalDateTime occurredOn;
     private int version;
+
+    public ItemVipPriceChaned(String id, String name, MonetaryAmount amount, Unit unit) {
+        this.id = id;
+        this.name = name;
+        this.amount = amount;
+        this.unit = unit;
+        occurredOn = LocalDateTime.now();
+        version = 1;
+    }
 
     public String id() {
         return id;
