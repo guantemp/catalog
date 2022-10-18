@@ -32,6 +32,16 @@ public class PsqlBrandQueryServiceTest {
 
     @Test
     public void testFindAll() {
+        Brand[] brands = query.findAll(0, 5);
+        assertEquals(brands.length, 5);
+        brands = query.findAll(1, 5);
+        assertEquals(brands.length, 5);
+        brands = query.findAll(4, 5);
+        assertEquals(brands.length, 2);
+        brands = query.findAll(5, 5);
+        assertEquals(brands.length, 1);
+        for (Brand brand : brands)
+            System.out.println(brand);
     }
 
     @Test
@@ -46,5 +56,6 @@ public class PsqlBrandQueryServiceTest {
 
     @Test
     public void testSize() {
+        assertEquals(query.size(), 6);
     }
 }
