@@ -18,7 +18,7 @@ package catalog.hoprxi.core.webapp;
 
 import catalog.hoprxi.core.application.CategoryAppService;
 import catalog.hoprxi.core.application.command.*;
-import catalog.hoprxi.core.application.query.CategoryQueryService;
+import catalog.hoprxi.core.application.query.CategoryViewQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBCategoryQueryService;
@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
 public class CategoryServlet extends HttpServlet {
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
     private static final CategoryAppService APP_SERVICE = new CategoryAppService();
-    private final CategoryQueryService categoryQueryService = new ArangoDBCategoryQueryService("catalog");
+    private final CategoryViewQueryService categoryQueryService = new ArangoDBCategoryQueryService("catalog");
 
     @Override
     public void init(ServletConfig config) {

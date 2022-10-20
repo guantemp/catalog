@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.application.query;
 
-import catalog.hoprxi.core.application.view.CategoryView;
+import catalog.hoprxi.core.domain.model.category.Category;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -25,31 +25,31 @@ import catalog.hoprxi.core.application.view.CategoryView;
  */
 public interface CategoryQueryService {
 
-    CategoryView[] root();
+    Category[] root();
 
     /**
      * @param id
      * @return
      */
-    CategoryView find(String id);
+    Category find(String id);
 
     /**
      * @param id
      * @return
      */
-    CategoryView[] children(String id);
+    Category[] children(String id);
 
     /**
      * @param id
      * @return descendants
      */
-    CategoryView[] descendants(String id);
+    Category[] descendants(String id);
 
-    CategoryView[] searchName(String regularExpression);
+    Category[] searchName(String regularExpression);
 
-    CategoryView[] siblings(String id);
+    Category[] siblings(String id);
 
-    CategoryView[] path(String id);
+    Category[] path(String id);
 
     int depth(String id);
 }

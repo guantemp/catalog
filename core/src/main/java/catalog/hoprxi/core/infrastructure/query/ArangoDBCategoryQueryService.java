@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query;
 
-import catalog.hoprxi.core.application.query.CategoryQueryService;
+import catalog.hoprxi.core.application.query.CategoryViewQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.ArangoDBUtil;
@@ -42,7 +42,7 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-03-21
  */
-public class ArangoDBCategoryQueryService implements CategoryQueryService {
+public class ArangoDBCategoryQueryService implements CategoryViewQueryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBCategoryQueryService.class);
     private static final int DESCENDANT_DEPTH = 3;
     private static Tree<CategoryView>[] trees;
