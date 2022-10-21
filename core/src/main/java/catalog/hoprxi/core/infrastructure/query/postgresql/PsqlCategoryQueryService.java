@@ -17,8 +17,8 @@
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
 import catalog.hoprxi.core.application.query.CategoryQueryService;
+import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
-import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ import java.util.Objects;
 public class PsqlCategoryQueryService implements CategoryQueryService {
     private static final String PLACEHOLDER = "placeholder";
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlCategoryQueryService.class);
-    private static Tree<Category>[] trees;
+    private static Tree<CategoryView>[] trees;
     private static Constructor<Name> nameConstructor;
 
     static {
@@ -51,7 +51,7 @@ public class PsqlCategoryQueryService implements CategoryQueryService {
             nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
             nameConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
-            if (LOGGER.isDebugEnabled()) LOGGER.debug("Not find Name class has such constructor", e);
+            LOGGER.error("Not find Name class has such constructor", e);
         }
     }
 
@@ -59,95 +59,147 @@ public class PsqlCategoryQueryService implements CategoryQueryService {
 
     public PsqlCategoryQueryService(String databaseName) {
         this.databaseName = Objects.requireNonNull(databaseName, "The databaseName parameter is required");
+        root();
     }
 
     @Override
-    public Category[] root() {
+    public CategoryView[] root() {
         if (trees != null) {
-            Category[] categories = new Category[trees.length];
+            CategoryView[] categoryViews = new CategoryView[trees.length];
             for (int i = 0, j = trees.length; i < j; i++) {
-                categories[i] = trees[i].root();
+                categoryViews[i] = trees[i].root();
             }
-            return categories;
+            return categoryViews;
         } else {
-            List<Category> categoryList = new ArrayList<>();
+            List<CategoryView> categoryViewList = new ArrayList<>();
             try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-                final String rootSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri from category where id = parent_id";
+                final String rootSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri,\"right\" - \"left\" as distance from category where id = parent_id";
                 PreparedStatement preparedStatement = connection.prepareStatement(rootSql);
                 ResultSet rs = preparedStatement.executeQuery();
                 while (rs.next()) {
-                    String id = rs.getString("id");
-                    String parentId = rs.getString("parent_id");
-                    Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
-                    String description = rs.getString("description");
-                    URI icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri"));
-                    categoryList.add(new Category(parentId, id, name, description, icon));
+                    categoryViewList.add(rebuild(rs));
                 }
-                categoryList.toArray(new Category[0]);
             } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
                 LOGGER.error("Can't rebuild category", e);
             }
-            trees = new Tree[categoryList.size()];
-            for (int i = 0, j = categoryList.size(); i < j; i++) {
-                trees[i] = Tree.root(categoryList.get(i));
+            trees = new Tree[categoryViewList.size()];
+            for (int i = 0, j = categoryViewList.size(); i < j; i++) {
+                trees[i] = Tree.root(categoryViewList.get(i));
             }
-            return categoryList.toArray(new Category[0]);
+            return categoryViewList.toArray(new CategoryView[0]);
         }
     }
 
     @Override
-    public Category find(String id) {
+    public CategoryView find(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
-        Category identifiable = Category.root(id, PLACEHOLDER);
-        for (Tree<Category> t : trees) {
+        CategoryView identifiable = CategoryView.identifiableCategoryView(id);
+        for (Tree<CategoryView> t : trees) {
             if (t.contain(identifiable)) return t.value(identifiable);
         }
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri from category where id=? limit 1";
+            final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri,\"right\" - \"left\" as distance from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, Long.parseLong(id));
             ResultSet rs = preparedStatement.executeQuery();
-            if (rs.next()) return rebuild(rs);
+            if (rs.next()) {
+                CategoryView view = rebuild(rs);
+                CategoryView parentIdentifiable = CategoryView.identifiableCategoryView(view.getParentId());
+                for (Tree<CategoryView> t : trees) {
+                    if (t.contain(parentIdentifiable)) {
+                        t.addChild(parentIdentifiable, view);
+                        break;
+                    }
+                }
+                return view;
+            }
         } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
             LOGGER.error("Can't rebuild category with (id = {})", id, e);
         }
         return null;
     }
 
-    private Category rebuild(ResultSet rs) throws SQLException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    private CategoryView rebuild(ResultSet rs) throws SQLException, InvocationTargetException, InstantiationException, IllegalAccessException {
         String id = rs.getString("id");
-        if (id.equals(Category.UNDEFINED.id())) return Category.UNDEFINED;
         String parentId = rs.getString("parent_id");
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
         String description = rs.getString("description");
         URI icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri"));
-        return new Category(parentId, id, name, description, icon);
+        boolean isLeaf = rs.getInt("distance") == 1 ? true : false;
+        return new CategoryView(parentId, id, name, description, icon, isLeaf);
     }
 
 
     @Override
-    public Category[] children(String id) {
-        return new Category[0];
+    public CategoryView[] children(String id) {
+        id = Objects.requireNonNull(id, "id required").trim();
+        CategoryView[] children = new CategoryView[0];
+        CategoryView identifiable = CategoryView.identifiableCategoryView(id);
+        for (Tree<CategoryView> tree : trees) {
+            if (tree.contain(identifiable)) {
+                if (tree.isLeaf(identifiable) && !tree.value(identifiable).isLeaf()) {
+                    children = queryAndFillChildren(id);
+                    for (CategoryView c : children)
+                        tree.addChild(identifiable, c);
+                }
+                children = tree.children(identifiable);
+                break;
+            }
+        }
+        return children;
+    }
+
+    private CategoryView[] queryAndFillChildren(String id) {
+        List<CategoryView> categoryViewList = new ArrayList<>();
+        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+            final String childrenSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri,\"right\" - \"left\" as distance from category where parent_id = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(childrenSql);
+            preparedStatement.setLong(1, Long.parseLong(id));
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                categoryViewList.add(rebuild(rs));
+            }
+        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            LOGGER.error("Can't rebuild category view", e);
+        }
+        return categoryViewList.toArray(new CategoryView[0]);
     }
 
     @Override
-    public Category[] descendants(String id) {
-        return new Category[0];
+    public CategoryView[] descendants(String id) {
+        id = Objects.requireNonNull(id, "id required").trim();
+        CategoryView[] descendants = new CategoryView[0];
+        CategoryView identifiable = CategoryView.identifiableCategoryView(id);
+        for (Tree<CategoryView> tree : trees) {
+            if (tree.contain(identifiable)) {
+                if (tree.isLeaf(identifiable) && !tree.value(identifiable).isLeaf()) {
+                    queryAndFillDescendants(id, tree);
+                } else {
+                    descendants = tree.descendants(identifiable);
+                }
+                break;
+            }
+        }
+        return descendants;
+    }
+
+    public CategoryView[] queryAndFillDescendants(String id, Tree<CategoryView> tree) {
+        return new CategoryView[0];
     }
 
     @Override
-    public Category[] searchName(String regularExpression) {
-        return new Category[0];
+    public CategoryView[] searchName(String regularExpression) {
+        return new CategoryView[0];
     }
 
     @Override
-    public Category[] siblings(String id) {
-        return new Category[0];
+    public CategoryView[] siblings(String id) {
+        return new CategoryView[0];
     }
 
     @Override
-    public Category[] path(String id) {
-        return new Category[0];
+    public CategoryView[] path(String id) {
+        return new CategoryView[0];
     }
 
     @Override

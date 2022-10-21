@@ -16,40 +16,39 @@
 
 package catalog.hoprxi.core.application.query;
 
-import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.application.view.CategoryView;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2021-12-01
+ * @version 0.0.1 builder 2022-10-20
  */
 public interface CategoryQueryService {
-
-    Category[] root();
-
-    /**
-     * @param id
-     * @return
-     */
-    Category find(String id);
+    CategoryView[] root();
 
     /**
      * @param id
      * @return
      */
-    Category[] children(String id);
+    CategoryView find(String id);
+
+    /**
+     * @param id
+     * @return
+     */
+    CategoryView[] children(String id);
 
     /**
      * @param id
      * @return descendants
      */
-    Category[] descendants(String id);
+    CategoryView[] descendants(String id);
 
-    Category[] searchName(String regularExpression);
+    CategoryView[] searchName(String regularExpression);
 
-    Category[] siblings(String id);
+    CategoryView[] siblings(String id);
 
-    Category[] path(String id);
+    CategoryView[] path(String id);
 
     int depth(String id);
 }

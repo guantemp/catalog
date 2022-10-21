@@ -35,27 +35,18 @@ public class CategoryView {
     private String parentId;
     private URI icon;
     private boolean isLeaf;
-    private boolean hasSibling;
-    private int depth = 0;
 
-    public CategoryView(String parentId, String id, Name name, String description, URI icon, boolean isLeaf, boolean hasSibling) {
+    public CategoryView(String parentId, String id, Name name, String description, URI icon, boolean isLeaf) {
         this.id = Objects.requireNonNull(id, "id required");
         this.description = description;
         this.name = name;
         this.parentId = parentId;
         this.icon = icon;
         this.isLeaf = isLeaf;
-        this.hasSibling = hasSibling;
     }
 
-    public CategoryView(String parentId, String id, String name) {
-        this.id = Objects.requireNonNull(id, "id required");
-        this.name = Name.of(name);
-        this.parentId = parentId;
-    }
-
-    public static CategoryView createIdentifiableCategoryView(String id) {
-        return new CategoryView(id, id, PLACEHOLDER);
+    public static CategoryView identifiableCategoryView(String id) {
+        return new CategoryView(id, id, Name.of(PLACEHOLDER), null, null, true);
     }
 
     public boolean isRoot() {
@@ -102,14 +93,6 @@ public class CategoryView {
         isLeaf = leaf;
     }
 
-    public boolean isHasSibling() {
-        return hasSibling;
-    }
-
-    public void setHasSibling(boolean hasSibling) {
-        this.hasSibling = hasSibling;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -134,7 +117,6 @@ public class CategoryView {
                 .add("description='" + description + "'")
                 .add("icon=" + icon)
                 .add("isLeaf=" + isLeaf)
-                .add("hasSibling=" + hasSibling)
                 .toString();
     }
 }

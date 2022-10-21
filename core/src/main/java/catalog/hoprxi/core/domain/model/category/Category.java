@@ -230,7 +230,7 @@ public class Category {
     }
 
     public CategoryView toView() {
-        return new CategoryView(parentId, id, name, description, icon, false, false);
+        return new CategoryView(parentId, id, name, description, icon, false);
     }
 
     @Override

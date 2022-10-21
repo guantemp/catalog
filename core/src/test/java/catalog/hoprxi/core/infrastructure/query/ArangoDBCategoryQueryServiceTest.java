@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query;
 
-import catalog.hoprxi.core.application.query.CategoryViewQueryService;
+import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
  * @version 0.0.1 builder 2021-12-03
  */
 public class ArangoDBCategoryQueryServiceTest {
-    private final CategoryViewQueryService query = new ArangoDBCategoryQueryService("catalog");
+    private final CategoryQueryService query = new ArangoDBCategoryQueryService("catalog");
 
     @Test(invocationCount = 1)
     public void testRoot() {
@@ -47,7 +47,7 @@ public class ArangoDBCategoryQueryServiceTest {
         sub = query.children("leisure_food");
         Assert.assertEquals(2, sub.length);
         //测试新对象持有同一个缓存tree
-        CategoryViewQueryService multiple = new ArangoDBCategoryQueryService("catalog");
+        CategoryQueryService multiple = new ArangoDBCategoryQueryService("catalog");
         sub = multiple.children("oil");
         Assert.assertEquals(7, sub.length);
         sub = multiple.children("flour");

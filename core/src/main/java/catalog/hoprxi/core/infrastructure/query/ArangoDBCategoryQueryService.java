@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query;
 
-import catalog.hoprxi.core.application.query.CategoryViewQueryService;
+import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.ArangoDBUtil;
@@ -42,7 +42,7 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-03-21
  */
-public class ArangoDBCategoryQueryService implements CategoryViewQueryService {
+public class ArangoDBCategoryQueryService implements CategoryQueryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBCategoryQueryService.class);
     private static final int DESCENDANT_DEPTH = 3;
     private static Tree<CategoryView>[] trees;
@@ -90,7 +90,7 @@ public class ArangoDBCategoryQueryService implements CategoryViewQueryService {
     @Override
     public CategoryView find(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
-        CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
+        CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
             if (t.contain(identifiable))
                 return t.value(identifiable);
@@ -103,7 +103,7 @@ public class ArangoDBCategoryQueryService implements CategoryViewQueryService {
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, VPackSlice.class);
         if (slices.hasNext()) {
             identifiable = rebuild(slices.next());
-            CategoryView parent = CategoryView.createIdentifiableCategoryView(identifiable.getParentId());
+            CategoryView parent = CategoryView.identifiableCategoryView(identifiable.getParentId());
             for (Tree<CategoryView> t : trees)
                 if (t.contain(parent)) {
                     t.addChild(parent, identifiable);
@@ -118,7 +118,7 @@ public class ArangoDBCategoryQueryService implements CategoryViewQueryService {
     public CategoryView[] children(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         CategoryView[] children = new CategoryView[0];
-        CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
+        CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
             if (t.contain(identifiable)) {
                 if (!t.value(identifiable).isLeaf()) {
@@ -149,7 +149,7 @@ public class ArangoDBCategoryQueryService implements CategoryViewQueryService {
     public CategoryView[] descendants(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         CategoryView[] descendants = new CategoryView[0];
-        CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
+        CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
             if (t.contain(identifiable)) {
                 if (!t.value(identifiable).isLeaf()) {
@@ -174,7 +174,7 @@ public class ArangoDBCategoryQueryService implements CategoryViewQueryService {
         ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, VPackSlice.class);
         CategoryView[] categoryViews = transform(cursor);
         for (CategoryView v : categoryViews) {
-            t.addChild(CategoryView.createIdentifiableCategoryView(v.getParentId()), v);
+            t.addChild(CategoryView.identifiableCategoryView(v.getParentId()), v);
             try {
                 Field depth = v.getClass().getDeclaredField("depth");
                 depth.setAccessible(true);
@@ -192,7 +192,7 @@ public class ArangoDBCategoryQueryService implements CategoryViewQueryService {
     public CategoryView[] siblings(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         CategoryView[] siblings = new CategoryView[0];
-        CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
+        CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
             if (t.contain(identifiable)) {
                 siblings = t.siblings(identifiable);
@@ -206,7 +206,7 @@ public class ArangoDBCategoryQueryService implements CategoryViewQueryService {
                     ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
                     siblings = transform(cursor);
                     for (CategoryView s : siblings)
-                        t.addChild(CategoryView.createIdentifiableCategoryView(s.getParentId()), s);
+                        t.addChild(CategoryView.identifiableCategoryView(s.getParentId()), s);
                     siblings = t.siblings(identifiable);
                     break;
                 }
@@ -230,7 +230,7 @@ public class ArangoDBCategoryQueryService implements CategoryViewQueryService {
     public CategoryView[] path(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         CategoryView[] path = new CategoryView[0];
-        CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
+        CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
             if (t.contain(identifiable)) {
                 path = t.path(identifiable);
@@ -243,7 +243,7 @@ public class ArangoDBCategoryQueryService implements CategoryViewQueryService {
                     ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
                     path = transform(cursor);
                     for (int i = path.length - 1; i >= 0; i--) {
-                        t.addChild(CategoryView.createIdentifiableCategoryView(path[i].getParentId()), path[i]);
+                        t.addChild(CategoryView.identifiableCategoryView(path[i].getParentId()), path[i]);
                     }
                     path = t.path(identifiable);
                 }
@@ -254,7 +254,7 @@ public class ArangoDBCategoryQueryService implements CategoryViewQueryService {
 
     @Override
     public int depth(String id) {
-        CategoryView identifiable = CategoryView.createIdentifiableCategoryView(id);
+        CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
             if (t.contain(identifiable))
                 return t.depth(identifiable);
@@ -290,7 +290,7 @@ public class ArangoDBCategoryQueryService implements CategoryViewQueryService {
         if (!slice.get("icon").isNull())
             icon = URI.create(slice.get("icon").getAsString());
         boolean isLeaf = slice.get("leaf").getAsBoolean();
-        CategoryView result = new CategoryView(parentId, id, name, description, icon, isLeaf, false);
+        CategoryView result = new CategoryView(parentId, id, name, description, icon, isLeaf);
         if (!slice.get("depth").isNone()) {
             try {
                 Field depth = result.getClass().getDeclaredField("depth");

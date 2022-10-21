@@ -14,13 +14,13 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.persistence.postgresql;
+package catalog.hoprxi.core.infrastructure.query.postgresql;
 
+import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
-import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
-import org.testng.Assert;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -29,10 +29,11 @@ import java.net.URI;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-09-26
+ * @version 0.0.1 builder 2022-10-21
  */
-public class PsqlCategoryRepositoryTest {
+public class PsqlCategoryQueryServiceTest {
     private static final CategoryRepository repository = new PsqlCategoryRepository("catalog");
+    private CategoryQueryService query = new PsqlCategoryQueryService("catalog");
 
     @BeforeClass
     public void beforeClass() {
@@ -105,11 +106,11 @@ public class PsqlCategoryRepositoryTest {
         //制品
         Category bread_cake = new Category("496796322118291493", "49581450261846020", new Name("面包/蛋糕", "bread_cake"));
         repository.save(bread_cake);
-        Category flour = new Category("496796322118291493", "49581450261846021", new Name("面粉", "flour"));
+        Category flour = new Category("496796322118291490", "49581450261846021", new Name("面粉", "flour"));
         repository.save(flour);
         Category instant_noodles = new Category("496796322118291493", "49581450261846022", new Name("方便面", "instant_noodles"), "是一种可在短时间之内用热水泡熟食用的面制食品。");
         repository.save(instant_noodles);
-        Category fine_dried_noodles = new Category("496796322118291493", "49581450261846023", new Name("挂面", "fine_dried_noodles"));
+        Category fine_dried_noodles = new Category("496796322118291490", "49581450261846023", new Name("挂面", "fine_dried_noodles"));
         repository.save(fine_dried_noodles);
         //调味品
         Category condiment = new Category("496796322118291457", "49581450261846035", new Name("调味品", "condiment"), "对谷类、豆类等粮食和油料及其加工成品和半成品的统称");
@@ -128,146 +129,37 @@ public class PsqlCategoryRepositoryTest {
         repository.save(salt);
         Category chicken_essence_monosodium_glutamate = new Category("49581450261846057", "49581450261846059", new Name("鸡精/味精", "chicken_essence_and_monosodium_glutamate"));
         repository.save(chicken_essence_monosodium_glutamate);
-    /*
-        Brand lancome = new Brand("lancome", "兰蔻");
-        Brand shiseido = new Brand("shiseido", "资生堂");
-        brandRepository.save(lancome);
-        brandRepository.save(shiseido);
-        SpecificationFamily families = new SpecificationFamily.Builder("品牌")
-                .with(new BrandSpecification(shiseido.toBrandDescriptor()))
-                .with(new BrandSpecification(lancome.toBrandDescriptor()))
-                .build();
-         */
-    }
-      /*
-        @AfterClass
-        public void afterClass() {
-            repository.remove("puffed_food");
-            repository.remove("dry_fruits");
-            repository.remove("leisure_food");
-            repository.remove("food");
-
-            repository.remove("wine");
-            repository.remove("Yellow_wine");
-            repository.remove("liquor");
-            repository.remove("beer");
-            repository.remove("drinks");
-
-            repository.remove("washing");
-             repository.remove("soap");
-              repository.remove(" washing_liquid");
-              repository.remove("oral_hygiene");
-            repository.remove("oral_hygiene");
-            repository.remove("clean");
-            repository.remove("hari");
-            repository.remove("cosmetics");
-            repository.remove("chemicals");
-
-            repository.remove("fine_dried_noodles");
-            repository.remove("instant_noodles");
-            repository.remove("bread_cake ");
-            repository.remove("flour");
-            repository.remove("blended_oil");
-            repository.remove("sunflower_seed_oil");
-            repository.remove("corn_oil ");
-            repository.remove("peanut_oil");
-            repository.remove("olive_oil");
-            repository.remove("soybean_oil");
-            repository.remove("rapeseed_oil");
-            repository.remove("rice_flour");
-            repository.remove("oil");
-            repository.remove("grain_and_oil_products");
-            repository.remove("grain_oil");
-
-            repository.remove("chicken_essence_and_monosodium_glutamate");
-            repository.remove("salt");
-            repository.remove("flavoring");
-            repository.remove("seasoning_oil");
-            repository.remove("vinegar");
-            repository.remove("soy_sauce");
-            repository.remove("sauce");
-            repository.remove("condiment");
-
-            repository.remove("meat");
-            repository.remove("fruit");
-            repository.remove("driedFish");
-            repository.remove("marineShrimp");
-            repository.remove("freshwaterOther ");
-            repository.remove("freshwaterCrabs");
-            repository.remove("freshwaterFish");
-            repository.remove("poultry");
-            repository.remove("pork");
-            repository.remove("cookedFood");
-            repository.remove("aquatic");
-            repository.remove("vegetables");
-            repository.remove("fresh");
-
-            repository.remove("root");
-            repository.remove(Category.UNDEFINED.id());
-        }
-    */
-
-    @Test
-    public void testFind() {
-        Category instant_noodles = repository.find("49581450261846022");
-        Assert.assertNotNull(instant_noodles);
-        Assert.assertNotNull(repository.find("496796322118291499"));//葵花籽油
-        Assert.assertNotNull(repository.find("496796322118291471"));//白酒
-        Assert.assertNull(repository.find("49581450261946041"));
-        //System.out.println(repository.find("49581450261846041"));
-    }
-
-    @Test
-    public void testNextIdentity() {
-        String id = repository.nextIdentity();
-        Assert.assertNotNull(id);
-    }
-
-    @Test(priority = 3)
-    public void testRemove() {
-        repository.remove("496796322118291493");
-        Assert.assertNull(repository.find("49581450261846020"));
-        Assert.assertNull(repository.find("49581450261846022"));
     }
 
     @Test
     public void testRoot() {
-        Category[] roots = repository.root();
-        Assert.assertEquals(2, roots.length);
     }
 
-    @Test(priority = 1, expectedExceptions = InvalidCategoryIdException.class)
-    public void testSave() {
-        Category beer = repository.find("496796322118291488");
-        Assert.assertEquals(beer.parentId(), "496796322118291482");//washing
-        beer.moveTo("496796322118291470");//drinks
-        repository.save(beer);
-        beer = repository.find("496796322118291488");
-        Assert.assertEquals(beer.parentId(), "496796322118291470");//drinks
-        Assert.assertEquals(beer.name().name(), "个人保健用卫生制剂");
+    @Test
+    public void testFind() {
+    }
 
-        beer.rename("      啤酒    ", null);
-        beer.changeDescription("是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
-        beer.rename(null, "杂皮");
-        repository.save(beer);
-        beer = repository.find("496796322118291488");
-        Assert.assertEquals(beer.description(), "是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
-        Assert.assertEquals(beer.name().name(), "啤酒");
+    @Test
+    public void testChildren() {
+    }
 
-        Category leisure_food = repository.find("496796322118291461");
-        Assert.assertNotNull(leisure_food);
-        leisure_food.changeDescription(null);
-        leisure_food.changeIcon(URI.create("https://gitee.com/static/images/logo-black.svg?t=158106664"));
-        //System.out.println(leisure_food);
-        repository.save(leisure_food);
-        leisure_food = repository.find("496796322118291461");
-        Assert.assertNull(leisure_food.description());
+    @Test
+    public void testDescendants() {
+    }
 
-        Category flavoring = repository.find("49581450261846057");//调味料
-        flavoring.moveTo("49581450261846040");//调味汁
-        repository.save(flavoring);
+    @Test
+    public void testSearchName() {
+    }
 
-        //异常必须要最后，后面语句不会被执行
-        beer.moveTo("12458763225");
+    @Test
+    public void testSiblings() {
+    }
+
+    @Test
+    public void testPath() {
+    }
+
+    @Test
+    public void testDepth() {
     }
 }
