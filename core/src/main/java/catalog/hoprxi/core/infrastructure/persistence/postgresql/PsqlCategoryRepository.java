@@ -64,6 +64,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
 
     @Override
     public Category find(String id) {
+        id = Objects.requireNonNull(id, "id required").trim();
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
@@ -97,6 +98,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
 
     @Override
     public void remove(String id) {
+        id = Objects.requireNonNull(id, "id required").trim();
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             final String removeSql = "select \"left\",\"right\",root_id from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);

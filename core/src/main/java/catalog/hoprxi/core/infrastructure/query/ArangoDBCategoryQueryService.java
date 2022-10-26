@@ -106,7 +106,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
             CategoryView parent = CategoryView.identifiableCategoryView(identifiable.getParentId());
             for (Tree<CategoryView> t : trees)
                 if (t.contain(parent)) {
-                    t.addChild(parent, identifiable);
+                    t.append(parent, identifiable);
                     break;
                 }
             return identifiable;
@@ -127,7 +127,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                         children = queryChildren(id);
                     }
                     for (CategoryView c : children)
-                        t.addChild(identifiable, c);
+                        t.append(identifiable, c);
                     break;
                 }
             }
@@ -174,7 +174,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, VPackSlice.class);
         CategoryView[] categoryViews = transform(cursor);
         for (CategoryView v : categoryViews) {
-            t.addChild(CategoryView.identifiableCategoryView(v.getParentId()), v);
+            t.append(CategoryView.identifiableCategoryView(v.getParentId()), v);
             try {
                 Field depth = v.getClass().getDeclaredField("depth");
                 depth.setAccessible(true);
@@ -206,7 +206,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                     ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
                     siblings = transform(cursor);
                     for (CategoryView s : siblings)
-                        t.addChild(CategoryView.identifiableCategoryView(s.getParentId()), s);
+                        t.append(CategoryView.identifiableCategoryView(s.getParentId()), s);
                     siblings = t.siblings(identifiable);
                     break;
                 }
@@ -243,7 +243,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                     ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
                     path = transform(cursor);
                     for (int i = path.length - 1; i >= 0; i--) {
-                        t.addChild(CategoryView.identifiableCategoryView(path[i].getParentId()), path[i]);
+                        t.append(CategoryView.identifiableCategoryView(path[i].getParentId()), path[i]);
                     }
                     path = t.path(identifiable);
                 }

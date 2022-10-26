@@ -107,7 +107,7 @@ public class PsqlCategoryQueryService implements CategoryQueryService {
                 CategoryView parentIdentifiable = CategoryView.identifiableCategoryView(view.getParentId());
                 for (Tree<CategoryView> t : trees) {
                     if (t.contain(parentIdentifiable)) {
-                        t.addChild(parentIdentifiable, view);
+                        t.append(parentIdentifiable, view);
                         break;
                     }
                 }
@@ -140,7 +140,7 @@ public class PsqlCategoryQueryService implements CategoryQueryService {
                 if (tree.isLeaf(identifiable) && !tree.value(identifiable).isLeaf()) {
                     children = queryAndFillChildren(id);
                     for (CategoryView c : children)
-                        tree.addChild(identifiable, c);
+                        tree.append(identifiable, c);
                 }
                 children = tree.children(identifiable);
                 break;

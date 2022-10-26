@@ -21,6 +21,7 @@ import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -139,73 +140,58 @@ public class PsqlCategoryRepositoryTest {
                 .build();
          */
     }
-      /*
-        @AfterClass
-        public void afterClass() {
-            repository.remove("puffed_food");
-            repository.remove("dry_fruits");
-            repository.remove("leisure_food");
-            repository.remove("food");
 
-            repository.remove("wine");
-            repository.remove("Yellow_wine");
-            repository.remove("liquor");
-            repository.remove("beer");
-            repository.remove("drinks");
+    @AfterClass
+    public void afterClass() {
+        repository.remove("49581450261846059");
+        repository.remove("49581450261846058");
+        repository.remove("49581450261846057");
+        repository.remove("49581450261846043");
+        repository.remove("49581450261846042");
+        repository.remove("49581450261846041");
+        repository.remove("49581450261846040");
+        repository.remove(" 49581450261846035");
 
-            repository.remove("washing");
-             repository.remove("soap");
-              repository.remove(" washing_liquid");
-              repository.remove("oral_hygiene");
-            repository.remove("oral_hygiene");
-            repository.remove("clean");
-            repository.remove("hari");
-            repository.remove("cosmetics");
-            repository.remove("chemicals");
+        repository.remove("49581450261846023");
+        repository.remove("49581450261846022");
+        repository.remove("49581450261846021");
+        repository.remove("49581450261846020");
 
-            repository.remove("fine_dried_noodles");
-            repository.remove("instant_noodles");
-            repository.remove("bread_cake ");
-            repository.remove("flour");
-            repository.remove("blended_oil");
-            repository.remove("sunflower_seed_oil");
-            repository.remove("corn_oil ");
-            repository.remove("peanut_oil");
-            repository.remove("olive_oil");
-            repository.remove("soybean_oil");
-            repository.remove("rapeseed_oil");
-            repository.remove("rice_flour");
-            repository.remove("oil");
-            repository.remove("grain_and_oil_products");
-            repository.remove("grain_oil");
+        repository.remove("496796322118291700");
+        repository.remove("496796322118291499");
+        repository.remove("496796322118291498");
+        repository.remove("496796322118291497");
+        repository.remove("496796322118291496");
+        repository.remove("496796322118291495");
+        repository.remove("496796322118291494");
+        repository.remove("496796322118291493");
+        repository.remove("496796322118291492");
+        repository.remove("496796322118291491");
+        repository.remove("496796322118291490");
 
-            repository.remove("chicken_essence_and_monosodium_glutamate");
-            repository.remove("salt");
-            repository.remove("flavoring");
-            repository.remove("seasoning_oil");
-            repository.remove("vinegar");
-            repository.remove("soy_sauce");
-            repository.remove("sauce");
-            repository.remove("condiment");
+        repository.remove("496796322118291488");
+        repository.remove("496796322118291487");
+        repository.remove("496796322118291486");
+        repository.remove("496796322118291485");
+        repository.remove("496796322118291484");
+        repository.remove("496796322118291483");
+        repository.remove("496796322118291482");
+        repository.remove("496796322118291481");
+        repository.remove("496796322118291480");
 
-            repository.remove("meat");
-            repository.remove("fruit");
-            repository.remove("driedFish");
-            repository.remove("marineShrimp");
-            repository.remove("freshwaterOther ");
-            repository.remove("freshwaterCrabs");
-            repository.remove("freshwaterFish");
-            repository.remove("poultry");
-            repository.remove("pork");
-            repository.remove("cookedFood");
-            repository.remove("aquatic");
-            repository.remove("vegetables");
-            repository.remove("fresh");
+        repository.remove("496796322118291473");
+        repository.remove("496796322118291472");
+        repository.remove("496796322118291471");
+        repository.remove("496796322118291470");
 
-            repository.remove("root");
-            repository.remove(Category.UNDEFINED.id());
-        }
-    */
+        repository.remove("496796322118291463");
+        repository.remove("496796322118291462");
+        repository.remove("496796322118291461");
+        repository.remove("496796322118291460");
+
+        repository.remove(" 496796322118291457");
+        repository.remove(Category.UNDEFINED.id());
+    }
 
     @Test
     public void testFind() {

@@ -21,6 +21,7 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -106,11 +107,11 @@ public class PsqlCategoryQueryServiceTest {
         //制品
         Category bread_cake = new Category("496796322118291493", "49581450261846020", new Name("面包/蛋糕", "bread_cake"));
         repository.save(bread_cake);
-        Category flour = new Category("496796322118291490", "49581450261846021", new Name("面粉", "flour"));
+        Category flour = new Category("496796322118291493", "49581450261846021", new Name("面粉", "flour"));
         repository.save(flour);
         Category instant_noodles = new Category("496796322118291493", "49581450261846022", new Name("方便面", "instant_noodles"), "是一种可在短时间之内用热水泡熟食用的面制食品。");
         repository.save(instant_noodles);
-        Category fine_dried_noodles = new Category("496796322118291490", "49581450261846023", new Name("挂面", "fine_dried_noodles"));
+        Category fine_dried_noodles = new Category("496796322118291493", "49581450261846023", new Name("挂面", "fine_dried_noodles"));
         repository.save(fine_dried_noodles);
         //调味品
         Category condiment = new Category("496796322118291457", "49581450261846035", new Name("调味品", "condiment"), "对谷类、豆类等粮食和油料及其加工成品和半成品的统称");
@@ -129,6 +130,58 @@ public class PsqlCategoryQueryServiceTest {
         repository.save(salt);
         Category chicken_essence_monosodium_glutamate = new Category("49581450261846057", "49581450261846059", new Name("鸡精/味精", "chicken_essence_and_monosodium_glutamate"));
         repository.save(chicken_essence_monosodium_glutamate);
+    }
+
+    @AfterClass
+    public void afterClass() {
+        repository.remove("49581450261846059");
+        repository.remove("49581450261846058");
+        repository.remove("49581450261846057");
+        repository.remove("49581450261846043");
+        repository.remove("49581450261846042");
+        repository.remove("49581450261846041");
+        repository.remove("49581450261846040");
+        repository.remove(" 49581450261846035");
+
+        repository.remove("49581450261846023");
+        repository.remove("49581450261846022");
+        repository.remove("49581450261846021");
+        repository.remove("49581450261846020");
+
+        repository.remove("496796322118291700");
+        repository.remove("496796322118291499");
+        repository.remove("496796322118291498");
+        repository.remove("496796322118291497");
+        repository.remove("496796322118291496");
+        repository.remove("496796322118291495");
+        repository.remove("496796322118291494");
+        repository.remove("496796322118291493");
+        repository.remove("496796322118291492");
+        repository.remove("496796322118291491");
+        repository.remove("496796322118291490");
+
+        repository.remove("496796322118291488");
+        repository.remove("496796322118291487");
+        repository.remove("496796322118291486");
+        repository.remove("496796322118291485");
+        repository.remove("496796322118291484");
+        repository.remove("496796322118291483");
+        repository.remove("496796322118291482");
+        repository.remove("496796322118291481");
+        repository.remove("496796322118291480");
+
+        repository.remove("496796322118291473");
+        repository.remove("496796322118291472");
+        repository.remove("496796322118291471");
+        repository.remove("496796322118291470");
+
+        repository.remove("496796322118291463");
+        repository.remove("496796322118291462");
+        repository.remove("496796322118291461");
+        repository.remove("496796322118291460");
+
+        repository.remove(" 496796322118291457");
+        repository.remove(Category.UNDEFINED.id());
     }
 
     @Test
