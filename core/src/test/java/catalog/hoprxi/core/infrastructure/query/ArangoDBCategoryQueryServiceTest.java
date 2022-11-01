@@ -18,6 +18,7 @@ package catalog.hoprxi.core.infrastructure.query;
 
 import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
+import catalog.hoprxi.core.domain.model.category.Category;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -54,11 +55,11 @@ public class ArangoDBCategoryQueryServiceTest {
         Assert.assertEquals(0, sub.length);
     }
 
-    @Test(priority = 3, invocationCount = 2)
+    @Test(invocationCount = 4, priority = 3, threadPoolSize = 1)
     public void testFind() {
         CategoryView root = query.find("root");
         Assert.assertTrue(root.isRoot());
-        root = query.find(" undefined");
+        root = query.find(Category.UNDEFINED.id());
         Assert.assertTrue(root.isRoot());
         CategoryView grain_oil = query.find("grain_oil");
         Assert.assertNotNull(grain_oil);

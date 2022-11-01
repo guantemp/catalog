@@ -14,22 +14,21 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.scale.infrastructure.persistence;
-
+package catalog.hoprxi.core.infrastructure;
 
 import org.testng.annotations.Test;
 
+import java.sql.SQLException;
+
 /***
- * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019/10/25
+ * @version 0.0.1 builder 2022-08-25
  */
-public class ScaleSetupTest {
+public class PsqlSetupTest {
 
     @Test
-    public void setup() {
-        ScaleSetup.setup("catalog");
-        ScaleSetup.createCategory();
-        //System.out.println((Locale.getDefault()==Locale.CHINA));
+    public void testSetup() throws SQLException {
+        PsqlSetup.setup("catalog");
     }
 }

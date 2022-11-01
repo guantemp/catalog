@@ -14,31 +14,12 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure;
-
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
-import java.sql.SQLException;
+package catalog.hoprxi.core.application.batch;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2022-11-01
  */
-public class Setup {
-    private static final Config config = ConfigFactory.load("database");
-
-    public static void setup() throws SQLException {
-        String provider = config.hasPath("provider") ? config.getString("provider") : "postgresql";
-        switch ((provider)) {
-            case "postgresql":
-                PsqlSetup.setup("catalog");
-                break;
-            case "arangodb":
-                ArangoDBSetup.setup("catalog");
-                break;
-        }
-
-    }
+public interface ItemBatchImportService {
 }

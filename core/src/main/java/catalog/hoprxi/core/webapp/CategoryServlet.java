@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2022-04-18
  */
 @WebServlet(urlPatterns = {"v1/categories/*"}, name = "categories", asyncSupported = true, initParams = {
-        @WebInitParam(name = "database", value = "arangodb"), @WebInitParam(name = "databaseName", value = "catalog")})
+        @WebInitParam(name = "provider", value = "arangodb"), @WebInitParam(name = "databaseName", value = "catalog")})
 public class CategoryServlet extends HttpServlet {
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
     private static final CategoryAppService APP_SERVICE = new CategoryAppService();

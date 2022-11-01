@@ -20,6 +20,8 @@ import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
+import event.hoprxi.domain.model.DomainEvent;
+import event.hoprxi.domain.model.DomainEventSubscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import salt.hoprxi.cache.application.Tree;
@@ -40,8 +42,7 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-10-20
  */
-public class PsqlCategoryQueryService implements CategoryQueryService {
-    private static final String PLACEHOLDER = "placeholder";
+public class PsqlCategoryQueryService implements CategoryQueryService, DomainEventSubscriber {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlCategoryQueryService.class);
     private static Tree<CategoryView>[] trees;
     private static Constructor<Name> nameConstructor;
@@ -95,7 +96,9 @@ public class PsqlCategoryQueryService implements CategoryQueryService {
         id = Objects.requireNonNull(id, "id required").trim();
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
-            if (t.contain(identifiable)) return t.value(identifiable);
+            if (t.contain(identifiable)) {
+                return t.value(identifiable);
+            }
         }
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri,\"right\" - \"left\" as distance from category where id=? limit 1";
@@ -138,9 +141,7 @@ public class PsqlCategoryQueryService implements CategoryQueryService {
         for (Tree<CategoryView> tree : trees) {
             if (tree.contain(identifiable)) {
                 if (tree.isLeaf(identifiable) && !tree.value(identifiable).isLeaf()) {
-                    children = queryAndFillChildren(id);
-                    for (CategoryView c : children)
-                        tree.append(identifiable, c);
+                    queryAndFillChildren(tree, identifiable, id);
                 }
                 children = tree.children(identifiable);
                 break;
@@ -149,20 +150,19 @@ public class PsqlCategoryQueryService implements CategoryQueryService {
         return children;
     }
 
-    private CategoryView[] queryAndFillChildren(String id) {
-        List<CategoryView> categoryViewList = new ArrayList<>();
+    private void queryAndFillChildren(Tree<CategoryView> tree, CategoryView parent, String id) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             final String childrenSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri,\"right\" - \"left\" as distance from category where parent_id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(childrenSql);
             preparedStatement.setLong(1, Long.parseLong(id));
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()) {
-                categoryViewList.add(rebuild(rs));
+                CategoryView view = rebuild(rs);
+                tree.append(parent, view);
             }
         } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
             LOGGER.error("Can't rebuild category view", e);
         }
-        return categoryViewList.toArray(new CategoryView[0]);
     }
 
     @Override
@@ -173,18 +173,36 @@ public class PsqlCategoryQueryService implements CategoryQueryService {
         for (Tree<CategoryView> tree : trees) {
             if (tree.contain(identifiable)) {
                 if (tree.isLeaf(identifiable) && !tree.value(identifiable).isLeaf()) {
-                    queryAndFillDescendants(id, tree);
-                } else {
-                    descendants = tree.descendants(identifiable);
+                    queryAndFillDescendants(tree, id);
                 }
+                descendants = tree.descendants(identifiable);
                 break;
             }
         }
         return descendants;
     }
 
-    public CategoryView[] queryAndFillDescendants(String id, Tree<CategoryView> tree) {
-        return new CategoryView[0];
+    public void queryAndFillDescendants(Tree<CategoryView> tree, String id) {
+        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+            final String descendantsSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri,\"right\" - \"left\" as distance from category \n" +
+                    "where root_id = (select root_id from category where id = ?)\n" +
+                    "  and \"left\" >= (select \"left\" from category where id = ?)\n" +
+                    "  and \"right\" <= (select \"right\" from category where id = ?)\n" +
+                    "order by \"left\"";
+            System.out.println(descendantsSql);
+            PreparedStatement preparedStatement = connection.prepareStatement(descendantsSql);
+            long sqlId = Long.parseLong(id);
+            preparedStatement.setLong(1, sqlId);
+            preparedStatement.setLong(2, sqlId);
+            preparedStatement.setLong(3, sqlId);
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                CategoryView view = rebuild(rs);
+                tree.append(CategoryView.identifiableCategoryView(view.getParentId()), view);
+            }
+        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            LOGGER.error("Can't rebuild category view", e);
+        }
     }
 
     @Override
@@ -205,5 +223,15 @@ public class PsqlCategoryQueryService implements CategoryQueryService {
     @Override
     public int depth(String id) {
         return 0;
+    }
+
+    @Override
+    public void handleEvent(DomainEvent domainEvent) {
+
+    }
+
+    @Override
+    public Class subscribedToEventType() {
+        return null;
     }
 }

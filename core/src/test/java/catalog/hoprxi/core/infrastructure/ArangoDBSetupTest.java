@@ -18,17 +18,15 @@ package catalog.hoprxi.core.infrastructure;
 
 import org.testng.annotations.Test;
 
-import java.sql.SQLException;
-
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-08-25
+ * @version 0.0.1 builder 2022-11-01
  */
-public class SetupTest {
+public class ArangoDBSetupTest {
 
     @Test
-    public void testSetup() throws SQLException {
-        Setup.setup("catalog");
+    public void testSetup() {
+        ArangoDBSetup.setup("catalog");
     }
 }

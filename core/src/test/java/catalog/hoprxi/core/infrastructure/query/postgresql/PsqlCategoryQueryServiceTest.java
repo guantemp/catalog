@@ -17,11 +17,12 @@
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
 import catalog.hoprxi.core.application.query.CategoryQueryService;
+import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
-import org.testng.annotations.AfterClass;
+import org.junit.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -34,7 +35,6 @@ import java.net.URI;
  */
 public class PsqlCategoryQueryServiceTest {
     private static final CategoryRepository repository = new PsqlCategoryRepository("catalog");
-    private CategoryQueryService query = new PsqlCategoryQueryService("catalog");
 
     @BeforeClass
     public void beforeClass() {
@@ -131,7 +131,7 @@ public class PsqlCategoryQueryServiceTest {
         Category chicken_essence_monosodium_glutamate = new Category("49581450261846057", "49581450261846059", new Name("鸡精/味精", "chicken_essence_and_monosodium_glutamate"));
         repository.save(chicken_essence_monosodium_glutamate);
     }
-
+/*
     @AfterClass
     public void afterClass() {
         repository.remove("49581450261846059");
@@ -184,20 +184,61 @@ public class PsqlCategoryQueryServiceTest {
         repository.remove(Category.UNDEFINED.id());
     }
 
-    @Test
+ */
+
+    @Test(invocationCount = 2, threadPoolSize = 2)
     public void testRoot() {
+        CategoryQueryService query = new PsqlCategoryQueryService("catalog");
+        Assert.assertEquals(2, query.root().length);
     }
 
-    @Test
+    @Test(invocationCount = 4, threadPoolSize = 1, dependsOnMethods = {"testDescendants"})
     public void testFind() {
+        CategoryQueryService query = new PsqlCategoryQueryService("catalog");
+        CategoryView root = query.find("496796322118291457");
+        Assert.assertTrue(root.isRoot());
+        root = query.find(Category.UNDEFINED.id());
+        Assert.assertTrue(root.isRoot());
+        CategoryView grain_oil = query.find("496796322118291490");//grain_oil
+        Assert.assertNotNull(grain_oil);
+        CategoryView oil = query.find("496796322118291492");//oil
+        Assert.assertNotNull(oil);
+        CategoryView corn_oil = query.find("496796322118291497");//corn_oil
+        Assert.assertNotNull(corn_oil);
+        CategoryView sunflower_seed_oil = query.find("496796322118291499");//sunflower_seed_oil
+        Assert.assertNotNull(sunflower_seed_oil);
     }
 
-    @Test
+    @Test(invocationCount = 4, threadPoolSize = 1, dependsOnMethods = {"testDescendants"})
     public void testChildren() {
+        CategoryQueryService query = new PsqlCategoryQueryService("catalog");
+        CategoryView[] sub = query.children("496796322118291457");//root
+        Assert.assertEquals(5, sub.length);
+        sub = query.children("496796322118291460");//food
+        Assert.assertEquals(1, sub.length);
+        sub = query.children("496796322118291490");//grand_oil
+        Assert.assertEquals(3, sub.length);
+        sub = query.children("496796322118291492");//oil
+        Assert.assertEquals(7, sub.length);
+        sub = query.children("496796322118291461");//leisure_food
+        Assert.assertEquals(2, sub.length);
     }
 
-    @Test
+    @Test(invocationCount = 1, priority = 1, dependsOnMethods = {"testRoot"})
     public void testDescendants() {
+        CategoryQueryService query = new PsqlCategoryQueryService("catalog");
+        CategoryView[] descendants = query.descendants("496796322118291457");//root
+        Assert.assertEquals(40, descendants.length);
+        descendants = query.descendants("496796322118291490");//grand_oil
+        Assert.assertEquals(14, descendants.length);
+        descendants = query.descendants("496796322118291492");//oil
+        Assert.assertEquals(7, descendants.length);
+        //for (CategoryView c : descendants)
+        //System.out.println("descendants:" + c);
+        descendants = query.descendants(" 496796322118291480");//chemicals
+        Assert.assertEquals(8, descendants.length);
+        descendants = query.descendants(" 123456");
+        Assert.assertEquals(0, descendants.length);
     }
 
     @Test

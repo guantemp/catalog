@@ -33,8 +33,8 @@ import java.util.Collection;
  * @version 0.0.3 2019-05-04
  */
 
-public class CoreSetup {
-    private static final Logger logger = LoggerFactory.getLogger(CoreSetup.class);
+public class ArangoDBSetup {
+    private static final Logger logger = LoggerFactory.getLogger(ArangoDBSetup.class);
 
     public static void setup(String databaseName) {
         ArangoDB arangoDB = ArangoDBUtil.getResource();
