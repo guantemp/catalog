@@ -77,7 +77,7 @@ public class PsqlCategoryQueryServiceTest {
         repository.save(clean);
         Category hari = new Category("496796322118291480", "496796322118291487", "洗/护发用品");
         repository.save(hari);
-        //will move to drinks sub and rename
+        //one error alias chemicals
         Category beer = new Category("496796322118291482", "496796322118291488", new Name("      个人保健用卫生制剂", "beer"));
         repository.save(beer);
         //粮油
@@ -186,7 +186,7 @@ public class PsqlCategoryQueryServiceTest {
 
  */
 
-    @Test(invocationCount = 2, threadPoolSize = 2)
+    @Test(invocationCount = 2, threadPoolSize = 1)
     public void testRoot() {
         CategoryQueryService query = new PsqlCategoryQueryService("catalog");
         Assert.assertEquals(2, query.root().length);
@@ -224,7 +224,7 @@ public class PsqlCategoryQueryServiceTest {
         Assert.assertEquals(2, sub.length);
     }
 
-    @Test(invocationCount = 1, priority = 1, dependsOnMethods = {"testRoot"})
+    @Test(invocationCount = 2, priority = 1, dependsOnMethods = {"testRoot"})
     public void testDescendants() {
         CategoryQueryService query = new PsqlCategoryQueryService("catalog");
         CategoryView[] descendants = query.descendants("496796322118291457");//root
@@ -241,16 +241,43 @@ public class PsqlCategoryQueryServiceTest {
         Assert.assertEquals(0, descendants.length);
     }
 
-    @Test
+    @Test(dependsOnMethods = {"testDescendants"})
     public void testSearchName() {
+        CategoryQueryService query = new PsqlCategoryQueryService("catalog");
+        CategoryView[] result = query.searchName("\'oil\'");
+        for (CategoryView c : result)
+            System.out.println("search:" + c);
     }
 
-    @Test
+    @Test(dependsOnMethods = {"testDescendants"})
     public void testSiblings() {
+        CategoryQueryService query = new PsqlCategoryQueryService("catalog");
+        CategoryView[] siblings = query.siblings("496796322118291490");//grand_oil
+        Assert.assertEquals(4, siblings.length);
+        siblings = query.siblings("496796322118291492");//oil
+        Assert.assertEquals(2, siblings.length);
+        siblings = query.siblings("496796322118291497");//corn_oil
+        // for (CategoryView c : siblings)
+        //     System.out.println("sibling:" + c);
+        org.testng.Assert.assertEquals(6, siblings.length);
+        siblings = query.siblings("496796322118291457");//root
+        Assert.assertEquals(0, siblings.length);
     }
 
-    @Test
+    @Test(dependsOnMethods = {"testDescendants"})
     public void testPath() {
+        CategoryQueryService query = new PsqlCategoryQueryService("catalog");
+        CategoryView[] path = query.path("496796322118291494");//rapeseed_oil
+        Assert.assertEquals(4, path.length);
+        path = query.path("49581450261846022");//instant_noodles
+        Assert.assertEquals(4, path.length);
+        path = query.path("496796322118291471");//liquor
+        Assert.assertEquals(3, path.length);
+        path = query.path("496796322118291457");//root
+        Assert.assertEquals(1, path.length);
+        path = query.path("496796322118291494");
+        //for (CategoryView c : path)
+        // System.out.println("rapeseed_oil path:" + c);
     }
 
     @Test

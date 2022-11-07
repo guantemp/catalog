@@ -239,7 +239,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
                             "FOR c,subordinate IN INBOUND SHORTEST_PATH @startVertex TO @targetVertex GRAPH core\n" +
                             "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +
                             "RETURN {'_key':c._key,'parentId':c.parentId,'name':c.name,'description':c.description,'icon':c.icon.string,'leaf':SUB == []}";
-                    final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).put("startVertex", "category/" + t.root().getId()).get();
+                    final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "category/" + id).put("targetVertex", "category/" + t.root().getId()).get();
                     ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);
                     path = transform(cursor);
                     for (int i = path.length - 1; i >= 0; i--) {
