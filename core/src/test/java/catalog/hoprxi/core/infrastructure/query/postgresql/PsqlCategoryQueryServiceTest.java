@@ -244,7 +244,7 @@ public class PsqlCategoryQueryServiceTest {
     @Test(dependsOnMethods = {"testDescendants"})
     public void testSearchName() {
         CategoryQueryService query = new PsqlCategoryQueryService("catalog");
-        CategoryView[] result = query.searchName("\'oil\'");
+        CategoryView[] result = query.searchName("oil$");
         for (CategoryView c : result)
             System.out.println("search:" + c);
     }

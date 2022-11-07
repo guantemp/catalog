@@ -208,21 +208,21 @@ public class PsqlCategoryQueryService implements CategoryQueryService, DomainEve
     public CategoryView[] searchName(String regularExpression) {
         List<CategoryView> categoryViewList = new ArrayList<>();
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String searchSql = "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,logo_uri from category where name::jsonb ->> 'name' ~ ?\n" +
+            final String searchSql = "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,logo_uri,\"right\" - \"left\" as distance from category where name::jsonb ->> 'name' ~ ?\n" +
                     "union\n" +
-                    "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,logo_uri from category where name::jsonb ->> 'alias' ~ ?\n" +
+                    "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,logo_uri,\"right\" - \"left\" as distance from category where name::jsonb ->> 'alias' ~ ?\n" +
                     "union\n" +
-                    "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,logo_uri from category where name::jsonb ->> 'mnemonic' ~ ?";
+                    "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,logo_uri,\"right\" - \"left\" as distance from category where name::jsonb ->> 'mnemonic' ~ ?";
             PreparedStatement ps = connection.prepareStatement(searchSql);
             ps.setString(1, regularExpression);
             ps.setString(2, regularExpression);
             ps.setString(3, regularExpression);
-
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 categoryViewList.add(rebuild(rs));
             }
         } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            System.out.println(e);
             LOGGER.error("Can't rebuild category view", e);
         }
         return categoryViewList.toArray(new CategoryView[0]);
