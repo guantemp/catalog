@@ -24,6 +24,7 @@ import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
+import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 
 
 /***
@@ -43,14 +44,20 @@ public class ItemView {
     private MemberPrice memberPrice;
     private VipPrice vipPrice;
     private Specification spec;
+    private ShelfLife shelfLife;
 
     public ItemView(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade) {
+        this(id, barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY);
+    }
+
+    public ItemView(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife) {
         this.barcode = barcode;
         this.grade = grade;
         this.id = id;
         this.name = name;
         this.madeIn = madeIn;
         this.spec = spec;
+        this.shelfLife = shelfLife;
     }
 
     public Barcode barcode() {

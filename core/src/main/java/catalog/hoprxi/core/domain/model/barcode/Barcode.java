@@ -16,6 +16,7 @@
 package catalog.hoprxi.core.domain.model.barcode;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -51,5 +52,12 @@ public abstract class Barcode {
     @Override
     public int hashCode() {
         return barcode != null ? barcode.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Barcode.class.getSimpleName() + "[", "]")
+                .add("barcode=" + barcode)
+                .toString();
     }
 }

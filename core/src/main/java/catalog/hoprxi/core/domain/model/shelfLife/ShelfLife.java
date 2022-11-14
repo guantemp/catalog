@@ -25,8 +25,39 @@ import java.util.concurrent.TimeUnit;
  * @version 0.0.1 builder 2019-04-28
  */
 public class ShelfLife {
-    public final static ShelfLife SAME_DAY = new ShelfLife(0);
-    public final static ShelfLife THREE_DAY = new ShelfLife(3);
+    public final static ShelfLife SAME_DAY = new ShelfLife(0) {
+        @Override
+        public ShelfLife extend(int days) {
+            return this;
+        }
+
+        @Override
+        public ShelfLife reduce(int days) {
+            return this;
+        }
+    };
+    public final static ShelfLife THREE_DAY = new ShelfLife(3) {
+        @Override
+        public ShelfLife extend(int days) {
+            return this;
+        }
+
+        @Override
+        public ShelfLife reduce(int days) {
+            return this;
+        }
+    };
+    public final static ShelfLife PERMANENTLY = new ShelfLife(35640) {
+        @Override
+        public ShelfLife extend(int days) {
+            return this;
+        }
+
+        @Override
+        public ShelfLife reduce(int days) {
+            return this;
+        }
+    };
     private int days;
 
     public ShelfLife(int days) {
@@ -38,6 +69,8 @@ public class ShelfLife {
             return SAME_DAY;
         if (days == 3)
             return THREE_DAY;
+        if (days == 35640)
+            return PERMANENTLY;
         return new ShelfLife(days);
     }
 
@@ -46,12 +79,12 @@ public class ShelfLife {
     }
 
     public static ShelfLife createShelfLifeWithYear(int year) {
-        return new ShelfLife(year * 365);
+        return new ShelfLife(year * 360);
     }
 
     private void setDays(int days) {
-        if (days < 0)
-            throw new IllegalArgumentException("days larger zero");
+        if (days < 0 || days > 35640)
+            throw new IllegalArgumentException("Shelf life days 1-1095 days");
         this.days = days;
     }
 
@@ -61,6 +94,14 @@ public class ShelfLife {
 
     public int days() {
         return days;
+    }
+
+    public ShelfLife extend(int days) {
+        return rebuild(days);
+    }
+
+    public ShelfLife reduce(int days) {
+        return rebuild(days);
     }
 
     @Override

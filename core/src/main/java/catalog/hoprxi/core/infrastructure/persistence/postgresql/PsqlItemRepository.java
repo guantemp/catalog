@@ -23,6 +23,7 @@ import catalog.hoprxi.core.domain.model.madeIn.Domestic;
 import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
+import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import com.fasterxml.jackson.core.*;
 import org.javamoney.moneta.Money;
@@ -73,7 +74,7 @@ public class PsqlItemRepository implements ItemRepository {
     public Item find(String id) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             final String findSql = "select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,barcode,category_id," +
-                    "brand_id,grade,made_in,specs,retail_price::jsonb->>'number' as retail_price_number,retail_price::jsonb->>'currencyCode' as retail_price_currencyCode,retail_price::jsonb->>'unit' as retail_price_unit" +
+                    "brand_id,grade,made_in,specs,shelf_life,retail_price::jsonb->>'number' as retail_price_number,retail_price::jsonb->>'currencyCode' as retail_price_currencyCode,retail_price::jsonb->>'unit' as retail_price_unit" +
                     ",member_price::jsonb ->> 'name' as member_price_name, member_price::jsonb -> 'price' ->> 'number' as member_price_number, member_price::jsonb -> 'price' ->> 'currencyCode' as member_price_currencyCode, member_price::jsonb -> 'price' ->> 'unit' as member_price_unit" +
                     ", vip_price::jsonb ->> 'name' as vip_price_name, vip_price::jsonb -> 'price' ->> 'number' as vip_price_number, vip_price::jsonb -> 'price' ->> 'currencyCode' as vip_price_currencyCode, vip_price::jsonb -> 'price' ->> 'unit' as vip_price_unit " +
                     "from item where id=? limit 1";
@@ -98,6 +99,7 @@ public class PsqlItemRepository implements ItemRepository {
         Grade grade = Grade.valueOf(rs.getString("grade"));
         MadeIn madeIn = toMadeIn(rs.getString("made_in"));
         Specification spec = new Specification(rs.getString("specs"));
+        ShelfLife shelfLife = ShelfLife.rebuild(rs.getInt("shelf_life"));
         MonetaryAmount amount = Money.of(rs.getBigDecimal("retail_price_number"), rs.getString("retail_price_currencyCode"));
         Unit unit = Unit.valueOf(rs.getString("retail_price_unit"));
         RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
@@ -109,7 +111,7 @@ public class PsqlItemRepository implements ItemRepository {
         amount = Money.of(rs.getBigDecimal("vip_price_number"), rs.getString("vip_price_currencyCode"));
         unit = Unit.valueOf(rs.getString("vip_price_unit"));
         VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
-        return new Item(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, categoryId, brandId);
+        return new Item(id, barcode, name, madeIn, spec, grade, shelfLife, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
     private MadeIn toMadeIn(String json) throws IOException {
@@ -165,9 +167,9 @@ public class PsqlItemRepository implements ItemRepository {
     @Override
     public void save(Item item) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String replaceInto = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,specs,retail_price,member_price,vip_price) " +
-                    "values (?,?::jsonb,?,?,?,?::grade,?::jsonb,?,?::jsonb,?::jsonb,?::jsonb) " +
-                    "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,specs=?,retail_price=?::jsonb,member_price=?::jsonb,vip_price=?::jsonb";
+            final String replaceInto = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,specs,shelf_life,retail_price,member_price,vip_price) " +
+                    "values (?,?::jsonb,?,?,?,?::grade,?::jsonb,?,?,?::jsonb,?::jsonb,?::jsonb) " +
+                    "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,specs=?,shelf_life=?,retail_price=?::jsonb,member_price=?::jsonb,vip_price=?::jsonb";
             PreparedStatement ps = connection.prepareStatement(replaceInto);
             ps.setLong(1, Long.parseLong(item.id()));
             ps.setString(2, toJson(item.name()));
@@ -177,21 +179,24 @@ public class PsqlItemRepository implements ItemRepository {
             ps.setString(6, item.grade().name());
             ps.setString(7, toJson(item.madeIn()));
             ps.setString(8, item.spec().value());
-            ps.setString(9, toJson(item.retailPrice()));
-            ps.setString(10, toJson(item.memberPrice()));
-            ps.setString(11, toJson(item.vipPrice()));
-            ps.setString(12, toJson(item.name()));
-            ps.setString(13, String.valueOf(item.barcode().barcode()));
-            ps.setLong(14, Long.parseLong(item.categoryId()));
-            ps.setLong(15, Long.parseLong(item.brandId()));
-            ps.setString(16, item.grade().name());
-            ps.setString(17, toJson(item.madeIn()));
-            ps.setString(18, item.spec().value());
-            ps.setString(19, toJson(item.retailPrice()));
-            ps.setString(20, toJson(item.memberPrice()));
-            ps.setString(21, toJson(item.vipPrice()));
+            ps.setInt(9, item.shelfLife().days());
+            ps.setString(10, toJson(item.retailPrice()));
+            ps.setString(11, toJson(item.memberPrice()));
+            ps.setString(12, toJson(item.vipPrice()));
+            ps.setString(13, toJson(item.name()));
+            ps.setString(14, String.valueOf(item.barcode().barcode()));
+            ps.setLong(15, Long.parseLong(item.categoryId()));
+            ps.setLong(16, Long.parseLong(item.brandId()));
+            ps.setString(17, item.grade().name());
+            ps.setString(18, toJson(item.madeIn()));
+            ps.setString(19, item.spec().value());
+            ps.setInt(20, item.shelfLife().days());
+            ps.setString(21, toJson(item.retailPrice()));
+            ps.setString(22, toJson(item.memberPrice()));
+            ps.setString(23, toJson(item.vipPrice()));
             ps.executeUpdate();
         } catch (SQLException e) {
+            System.out.println(e);
             LOGGER.error("Can't save item{}", item, e);
         }
     }

@@ -25,6 +25,8 @@ import com.fasterxml.jackson.core.*;
 import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import salt.hoprxi.cache.Cache;
+import salt.hoprxi.cache.CacheFactory;
 import salt.hoprxi.id.LongId;
 
 import java.io.ByteArrayOutputStream;
@@ -49,6 +51,8 @@ public class PsqlBrandRepository implements BrandRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlBrandRepository.class);
     private static Constructor<Name> nameConstructor;
 
+    private static Cache<String, Brand> cache = CacheFactory.build("brand");
+
     static {
         try {
             nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
@@ -66,17 +70,21 @@ public class PsqlBrandRepository implements BrandRepository {
 
     @Override
     public Brand find(String id) {
-        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String findSql = "select id,name,about from brand where id=? limit 1";
-            PreparedStatement preparedStatement = connection.prepareStatement(findSql);
-            preparedStatement.setLong(1, Long.parseLong(id));
-            ResultSet rs = preparedStatement.executeQuery();
-            return rebuild(rs);
-        } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
-                 IllegalAccessException e) {
-            LOGGER.error("Can't rebuild brand with (id = {})", id, e);
+        Brand brand = cache.get(id);
+        if (brand == null) {
+            try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+                final String findSql = "select id,name,about from brand where id=? limit 1";
+                PreparedStatement preparedStatement = connection.prepareStatement(findSql);
+                preparedStatement.setLong(1, Long.parseLong(id));
+                ResultSet rs = preparedStatement.executeQuery();
+                brand = rebuild(rs);
+                cache.put(id, brand);
+            } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
+                     IllegalAccessException e) {
+                LOGGER.error("Can't rebuild brand with (id = {})", id, e);
+            }
         }
-        return null;
+        return brand;
     }
 
     private Brand rebuild(ResultSet resultSet) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {

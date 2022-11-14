@@ -25,6 +25,7 @@ import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.Unit;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
+import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.util.DomainRegistry;
 import com.arangodb.entity.DocumentField;
 import com.arangodb.velocypack.annotations.Expose;
@@ -52,6 +53,7 @@ public class Item {
     private MemberPrice memberPrice;
     private VipPrice vipPrice;
     private Specification spec;
+    private ShelfLife shelfLife;
 
     /**
      * @param id
@@ -60,23 +62,24 @@ public class Item {
      * @param madeIn
      * @param spec
      * @param grade
+     * @param shelfLife
      * @param retailPrice
      * @param memberPrice
      * @param vipPrice
      * @param categoryId
-     * @param brandId
+     * @param brandId     id of brand
      * @throws IllegalArgumentException if id is null or id length range not in [1-36]
      *                                  if name is null
      *                                  if madeIn is null
      */
-    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-                Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
+    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
         setMadeIn(madeIn);
         setSpecification(spec);
         setGrade(grade);
+        setShelfLife(shelfLife);
         setRetailPrice(retailPrice);
         setMemberPrice(memberPrice);
         setVipPrice(vipPrice);
@@ -84,9 +87,16 @@ public class Item {
         setBrandId(brandId);
     }
 
-    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-                Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
+    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
+        this(id, barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY, retailPrice, memberPrice, vipPrice, categoryId, brandId);
+    }
+
+    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
         this(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+    }
+
+    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, RetailPrice retailPrice) {
+        this(id, barcode, name, madeIn, spec, grade, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
     }
 
     private void setCategoryId(String categoryId) {
@@ -104,8 +114,7 @@ public class Item {
     }
 
     private void setSpecification(Specification spec) {
-        if (spec == null)
-            spec = Specification.UNDEFINED;
+        if (spec == null) spec = Specification.UNDEFINED;
         this.spec = spec;
     }
 
@@ -144,9 +153,13 @@ public class Item {
     }
 
     private void setGrade(Grade grade) {
-        if (null == grade)
-            grade = Grade.QUALIFIED;
+        if (null == grade) grade = Grade.QUALIFIED;
         this.grade = grade;
+    }
+
+    private void setShelfLife(ShelfLife shelfLife) {
+        if (shelfLife == null) shelfLife = ShelfLife.SAME_DAY;
+        this.shelfLife = shelfLife;
     }
 
     private void setName(Name name) {
@@ -297,6 +310,10 @@ public class Item {
         return name;
     }
 
+    public ShelfLife shelfLife() {
+        return shelfLife;
+    }
+
     public MadeIn madeIn() {
         return madeIn;
     }
@@ -321,9 +338,8 @@ public class Item {
     }
 
     public ProhibitSellItem prohibitSell() {
-        return new ProhibitSellItem(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, brandId, categoryId);
+        return new ProhibitSellItem(id, barcode, name, madeIn, spec, grade, shelfLife, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
-
 
     @Override
     public String toString() {
@@ -339,6 +355,7 @@ public class Item {
                 .add("memberPrice=" + memberPrice)
                 .add("vipPrice=" + vipPrice)
                 .add("spec=" + spec)
+                .add("shelfLife=" + shelfLife)
                 .toString();
     }
 }

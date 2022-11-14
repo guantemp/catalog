@@ -29,6 +29,7 @@ import catalog.hoprxi.core.domain.model.madeIn.Domestic;
 import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
+import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import org.javamoney.moneta.Money;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
@@ -70,8 +71,7 @@ public class PsqlItemRepositoryTest {
         categoryRepository.save(vegetable_products);
         Category chemicals = new Category("52495569397272599", "52495569397272595", new Name("日化", "chemicals"), "日用化学品,指人们平日常用的科技化学制品,包括洗发水、沐浴露、护肤、护发、化妆品等等");
         categoryRepository.save(chemicals);
-        Category cosmetics = new Category("52495569397272595", "52495569397272594", new Name("化妆品", "cosmetics"),
-                "指以涂抹、喷洒或者其他类似方法，散布于人体表面的任何部位，如皮肤、毛发、指趾甲、唇齿等，以达到清洁、保养、美容、修饰和改变外观，或者修正人体气味，保持良好状态为目的的化学工业品或精细化工产品");
+        Category cosmetics = new Category("52495569397272595", "52495569397272594", new Name("化妆品", "cosmetics"), "指以涂抹、喷洒或者其他类似方法，散布于人体表面的任何部位，如皮肤、毛发、指趾甲、唇齿等，以达到清洁、保养、美容、修饰和改变外观，或者修正人体气味，保持良好状态为目的的化学工业品或精细化工产品");
         categoryRepository.save(cosmetics);
         Category skin = new Category("52495569397272594", "52495569397272593", new Name("肤用化妆品", "skin"));
         categoryRepository.save(skin);
@@ -79,81 +79,67 @@ public class PsqlItemRepositoryTest {
         Barcode barcode = BarcodeGenerateServices.createMatchingBarcode("6907861191394");
         MadeIn madeIn = new Domestic("四川", "成都");
         RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.59, currency), Unit.HE));
-        Item one = new Item("52496163982907400", barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "150ml彩虹电热灭蚊香液"), madeIn,
-                new Specification("150ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
+        Item one = new Item("52496163982907400", barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "150ml彩虹电热灭蚊香液"), madeIn, new Specification("150ml"), Grade.QUALIFIED, new ShelfLife(180), retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
         itemRepository.save(one);
 
         retailPrice = new RetailPrice(new Price(Money.of(35.50, currency), Unit.HE));
-        Item two = new Item("52496163982907401", new EAN_13("6907861181388"), new Name("彩虹电热灭蚊香液橙子香型2瓶装", "彩虹电热灭蚊香液2瓶装"), madeIn,
-                new Specification("2*150ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
+        Item two = new Item("52496163982907401", new EAN_13("6907861181388"), new Name("彩虹电热灭蚊香液橙子香型2瓶装", "彩虹电热灭蚊香液2瓶装"), madeIn, new Specification("2*150ml"), Grade.QUALIFIED, new ShelfLife(180), retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
         itemRepository.save(two);
 
         retailPrice = new RetailPrice(new Price(Money.of(56.80, currency), Unit.HE));
         barcode = BarcodeGenerateServices.createMatchingBarcode("6907861181395");
-        Item three = new Item("52496163982907402", barcode, new Name("彩虹电热灭蚊香液4瓶装（橙子+芒果香型）", "彩虹电热灭蚊香液4瓶装"), madeIn,
-                new Specification("4*120ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
+        Item three = new Item("52496163982907402", barcode, new Name("彩虹电热灭蚊香液4瓶装（橙子+芒果香型）", "彩虹电热灭蚊香液4瓶装"), madeIn, new Specification("4*120ml"), Grade.QUALIFIED, new ShelfLife(180), retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
         itemRepository.save(three);
 
         retailPrice = new RetailPrice(new Price(Money.of(4.50, currency), Unit.HE));
         MemberPrice memberPrice = new MemberPrice(new Price(Money.of(3.96, currency), Unit.HE));
         VipPrice vipPrice = new VipPrice("PLUS价", new Price(Money.of(3.00, currency), Unit.HE));
-        Item four = new Item("52496163982907403", new EAN_13("6942070284987"), new Name("天友南美酸奶", "天友南美酸奶"), Domestic.CHONG_QING,
-                new Specification("350ml"), Grade.QUALIFIED, retailPrice, memberPrice, vipPrice, dairy.id(), tianyou.id());
+        Item four = new Item("52496163982907403", new EAN_13("6942070284987"), new Name("天友南美酸奶", "天友南美酸奶"), Domestic.CHONG_QING, new Specification("350ml"), Grade.QUALIFIED, new ShelfLife(30), retailPrice, memberPrice, vipPrice, dairy.id(), tianyou.id());
         itemRepository.save(four);
 
         retailPrice = new RetailPrice(new Price(Money.of(10.00, currency), Unit.TI));
         memberPrice = new MemberPrice(new Price(Money.of(9.5, currency), Unit.TI));
         vipPrice = new VipPrice("PLUS", new Price(Money.of(8.8, currency), Unit.TI));
         barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240896");
-        Item five = new Item("52496163982907404", barcode, new Name("天友纯牛奶", "天友纯牛奶"), Domestic.CHONG_QING,
-                new Specification("350ml"), Grade.QUALIFIED, retailPrice, memberPrice, vipPrice, dairy.id(), tianyou.id());
+        Item five = new Item("52496163982907404", barcode, new Name("天友纯牛奶", "天友纯牛奶"), Domestic.CHONG_QING, new Specification("350ml"), Grade.QUALIFIED, new ShelfLife(90), retailPrice, memberPrice, vipPrice, dairy.id(), tianyou.id());
         itemRepository.save(five);
 
         retailPrice = new RetailPrice(new Price(Money.of(17.90, currency), Unit.PCS));
         vipPrice = new VipPrice("PLUS", new Price(Money.of(15.50, currency), Unit.PCS));
-        Item six = new Item("52496163982907405", new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), Domestic.CHONG_QING,
-                new Specification("6*250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, vipPrice, food.id(), tianyou.id());
+        Item six = new Item("52496163982907405", new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), Domestic.CHONG_QING, new Specification("6*250ml"), Grade.QUALIFIED, new ShelfLife(90), retailPrice, MemberPrice.RMB_ZERO, vipPrice, food.id(), tianyou.id());
         itemRepository.save(six);
 
         barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240865");
-        Item six_1 = new Item("52496321492179000", barcode, new Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶"), Domestic.CHONG_QING,
-                new Specification("250ml"), Grade.QUALIFIED, RetailPrice.RMB_ZERO, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, dairy.id(), tianyou.id());
+        Item six_1 = new Item("52496321492179000", barcode, new Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶"), Domestic.CHONG_QING, new Specification("250ml"), Grade.QUALIFIED, new ShelfLife(90), RetailPrice.RMB_ZERO, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, dairy.id(), tianyou.id());
         itemRepository.save(six_1);
 
         retailPrice = new RetailPrice(new Price(Money.of(27.5, currency), Unit.DAI));
         barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240889");
-        Item six_2 = new Item("52496321492179001", barcode, new Name("250ml天友纯牛奶", "250ml天友纯牛奶"), Domestic.CHONG_QING,
-                new Specification("250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, dairy.id(), tianyou.id());
+        Item six_2 = new Item("52496321492179001", barcode, new Name("250ml天友纯牛奶", "250ml天友纯牛奶"), Domestic.CHONG_QING, new Specification("250ml"), Grade.QUALIFIED, new ShelfLife(90), retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, dairy.id(), tianyou.id());
         itemRepository.save(six_2);
 
         retailPrice = new RetailPrice(new Price(Money.of(2.5, currency), Unit.DAI));
-        Item seven = new Item("52496321492179002", new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), Domestic.TIAN_JIN, new Specification("25g"),
-                Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), Brand.UNDEFINED.id());
+        Item seven = new Item("52496321492179002", new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), Domestic.TIAN_JIN, new Specification("25g"), Grade.QUALIFIED, new ShelfLife(180), retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), Brand.UNDEFINED.id());
         itemRepository.save(seven);
 
         retailPrice = new RetailPrice(new Price(Money.of(4.80, currency), Unit.DAI));
-        Item eight = new Item("52496321492179003", new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), Domestic.TIAN_JIN, new Specification("50g"),
-                Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, vegetable_products.id(), Brand.UNDEFINED.id());
+        Item eight = new Item("52496321492179003", new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), Domestic.TIAN_JIN, new Specification("50g"), Grade.QUALIFIED, new ShelfLife(180), retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, vegetable_products.id(), Brand.UNDEFINED.id());
         itemRepository.save(eight);
 
         retailPrice = new RetailPrice(new Price(Money.of(6.90, currency), Unit.DAI));
-        Item nine = new Item("52496321492179004", new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), Domestic.TIAN_JIN, new Specification("75g"),
-                Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, vegetable_products.id(), Brand.UNDEFINED.id());
+        Item nine = new Item("52496321492179004", new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), Domestic.TIAN_JIN, new Specification("75g"), Grade.QUALIFIED, new ShelfLife(180), retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, vegetable_products.id(), Brand.UNDEFINED.id());
         itemRepository.save(nine);
 
         retailPrice = new RetailPrice(new Price(Money.of(5.00, currency), Unit.DUI));
-        Item ten = new Item("52496321492179005", new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic("四川", "绵阳"), new Specification("10粒缩卡装"),
-                Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), changhong.id());
+        Item ten = new Item("52496321492179005", new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic("四川", "绵阳"), new Specification("10粒缩卡装"), Grade.QUALIFIED, new ShelfLife(360 * 3), retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), changhong.id());
         itemRepository.save(ten);
 
         retailPrice = new RetailPrice(new Price(Money.of(5, currency), Unit.BEN));
-        Item twelve = new Item("52496321492179006", new EAN_13("6925834037159"), new Name("车线本"), new Domestic("浙江", "仓南县"),
-                Specification.UNDEFINED, Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+        Item twelve = new Item("52496321492179006", new EAN_13("6925834037159"), new Name("车线本"), new Domestic("浙江", "仓南县"), Specification.UNDEFINED, Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(twelve);
 
         retailPrice = new RetailPrice(new Price(Money.of(32.00, currency), Unit.HE));
-        Item thirteen = new Item(itemRepository.nextIdentity(), new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("泰国"),
-                new Specification("10片装"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+        Item thirteen = new Item(itemRepository.nextIdentity(), new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("泰国"), new Specification("10片装"), Grade.QUALIFIED, new ShelfLife(360 * 3), retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(thirteen);
     }
 /*
@@ -194,21 +180,22 @@ public class PsqlItemRepositoryTest {
     @Test
     public void testSave() {
         Item ten = itemRepository.find("52496321492179005");
+        //old Name("长虹5号碱性电池", "长虹电池")
         ten.rename(new Name("长虹5号碳性电池 ", "长虹1号"));
         itemRepository.save(ten);
         ten = itemRepository.find("52496321492179005");
         Assert.assertEquals(ten.name(), new Name("长虹5号碳性电池", "长虹1号"));
-
+        // old Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶")
         Item six = itemRepository.find("52496321492179000");
         Assert.assertNotNull(six);
         six.changeBarcode(new EAN_13("6923555240728"));
         six.changeRetailPrice(new RetailPrice(new Price(Money.of(39.9, currency), Unit.TI)));
         six.changeGrade(Grade.PREMIUM);
         six.moveToNewCategory("52495569397272598");
-        System.out.println(six);
         itemRepository.save(six);
         six = itemRepository.find("52496321492179000");
         Assert.assertEquals(six.barcode(), BarcodeGenerateServices.createMatchingBarcode("6923555240728"));
+        Assert.assertEquals(six.categoryId(), "52495569397272598");
         System.out.println(six);
     }
 }
