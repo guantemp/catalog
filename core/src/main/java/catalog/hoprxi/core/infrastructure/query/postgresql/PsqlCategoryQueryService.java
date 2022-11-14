@@ -222,7 +222,6 @@ public class PsqlCategoryQueryService implements CategoryQueryService, DomainEve
                 categoryViewList.add(rebuild(rs));
             }
         } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
-            System.out.println(e);
             LOGGER.error("Can't rebuild category view", e);
         }
         return categoryViewList.toArray(new CategoryView[0]);

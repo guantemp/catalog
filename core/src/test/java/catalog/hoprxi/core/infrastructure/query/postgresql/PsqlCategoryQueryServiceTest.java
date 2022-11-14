@@ -65,18 +65,19 @@ public class PsqlCategoryQueryServiceTest {
         Category cosmetics = new Category("496796322118291480", "496796322118291481", new Name("化妆品", "cosmetics"),
                 "指以涂抹、喷洒或者其他类似方法，散布于人体表面的任何部位，如皮肤、毛发、指趾甲、唇齿等，以达到清洁、保养、美容、修饰和改变外观，或者修正人体气味，保持良好状态为目的的化学工业品或精细化工产品");
         repository.save(cosmetics);
-        Category washing = new Category("496796322118291480", "496796322118291482", new Name("洗涤用品", "washing"));
-        repository.save(washing);
-        Category soap = new Category("496796322118291482", "496796322118291483", new Name("肥皂", "soap"), "脂肪酸金属盐的总称");
-        repository.save(soap);
-        Category washing_liquid = new Category("496796322118291482", "496796322118291484", new Name("洗衣液", "washing_liquid"), "多采用非离子型表面活性剂，PH接近中性，对皮肤温和，并且排入自然界后，降解较洗衣粉快");
-        repository.save(washing_liquid);
         Category oral_hygiene = new Category("496796322118291480", "496796322118291485", new Name("口腔用品", "oral_hygiene"));
         repository.save(oral_hygiene);
         Category clean = new Category("496796322118291480", "496796322118291486", new Name("清洁/卫生用品", "clean"));
         repository.save(clean);
         Category hari = new Category("496796322118291480", "496796322118291487", "洗/护发用品");
         repository.save(hari);
+        Category washing = new Category("496796322118291480", "496796322118291482", new Name("洗涤用品", "washing"));
+        repository.save(washing);
+
+        Category soap = new Category("496796322118291482", "496796322118291483", new Name("肥皂", "soap"), "脂肪酸金属盐的总称");
+        repository.save(soap);
+        Category washing_liquid = new Category("496796322118291482", "496796322118291484", new Name("洗衣液", "washing_liquid"), "多采用非离子型表面活性剂，PH接近中性，对皮肤温和，并且排入自然界后，降解较洗衣粉快");
+        repository.save(washing_liquid);
         //one error alias chemicals
         Category beer = new Category("496796322118291482", "496796322118291488", new Name("      个人保健用卫生制剂", "beer"));
         repository.save(beer);
@@ -85,11 +86,11 @@ public class PsqlCategoryQueryServiceTest {
         repository.save(grain_oil);
         Category rice_flour = new Category("496796322118291490", "496796322118291491", new Name("米/面/杂粮", "rice_flour"));
         repository.save(rice_flour);
-        Category oil = new Category("496796322118291490", "496796322118291492", new Name("食用油", "oil"));
-        repository.save(oil);
         Category grain_and_oil_products = new Category("496796322118291490", "496796322118291493", new Name("粮油制品", "grain_and_oil_products"));
         repository.save(grain_and_oil_products);
-        //食用油
+
+        Category oil = new Category("496796322118291490", "496796322118291492", new Name("食用油", "oil"));  //食用油
+        repository.save(oil);
         Category rapeseed_oil = new Category("496796322118291492", "496796322118291494", new Name("菜籽油", "rapeseed_oil"), "用油菜籽榨出来的一种食用油。是我国主要食用油之一");
         repository.save(rapeseed_oil);
         Category soybean_oil = new Category("496796322118291492", "496796322118291495", new Name("大豆油", "soybean_oil"));
@@ -104,8 +105,8 @@ public class PsqlCategoryQueryServiceTest {
         repository.save(sunflower_seed_oil);
         Category blended_oil = new Category("496796322118291492", "496796322118291700", new Name("调和油", "blended_oil"), "根据使用需要，将两种以上经精炼的油脂（香味油除外）按比例调配制成的食用油");
         repository.save(blended_oil);
-        //制品
-        Category bread_cake = new Category("496796322118291493", "49581450261846020", new Name("面包/蛋糕", "bread_cake"));
+
+        Category bread_cake = new Category("496796322118291493", "49581450261846020", new Name("面包/蛋糕", "bread_cake")); //粮油制品
         repository.save(bread_cake);
         Category flour = new Category("496796322118291493", "49581450261846021", new Name("面粉", "flour"));
         repository.save(flour);
@@ -244,9 +245,15 @@ public class PsqlCategoryQueryServiceTest {
     @Test(dependsOnMethods = {"testDescendants"})
     public void testSearchName() {
         CategoryQueryService query = new PsqlCategoryQueryService("catalog");
-        CategoryView[] result = query.searchName("oil$");
+        CategoryView[] result = query.searchName("oil");
+        Assert.assertEquals(11, result.length);
+        result = query.searchName("oil$");
+        Assert.assertEquals(10, result.length);
+        result = query.searchName("hj");
+        Assert.assertEquals(1, result.length);
+        System.out.println("search:");
         for (CategoryView c : result)
-            System.out.println("search:" + c);
+            System.out.println(c);
     }
 
     @Test(dependsOnMethods = {"testDescendants"})
@@ -280,7 +287,18 @@ public class PsqlCategoryQueryServiceTest {
         // System.out.println("rapeseed_oil path:" + c);
     }
 
-    @Test
+    @Test(dependsOnMethods = {"testDescendants"})
     public void testDepth() {
+        CategoryQueryService query = new PsqlCategoryQueryService("catalog");
+        int depth = query.depth("496796322118291494");//rapeseed_oil
+        Assert.assertEquals(4, depth);
+        depth = query.depth("496796322118291490");//grain_oil
+        Assert.assertEquals(2, depth);
+        depth = query.depth("496796322118291470");//drinks
+        Assert.assertEquals(2, depth);
+        depth = query.depth("496796322118291457");//root
+        Assert.assertEquals(1, depth);
+        depth = query.depth("496796322118291484");//washing_liquid
+        Assert.assertEquals(4, depth);
     }
 }
