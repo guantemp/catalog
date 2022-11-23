@@ -48,7 +48,7 @@ public class PsqlBrandQueryService implements BrandQueryService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlBrandQueryService.class);
     private static Constructor<Name> nameConstructor;
-    private static Cache<String, Brand> cache = CacheFactory.build("brand");
+    private static Cache<String, Brand> CACHE = CacheFactory.build("brand");
 
     static {
         try {
@@ -66,16 +66,24 @@ public class PsqlBrandQueryService implements BrandQueryService {
         this.databaseName = Objects.requireNonNull(databaseName, "The databaseName parameter is required");
     }
 
+    @Override
     public Brand find(String id) {
+        Brand brand = CACHE.get(id);
+        if (brand != null)
+            return brand;
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String findSql = "select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,about from brand where id=? limit 1";
+            final String findSql = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, Long.parseLong(id));
             ResultSet rs = preparedStatement.executeQuery();
-            if (rs.next())
-                return rebuild(rs);
+            if (rs.next()) {
+                brand = rebuild(rs);
+                CACHE.put(id, brand);
+                return brand;
+            }
         } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
                  IllegalAccessException e) {
+            System.out.println(e);
             LOGGER.error("Can't rebuild brand with (id = {})", id, e);
         }
         return null;
@@ -83,7 +91,7 @@ public class PsqlBrandQueryService implements BrandQueryService {
 
     @Override
     public Brand[] findAll(int offset, int limit) {
-        final String query = "select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,about::jsonb->>'story' as story, about::jsonb->>'since' as since,about::jsonb->>'homepage' as homepage,about::jsonb->>'logo' as logo from brand offset ? limit ?";
+        final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand offset ? limit ?";
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setInt(1, offset);
@@ -99,9 +107,9 @@ public class PsqlBrandQueryService implements BrandQueryService {
 
     @Override
     public Brand[] findByName(String name) {
-        final String query = "select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,about::jsonb->>'story' as story, about::jsonb->>'since' as since,about::jsonb->>'homepage' as homepage,about::jsonb->>'logo' as logo from brand " +
-                "where name::jsonb->>'name' ~ ? union select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,about::jsonb->>'story' as story, about::jsonb->>'since' as since,about::jsonb->>'homepage' as homepage,about::jsonb->>'logo' as logo from brand " +
-                "where name::jsonb->>'mnemonic' ~ ? union select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,about::jsonb->>'story' as story, about::jsonb->>'since' as since,about::jsonb->>'homepage' as homepage,about::jsonb->>'logo' as logo from brand " +
+        final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
+                "where name::jsonb->>'name' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
+                "where name::jsonb->>'mnemonic' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
                 "where name::jsonb->>'alias' ~ ?";
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);

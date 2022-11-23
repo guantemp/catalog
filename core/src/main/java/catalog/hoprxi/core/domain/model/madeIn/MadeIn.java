@@ -27,6 +27,4 @@ public interface MadeIn {
     default long code() {
         return 0L;
     }
-
-    ;
 }

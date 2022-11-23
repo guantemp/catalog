@@ -31,6 +31,10 @@ public interface BrandQueryService {
      */
     Brand[] findAll(int offset, int limit);
 
+    default Brand find(String id) {
+        return Brand.UNDEFINED;
+    }
+
     /**
      * @param name is support regular
      * @return

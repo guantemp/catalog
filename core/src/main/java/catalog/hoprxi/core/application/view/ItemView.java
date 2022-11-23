@@ -26,6 +26,9 @@ import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 
+import java.util.Objects;
+import java.util.StringJoiner;
+
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -33,18 +36,22 @@ import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
  * @version 0.0.1 builder 2021-10-13
  */
 public class ItemView {
-    private Barcode barcode;
+    private final Barcode barcode;
     private BrandView brandView;
     private CategoryView categoryView;
-    private Grade grade;
-    private String id;
-    private Name name;
-    private MadeIn madeIn;
+    private final Grade grade;
+    private final String id;
+    private final Name name;
+    private final MadeIn madeIn;
     private RetailPrice retailPrice;
     private MemberPrice memberPrice;
     private VipPrice vipPrice;
-    private Specification spec;
-    private ShelfLife shelfLife;
+    private final Specification spec;
+    private final ShelfLife shelfLife;
+
+    public ShelfLife shelfLife() {
+        return shelfLife;
+    }
 
     public ItemView(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade) {
         this(id, barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY);
@@ -62,10 +69,6 @@ public class ItemView {
 
     public Barcode barcode() {
         return barcode;
-    }
-
-    public void setBarcode(Barcode barcode) {
-        this.barcode = barcode;
     }
 
     public BrandView brandView() {
@@ -88,32 +91,16 @@ public class ItemView {
         return grade;
     }
 
-    public void setGrade(Grade grade) {
-        this.grade = grade;
-    }
-
     public String id() {
         return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public Name name() {
         return name;
     }
 
-    public void setName(Name name) {
-        this.name = name;
-    }
-
     public MadeIn madeIn() {
         return madeIn;
-    }
-
-    public void setMadeIn(MadeIn madeIn) {
-        this.madeIn = madeIn;
     }
 
     public RetailPrice retailPrice() {
@@ -144,8 +131,37 @@ public class ItemView {
         return spec;
     }
 
-    public void setSpec(Specification spec) {
-        this.spec = spec;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ItemView)) return false;
+
+        ItemView itemView = (ItemView) o;
+
+        return Objects.equals(id, itemView.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", ItemView.class.getSimpleName() + "[", "]")
+                .add("barcode=" + barcode)
+                .add("brandView=" + brandView)
+                .add("categoryView=" + categoryView)
+                .add("grade=" + grade)
+                .add("id='" + id + "'")
+                .add("name=" + name)
+                .add("madeIn=" + madeIn)
+                .add("retailPrice=" + retailPrice)
+                .add("memberPrice=" + memberPrice)
+                .add("vipPrice=" + vipPrice)
+                .add("spec=" + spec)
+                .add("shelfLife=" + shelfLife)
+                .toString();
     }
 
     public static class BrandView {
@@ -164,6 +180,29 @@ public class ItemView {
         public String name() {
             return name;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof BrandView)) return false;
+
+            BrandView brandView = (BrandView) o;
+
+            return Objects.equals(id, brandView.id);
+        }
+
+        @Override
+        public int hashCode() {
+            return id != null ? id.hashCode() : 0;
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", BrandView.class.getSimpleName() + "[", "]")
+                    .add("id='" + id + "'")
+                    .add("name='" + name + "'")
+                    .toString();
+        }
     }
 
     public static class CategoryView {
@@ -181,6 +220,29 @@ public class ItemView {
 
         public String name() {
             return name;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof CategoryView)) return false;
+
+            CategoryView that = (CategoryView) o;
+
+            return Objects.equals(id, that.id);
+        }
+
+        @Override
+        public int hashCode() {
+            return id != null ? id.hashCode() : 0;
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", CategoryView.class.getSimpleName() + "[", "]")
+                    .add("id='" + id + "'")
+                    .add("name='" + name + "'")
+                    .toString();
         }
     }
 }

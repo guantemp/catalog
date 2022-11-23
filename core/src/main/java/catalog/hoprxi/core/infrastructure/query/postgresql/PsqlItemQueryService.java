@@ -16,24 +16,32 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
+import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.query.ItemQueryService;
+import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
+import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.madeIn.Domestic;
 import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import salt.hoprxi.cache.Cache;
+import salt.hoprxi.cache.CacheFactory;
 
+import javax.money.MonetaryAmount;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -42,6 +50,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /***
@@ -51,6 +61,7 @@ import java.util.Objects;
  */
 public class PsqlItemQueryService implements ItemQueryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQueryService.class);
+    private static final Cache<String, ItemView> CACHE = CacheFactory.build("itemView");
     private static Constructor<Name> nameConstructor;
 
     static {
@@ -71,17 +82,26 @@ public class PsqlItemQueryService implements ItemQueryService {
 
     @Override
     public ItemView find(String id) {
+        ItemView itemView = CACHE.get(id);
+        if (itemView != null)
+            return itemView;
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String findSql = "select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,barcode,category_id," +
-                    "brand_id,grade,made_in,specs,shelf_life,retail_price::jsonb->>'number' as retail_price_number,retail_price::jsonb->>'currencyCode' as retail_price_currencyCode,retail_price::jsonb->>'unit' as retail_price_unit" +
-                    ",member_price::jsonb ->> 'name' as member_price_name, member_price::jsonb -> 'price' ->> 'number' as member_price_number, member_price::jsonb -> 'price' ->> 'currencyCode' as member_price_currencyCode, member_price::jsonb -> 'price' ->> 'unit' as member_price_unit" +
-                    ", vip_price::jsonb ->> 'name' as vip_price_name, vip_price::jsonb -> 'price' ->> 'number' as vip_price_number, vip_price::jsonb -> 'price' ->> 'currencyCode' as vip_price_currencyCode, vip_price::jsonb -> 'price' ->> 'unit' as vip_price_unit " +
-                    "from item where id=? limit 1";
+            final String findSql = "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic' mnemonic,i.name::jsonb ->> 'alias' alias,i.barcode,\n" +
+                    "i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,\n" +
+                    "i.grade, i.made_in,i.specs,i.shelf_life,\n" +
+                    "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
+                    "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
+                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit\n" +
+                    "from item  i,category  c,brand  b\n" +
+                    "where i.id= ? and i.category_id = c.id and i.brand_id = b.id limit 1";
             PreparedStatement ps = connection.prepareStatement(findSql);
             ps.setLong(1, Long.parseLong(id));
             ResultSet rs = ps.executeQuery();
-            if (rs.next())
-                return rebuild(rs);
+            if (rs.next()) {
+                itemView = rebuild(rs);
+                CACHE.put(id, itemView);
+                return itemView;
+            }
         } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
                  IOException e) {
             LOGGER.error("Can't rebuild item with (id = {})", id, e);
@@ -93,13 +113,31 @@ public class PsqlItemQueryService implements ItemQueryService {
         String id = rs.getString("id");
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
         Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(rs.getString("barcode"));
-        String categoryId = rs.getString("category_id");
-        String brandId = rs.getString("brand_id");
         Grade grade = Grade.valueOf(rs.getString("grade"));
         MadeIn madeIn = toMadeIn(rs.getString("made_in"));
         Specification spec = new Specification(rs.getString("specs"));
         ShelfLife shelfLife = ShelfLife.rebuild(rs.getInt("shelf_life"));
         ItemView itemView = new ItemView(id, barcode, name, madeIn, spec, grade, shelfLife);
+
+        ItemView.CategoryView categoryView = new ItemView.CategoryView(rs.getString("category_id"), rs.getString("category_name"));
+        itemView.setCategoryView(categoryView);
+        ItemView.BrandView brandView = new ItemView.BrandView(rs.getString("brand_id"), rs.getString("brand_name"));
+        itemView.setBrandView(brandView);
+
+        MonetaryAmount amount = Money.of(rs.getBigDecimal("retail_price_number"), rs.getString("retail_price_currencyCode"));
+        Unit unit = Unit.valueOf(rs.getString("retail_price_unit"));
+        RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
+        itemView.setRetailPrice(retailPrice);
+        String priceName = rs.getString("member_price_name");
+        amount = Money.of(rs.getBigDecimal("member_price_number"), rs.getString("member_price_currencyCode"));
+        unit = Unit.valueOf(rs.getString("member_price_unit"));
+        MemberPrice memberPrice = new MemberPrice(priceName, new Price(amount, unit));
+        itemView.setMemberPrice(memberPrice);
+        priceName = rs.getString("vip_price_name");
+        amount = Money.of(rs.getBigDecimal("vip_price_number"), rs.getString("vip_price_currencyCode"));
+        unit = Unit.valueOf(rs.getString("vip_price_unit"));
+        VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
+        itemView.setVipPrice(vipPrice);
         return itemView;
     }
 
@@ -143,7 +181,82 @@ public class PsqlItemQueryService implements ItemQueryService {
 
     @Override
     public ItemView[] belongToCategory(String categoryId, long offset, int limit) {
+        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+            final String findSql = "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic'  mnemonic,i.name::jsonb ->> 'alias'  alias,i.barcode,\n" +
+                    "i.category_id,c.name::jsonb ->> 'name'  category_name,i.brand_id,b.name::jsonb ->> 'name'  brand_name,\n" +
+                    "i.grade, i.made_in,i.specs,i.shelf_life,\n" +
+                    "i.retail_price::jsonb ->> 'number'  retail_price_number,i.retail_price::jsonb ->> 'currencyCode'  retail_price_currencyCode,i.retail_price::jsonb ->> 'unit'  retail_price_unit,\n" +
+                    "i.member_price::jsonb ->> 'name'  member_price_name,i.member_price::jsonb -> 'price' ->> 'number'  member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode'  member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit'  member_price_unit,\n" +
+                    "i.vip_price::jsonb ->> 'name'  vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number'  vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode'  vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit'  vip_price_unit\n" +
+                    "from category  c left join item i on i.category_id = c.id left join brand b on b.id = i.brand_id\n" +
+                    "where c.id = ? offset ? limit ?";
+            PreparedStatement ps = connection.prepareStatement(findSql);
+            ps.setLong(1, Long.parseLong(categoryId));
+            ps.setLong(2, offset);
+            ps.setLong(3, limit);
+            ResultSet rs = ps.executeQuery();
+            return transform(rs);
+        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
+                 IOException e) {
+            LOGGER.error("Can't rebuild item", e);
+        }
         return new ItemView[0];
+    }
+
+    public ItemView[] belongToCategoryDescendants(String categoryId) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        CategoryQueryService categoryQuery = new PsqlCategoryQueryService(databaseName);
+        PsqlBrandQueryService brandQueryService = new PsqlBrandQueryService(databaseName);
+        List<ItemView> itemViews = new ArrayList<>();
+        CategoryView[] categoryViews = categoryQuery.descendants(categoryId);
+        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+            for (CategoryView categoryView : categoryViews) {
+                ItemView.CategoryView categoryView1 = new ItemView.CategoryView(categoryView.getId(), categoryView.getName().name());
+                String itemViewQuerySql = "select id,name::jsonb ->> 'name' name, name::jsonb ->> 'mnemonic' mnemonic,name::jsonb ->> 'alias' alias,barcode,\n" +
+                        "brand_id,grade,made_in,specs,shelf_life,\n" +
+                        "retail_price::jsonb ->> 'number' retail_price_number,retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
+                        "member_price::jsonb ->> 'name' member_price_name,member_price::jsonb -> 'price' ->> 'number' member_price_number,member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
+                        "vip_price::jsonb ->> 'name' vip_price_name,vip_price::jsonb -> 'price' ->> 'number' vip_price_number,vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit\n" +
+                        "from item where category_id = ?";
+                PreparedStatement ps = connection.prepareStatement(itemViewQuerySql);
+                ps.setLong(1, Long.parseLong(categoryView.getId()));
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    Brand brand = brandQueryService.find(rs.getString("brand_id"));
+                    ItemView itemView = rebuildWith(rs, categoryView1, new ItemView.BrandView(brand.id(), brand.name().name()));
+                    itemViews.add(itemView);
+                }
+            }
+        }
+        return itemViews.toArray(new ItemView[0]);
+    }
+
+    private ItemView rebuildWith(ResultSet rs, ItemView.CategoryView categoryView, ItemView.BrandView brandView) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
+        String id = rs.getString("id");
+        Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
+        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(rs.getString("barcode"));
+        Grade grade = Grade.valueOf(rs.getString("grade"));
+        MadeIn madeIn = toMadeIn(rs.getString("made_in"));
+        Specification spec = new Specification(rs.getString("specs"));
+        ShelfLife shelfLife = ShelfLife.rebuild(rs.getInt("shelf_life"));
+        ItemView itemView = new ItemView(id, barcode, name, madeIn, spec, grade, shelfLife);
+        itemView.setCategoryView(categoryView);
+        itemView.setBrandView(brandView);
+
+        MonetaryAmount amount = Money.of(rs.getBigDecimal("retail_price_number"), rs.getString("retail_price_currencyCode"));
+        Unit unit = Unit.valueOf(rs.getString("retail_price_unit"));
+        RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
+        itemView.setRetailPrice(retailPrice);
+        String priceName = rs.getString("member_price_name");
+        amount = Money.of(rs.getBigDecimal("member_price_number"), rs.getString("member_price_currencyCode"));
+        unit = Unit.valueOf(rs.getString("member_price_unit"));
+        MemberPrice memberPrice = new MemberPrice(priceName, new Price(amount, unit));
+        itemView.setMemberPrice(memberPrice);
+        priceName = rs.getString("vip_price_name");
+        amount = Money.of(rs.getBigDecimal("vip_price_number"), rs.getString("vip_price_currencyCode"));
+        unit = Unit.valueOf(rs.getString("vip_price_unit"));
+        VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
+        itemView.setVipPrice(vipPrice);
+        return itemView;
     }
 
     @Override
@@ -164,5 +277,13 @@ public class PsqlItemQueryService implements ItemQueryService {
     @Override
     public ItemView[] fromName(String name) {
         return new ItemView[0];
+    }
+
+    private ItemView[] transform(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        List<ItemView> itemViews = new ArrayList<>();
+        while (rs.next()) {
+            itemViews.add(rebuild(rs));
+        }
+        return itemViews.toArray(new ItemView[0]);
     }
 }

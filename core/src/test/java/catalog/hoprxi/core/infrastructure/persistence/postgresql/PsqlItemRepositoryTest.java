@@ -139,7 +139,7 @@ public class PsqlItemRepositoryTest {
         itemRepository.save(twelve);
 
         retailPrice = new RetailPrice(new Price(Money.of(32.00, currency), Unit.HE));
-        Item thirteen = new Item(itemRepository.nextIdentity(), new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("泰国"), new Specification("10片装"), Grade.QUALIFIED, new ShelfLife(360 * 3), retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+        Item thirteen = new Item("52496321492179007", new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("泰国"), new Specification("10片装"), Grade.QUALIFIED, new ShelfLife(360 * 3), retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(thirteen);
     }
 /*
@@ -158,6 +158,7 @@ public class PsqlItemRepositoryTest {
         itemRepository.remove("52496321492179004");
         itemRepository.remove("52496321492179005");
         itemRepository.remove("52496321492179006");
+        itemRepository.remove("52496321492179007");
 
         brandRepository.remove(Brand.UNDEFINED.id());
         brandRepository.remove("52495569395175425");
@@ -173,9 +174,7 @@ public class PsqlItemRepositoryTest {
         categoryRepository.remove("52495569397272598");
         categoryRepository.remove("52495569397272599");
     }
-
  */
-
 
     @Test
     public void testSave() {
@@ -196,6 +195,9 @@ public class PsqlItemRepositoryTest {
         six = itemRepository.find("52496321492179000");
         Assert.assertEquals(six.barcode(), BarcodeGenerateServices.createMatchingBarcode("6923555240728"));
         Assert.assertEquals(six.categoryId(), "52495569397272598");
-        System.out.println(six);
+
+        Item ce = itemRepository.find("52496321492179006");
+        Assert.assertNotNull(ce);
+        System.out.println(ce);
     }
 }
