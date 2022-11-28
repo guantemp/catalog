@@ -84,20 +84,36 @@ public class PsqlItemQueryServiceTest {
 
     }
 
-    @Test(invocationCount = 1)
+    @Test(invocationCount = 10, threadPoolSize = 2)
     public void testBelongToCategoryWith() throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
         PsqlItemQueryService itemQueryService = ((PsqlItemQueryService) query);
         ItemView[] skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
         //Assert.assertEquals(skuses.length, 8);
-        skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
+        skuses = itemQueryService.belongToCategoryAndDescendants("-1");
         //Assert.assertEquals(skuses.length, 5);
-        skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
+        skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272595");
         //Assert.assertEquals(skuses.length, 3);
-        skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
+        skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272599");
         //Assert.assertEquals(skuses.length, 2);
         skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
         //Assert.assertEquals(skuses.length, 0);
-        skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
+        skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272597");
+        //Assert.assertEquals(skuses.length, 1);
+    }
+
+    @Test(invocationCount = 5)
+    public void testBelongToCategoryTest() {
+        PsqlItemQueryService itemQueryService = ((PsqlItemQueryService) query);
+        ItemView[] skuses = itemQueryService.belongToCategoryTest("52495569397272598");
+        //Assert.assertEquals(skuses.length, 5);
+        skuses = itemQueryService.belongToCategoryTest("52495569397272595");
+        skuses = itemQueryService.belongToCategoryTest("-1");
+        //Assert.assertEquals(skuses.length, 3);
+        skuses = itemQueryService.belongToCategoryTest("52495569397272599");
+        //Assert.assertEquals(skuses.length, 2);
+        skuses = itemQueryService.belongToCategoryTest("52495569397272598");
+        //Assert.assertEquals(skuses.length, 0);
+        skuses = itemQueryService.belongToCategoryTest("52495569397272597");
         //Assert.assertEquals(skuses.length, 1);
     }
 

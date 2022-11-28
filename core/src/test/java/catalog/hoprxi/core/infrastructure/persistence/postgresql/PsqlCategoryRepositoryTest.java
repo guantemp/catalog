@@ -21,7 +21,6 @@ import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -140,7 +139,7 @@ public class PsqlCategoryRepositoryTest {
                 .build();
          */
     }
-
+/*
     @AfterClass
     public void afterClass() {
         repository.remove("49581450261846059");
@@ -193,6 +192,8 @@ public class PsqlCategoryRepositoryTest {
         repository.remove(Category.UNDEFINED.id());
     }
 
+ */
+
     @Test
     public void testFind() {
         Category instant_noodles = repository.find("49581450261846022");
@@ -209,13 +210,14 @@ public class PsqlCategoryRepositoryTest {
         Assert.assertNotNull(id);
     }
 
-    @Test(priority = 3)
-    public void testRemove() {
-        repository.remove("496796322118291493");
-        Assert.assertNull(repository.find("49581450261846020"));
-        Assert.assertNull(repository.find("49581450261846022"));
-    }
-
+    /*
+        @Test(priority = 3)
+        public void testRemove() {
+            repository.remove("496796322118291493");
+            Assert.assertNull(repository.find("49581450261846020"));
+            Assert.assertNull(repository.find("49581450261846022"));
+        }
+    */
     @Test
     public void testRoot() {
         Category[] roots = repository.root();

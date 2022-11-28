@@ -109,71 +109,6 @@ public class PsqlItemQueryService implements ItemQueryService {
         return null;
     }
 
-    private ItemView rebuild(ResultSet rs) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
-        String id = rs.getString("id");
-        Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
-        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(rs.getString("barcode"));
-        Grade grade = Grade.valueOf(rs.getString("grade"));
-        MadeIn madeIn = toMadeIn(rs.getString("made_in"));
-        Specification spec = new Specification(rs.getString("specs"));
-        ShelfLife shelfLife = ShelfLife.rebuild(rs.getInt("shelf_life"));
-        ItemView itemView = new ItemView(id, barcode, name, madeIn, spec, grade, shelfLife);
-
-        ItemView.CategoryView categoryView = new ItemView.CategoryView(rs.getString("category_id"), rs.getString("category_name"));
-        itemView.setCategoryView(categoryView);
-        ItemView.BrandView brandView = new ItemView.BrandView(rs.getString("brand_id"), rs.getString("brand_name"));
-        itemView.setBrandView(brandView);
-
-        MonetaryAmount amount = Money.of(rs.getBigDecimal("retail_price_number"), rs.getString("retail_price_currencyCode"));
-        Unit unit = Unit.valueOf(rs.getString("retail_price_unit"));
-        RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
-        itemView.setRetailPrice(retailPrice);
-        String priceName = rs.getString("member_price_name");
-        amount = Money.of(rs.getBigDecimal("member_price_number"), rs.getString("member_price_currencyCode"));
-        unit = Unit.valueOf(rs.getString("member_price_unit"));
-        MemberPrice memberPrice = new MemberPrice(priceName, new Price(amount, unit));
-        itemView.setMemberPrice(memberPrice);
-        priceName = rs.getString("vip_price_name");
-        amount = Money.of(rs.getBigDecimal("vip_price_number"), rs.getString("vip_price_currencyCode"));
-        unit = Unit.valueOf(rs.getString("vip_price_unit"));
-        VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
-        itemView.setVipPrice(vipPrice);
-        return itemView;
-    }
-
-    private MadeIn toMadeIn(String json) throws IOException {
-        String _class = null, province = null, city = null, country = null;
-        JsonFactory jasonFactory = new JsonFactory();
-        JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
-        while (!parser.isClosed()) {
-            JsonToken jsonToken = parser.nextToken();
-            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
-                String fieldName = parser.getCurrentName();
-                parser.nextToken();
-                switch (fieldName) {
-                    case "_class":
-                        _class = parser.getValueAsString();
-                        break;
-                    case "province":
-                        province = parser.getValueAsString();
-                        break;
-                    case "city":
-                        city = parser.getValueAsString();
-                        break;
-                    case "country":
-                        country = parser.getValueAsString();
-                        break;
-                }
-            }
-        }
-        if (Domestic.class.getName().equals(_class)) {
-            return new Domestic(province, city);
-        } else if (Imported.class.getName().equals(_class)) {
-            return new Imported(country);
-        }
-        return null;
-    }
-
     @Override
     public ItemView[] belongToBrand(String brandId, int offset, int limit) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
@@ -276,6 +211,32 @@ public class PsqlItemQueryService implements ItemQueryService {
         VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
         itemView.setVipPrice(vipPrice);
         return itemView;
+    }
+
+    public ItemView[] belongToCategoryTest(String categoryId) {
+        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+            final String sql = "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic'  mnemonic,i.name::jsonb ->> 'alias'  alias,i.barcode,\n" +
+                    "i.category_id,c.name::jsonb ->> 'name'  category_name,i.brand_id,b.name::jsonb ->> 'name'  brand_name,\n" +
+                    "i.grade, i.made_in,i.specs,i.shelf_life,\n" +
+                    "i.retail_price::jsonb ->> 'number'  retail_price_number,i.retail_price::jsonb ->> 'currencyCode'  retail_price_currencyCode,i.retail_price::jsonb ->> 'unit'  retail_price_unit,\n" +
+                    "i.member_price::jsonb ->> 'name'  member_price_name,i.member_price::jsonb -> 'price' ->> 'number'  member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode'  member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit'  member_price_unit,\n" +
+                    "i.vip_price::jsonb ->> 'name'  vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number'  vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode'  vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit'  vip_price_unit\n" +
+                    "from item i, category c,brand b\n" +
+                    "where c.id in (select id from category where root_id = (select root_id from category where id = ?)\n" +
+                    "                 and \"left\" >= (select \"left\" from category where id = ?)\n" +
+                    "                 and \"right\" <= (select \"right\" from category where id = ?))\n" +
+                    "  and i.category_id = c.id and i.brand_id = b.id";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setLong(1, Long.parseLong(categoryId));
+            ps.setLong(2, Long.parseLong(categoryId));
+            ps.setLong(3, Long.parseLong(categoryId));
+            ResultSet rs = ps.executeQuery();
+            return transform(rs);
+        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
+                 IOException e) {
+            LOGGER.error("Can't rebuild item", e);
+        }
+        return new ItemView[0];
     }
 
     @Override
@@ -385,5 +346,70 @@ public class PsqlItemQueryService implements ItemQueryService {
             itemViews.add(rebuild(rs));
         }
         return itemViews.toArray(new ItemView[0]);
+    }
+
+    private ItemView rebuild(ResultSet rs) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
+        String id = rs.getString("id");
+        Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
+        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(rs.getString("barcode"));
+        Grade grade = Grade.valueOf(rs.getString("grade"));
+        MadeIn madeIn = toMadeIn(rs.getString("made_in"));
+        Specification spec = new Specification(rs.getString("specs"));
+        ShelfLife shelfLife = ShelfLife.rebuild(rs.getInt("shelf_life"));
+        ItemView itemView = new ItemView(id, barcode, name, madeIn, spec, grade, shelfLife);
+
+        ItemView.CategoryView categoryView = new ItemView.CategoryView(rs.getString("category_id"), rs.getString("category_name"));
+        itemView.setCategoryView(categoryView);
+        ItemView.BrandView brandView = new ItemView.BrandView(rs.getString("brand_id"), rs.getString("brand_name"));
+        itemView.setBrandView(brandView);
+
+        MonetaryAmount amount = Money.of(rs.getBigDecimal("retail_price_number"), rs.getString("retail_price_currencyCode"));
+        Unit unit = Unit.valueOf(rs.getString("retail_price_unit"));
+        RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
+        itemView.setRetailPrice(retailPrice);
+        String priceName = rs.getString("member_price_name");
+        amount = Money.of(rs.getBigDecimal("member_price_number"), rs.getString("member_price_currencyCode"));
+        unit = Unit.valueOf(rs.getString("member_price_unit"));
+        MemberPrice memberPrice = new MemberPrice(priceName, new Price(amount, unit));
+        itemView.setMemberPrice(memberPrice);
+        priceName = rs.getString("vip_price_name");
+        amount = Money.of(rs.getBigDecimal("vip_price_number"), rs.getString("vip_price_currencyCode"));
+        unit = Unit.valueOf(rs.getString("vip_price_unit"));
+        VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
+        itemView.setVipPrice(vipPrice);
+        return itemView;
+    }
+
+    private MadeIn toMadeIn(String json) throws IOException {
+        String _class = null, province = null, city = null, country = null;
+        JsonFactory jasonFactory = new JsonFactory();
+        JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "_class":
+                        _class = parser.getValueAsString();
+                        break;
+                    case "province":
+                        province = parser.getValueAsString();
+                        break;
+                    case "city":
+                        city = parser.getValueAsString();
+                        break;
+                    case "country":
+                        country = parser.getValueAsString();
+                        break;
+                }
+            }
+        }
+        if (Domestic.class.getName().equals(_class)) {
+            return new Domestic(province, city);
+        } else if (Imported.class.getName().equals(_class)) {
+            return new Imported(country);
+        }
+        return null;
     }
 }
