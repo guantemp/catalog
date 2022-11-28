@@ -40,7 +40,7 @@ public class PsqlItemQueryServiceTest {
         categoryQuery.descendants("52495569397272599");
     }
 
-    @Test(invocationCount = 20, threadPoolSize = 1)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFind() {
         ItemView itemView = query.find("52496163982907400");
         Assert.assertNotNull(itemView);
@@ -57,9 +57,17 @@ public class PsqlItemQueryServiceTest {
 
     @Test
     public void testBelongToBrand() {
+        ItemView[] skuses = query.belongToBrand("52495569395175425", 0, 3);
+        Assert.assertEquals(skuses.length, 3);
+        skuses = query.belongToBrand("52495569395175425", 1, 3);
+        Assert.assertEquals(skuses.length, 2);
+        skuses = query.belongToBrand("52495569395175425", 1, 1);
+        Assert.assertEquals(skuses.length, 1);
+        skuses = query.belongToBrand("52495569395175425", 1, 0);
+        Assert.assertEquals(skuses.length, 0);
     }
 
-    @Test
+    @Test(invocationCount = 1)
     public void testBelongToCategory() {
         ItemView[] skuses = query.belongToCategory("52495569397272598", 0, 10);
         Assert.assertEquals(skuses.length, 3);
@@ -76,33 +84,52 @@ public class PsqlItemQueryServiceTest {
 
     }
 
-    @Test
+    @Test(invocationCount = 1)
     public void testBelongToCategoryWith() throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
         PsqlItemQueryService itemQueryService = ((PsqlItemQueryService) query);
-        ItemView[] skuses = itemQueryService.belongToCategoryDescendants("52495569397272598");
+        ItemView[] skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
         //Assert.assertEquals(skuses.length, 8);
-        skuses = itemQueryService.belongToCategoryDescendants("52495569397272598");
+        skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
         //Assert.assertEquals(skuses.length, 5);
-        skuses = itemQueryService.belongToCategoryDescendants("52495569397272598");
+        skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
         //Assert.assertEquals(skuses.length, 3);
-        skuses = itemQueryService.belongToCategoryDescendants("52495569397272598");
+        skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
         //Assert.assertEquals(skuses.length, 2);
-        skuses = itemQueryService.belongToCategoryDescendants("52495569397272598");
+        skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
         //Assert.assertEquals(skuses.length, 0);
-        skuses = itemQueryService.belongToCategoryDescendants("52495569397272598");
+        skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
         //Assert.assertEquals(skuses.length, 1);
     }
 
     @Test
     public void testFindAll() {
+        ItemView[] skuses = query.findAll(0, 25);
+        Assert.assertEquals(skuses.length, 14);
+        skuses = query.findAll(12, 25);
+        Assert.assertEquals(skuses.length, 2);
+        skuses = query.findAll(5, 5);
+        Assert.assertEquals(skuses.length, 5);
     }
 
     @Test
     public void testSize() {
+        Assert.assertEquals(query.size(), 14);
     }
 
     @Test
     public void testFromBarcode() {
+        ItemView[] items = query.serach("69235552");
+        Assert.assertEquals(items.length, 3);
+        items = query.serach("690");
+        Assert.assertEquals(items.length, 3);
+        items = query.serach("123465");
+        Assert.assertEquals(items.length, 0);
+        items = query.serach("4695");
+        Assert.assertEquals(items.length, 1);
+        items = query.serach("4547691239136");
+        Assert.assertEquals(items.length, 1);
+        for (ItemView item : items)
+            System.out.println(item);
     }
 
     @Test

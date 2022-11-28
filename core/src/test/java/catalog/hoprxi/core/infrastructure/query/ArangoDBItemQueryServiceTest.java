@@ -75,15 +75,15 @@ public class ArangoDBItemQueryServiceTest {
 
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFromBarcode() {
-        ItemView[] items = itemQueryService.fromBarcode("69235552");
+        ItemView[] items = itemQueryService.findByBarcode("69235552");
         Assert.assertEquals(items.length, 3);
-        items = itemQueryService.fromBarcode("690");
+        items = itemQueryService.findByBarcode("690");
         Assert.assertEquals(items.length, 3);
-        items = itemQueryService.fromBarcode("123465");
+        items = itemQueryService.findByBarcode("123465");
         Assert.assertEquals(items.length, 0);
-        items = itemQueryService.fromBarcode("4695");
+        items = itemQueryService.findByBarcode("4695");
         Assert.assertEquals(items.length, 1);
-        items = itemQueryService.fromBarcode("4547691239136");
+        items = itemQueryService.findByBarcode("4547691239136");
         Assert.assertEquals(items.length, 1);
         for (ItemView item : items)
             System.out.println(item);
@@ -91,28 +91,28 @@ public class ArangoDBItemQueryServiceTest {
 
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFromName() {
-        ItemView[] items = itemQueryService.fromName("彩虹");
+        ItemView[] items = itemQueryService.serach("彩虹");
         Assert.assertEquals(items.length, 3);
-        items = itemQueryService.fromName("^彩虹");
+        items = itemQueryService.serach("^彩虹");
         Assert.assertEquals(items.length, 2);
-        items = itemQueryService.fromName("彩虹|长虹");
+        items = itemQueryService.serach("彩虹|长虹");
         Assert.assertEquals(items.length, 4);
-        items = itemQueryService.fromName("不知道");
+        items = itemQueryService.serach("不知道");
         Assert.assertEquals(items.length, 0);
-        items = itemQueryService.fromName("天友|长虹|彩虹");
+        items = itemQueryService.serach("天友|长虹|彩虹");
         Assert.assertEquals(items.length, 9);
-        items = itemQueryService.fromName("^天友|长虹|彩虹");
+        items = itemQueryService.serach("^天友|长虹|彩虹");
         Assert.assertEquals(items.length, 7);
 
-        ItemView[] skuses = itemQueryService.fromName("^ch");
+        ItemView[] skuses = itemQueryService.serach("^ch");
         Assert.assertEquals(skuses.length, 3);
-        skuses = itemQueryService.fromName("qd");
+        skuses = itemQueryService.serach("qd");
         Assert.assertEquals(skuses.length, 3);
-        skuses = itemQueryService.fromName("ch");
+        skuses = itemQueryService.serach("ch");
         Assert.assertEquals(skuses.length, 4);
-        skuses = itemQueryService.fromName("chetr");
+        skuses = itemQueryService.serach("chetr");
         Assert.assertEquals(skuses.length, 0);
-        skuses = itemQueryService.fromName("ty");
+        skuses = itemQueryService.serach("ty");
         Assert.assertEquals(skuses.length, 5);
     }
 }

@@ -58,11 +58,11 @@ public interface ItemQueryService {
      * @param barcode is support regular
      * @return
      */
-    ItemView[] fromBarcode(String barcode);
+    ItemView[] findByBarcode(String barcode);
 
     /**
-     * @param name is support regular
+     * @param regularExpression is support regular
      * @return
      */
-    ItemView[] fromName(String name);
+    ItemView[] serach(String regularExpression);
 }

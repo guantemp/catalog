@@ -164,7 +164,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
     }
 
     @Override
-    public ItemView[] fromBarcode(String barcode) {
+    public ItemView[] findByBarcode(String barcode) {
         final String query = "WITH brand,category,item,barcode\n" +
                 "FOR b IN barcode FILTER b.barcode =~ @barcode\n" +
                 "FOR i IN 1..1 INBOUND b._id has\n" +
@@ -177,14 +177,14 @@ public class ArangoDBItemQueryService implements ItemQueryService {
     }
 
     @Override
-    public ItemView[] fromName(String name) {
+    public ItemView[] serach(String regularExpression) {
         final String query = "WITH brand,category,item,barcode\n" +
-                "FOR i IN item FILTER i.name.name =~ @name || i.name.alias =~ @name || i.name.mnemonic =~ @name\n" +
+                "FOR i IN item FILTER i.regularExpression.regularExpression =~ @regularExpression || i.regularExpression.alias =~ @regularExpression || i.regularExpression.mnemonic =~ @regularExpression\n" +
                 "FOR b IN 1..1 OUTBOUND i._id has\n" +
                 "FOR c IN 1..1 OUTBOUND i._id belong FILTER c._id =~ '^category'\n" +
                 "FOR br IN 1..1 OUTBOUND i._id belong FILTER br._id =~ '^brand'\n" +
-                "RETURN {'id':i._key,'name':i.name,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'brand':{'id':br._key,'name':br.name.name},'category':{'id':c._key,'name':c.name.name},'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice}";
-        final Map<String, Object> bindVars = new MapBuilder().put("name", name).get();
+                "RETURN {'id':i._key,'regularExpression':i.regularExpression,'barcode':b.barcode,'madeIn':i.madeIn,'spec':i.spec,'grade':i.grade,'brand':{'id':br._key,'regularExpression':br.regularExpression.regularExpression},'category':{'id':c._key,'regularExpression':c.regularExpression.regularExpression},'retailPrice':i.retailPrice,'memberPrice':i.memberPrice,'vipPrice':i.vipPrice}";
+        final Map<String, Object> bindVars = new MapBuilder().put("regularExpression", regularExpression).get();
         ArangoCursor<VPackSlice> slices = catalog.query(query, bindVars, null, VPackSlice.class);
         return transform(slices);
     }

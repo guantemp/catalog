@@ -242,7 +242,7 @@ public class PsqlCategoryQueryServiceTest {
         Assert.assertEquals(0, descendants.length);
     }
 
-    @Test(dependsOnMethods = {"testDescendants"})
+    @Test(dependsOnMethods = {"testDescendants"}, invocationCount = 50)
     public void testSearchName() {
         CategoryQueryService query = new PsqlCategoryQueryService("catalog");
         CategoryView[] result = query.searchName("oil");

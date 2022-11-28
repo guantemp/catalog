@@ -131,12 +131,12 @@ public class ItemServlet extends HttpServlet {
             } else if (!barcode.isEmpty() || !name.isEmpty()) {
                 Set<ItemView> itemViewSet = new HashSet<>();
                 if (!barcode.isEmpty()) {
-                    ItemView[] itemViews = queryService.fromBarcode(barcode);
+                    ItemView[] itemViews = queryService.findByBarcode(barcode);
                     for (ItemView itemView : itemViews)
                         itemViewSet.add(itemView);
                 }
                 if (!name.isEmpty()) {
-                    ItemView[] itemViews = queryService.fromName(name);
+                    ItemView[] itemViews = queryService.serach(name);
                     itemViewSet.addAll(Arrays.asList(itemViews));
                 }
                 responseItemViews(generator, itemViewSet.toArray(new ItemView[0]));
