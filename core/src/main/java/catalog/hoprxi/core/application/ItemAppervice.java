@@ -18,17 +18,53 @@ package catalog.hoprxi.core.application;
 
 import catalog.hoprxi.core.domain.model.Item;
 import catalog.hoprxi.core.domain.model.ItemRepository;
+import catalog.hoprxi.core.domain.model.brand.BrandRepository;
+import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
+import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBItemRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlItemRepository;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2020-01-10
+ * @version 0.0.2 2022-11-29
  */
 public class ItemAppervice {
-    private ItemRepository repository = new ArangoDBItemRepository("catalog");
+    private static ItemRepository itemRepository;
+    private static CategoryRepository categoryRepository;
+    private static BrandRepository brandRepository;
+
+
+    static {
+        Config config = ConfigFactory.load("database");
+        String provider = config.hasPath("provider") ? config.getString("provider").toLowerCase() : "postgresql";
+        String database = config.hasPath("database") ? config.getString("database").toLowerCase() : "catalog";
+        switch ((provider)) {
+            case "psql":
+            case "postgres":
+            case "postgresql":
+                itemRepository = new PsqlItemRepository(database);
+                categoryRepository = new PsqlCategoryRepository(database);
+                brandRepository = new PsqlBrandRepository(database);
+                break;
+            case "arangodb":
+                itemRepository = new ArangoDBItemRepository(database);
+                categoryRepository = new ArangoDBCategoryRepository(database);
+                brandRepository = new ArangoDBBrandRepository(database);
+                break;
+        }
+    }
 
     public Item findItem(String id) {
-        return repository.find(id);
+        return itemRepository.find(id);
+    }
+
+    public void batchImport() {
+
     }
 }

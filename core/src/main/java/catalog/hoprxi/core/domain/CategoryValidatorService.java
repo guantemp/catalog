@@ -17,10 +17,13 @@
 package catalog.hoprxi.core.domain;
 
 
+import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
+import catalog.hoprxi.core.infrastructure.query.ArangoDBCategoryQueryService;
+import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQueryService;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -31,16 +34,22 @@ import com.typesafe.config.ConfigFactory;
  */
 public class CategoryValidatorService {
     private static CategoryRepository repository;
+    private static CategoryQueryService query;
 
     static {
         Config config = ConfigFactory.load("database");
-        String provider = config.hasPath("provider") ? config.getString("provider") : "postgresql";
+        String provider = config.hasPath("provider") ? config.getString("provider").toLowerCase() : "postgresql";
+        String database = config.hasPath("database") ? config.getString("database").toLowerCase() : "catalog";
         switch ((provider)) {
+            case "psql":
+            case "postgres":
             case "postgresql":
-                repository = new PsqlCategoryRepository("catalog");
+                repository = new PsqlCategoryRepository(database);
+                query = new PsqlCategoryQueryService(database);
                 break;
             case "arangodb":
-                repository = new ArangoDBCategoryRepository("catalog");
+                repository = new ArangoDBCategoryRepository(database);
+                query = new ArangoDBCategoryQueryService(database);
                 break;
         }
     }

@@ -42,6 +42,8 @@ public interface ItemQueryService {
      */
     ItemView[] belongToCategory(String categoryId, long offset, int limit);
 
+    ItemView[] belongToCategoryAndDescendants(String categoryId);
+
     /**
      * @param offset
      * @param limit

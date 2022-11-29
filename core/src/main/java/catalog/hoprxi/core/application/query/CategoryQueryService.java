@@ -24,11 +24,14 @@ import catalog.hoprxi.core.application.view.CategoryView;
  * @version 0.0.1 builder 2022-10-20
  */
 public interface CategoryQueryService {
+    /**
+     * @return all root
+     */
     CategoryView[] root();
 
     /**
      * @param id
-     * @return
+     * @return category key is id
      */
     CategoryView find(String id);
 
@@ -44,11 +47,27 @@ public interface CategoryQueryService {
      */
     CategoryView[] descendants(String id);
 
+    /**
+     * @param regularExpression
+     * @return
+     */
     CategoryView[] searchName(String regularExpression);
 
+    /**
+     * @param id
+     * @return
+     */
     CategoryView[] siblings(String id);
 
+    /**
+     * @param id
+     * @return
+     */
     CategoryView[] path(String id);
 
+    /**
+     * @param id
+     * @return
+     */
     int depth(String id);
 }

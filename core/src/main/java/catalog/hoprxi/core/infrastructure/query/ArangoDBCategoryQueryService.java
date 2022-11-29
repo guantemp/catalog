@@ -165,6 +165,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
         return descendants;
     }
 
+
     private void queryAndFillDescendants(Tree<CategoryView> t, String id) {
         final String query = "WITH category,subordinate\n" +
                 "FOR c,s,p in 1..@depth OUTBOUND @startVertex subordinate\n" +
