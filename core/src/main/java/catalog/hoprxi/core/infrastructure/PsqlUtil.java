@@ -67,10 +67,9 @@ public class PsqlUtil {
             props.setProperty("dataSource.portNumber", config.getString("postgresql_write.port"));
             props.setProperty("dataSource.user", config.getString("postgresql_write.user"));
             props.setProperty("dataSource.password", config.getString("postgresql_write.password"));
-            props.setProperty("catalog", config.getString("databaseName"));
+            props.setProperty("catalog", config.hasPath("databaseName") ? config.getString("databaseName") : "catalog");
             props.put("dataSource.logWriter", new PrintWriter(System.out));
             HikariConfig hikariConfig = new HikariConfig(props);
-            //hikariConfig.
             hikariDataSource = new HikariDataSource(hikariConfig);
         }
         return hikariDataSource.getConnection();

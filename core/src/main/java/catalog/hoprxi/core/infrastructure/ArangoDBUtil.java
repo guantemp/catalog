@@ -68,7 +68,7 @@ public class ArangoDBUtil {
      * @return
      */
     public static ArangoDatabase getDatabase() {
-        return getResource().db("catalog");
+        return getResource().db(config.hasPath("databaseName") ? config.getString("databaseName") : "catalog");
     }
 
 
