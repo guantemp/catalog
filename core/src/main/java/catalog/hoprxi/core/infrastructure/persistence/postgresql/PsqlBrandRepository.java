@@ -72,7 +72,7 @@ public class PsqlBrandRepository implements BrandRepository {
     public Brand find(String id) {
         Brand brand = cache.get(id);
         if (brand == null) {
-            try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+            try (Connection connection = PsqlUtil.getConnection()) {
                 final String findSql = "select id,name,about from brand where id=? limit 1";
                 PreparedStatement preparedStatement = connection.prepareStatement(findSql);
                 preparedStatement.setLong(1, Long.parseLong(id));

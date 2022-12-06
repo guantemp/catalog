@@ -32,7 +32,14 @@ import java.util.Properties;
  * @version 0.0.1 builder 2022-08-25
  */
 public class PsqlUtil {
-    private static final Config config = ConfigFactory.load("database");
+    private static final Config config;
+
+    static {
+        Config cache = ConfigFactory.load("core");
+        Config units = ConfigFactory.load("database");
+        config = cache.withFallback(units);
+    }
+
     private static HikariDataSource hikariDataSource;
 
     public static Connection getConnection(String databaseName) throws SQLException {
@@ -46,6 +53,24 @@ public class PsqlUtil {
             props.setProperty("dataSource.databaseName", databaseName);
             props.put("dataSource.logWriter", new PrintWriter(System.out));
             HikariConfig hikariConfig = new HikariConfig(props);
+            //hikariConfig.
+            hikariDataSource = new HikariDataSource(hikariConfig);
+        }
+        return hikariDataSource.getConnection();
+    }
+
+    public static Connection getConnection() throws SQLException {
+        if (hikariDataSource == null) {
+            Properties props = new Properties();
+            props.setProperty("dataSourceClassName", config.getString("postgresql_write.dataSourceClassName"));
+            props.setProperty("dataSource.serverName", config.getString("postgresql_write.host"));
+            props.setProperty("dataSource.portNumber", config.getString("postgresql_write.port"));
+            props.setProperty("dataSource.user", config.getString("postgresql_write.user"));
+            props.setProperty("dataSource.password", config.getString("postgresql_write.password"));
+            props.setProperty("catalog", config.getString("databaseName"));
+            props.put("dataSource.logWriter", new PrintWriter(System.out));
+            HikariConfig hikariConfig = new HikariConfig(props);
+            //hikariConfig.
             hikariDataSource = new HikariDataSource(hikariConfig);
         }
         return hikariDataSource.getConnection();

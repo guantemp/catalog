@@ -28,23 +28,9 @@ import java.sql.Statement;
  * @version 0.0.1 builder 2022-08-22
  */
 public class PsqlSetup {
-    private static final String CREATE_BRAND_SQL = "create table if not exists brand\n" +
-            "(\n" +
-            "    id    bigint not null\n" +
-            "        primary key,\n" +
-            "    name  jsonb,\n" +
-            "    about jsonb\n" +
-            ");\n" +
-            "\n" +
-            "create index if not exists brand_name_index\n" +
-            "    on brand USING gin (name);\n" +
-            "\n" +
-            "insert into brand (id, name, about)\n" +
-            "values (-1, '{\n" +
-            "  \"name\": \"undefined\",\n" +
-            "  \"mnemonic\": \"undefined\",\n" +
-            "  \"alias\": \"未定义\"\n" +
-            "}', null);";
+    private static final String CREATE_BRAND_SQL = "create table if not exists brand ( id bigint not null primary key,name  jsonb, about jsonb );\n" +
+            "create index if not exists brand_name_index on brand USING gin (name);\n" +
+            "insert into brand (id, name, about) values (-1, '{\"name\": \"undefined\", \"mnemonic\": \"undefined\",\"alias\": \"未定义\"}', null);";
     private static final String CREATE_CATEGORY_SQL = "create table if not exists category\n" +
             "(\n" +
             "    id          bigint  not null\n" +
@@ -58,8 +44,9 @@ public class PsqlSetup {
             "    \"right\"     integer not null\n" +
             ");\n" +
             "\n" +
+            "CREATE EXTENSION if not exists pg_trgm;\n" +
             "create index if not exists category_name_index\n" +
-            "    on category using gin (name);\n" +
+            "    on category using gin ((name ->> 'name') gin_trgm_ops);\n" +
             "create index if not exists category_rootId_parentId_index\n" +
             "    on category (root_id, parent_id);\n" +
             "create index if not exists category_left_index\n" +
@@ -70,8 +57,7 @@ public class PsqlSetup {
 
     public static void setup(String databaseName) throws SQLException {
         String password = PasswordService.generateVeryStrongPassword();
-        String user = "create user hoprxi with password '" + password + "'";
-        System.out.println(user);
+        String user = "create user catalog with password '" + password + "'";
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             connection.setAutoCommit(false);
             Statement statement = connection.createStatement();

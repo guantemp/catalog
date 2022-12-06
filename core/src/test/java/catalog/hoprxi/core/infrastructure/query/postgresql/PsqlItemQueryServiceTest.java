@@ -52,7 +52,7 @@ public class PsqlItemQueryServiceTest {
         Assert.assertNull(itemView);
         itemView = query.find("52496321492179007");
         Assert.assertNotNull(itemView);
-        //System.out.println(itemView);
+        System.out.println(itemView);
     }
 
     @Test

@@ -33,13 +33,11 @@ catalog\hoprxi\core\domain\BrandValidatorService.class
 catalog\hoprxi\core\infrastructure\query\ArangoDBItemQueryService.class
 catalog\hoprxi\core\application\command\Command.class
 catalog\hoprxi\core\domain\model\shelfLife\ShelfLifeService.class
-catalog\hoprxi\core\domain\model\brand\ValidatorBrand.class
 catalog\hoprxi\core\domain\model\shelfLife\Rang.class
 catalog\hoprxi\core\domain\model\ItemSpecificationChanged.class
 catalog\hoprxi\core\domain\model\Name.class
 catalog\hoprxi\core\domain\model\brand\BrandRenamed.class
 catalog\hoprxi\core\domain\model\category\InvalidCategoryIdException.class
-catalog\hoprxi\core\domain\model\barcode\EanUcc.class
 catalog\hoprxi\core\domain\model\ItemBarcodeChanged.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBCategoryRepository$Edge.class
 catalog\hoprxi\core\domain\model\price\Unit$18.class
@@ -57,7 +55,6 @@ catalog\hoprxi\core\domain\model\ProhibitSellItem.class
 catalog\hoprxi\core\application\ItemAppervice.class
 catalog\hoprxi\core\domain\model\madeIn\Domestic.class
 catalog\hoprxi\core\webapp\ItemServlet.class
-catalog\hoprxi\core\infrastructure\CoreSetup.class
 catalog\hoprxi\core\domain\model\price\MemberPrice.class
 catalog\hoprxi\core\domain\model\madeIn\Imported.class
 catalog\hoprxi\core\domain\model\price\Unit$22.class
@@ -98,7 +95,6 @@ catalog\hoprxi\core\infrastructure\persistence\ArangoDBProhibitSellItemRepositor
 catalog\hoprxi\core\application\command\BrandCreateCommand.class
 catalog\hoprxi\core\domain\model\price\Unit$20.class
 catalog\hoprxi\core\domain\model\price\Unit$40.class
-catalog\hoprxi\core\domain\model\ItemPermitSold.class
 catalog\hoprxi\core\domain\model\ItemVipPriceChaned.class
 catalog\hoprxi\core\domain\model\barcode\InvalidBarcodeException.class
 catalog\hoprxi\core\application\query\ItemQueryService.class

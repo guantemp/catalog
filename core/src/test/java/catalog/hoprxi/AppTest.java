@@ -22,6 +22,8 @@ import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.Unit;
 import com.fasterxml.jackson.core.*;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.javamoney.moneta.Money;
 import org.javamoney.moneta.format.CurrencyStyle;
 import org.testng.annotations.Test;
@@ -38,6 +40,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -49,7 +52,18 @@ import java.util.regex.Pattern;
 public class AppTest {
 
     @Test
-    public void testMain() throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    public void testConfig() {
+        Config test = ConfigFactory.load("database_test");
+        //Config config = cache.withFallback(units);
+        System.out.println(test.getString("hikari.maximumPoolSize"));
+        List<? extends Config> reads = test.getConfigList("read");
+        for (Config c : reads) {
+            System.out.println(c.getString("host"));
+        }
+    }
+
+    @Test
+    void testOther() throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         String[] test = {"69832423", "69821412", "697234", "998541", "69841", "市政府撒的", "9782"};
         String[] result = Arrays.stream(test).filter(s -> Pattern.compile("^698\\d*").matcher(s).matches()).toArray(String[]::new);
         //result="/".split("/");
@@ -124,4 +138,5 @@ public class AppTest {
         nameConstructor.setAccessible(true);
         System.out.println(nameConstructor.newInstance("中文变量", "3252", "dsgfd"));
     }
+
 }

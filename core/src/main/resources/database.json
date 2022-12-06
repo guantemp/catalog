@@ -1,8 +1,14 @@
 {
     "provider": "postgresql",
-    "database": "catalog",
-    "write": "postgresql_write",
-    "read": "postgresql_read",
+    "databaseName": "catalog",
+    "read": "postgresql",
+    "hikari": {
+        "maximumPoolSize": 5,
+        "connections": 3
+    },
+    "write": {
+        "provider": "postgresql"
+    },
     "arangodb_write": {
         "host": "120.77.47.145",
         "port": "8529",
@@ -16,10 +22,6 @@
         "user": "root",
         "password": "Qwe123465",
         "maxConnections": 8
-    },
-    "hikari": {
-        "maximumPoolSize": 5,
-        "connections": 3
     },
     "postgresql_write": {
         "dataSourceClassName": "org.postgresql.ds.PGSimpleDataSource",

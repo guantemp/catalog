@@ -42,6 +42,10 @@ public interface ItemQueryService {
      */
     ItemView[] belongToCategory(String categoryId, long offset, int limit);
 
+    /**
+     * @param categoryId
+     * @return all item belong current category and descendants category
+     */
     ItemView[] belongToCategoryAndDescendants(String categoryId);
 
     /**
@@ -63,8 +67,8 @@ public interface ItemQueryService {
     ItemView[] findByBarcode(String barcode);
 
     /**
-     * @param regularExpression is support regular
-     * @return
+     * @param regularExpression is support regular,will search Name(name,alias,mnemonic),barcode
+     * @return matched result
      */
     ItemView[] serach(String regularExpression);
 }

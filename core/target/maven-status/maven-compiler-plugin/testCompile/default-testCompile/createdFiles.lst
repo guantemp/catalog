@@ -1,12 +1,11 @@
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBBrandRepositoryTest.class
 catalog\hoprxi\core\infrastructure\query\ArangoDBBrandQueryServiceTest.class
-catalog\hoprxi\core\domain\model\UnitTest.class
 catalog\hoprxi\core\infrastructure\query\ArangoDBCategoryQueryServiceTest.class
-catalog\hoprxi\core\infrastructure\persistence\CoreSetupTest.class
 catalog\hoprxi\core\domain\model\barcode\BarcodeGenerateServicesTest.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBCategoryRepositoryTest.class
-catalog\hoprxi\core\domain\model\GradeTest.class
 catalog\hoprxi\core\infrastructure\i18n\LabelTest.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBItemRepositoryTest.class
 catalog\hoprxi\AppTest.class
+catalog\hoprxi\core\domain\model\UnitTest.class
+catalog\hoprxi\core\domain\model\GradeTest.class
 catalog\hoprxi\core\infrastructure\query\ArangoDBItemQueryServiceTest.class
