@@ -72,6 +72,17 @@
           <element id="library" level="project" name="Maven: commons-io:commons-io:2.11.0" />
           <element id="library" level="project" name="Maven: com.zaxxer:SparseBitSet:1.2" />
           <element id="library" level="project" name="Maven: org.apache.logging.log4j:log4j-api:2.18.0" />
+          <element id="library" level="project" name="Maven: org.apache.poi:poi-ooxml:5.2.3" />
+          <element id="library" level="project" name="Maven: org.apache.poi:poi-ooxml-lite:5.2.3" />
+          <element id="library" level="project" name="Maven: org.apache.xmlbeans:xmlbeans:5.1.1" />
+          <element id="library" level="project" name="Maven: xml-apis:xml-apis:1.4.01" />
+          <element id="library" level="project" name="Maven: org.apache.commons:commons-compress:1.21" />
+          <element id="library" level="project" name="Maven: com.github.virtuald:curvesapi:1.07" />
+          <element id="library" level="project" name="Maven: com.opencsv:opencsv:5.7.1" />
+          <element id="library" level="project" name="Maven: org.apache.commons:commons-lang3:3.12.0" />
+          <element id="library" level="project" name="Maven: org.apache.commons:commons-text:1.10.0" />
+          <element id="library" level="project" name="Maven: commons-beanutils:commons-beanutils:1.9.4" />
+          <element id="library" level="project" name="Maven: commons-collections:commons-collections:3.2.2" />
           <element id="library" level="project" name="Maven: io.undertow:undertow-core:2.1.0.Final" />
           <element id="library" level="project" name="Maven: org.jboss.logging:jboss-logging:3.4.1.Final" />
           <element id="library" level="project" name="Maven: org.jboss.xnio:xnio-api:3.8.0.Final" />

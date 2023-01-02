@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,13 +53,13 @@ public class AppTest {
 
     @Test
     public void testConfig() {
-        Config test = ConfigFactory.load("database_test");
-        //Config config = cache.withFallback(units);
-        System.out.println(test.getString("hikari.maximumPoolSize"));
+        Config test = ConfigFactory.load("database_new");
+        //System.out.println(test.getString("read.hikari.maximumPoolSize"));
         List<? extends Config> reads = test.getConfigList("read");
         for (Config c : reads) {
             System.out.println(c.getString("host"));
         }
+        //System.out.println(test.getStringList("read.host"));
     }
 
     @Test
@@ -95,9 +95,7 @@ public class AppTest {
         generator.writeEndObject();
         generator.writeStringField("retailPrice", format.format(retailPrice.price().amount()) + "/" + retailPrice.price().unit().toString());
         //generator.write
-        StringBuilder sb = new StringBuilder("\n\"name\" : ");
-        sb.append("\"guantemp\",").append('\n').append("\"age\" : ").append(21);
-        generator.writeRaw(sb.toString());
+        generator.writeRaw("\n\"name\" : " + "\"guantemp\"," + '\n' + "\"age\" : " + 21);
         generator.flush();
 
         System.out.println("money:" + new BigDecimal("1E+1").toPlainString());

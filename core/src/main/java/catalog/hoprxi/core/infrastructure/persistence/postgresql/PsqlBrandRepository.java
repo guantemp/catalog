@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ public class PsqlBrandRepository implements BrandRepository {
     public Brand find(String id) {
         Brand brand = cache.get(id);
         if (brand == null) {
-            try (Connection connection = PsqlUtil.getConnection()) {
+            try (Connection connection = PsqlUtil.getConnection(databaseName)) {
                 final String findSql = "select id,name,about from brand where id=? limit 1";
                 PreparedStatement preparedStatement = connection.prepareStatement(findSql);
                 preparedStatement.setLong(1, Long.parseLong(id));

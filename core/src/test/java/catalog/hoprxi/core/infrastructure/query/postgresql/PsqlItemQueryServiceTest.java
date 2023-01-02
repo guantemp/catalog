@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@ public class PsqlItemQueryServiceTest {
     }
 
     @Test(invocationCount = 10, threadPoolSize = 2)
-    public void testBelongToCategoryWith() throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    public void belongToCategoryAndDescendants() throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
         PsqlItemQueryService itemQueryService = ((PsqlItemQueryService) query);
         ItemView[] skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
         //Assert.assertEquals(skuses.length, 8);

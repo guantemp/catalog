@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,6 @@ public class PsqlUtil {
             props.setProperty("dataSource.databaseName", databaseName);
             props.put("dataSource.logWriter", new PrintWriter(System.out));
             HikariConfig hikariConfig = new HikariConfig(props);
-            //hikariConfig.
             hikariDataSource = new HikariDataSource(hikariConfig);
         }
         return hikariDataSource.getConnection();

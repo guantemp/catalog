@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,142 +16,202 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
+import catalog.hoprxi.core.application.batch.ItemImportExportService;
 import catalog.hoprxi.core.application.query.ItemQueryService;
 import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQueryService;
-import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.hssf.util.HSSFColor;
-import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.xssf.streaming.*;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFComment;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.javamoney.moneta.format.CurrencyStyle;
 
-import java.io.*;
+import javax.money.format.AmountFormatQueryBuilder;
+import javax.money.format.MonetaryAmountFormat;
+import javax.money.format.MonetaryFormats;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Locale;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2022-11-29
  */
-public class PsqlItemImportExport {
+public class PsqlItemImportExport implements ItemImportExportService {
+    public static void importFromExcel(InputStream inputStream) {
+
+    }
+
+    public static OutputStream importFromCsv(InputStream inputStream) {
+        return null;
+    }
 
     public static void export(OutputStream outputStream) throws IOException {
         ItemQueryService query = new PsqlItemQueryService("catalog");
         ItemView[] itemViews = query.findAll(0, 1000);
-        HSSFWorkbook workbook = null;
+        SXSSFWorkbook workbook = null;
         BufferedOutputStream bufferedOutPut = null;
+        MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
+                .set(CurrencyStyle.SYMBOL).set("pattern", "¤#,##0.0000")//"#,##0.00### ¤"
+                .build());
         try {
-            workbook = new HSSFWorkbook();
+            workbook = new SXSSFWorkbook();
             // 创建页
-            HSSFSheet sheet = workbook.createSheet("商品信息");
+            SXSSFSheet sheet = workbook.createSheet("商品信息");
             //设置列宽
-            sheet.setColumnWidth(0, 256 * 35);
-            sheet.setColumnWidth(1, 256 * 35);
-            sheet.setColumnWidth(2, 256 * 35);
-            sheet.setColumnWidth(3, 256 * 35);
-            sheet.setColumnWidth(4, 256 * 35);
-            sheet.setColumnWidth(5, 256 * 35);
-            sheet.setColumnWidth(6, 256 * 35);
-            sheet.setColumnWidth(7, 256 * 35);
-            sheet.setColumnWidth(8, 256 * 35);
-            sheet.setColumnWidth(9, 256 * 35);
-            sheet.setColumnWidth(10, 256 * 35);
-            sheet.setColumnWidth(11, 256 * 35);
-            sheet.setColumnWidth(12, 256 * 35);
-            sheet.setColumnWidth(13, 256 * 35);
-            sheet.setColumnWidth(14, 256 * 35);
-
+            sheet.setColumnWidth(0, 148 * 35);//id
+            sheet.setColumnWidth(1, 290 * 35);//品名
+            sheet.setColumnWidth(2, 172 * 35);//别名
+            sheet.setColumnWidth(3, 104 * 35);//条码
+            sheet.setColumnWidth(4, 112 * 35);//规格
+            sheet.setColumnWidth(5, 64 * 35);//等级
+            sheet.setColumnWidth(6, 88 * 35);//类别
+            sheet.setColumnWidth(7, 72 * 35);//保质期
+            sheet.setColumnWidth(8, 128 * 35);//产地
+            sheet.setColumnWidth(9, 80 * 35);//计价单位
+            sheet.setColumnWidth(10, 112 * 35);//零售价
+            sheet.setColumnWidth(11, 112 * 35);//会员价
+            sheet.setColumnWidth(12, 112 * 35);//VIP价
+            sheet.setColumnWidth(13, 112 * 35);//"品牌"
+            sheet.getDataValidationHelper();
 
             // 创建行
-            HSSFRow firstrow = sheet.createRow(0);
+            SXSSFRow firstrow = sheet.createRow(0);
+            SXSSFDrawing p = sheet.createDrawingPatriarch();
             // 创建列
-            HSSFCell cell0 = firstrow.createCell(0);
+            SXSSFCell cell0 = firstrow.createCell(0);
             cell0.setCellStyle(getColumnTopStyle(workbook));
             cell0.setCellValue("ID");
             // 创建列
-            HSSFCell cell1 = firstrow.createCell(1);
+            SXSSFCell cell1 = firstrow.createCell(1);
             cell1.setCellStyle(getColumnTopStyle(workbook));
             cell1.setCellValue("品名");
             // 创建列
-            HSSFCell cell2 = firstrow.createCell(2);
+            SXSSFCell cell2 = firstrow.createCell(2);
             cell2.setCellStyle(getColumnTopStyle(workbook));
             cell2.setCellValue("别名");
             // 创建列
-            HSSFCell cell3 = firstrow.createCell(3);
-            cell3.setCellStyle(getColumnTopStyle(workbook));
-            cell3.setCellValue("快捷拼音");
-            // 创建列
-            HSSFCell cell4 = firstrow.createCell(4);
+            SXSSFCell cell4 = firstrow.createCell(3);
             cell4.setCellStyle(getColumnTopStyle(workbook));
             cell4.setCellValue("条码");
+            XSSFComment comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 3, 0, 5, 12));
+            // 输入批注信息
+            comment.setString(new XSSFRichTextString("条码规则：\n\n 1、支持EAN8,EAN13,UPCA,UPC条码\n2、最后一位为效验码，如果你不知道如何计算该效验码，请输入条码的前7位(ean8),前12位(EAN13),等待系统为你自动生成!"));
+            // 添加作者,选中B5单元格,看状态栏
+            comment.setAuthor("guan-xianghuang");
+            cell4.setCellComment(comment);
             // 创建列
-            HSSFCell cell5 = firstrow.createCell(5);
+            SXSSFCell cell5 = firstrow.createCell(4);
             cell5.setCellStyle(getColumnTopStyle(workbook));
             cell5.setCellValue("规格");
             // 创建列
-            HSSFCell cell6 = firstrow.createCell(6);
+            SXSSFCell cell6 = firstrow.createCell(5);
             cell6.setCellStyle(getColumnTopStyle(workbook));
             cell6.setCellValue("等级");
+            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 5, 0, 5, 6));
+            // 输入批注信息
+            comment.setString(new XSSFRichTextString("等级规则：\n\n 1、請使用：不合格品、合格品、一等品、优等品\n2、留空或不是以上字符的默認為合格品"));
             // 创建列
-            HSSFCell cell7 = firstrow.createCell(7);
+            SXSSFCell cell7 = firstrow.createCell(6);
             cell7.setCellStyle(getColumnTopStyle(workbook));
-            cell7.setCellValue("保质期");
+            cell7.setCellValue("类别");
             // 创建列
-            HSSFCell cell8 = firstrow.createCell(8);
+            SXSSFCell cell8 = firstrow.createCell(7);
             cell8.setCellStyle(getColumnTopStyle(workbook));
-            cell8.setCellValue("产地");
+            cell8.setCellValue("保质期");
             // 创建列
-            HSSFCell cell9 = firstrow.createCell(9);
+            SXSSFCell cell9 = firstrow.createCell(8);
             cell9.setCellStyle(getColumnTopStyle(workbook));
             cell9.setCellValue("产地");
+
+            SXSSFCell cell3 = firstrow.createCell(9);
+            cell3.setCellStyle(getColumnTopStyle(workbook));
+            cell3.setCellValue("计价单位");
             // 创建列
-            HSSFCell cell10 = firstrow.createCell(10);
+            SXSSFCell cell10 = firstrow.createCell(10);
             cell10.setCellStyle(getColumnTopStyle(workbook));
             cell10.setCellValue("零售价");
             // 创建列
-            HSSFCell cell11 = firstrow.createCell(11);
+            SXSSFCell cell11 = firstrow.createCell(11);
             cell11.setCellStyle(getColumnTopStyle(workbook));
             cell11.setCellValue("会员价");
             // 创建列
-            HSSFCell cell12 = firstrow.createCell(12);
+            SXSSFCell cell12 = firstrow.createCell(12);
             cell12.setCellStyle(getColumnTopStyle(workbook));
             cell12.setCellValue("VIP价");
             // 创建列
-            HSSFCell cell13 = firstrow.createCell(13);
-            cell13.setCellStyle(getColumnTopStyle(workbook));
-            cell13.setCellValue("类别");
-            // 创建列
-            HSSFCell cell14 = firstrow.createCell(14);
+            SXSSFCell cell14 = firstrow.createCell(13);
             cell14.setCellStyle(getColumnTopStyle(workbook));
             cell14.setCellValue("品牌");
 
             for (ItemView itemView : itemViews) {
-                HSSFRow row = sheet.createRow(sheet.getLastRowNum() + 1);
+                // 创建行
+                SXSSFRow row = sheet.createRow(sheet.getLastRowNum() + 1);
                 //设置单元格的值，并且设置样式
-                HSSFCell cell00 = row.createCell(0);
+                SXSSFCell cell00 = row.createCell(0);
                 cell00.setCellStyle(getStyle(workbook));
                 cell00.setCellValue(itemView.id());
                 //设置单元格的值，并且设置样式
-                HSSFCell cell01 = row.createCell(1);
+                SXSSFCell cell01 = row.createCell(1);
                 cell01.setCellStyle(getStyle(workbook));
                 cell01.setCellValue(itemView.name().name());
                 //设置单元格的值，并且设置样式
-                HSSFCell cell02 = row.createCell(2);
+                SXSSFCell cell02 = row.createCell(2);
                 cell02.setCellStyle(getStyle(workbook));
-                cell02.setCellValue(itemView.name().name());
+                cell02.setCellValue(itemView.name().alias());
                 //设置单元格的值，并且设置样式
-                HSSFCell cell03 = row.createCell(3);
-                cell03.setCellStyle(getStyle(workbook));
-                cell03.setCellValue(itemView.name().name());
-                //设置单元格的值，并且设置样式
-                HSSFCell cell04 = row.createCell(4);
+                SXSSFCell cell04 = row.createCell(3);
                 cell04.setCellStyle(getStyle(workbook));
-                cell04.setCellValue(itemView.name().name());
+                cell04.setCellValue(String.valueOf(itemView.barcode().barcode()));
+
+                SXSSFCell cell05 = row.createCell(4);
+                cell05.setCellStyle(getStyle(workbook));
+                cell05.setCellValue(itemView.spec().value());
+
+                SXSSFCell cell06 = row.createCell(5);
+                cell06.setCellStyle(getStyle(workbook));
+                cell06.setCellValue(itemView.grade().toString());
+
+                SXSSFCell cell07 = row.createCell(6);
+                cell07.setCellStyle(getStyle(workbook));
+                cell07.setCellValue(itemView.categoryView().name());
+
+                SXSSFCell cell08 = row.createCell(7);
+                cell08.setCellStyle(getStyle(workbook));
+                cell08.setCellValue(itemView.shelfLife().days() + "天");
+
+                SXSSFCell cell09 = row.createCell(8);
+                cell09.setCellStyle(getStyle(workbook));
+                cell09.setCellValue(itemView.madeIn().madeIn());
+
+                SXSSFCell cell03 = row.createCell(9);
+                cell03.setCellStyle(getStyle(workbook));
+                cell03.setCellValue(itemView.retailPrice().price().unit().toString());
+
+                SXSSFCell cell010 = row.createCell(10);
+                cell010.setCellStyle(getStyle(workbook));
+                cell010.setCellValue(format.format(itemView.retailPrice().price().amount()));
+
+                SXSSFCell cell011 = row.createCell(11);
+                cell011.setCellStyle(getStyle(workbook));
+                cell011.setCellValue(format.format(itemView.memberPrice().price().amount()));
+
+                SXSSFCell cell012 = row.createCell(12);
+                cell012.setCellStyle(getStyle(workbook));
+                cell012.setCellValue(format.format(itemView.vipPrice().price().amount()));
+
+                SXSSFCell cell013 = row.createCell(13);
+                cell013.setCellStyle(getStyle(workbook));
+                cell013.setCellValue(itemView.brandView().name());
             }
-            File file = new File("E:/导出数据商品库.xls");
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
             getColumnTopStyle(workbook);
-            bufferedOutPut = new BufferedOutputStream(fileOutputStream);
+            bufferedOutPut = new BufferedOutputStream(outputStream);
             workbook.write(bufferedOutPut);
             bufferedOutPut.flush();
         } finally {
@@ -162,9 +222,9 @@ public class PsqlItemImportExport {
         }
     }
 
-    public static HSSFCellStyle getStyle(HSSFWorkbook workbook) {
+    public static CellStyle getStyle(SXSSFWorkbook workbook) {
         // 设置字体
-        HSSFFont font = workbook.createFont();
+        Font font = workbook.createFont();
         //设置字体大小
         font.setFontHeightInPoints((short) 12);
         //字体加粗
@@ -172,9 +232,9 @@ public class PsqlItemImportExport {
         //设置字体名字
         font.setFontName("宋体");
         //设置样式;
-        HSSFCellStyle style = workbook.createCellStyle();
+        CellStyle style = workbook.createCellStyle();
         //设置背景颜色;
-        style.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LEMON_CHIFFON.getIndex());
+        style.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_YELLOW.getIndex());
         //solid 填充  foreground  前景色
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         //设置底边框;
@@ -202,23 +262,22 @@ public class PsqlItemImportExport {
         //设置垂直对齐的样式为居中对齐;
         style.setVerticalAlignment(VerticalAlignment.CENTER);
         return style;
-
     }
 
     /*
      * 列头单元格样式
      */
-    public static HSSFCellStyle getColumnTopStyle(HSSFWorkbook workbook) {
+    public static CellStyle getColumnTopStyle(SXSSFWorkbook workbook) {
         // 设置字体
-        HSSFFont font = workbook.createFont();
+        Font font = workbook.createFont();
         //设置字体大小
         font.setFontHeightInPoints((short) 14);
         //字体加粗
         font.setBold(true);
         //设置字体名字
-        font.setFontName("黑体");
+        font.setFontName("宋体");
         //设置样式;
-        HSSFCellStyle style = workbook.createCellStyle();
+        CellStyle style = workbook.createCellStyle();
         //设置背景颜色;
         style.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_ORANGE.getIndex());
         //solid 填充  foreground  前景色
@@ -250,7 +309,14 @@ public class PsqlItemImportExport {
         return style;
     }
 
-    public void batchImport(InputStream inputStream) {
-
+    private DataValidation dropDownList(Sheet sheet, String[] textList, int firstRow, int endRow, int firstCol, int endCol) {
+        DataValidationHelper helper = sheet.getDataValidationHelper();
+        //加载下拉列表内容
+        DataValidationConstraint constraint = helper.createExplicitListConstraint(textList);
+        constraint.setExplicitListValues(textList);
+        //设置数据有效性加载在哪个单元格上。四个参数分别是：起始行、终止行、起始列、终止列
+        CellRangeAddressList regions = new CellRangeAddressList((short) firstRow, (short) endRow, (short) firstCol, (short) endCol);
+        //数据有效性对象
+        return helper.createValidation(constraint, regions);
     }
 }

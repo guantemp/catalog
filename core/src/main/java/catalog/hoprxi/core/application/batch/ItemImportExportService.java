@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,5 +21,5 @@ package catalog.hoprxi.core.application.batch;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-11-01
  */
-public interface ItemBatchImportService {
+public interface ItemImportExportService {
 }
