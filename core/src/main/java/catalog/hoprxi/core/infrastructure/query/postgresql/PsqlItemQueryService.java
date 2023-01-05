@@ -315,6 +315,7 @@ public class PsqlItemQueryService implements ItemQueryService {
 
     private MadeIn toMadeIn(String json) throws IOException {
         String _class = null, province = null, city = null, country = null;
+        int code = -1;
         JsonFactory jasonFactory = new JsonFactory();
         JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
         while (!parser.isClosed()) {
@@ -335,14 +336,19 @@ public class PsqlItemQueryService implements ItemQueryService {
                     case "country":
                         country = parser.getValueAsString();
                         break;
+                    case "code":
+                        code = parser.getIntValue();
+                        break;
                 }
             }
         }
+        if (code == 0)
+            return Domestic.BLACK;
         if (Domestic.class.getName().equals(_class)) {
             return new Domestic(province, city);
         } else if (Imported.class.getName().equals(_class)) {
             return new Imported(country);
         }
-        return null;
+        return Domestic.BLACK;
     }
 }

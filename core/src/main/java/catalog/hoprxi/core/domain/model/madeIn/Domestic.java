@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,11 +31,17 @@ public class Domestic implements MadeIn {
     public static final Domestic TIAN_JIN = new Domestic("天津市", "天津市");
     public static final Domestic SHANG_HAI = new Domestic("上海市", "上海市");
     public static final Domestic CHONG_QING = new Domestic("重庆市", "重庆市");
+    public static final Domestic BLACK = new Domestic(0, "", "") {
+        @Override
+        public String madeIn() {
+            return "";
+        }
+    };
 
     // 省/市级
     private final String province;//四川省
     private final String city;//乐山市
-    private long code;
+    private int code = 511100;
 
     public String province() {
         return province;
@@ -50,6 +56,21 @@ public class Domestic implements MadeIn {
         this.city = Objects.requireNonNull(city, "city required").trim();
     }
 
+    public Domestic(int code) {
+        this("四川省", "乐山市");
+        if (code < 0)
+            throw new IllegalArgumentException("code must larger zero");
+        this.code = code;
+    }
+
+    public Domestic(int code, String province, String city) {
+        this.province = province;
+        this.city = city;
+        if (code < 0)
+            throw new IllegalArgumentException("code must larger zero");
+        this.code = code;
+    }
+
     @Override
     public String madeIn() {
         return province + Label.MADIN_SEPARATORS + city;
@@ -61,6 +82,7 @@ public class Domestic implements MadeIn {
         return new StringJoiner(", ", Domestic.class.getSimpleName() + "[", "]")
                 .add("province='" + province + "'")
                 .add("city='" + city + "'")
+                .add("code=" + code)
                 .toString();
     }
 
@@ -80,5 +102,9 @@ public class Domestic implements MadeIn {
         int result = province != null ? province.hashCode() : 0;
         result = 31 * result + (city != null ? city.hashCode() : 0);
         return result;
+    }
+
+    public int code() {
+        return code;
     }
 }

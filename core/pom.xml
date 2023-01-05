@@ -27,7 +27,7 @@
 
     <name>core</name>
     <!-- FIXME change it to the project's website -->
-    <url>http://catalog.hoprxi.com</url>
+    <url>https://catalog.hoprxi.com</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -43,6 +43,22 @@
             <artifactId>testng</artifactId>
             <version>7.3.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-nop</artifactId>
+            <version>2.0.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.19.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+            <version>3.4.2</version>
         </dependency>
         <dependency>
             <groupId>event.hoprxi</groupId>
@@ -81,7 +97,6 @@
             <version>5.1.0</version>
         </dependency>
         <dependency>
-            <scope>compile</scope>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.4.2</version>
@@ -142,6 +157,7 @@
                 <includes>
                     <include>**/*.conf</include>
                     <include>**/*.json</include>
+                    <include>**/*.xml</include>
                 </includes>
             </resource>
         </resources>
@@ -165,7 +181,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/conf</outputDirectory>
+                            <outputDirectory>${project.build.directory}/config</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>src/main/resources</directory>
@@ -173,6 +189,7 @@
                                         <exclude>**/*.conf</exclude>
                                         <exclude>**/*.properties</exclude>
                                         <exclude>**/*.json</exclude>
+                                        <exclude>**/*.xml</exclude>
                                     </includes>
                                     <filtering>true</filtering>
                                 </resource>
@@ -205,7 +222,7 @@
                         </manifest>
                         <!--(配置文件外置目录) -->
                         <manifestEntries>
-                            <Class-Path>conf/</Class-Path>
+                            <Class-Path>config/</Class-Path>
                         </manifestEntries>
                         <!--
                                                 <excludes>

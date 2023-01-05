@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,9 @@ import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +37,20 @@ import java.util.Objects;
  * @version 0.0.2 builder 2022-04-27
  */
 public class CategoryAppService {
-    private final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
+    private CategoryRepository repository;
+
+    public CategoryAppService() {
+        Config conf = ConfigFactory.load("database");
+        String provider = conf.hasPath("provider") ? conf.getString("provider") : "postgresql";
+        switch ((provider)) {
+            case "postgresql":
+                repository = new PsqlCategoryRepository("catalog");
+                break;
+            case "arangodb":
+                repository = new ArangoDBCategoryRepository("catalog");
+                break;
+        }
+    }
 
     public CategoryView create(CategoryCreateCommand command) {
         Objects.requireNonNull(command, "command required");

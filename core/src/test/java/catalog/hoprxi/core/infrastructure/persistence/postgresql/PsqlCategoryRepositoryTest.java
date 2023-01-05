@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ public class PsqlCategoryRepositoryTest {
     @BeforeClass
     public void beforeClass() {
         repository.save(Category.UNDEFINED);
-        Category root = Category.root("496796322118291457", new Name("分类", "root"));
+        Category root = Category.root("496796322118291457", new Name("商品类别", "root"));
         repository.save(root);
         //食品
         Category food = new Category("496796322118291457", "496796322118291460", new Name("食品", "food"), "可供人类食用或饮用的物质，包括加工食品，半成品和未加工食品，不包括烟草或只作药品用的物质");

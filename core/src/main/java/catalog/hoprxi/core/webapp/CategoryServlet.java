@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,10 @@ import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBCategoryQueryService;
+import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQueryService;
 import com.fasterxml.jackson.core.*;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.annotation.WebInitParam;
@@ -42,17 +45,26 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2022-04-18
  */
 @WebServlet(urlPatterns = {"v1/categories/*"}, name = "categories", asyncSupported = true, initParams = {
-        @WebInitParam(name = "provider", value = "arangodb"), @WebInitParam(name = "databaseName", value = "catalog")})
+        @WebInitParam(name = "provider", value = "arangodb"), @WebInitParam(name = "database", value = "catalog")})
 public class CategoryServlet extends HttpServlet {
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
     private static final CategoryAppService APP_SERVICE = new CategoryAppService();
-    private final CategoryQueryService categoryQueryService = new ArangoDBCategoryQueryService("catalog");
+    private CategoryQueryService categoryQueryService;
 
     @Override
     public void init(ServletConfig config) {
         if (config != null) {
             String database = config.getInitParameter("database");
-            String databaseName = config.getInitParameter("databaseName");
+        }
+        Config conf = ConfigFactory.load("database");
+        String provider = conf.hasPath("provider") ? conf.getString("provider") : "postgresql";
+        switch ((provider)) {
+            case "postgresql":
+                categoryQueryService = new PsqlCategoryQueryService("catalog");
+                break;
+            case "arangodb":
+                categoryQueryService = new ArangoDBCategoryQueryService("catalog");
+                break;
         }
         categoryQueryService.root();
     }

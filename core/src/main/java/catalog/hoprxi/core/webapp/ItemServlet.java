@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,12 @@ import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.ItemRepository;
 import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBItemRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlItemRepository;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBItemQueryService;
+import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQueryService;
 import com.fasterxml.jackson.core.*;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.javamoney.moneta.format.CurrencyStyle;
 import salt.hoprxi.utils.NumberHelper;
 
@@ -61,15 +65,18 @@ public class ItemServlet extends HttpServlet {
         if (config != null) {
             String database = config.getInitParameter("database");
             String databaseName = config.getInitParameter("databaseName");
-            switch (database) {
-                case "arangodb":
-                    break;
-                case "mysql":
-                    break;
-                default:
-                    queryService = new ArangoDBItemQueryService(databaseName);
-                    repository = new ArangoDBItemRepository(databaseName);
-            }
+        }
+        Config conf = ConfigFactory.load("database");
+        String provider = conf.hasPath("provider") ? conf.getString("provider") : "postgresql";
+        switch ((provider)) {
+            case "postgresql":
+                repository = new PsqlItemRepository("catalog");
+                queryService = new PsqlItemQueryService("catalog");
+                break;
+            case "arangodb":
+                repository = new ArangoDBItemRepository("catalog");
+                queryService = new ArangoDBItemQueryService("catalog");
+                break;
         }
     }
 

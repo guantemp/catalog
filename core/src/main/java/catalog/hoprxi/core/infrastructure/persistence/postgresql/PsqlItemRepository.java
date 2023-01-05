@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,6 +116,7 @@ public class PsqlItemRepository implements ItemRepository {
 
     private MadeIn toMadeIn(String json) throws IOException {
         String _class = null, province = null, city = null, country = null;
+        int code = -1;
         JsonFactory jasonFactory = new JsonFactory();
         JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
         while (!parser.isClosed()) {
@@ -136,15 +137,20 @@ public class PsqlItemRepository implements ItemRepository {
                     case "country":
                         country = parser.getValueAsString();
                         break;
+                    case "code":
+                        code = parser.getIntValue();
+                        break;
                 }
             }
         }
+        if (code == 0)
+            return Domestic.BLACK;
         if (Domestic.class.getName().equals(_class)) {
             return new Domestic(province, city);
         } else if (Imported.class.getName().equals(_class)) {
             return new Imported(country);
         }
-        return null;
+        return Domestic.BLACK;
     }
 
     @Override
@@ -210,9 +216,11 @@ public class PsqlItemRepository implements ItemRepository {
             generator.writeStringField("_class", _class);
             if (Domestic.class.getName().equals(_class)) {
                 Domestic domestic = (Domestic) madeIn;
+                generator.writeNumberField("code", domestic.code());
                 generator.writeStringField("province", domestic.province());
                 generator.writeStringField("city", domestic.city());
             } else if (Imported.class.getName().equals(_class)) {
+                generator.writeNumberField("code", madeIn.code());
                 generator.writeStringField("country", ((Imported) madeIn).country());
             }
             generator.writeEndObject();

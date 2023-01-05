@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,13 @@ import catalog.hoprxi.core.application.query.BrandQueryService;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBBrandQueryService;
+import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlBrandQueryService;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import salt.hoprxi.utils.NumberHelper;
 
 import javax.servlet.ServletConfig;
@@ -51,12 +55,23 @@ import java.util.List;
 public class BrandServlet extends HttpServlet {
     private static final int OFFSET = 0;
     private static final int LIMIT = 50;
-    private final BrandRepository repository = new ArangoDBBrandRepository("catalog");
-    private final BrandQueryService query = new ArangoDBBrandQueryService("catalog");
+    private BrandRepository repository;
+    private BrandQueryService query;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
-        super.init(config);
+        Config conf = ConfigFactory.load("database");
+        String provider = conf.hasPath("provider") ? conf.getString("provider") : "postgresql";
+        switch ((provider)) {
+            case "postgresql":
+                repository = new PsqlBrandRepository("catalog");
+                query = new PsqlBrandQueryService("catalog");
+                break;
+            case "arangodb":
+                repository = new ArangoDBBrandRepository("catalog");
+                query = new ArangoDBBrandQueryService("catalog");
+                break;
+        }
     }
 
     @Override
