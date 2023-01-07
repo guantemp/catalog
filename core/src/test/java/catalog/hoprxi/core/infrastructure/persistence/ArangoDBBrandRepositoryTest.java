@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,12 +69,12 @@ public class ArangoDBBrandRepositoryTest {
     /*
         @AfterClass
         public void afterClass() {
-            repository.remove("495651176959596552");
-            repository.remove("495651176959596578");
-            repository.remove("495651176959596546");
-            repository.remove("495651176959596602");
-             repository.remove("495651176959596634");
-            repository.remove(Brand.UNDEFINED.id());
+            repository.delete("495651176959596552");
+            repository.delete("495651176959596578");
+            repository.delete("495651176959596546");
+            repository.delete("495651176959596602");
+             repository.delete("495651176959596634");
+            repository.delete(Brand.UNDEFINED.id());
         }
     */
     @Test(invocationCount = 15)

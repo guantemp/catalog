@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,33 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.processor;
-
-
-import catalog.hoprxi.core.application.command.Command;
+package catalog.hoprxi.core.application.command;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2022-06-24
+ * @version 0.0.1 2019-05-19
  */
-public interface Processor<T extends Command> {
-    /**
-     * @param command
-     */
-    void processor(T command);
+public class BrandRenameCommand {
+    private String id;
+    private String name;
+    private String alias;
 
-    void undo();
+    public BrandRenameCommand(String id, String name, String alias) {
+        this.id = id;
+        this.name = name;
+        this.alias = alias;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getAlias() {
+        return alias;
+    }
 }

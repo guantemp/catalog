@@ -166,7 +166,7 @@ public class PsqlItemRepository implements ItemRepository {
             preparedStatement.setLong(1, Long.parseLong(id));
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            LOGGER.error("Can't remove from item(id={})", id, e);
+            LOGGER.error("Can't delete from item(id={})", id, e);
         }
     }
 

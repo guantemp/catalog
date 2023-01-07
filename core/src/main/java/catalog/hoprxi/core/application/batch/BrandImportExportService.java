@@ -13,33 +13,13 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.core.domain.model.brand;
+
+package catalog.hoprxi.core.application.batch;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2019-05-15
+ * @version 0.0.1 builder 2023-01-07
  */
-public interface BrandRepository {
-
-    /**
-     * @param id
-     * @return
-     */
-    Brand find(String id);
-
-    /**
-     * @return
-     */
-    String nextIdentity();
-
-    /**
-     * @param id
-     */
-    void delete(String id);
-
-    /**
-     * @param brand
-     */
-    void save(Brand brand);
+public interface BrandImportExportService {
 }

@@ -13,33 +13,22 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.core.domain.model.brand;
+
+package catalog.hoprxi.core.application.handle;
+
+
+import catalog.hoprxi.core.application.command.Command;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2019-05-15
+ * @version 0.0.1 2022-06-24
  */
-public interface BrandRepository {
-
+public interface Handle<T extends Command> {
     /**
-     * @param id
-     * @return
+     * @param command
      */
-    Brand find(String id);
+    void handle(T command);
 
-    /**
-     * @return
-     */
-    String nextIdentity();
-
-    /**
-     * @param id
-     */
-    void delete(String id);
-
-    /**
-     * @param brand
-     */
-    void save(Brand brand);
+    void undo();
 }

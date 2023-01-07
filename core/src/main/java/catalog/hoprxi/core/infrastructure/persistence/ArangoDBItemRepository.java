@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -226,7 +226,7 @@ public class ArangoDBItemRepository implements ItemRepository {
 
         private void updateBarcodeBook(ArangoDatabase arangoDatabase, DocumentEntity startVertex, EANUPCBarcode barcode) {
             Barcode[] barcodes = barcode.barcodes();
-            //remove v not in barcodes and e in has
+            //delete v not in barcodes and e in has
             StringBuilder sb = new StringBuilder("WITH item,has\n" +
                     "FOR v,e IN 1..1 OUTBOUND '").append(startVertex.getId()).append("' has FILTER v._id =~ '^barcode' && v.barcode NOT IN[");
             for (int i = barcodes.length - 1; i >= 0; i--) {

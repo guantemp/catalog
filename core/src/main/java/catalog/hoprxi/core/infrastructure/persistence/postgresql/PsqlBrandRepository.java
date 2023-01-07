@@ -162,14 +162,14 @@ public class PsqlBrandRepository implements BrandRepository {
     }
 
     @Override
-    public void remove(String id) {
+    public void delete(String id) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             final String removeSql = "delete from brand where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
             preparedStatement.setLong(1, Long.parseLong(id));
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            LOGGER.error("Can't remove brand(id={})", id, e);
+            LOGGER.error("Can't delete brand(id={})", id, e);
         }
     }
 
@@ -182,7 +182,7 @@ public class PsqlBrandRepository implements BrandRepository {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             name.setValue(toJson(brand.name()));
             about.setValue(toJson(brand.about()));
-            //insert into brand (id,name,about) values (?,?::jsonb,?::jsonb)
+            //insert into brand (id,name,about) values (?,?::jsonb,?::jsonb) 没有用PGobject修饰的sql
             final String replaceInto = "insert into brand (id,name,about) values (?,?,?) on conflict(id) do update set name=?,about=?";
             PreparedStatement ps = connection.prepareStatement(replaceInto);
             ps.setLong(1, Long.parseLong(brand.id()));

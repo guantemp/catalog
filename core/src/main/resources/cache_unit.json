@@ -13,11 +13,11 @@
             "maximumSize": 1024
         }
     },
-    "Integer": {
+    "brand": {
         "provider": "caffeine",
         "caffeine": {
             "expire": 7200000,
-            "maximumSize": 1024
+            "maximumSize": 192
         }
     },
     "category": {

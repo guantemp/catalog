@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,10 +45,9 @@ import java.util.Objects;
  * @version 0.0.1 builder 2022-10-18
  */
 public class PsqlBrandQueryService implements BrandQueryService {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlBrandQueryService.class);
     private static Constructor<Name> nameConstructor;
-    private static Cache<String, Brand> CACHE = CacheFactory.build("brand");
+    private static final Cache<String, Brand> CACHE = CacheFactory.build("brand");
 
     static {
         try {
@@ -83,7 +82,6 @@ public class PsqlBrandQueryService implements BrandQueryService {
             }
         } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
                  IllegalAccessException e) {
-            System.out.println(e);
             LOGGER.error("Can't rebuild brand with (id = {})", id, e);
         }
         return null;
@@ -91,7 +89,8 @@ public class PsqlBrandQueryService implements BrandQueryService {
 
     @Override
     public Brand[] findAll(int offset, int limit) {
-        final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand offset ? limit ?";
+        final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo " +
+                "from brand a INNER JOIN (SELECT id FROM brand order by id desc offset ? LIMIT ?) b USING (id)";
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setInt(1, offset);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,31 +16,36 @@
 
 package catalog.hoprxi.core.application.command;
 
+import java.util.Objects;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-05-19
+ * @version 0.0.1 builder 2023-01-07
  */
-public class RenameBrandCommand {
-    private String id;
-    private String name;
-    private String alias;
+public class BrandDeleteCommand implements Command {
+    private final String id;
 
-    public RenameBrandCommand(String id, String name, String alias) {
-        this.id = id;
-        this.name = name;
-        this.alias = alias;
+    public BrandDeleteCommand(String id) {
+        this.id = Objects.requireNonNull(id, "id is required").trim();
     }
 
     public String getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BrandDeleteCommand)) return false;
+
+        BrandDeleteCommand that = (BrandDeleteCommand) o;
+
+        return Objects.equals(id, that.id);
     }
 
-    public String getAlias() {
-        return alias;
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
 }

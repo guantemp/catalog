@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -159,35 +159,35 @@ public class ArangoDBItemRepositoryTest {
 /*
     @AfterTest
     public void tearDown() {
-        brandRepository.remove(Brand.UNDEFINED.id());
-        brandRepository.remove("caihong");
-        brandRepository.remove("tianyou");
-        brandRepository.remove("changjhong");
+        brandRepository.delete(Brand.UNDEFINED.id());
+        brandRepository.delete("caihong");
+        brandRepository.delete("tianyou");
+        brandRepository.delete("changjhong");
 
-        categoryRepository.remove(Category.UNDEFINED.id());
-        categoryRepository.remove("skin");
-        categoryRepository.remove("cosmetics");
-        categoryRepository.remove("chemicals");
-        categoryRepository.remove("food");
-        categoryRepository.remove("root");
+        categoryRepository.delete(Category.UNDEFINED.id());
+        categoryRepository.delete("skin");
+        categoryRepository.delete("cosmetics");
+        categoryRepository.delete("chemicals");
+        categoryRepository.delete("food");
+        categoryRepository.delete("root");
 
-        itemRepository.remove("one");
-        itemRepository.remove("two");
-        itemRepository.remove("three");
-        itemRepository.remove("four");
-        itemRepository.remove("five");
-        itemRepository.remove("six");
-        itemRepository.remove("six_1");
-        itemRepository.remove("six_2");
-        itemRepository.remove("seven");
-        itemRepository.remove("eight");
-        itemRepository.remove("nine");
-        itemRepository.remove("ten");
-        itemRepository.remove("twelve");
+        itemRepository.delete("one");
+        itemRepository.delete("two");
+        itemRepository.delete("three");
+        itemRepository.delete("four");
+        itemRepository.delete("five");
+        itemRepository.delete("six");
+        itemRepository.delete("six_1");
+        itemRepository.delete("six_2");
+        itemRepository.delete("seven");
+        itemRepository.delete("eight");
+        itemRepository.delete("nine");
+        itemRepository.delete("ten");
+        itemRepository.delete("twelve");
         for (Item item : itemRepository.findByBarcode("4547691239136")) {
-            itemRepository.remove(item.id());
+            itemRepository.delete(item.id());
         }
-        itemRepository.remove("twelve");
+        itemRepository.delete("twelve");
     }
  */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,7 +119,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 connection.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            LOGGER.error("Can't remove category(id = {}) and children", id, e);
+            LOGGER.error("Can't delete category(id = {}) and children", id, e);
         }
     }
 
@@ -212,7 +212,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         Statement statement = connection.createStatement();
         //需要移动的节点及子节点 left, right 值置为负值,归属到新的树形（root_id),移动节点的顶点parent_id设置为新的父节点的id值
         statement.addBatch("update category set \"left\"=0-\"left\",\"right\"=0-\"right\",root_id=" + targetRootId + " where \"left\">=" + left + " and \"right\"<=" + right);
-        StringBuilder updateSql = new StringBuilder("update category set parent_id=").append(category.parentId()).append(",name='").append(toJson(category.name())).append("'");
+        StringBuilder updateSql = new StringBuilder("handle category set parent_id=").append(category.parentId()).append(",name='").append(toJson(category.name())).append("'");
         if (category.description() != null)
             updateSql.append(",description='").append(category.description()).append("'");
         if (category.icon() != null)
@@ -227,7 +227,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         statement.addBatch("update category set \"right\"= \"right\"+" + offset + " where \"right\">=" + targetRight + " and root_id=" + targetRootId);
         //将负值记录填充到正确位置,队尾位置
         statement.addBatch("update category set \"left\"=0-\"left\"-(" + (left - targetRight) + "),\"right\"=0-\"right\"-(" + (left - targetRight) + ") where \"left\"<0");
-        //System.out.println("update category set \"left\"=0-\"left\"-(" + (left - targetRight) + "),\"right\"=0-\"right\"-(" + (left - targetRight) + ") where \"left\"<0");
+        //System.out.println("handle category set \"left\"=0-\"left\"-(" + (left - targetRight) + "),\"right\"=0-\"right\"-(" + (left - targetRight) + ") where \"left\"<0");
         statement.executeBatch();
         connection.commit();
         connection.setAutoCommit(true);

@@ -142,54 +142,54 @@ public class PsqlCategoryRepositoryTest {
 /*
     @AfterClass
     public void afterClass() {
-        repository.remove("49581450261846059");
-        repository.remove("49581450261846058");
-        repository.remove("49581450261846057");
-        repository.remove("49581450261846043");
-        repository.remove("49581450261846042");
-        repository.remove("49581450261846041");
-        repository.remove("49581450261846040");
-        repository.remove(" 49581450261846035");
+        repository.delete("49581450261846059");
+        repository.delete("49581450261846058");
+        repository.delete("49581450261846057");
+        repository.delete("49581450261846043");
+        repository.delete("49581450261846042");
+        repository.delete("49581450261846041");
+        repository.delete("49581450261846040");
+        repository.delete(" 49581450261846035");
 
-        repository.remove("49581450261846023");
-        repository.remove("49581450261846022");
-        repository.remove("49581450261846021");
-        repository.remove("49581450261846020");
+        repository.delete("49581450261846023");
+        repository.delete("49581450261846022");
+        repository.delete("49581450261846021");
+        repository.delete("49581450261846020");
 
-        repository.remove("496796322118291700");
-        repository.remove("496796322118291499");
-        repository.remove("496796322118291498");
-        repository.remove("496796322118291497");
-        repository.remove("496796322118291496");
-        repository.remove("496796322118291495");
-        repository.remove("496796322118291494");
-        repository.remove("496796322118291493");
-        repository.remove("496796322118291492");
-        repository.remove("496796322118291491");
-        repository.remove("496796322118291490");
+        repository.delete("496796322118291700");
+        repository.delete("496796322118291499");
+        repository.delete("496796322118291498");
+        repository.delete("496796322118291497");
+        repository.delete("496796322118291496");
+        repository.delete("496796322118291495");
+        repository.delete("496796322118291494");
+        repository.delete("496796322118291493");
+        repository.delete("496796322118291492");
+        repository.delete("496796322118291491");
+        repository.delete("496796322118291490");
 
-        repository.remove("496796322118291488");
-        repository.remove("496796322118291487");
-        repository.remove("496796322118291486");
-        repository.remove("496796322118291485");
-        repository.remove("496796322118291484");
-        repository.remove("496796322118291483");
-        repository.remove("496796322118291482");
-        repository.remove("496796322118291481");
-        repository.remove("496796322118291480");
+        repository.delete("496796322118291488");
+        repository.delete("496796322118291487");
+        repository.delete("496796322118291486");
+        repository.delete("496796322118291485");
+        repository.delete("496796322118291484");
+        repository.delete("496796322118291483");
+        repository.delete("496796322118291482");
+        repository.delete("496796322118291481");
+        repository.delete("496796322118291480");
 
-        repository.remove("496796322118291473");
-        repository.remove("496796322118291472");
-        repository.remove("496796322118291471");
-        repository.remove("496796322118291470");
+        repository.delete("496796322118291473");
+        repository.delete("496796322118291472");
+        repository.delete("496796322118291471");
+        repository.delete("496796322118291470");
 
-        repository.remove("496796322118291463");
-        repository.remove("496796322118291462");
-        repository.remove("496796322118291461");
-        repository.remove("496796322118291460");
+        repository.delete("496796322118291463");
+        repository.delete("496796322118291462");
+        repository.delete("496796322118291461");
+        repository.delete("496796322118291460");
 
-        repository.remove(" 496796322118291457");
-        repository.remove(Category.UNDEFINED.id());
+        repository.delete(" 496796322118291457");
+        repository.delete(Category.UNDEFINED.id());
     }
 
  */
@@ -213,7 +213,7 @@ public class PsqlCategoryRepositoryTest {
     /*
         @Test(priority = 3)
         public void testRemove() {
-            repository.remove("496796322118291493");
+            repository.delete("496796322118291493");
             Assert.assertNull(repository.find("49581450261846020"));
             Assert.assertNull(repository.find("49581450261846022"));
         }

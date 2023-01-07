@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,17 +106,17 @@ public class ArangoDBWeightRepositoryTest {
     /*
         @AfterClass
         public static void teardown() {
-            weightRepository.remove(new Plu(1));
-            weightRepository.remove(new Plu(2));
-            weightRepository.remove(new Plu(10));
-            weightRepository.remove(new Plu(11));
-            weightRepository.remove(new Plu(12));
-            weightRepository.remove(new Plu(13));
-            weightRepository.remove(new Plu(20));
-            weightRepository.remove(new Plu(21));
+            weightRepository.delete(new Plu(1));
+            weightRepository.delete(new Plu(2));
+            weightRepository.delete(new Plu(10));
+            weightRepository.delete(new Plu(11));
+            weightRepository.delete(new Plu(12));
+            weightRepository.delete(new Plu(13));
+            weightRepository.delete(new Plu(20));
+            weightRepository.delete(new Plu(21));
 
-            brandRepository.remove(Brand.UNDEFINED.id());
-            brandRepository.remove("tw");
+            brandRepository.delete(Brand.UNDEFINED.id());
+            brandRepository.delete("tw");
         }
     */
     @Test

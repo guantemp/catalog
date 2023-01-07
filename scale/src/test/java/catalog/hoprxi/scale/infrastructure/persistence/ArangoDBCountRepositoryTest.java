@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,8 +93,8 @@ public class ArangoDBCountRepositoryTest {
         countRepository.remove(new Plu(4));
         countRepository.remove(new Plu(3));
 
-        brandRepository.remove("dyb");
-        brandRepository.remove(Brand.UNDEFINED.id());
+        brandRepository.delete("dyb");
+        brandRepository.delete(Brand.UNDEFINED.id());
     }
 
     @Test
