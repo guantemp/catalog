@@ -335,7 +335,7 @@ public class PsqlItemImportExport implements ItemImportExportService {
         //设置背景颜色;
         style.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_ORANGE.getIndex());
         //solid 填充  foreground  前景色
-        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setFillPattern(FillPatternType.DIAMONDS);
         //设置底边框;
         style.setBorderBottom(BorderStyle.THIN);
         //设置底边框颜色;

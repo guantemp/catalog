@@ -30,7 +30,7 @@ import java.util.Collection;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-05-16
+ * @version 0.0.2 2023-01-07
  */
 public class BrandAppService {
     private final BrandRepository repository;
@@ -82,13 +82,17 @@ public class BrandAppService {
     }
 
     private void rename(Brand brand, BrandRenameCommand command) {
-        Name name = new Name(command.getName(), command.getAlias());
-        brand.rename(name);
+        if (brand != null) {
+            Name name = new Name(command.getName(), command.getAlias());
+            brand.rename(name);
+        }
     }
 
     private void changeBrandAbout(Brand brand, BrandChangeAboutCommand command) {
-        AboutBrand about = new AboutBrand(command.getLogo(), command.getHomepage(), command.getSince(), command.getStory());
-        brand.changeAbout(about);
+        if (brand != null) {
+            AboutBrand about = new AboutBrand(command.getLogo(), command.getHomepage(), command.getSince(), command.getStory());
+            brand.changeAbout(about);
+        }
     }
 
     public void delete(BrandDeleteCommand deleteCommand) {
