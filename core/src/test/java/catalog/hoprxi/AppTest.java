@@ -59,7 +59,7 @@ public class AppTest {
         for (Config c : reads) {
             System.out.println(c.getString("host"));
         }
-        //System.out.println(test.getStringList("read.host"));
+        //System.out.println(test.getList("write").parallelStream().);
     }
 
     @Test

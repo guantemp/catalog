@@ -111,7 +111,9 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 long rootId = resultSet.getLong("root_id");
                 connection.setAutoCommit(false);
                 Statement statement = connection.createStatement();
+                //移除所有后代
                 statement.addBatch("delete from category where \"left\">=" + left + " and \"right\"<=" + right + " and root_id=" + rootId);
+                //所有大于left的其它类别前移
                 statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and root_id=" + rootId);
                 statement.addBatch("update category set \"right\"= \"right\"-" + offset + "where \"right\">" + right + " and root_id=" + rootId);
                 statement.executeBatch();
