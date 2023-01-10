@@ -56,11 +56,6 @@
             <version>2.19.0</version>
         </dependency>
         <dependency>
-            <groupId>com.lmax</groupId>
-            <artifactId>disruptor</artifactId>
-            <version>3.4.2</version>
-        </dependency>
-        <dependency>
             <groupId>event.hoprxi</groupId>
             <artifactId>core</artifactId>
             <version>${hoprxi.event.version}</version>

@@ -173,10 +173,10 @@ public class PsqlItemRepository implements ItemRepository {
     @Override
     public void save(Item item) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String replaceInto = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,specs,shelf_life,retail_price,member_price,vip_price) " +
+            final String insertOrReplaceSql = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,specs,shelf_life,retail_price,member_price,vip_price) " +
                     "values (?,?::jsonb,?,?,?,?::grade,?::jsonb,?,?,?::jsonb,?::jsonb,?::jsonb) " +
                     "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,specs=?,shelf_life=?,retail_price=?::jsonb,member_price=?::jsonb,vip_price=?::jsonb";
-            PreparedStatement ps = connection.prepareStatement(replaceInto);
+            PreparedStatement ps = connection.prepareStatement(insertOrReplaceSql);
             ps.setLong(1, Long.parseLong(item.id()));
             ps.setString(2, toJson(item.name()));
             ps.setString(3, String.valueOf(item.barcode().barcode()));
@@ -202,7 +202,6 @@ public class PsqlItemRepository implements ItemRepository {
             ps.setString(23, toJson(item.vipPrice()));
             ps.executeUpdate();
         } catch (SQLException e) {
-            System.out.println(e);
             LOGGER.error("Can't save item{}", item, e);
         }
     }
