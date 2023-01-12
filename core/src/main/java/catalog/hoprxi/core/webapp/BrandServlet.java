@@ -51,6 +51,7 @@ public class BrandServlet extends HttpServlet {
     private static final int LIMIT = 64;
     private BrandAppService appService = new BrandAppService();
     private BrandQueryService query;
+    private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
     public BrandServlet() {
         Config conf = ConfigFactory.load("database");
@@ -71,7 +72,6 @@ public class BrandServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         resp.setContentType("application/json; charset=UTF-8");
-        JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
                 .setPrettyPrinter(new DefaultPrettyPrinter());
         generator.writeStartObject();
@@ -112,7 +112,6 @@ public class BrandServlet extends HttpServlet {
         String name = null, alias = null, story = null;
         URL logo = null, homepage = null;
         Year since = null;
-        JsonFactory jasonFactory = new JsonFactory();
         JsonParser parser = jasonFactory.createParser(req.getInputStream());
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();
@@ -157,7 +156,6 @@ public class BrandServlet extends HttpServlet {
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         if (pathInfo != null) {
-            JsonFactory jasonFactory = new JsonFactory();
             String id = pathInfo.substring(1);
             String name = null, alias = null, story = null;
             URL logo = null, homepage = null;
@@ -218,7 +216,6 @@ public class BrandServlet extends HttpServlet {
             appService.delete(command);
         }
         resp.setContentType("application/json; charset=UTF-8");
-        JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
                 .setPrettyPrinter(new DefaultPrettyPrinter());
         generator.writeStartObject();

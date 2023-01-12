@@ -36,10 +36,11 @@ import java.io.IOException;
  */
 @WebServlet(urlPatterns = {"v1/units"}, name = "unit", asyncSupported = false)
 public class UnitServlet extends HttpServlet {
+    private final JsonFactory jasonFactory = JsonFactory.builder().build();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json; charset=UTF-8");
-        JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
                 .setPrettyPrinter(new DefaultPrettyPrinter());
         generator.writeStartObject();

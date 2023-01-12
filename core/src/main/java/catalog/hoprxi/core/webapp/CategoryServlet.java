@@ -50,6 +50,7 @@ public class CategoryServlet extends HttpServlet {
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
     private static final CategoryAppService APP_SERVICE = new CategoryAppService();
     private CategoryQueryService categoryQueryService;
+    private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
     @Override
     public void init(ServletConfig config) {
@@ -73,7 +74,6 @@ public class CategoryServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         //String[] fields = req.getParameter("fields").split(",");
         resp.setContentType("application/json; charset=UTF-8");
-        JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
         generator.writeStartObject();
         String pathInfo = req.getPathInfo();
@@ -188,7 +188,6 @@ public class CategoryServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String name = null, alias = null, description = null, icon = null, parentId = null;
-        JsonFactory jasonFactory = new JsonFactory();
         JsonParser parser = jasonFactory.createParser(req.getInputStream());
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();
@@ -298,7 +297,6 @@ public class CategoryServlet extends HttpServlet {
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         long start = System.currentTimeMillis();
         resp.setContentType("application/json; charset=UTF-8");
-        JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
         generator.writeStartObject();
         String pathInfo = req.getPathInfo();
@@ -318,7 +316,6 @@ public class CategoryServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        JsonFactory jasonFactory = new JsonFactory();
         String name = null, alias = null, description = null, icon = null, parentId = null, id = null;
         JsonParser parser = jasonFactory.createParser(req.getInputStream());
         while (!parser.isClosed()) {

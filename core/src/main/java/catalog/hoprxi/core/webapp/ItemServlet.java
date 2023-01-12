@@ -59,6 +59,7 @@ public class ItemServlet extends HttpServlet {
     private static final String PRE_SUFFIX = ".*?";
     private ItemQueryService queryService;
     private ItemRepository repository;
+    private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
     @Override
     public void init(ServletConfig config) {
@@ -84,7 +85,6 @@ public class ItemServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         resp.setContentType("application/json; charset=UTF-8");
-        JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
         generator.writeStartObject();
         if (pathInfo != null) {
@@ -211,7 +211,6 @@ public class ItemServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String name = null, alias = null, barcode = null, brandId = null, categoryId = null, spec = null, grade = null, madeIn = null;
         Number retailPrice = null, memberPrice = null, vipPrice = null;
-        JsonFactory jasonFactory = new JsonFactory();
         JsonParser parser = jasonFactory.createParser(req.getInputStream());
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();

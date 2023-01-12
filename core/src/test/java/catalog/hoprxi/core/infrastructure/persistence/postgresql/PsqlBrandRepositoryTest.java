@@ -20,7 +20,6 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -66,7 +65,7 @@ public class PsqlBrandRepositoryTest {
         repository.save(Brand.UNDEFINED);
     }
 
-
+/*
     @AfterClass
     public void afterClass() {
         repository.delete("495651176959596552");
@@ -76,7 +75,7 @@ public class PsqlBrandRepositoryTest {
         repository.delete("495651176959596634");
         repository.delete(Brand.UNDEFINED.id());
     }
-
+*/
 
     @Test(invocationCount = 15)
     public void testFind() {
