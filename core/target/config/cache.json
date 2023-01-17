@@ -1,0 +1,65 @@
+{
+    "public example": {
+        "provider": "caffeine",
+        "caffeine": {
+            "expire": 30000,
+            "maximumSize": 10000
+        },
+        "redis": {
+            "redisClient": "standAlone",
+            "standAlone": {
+                "host": "120.77.47.145",
+                "user": "root",
+                "password": "Qwe123465",
+                "port": 6379,
+                "database": 15,
+                "serialization": "kryo",
+                "maxTotal": 16,
+                "maxIdle": 16,
+                "minIdle": 2,
+                "maxWaitMillis": 1000,
+                "expire": 15000,
+                "timeout": 3000
+            }
+        },
+        "l1_2": {
+            "l1": {
+                "provider": "caffeine",
+                "caffeine": {
+                    "expire": 10,
+                    "maximumSize": 10000,
+                    "expireAfterWrite": 10000
+                }
+            },
+            "l2": {
+                "provider": "redis",
+                "redis": {
+                    "redisClient": "cluster",
+                    "cluster": {
+                        "hosts": [
+                            "120.77.47.145:7001",
+                            "120.77.47.145:7002",
+                            "120.77.47.145:7003",
+                            "120.77.47.145:7004",
+                            "120.77.47.145:7005",
+                            "120.77.47.145:7006"
+                        ],
+                        "password": "Qwe123465",
+                        "serialization": "fst",
+                        "database": 15,
+                        "maxTotal": 16,
+                        "maxIdle": 16,
+                        "minIdle": 2,
+                        "maxWaitMillis": 1000,
+                        "expire": 300000,
+                        "timeout": 3000,
+                        "testOnBorrow": "true",
+                        "testOnReturn": "true",
+                        "testWhileIdle": "true",
+                        "master": "master"
+                    }
+                }
+            }
+        }
+    }
+}

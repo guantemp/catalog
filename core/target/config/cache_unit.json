@@ -1,0 +1,83 @@
+{
+    "smsCode": {
+        "provider": "caffeine",
+        "caffeine": {
+            "expire": 300000,
+            "maximumSize": 2048
+        }
+    },
+    "CategoryView": {
+        "provider": "caffeine",
+        "caffeine": {
+            "maximumSize": 1024
+        }
+    },
+    "brand": {
+        "provider": "caffeine",
+        "caffeine": {
+            "expire": 7200000,
+            "maximumSize": 192
+        }
+    },
+    "category": {
+        "provider": "redis",
+        "redis": {
+            "redisClient": "standAlone",
+            "standAlone": {
+                "host": "120.77.47.145",
+                "user": "root",
+                "password": "Qwe123465",
+                "port": 6379,
+                "database": 9,
+                "serialization": "kryo",
+                "maxTotal": 16,
+                "maxIdle": 16,
+                "minIdle": 2,
+                "maxWaitMillis": 1000,
+                "expire": 300000,
+                "timeout": 3000
+            }
+        }
+    },
+    "item": {
+        "provider": "l1_2",
+        "l1_2": {
+            "l1": {
+                "provider": "caffeine",
+                "caffeine": {
+                    "expire": 1000,
+                    "maximumSize": 10000
+                }
+            },
+            "l2": {
+                "provider": "redis",
+                "redis": {
+                    "redisClient": "cluster",
+                    "cluster": {
+                        "hosts": [
+                            "120.77.47.145:7001",
+                            "120.77.47.145:7002",
+                            "120.77.47.145:7003",
+                            "120.77.47.145:7004",
+                            "120.77.47.145:7005",
+                            "120.77.47.145:7006"
+                        ],
+                        "password": "Qwe123465",
+                        "serialization": "fst",
+                        "database": 15,
+                        "maxTotal": 16,
+                        "maxIdle": 16,
+                        "minIdle": 2,
+                        "maxWaitMillis": 1000,
+                        "expire": 300000,
+                        "timeout": 3000,
+                        "testOnBorrow": "true",
+                        "testOnReturn": "true",
+                        "testWhileIdle": "true",
+                        "master": "master"
+                    }
+                }
+            }
+        }
+    }
+}
