@@ -188,7 +188,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/conf</outputDirectory>
+                            <outputDirectory>${project.build.directory}/config</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>src/main/resources</directory>
@@ -229,7 +229,7 @@
                         </manifest>
                         <!--(配置文件外置目录) -->
                         <manifestEntries>
-                            <Class-Path>conf/</Class-Path>
+                            <Class-Path>config/</Class-Path>
                         </manifestEntries>
                         <!--
                                                 <excludes>

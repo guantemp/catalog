@@ -3,7 +3,6 @@ catalog\hoprxi\core\infrastructure\query\ElasticSearchItemQueryService.class
 catalog\hoprxi\core\domain\model\brand\Brand$1.class
 catalog\hoprxi\core\domain\model\price\RetailPrice.class
 catalog\hoprxi\core\domain\model\price\Unit$4.class
-catalog\hoprxi\core\application\processor\Processor.class
 catalog\hoprxi\core\domain\model\shelfLife\Approach.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBProhibitSellItemRepository$1.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlItemQueryService.class
@@ -27,7 +26,6 @@ catalog\hoprxi\core\domain\model\barcode\Barcode.class
 catalog\hoprxi\core\domain\model\price\Unit$21.class
 catalog\hoprxi\core\application\command\CategoryChangeDescriptionCommand.class
 catalog\hoprxi\core\domain\model\price\Unit$9.class
-catalog\hoprxi\core\application\processor\CategoryCreateProcessor.class
 catalog\hoprxi\core\application\command\CategoryMoveNodeCommand.class
 catalog\hoprxi\core\domain\model\barcode\UPC_A.class
 catalog\hoprxi\core\application\view\ItemView$BrandView.class
@@ -81,7 +79,6 @@ catalog\hoprxi\core\domain\model\category\CategoryRenamed.class
 catalog\hoprxi\core\domain\model\price\Unit$33.class
 catalog\hoprxi\core\domain\model\price\Unit$23.class
 catalog\hoprxi\core\webapp\UnitServlet.class
-catalog\hoprxi\core\application\command\RenameBrandCommand.class
 catalog\hoprxi\core\domain\model\price\Unit$13.class
 catalog\hoprxi\core\infrastructure\Setup.class
 catalog\hoprxi\core\application\command\BrandChangeAboutCommand.class
