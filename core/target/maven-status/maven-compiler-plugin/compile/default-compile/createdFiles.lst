@@ -8,6 +8,7 @@ catalog\hoprxi\core\infrastructure\persistence\ArangoDBProhibitSellItemRepositor
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlItemQueryService.class
 catalog\hoprxi\core\domain\model\barcode\ISBN.class
 catalog\hoprxi\core\domain\model\Item.class
+catalog\hoprxi\core\domain\model\madeIn\Domestic$1.class
 catalog\hoprxi\core\application\query\BrandQueryService.class
 catalog\hoprxi\core\domain\model\ItemCategoryReallocated.class
 catalog\hoprxi\core\domain\model\price\Unit$24.class
@@ -18,6 +19,7 @@ catalog\hoprxi\core\domain\model\Grade$4.class
 catalog\hoprxi\core\application\view\ItemView.class
 catalog\hoprxi\core\domain\model\ItemProhibitSold.class
 catalog\hoprxi\core\domain\model\madeIn\Province.class
+catalog\hoprxi\core\domain\model\brand\BrandDeleted.class
 catalog\hoprxi\core\domain\model\price\Unit$12.class
 catalog\hoprxi\core\domain\model\price\Unit$27.class
 catalog\hoprxi\core\domain\model\price\Unit$32.class
@@ -26,6 +28,7 @@ catalog\hoprxi\core\domain\model\barcode\Barcode.class
 catalog\hoprxi\core\domain\model\price\Unit$21.class
 catalog\hoprxi\core\application\command\CategoryChangeDescriptionCommand.class
 catalog\hoprxi\core\domain\model\price\Unit$9.class
+catalog\hoprxi\core\application\command\BrandDeleteCommand.class
 catalog\hoprxi\core\application\command\CategoryMoveNodeCommand.class
 catalog\hoprxi\core\domain\model\barcode\UPC_A.class
 catalog\hoprxi\core\application\view\ItemView$BrandView.class
@@ -33,12 +36,14 @@ catalog\hoprxi\core\domain\BrandValidatorService.class
 catalog\hoprxi\core\infrastructure\query\ArangoDBItemQueryService.class
 catalog\hoprxi\core\application\command\Command.class
 catalog\hoprxi\core\domain\model\shelfLife\ShelfLifeService.class
+catalog\hoprxi\core\infrastructure\batch\PsqlBrandImportExport.class
 catalog\hoprxi\core\domain\model\shelfLife\Rang.class
 catalog\hoprxi\core\domain\model\ItemSpecificationChanged.class
 catalog\hoprxi\core\domain\model\shelfLife\ShelfLife$2.class
 catalog\hoprxi\core\domain\model\Name.class
 catalog\hoprxi\core\domain\model\brand\BrandRenamed.class
 catalog\hoprxi\core\domain\model\category\InvalidCategoryIdException.class
+catalog\hoprxi\core\application\handle\BrandCreateHandle.class
 catalog\hoprxi\core\domain\model\ItemBarcodeChanged.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlCategoryQueryService.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBCategoryRepository$Edge.class
@@ -62,6 +67,7 @@ catalog\hoprxi\core\domain\model\price\MemberPrice.class
 catalog\hoprxi\core\domain\model\madeIn\Imported.class
 catalog\hoprxi\core\domain\model\price\Unit$22.class
 catalog\hoprxi\core\application\command\CategoryDeleteCommand.class
+catalog\hoprxi\core\application\command\BrandRenameCommand.class
 catalog\hoprxi\core\domain\model\shelfLife\ShelfLife$1.class
 catalog\hoprxi\core\domain\model\category\CategoryRepository.class
 catalog\hoprxi\core\domain\model\price\Unit$11.class
@@ -105,6 +111,7 @@ catalog\hoprxi\core\domain\model\price\Unit$40.class
 catalog\hoprxi\core\domain\model\ItemVipPriceChaned.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlCategoryRepository.class
 catalog\hoprxi\core\domain\model\barcode\InvalidBarcodeException.class
+catalog\hoprxi\core\application\handle\CategoryCreateHandle.class
 catalog\hoprxi\core\application\query\ItemQueryService.class
 catalog\hoprxi\core\infrastructure\query\ArangoDBBrandQueryService.class
 catalog\hoprxi\core\domain\model\Specification.class
@@ -120,6 +127,7 @@ catalog\hoprxi\core\domain\model\price\Unit$36.class
 catalog\hoprxi\core\domain\CategoryValidatorService.class
 catalog\hoprxi\core\domain\model\brand\AboutBrand.class
 catalog\hoprxi\core\infrastructure\PsqlSetup.class
+catalog\hoprxi\core\application\handle\Handle.class
 catalog\hoprxi\core\domain\model\ItemMemberPriceChaned.class
 catalog\hoprxi\core\domain\model\price\Unit$16.class
 catalog\hoprxi\core\application\batch\ItemImportExportService.class
@@ -135,6 +143,7 @@ catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlItemRepository.cla
 catalog\hoprxi\core\webapp\CategoryServlet.class
 catalog\hoprxi\core\domain\model\price\Unit$38.class
 catalog\hoprxi\core\application\command\CategoryRenameCommand.class
+catalog\hoprxi\core\application\batch\BrandImportExportService.class
 catalog\hoprxi\core\domain\model\brand\BrandAboutChanged.class
 catalog\hoprxi\core\domain\model\price\Unit$6.class
 catalog\hoprxi\core\domain\model\ItemRenamed.class

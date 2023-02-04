@@ -7,12 +7,12 @@ E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\Category
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\command\CreateItemCommand.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\barcode\UPC_E.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\price\Price.java
-E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\processor\CategoryCreateProcessor.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\query\postgresql\PsqlItemQueryService.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\madeIn\Imported.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\ProhibitSellItemRepository.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\category\InvalidCategoryIdException.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\madeIn\Province.java
+E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\handle\Handle.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\webapp\ItemServlet.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\query\postgresql\PsqlCategoryQueryService.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\BrandAppService.java
@@ -31,7 +31,9 @@ E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\ItemVip
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\shelfLife\Approach.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\madeIn\Domestic.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\command\CategoryChangeDescriptionCommand.java
+E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\command\BrandRenameCommand.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\brand\BrandAboutChanged.java
+E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\batch\PsqlBrandImportExport.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\category\Category.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\webapp\UnitServlet.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\barcode\ITF14.java
@@ -49,6 +51,7 @@ E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\categor
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\batch\PsqlItemImportExport.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\persistence\ArangoDBProhibitSellItemRepository.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\command\BrandCreateCommand.java
+E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\handle\CategoryCreateHandle.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\category\package-info.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\query\ItemQueryService.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\barcode\EanCheckService.java
@@ -59,6 +62,7 @@ E:\workspace\catalog\core\src\main\java\catalog\hoprxi\App.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\command\CategoryRenameCommand.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\ItemBrandReallocated.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\PsqlUtil.java
+E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\command\BrandDeleteCommand.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\price\Unit.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\shelfLife\Limit.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlItemRepository.java
@@ -72,12 +76,13 @@ E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\webapp\CategoryServl
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\Item.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\ProhibitSellItemPermitSold.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\price\Agile.java
-E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\command\RenameBrandCommand.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\command\BrandChangeAboutCommand.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\barcode\Barcode.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\BrandValidatorService.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\i18n\package-info.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlCategoryRepository.java
+E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\batch\BrandImportExportService.java
+E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\handle\BrandCreateHandle.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\ItemRetailPriceChanged.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\brand\Brand.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\view\ItemView.java
@@ -87,6 +92,7 @@ E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\madeIn\
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\persistence\ArangoDBBrandRepository.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\barcode\BarcodeGenerateServices.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\Bootstrap.java
+E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\brand\BrandDeleted.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\query\ArangoDBItemQueryService.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\util\DomainRegistry.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\barcode\UPC_A.java
@@ -95,7 +101,6 @@ E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\ItemCre
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\Specification.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\command\CategoryMoveNodeCommand.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\query\CategoryQueryService.java
-E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\processor\Processor.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\barcode\EAN_13.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\persistence\ArangoDBItemRepository.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\price\MemberPrice.java

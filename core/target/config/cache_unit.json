@@ -6,9 +6,10 @@
             "maximumSize": 2048
         }
     },
-    "CategoryView": {
+    "category_view": {
         "provider": "caffeine",
         "caffeine": {
+            "expire": 2592000000,
             "maximumSize": 1024
         }
     },
