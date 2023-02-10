@@ -41,16 +41,16 @@ public class PsqlItemQueryServiceTest {
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testFind() {
-        ItemView itemView = query.find("52496163982907400");
+    public void testQuery() {
+        ItemView itemView = query.query("52496163982907400");
         Assert.assertNotNull(itemView);
-        itemView = query.find("52496321492179007");
+        itemView = query.query("52496321492179007");
         Assert.assertNotNull(itemView);
-        itemView = query.find("52496163982907400");
+        itemView = query.query("52496163982907400");
         Assert.assertNotNull(itemView);
-        itemView = query.find("52496163982907408");
+        itemView = query.query("52496163982907408");
         Assert.assertNull(itemView);
-        itemView = query.find("52496321492179007");
+        itemView = query.query("52496321492179007");
         Assert.assertNotNull(itemView);
         System.out.println(itemView);
     }
@@ -84,13 +84,13 @@ public class PsqlItemQueryServiceTest {
 
     }
 
-    @Test(invocationCount = 10, threadPoolSize = 2)
-    public void belongToCategoryAndDescendants() throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    @Test(invocationCount = 2, threadPoolSize = 2)
+    public void testBelongToCategoryAndDescendants() throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
         PsqlItemQueryService itemQueryService = ((PsqlItemQueryService) query);
         ItemView[] skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
-        //Assert.assertEquals(skuses.length, 8);
+        Assert.assertEquals(skuses.length, 5);
         skuses = itemQueryService.belongToCategoryAndDescendants("-1");
-        //Assert.assertEquals(skuses.length, 5);
+        Assert.assertEquals(skuses.length, 0);
         skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272595");
         //Assert.assertEquals(skuses.length, 3);
         skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272599");
@@ -118,12 +118,12 @@ public class PsqlItemQueryServiceTest {
     }
 
     @Test
-    public void testFindAll() {
-        ItemView[] skuses = query.findAll(0, 25);
+    public void testQueryAll() {
+        ItemView[] skuses = query.queryAll(0, 25);
         Assert.assertEquals(skuses.length, 14);
-        skuses = query.findAll(12, 25);
+        skuses = query.queryAll(12, 25);
         Assert.assertEquals(skuses.length, 2);
-        skuses = query.findAll(5, 5);
+        skuses = query.queryAll(5, 5);
         Assert.assertEquals(skuses.length, 5);
     }
 
@@ -149,6 +149,29 @@ public class PsqlItemQueryServiceTest {
     }
 
     @Test
-    public void testFromName() {
+    public void testSerach() {
+        ItemView[] items = query.serach("彩虹");
+        Assert.assertEquals(items.length, 3);
+        items = query.serach("^彩虹");
+        Assert.assertEquals(items.length, 2);
+        items = query.serach("彩虹|长虹");
+        Assert.assertEquals(items.length, 4);
+        items = query.serach("不知道");
+        Assert.assertEquals(items.length, 0);
+        items = query.serach("天友|长虹|彩虹");
+        Assert.assertEquals(items.length, 9);
+        items = query.serach("^天友|长虹|彩虹");
+        Assert.assertEquals(items.length, 7);
+
+        ItemView[] skuses = query.serach("^ch");
+        Assert.assertEquals(skuses.length, 3);
+        skuses = query.serach("qd");
+        Assert.assertEquals(skuses.length, 3);
+        skuses = query.serach("ch");
+        Assert.assertEquals(skuses.length, 4);
+        skuses = query.serach("chetr");
+        Assert.assertEquals(skuses.length, 0);
+        skuses = query.serach("ty");
+        Assert.assertEquals(skuses.length, 5);
     }
 }

@@ -18,12 +18,13 @@
           <element id="archive" name="catalog.hoprxi-core-1.0-SNAPSHOT.jar">
             <element id="module-output" name="core" />
           </element>
+          <element id="library" level="project" name="Maven: org.slf4j:slf4j-nop:2.0.6" />
+          <element id="library" level="project" name="Maven: org.slf4j:slf4j-api:2.0.6" />
           <element id="library" level="project" name="Maven: org.apache.logging.log4j:log4j-core:2.19.0" />
           <element id="library" level="project" name="Maven: org.apache.logging.log4j:log4j-api:2.19.0" />
           <element id="file-copy" path="$PROJECT_DIR$/../../mvn/event/hoprxi/core/1.0-SNAPSHOT/core-1.0-SNAPSHOT.jar" output-file-name="event.hoprxi-core-1.0-SNAPSHOT.jar" />
           <element id="library" level="project" name="Maven: com.lmax:disruptor:3.4.4" />
           <element id="library" level="project" name="Maven: salt.hoprxi:utils:1.0-SNAPSHOT" />
-          <element id="library" level="project" name="Maven: org.slf4j:slf4j-api:1.7.36" />
           <element id="library" level="project" name="Maven: salt.hoprxi:cache:1.0-SNAPSHOT" />
           <element id="library" level="project" name="Maven: com.carrotsearch:java-sizeof:0.0.5" />
           <element id="library" level="project" name="Maven: com.github.ben-manes.caffeine:caffeine:2.9.3" />

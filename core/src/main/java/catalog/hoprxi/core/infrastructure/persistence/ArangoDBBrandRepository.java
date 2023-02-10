@@ -53,7 +53,7 @@ public class ArangoDBBrandRepository implements BrandRepository {
             nameConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
             if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Not find Name class has such constructor", e);
+                LOGGER.debug("Not query Name class has such constructor", e);
         }
     }
 

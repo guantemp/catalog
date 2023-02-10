@@ -89,13 +89,13 @@ public class ItemServlet extends HttpServlet {
         generator.writeStartObject();
         if (pathInfo != null) {
             String id = pathInfo.substring(1);
-            ItemView itemView = queryService.find(id);
+            ItemView itemView = queryService.query(id);
             if (itemView != null) {
                 responseItemView(generator, itemView);
             } else {
                 //resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
                 generator.writeNumberField("code", 204);
-                generator.writeStringField("message", "Not find");
+                generator.writeStringField("message", "Not query");
             }
         } else {
             int offset = NumberHelper.intOf(req.getParameter("offset"), OFFSET);
@@ -138,7 +138,7 @@ public class ItemServlet extends HttpServlet {
             } else if (!barcode.isEmpty() || !name.isEmpty()) {
                 Set<ItemView> itemViewSet = new HashSet<>();
                 if (!barcode.isEmpty()) {
-                    ItemView[] itemViews = queryService.findByBarcode(barcode);
+                    ItemView[] itemViews = queryService.queryByBarcode(barcode);
                     for (ItemView itemView : itemViews)
                         itemViewSet.add(itemView);
                 }
@@ -149,7 +149,7 @@ public class ItemServlet extends HttpServlet {
                 responseItemViews(generator, itemViewSet.toArray(new ItemView[0]));
             } else {
                 generator.writeNumberField("total", queryService.size());
-                ItemView[] itemViews = queryService.findAll(offset, limit);
+                ItemView[] itemViews = queryService.queryAll(offset, limit);
                 responseItemViews(generator, itemViews);
             }
         }

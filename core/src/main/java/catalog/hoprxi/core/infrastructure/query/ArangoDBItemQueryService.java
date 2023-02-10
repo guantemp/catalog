@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
             nameConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
             if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Not find Name class has such constructor", e);
+                LOGGER.debug("Not query Name class has such constructor", e);
         }
     }
 
@@ -70,7 +70,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
     }
 
     @Override
-    public ItemView find(String id) {
+    public ItemView query(String id) {
         final String query = "WITH brand,category,item,barcode\n" +
                 "FOR i IN item FILTER i._key == @key\n" +
                 "FOR b IN 1..1 OUTBOUND i._id has\n" +
@@ -132,7 +132,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
     }
 
     @Override
-    public ItemView[] findAll(long offset, int limit) {
+    public ItemView[] queryAll(long offset, int limit) {
         ItemView[] itemViews = ArangoDBUtil.calculationCollectionSize(catalog, ItemView.class, "item", offset, limit);
         if (itemViews.length == 0)
             return itemViews;
@@ -164,7 +164,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
     }
 
     @Override
-    public ItemView[] findByBarcode(String barcode) {
+    public ItemView[] queryByBarcode(String barcode) {
         final String query = "WITH brand,category,item,barcode\n" +
                 "FOR b IN barcode FILTER b.barcode =~ @barcode\n" +
                 "FOR i IN 1..1 INBOUND b._id has\n" +

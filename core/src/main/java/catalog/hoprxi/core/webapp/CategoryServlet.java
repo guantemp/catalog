@@ -86,7 +86,7 @@ public class CategoryServlet extends HttpServlet {
                     CategoryView view = categoryQueryService.find(parameters[1]);
                     if (view != null) {
                         responseCategoryView(generator, view);
-                    } else {//not find
+                    } else {//not query
                         responseNotFind(resp, generator, parameters[1]);
                     }
                 }
@@ -138,7 +138,7 @@ public class CategoryServlet extends HttpServlet {
     private void responseNotFind(HttpServletResponse resp, JsonGenerator generator, String id) throws IOException {
         resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         generator.writeNumberField("code", 1001);
-        generator.writeStringField("message", "Not find category(id=" + id + ")");
+        generator.writeStringField("message", "Not query category(id=" + id + ")");
     }
 
     private void responseCategoryView(JsonGenerator generator, CategoryView view) throws IOException {

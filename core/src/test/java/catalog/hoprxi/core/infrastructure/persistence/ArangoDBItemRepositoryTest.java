@@ -184,7 +184,7 @@ public class ArangoDBItemRepositoryTest {
         itemRepository.delete("nine");
         itemRepository.delete("ten");
         itemRepository.delete("twelve");
-        for (Item item : itemRepository.findByBarcode("4547691239136")) {
+        for (Item item : itemRepository.queryByBarcode("4547691239136")) {
             itemRepository.delete(item.id());
         }
         itemRepository.delete("twelve");

@@ -219,9 +219,12 @@ public class PsqlBrandRepository implements BrandRepository {
         try (JsonGenerator generator = jasonFactory.createGenerator(output, JsonEncoding.UTF8)) {
             generator.writeStartObject();
             generator.writeNumberField("since", about.since().getValue());
-            generator.writeStringField("story", about.story());
-            generator.writeStringField("logo", about.logo().toExternalForm());
-            generator.writeStringField("homepage", about.logo().toExternalForm());
+            if (about.story() != null)
+                generator.writeStringField("story", about.story());
+            if (about.logo() != null)
+                generator.writeStringField("logo", about.logo().toExternalForm());
+            if (about.homepage() != null)
+                generator.writeStringField("homepage", about.homepage().toExternalForm());
             generator.writeEndObject();
             generator.flush();
         } catch (IOException e) {

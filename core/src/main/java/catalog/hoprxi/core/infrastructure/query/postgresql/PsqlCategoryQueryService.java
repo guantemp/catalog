@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ public class PsqlCategoryQueryService implements CategoryQueryService, DomainEve
             nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
             nameConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
-            LOGGER.error("Not find Name class has such constructor", e);
+            LOGGER.error("Not query Name class has such constructor", e);
         }
     }
 

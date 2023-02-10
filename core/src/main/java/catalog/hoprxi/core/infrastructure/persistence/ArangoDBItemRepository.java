@@ -60,7 +60,7 @@ public class ArangoDBItemRepository implements ItemRepository {
             nameConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
             if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Not find Name class has such constructor", e);
+                LOGGER.debug("Not query Name class has such constructor", e);
         }
     }
 
@@ -236,7 +236,7 @@ public class ArangoDBItemRepository implements ItemRepository {
             }
             sb.append("] REMOVE e IN has REMOVE v IN barcode");
             arangoDatabase.query(sb.toString(), null, null, VPackSlice.class);
-            //find existed
+            //query existed
             final String query = "WITH item,has\n" +
                     "FOR v,e IN 1..1 OUTBOUND @startVertex has FILTER v._id =~ '^barcode' RETURN v";
             final Map<String, Object> bindVars = new MapBuilder().put("startVertex", startVertex.getId()).get();

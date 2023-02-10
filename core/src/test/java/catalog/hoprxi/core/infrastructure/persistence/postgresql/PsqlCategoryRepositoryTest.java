@@ -201,7 +201,7 @@ public class PsqlCategoryRepositoryTest {
         Assert.assertNotNull(repository.find("496796322118291499"));//葵花籽油
         Assert.assertNotNull(repository.find("496796322118291471"));//白酒
         Assert.assertNull(repository.find("49581450261946041"));
-        //System.out.println(repository.find("49581450261846041"));
+        //System.out.println(repository.query("49581450261846041"));
     }
 
     @Test
@@ -214,8 +214,8 @@ public class PsqlCategoryRepositoryTest {
         @Test(priority = 3)
         public void testRemove() {
             repository.delete("496796322118291493");
-            Assert.assertNull(repository.find("49581450261846020"));
-            Assert.assertNull(repository.find("49581450261846022"));
+            Assert.assertNull(repository.query("49581450261846020"));
+            Assert.assertNull(repository.query("49581450261846022"));
         }
     */
     @Test

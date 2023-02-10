@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ public interface ItemQueryService {
      * @param id
      * @return
      */
-    ItemView find(String id);
+    ItemView query(String id);
 
     /**
      * @param brandId
@@ -53,7 +53,7 @@ public interface ItemQueryService {
      * @param limit
      * @return
      */
-    ItemView[] findAll(long offset, int limit);
+    ItemView[] queryAll(long offset, int limit);
 
     /**
      * @return
@@ -64,7 +64,7 @@ public interface ItemQueryService {
      * @param barcode is support regular
      * @return
      */
-    ItemView[] findByBarcode(String barcode);
+    ItemView[] queryByBarcode(String barcode);
 
     /**
      * @param regularExpression is support regular,will search Name(name,alias,mnemonic),barcode

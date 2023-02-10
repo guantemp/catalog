@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,12 +59,12 @@ public class ArangoDBItemQueryServiceTest {
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testFindAll() {
-        ItemView[] skuses = itemQueryService.findAll(0, 25);
+    public void testQueryAll() {
+        ItemView[] skuses = itemQueryService.queryAll(0, 25);
         Assert.assertEquals(skuses.length, 14);
-        skuses = itemQueryService.findAll(12, 25);
+        skuses = itemQueryService.queryAll(12, 25);
         Assert.assertEquals(skuses.length, 2);
-        skuses = itemQueryService.findAll(5, 5);
+        skuses = itemQueryService.queryAll(5, 5);
         Assert.assertEquals(skuses.length, 5);
     }
 
@@ -75,22 +75,22 @@ public class ArangoDBItemQueryServiceTest {
 
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFromBarcode() {
-        ItemView[] items = itemQueryService.findByBarcode("69235552");
+        ItemView[] items = itemQueryService.queryByBarcode("69235552");
         Assert.assertEquals(items.length, 3);
-        items = itemQueryService.findByBarcode("690");
+        items = itemQueryService.queryByBarcode("690");
         Assert.assertEquals(items.length, 3);
-        items = itemQueryService.findByBarcode("123465");
+        items = itemQueryService.queryByBarcode("123465");
         Assert.assertEquals(items.length, 0);
-        items = itemQueryService.findByBarcode("4695");
+        items = itemQueryService.queryByBarcode("4695");
         Assert.assertEquals(items.length, 1);
-        items = itemQueryService.findByBarcode("4547691239136");
+        items = itemQueryService.queryByBarcode("4547691239136");
         Assert.assertEquals(items.length, 1);
         for (ItemView item : items)
             System.out.println(item);
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testFromName() {
+    public void testSerach() {
         ItemView[] items = itemQueryService.serach("彩虹");
         Assert.assertEquals(items.length, 3);
         items = itemQueryService.serach("^彩虹");

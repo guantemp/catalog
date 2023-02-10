@@ -200,7 +200,7 @@ public class ArangoDBCategoryRepositoryTest {
         Assert.assertNotNull(repository.find("496796322118291499"));//葵花籽油
         Assert.assertNotNull(repository.find("496796322118291471"));//白酒
         Assert.assertNull(repository.find("49581450261946041"));
-        //System.out.println(repository.find("49581450261846041"));
+        //System.out.println(repository.query("49581450261846041"));
     }
 
     @Test

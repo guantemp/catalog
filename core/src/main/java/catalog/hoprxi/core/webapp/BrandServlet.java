@@ -87,7 +87,7 @@ public class BrandServlet extends HttpServlet {
                 generator.writeNumberField("code", 30101);
                 generator.writeStringField("message", MessageFormat.format("No brand with id={0} found", id));
             }
-        } else {//find all
+        } else {//query all
             int offset = NumberHelper.intOf(req.getParameter("offset"), OFFSET);
             int limit = NumberHelper.intOf(req.getParameter("limit"), LIMIT);
             String keyword = Optional.ofNullable(req.getParameter("keyword")).orElse("");

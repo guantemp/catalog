@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ public class ArangoDBBrandQueryService implements BrandQueryService {
             nameConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
             if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Not find Name class has such constructor", e);
+                LOGGER.debug("Not query Name class has such constructor", e);
         }
     }
 

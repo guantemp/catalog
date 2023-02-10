@@ -50,7 +50,7 @@ public class PsqlItemImportExport implements ItemImportExportService {
 
     public static void export(OutputStream outputStream) throws IOException {
         ItemQueryService query = new PsqlItemQueryService("catalog");
-        ItemView[] itemViews = query.findAll(0, 2000);
+        ItemView[] itemViews = query.queryAll(0, 2000);
         SXSSFWorkbook workbook = null;
         BufferedOutputStream bufferedOutPut = null;
         /*
