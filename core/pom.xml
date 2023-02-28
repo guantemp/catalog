@@ -164,6 +164,7 @@
                     <include>**/*.conf</include>
                     <include>**/*.json</include>
                     <include>**/*.xml</include>
+                    <include>**/*.xls</include>
                 </includes>
             </resource>
         </resources>
@@ -187,7 +188,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/config</outputDirectory>
+                            <outputDirectory>${project.build.directory}/conf</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>src/main/resources</directory>
@@ -228,7 +229,7 @@
                         </manifest>
                         <!--(配置文件外置目录) -->
                         <manifestEntries>
-                            <Class-Path>config/</Class-Path>
+                            <Class-Path>conf/</Class-Path>
                         </manifestEntries>
                         <!--
                                                 <excludes>

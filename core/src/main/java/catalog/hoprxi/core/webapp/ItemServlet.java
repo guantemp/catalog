@@ -65,6 +65,7 @@ public class ItemServlet extends HttpServlet {
     public void init(ServletConfig config) {
         if (config != null) {
             String database = config.getInitParameter("database");
+            System.out.println(database);
             String databaseName = config.getInitParameter("databaseName");
         }
         Config conf = ConfigFactory.load("database");
@@ -83,10 +84,10 @@ public class ItemServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String pathInfo = req.getPathInfo();
         resp.setContentType("application/json; charset=UTF-8");
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
         generator.writeStartObject();
+        String pathInfo = req.getPathInfo();
         if (pathInfo != null) {
             String id = pathInfo.substring(1);
             ItemView itemView = queryService.query(id);
