@@ -48,7 +48,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-10-11
+ * @version 0.0.2 builder 2023-03-01
  */
 public class PsqlItemRepository implements ItemRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemRepository.class);
@@ -115,8 +115,7 @@ public class PsqlItemRepository implements ItemRepository {
     }
 
     private MadeIn toMadeIn(String json) throws IOException {
-        String _class = null, city = null, country = null;
-        int code = -1;
+        String _class = null, city = null, country = null, code = "156";
         JsonFactory jasonFactory = new JsonFactory();
         JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
         while (!parser.isClosed()) {
@@ -135,19 +134,19 @@ public class PsqlItemRepository implements ItemRepository {
                         country = parser.getValueAsString();
                         break;
                     case "code":
-                        code = parser.getIntValue();
+                        code = parser.getValueAsString();
                         break;
                 }
             }
         }
-        if (code == 0)
-            return Domestic.BLACK;
-        if (Domestic.class.getName().equals(_class)) {
+        if ("156".equals(code))
+            return MadeIn.BLACk;
+        else if (Domestic.class.getName().equals(_class)) {
             return new Domestic(code, city);
         } else if (Imported.class.getName().equals(_class)) {
             return new Imported(code, country);
         }
-        return Domestic.BLACK;
+        return MadeIn.BLACk;
     }
 
     @Override
@@ -210,7 +209,7 @@ public class PsqlItemRepository implements ItemRepository {
         try (JsonGenerator generator = jasonFactory.createGenerator(output, JsonEncoding.UTF8)) {
             generator.writeStartObject();
             generator.writeStringField("_class", _class);
-            generator.writeNumberField("code", madeIn.code());
+            generator.writeStringField("code", madeIn.code());
             if (Domestic.class.getName().equals(_class)) {
                 generator.writeStringField("city", ((Domestic) madeIn).city());
             } else if (Imported.class.getName().equals(_class)) {

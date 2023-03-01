@@ -100,9 +100,9 @@ public class ArangoDBItemRepository implements ItemRepository {
         MadeIn madeIn = null;
         String className = madeInSlice.get("_class").getAsString();
         if (Domestic.class.getName().equals(className)) {
-            madeIn = new Domestic(madeInSlice.get("code").getAsInt(), madeInSlice.get("city").getAsString());
+            madeIn = new Domestic(madeInSlice.get("code").getAsString(), madeInSlice.get("city").getAsString());
         } else if (Imported.class.getName().equals(className)) {
-            madeIn = new Imported(madeInSlice.get("code").getAsInt(), madeInSlice.get("country").getAsString());
+            madeIn = new Imported(madeInSlice.get("code").getAsString(), madeInSlice.get("country").getAsString());
         }
         Specification spec = new Specification(slice.get("spec").get("value").getAsString());
         Grade grade = Grade.valueOf(slice.get("grade").getAsString());

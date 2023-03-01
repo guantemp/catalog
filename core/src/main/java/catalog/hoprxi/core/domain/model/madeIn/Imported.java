@@ -18,6 +18,7 @@ package catalog.hoprxi.core.domain.model.madeIn;
 
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -27,11 +28,15 @@ import java.util.StringJoiner;
 public class Imported implements MadeIn {
     // 进口（国家或地区,如：美国）
     private final String country;
-    private final int code;
+    private final String code;
+    private final Pattern CODE_PATTERBN = Pattern.compile("^\\d{3}$");
 
-    public Imported(int code, String country) {
-        this.code = code;
+    public Imported(String code, String country) {
         this.country = Objects.requireNonNull(country, "country required");
+        code = Objects.requireNonNull(code, "city required").trim();
+        if (!CODE_PATTERBN.matcher(code).matches())
+            throw new IllegalArgumentException("code is three digit");
+        this.code = code;
     }
 
     public String country() {
@@ -39,7 +44,7 @@ public class Imported implements MadeIn {
     }
 
     @Override
-    public int code() {
+    public String code() {
         return this.code;
     }
 
@@ -55,19 +60,19 @@ public class Imported implements MadeIn {
 
         Imported imported = (Imported) o;
 
-        return code == imported.code;
+        return Objects.equals(code, imported.code);
     }
 
     @Override
     public int hashCode() {
-        return code;
+        return code != null ? code.hashCode() : 0;
     }
 
     @Override
     public String toString() {
         return new StringJoiner(", ", Imported.class.getSimpleName() + "[", "]")
                 .add("country='" + country + "'")
-                .add("code=" + code)
+                .add("code='" + code + "'")
                 .toString();
     }
 }

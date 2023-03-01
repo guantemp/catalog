@@ -77,7 +77,7 @@ public class ArangoDBItemRepositoryTest {
         categoryRepository.save(skin);
 
         Barcode barcode = BarcodeGenerateServices.createMatchingBarcode("6907861191394");
-        MadeIn madeIn = new Domestic(510100, "成都");
+        MadeIn madeIn = new Domestic("510100", "成都");
         RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.59, currency), Unit.HE));
         Item one = new Item("one", barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "150ml彩虹电热灭蚊香液"), madeIn,
                 new Specification("150ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
@@ -142,17 +142,17 @@ public class ArangoDBItemRepositoryTest {
         itemRepository.save(nine);
 
         retailPrice = new RetailPrice(new Price(Money.of(5.00, currency), Unit.DUI));
-        Item ten = new Item("ten", new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic(510700, "绵阳市"), new Specification("10粒缩卡装"),
+        Item ten = new Item("ten", new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic("510700", "绵阳市"), new Specification("10粒缩卡装"),
                 Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), changhong.id());
         itemRepository.save(ten);
 
         retailPrice = new RetailPrice(new Price(Money.of(5, currency), Unit.BEN));
-        Item twelve = new Item("twelve", new EAN_13("6925834037159"), new Name("车线本"), new Domestic(330500, "湖州市"),
+        Item twelve = new Item("twelve", new EAN_13("6925834037159"), new Name("车线本"), new Domestic("330500", "湖州市"),
                 Specification.UNDEFINED, Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(twelve);
 
         retailPrice = new RetailPrice(new Price(Money.of(32.00, currency), Unit.HE));
-        Item thirteen = new Item(itemRepository.nextIdentity(), new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported(152, "泰国"),
+        Item thirteen = new Item(itemRepository.nextIdentity(), new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("764", "泰国"),
                 new Specification("10片装"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(thirteen);
     }

@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.domain.model.madeIn;
 
 import java.util.Objects;
-import java.util.StringJoiner;
+import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -25,24 +25,25 @@ import java.util.StringJoiner;
  * @version 0.0.2 2023-03-01
  */
 public class Domestic implements MadeIn {
-    public static final Domestic BEI_JING = new Domestic(110100, "北京市");
-    public static final Domestic TIAN_JIN = new Domestic(120100, "天津市");
-    public static final Domestic SHANG_HAI = new Domestic(310100, "上海市");
-    public static final Domestic CHONG_QING = new Domestic(500100, "重庆市");
-    public static final Domestic BLACK = new Domestic(0, "");
+    public static final Domestic BEI_JING = new Domestic("110100", "北京市");
+    public static final Domestic TIAN_JIN = new Domestic("120100", "天津市");
+    public static final Domestic SHANG_HAI = new Domestic("310100", "上海市");
+    public static final Domestic CHONG_QING = new Domestic("500100", "重庆市");
 
     private final String city;//乐山市
-    private int code = 511100;
+    private final String code;// 511100;
+    private final Pattern CODE_PATTERBN = Pattern.compile("^\\d{3,}$");
 
     public String city() {
         return city;
     }
 
-    public Domestic(int code, String city) {
-        if (code < 0)
-            throw new IllegalArgumentException("code must larger zero");
-        this.code = code;
+    public Domestic(String code, String city) {
         this.city = Objects.requireNonNull(city, "city required").trim();
+        code = Objects.requireNonNull(code, "code required").trim();
+        if (!CODE_PATTERBN.matcher(code).matches())
+            throw new IllegalArgumentException("code is three digit");
+        this.code = code;
     }
 
     @Override
@@ -58,23 +59,15 @@ public class Domestic implements MadeIn {
 
         Domestic domestic = (Domestic) o;
 
-        return code == domestic.code;
+        return Objects.equals(code, domestic.code);
     }
 
     @Override
     public int hashCode() {
-        return code;
+        return code != null ? code.hashCode() : 0;
     }
 
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", Domestic.class.getSimpleName() + "[", "]")
-                .add("city='" + city + "'")
-                .add("code=" + code)
-                .toString();
-    }
-
-    public int code() {
+    public String code() {
         return code;
     }
 }

@@ -19,12 +19,24 @@ package catalog.hoprxi.core.domain.model.madeIn;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-08-28
+ * @version 0.0.2 2023-03-01
  */
 public interface MadeIn {
     String madeIn();
 
-    default int code() {
-        return 0;
+    public static MadeIn BLACk = new MadeIn() {
+        @Override
+        public String madeIn() {
+            return "";
+        }
+
+        @Override
+        public String code() {
+            return "156";
+        }
+    };
+
+    default String code() {
+        return "156";
     }
 }

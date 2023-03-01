@@ -169,7 +169,7 @@ public class ItemServlet extends HttpServlet {
         generator.writeEndObject();
         generator.writeObjectField("spec", itemView.spec().value());
         generator.writeObjectFieldStart("madeIn");
-        generator.writeNumberField("code", itemView.madeIn().code());
+        generator.writeStringField("code", itemView.madeIn().code());
         generator.writeStringField("madeIn", itemView.madeIn().madeIn());
         generator.writeEndObject();
         generator.writeObjectField("grade", itemView.grade().toString());

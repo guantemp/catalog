@@ -57,7 +57,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-11-28
+ * @version 0.0.2 builder 2023-03-01
  */
 public class PsqlItemQueryService implements ItemQueryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQueryService.class);
@@ -374,8 +374,7 @@ public class PsqlItemQueryService implements ItemQueryService {
     }
 
     private MadeIn toMadeIn(String json) throws IOException {
-        String _class = null, city = null, country = null;
-        int code = -1;
+        String _class = null, city = null, country = null, code = "156";
         JsonFactory jasonFactory = new JsonFactory();
         JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
         while (!parser.isClosed()) {
@@ -394,18 +393,18 @@ public class PsqlItemQueryService implements ItemQueryService {
                         country = parser.getValueAsString();
                         break;
                     case "code":
-                        code = parser.getIntValue();
+                        code = parser.getValueAsString();
                         break;
                 }
             }
         }
-        if (code == 0)
-            return Domestic.BLACK;
-        if (Domestic.class.getName().equals(_class)) {
+        if ("156".equals(code))
+            return MadeIn.BLACk;
+        else if (Domestic.class.getName().equals(_class)) {
             return new Domestic(code, city);
         } else if (Imported.class.getName().equals(_class)) {
             return new Imported(code, country);
         }
-        return Domestic.BLACK;
+        return MadeIn.BLACk;
     }
 }

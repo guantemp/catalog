@@ -134,9 +134,9 @@ public class ArangoDBWeightRepository implements WeightRepository {
         if (!madeInSlice.isNone() && !madeInSlice.isNull()) {
             String className = madeInSlice.get("_class").getAsString();
             if (Domestic.class.getName().equals(className)) {
-                madeIn = new Domestic(madeInSlice.get("code").getAsInt(), madeInSlice.get("city").getAsString());
+                madeIn = new Domestic(madeInSlice.get("code").getAsString(), madeInSlice.get("city").getAsString());
             } else if (Imported.class.getName().equals(className)) {
-                madeIn = new Imported(madeInSlice.get("code").getAsInt(), madeInSlice.get("country").getAsString());
+                madeIn = new Imported(madeInSlice.get("code").getAsString(), madeInSlice.get("country").getAsString());
             }
         }
         Specification spec = Specification.rebulid(slice.get("spec").get("value").getAsString());
