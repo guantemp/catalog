@@ -41,14 +41,14 @@ public class PsqlItemImport implements ItemImportService {
         try (Connection connection = PsqlUtil.getConnection()) {
             connection.setAutoCommit(false);
             Statement statement = connection.createStatement();
-            StringJoiner sql = new StringJoiner(",", "insert into area (code,parent_code,name,boundary,\"type\") values", "");
+            StringJoiner sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,retail_price,member_price,vip_price) values", "");
             for (int i = 1, j = sheet.getLastRowNum(); i < j; i++) {
                 Row row = sheet.getRow(i);
                 StringJoiner values = extracted(row);
                 sql.add(values.toString());
                 if (i % 513 == 0) {
                     statement.addBatch(sql.toString());
-                    sql = new StringJoiner(",", "insert into area (code,parent_code,name,boundary,\"type\") values", "");
+                    sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,retail_price,member_price,vip_price) values", "");
                 }
                 if (i == j - 1) {
                     statement.addBatch(sql.toString());

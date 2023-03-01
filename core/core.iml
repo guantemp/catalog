@@ -47,6 +47,7 @@
     <orderEntry type="library" name="Maven: com.lmax:disruptor:3.4.4" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:utils:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:cache:1.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-slf4j-impl:2.19.0" level="project" />
     <orderEntry type="library" name="Maven: com.carrotsearch:java-sizeof:0.0.5" level="project" />
     <orderEntry type="library" name="Maven: com.github.ben-manes.caffeine:caffeine:2.9.3" level="project" />
     <orderEntry type="library" name="Maven: com.google.errorprone:error_prone_annotations:2.10.0" level="project" />

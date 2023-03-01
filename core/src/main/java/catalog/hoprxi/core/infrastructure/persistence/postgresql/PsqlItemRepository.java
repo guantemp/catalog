@@ -74,7 +74,7 @@ public class PsqlItemRepository implements ItemRepository {
     public Item find(String id) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             final String findSql = "select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,barcode,category_id," +
-                    "brand_id,grade,made_in,specs,shelf_life,retail_price::jsonb->>'number' as retail_price_number,retail_price::jsonb->>'currencyCode' as retail_price_currencyCode,retail_price::jsonb->>'unit' as retail_price_unit" +
+                    "brand_id,grade,made_in,spec,shelf_life,retail_price::jsonb->>'number' as retail_price_number,retail_price::jsonb->>'currencyCode' as retail_price_currencyCode,retail_price::jsonb->>'unit' as retail_price_unit" +
                     ",member_price::jsonb ->> 'name' as member_price_name, member_price::jsonb -> 'price' ->> 'number' as member_price_number, member_price::jsonb -> 'price' ->> 'currencyCode' as member_price_currencyCode, member_price::jsonb -> 'price' ->> 'unit' as member_price_unit" +
                     ", vip_price::jsonb ->> 'name' as vip_price_name, vip_price::jsonb -> 'price' ->> 'number' as vip_price_number, vip_price::jsonb -> 'price' ->> 'currencyCode' as vip_price_currencyCode, vip_price::jsonb -> 'price' ->> 'unit' as vip_price_unit " +
                     "from item where id=? limit 1";
@@ -98,7 +98,7 @@ public class PsqlItemRepository implements ItemRepository {
         String brandId = rs.getString("brand_id");
         Grade grade = Grade.valueOf(rs.getString("grade"));
         MadeIn madeIn = toMadeIn(rs.getString("made_in"));
-        Specification spec = new Specification(rs.getString("specs"));
+        Specification spec = new Specification(rs.getString("spec"));
         ShelfLife shelfLife = ShelfLife.rebuild(rs.getInt("shelf_life"));
         MonetaryAmount amount = Money.of(rs.getBigDecimal("retail_price_number"), rs.getString("retail_price_currencyCode"));
         Unit unit = Unit.valueOf(rs.getString("retail_price_unit"));
@@ -115,7 +115,7 @@ public class PsqlItemRepository implements ItemRepository {
     }
 
     private MadeIn toMadeIn(String json) throws IOException {
-        String _class = null, province = null, city = null, country = null;
+        String _class = null, city = null, country = null;
         int code = -1;
         JsonFactory jasonFactory = new JsonFactory();
         JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
@@ -127,9 +127,6 @@ public class PsqlItemRepository implements ItemRepository {
                 switch (fieldName) {
                     case "_class":
                         _class = parser.getValueAsString();
-                        break;
-                    case "province":
-                        province = parser.getValueAsString();
                         break;
                     case "city":
                         city = parser.getValueAsString();
@@ -146,9 +143,9 @@ public class PsqlItemRepository implements ItemRepository {
         if (code == 0)
             return Domestic.BLACK;
         if (Domestic.class.getName().equals(_class)) {
-            return new Domestic(province, city);
+            return new Domestic(code, city);
         } else if (Imported.class.getName().equals(_class)) {
-            return new Imported(country);
+            return new Imported(code, country);
         }
         return Domestic.BLACK;
     }
@@ -173,9 +170,9 @@ public class PsqlItemRepository implements ItemRepository {
     @Override
     public void save(Item item) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String insertOrReplaceSql = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,specs,shelf_life,retail_price,member_price,vip_price) " +
+            final String insertOrReplaceSql = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,retail_price,member_price,vip_price) " +
                     "values (?,?::jsonb,?,?,?,?::grade,?::jsonb,?,?,?::jsonb,?::jsonb,?::jsonb) " +
-                    "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,specs=?,shelf_life=?,retail_price=?::jsonb,member_price=?::jsonb,vip_price=?::jsonb";
+                    "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,spec=?,shelf_life=?,retail_price=?::jsonb,member_price=?::jsonb,vip_price=?::jsonb";
             PreparedStatement ps = connection.prepareStatement(insertOrReplaceSql);
             ps.setLong(1, Long.parseLong(item.id()));
             ps.setString(2, toJson(item.name()));
@@ -213,13 +210,10 @@ public class PsqlItemRepository implements ItemRepository {
         try (JsonGenerator generator = jasonFactory.createGenerator(output, JsonEncoding.UTF8)) {
             generator.writeStartObject();
             generator.writeStringField("_class", _class);
+            generator.writeNumberField("code", madeIn.code());
             if (Domestic.class.getName().equals(_class)) {
-                Domestic domestic = (Domestic) madeIn;
-                generator.writeNumberField("code", domestic.code());
-                generator.writeStringField("province", domestic.province());
-                generator.writeStringField("city", domestic.city());
+                generator.writeStringField("city", ((Domestic) madeIn).city());
             } else if (Imported.class.getName().equals(_class)) {
-                generator.writeNumberField("code", madeIn.code());
                 generator.writeStringField("country", ((Imported) madeIn).country());
             }
             generator.writeEndObject();

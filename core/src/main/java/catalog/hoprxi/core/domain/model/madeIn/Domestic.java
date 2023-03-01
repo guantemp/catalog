@@ -16,92 +16,62 @@
 
 package catalog.hoprxi.core.domain.model.madeIn;
 
-import catalog.hoprxi.core.infrastructure.i18n.Label;
-
 import java.util.Objects;
 import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-08-28
+ * @version 0.0.2 2023-03-01
  */
 public class Domestic implements MadeIn {
-    public static final Domestic BEI_JING = new Domestic("北京市", "北京市");
-    public static final Domestic TIAN_JIN = new Domestic("天津市", "天津市");
-    public static final Domestic SHANG_HAI = new Domestic("上海市", "上海市");
-    public static final Domestic CHONG_QING = new Domestic("重庆市", "重庆市");
-    public static final Domestic BLACK = new Domestic(0, "", "") {
-        @Override
-        public String madeIn() {
-            return "";
-        }
-    };
+    public static final Domestic BEI_JING = new Domestic(110100, "北京市");
+    public static final Domestic TIAN_JIN = new Domestic(120100, "天津市");
+    public static final Domestic SHANG_HAI = new Domestic(310100, "上海市");
+    public static final Domestic CHONG_QING = new Domestic(500100, "重庆市");
+    public static final Domestic BLACK = new Domestic(0, "");
 
-    // 省/市级
-    private final String province;//四川省
     private final String city;//乐山市
     private int code = 511100;
-
-    public String province() {
-        return province;
-    }
 
     public String city() {
         return city;
     }
 
-    public Domestic(String province, String city) {
-        this.province = Objects.requireNonNull(province, "province required").trim();
+    public Domestic(int code, String city) {
+        if (code < 0)
+            throw new IllegalArgumentException("code must larger zero");
+        this.code = code;
         this.city = Objects.requireNonNull(city, "city required").trim();
-    }
-
-    public Domestic(int code) {
-        this("四川省", "乐山市");
-        if (code < 0)
-            throw new IllegalArgumentException("code must larger zero");
-        this.code = code;
-    }
-
-    public Domestic(int code, String province, String city) {
-        this.province = province;
-        this.city = city;
-        if (code < 0)
-            throw new IllegalArgumentException("code must larger zero");
-        this.code = code;
     }
 
     @Override
     public String madeIn() {
-        return province + Label.MADIN_SEPARATORS + city;
+        return city;
         //return new StringJoiner(Label.MADIN_SEPARATORS).add(province).add(city).toString();
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", Domestic.class.getSimpleName() + "[", "]")
-                .add("province='" + province + "'")
-                .add("city='" + city + "'")
-                .add("code=" + code)
-                .toString();
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Domestic)) return false;
 
         Domestic domestic = (Domestic) o;
 
-        if (province != null ? !province.equals(domestic.province) : domestic.province != null) return false;
-        return city != null ? city.equals(domestic.city) : domestic.city == null;
+        return code == domestic.code;
     }
 
     @Override
     public int hashCode() {
-        int result = province != null ? province.hashCode() : 0;
-        result = 31 * result + (city != null ? city.hashCode() : 0);
-        return result;
+        return code;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Domestic.class.getSimpleName() + "[", "]")
+                .add("city='" + city + "'")
+                .add("code=" + code)
+                .toString();
     }
 
     public int code() {

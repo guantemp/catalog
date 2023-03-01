@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,10 @@ import java.util.StringJoiner;
 public class Imported implements MadeIn {
     // 进口（国家或地区,如：美国）
     private final String country;
+    private final int code;
 
-    public Imported(String country) {
+    public Imported(int code, String country) {
+        this.code = code;
         this.country = Objects.requireNonNull(country, "country required");
     }
 
@@ -37,29 +39,35 @@ public class Imported implements MadeIn {
     }
 
     @Override
+    public int code() {
+        return this.code;
+    }
+
+    @Override
     public String madeIn() {
         return country;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Imported)) return false;
+
+        Imported imported = (Imported) o;
+
+        return code == imported.code;
+    }
+
+    @Override
+    public int hashCode() {
+        return code;
     }
 
     @Override
     public String toString() {
         return new StringJoiner(", ", Imported.class.getSimpleName() + "[", "]")
                 .add("country='" + country + "'")
+                .add("code=" + code)
                 .toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Imported imported = (Imported) o;
-
-        return country != null ? country.equals(imported.country) : imported.country == null;
-    }
-
-    @Override
-    public int hashCode() {
-        return country != null ? country.hashCode() : 0;
     }
 }
