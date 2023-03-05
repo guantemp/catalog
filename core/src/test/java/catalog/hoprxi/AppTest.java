@@ -21,6 +21,7 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.Unit;
+import catalog.hoprxi.core.webapp.UploadServlet;
 import com.fasterxml.jackson.core.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -42,6 +43,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
 /***
@@ -53,13 +55,25 @@ public class AppTest {
 
     @Test
     public void testConfig() {
-        Config test = ConfigFactory.load("database_new");
+        Config test = ConfigFactory.load("database");
         //System.out.println(test.getString("read.hikari.maximumPoolSize"));
-        List<? extends Config> reads = test.getConfigList("read");
+        List<? extends Config> reads = test.getConfigList("reads");
+        System.out.println(reads.size());
+        int sum = 0;
         for (Config c : reads) {
+            sum = sum + (c.hasPath("weight") ? c.getInt("weight") : 1);
             System.out.println(c.getString("host"));
         }
+        System.out.println("sum: " + sum);
         //System.out.println(test.getList("write").parallelStream().);
+        String filePath = UploadServlet.class.getResource("/").toExternalForm();
+        String[] sss = filePath.split("/");
+        StringJoiner joiner = new StringJoiner("/", "", "/");
+        for (int i = 0, j = sss.length - 1; i < j; i++) {
+            joiner.add(sss[i]);
+        }
+        joiner.add("upload");
+        System.out.println(joiner);
     }
 
     @Test

@@ -8,7 +8,6 @@ catalog\hoprxi\core\infrastructure\persistence\ArangoDBProhibitSellItemRepositor
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlItemQueryService.class
 catalog\hoprxi\core\domain\model\barcode\ISBN.class
 catalog\hoprxi\core\domain\model\Item.class
-catalog\hoprxi\core\domain\model\madeIn\Domestic$1.class
 catalog\hoprxi\core\application\query\BrandQueryService.class
 catalog\hoprxi\core\domain\model\ItemCategoryReallocated.class
 catalog\hoprxi\core\domain\model\price\Unit$24.class
@@ -18,7 +17,6 @@ catalog\hoprxi\core\Bootstrap.class
 catalog\hoprxi\core\domain\model\Grade$4.class
 catalog\hoprxi\core\application\view\ItemView.class
 catalog\hoprxi\core\domain\model\ItemProhibitSold.class
-catalog\hoprxi\core\domain\model\madeIn\Province.class
 catalog\hoprxi\core\domain\model\brand\BrandDeleted.class
 catalog\hoprxi\core\domain\model\price\Unit$12.class
 catalog\hoprxi\core\domain\model\price\Unit$27.class
@@ -130,7 +128,6 @@ catalog\hoprxi\core\infrastructure\PsqlSetup.class
 catalog\hoprxi\core\application\handle\Handle.class
 catalog\hoprxi\core\domain\model\ItemMemberPriceChaned.class
 catalog\hoprxi\core\domain\model\price\Unit$16.class
-catalog\hoprxi\core\application\batch\ItemImportExportService.class
 catalog\hoprxi\core\infrastructure\i18n\Label.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlProhibitSellItemRepository.class
 catalog\hoprxi\core\domain\model\ItemGradeChanged.class
@@ -164,7 +161,6 @@ catalog\hoprxi\core\domain\model\price\Unit$14.class
 catalog\hoprxi\core\application\query\CategoryQueryService.class
 catalog\hoprxi\core\domain\model\category\CategoryIconChanged.class
 catalog\hoprxi\core\domain\model\price\Unit$37.class
-catalog\hoprxi\core\infrastructure\batch\PsqlItemImportExport.class
 catalog\hoprxi\core\domain\model\category\Category.class
 catalog\hoprxi\core\domain\model\price\Unit$7.class
 catalog\hoprxi\core\domain\model\shelfLife\ShelfLifeService$OnSchedule.class

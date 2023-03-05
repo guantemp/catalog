@@ -40,7 +40,7 @@
         </File>
         <!--SMTP :邮件发送日志-->
         <!--
-        <SMTP name="Mail" subject="****SaaS系统正式版异常信息" to="327885095@11.com" from="message@lengjing.info" smtpUsername="message@message.info" smtpPassword="LENG****1234" smtpHost="mail.lengjing.info" smtpDebug="false" smtpPort="25" bufferSize="10">
+        <SMTP name="Mail" subject="hoprxi协助系统异常信息" to="327885095@qq.com" from="message@lengjing.info" smtpUsername="message@message.info" smtpPassword="LENG****1234" smtpHost="mail.lengjing.info" smtpDebug="false" smtpPort="25" bufferSize="10">
             <PatternLayout pattern="[%-5p]:%d{YYYY-MM-dd HH:mm:ss} [%t] %c{1}:%L - %msg%n" />
         </SMTP>
         -->

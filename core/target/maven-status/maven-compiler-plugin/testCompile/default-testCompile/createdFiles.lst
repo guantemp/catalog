@@ -16,5 +16,4 @@ catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlCategoryRepository
 catalog\hoprxi\core\infrastructure\PsqlSetupTest.class
 catalog\hoprxi\core\domain\model\GradeTest.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlBrandQueryServiceTest.class
-catalog\hoprxi\core\infrastructure\batch\PsqlItemImportExportTest.class
 catalog\hoprxi\core\infrastructure\query\ArangoDBItemQueryServiceTest.class

@@ -34,7 +34,7 @@ import java.io.IOException;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-09-09
  */
-@WebServlet(urlPatterns = {"v1/units"}, name = "unit", asyncSupported = false)
+@WebServlet(urlPatterns = {"v1/units"}, name = "unit")
 public class UnitServlet extends HttpServlet {
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
