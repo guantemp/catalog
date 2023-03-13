@@ -49,8 +49,8 @@ import java.util.regex.Pattern;
 public class CategoryServlet extends HttpServlet {
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
     private static final CategoryAppService APP_SERVICE = new CategoryAppService();
-    private CategoryQueryService categoryQueryService;
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
+    private CategoryQueryService categoryQueryService;
 
     @Override
     public void init(ServletConfig config) {

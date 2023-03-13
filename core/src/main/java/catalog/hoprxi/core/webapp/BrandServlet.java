@@ -49,9 +49,9 @@ import java.util.Optional;
 public class BrandServlet extends HttpServlet {
     private static final int OFFSET = 0;
     private static final int LIMIT = 64;
+    private final JsonFactory jasonFactory = JsonFactory.builder().build();
     private BrandAppService appService = new BrandAppService();
     private BrandQueryService query;
-    private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
     public BrandServlet() {
         Config conf = ConfigFactory.load("database");

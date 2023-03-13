@@ -313,9 +313,9 @@ public class PsqlItemExport implements ItemExportService {
                 SXSSFCell cell013 = row.createCell(13);
                 cell013.setCellStyle(getStyle(workbook));
                 cell013.setCellValue(itemView.brandView().name());
-
-
             }
+            DataValidation dataValidation = dropDownList(sheet, new String[]{"不合格品", "合格品", "一等品", "优等品"}, 1, 15, 5, 6);
+            sheet.addValidationData(dataValidation);
             sheet.flushRows();
             bufferedOutPut = new BufferedOutputStream(outputStream);
             workbook.write(bufferedOutPut);

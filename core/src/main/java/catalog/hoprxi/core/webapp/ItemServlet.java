@@ -57,9 +57,9 @@ public class ItemServlet extends HttpServlet {
     private static final int OFFSET = 0;
     private static final int LIMIT = 50;
     private static final String PRE_SUFFIX = ".*?";
+    private final JsonFactory jasonFactory = JsonFactory.builder().build();
     private ItemQueryService queryService;
     private ItemRepository repository;
-    private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
     @Override
     public void init(ServletConfig config) {

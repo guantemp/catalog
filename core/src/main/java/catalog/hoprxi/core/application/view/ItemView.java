@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,21 +37,17 @@ import java.util.StringJoiner;
  */
 public class ItemView {
     private final Barcode barcode;
-    private BrandView brandView;
-    private CategoryView categoryView;
     private final Grade grade;
     private final String id;
     private final Name name;
     private final MadeIn madeIn;
+    private final Specification spec;
+    private final ShelfLife shelfLife;
+    private BrandView brandView;
+    private CategoryView categoryView;
     private RetailPrice retailPrice;
     private MemberPrice memberPrice;
     private VipPrice vipPrice;
-    private final Specification spec;
-    private final ShelfLife shelfLife;
-
-    public ShelfLife shelfLife() {
-        return shelfLife;
-    }
 
     public ItemView(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade) {
         this(id, barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY);
@@ -65,6 +61,10 @@ public class ItemView {
         this.madeIn = madeIn;
         this.spec = spec;
         this.shelfLife = shelfLife;
+    }
+
+    public ShelfLife shelfLife() {
+        return shelfLife;
     }
 
     public Barcode barcode() {

@@ -22,8 +22,6 @@ package catalog.hoprxi.core.domain.model.madeIn;
  * @version 0.0.2 2023-03-01
  */
 public interface MadeIn {
-    String madeIn();
-
     public static MadeIn BLACk = new MadeIn() {
         @Override
         public String madeIn() {
@@ -35,6 +33,8 @@ public interface MadeIn {
             return "156";
         }
     };
+
+    String madeIn();
 
     default String code() {
         return "156";

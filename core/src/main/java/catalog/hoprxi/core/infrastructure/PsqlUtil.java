@@ -36,6 +36,7 @@ import java.util.Properties;
 public class PsqlUtil {
     private static final Config config;
     private static final Selector readsSelector = new Selector();
+    private static HikariDataSource hikariDataSource;
 
     static {
         Config cache = ConfigFactory.load("core");
@@ -69,8 +70,6 @@ public class PsqlUtil {
             readsSelector.add(new Selector.Divisor(read.hasPath("weight") ? read.getInt("weight") : 1, dataSource));
         }
     }
-
-    private static HikariDataSource hikariDataSource;
 
     public static Connection getConnection(String databaseName) throws SQLException {
         if (hikariDataSource == null) {

@@ -46,8 +46,8 @@ import java.util.Objects;
  */
 public class PsqlBrandQueryService implements BrandQueryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlBrandQueryService.class);
-    private static Constructor<Name> nameConstructor;
     private static final Cache<String, Brand> CACHE = CacheFactory.build("brand");
+    private static Constructor<Name> nameConstructor;
 
     static {
         try {
