@@ -2,6 +2,7 @@ catalog\hoprxi\core\infrastructure\persistence\ArangoDBBrandRepositoryTest.class
 catalog\hoprxi\core\infrastructure\query\ArangoDBBrandQueryServiceTest.class
 catalog\hoprxi\core\infrastructure\query\ArangoDBCategoryQueryServiceTest.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlBrandRepositoryTest.class
+catalog\hoprxi\core\infrastructure\batch\PsqlItemExportTest.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlCategoryQueryServiceTest.class
 catalog\hoprxi\core\infrastructure\ArangoDBSetupTest.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlItemQueryServiceTest.class
@@ -14,6 +15,7 @@ catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlItemRepositoryTest
 catalog\hoprxi\core\domain\model\UnitTest.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlCategoryRepositoryTest.class
 catalog\hoprxi\core\infrastructure\PsqlSetupTest.class
+catalog\hoprxi\core\infrastructure\batch\PsqlItemImportTest.class
 catalog\hoprxi\core\domain\model\GradeTest.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlBrandQueryServiceTest.class
 catalog\hoprxi\core\infrastructure\query\ArangoDBItemQueryServiceTest.class

@@ -68,7 +68,6 @@ public class PsqlItemImport implements ItemImportService {
             }
         }
         workbook.close();
-
     }
 
     private StringJoiner extracted(Row row) {
@@ -80,13 +79,15 @@ public class PsqlItemImport implements ItemImportService {
             Cell cell = row.getCell(k);
             switch (k % divisor) {
                 case 0:
-                case 2:
-                    int code = (int) cell.getNumericCellValue();
-                    cellJoiner.add(String.valueOf(code));
                     break;
                 case 1:
                     name = cell.getStringCellValue();
                     break;
+                case 2:
+                    int code = (int) cell.getNumericCellValue();
+                    cellJoiner.add(String.valueOf(code));
+                    break;
+
                 case 3:
                     cellJoiner.add("'" + "'");
                     break;

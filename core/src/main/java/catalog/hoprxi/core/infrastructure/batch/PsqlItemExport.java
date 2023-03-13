@@ -39,11 +39,13 @@ import java.io.OutputStream;
  * @version 0.0.1 builder 2023-02-28
  */
 public class PsqlItemExport implements ItemExportService {
-    public static void setStyle(CellStyle style) {
+
+    //     列头单元格样式
+    public static void setColumnTopStyle(CellStyle style) {
         //设置背景颜色;
-        style.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_YELLOW.getIndex());
+        style.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_ORANGE.getIndex());
         //solid 填充  foreground  前景色
-        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setFillPattern(FillPatternType.DIAMONDS);
         //设置底边框;
         style.setBorderBottom(BorderStyle.THIN);
         //设置底边框颜色;
@@ -101,6 +103,7 @@ public class PsqlItemExport implements ItemExportService {
         style.setTopBorderColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex());
         //在样式用应用设置的字体;
         style.setFont(font);
+
         //设置自动换行;
         style.setWrapText(false);
         //设置水平对齐的样式为居中对齐;
@@ -115,36 +118,6 @@ public class PsqlItemExport implements ItemExportService {
         XSSFDataFormat dataFormat = workbook.getXSSFWorkbook().createDataFormat();
         cellstyle.setDataFormat(dataFormat.getFormat("¥* #,##0.00"));
         return cellstyle;
-    }
-
-    //     列头单元格样式
-    public static void setColumnTopStyle(CellStyle style) {
-        //设置背景颜色;
-        style.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_ORANGE.getIndex());
-        //solid 填充  foreground  前景色
-        style.setFillPattern(FillPatternType.DIAMONDS);
-        //设置底边框;
-        style.setBorderBottom(BorderStyle.THIN);
-        //设置底边框颜色;
-        style.setBottomBorderColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex());
-        //设置左边框;
-        style.setBorderLeft(BorderStyle.THIN);
-        //设置左边框颜色;
-        style.setLeftBorderColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex());
-        //设置右边框;
-        style.setBorderRight(BorderStyle.THIN);
-        //设置右边框颜色;
-        style.setRightBorderColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex());
-        //设置顶边框;
-        style.setBorderTop(BorderStyle.THIN);
-        //设置顶边框颜色;
-        style.setTopBorderColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex());
-        //设置自动换行;
-        style.setWrapText(false);
-        //设置水平对齐的样式为居中对齐;
-        style.setAlignment(HorizontalAlignment.CENTER);
-        //设置垂直对齐的样式为居中对齐;
-        style.setVerticalAlignment(VerticalAlignment.CENTER);
     }
 
     @Override
@@ -210,9 +183,12 @@ public class PsqlItemExport implements ItemExportService {
             SXSSFCell cell4 = firstrow.createCell(3);
             cell4.setCellStyle(topStyle);
             cell4.setCellValue("条码");
-            XSSFComment comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 3, 0, 5, 9));
+            XSSFComment comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 3, 0, 5, 15));
             // 输入批注信息
-            comment.setString(new XSSFRichTextString("条码规则：\n 1、条码支持EAN8,EAN13,UPC_A,UPC_E,ITF14\n2、最后一位为校验码，如果你不知道如何计算该校验码，请输入条码的前7位(ean8),前12位(EAN13),前6位(UPC_A),前11位(UPC_E),导入时系统將为你自动补全!"));
+            comment.setString(new XSSFRichTextString("条码规则：\n 1、条码支持EAN8,EAN13,UPC_A,UPC_E,ITF14\n" +
+                    "2、最后一位为校验码，如果你不知道如何计算该校验码，请输入条码的前7位(ean8),前12位(EAN13),前6位(UPC_A),前11位(UPC_E),导入时系统將为你自动补全!\n" +
+                    "3、导入时会验证校验码，有不符合要求的条码列不会被导入\n" +
+                    "4、系统中已存在的条码，在结果表会导出系统中的数据与输入源数据对比，以便你再次导入时选择使用那条数据"));
             // 添加作者,选中单元格,看状态栏
             comment.setAuthor("guan-xianghuang");
             cell4.setCellComment(comment);
@@ -247,7 +223,7 @@ public class PsqlItemExport implements ItemExportService {
             cell9.setCellStyle(topStyle);
             cell9.setCellValue("产地");
             comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 8, 0, 11, 9));
-            comment.setString(new XSSFRichTextString("产地规则：\n1、进口商品标明进口国，国产商品标记到到市，本市标记到区县\n2、查询区域表(https://area.hoprxi.com)，输入编号（510500 代表四川泸州市）\n3、输入：乐山、乐山市、重庆市、四川.泸州，四川省泸州、四川省泸州市、四川省.泸州市、广西.南宁、广西壮族自治区南宁\n5、没有找到匹配地址或留空，返回空白地址"));
+            comment.setString(new XSSFRichTextString("产地规则：\n1、进口商品标明进口国，国产商品标记到到市\n2、查询区域表(https://hoprxi.tooo.top/area/v1/areas)，输入编号（510500 代表四川泸州市）\n3、输入例：乐山、乐山市、重庆市、四川.泸州，四川省泸州、四川省泸州市、四川省.泸州市、广西.南宁、广西壮族自治区南宁\n5、没有找到匹配地址或留空，返回空白地址"));
             cell9.setCellComment(comment);
 
             SXSSFCell cell3 = firstrow.createCell(9);
@@ -337,6 +313,8 @@ public class PsqlItemExport implements ItemExportService {
                 SXSSFCell cell013 = row.createCell(13);
                 cell013.setCellStyle(getStyle(workbook));
                 cell013.setCellValue(itemView.brandView().name());
+
+
             }
             sheet.flushRows();
             bufferedOutPut = new BufferedOutputStream(outputStream);
@@ -362,4 +340,6 @@ public class PsqlItemExport implements ItemExportService {
         //数据有效性对象
         return helper.createValidation(constraint, regions);
     }
+
+
 }

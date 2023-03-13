@@ -6,6 +6,7 @@ catalog\hoprxi\core\domain\model\price\Unit$4.class
 catalog\hoprxi\core\domain\model\shelfLife\Approach.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBProhibitSellItemRepository$1.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlItemQueryService.class
+catalog\hoprxi\core\webapp\UploadServlet.class
 catalog\hoprxi\core\domain\model\barcode\ISBN.class
 catalog\hoprxi\core\domain\model\Item.class
 catalog\hoprxi\core\application\query\BrandQueryService.class
@@ -25,6 +26,7 @@ catalog\hoprxi\core\domain\model\Grade$1.class
 catalog\hoprxi\core\domain\model\barcode\Barcode.class
 catalog\hoprxi\core\domain\model\price\Unit$21.class
 catalog\hoprxi\core\application\command\CategoryChangeDescriptionCommand.class
+catalog\hoprxi\core\webapp\UploadServlet$1.class
 catalog\hoprxi\core\domain\model\price\Unit$9.class
 catalog\hoprxi\core\application\command\BrandDeleteCommand.class
 catalog\hoprxi\core\application\command\CategoryMoveNodeCommand.class
@@ -42,6 +44,7 @@ catalog\hoprxi\core\domain\model\Name.class
 catalog\hoprxi\core\domain\model\brand\BrandRenamed.class
 catalog\hoprxi\core\domain\model\category\InvalidCategoryIdException.class
 catalog\hoprxi\core\application\handle\BrandCreateHandle.class
+catalog\hoprxi\core\infrastructure\batch\PsqlItemExport.class
 catalog\hoprxi\core\domain\model\ItemBarcodeChanged.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlCategoryQueryService.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBCategoryRepository$Edge.class
@@ -62,6 +65,7 @@ catalog\hoprxi\core\application\ItemAppervice.class
 catalog\hoprxi\core\domain\model\madeIn\Domestic.class
 catalog\hoprxi\core\webapp\ItemServlet.class
 catalog\hoprxi\core\domain\model\price\MemberPrice.class
+catalog\hoprxi\core\application\batch\ItemImportService.class
 catalog\hoprxi\core\domain\model\madeIn\Imported.class
 catalog\hoprxi\core\domain\model\price\Unit$22.class
 catalog\hoprxi\core\application\command\CategoryDeleteCommand.class
@@ -77,6 +81,7 @@ catalog\hoprxi\core\domain\model\brand\BrandRepository.class
 catalog\hoprxi\core\domain\model\Grade$3.class
 catalog\hoprxi\core\domain\model\ProhibitSellItemPermitSold.class
 catalog\hoprxi\core\infrastructure\persistence\ArangoDBProhibitSellItemRepository$BelongEdge.class
+catalog\hoprxi\core\application\batch\ItemExportService.class
 catalog\hoprxi\core\domain\model\price\Unit$34.class
 catalog\hoprxi\core\domain\model\price\Unit$29.class
 catalog\hoprxi\core\domain\model\category\CategoryRenamed.class
@@ -124,6 +129,7 @@ catalog\hoprxi\core\domain\model\price\VipPrice.class
 catalog\hoprxi\core\domain\model\price\Unit$36.class
 catalog\hoprxi\core\domain\CategoryValidatorService.class
 catalog\hoprxi\core\domain\model\brand\AboutBrand.class
+catalog\hoprxi\core\infrastructure\batch\PsqlItemImport.class
 catalog\hoprxi\core\infrastructure\PsqlSetup.class
 catalog\hoprxi\core\application\handle\Handle.class
 catalog\hoprxi\core\domain\model\ItemMemberPriceChaned.class
@@ -159,6 +165,7 @@ catalog\hoprxi\core\infrastructure\query\ArangoDBCategoryQueryService.class
 catalog\hoprxi\core\domain\model\barcode\ISSN.class
 catalog\hoprxi\core\domain\model\price\Unit$14.class
 catalog\hoprxi\core\application\query\CategoryQueryService.class
+catalog\hoprxi\core\domain\model\madeIn\MadeIn$1.class
 catalog\hoprxi\core\domain\model\category\CategoryIconChanged.class
 catalog\hoprxi\core\domain\model\price\Unit$37.class
 catalog\hoprxi\core\domain\model\category\Category.class
