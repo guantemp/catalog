@@ -93,7 +93,7 @@ public class PsqlItemRepository implements ItemRepository {
     private Item rebuild(ResultSet rs) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
         String id = rs.getString("id");
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
-        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(rs.getString("barcode"));
+        Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
         String categoryId = rs.getString("category_id");
         String brandId = rs.getString("brand_id");
         Grade grade = Grade.valueOf(rs.getString("grade"));

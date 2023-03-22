@@ -94,7 +94,7 @@ public class ArangoDBItemRepository implements ItemRepository {
     private Item rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
         //DocumentField.Type.KEY.getSerializeName()
         String id = slice.get("id").getAsString();
-        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(slice.get("barcode").getAsString());
+        Barcode barcode = BarcodeGenerateServices.createBarcode(slice.get("barcode").getAsString());
         Name name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());
         VPackSlice madeInSlice = slice.get("madeIn");
         MadeIn madeIn = null;

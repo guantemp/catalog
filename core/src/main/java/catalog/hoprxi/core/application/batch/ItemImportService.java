@@ -26,7 +26,7 @@ import java.sql.SQLException;
  * @version 0.0.1 builder 2022-11-01
  */
 public interface ItemImportService {
-    void importItemXlsFrom(InputStream is) throws IOException, SQLException;
+    void importItemXlsFrom(InputStream is, int[] shineUpon) throws IOException, SQLException;
 
     void importItemCsvFrom(InputStream is);
 }

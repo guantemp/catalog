@@ -18,8 +18,9 @@ package catalog.hoprxi.core.infrastructure.batch;
 
 import org.testng.annotations.Test;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.sql.SQLException;
 
 /***
@@ -32,9 +33,11 @@ public class PsqlItemImportTest {
 
     @Test
     public void testImportItemXlsFrom() throws IOException, SQLException {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        URL url = loader.getResource("item.xls");
-        itemImport.importItemXlsFrom(url.openStream());
+        //ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        //URL url = loader.getResource("item.xls");
+        File file = new File("F:/developer/catalog/jc.xls");
+        FileInputStream fis = new FileInputStream(file);
+        itemImport.importItemXlsFrom(fis, new int[]{-1, -1, 0, -1, 1, 2, -1, 3, -1, 5, 6, 8, -1, -1, 4});
     }
 
     @Test

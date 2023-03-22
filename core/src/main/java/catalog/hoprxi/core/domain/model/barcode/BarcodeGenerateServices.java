@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.2 2020-05-05
+ * @version 0.0.3 2023-03-21
  */
 public class BarcodeGenerateServices {
     private static final Logger LOGGER = LoggerFactory.getLogger(BarcodeGenerateServices.class);
@@ -35,7 +35,11 @@ public class BarcodeGenerateServices {
     private static final DecimalFormat EAN_8_DECIMAL_FORMAT = new DecimalFormat("00000");
     private static final DecimalFormat EAN_13_DECIMAL_FORMAT = new DecimalFormat("0000000000");
 
-    public static Barcode createMatchingBarcode(CharSequence barcode) {
+    /**
+     * @param barcode
+     * @return
+     */
+    public static Barcode createBarcode(CharSequence barcode) {
         if (barcode.length() == 8)
             return new EAN_8(barcode);
         if (barcode.length() == 12)
@@ -43,6 +47,16 @@ public class BarcodeGenerateServices {
         if (barcode.length() == 13)
             return new EAN_13(barcode);
         throw new InvalidBarcodeException("Not invalid barcode");
+    }
+
+    /**
+     * @param barcode
+     * @return
+     */
+    public static Barcode createBarcodeWithChecksum(CharSequence barcode) {
+        int checksum = EanCheckService.computeChecksum(barcode);
+        String temp = barcode.toString() + checksum;
+        return createBarcode(temp);
     }
 
     /**

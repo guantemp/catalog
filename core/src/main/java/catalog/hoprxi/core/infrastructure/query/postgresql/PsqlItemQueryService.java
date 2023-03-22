@@ -183,7 +183,7 @@ public class PsqlItemQueryService implements ItemQueryService {
     private ItemView rebuildWith(ResultSet rs, ItemView.CategoryView categoryView, ItemView.BrandView brandView) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
         String id = rs.getString("id");
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
-        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(rs.getString("barcode"));
+        Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
         Grade grade = Grade.valueOf(rs.getString("grade"));
         MadeIn madeIn = toMadeIn(rs.getString("made_in"));
         Specification spec = new Specification(rs.getString("spec"));
@@ -344,7 +344,7 @@ public class PsqlItemQueryService implements ItemQueryService {
     private ItemView rebuild(ResultSet rs) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
         String id = rs.getString("id");
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
-        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(rs.getString("barcode"));
+        Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
         Grade grade = Grade.valueOf(rs.getString("grade"));
         MadeIn madeIn = toMadeIn(rs.getString("made_in"));
         Specification spec = new Specification(rs.getString("spec"));

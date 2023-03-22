@@ -203,7 +203,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
     }
 
     private ItemView rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(slice.get("barcode").getAsString());
+        Barcode barcode = BarcodeGenerateServices.createBarcode(slice.get("barcode").getAsString());
 
         String id = slice.get("id").getAsString();
         Name name = nameConstructor.newInstance(slice.get("name").get("name").getAsString(), slice.get("name").get("mnemonic").getAsString(), slice.get("name").get("alias").getAsString());

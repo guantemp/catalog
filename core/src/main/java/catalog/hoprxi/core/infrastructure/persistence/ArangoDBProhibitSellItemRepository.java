@@ -96,7 +96,7 @@ public class ArangoDBProhibitSellItemRepository implements ProhibitSellItemRepos
     }
 
     private ProhibitSellItem rebuild(VPackSlice slice) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode(slice.get("barcode").getAsString());
+        Barcode barcode = BarcodeGenerateServices.createBarcode(slice.get("barcode").getAsString());
         //Sku
         VPackSlice sku = slice.get("sku");
         String id = sku.get(DocumentField.Type.KEY.getSerializeName()).getAsString();

@@ -76,7 +76,7 @@ public class ArangoDBItemRepositoryTest {
         Category skin = new Category("cosmetics", "skin", Name.of("肤用化妆品"));
         categoryRepository.save(skin);
 
-        Barcode barcode = BarcodeGenerateServices.createMatchingBarcode("6907861191394");
+        Barcode barcode = BarcodeGenerateServices.createBarcode("6907861191394");
         MadeIn madeIn = new Domestic("510100", "成都");
         RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.59, currency), Unit.HE));
         Item one = new Item("one", barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "150ml彩虹电热灭蚊香液"), madeIn,
@@ -89,7 +89,7 @@ public class ArangoDBItemRepositoryTest {
         itemRepository.save(two);
 
         retailPrice = new RetailPrice(new Price(Money.of(56.80, currency), Unit.HE));
-        barcode = BarcodeGenerateServices.createMatchingBarcode("6907861181395");
+        barcode = BarcodeGenerateServices.createBarcode("6907861181395");
         Item three = new Item("three", barcode, new Name("彩虹电热灭蚊香液4瓶装（橙子+芒果香型）", "彩虹电热灭蚊香液4瓶装"), madeIn,
                 new Specification("4*120ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
         itemRepository.save(three);
@@ -104,7 +104,7 @@ public class ArangoDBItemRepositoryTest {
         retailPrice = new RetailPrice(new Price(Money.of(10.00, currency), Unit.TI));
         memberPrice = new MemberPrice(new Price(Money.of(9.5, currency), Unit.TI));
         vipPrice = new VipPrice("PLUS", new Price(Money.of(8.8, currency), Unit.TI));
-        barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240896");
+        barcode = BarcodeGenerateServices.createBarcode("6923555240896");
         Item five = new Item("five", barcode, new Name("天友纯牛奶", "天友纯牛奶"), Domestic.CHONG_QING,
                 new Specification("350ml"), Grade.QUALIFIED, retailPrice, memberPrice, vipPrice, dairy.id(), tianyou.id());
         itemRepository.save(five);
@@ -115,13 +115,13 @@ public class ArangoDBItemRepositoryTest {
                 new Specification("6*250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, vipPrice, food.id(), tianyou.id());
         itemRepository.save(six);
 
-        barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240865");
+        barcode = BarcodeGenerateServices.createBarcode("6923555240865");
         Item six_1 = new Item("six_1", barcode, new Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶"), Domestic.CHONG_QING,
                 new Specification("250ml"), Grade.QUALIFIED, RetailPrice.RMB_ZERO, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, dairy.id(), tianyou.id());
         itemRepository.save(six_1);
 
         retailPrice = new RetailPrice(new Price(Money.of(27.5, currency), Unit.DAI));
-        barcode = BarcodeGenerateServices.createMatchingBarcode("6923555240889");
+        barcode = BarcodeGenerateServices.createBarcode("6923555240889");
         Item six_2 = new Item("six_2", barcode, new Name("250ml天友纯牛奶", "250ml天友纯牛奶"), Domestic.CHONG_QING,
                 new Specification("250ml"), Grade.QUALIFIED, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, dairy.id(), tianyou.id());
         itemRepository.save(six_2);
