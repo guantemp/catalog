@@ -168,7 +168,7 @@ public class PsqlItemQueryService implements ItemQueryService {
                 ps.setLong(1, Long.parseLong(categoryView.getId()));
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
-                    Brand brand = brandQueryService.find(rs.getString("brand_id"));
+                    Brand brand = brandQueryService.query(rs.getString("brand_id"));
                     ItemView itemView = rebuildWith(rs, categoryViewTemp, new ItemView.BrandView(brand.id(), brand.name().name()));
                     itemViews.add(itemView);
                 }

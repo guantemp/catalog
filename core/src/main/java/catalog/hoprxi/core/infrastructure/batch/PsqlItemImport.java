@@ -17,11 +17,22 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemImportService;
+import catalog.hoprxi.core.application.query.BrandQueryService;
+import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.query.ItemQueryService;
-import catalog.hoprxi.core.application.view.ItemView;
+import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
+import catalog.hoprxi.core.domain.model.brand.Brand;
+import catalog.hoprxi.core.domain.model.brand.BrandRepository;
+import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
+import catalog.hoprxi.core.infrastructure.i18n.Label;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
+import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlBrandQueryService;
+import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQueryService;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQueryService;
 import org.apache.poi.ss.usermodel.*;
 
@@ -42,8 +53,11 @@ import java.util.StringJoiner;
  * @version 0.0.1 builder 2022-11-29
  */
 public class PsqlItemImport implements ItemImportService {
-    private static final int SPEC_LENGTH = 14;
-    private static ItemQueryService itemQueryService = new PsqlItemQueryService("catalog");
+    private static final ItemQueryService ITEM_QUERY = new PsqlItemQueryService("catalog");
+    private static final BrandQueryService BRAND_QUERY = new PsqlBrandQueryService("catalog");
+    private static final BrandRepository BRAND_REPO = new PsqlBrandRepository("catalog");
+    private static final CategoryQueryService CATEGORY_QUERY = new PsqlCategoryQueryService("catalog");
+    private final CategoryRepository categoryRepository = new PsqlCategoryRepository("catalog");
 
 
     public void importItemXlsFrom(InputStream is, int[] shineUpon) throws IOException, SQLException {
@@ -93,9 +107,10 @@ public class PsqlItemImport implements ItemImportService {
             temps[i] = readCellValue(cell);
         }
         for (String s : temps)
-            System.out.print(s + ",");
+            System.out.print(s + ',');
         System.out.println();
-        System.out.println(processBarcode(temps[4]));
+        processBarcode(temps[4]);
+        processBrand(temps[14]);
         StringJoiner cellJoiner = new StringJoiner(",", "(", ")");
         return cellJoiner;
     }
@@ -105,6 +120,7 @@ public class PsqlItemImport implements ItemImportService {
         try {
             bar = BarcodeGenerateServices.createBarcode(barcode);
         } catch (Exception e) {
+            System.out.println(e + ":" + barcode);
             try {
                 bar = BarcodeGenerateServices.createBarcodeWithChecksum(barcode);
             } catch (Exception i) {
@@ -115,12 +131,48 @@ public class PsqlItemImport implements ItemImportService {
             return "";
             //publish InvalidBarcode
         }
+        /*
         ItemView[] itemViews = itemQueryService.queryByBarcode(bar.toPlanString());
         if (itemViews.length != 0) {
             //publish Already exists
             return "";
         }
+        */
         return bar.toPlanString();
+    }
+
+    private String processRetailPrice(String price, String unit) {
+        return "";
+    }
+
+    private String processBrand(String brand) {
+        if (brand == null || brand.isEmpty() || brand.equalsIgnoreCase("undefined") || brand.equalsIgnoreCase(Label.BRAND_UNDEFINED))
+            return Brand.UNDEFINED.id();
+        Brand[] brands = BRAND_QUERY.queryByName("^" + brand + "$");
+        if (brands.length != 0)
+            return brands[0].id();
+        Brand temp = new Brand(BRAND_REPO.nextIdentity(), brand);
+        String[] ss = brand.split("/");
+        if (ss.length > 1) {
+            brands = BRAND_QUERY.queryByName("^" + ss[0] + "$|^" + ss[1] + "$");
+            if (brands.length != 0)
+                return brands[0].id();
+            temp = new Brand(BRAND_REPO.nextIdentity(), new Name(ss[0], ss[1]));
+            //System.out.println(ss[1]);
+        }
+        BRAND_REPO.save(temp);
+        return temp.id();
+    }
+
+    private String processCategory(String category) {
+        if (category == null || category.isEmpty() || category.equalsIgnoreCase("undefined") || category.equalsIgnoreCase(Label.CATEGORY_UNDEFINED))
+            return Category.UNDEFINED.id();
+        String[] ss = category.split("/");
+        return "";
+    }
+
+    private String processMadein(String madein) {
+        return "";
     }
 
     private String readCellValue(Cell cell) {

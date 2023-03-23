@@ -29,13 +29,13 @@ public interface BrandQueryService {
      * @param limit
      * @return
      */
-    Brand[] findAll(int offset, int limit);
+    Brand[] queryAll(int offset, int limit);
 
     /**
      * @param id
      * @return
      */
-    default Brand find(String id) {
+    default Brand query(String id) {
         return Brand.UNDEFINED;
     }
 
@@ -43,7 +43,7 @@ public interface BrandQueryService {
      * @param name is support regular
      * @return
      */
-    Brand[] findByName(String name);
+    Brand[] queryByName(String name);
 
     /**
      * @return

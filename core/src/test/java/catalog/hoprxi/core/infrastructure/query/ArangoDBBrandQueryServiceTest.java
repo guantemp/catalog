@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,23 +32,23 @@ public class ArangoDBBrandQueryServiceTest {
 
     @Test(priority = 1)
     public void testFindAll() {
-        Brand[] brands = query.findAll(0, 5);
+        Brand[] brands = query.queryAll(0, 5);
         assertEquals(brands.length, 5);
-        brands = query.findAll(1, 5);
+        brands = query.queryAll(1, 5);
         assertEquals(brands.length, 5);
-        brands = query.findAll(4, 5);
+        brands = query.queryAll(4, 5);
         assertEquals(brands.length, 2);
-        brands = query.findAll(5, 5);
+        brands = query.queryAll(5, 5);
         assertEquals(brands.length, 1);
     }
 
     @Test
     public void testFindByName() {
-        Brand[] brands = query.findByName("康威");
+        Brand[] brands = query.queryByName("康威");
         assertEquals(brands.length, 1);
-        brands = query.findByName("康威|@hua");
+        brands = query.queryByName("康威|@hua");
         assertEquals(brands.length, 2);
-        brands = query.findByName("康威|dh|dsp");
+        brands = query.queryByName("康威|dh|dsp");
         assertEquals(brands.length, 3);
     }
 

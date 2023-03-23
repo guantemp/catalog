@@ -80,27 +80,32 @@ public class PsqlBrandQueryServiceTest {
  */
 
     @Test
-    public void testFindAll() {
-        Brand[] brands = query.findAll(0, 5);
+    public void testQueryAll() {
+        Brand[] brands = query.queryAll(0, 5);
         assertEquals(brands.length, 5);
-        brands = query.findAll(1, 5);
+        brands = query.queryAll(1, 5);
         assertEquals(brands.length, 5);
-        brands = query.findAll(4, 5);
+        brands = query.queryAll(4, 5);
         assertEquals(brands.length, 2);
-        brands = query.findAll(5, 5);
+        brands = query.queryAll(5, 5);
         assertEquals(brands.length, 1);
         for (Brand brand : brands)
             System.out.println(brand);
     }
 
     @Test
-    public void testFindByName() {
-        Brand[] brands = query.findByName("康威");
+    public void testQueryByName() {
+        Brand[] brands = query.queryByName("康威");
         assertEquals(brands.length, 1);
-        brands = query.findByName("康威|@hua");
+        brands = query.queryByName("^康威");
+        assertEquals(brands.length, 0);
+        brands = query.queryByName("^迪士普$");
+        assertEquals(brands.length, 1);
+        brands = query.queryByName("康威|@hua");
         assertEquals(brands.length, 2);
-        brands = query.findByName("康威|dh|dsp|kw");
+        brands = query.queryByName("康威|dh|dsp|kw");
         assertEquals(brands.length, 3);
+
     }
 
     @Test

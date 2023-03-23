@@ -19,6 +19,7 @@ package catalog.hoprxi.core.infrastructure.batch;
 import catalog.hoprxi.core.application.batch.ItemExportService;
 import catalog.hoprxi.core.application.query.ItemQueryService;
 import catalog.hoprxi.core.application.view.ItemView;
+import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQueryService;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
@@ -245,6 +246,10 @@ public class PsqlItemExport implements ItemExportService {
             SXSSFCell cell14 = firstrow.createCell(13);
             cell14.setCellStyle(topStyle);
             cell14.setCellValue("品牌");
+            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 13, 0, 15, 9));
+            comment.setString(new XSSFRichTextString("品牌规则：\n\n 1、留空或使用'undefined',‘未定义’，'" + Label.BRAND_UNDEFINED + "'字符的导入为未定义品牌\n2、允许2个名称，如'好来/黑人','好来'是主名称,'黑人'是别名"));
+            comment.setAuthor("guan-xianghuang");
+            cell14.setCellComment(comment);
 
             // CellStyle style = workbook.createCellStyle();
             // Font font = workbook.createFont();

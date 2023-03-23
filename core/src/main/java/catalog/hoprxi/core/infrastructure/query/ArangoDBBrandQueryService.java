@@ -67,7 +67,7 @@ public class ArangoDBBrandQueryService implements BrandQueryService {
     }
 
     @Override
-    public Brand[] findAll(int offset, int limit) {
+    public Brand[] queryAll(int offset, int limit) {
         Brand[] brands = ArangoDBUtil.calculationCollectionSize(catalog, Brand.class, offset, limit);
         if (brands.length == 0)
             return brands;
@@ -98,7 +98,7 @@ public class ArangoDBBrandQueryService implements BrandQueryService {
     }
 
     @Override
-    public Brand[] findByName(String name) {
+    public Brand[] queryByName(String name) {
         final String query = "FOR v IN brand FILTER v.name.name =~ @name || v.name.alias =~ @name ||v.name.mnemonic =~ @name RETURN v";
         final Map<String, Object> bindVars = new MapBuilder().put("name", name).get();
         final ArangoCursor<VPackSlice> cursor = catalog.query(query, bindVars, null, VPackSlice.class);

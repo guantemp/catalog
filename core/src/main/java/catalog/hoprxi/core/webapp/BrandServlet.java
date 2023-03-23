@@ -77,7 +77,7 @@ public class BrandServlet extends HttpServlet {
         generator.writeStartObject();
         if (pathInfo != null) {
             String id = pathInfo.substring(1);
-            Brand brand = query.find(id);
+            Brand brand = query.query(id);
             if (brand != null) {
                 generator.writeObjectFieldStart("brand");
                 responseBrand(generator, brand);
@@ -92,13 +92,13 @@ public class BrandServlet extends HttpServlet {
             int limit = NumberHelper.intOf(req.getParameter("limit"), LIMIT);
             String keyword = Optional.ofNullable(req.getParameter("keyword")).orElse("");
             if (!keyword.isEmpty()) {
-                Brand[] brands = query.findByName(keyword);
+                Brand[] brands = query.queryByName(keyword);
                 responseBrands(generator, brands);
             } else {
                 generator.writeNumberField("total", query.size());
                 generator.writeNumberField("offset", offset);
                 generator.writeNumberField("limit", limit);
-                Brand[] brands = query.findAll(offset, limit);
+                Brand[] brands = query.queryAll(offset, limit);
                 responseBrands(generator, brands);
             }
         }

@@ -66,7 +66,7 @@ public class PsqlBrandQueryService implements BrandQueryService {
     }
 
     @Override
-    public Brand find(String id) {
+    public Brand query(String id) {
         Brand brand = CACHE.get(id);
         if (brand != null)
             return brand;
@@ -88,7 +88,7 @@ public class PsqlBrandQueryService implements BrandQueryService {
     }
 
     @Override
-    public Brand[] findAll(int offset, int limit) {
+    public Brand[] queryAll(int offset, int limit) {
         final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo " +
                 "from brand a INNER JOIN (SELECT id FROM brand order by id desc offset ? LIMIT ?) b USING (id)";
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
@@ -105,7 +105,7 @@ public class PsqlBrandQueryService implements BrandQueryService {
     }
 
     @Override
-    public Brand[] findByName(String name) {
+    public Brand[] queryByName(String name) {
         final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
                 "where name::jsonb->>'name' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
                 "where name::jsonb->>'mnemonic' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
