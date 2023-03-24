@@ -209,8 +209,8 @@ public class PsqlItemExport implements ItemExportService {
             SXSSFCell cell7 = firstrow.createCell(6);
             cell7.setCellStyle(topStyle);
             cell7.setCellValue("类别");
-            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 6, 0, 9, 8));
-            comment.setString(new XSSFRichTextString("类别规则：\n\n 1、查询类别id,填入该id（如：496796322118291471 酒水/白酒）\n2、使用如下格式：日化/洗涤用品/洗衣液,没有名字的类别将会自动新建（包含首层类如：日化）,请特别注意名字必须是一致的才不会新建类，名字前后空格会自动删除"));
+            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 6, 0, 9, 9));
+            comment.setString(new XSSFRichTextString("类别规则：\n\n 1、查询类别id,填入该id（如：496796322118291471 酒/白酒）\n2、使用如下格式：日化/洗涤用品/洗衣液、洗涤用品/洗衣液，不存在的类别将会新建（类如：日化、洗涤用品如不存在将被将新建在首层）,请特别注意名字（前后空格会自动删除）必须完全一致，防止建立过多的新类"));
             cell7.setCellComment(comment);
             // 创建列
             SXSSFCell cell8 = firstrow.createCell(7);

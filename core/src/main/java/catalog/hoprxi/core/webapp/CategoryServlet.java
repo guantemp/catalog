@@ -83,7 +83,7 @@ public class CategoryServlet extends HttpServlet {
                 if (parameters[1].equals("_search")) {//search
                     System.out.println(12);
                 } else {
-                    CategoryView view = categoryQueryService.find(parameters[1]);
+                    CategoryView view = categoryQueryService.query(parameters[1]);
                     if (view != null) {
                         responseCategoryView(generator, view);
                     } else {//not query
@@ -103,7 +103,7 @@ public class CategoryServlet extends HttpServlet {
                         }
                         break;
                     case "children":
-                        CategoryView parent = categoryQueryService.find(parameters[1]);
+                        CategoryView parent = categoryQueryService.query(parameters[1]);
                         if (parent == null)
                             responseNotFind(resp, generator, parameters[1]);
                         else {
@@ -111,7 +111,7 @@ public class CategoryServlet extends HttpServlet {
                         }
                         break;
                     case "descendants":
-                        CategoryView senior = categoryQueryService.find(parameters[1]);
+                        CategoryView senior = categoryQueryService.query(parameters[1]);
                         if (senior == null)
                             responseNotFind(resp, generator, parameters[1]);
                         else {

@@ -92,7 +92,7 @@ public class PsqlCategoryQueryService implements CategoryQueryService, DomainEve
     }
 
     @Override
-    public CategoryView find(String id) {
+    public CategoryView query(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
@@ -205,7 +205,7 @@ public class PsqlCategoryQueryService implements CategoryQueryService, DomainEve
     }
 
     @Override
-    public CategoryView[] searchName(String regularExpression) {
+    public CategoryView[] queryByName(String regularExpression) {
         List<CategoryView> categoryViewList = new ArrayList<>();
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             final String searchSql = "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,logo_uri,\"right\" - \"left\" as distance from category where name::jsonb ->> 'name' ~ ?\n" +

@@ -88,7 +88,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     }
 
     @Override
-    public CategoryView find(String id) {
+    public CategoryView query(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
@@ -217,7 +217,7 @@ public class ArangoDBCategoryQueryService implements CategoryQueryService {
     }
 
     @Override
-    public CategoryView[] searchName(String regularExpression) {
+    public CategoryView[] queryByName(String regularExpression) {
         final String query = "WITH category,subordinate\n" +
                 "FOR c IN category FILTER c.name.name =~ @regularExpression || c.name.alias =~ @regularExpression || c.name.mnemonic =~ @regularExpression\n" +
                 "LET SUB =  (FOR v,e in 1..1 OUTBOUND c._id subordinate RETURN e)\n" +

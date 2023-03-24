@@ -61,7 +61,7 @@ public class PsqlItemRepositoryTest {
         brandRepository.save(changhong);
 
         categoryRepository.save((Category.UNDEFINED));
-        Category root = Category.root("52495569397272599", new Name("分类", "root"));
+        Category root = Category.root("52495569397272599", new Name("item测试分类", "root"));
         categoryRepository.save(root);
         Category food = new Category("52495569397272599", "52495569397272598", new Name("食品", "food"), "可供人类食用或饮用的物质，包括加工食品，半成品和未加工食品，不包括烟草或只作药品用的物质");
         categoryRepository.save(food);

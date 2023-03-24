@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,21 +57,21 @@ public class ArangoDBCategoryQueryServiceTest {
 
     @Test(invocationCount = 4, priority = 3, threadPoolSize = 1)
     public void testFind() {
-        CategoryView root = query.find("root");
+        CategoryView root = query.query("root");
         Assert.assertTrue(root.isRoot());
-        root = query.find(Category.UNDEFINED.id());
+        root = query.query(Category.UNDEFINED.id());
         Assert.assertTrue(root.isRoot());
-        CategoryView grain_oil = query.find("grain_oil");
+        CategoryView grain_oil = query.query("grain_oil");
         Assert.assertNotNull(grain_oil);
-        grain_oil = query.find("grain_oil");
+        grain_oil = query.query("grain_oil");
         Assert.assertNotNull(grain_oil);
-        CategoryView oil = query.find("oil");
+        CategoryView oil = query.query("oil");
         Assert.assertNotNull(oil);
-        CategoryView corn_oil = query.find("corn_oil");
+        CategoryView corn_oil = query.query("corn_oil");
         Assert.assertNotNull(corn_oil);
-        CategoryView sunflower_seed_oil = query.find("sunflower_seed_oil");
+        CategoryView sunflower_seed_oil = query.query("sunflower_seed_oil");
         Assert.assertNotNull(sunflower_seed_oil);
-        sunflower_seed_oil = query.find("sunflower_seed_oil");
+        sunflower_seed_oil = query.query("sunflower_seed_oil");
         Assert.assertNotNull(sunflower_seed_oil);
     }
 
@@ -121,7 +121,7 @@ public class ArangoDBCategoryQueryServiceTest {
 
     @Test(invocationCount = 1, dependsOnMethods = {"testRoot"})
     public void testSearchName() {
-        CategoryView[] result = query.searchName("食品");
+        CategoryView[] result = query.queryByName("食品");
         for (CategoryView c : result)
             System.out.println("search:" + c);
     }

@@ -148,6 +148,10 @@ public class AppTest {
         Constructor<Name> nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
         nameConstructor.setAccessible(true);
         System.out.println(nameConstructor.newInstance("中文变量", "3252", "dsgfd"));
+
+        for (String s : "awr//er/qw/asfd".split("[^(//)]/")) {
+            System.out.println(s);
+        }
     }
 
 }
