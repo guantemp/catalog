@@ -104,8 +104,8 @@ public class PsqlItemRepositoryTest {
         Item five = new Item("52496163982907404", barcode, new Name("天友纯牛奶", "天友纯牛奶"), Domestic.CHONG_QING, new Specification("350ml"), Grade.QUALIFIED, new ShelfLife(90), retailPrice, memberPrice, vipPrice, dairy.id(), tianyou.id());
         itemRepository.save(five);
 
-        retailPrice = new RetailPrice(new Price(Money.of(17.90, currency), Unit.PCS));
-        vipPrice = new VipPrice("PLUS", new Price(Money.of(15.50, currency), Unit.PCS));
+        retailPrice = new RetailPrice(new Price(Money.of(17.90, currency), Unit.ZHU));
+        vipPrice = new VipPrice("PLUS", new Price(Money.of(15.50, currency), Unit.ZHU));
         Item six = new Item("52496163982907405", new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), Domestic.CHONG_QING, new Specification("6*250ml"), Grade.QUALIFIED, new ShelfLife(90), retailPrice, MemberPrice.RMB_ZERO, vipPrice, food.id(), tianyou.id());
         itemRepository.save(six);
 

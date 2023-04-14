@@ -21,6 +21,7 @@ import catalog.hoprxi.core.application.query.BrandQueryService;
 import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.query.ItemQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
+import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
@@ -28,6 +29,8 @@ import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.price.Unit;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
@@ -35,35 +38,64 @@ import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRep
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlBrandQueryService;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQueryService;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQueryService;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
+import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.config.Registry;
+import org.apache.hc.core5.http.config.RegistryBuilder;
+import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.hc.core5.http.ssl.TLS;
+import org.apache.hc.core5.net.URIBuilder;
+import org.apache.hc.core5.ssl.SSLContexts;
+import org.apache.hc.core5.util.TimeValue;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.poi.ss.usermodel.*;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.RoundingMode;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-11-29
+ * @version 0.0.2 builder 2023-03-26
  */
 public class PsqlItemImport implements ItemImportService {
-    private static final Pattern NUMBER_PATTERN = Pattern.compile("^\\d{15,19}$");
-
+    public static final String AREA_URL = "https://hoprxi.tooo.top/area/v1/areas";
+    private static final Pattern ID_PATTERN = Pattern.compile("^\\d{12,19}$");
+    public static CloseableHttpClient httpClient;
     private static final ItemQueryService ITEM_QUERY = new PsqlItemQueryService("catalog");
     private static final BrandQueryService BRAND_QUERY = new PsqlBrandQueryService("catalog");
     private static final BrandRepository BRAND_REPO = new PsqlBrandRepository("catalog");
     private static final CategoryQueryService CATEGORY_QUERY = new PsqlCategoryQueryService("catalog");
     private final CategoryRepository categoryRepository = new PsqlCategoryRepository("catalog");
-
-    private static String CORE_PARENT_ID;
 
     static {
         CategoryView[] root = CATEGORY_QUERY.root();
@@ -74,12 +106,36 @@ public class PsqlItemImport implements ItemImportService {
                 break;
             }
         }
+        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
+        SSLContext sslContext = null;
+        try {
+            sslContext = SSLContexts.custom().loadTrustMaterial(null, (x509Certificates, s) -> true).build();
+        } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
+            throw new RuntimeException(e);
+        }
+        // Allow TLSv1.2 protocol only
+        final SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
+                .setSslContext(sslContext).setTlsVersions(TLS.V_1_2).build();
+        Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
+                .register("http", PlainConnectionSocketFactory.INSTANCE)
+                .register("https", sslSocketFactory)
+                .build();
+        //适配http以及https请求 通过new创建PoolingHttpClientConnectionManager
+        PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
+        httpClientBuilder.setConnectionManager(connManager).evictExpiredConnections().evictIdleConnections(TimeValue.ofSeconds(5)).disableAutomaticRetries();
+        httpClientBuilder.setDefaultRequestConfig(RequestConfig.custom()
+                .setConnectionRequestTimeout(Timeout.ofSeconds(10))
+                .build());
+        httpClient = httpClientBuilder.build();
     }
 
+    private static String CORE_PARENT_ID;
+
+    private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
     public void importItemXlsFrom(InputStream is, int[] shineUpon) throws IOException, SQLException {
         if (shineUpon == null || shineUpon.length == 0)
-            shineUpon = new int[]{0, 1, 2, 3, 4, 5, -6, 7, 8, 9, 10, 11, 12, 13, 14};
+            shineUpon = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
         Workbook workbook = WorkbookFactory.create(is);
         Sheet sheet = workbook.getSheetAt(0);
         try (Connection connection = PsqlUtil.getConnection()) {
@@ -114,7 +170,7 @@ public class PsqlItemImport implements ItemImportService {
         workbook.close();
     }
 
-    private StringJoiner extracted(Row row, int[] shineUpon) {
+    private StringJoiner extracted(Row row, int[] shineUpon) throws IOException {
         String[] temps = new String[shineUpon.length];
         for (int i = 0; i < shineUpon.length; i++) {
             int posi = shineUpon[i];
@@ -123,14 +179,16 @@ public class PsqlItemImport implements ItemImportService {
             Cell cell = row.getCell(posi);
             temps[i] = readCellValue(cell);
         }
-        /*
+
         for (String s : temps)
             System.out.print(s + ',');
         System.out.println();
-        */
-        processBarcode(temps[4]);
-        processBrand(temps[14]);
-        processCategory(temps[7]);
+
+        //processBarcode(temps[4]);
+        //processBrand(temps[14]);
+        //processCategory(temps[7]);
+        //processMadein(temps[8]);
+        processRetailPrice(temps[11], temps[9]);
         StringJoiner cellJoiner = new StringJoiner(",", "(", ")");
         return cellJoiner;
     }
@@ -150,23 +208,31 @@ public class PsqlItemImport implements ItemImportService {
             return "";
             //publish InvalidBarcode
         }
-        /*
-        ItemView[] itemViews = itemQueryService.queryByBarcode(bar.toPlanString());
+        ItemView[] itemViews = ITEM_QUERY.queryByBarcode(bar.toPlanString());
         if (itemViews.length != 0) {
             //publish Already exists
             return "";
         }
-        */
         return bar.toPlanString();
     }
 
-    private String processRetailPrice(String price, String unit) {
-        return "";
+    private String processRetailPrice(String price, String unit) throws IOException {
+        Unit unit1 = Unit.of(unit);
+        StringJoiner cellJoiner = new StringJoiner(",", "{", "}");
+        cellJoiner.add("\"number\": " + price + ",\n");
+        cellJoiner.add("\"currencyCode\": \"CNY\",\n");
+        cellJoiner.add("\"unit\": \"" + unit1.name() + "\"\n");
+        System.out.println(cellJoiner);
+        return cellJoiner.toString();
     }
 
     private String processBrand(String brand) {
         if (brand == null || brand.isEmpty() || brand.equalsIgnoreCase("undefined") || brand.equalsIgnoreCase(Label.BRAND_UNDEFINED))
             return Brand.UNDEFINED.id();
+        if (ID_PATTERN.matcher(brand).matches()) {
+            //System.out.println("我直接用的id：" + brand);
+            return brand;
+        }
         String[] ss = brand.split("/");
         String query = "^" + ss[0] + "$";
         if (ss.length > 1)
@@ -182,22 +248,20 @@ public class PsqlItemImport implements ItemImportService {
     private String processCategory(String category) {
         if (category == null || category.isEmpty() || category.equalsIgnoreCase("undefined") || category.equalsIgnoreCase(Label.CATEGORY_UNDEFINED))
             return Category.UNDEFINED.id();
-        if (NUMBER_PATTERN.matcher(category).matches()) {
-            System.out.println("我直接用的id：" + category);
+        if (ID_PATTERN.matcher(category).matches()) {
             return category;
         }
         String[] ss = category.split("/");
         CategoryView[] categoryViews = CATEGORY_QUERY.queryByName("^" + ss[ss.length - 1] + "$");
         if (categoryViews.length >= 1) {
-            //System.out.println("查到有：" + categoryViews[0]);
             return categoryViews[0].getId();
         } else {
             String parentId = CORE_PARENT_ID;
             Category temp;
-            for (int i = 0; i < ss.length; i++) {
-                categoryViews = CATEGORY_QUERY.queryByName("^" + ss[i] + "$");
+            for (String s : ss) {
+                categoryViews = CATEGORY_QUERY.queryByName("^" + s + "$");
                 if (categoryViews.length == 0) {
-                    temp = new Category(parentId, categoryRepository.nextIdentity(), ss[i]);
+                    temp = new Category(parentId, categoryRepository.nextIdentity(), s);
                     categoryRepository.save(temp);
                     //System.out.println("新建：" + temp);
                     parentId = temp.id();
@@ -205,25 +269,95 @@ public class PsqlItemImport implements ItemImportService {
                     parentId = categoryViews[0].getId();
                 }
             }
-            System.out.println("正确的类别id：" + parentId);
+            //System.out.println("正确的类别id：" + parentId);
             return parentId;
         }
     }
 
-    private String processMadein(String madein) {
+    private String processMadein(String madein) throws IOException {
+        ClassicHttpRequest httpGet = ClassicRequestBuilder.get(AREA_URL).build();
+        // 表单参数
+        List<NameValuePair> nvps = new ArrayList<>();
+        // GET 请求参数
+        nvps.add(new BasicNameValuePair("search", "^" + madein + "$"));
+        nvps.add(new BasicNameValuePair("filters", "city,country,county"));
+        // 增加到请求 URL 中
+        try {
+            URI uri = new URIBuilder(new URI(AREA_URL))
+                    .addParameters(nvps)
+                    .build();
+            httpGet.setUri(uri);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        httpClient.execute(httpGet, response -> {
+            //System.out.println(response.getCode() + " " + response.getReasonPhrase() + " " + response.getVersion());
+            final HttpEntity entity = response.getEntity();
 
+            // do something useful with the response body
+            // and ensure it is fully consumed
+            //System.out.println(madein + ":" + EntityUtils.toString(entity));
+            //EntityUtils.consume(entity);
+            System.out.println(processmMadeinJson(entity.getContent()));
+            return null;
+        });
         return "";
+    }
+
+    public String processmMadeinJson(InputStream inputStream) throws IOException {
+        String code = null, name = null, parentCode = null, parentName = null, level = null;
+        boolean parent = false;
+        JsonParser parser = jasonFactory.createParser(inputStream);
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "code":
+                        if (parent)
+                            parentCode = parser.getValueAsString();
+                        else
+                            code = parser.getValueAsString();
+                        break;
+                    case "name":
+                        if (!parser.isExpectedStartObjectToken()) {
+                            if (parent)
+                                parentName = parser.getValueAsString();
+                            else
+                                name = parser.getValueAsString();
+                        }
+                        break;
+                    case "abbreviation":
+                        name = parser.getValueAsString();
+                        break;
+                    case "parent":
+                        parent = true;
+                        break;
+                    case "level":
+                        level = parser.getValueAsString();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        if (code == null)
+            return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Black\" \"code\":" + MadeIn.BLACk.code() + " \"name\":\"" + MadeIn.BLACk.madeIn() + "\"}";
+        if (level != null && level.equals("COUNTRY"))
+            return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\" \"code\":" + parentCode + " \"name\":\"" + parentName + "\"}";
+        return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\" \"code\":" + code + " \"name\":\"" + name + "\"}";
     }
 
     private String readCellValue(Cell cell) {
         if (cell == null || cell.toString().trim().isEmpty()) {
             return null;
         }
-        String returnValue = null;
+        String result = null;
         switch (cell.getCellType()) {
             case NUMERIC:   //数字
                 if (DateUtil.isCellDateFormatted(cell)) {//注意：DateUtil.isCellDateFormatted()方法对“2019年1月18日"这种格式的日期，判断会出现问题，需要另行处理
-                    DateTimeFormatter dtf;
+                    //DateTimeFormatter dtf;
                     SimpleDateFormat sdf;
                     short format = cell.getCellStyle().getDataFormat();
                     if (format == 20 || format == 32) {
@@ -233,12 +367,12 @@ public class PsqlItemImport implements ItemImportService {
                         sdf = new SimpleDateFormat("yyyy-MM-dd");
                         double value = cell.getNumericCellValue();
                         Date date = DateUtil.getJavaDate(value);
-                        returnValue = sdf.format(date);
+                        result = sdf.format(date);
                     } else {// 日期
                         sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     }
                     try {
-                        returnValue = sdf.format(cell.getDateCellValue());// 日期
+                        result = sdf.format(cell.getDateCellValue());// 日期
                     } catch (Exception e) {
                         try {
                             throw new Exception("exception on get date data !".concat(e.toString()));
@@ -247,36 +381,36 @@ public class PsqlItemImport implements ItemImportService {
                         }
                     }
                 } else {
+                    //System.out.println(cell.getCellStyle().getDataFormatString());
                     NumberFormat nf = NumberFormat.getNumberInstance();
-                    nf.setMaximumFractionDigits(3);
+                    nf.setMaximumFractionDigits(4);
                     nf.setRoundingMode(RoundingMode.HALF_EVEN);
                     nf.setGroupingUsed(false);
-                    returnValue = nf.format(cell.getNumericCellValue());
+                    result = nf.format(cell.getNumericCellValue());
                     /*
                     BigDecimal bd = new BigDecimal(cell.getNumericCellValue());
                     bd.setScale(3, RoundingMode.HALF_UP);
-                    returnValue = bd.toPlainString();
+                    result = bd.toPlainString();
                      */
                 }
                 break;
             case STRING:    //字符串
-                returnValue = cell.getStringCellValue().trim();
+                result = cell.getStringCellValue().trim();
                 break;
             case BOOLEAN:   //布尔
                 Boolean booleanValue = cell.getBooleanCellValue();
-                returnValue = booleanValue.toString();
-                break;
-            case BLANK:     // 空值
+                result = booleanValue.toString();
                 break;
             case FORMULA:   // 公式
-                returnValue = cell.getCellFormula();
+                result = cell.getCellFormula();
                 break;
+            case BLANK:     // 空值
             case ERROR:     // 故障
                 break;
             default:
                 break;
         }
-        return returnValue;
+        return result;
     }
 
     @Override

@@ -37,7 +37,7 @@ public class PsqlItemImportTest {
         //URL url = loader.getResource("item.xls");
         File file = new File("F:/developer/catalog/jc.xls");
         FileInputStream fis = new FileInputStream(file);
-        itemImport.importItemXlsFrom(fis, new int[]{-1, -1, 0, -1, 1, 2, -1, 3, -1, 5, 6, 8, -1, -1, 4});
+        itemImport.importItemXlsFrom(fis, new int[]{-1, -1, 0, -1, 1, 2, -1, 3, 6, 5, -1, 8, -1, -1, 4});
     }
 
     @Test

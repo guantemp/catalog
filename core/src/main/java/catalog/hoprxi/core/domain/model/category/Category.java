@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,19 +35,72 @@ public class Category {
     public static final Category UNDEFINED = new Category("-1", "-1", new Name(Label.CATEGORY_UNDEFINED, "undefined"), "undefined category") {
         @Override
         public void rename(String newName, String newAlias) {
-
+            throw new UnsupportedOperationException("");
         }
 
         @Override
         public void changeDescription(String description) {
+            throw new UnsupportedOperationException("");
         }
 
         @Override
         public void changeIcon(URI icon) {
+            throw new UnsupportedOperationException("");
         }
 
         @Override
         public void moveTo(String movedId) {
+            throw new UnsupportedOperationException("");
+        }
+    };
+    public static final Category ITEM_ROOT = new Category("1", "1", new Name("商品分类", "item root"), "Product classification root directory") {
+
+        @Override
+        public void rename(String newName, String newAlias) {
+            throw new UnsupportedOperationException("");
+        }
+
+        @Override
+        public void changeDescription(String description) {
+            throw new UnsupportedOperationException("");
+        }
+
+        /**
+         * @param icon
+         */
+        @Override
+        public void changeIcon(URI icon) {
+            throw new UnsupportedOperationException("");
+        }
+
+        @Override
+        public void moveTo(String movedId) {
+            throw new UnsupportedOperationException("");
+        }
+    };
+    public static final Category SCALES_ROOT = new Category("2", "2", new Name("秤分类", "scales"), "Scales classification root directory") {
+
+        @Override
+        public void rename(String newName, String newAlias) {
+            throw new UnsupportedOperationException("");
+        }
+
+        @Override
+        public void changeDescription(String description) {
+            throw new UnsupportedOperationException("");
+        }
+
+        /**
+         * @param icon
+         */
+        @Override
+        public void changeIcon(URI icon) {
+            throw new UnsupportedOperationException("");
+        }
+
+        @Override
+        public void moveTo(String movedId) {
+            throw new UnsupportedOperationException("");
         }
     };
     private static final int ID_MAX_LENGTH = 48;

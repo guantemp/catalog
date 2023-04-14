@@ -23,6 +23,7 @@ import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQueryService;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.streaming.*;
 import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
@@ -117,7 +118,7 @@ public class PsqlItemExport implements ItemExportService {
     private static CellStyle getCurrencyCell(SXSSFWorkbook workbook) {
         CellStyle cellstyle = getStyle(workbook);
         XSSFDataFormat dataFormat = workbook.getXSSFWorkbook().createDataFormat();
-        cellstyle.setDataFormat(dataFormat.getFormat("¥* #,##0.00"));
+        cellstyle.setDataFormat(dataFormat.getFormat("¥* #,##0.00##;¥* -#,##0.00##"));//.getBuiltinFormat("0.00%"),
         return cellstyle;
     }
 
@@ -154,9 +155,20 @@ public class PsqlItemExport implements ItemExportService {
             sheet.setColumnWidth(13, 112 * 35);//"品牌"
             sheet.getDataValidationHelper();
             //第一行冻结置顶,ａ表示要冻结的列数；rowSplit表示要冻结的行数；ｃ表示右边区域[可见]的首列序号；topRow表示下边区域[可见]的首行序号；
-            sheet.createFreezePane(0, 1, 0, 1);
-            // 创建行
-            SXSSFRow firstrow = sheet.createRow(0);
+            sheet.createFreezePane(0, 2, 0, 2);
+            // 创建合并标题栏
+            SXSSFRow head = sheet.createRow(0);
+            head.setHeight((short) (16 * 35));
+            SXSSFCell cell = head.createCell(0);
+            CellStyle style = workbook.createCellStyle(); // 自定义单元格内容换行规则
+            style.setWrapText(true);
+            cell.setCellStyle(style);
+            cell.setCellValue(new XSSFRichTextString("1、不要删除1,2行\n2、"));
+            //合并列
+            CellRangeAddress region = new CellRangeAddress(0, 0, 0, 13);
+            sheet.addMergedRegion(region);
+            // 创建分列标题栏
+            SXSSFRow firstrow = sheet.createRow(1);
             SXSSFDrawing p = sheet.createDrawingPatriarch();
             CellStyle topStyle = workbook.createCellStyle();
             Font topFont = workbook.createFont();
@@ -209,8 +221,9 @@ public class PsqlItemExport implements ItemExportService {
             SXSSFCell cell7 = firstrow.createCell(6);
             cell7.setCellStyle(topStyle);
             cell7.setCellValue("类别");
-            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 6, 0, 9, 9));
-            comment.setString(new XSSFRichTextString("类别规则：\n\n 1、查询类别id,填入该id（如：496796322118291471 酒/白酒）\n2、使用如下格式：日化/洗涤用品/洗衣液、洗涤用品/洗衣液，不存在的类别将会新建（类如：日化、洗涤用品如不存在将被将新建在首层）,请特别注意名字（前后空格会自动删除）必须完全一致，防止建立过多的新类"));
+            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 6, 0, 10, 10));
+            comment.setString(new XSSFRichTextString("类别规则：\n\n 1、查询并填入(https://hoprxi.tooo.top/catalog/core/v1/categories)ID值（白酒id:496796322118291471）\n2、使用如下格式：日化/洗涤用品/洗衣液、洗涤用品/洗衣液，不存在的类别将会新建（类如：日化、洗涤用品如不存在将被将新建在首层）,请特别注意名字（前后空格会自动删除）必须完全一致，防止建立过多的新类\n" +
+                    "3、留空或使用'undefined',‘未定义’，'" + Label.CATEGORY_UNDEFINED + "'字符的导入为缺省未分类"));
             cell7.setCellComment(comment);
             // 创建列
             SXSSFCell cell8 = firstrow.createCell(7);
@@ -224,12 +237,15 @@ public class PsqlItemExport implements ItemExportService {
             cell9.setCellStyle(topStyle);
             cell9.setCellValue("产地");
             comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 8, 0, 11, 9));
-            comment.setString(new XSSFRichTextString("产地规则：\n1、进口商品标明进口国，国产商品标记到到市\n2、查询区域表(https://hoprxi.tooo.top/area/v1/areas)，输入编号（510500 代表四川泸州市）\n3、输入例：乐山、乐山市、重庆市、四川.泸州，四川省泸州、四川省泸州市、四川省.泸州市、广西.南宁、广西壮族自治区南宁\n5、没有找到匹配地址或留空，返回空白地址"));
+            comment.setString(new XSSFRichTextString("产地规则：\n1、进口商品标明进口国，国产商品标记到到市\n2、获取行政区划码(https://hoprxi.tooo.top/area/v1/areas)，输入编号（510500 代表四川泸州市）\n3、输入例：乐山、乐山市、重庆市、四川.泸州，四川省泸州、四川省泸州市、四川省.泸州市、广西.南宁、广西壮族自治区南宁\n5、没有找到匹配地址或留空，返回空白地址"));
             cell9.setCellComment(comment);
 
             SXSSFCell cell3 = firstrow.createCell(9);
             cell3.setCellStyle(topStyle);
             cell3.setCellValue("计价单位");
+            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 9, 0, 11, 3));
+            comment.setString(new XSSFRichTextString("单位规则：\n留空或不符合系统提供得单位的缺省为PCS"));
+            cell3.setCellComment(comment);
             // 创建列
             SXSSFCell cell10 = firstrow.createCell(10);
             cell10.setCellStyle(topStyle);
