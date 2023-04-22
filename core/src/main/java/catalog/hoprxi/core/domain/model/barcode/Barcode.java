@@ -29,7 +29,7 @@ public abstract class Barcode {
     public Barcode(CharSequence barcode) {
         Objects.requireNonNull(barcode, "barcode is required");
         if (checkFeature(barcode))
-            throw new IllegalArgumentException("Invalid barcode");
+            throw new InvalidBarcodeException("Invalid barcode");
         this.barcode = barcode;
     }
 

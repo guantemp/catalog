@@ -21,10 +21,10 @@ import catalog.hoprxi.core.application.query.BrandQueryService;
 import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.query.ItemQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
-import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
+import catalog.hoprxi.core.domain.model.barcode.InvalidBarcodeException;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.domain.model.category.Category;
@@ -62,6 +62,8 @@ import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
 import org.apache.poi.ss.usermodel.*;
+import salt.hoprxi.id.LongId;
+import salt.hoprxi.to.PinYin;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
@@ -76,10 +78,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /***
@@ -88,9 +87,10 @@ import java.util.regex.Pattern;
  * @version 0.0.2 builder 2023-03-26
  */
 public class PsqlItemImport implements ItemImportService {
-    public static final String AREA_URL = "https://hoprxi.tooo.top/area/v1/areas";
+    private static final String AREA_URL = "https://hoprxi.tooo.top/area/v1/areas";
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{12,19}$");
-    public static CloseableHttpClient httpClient;
+    private static final Map<String, Barcode> BARCODE_MAP = new HashMap<>();
+    private static CloseableHttpClient httpClient;
     private static final ItemQueryService ITEM_QUERY = new PsqlItemQueryService("catalog");
     private static final BrandQueryService BRAND_QUERY = new PsqlBrandQueryService("catalog");
     private static final BrandRepository BRAND_REPO = new PsqlBrandRepository("catalog");
@@ -135,6 +135,7 @@ public class PsqlItemImport implements ItemImportService {
 
     public void importItemXlsFrom(InputStream is, int[] shineUpon) throws IOException, SQLException {
         if (shineUpon == null || shineUpon.length == 0)
+            //check,id,name,alias,条码，规格，等级,类别，
             shineUpon = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
         Workbook workbook = WorkbookFactory.create(is);
         Sheet sheet = workbook.getSheetAt(0);
@@ -180,11 +181,12 @@ public class PsqlItemImport implements ItemImportService {
             temps[i] = readCellValue(cell);
         }
 
-        for (String s : temps)
-            System.out.print(s + ',');
-        System.out.println();
-
-        //processBarcode(temps[4]);
+        //   for (String s : temps)
+        //   System.out.print(s + ',');
+        // System.out.println();
+        // System.out.println(processId(temps[1]));
+        //System.out.println(processName(temps[2], temps[3]));
+        processBarcode(temps[4]);
         //processBrand(temps[14]);
         //processCategory(temps[7]);
         //processMadein(temps[8]);
@@ -193,26 +195,54 @@ public class PsqlItemImport implements ItemImportService {
         return cellJoiner;
     }
 
+
+    private String processId(String id) {
+        if (id != null && !id.isEmpty() && ID_PATTERN.matcher(id).matches())
+            return id;
+        return String.valueOf(LongId.generate());
+    }
+
+    private String processName(String name, String alias) {
+        StringJoiner stringJoiner = new StringJoiner(",", "{", "}");
+        stringJoiner.add("\"name\":\"" + name + "\"");
+        stringJoiner.add("\"mnemonic\":\"" + PinYin.toShortPinYing(name) + "\"");
+        stringJoiner.add("\"alias\":\"" + (alias == null ? name : alias) + "\"");
+        return stringJoiner.toString();
+    }
+
     private String processBarcode(String barcode) {
+        if (barcode == null || barcode.isEmpty())
+            //设置规则生成店内码
+            return BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(1, 1, "21")[0].toPlanString();
         Barcode bar = null;
         try {
             bar = BarcodeGenerateServices.createBarcode(barcode);
-        } catch (Exception e) {
+        } catch (InvalidBarcodeException e) {
             try {
                 bar = BarcodeGenerateServices.createBarcodeWithChecksum(barcode);
-            } catch (Exception i) {
+            } catch (InvalidBarcodeException i) {
+                //publish error barcode
                 System.out.println(i + ":" + barcode);
             }
         }
         if (bar == null) {
-            return "";
+            return "nothing";
             //publish InvalidBarcode
         }
-        ItemView[] itemViews = ITEM_QUERY.queryByBarcode(bar.toPlanString());
+/*
+        ItemView[] itemViews = ITEM_QUERY.queryByBarcode("^" + bar.toPlanString() + "$");
         if (itemViews.length != 0) {
             //publish Already exists
-            return "";
+            System.out.println("Already exists");
+            return "exists";
         }
+ */
+        if (BARCODE_MAP.containsValue(bar)) {
+            System.out.println("find repeat barcode:" + barcode);
+            //publish repeat barcode
+            return "repeat";
+        }
+        BARCODE_MAP.put(barcode, bar);
         return bar.toPlanString();
     }
 
@@ -222,7 +252,6 @@ public class PsqlItemImport implements ItemImportService {
         cellJoiner.add("\"number\": " + price + ",\n");
         cellJoiner.add("\"currencyCode\": \"CNY\",\n");
         cellJoiner.add("\"unit\": \"" + unit1.name() + "\"\n");
-        System.out.println(cellJoiner);
         return cellJoiner.toString();
     }
 

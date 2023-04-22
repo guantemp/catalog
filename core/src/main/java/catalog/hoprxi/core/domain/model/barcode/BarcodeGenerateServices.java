@@ -46,7 +46,7 @@ public class BarcodeGenerateServices {
             return new UPC_A(barcode);
         if (barcode.length() == 13)
             return new EAN_13(barcode);
-        throw new InvalidBarcodeException("Not invalid barcode");
+        throw new InvalidBarcodeException("Invalid barcode");
     }
 
     /**
