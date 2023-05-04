@@ -14,16 +14,13 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.batch;
-
-import java.io.InputStream;
+package catalog.hoprxi.core.infrastructure.batch;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-11-01
+ * @version 0.0.1 builder 2023-05-04
  */
-public interface ItemImportService {
-
-    void importItemCsvFrom(InputStream is);
+public enum Corresponding {
+    IGNORE, CHECK, ID, NAME, ALIAS, BARCODE, SPEC, GRADE, CATEGORY, BRAND, SHELF_LIFE, MADE_IN, UNIT, RETAIL_PRICE, MEMBER_PRICE, VIP_PRICE;
 }

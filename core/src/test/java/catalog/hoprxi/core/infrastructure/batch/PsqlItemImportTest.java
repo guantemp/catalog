@@ -35,12 +35,16 @@ public class PsqlItemImportTest {
     public void testImportItemXlsFrom() throws IOException, SQLException {
         //ClassLoader loader = Thread.currentThread().getContextClassLoader();
         //URL url = loader.getResource("item.xls");
+        // F:/developer/catalog/jc.xls new Corresponding[]{Corresponding.NAME, Corresponding.BARCODE,
+        //                Corresponding.SPEC, Corresponding.CATEGORY, Corresponding.BRAND, Corresponding.UNIT, Corresponding.MADE_IN, Corresponding.IGNORE, Corresponding.RETAIL_PRICE};
         //F:/developer/catalog/jc.xls   new int[]{-1, -1, 0, -1, 1, 2, -1, 3, 6, 5, -1, 8, -1, -1, 4})
         //e:/导出数据商品库.xlsx new int[]{-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}
         File file = new File("F:/developer/catalog/jc.xls");
         FileInputStream fis = new FileInputStream(file);
-
-        itemImport.importItemXlsFrom(fis, new int[]{-1, -1, 0, -1, 1, 2, -1, 3, 6, 5, -1, 8, -1, -1, 4});
+        Corresponding[] correspondings = new Corresponding[]{Corresponding.NAME, Corresponding.BARCODE,
+                Corresponding.SPEC, Corresponding.CATEGORY, Corresponding.BRAND, Corresponding.UNIT, Corresponding.MADE_IN, Corresponding.IGNORE, Corresponding.RETAIL_PRICE};
+        //itemImport.importItemXlsFrom(fis, new int[]{-1, -1, 0, -1, 1, 2, -1, 3, 6, 5, -1, 8, -1, -1, 4});
+        itemImport.importItemXlsFrom(fis, correspondings);
     }
 
     @Test

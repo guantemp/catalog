@@ -139,13 +139,13 @@ public class PsqlItemRepository implements ItemRepository {
             }
         }
         if ("156".equals(code))
-            return MadeIn.BLACk;
+            return MadeIn.UNKNOWN;
         else if (Domestic.class.getName().equals(_class)) {
             return new Domestic(code, city);
         } else if (Imported.class.getName().equals(_class)) {
             return new Imported(code, country);
         }
-        return MadeIn.BLACk;
+        return MadeIn.UNKNOWN;
     }
 
     @Override

@@ -21,6 +21,7 @@ import catalog.hoprxi.core.application.query.BrandQueryService;
 import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.query.ItemQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
+import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
@@ -95,7 +96,9 @@ public class PsqlItemImport implements ItemImportService {
     private static final BrandQueryService BRAND_QUERY = new PsqlBrandQueryService("catalog");
     private static final BrandRepository BRAND_REPO = new PsqlBrandRepository("catalog");
     private static final CategoryQueryService CATEGORY_QUERY = new PsqlCategoryQueryService("catalog");
+    private static final Corresponding[] CORR = new Corresponding[]{};
     private final CategoryRepository categoryRepository = new PsqlCategoryRepository("catalog");
+    private final EnumMap<Corresponding, String> map = new EnumMap<>(Corresponding.class);
 
     static {
         CategoryView[] root = CATEGORY_QUERY.root();
@@ -133,10 +136,7 @@ public class PsqlItemImport implements ItemImportService {
 
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
-    public void importItemXlsFrom(InputStream is, int[] shineUpon) throws IOException, SQLException {
-        if (shineUpon == null || shineUpon.length == 0)
-            //check,id,name,alias,条码，规格，等级,类别，
-            shineUpon = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+    public void importItemXlsFrom(InputStream is, Corresponding[] correspondings) throws IOException, SQLException {
         Workbook workbook = WorkbookFactory.create(is);
         Sheet sheet = workbook.getSheetAt(0);
         try (Connection connection = PsqlUtil.getConnection()) {
@@ -145,7 +145,8 @@ public class PsqlItemImport implements ItemImportService {
             StringJoiner sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,retail_price,member_price,vip_price) values", "");
             for (int i = 1, j = sheet.getLastRowNum(); i < j; i++) {
                 Row row = sheet.getRow(i);
-                StringJoiner values = extracted(row, shineUpon);
+                StringJoiner values = extracted(row, correspondings);
+                System.out.println(values);
                 sql.add(values.toString());
                 if (i % 513 == 0) {
                     //statement.addBatch(sql.toString());
@@ -171,27 +172,18 @@ public class PsqlItemImport implements ItemImportService {
         workbook.close();
     }
 
-    private StringJoiner extracted(Row row, int[] shineUpon) throws IOException {
-        String[] temps = new String[shineUpon.length];
-        for (int i = 0; i < shineUpon.length; i++) {
-            int posi = shineUpon[i];
-            if (posi < 0)
+    private StringJoiner extracted(Row row, Corresponding[] correspondings) throws IOException {
+        for (int i = 0, j = correspondings.length; i < j; i++) {
+            if (correspondings[i] == Corresponding.IGNORE)
                 continue;
-            Cell cell = row.getCell(posi);
-            temps[i] = readCellValue(cell);
+            Cell cell = row.getCell(i);
+            map.put(correspondings[i], readCellValue(cell));
         }
-
-        //   for (String s : temps)
-        //   System.out.print(s + ',');
-        // System.out.println();
-        // System.out.println(processId(temps[1]));
-        //System.out.println(processName(temps[2], temps[3]));
-        processBarcode(temps[4]);
-        //processBrand(temps[14]);
-        //processCategory(temps[7]);
-        //processMadein(temps[8]);
-        processRetailPrice(temps[11], temps[9]);
         StringJoiner cellJoiner = new StringJoiner(",", "(", ")");
+        cellJoiner.add(processId(map.get(Corresponding.ID))).add(processName(map.get(Corresponding.NAME), map.get(Corresponding.ALIAS)))
+                .add(processBarcode(map.get(Corresponding.BARCODE))).add(processCategory(map.get(Corresponding.CATEGORY))).add(processBrand(map.get(Corresponding.BRAND)))
+                .add(processGrade(map.get(Corresponding.GRADE))).add(processMadein(map.get(Corresponding.MADE_IN))).add(map.get(Corresponding.SPEC))
+                .add(map.get(Corresponding.SPEC)).add(processRetailPrice(map.get(Corresponding.RETAIL_PRICE), map.get(Corresponding.UNIT)));
         return cellJoiner;
     }
 
@@ -246,34 +238,6 @@ public class PsqlItemImport implements ItemImportService {
         return bar.toPlanString();
     }
 
-    private String processRetailPrice(String price, String unit) throws IOException {
-        Unit unit1 = Unit.of(unit);
-        StringJoiner cellJoiner = new StringJoiner(",", "{", "}");
-        cellJoiner.add("\"number\": " + price + ",\n");
-        cellJoiner.add("\"currencyCode\": \"CNY\",\n");
-        cellJoiner.add("\"unit\": \"" + unit1.name() + "\"\n");
-        return cellJoiner.toString();
-    }
-
-    private String processBrand(String brand) {
-        if (brand == null || brand.isEmpty() || brand.equalsIgnoreCase("undefined") || brand.equalsIgnoreCase(Label.BRAND_UNDEFINED))
-            return Brand.UNDEFINED.id();
-        if (ID_PATTERN.matcher(brand).matches()) {
-            //System.out.println("我直接用的id：" + brand);
-            return brand;
-        }
-        String[] ss = brand.split("/");
-        String query = "^" + ss[0] + "$";
-        if (ss.length > 1)
-            query = query + "|^" + ss[1] + "$";
-        Brand[] brands = BRAND_QUERY.queryByName(query);
-        if (brands.length != 0)
-            return brands[0].id();
-        Brand temp = ss.length > 1 ? new Brand(BRAND_REPO.nextIdentity(), new Name(ss[0], ss[1])) : new Brand(BRAND_REPO.nextIdentity(), ss[0]);
-        BRAND_REPO.save(temp);
-        return temp.id();
-    }
-
     private String processCategory(String category) {
         if (category == null || category.isEmpty() || category.equalsIgnoreCase("undefined") || category.equalsIgnoreCase(Label.CATEGORY_UNDEFINED))
             return Category.UNDEFINED.id();
@@ -302,6 +266,31 @@ public class PsqlItemImport implements ItemImportService {
             return parentId;
         }
     }
+
+    private String processBrand(String brand) {
+        if (brand == null || brand.isEmpty() || brand.equalsIgnoreCase("undefined") || brand.equalsIgnoreCase(Label.BRAND_UNDEFINED))
+            return Brand.UNDEFINED.id();
+        if (ID_PATTERN.matcher(brand).matches()) {
+            //System.out.println("我直接用的id：" + brand);
+            return brand;
+        }
+        String[] ss = brand.split("/");
+        String query = "^" + ss[0] + "$";
+        if (ss.length > 1)
+            query = query + "|^" + ss[1] + "$";
+        Brand[] brands = BRAND_QUERY.queryByName(query);
+        if (brands.length != 0)
+            return brands[0].id();
+        Brand temp = ss.length > 1 ? new Brand(BRAND_REPO.nextIdentity(), new Name(ss[0], ss[1])) : new Brand(BRAND_REPO.nextIdentity(), ss[0]);
+        BRAND_REPO.save(temp);
+        return temp.id();
+    }
+
+    private String processGrade(String grade) {
+        Grade g = Grade.of(grade);
+        return g.name();
+    }
+
 
     private String processMadein(String madein) throws IOException {
         ClassicHttpRequest httpGet = ClassicRequestBuilder.get(AREA_URL).build();
@@ -372,10 +361,19 @@ public class PsqlItemImport implements ItemImportService {
             }
         }
         if (code == null)
-            return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Black\" \"code\":" + MadeIn.BLACk.code() + " \"name\":\"" + MadeIn.BLACk.madeIn() + "\"}";
+            return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Black\" \"code\":" + MadeIn.UNKNOWN.code() + " \"name\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}";
         if (level != null && level.equals("COUNTRY"))
             return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\" \"code\":" + parentCode + " \"name\":\"" + parentName + "\"}";
         return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\" \"code\":" + code + " \"name\":\"" + name + "\"}";
+    }
+
+    private String processRetailPrice(String price, String unit) throws IOException {
+        Unit unit1 = Unit.of(unit);
+        StringJoiner cellJoiner = new StringJoiner(",", "{", "}");
+        cellJoiner.add("\"number\": " + price + ",\n");
+        cellJoiner.add("\"currencyCode\": \"CNY\",\n");
+        cellJoiner.add("\"unit\": \"" + unit1.name() + "\"\n");
+        return cellJoiner.toString();
     }
 
     private String readCellValue(Cell cell) {
