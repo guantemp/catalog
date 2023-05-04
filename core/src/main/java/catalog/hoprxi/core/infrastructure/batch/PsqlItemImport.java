@@ -90,13 +90,15 @@ import java.util.regex.Pattern;
 public class PsqlItemImport implements ItemImportService {
     private static final String AREA_URL = "https://hoprxi.tooo.top/area/v1/areas";
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{12,19}$");
+    private static final Pattern SHEL_LIFE_PATTERN = Pattern.compile("\\d{1,2}(([年|月|天])|(个月))$");
     private static final Map<String, Barcode> BARCODE_MAP = new HashMap<>();
-    private static CloseableHttpClient httpClient;
+
     private static final ItemQueryService ITEM_QUERY = new PsqlItemQueryService("catalog");
     private static final BrandQueryService BRAND_QUERY = new PsqlBrandQueryService("catalog");
     private static final BrandRepository BRAND_REPO = new PsqlBrandRepository("catalog");
     private static final CategoryQueryService CATEGORY_QUERY = new PsqlCategoryQueryService("catalog");
-    private static final Corresponding[] CORR = new Corresponding[]{};
+    private static final Corresponding[] DEFAULT_CORR = Corresponding.values();
+    private static CloseableHttpClient httpClient;
     private final CategoryRepository categoryRepository = new PsqlCategoryRepository("catalog");
     private final EnumMap<Corresponding, String> map = new EnumMap<>(Corresponding.class);
 
@@ -109,6 +111,7 @@ public class PsqlItemImport implements ItemImportService {
                 break;
             }
         }
+
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         SSLContext sslContext = null;
         try {
@@ -129,6 +132,7 @@ public class PsqlItemImport implements ItemImportService {
         httpClientBuilder.setDefaultRequestConfig(RequestConfig.custom()
                 .setConnectionRequestTimeout(Timeout.ofSeconds(10))
                 .build());
+
         httpClient = httpClientBuilder.build();
     }
 
@@ -137,6 +141,8 @@ public class PsqlItemImport implements ItemImportService {
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
     public void importItemXlsFrom(InputStream is, Corresponding[] correspondings) throws IOException, SQLException {
+        if (correspondings == null || correspondings.length == 0)
+            correspondings = DEFAULT_CORR;
         Workbook workbook = WorkbookFactory.create(is);
         Sheet sheet = workbook.getSheetAt(0);
         try (Connection connection = PsqlUtil.getConnection()) {
@@ -365,6 +371,10 @@ public class PsqlItemImport implements ItemImportService {
         if (level != null && level.equals("COUNTRY"))
             return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\" \"code\":" + parentCode + " \"name\":\"" + parentName + "\"}";
         return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\" \"code\":" + code + " \"name\":\"" + name + "\"}";
+    }
+
+    private String processShelfLife(String shelfLife) {
+        return null;
     }
 
     private String processRetailPrice(String price, String unit) throws IOException {
