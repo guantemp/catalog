@@ -21,6 +21,7 @@ import catalog.hoprxi.core.application.query.BrandQueryService;
 import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.query.ItemQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
+import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
@@ -154,7 +155,7 @@ public class PsqlItemImport implements ItemImportService {
                 StringJoiner values = extracted(row, correspondings);
                 System.out.println(values);
                 sql.add(values.toString());
-                if (i % 513 == 0) {
+                if (i % 256 == 0) {
                     //statement.addBatch(sql.toString());
                     sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,retail_price,member_price,vip_price) values", "");
                 }
@@ -216,31 +217,27 @@ public class PsqlItemImport implements ItemImportService {
         try {
             bar = BarcodeGenerateServices.createBarcode(barcode);
         } catch (InvalidBarcodeException e) {
-            try {
-                bar = BarcodeGenerateServices.createBarcodeWithChecksum(barcode);
-            } catch (InvalidBarcodeException i) {
-                //publish error barcode
-                System.out.println(i + ":" + barcode);
-            }
+            bar = BarcodeGenerateServices.createBarcodeWithChecksum(barcode);
         }
+        /*
         if (bar == null) {
             return "nothing";
             //publish InvalidBarcode
         }
-/*
-        ItemView[] itemViews = ITEM_QUERY.queryByBarcode("^" + bar.toPlanString() + "$");
-        if (itemViews.length != 0) {
-            //publish Already exists
-            System.out.println("Already exists");
-            return "exists";
-        }
- */
+*/
         if (BARCODE_MAP.containsValue(bar)) {
             System.out.println("find repeat barcode:" + barcode);
             //publish repeat barcode
-            return "repeat";
+            throw new InvalidBarcodeException("");
         }
         BARCODE_MAP.put(barcode, bar);
+
+        ItemView[] itemViews = ITEM_QUERY.queryByBarcode("^" + bar.toPlanString() + "$");
+        if (itemViews.length != 0) {
+            System.out.println("Already exists");
+            throw new InvalidBarcodeException("");
+            //publish Already exists
+        }
         return bar.toPlanString();
     }
 
