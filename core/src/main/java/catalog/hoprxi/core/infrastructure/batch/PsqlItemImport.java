@@ -78,6 +78,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -138,7 +139,6 @@ public class PsqlItemImport implements ItemImportService {
     }
 
     private static String CORE_PARENT_ID;
-
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
     public void importItemXlsFrom(InputStream is, Corresponding[] correspondings) throws IOException, SQLException {
@@ -147,32 +147,33 @@ public class PsqlItemImport implements ItemImportService {
         Workbook workbook = WorkbookFactory.create(is);
         Sheet sheet = workbook.getSheetAt(0);
         try (Connection connection = PsqlUtil.getConnection()) {
-            //connection.setAutoCommit(false);
-            //Statement statement = connection.createStatement();
-            StringJoiner sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,retail_price,member_price,vip_price) values", "");
+            connection.setAutoCommit(false);
+            Statement statement = connection.createStatement();
+            StringJoiner sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,retail_price,member_price,vip_price) values ", "");
             for (int i = 1, j = sheet.getLastRowNum(); i < j; i++) {
                 Row row = sheet.getRow(i);
                 StringJoiner values = extracted(row, correspondings);
-                System.out.println(values);
-                sql.add(values.toString());
-                if (i % 256 == 0) {
-                    //statement.addBatch(sql.toString());
-                    sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,retail_price,member_price,vip_price) values", "");
+                if (values != null)
+                    sql.add(values.toString());
+                if (i % 128 == 0) {
+                    if (sql.length() > 130) {
+                        statement.addBatch(sql.toString());
+                    }
+                    sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,retail_price,member_price,vip_price) values ", "");
+                }
+                if (i % 512 == 0) {
+                    statement.executeBatch();
+                    connection.commit();
+                    connection.setAutoCommit(true);
+                    connection.setAutoCommit(false);
+                    statement = connection.createStatement();
                 }
                 if (i == j - 1) {
-                    //statement.addBatch(sql.toString());
-                }
-                if (i % 12289 == 0) {
-                    //statement.executeBatch();
-                    //connection.commit();
-                    // connection.setAutoCommit(true);
-                    //connection.setAutoCommit(false);
-                    // statement = connection.createStatement();
-                }
-                if (i == j - 1) {
-                    // statement.executeBatch();
-                    // connection.commit();
-                    // connection.setAutoCommit(true);
+                    if (sql.length() > 130)
+                        statement.addBatch(sql.toString());
+                    statement.executeBatch();
+                    connection.commit();
+                    connection.setAutoCommit(true);
                 }
             }
         }
@@ -186,11 +187,16 @@ public class PsqlItemImport implements ItemImportService {
             Cell cell = row.getCell(i);
             map.put(correspondings[i], readCellValue(cell));
         }
+        String barcode = processBarcode(map.get(Corresponding.BARCODE));
+        if (barcode == null)
+            return null;
         StringJoiner cellJoiner = new StringJoiner(",", "(", ")");
-        cellJoiner.add(processId(map.get(Corresponding.ID))).add(processName(map.get(Corresponding.NAME), map.get(Corresponding.ALIAS)))
-                .add(processBarcode(map.get(Corresponding.BARCODE))).add(processCategory(map.get(Corresponding.CATEGORY))).add(processBrand(map.get(Corresponding.BRAND)))
-                .add(processGrade(map.get(Corresponding.GRADE))).add(processMadein(map.get(Corresponding.MADE_IN))).add(map.get(Corresponding.SPEC))
-                .add(map.get(Corresponding.SPEC)).add(processRetailPrice(map.get(Corresponding.RETAIL_PRICE), map.get(Corresponding.UNIT)));
+        cellJoiner.add(processId(map.get(Corresponding.ID))).add("'" + processName(map.get(Corresponding.NAME), map.get(Corresponding.ALIAS)) + "'")
+                .add("'" + barcode + "'").add(processCategory(map.get(Corresponding.CATEGORY))).add(processBrand(map.get(Corresponding.BRAND)))
+                .add("'" + processGrade(map.get(Corresponding.GRADE)) + "'").add("'" + processMadein(map.get(Corresponding.MADE_IN)) + "'").add("'" + map.get(Corresponding.SPEC) + "'")
+                .add(processShelfLife(map.get(Corresponding.SPEC))).add("'" + processRetailPrice(map.get(Corresponding.RETAIL_PRICE), map.get(Corresponding.UNIT)) + "'")
+                .add("'" + processMemmberPrice(map.get(Corresponding.MEMBER_PRICE), map.get(Corresponding.UNIT)) + "'").add("'" + processVipPrice(map.get(Corresponding.RETAIL_PRICE), map.get(Corresponding.UNIT)) + "'");
+        //System.out.println(cellJoiner.toString());
         return cellJoiner;
     }
 
@@ -202,10 +208,11 @@ public class PsqlItemImport implements ItemImportService {
     }
 
     private String processName(String name, String alias) {
+        name = name.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\");
         StringJoiner stringJoiner = new StringJoiner(",", "{", "}");
         stringJoiner.add("\"name\":\"" + name + "\"");
         stringJoiner.add("\"mnemonic\":\"" + PinYin.toShortPinYing(name) + "\"");
-        stringJoiner.add("\"alias\":\"" + (alias == null ? name : alias) + "\"");
+        stringJoiner.add("\"alias\":\"" + (alias == null ? name : alias.replaceAll("'", "''")) + "\"");
         return stringJoiner.toString();
     }
 
@@ -217,25 +224,25 @@ public class PsqlItemImport implements ItemImportService {
         try {
             bar = BarcodeGenerateServices.createBarcode(barcode);
         } catch (InvalidBarcodeException e) {
-            bar = BarcodeGenerateServices.createBarcodeWithChecksum(barcode);
+            try {
+                bar = BarcodeGenerateServices.createBarcodeWithChecksum(barcode);
+            } catch (InvalidBarcodeException f) {
+                //publish InvalidBarcode
+                return null;
+            }
         }
-        /*
-        if (bar == null) {
-            return "nothing";
-            //publish InvalidBarcode
-        }
-*/
+
         if (BARCODE_MAP.containsValue(bar)) {
             System.out.println("find repeat barcode:" + barcode);
             //publish repeat barcode
-            throw new InvalidBarcodeException("");
+            return null;
         }
         BARCODE_MAP.put(barcode, bar);
 
         ItemView[] itemViews = ITEM_QUERY.queryByBarcode("^" + bar.toPlanString() + "$");
         if (itemViews.length != 0) {
             System.out.println("Already exists");
-            throw new InvalidBarcodeException("");
+            return null;
             //publish Already exists
         }
         return bar.toPlanString();
@@ -311,7 +318,7 @@ public class PsqlItemImport implements ItemImportService {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
-        httpClient.execute(httpGet, response -> {
+        return httpClient.execute(httpGet, response -> {
             //System.out.println(response.getCode() + " " + response.getReasonPhrase() + " " + response.getVersion());
             final HttpEntity entity = response.getEntity();
 
@@ -319,10 +326,8 @@ public class PsqlItemImport implements ItemImportService {
             // and ensure it is fully consumed
             //System.out.println(madein + ":" + EntityUtils.toString(entity));
             //EntityUtils.consume(entity);
-            System.out.println(processmMadeinJson(entity.getContent()));
-            return null;
+            return processmMadeinJson(entity.getContent());
         });
-        return "";
     }
 
     public String processmMadeinJson(InputStream inputStream) throws IOException {
@@ -363,24 +368,46 @@ public class PsqlItemImport implements ItemImportService {
                 }
             }
         }
-        if (code == null)
-            return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Black\" \"code\":" + MadeIn.UNKNOWN.code() + " \"name\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}";
+        if (code == null || code.equals("156"))
+            return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Black\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"name\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}";
         if (level != null && level.equals("COUNTRY"))
-            return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\" \"code\":" + parentCode + " \"name\":\"" + parentName + "\"}";
-        return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\" \"code\":" + code + " \"name\":\"" + name + "\"}";
+            return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\",\"code\":" + parentCode + ",\"country\":\"" + parentName + "\"}";
+        return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"city\":\"" + name + "\"}";
     }
 
     private String processShelfLife(String shelfLife) {
-        return null;
+        return "0";
     }
 
     private String processRetailPrice(String price, String unit) throws IOException {
-        Unit unit1 = Unit.of(unit);
+        Unit systemUnit = Unit.of(unit);
         StringJoiner cellJoiner = new StringJoiner(",", "{", "}");
-        cellJoiner.add("\"number\": " + price + ",\n");
-        cellJoiner.add("\"currencyCode\": \"CNY\",\n");
-        cellJoiner.add("\"unit\": \"" + unit1.name() + "\"\n");
+        cellJoiner.add("\"number\":" + price);
+        cellJoiner.add("\"currencyCode\":\"CNY\"");
+        cellJoiner.add("\"unit\":\"" + systemUnit.name() + "\"");
         return cellJoiner.toString();
+    }
+
+    private String processMemmberPrice(String price, String unit) throws IOException {
+        Unit systemUnit = Unit.of(unit);
+        StringJoiner joiner = new StringJoiner(",", "{\"name\":\"会员价\",\"price\": ", "}");
+        StringJoiner cellJoiner = new StringJoiner(",", "{", "}");
+        cellJoiner.add("\"number\":" + price);
+        cellJoiner.add("\"currencyCode\":\"CNY\"");
+        cellJoiner.add("\"unit\":\"" + systemUnit.name() + "\"");
+        joiner.add(cellJoiner.toString());
+        return joiner.toString();
+    }
+
+    private String processVipPrice(String price, String unit) throws IOException {
+        Unit unit1 = Unit.of(unit);
+        StringJoiner joiner = new StringJoiner(",", "{\"name\":\"VIP\",\"price\": ", "}");
+        StringJoiner cellJoiner = new StringJoiner(",", "{", "}");
+        cellJoiner.add("\"number\":" + price);
+        cellJoiner.add("\"currencyCode\":\"CNY\"");
+        cellJoiner.add("\"unit\":\"" + unit1.name() + "\"");
+        joiner.add(cellJoiner.toString());
+        return joiner.toString();
     }
 
     private String readCellValue(Cell cell) {

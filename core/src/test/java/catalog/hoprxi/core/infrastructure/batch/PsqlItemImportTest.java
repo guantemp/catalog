@@ -42,7 +42,7 @@ public class PsqlItemImportTest {
         File file = new File("F:/developer/catalog/jc.xls");
         FileInputStream fis = new FileInputStream(file);
         Corresponding[] correspondings = new Corresponding[]{Corresponding.NAME, Corresponding.BARCODE,
-                Corresponding.SPEC, Corresponding.CATEGORY, Corresponding.BRAND, Corresponding.UNIT, Corresponding.MADE_IN, Corresponding.IGNORE, Corresponding.RETAIL_PRICE};
+                Corresponding.SPEC, Corresponding.CATEGORY, Corresponding.BRAND, Corresponding.UNIT, Corresponding.MADE_IN, Corresponding.MEMBER_PRICE, Corresponding.RETAIL_PRICE};
         //itemImport.importItemXlsFrom(fis, new int[]{-1, -1, 0, -1, 1, 2, -1, 3, 6, 5, -1, 8, -1, -1, 4});
         itemImport.importItemXlsFrom(fis, correspondings);
     }
