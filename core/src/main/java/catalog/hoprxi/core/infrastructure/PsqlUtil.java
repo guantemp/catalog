@@ -63,7 +63,7 @@ public class PsqlUtil {
             props.setProperty("dataSource.password", read.getString("password"));
             props.setProperty("dataSource.databaseName", read.getString("databaseName"));
             props.setProperty("dataSourceClassName", read.getString("hikari.dataSourceClassName"));
-            props.put("maximumPoolSize", read.hasPath("hikari.maximumPoolSize") ? read.getInt("hikari.maximumPoolSize") : 3);
+            props.put("maximumPoolSize", read.hasPath("hikari.maximumPoolSize") ? read.getInt("hikari.maximumPoolSize") : 5);
             props.put("dataSource.logWriter", new PrintWriter(System.out));
             HikariConfig hikariConfig = new HikariConfig(props);
             HikariDataSource dataSource = new HikariDataSource(hikariConfig);
