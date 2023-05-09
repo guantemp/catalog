@@ -39,6 +39,7 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
         String barcode = itemImportEvent.map.get(Corresponding.BARCODE);
+        itemImportEvent.verify = Verify.OK;
         if (barcode == null || barcode.isEmpty()) {
             //根据设置规则生成店内码
             itemImportEvent.map.put(Corresponding.BARCODE, BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(1, 1, "21")[0].toPlanString());
@@ -68,5 +69,6 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
             //publish Already exists
         }
         itemImportEvent.map.put(Corresponding.BARCODE, "'" + bar.toPlanString() + "'");
+        //System.out.println("barcode:"+itemImportEvent.map.get(Corresponding.BARCODE));
     }
 }

@@ -101,7 +101,7 @@ public class MadeinHandler implements EventHandler<ItemImportEvent> {
         List<NameValuePair> nvps = new ArrayList<>();
         // GET 请求参数
         nvps.add(new BasicNameValuePair("search", "^" + madein + "$"));
-        nvps.add(new BasicNameValuePair("filters", "city,country,county"));
+        nvps.add(new BasicNameValuePair("filters", "city,country,county,province"));
         // 增加到请求 URL 中
         try {
             URI uri = new URIBuilder(new URI(AREA_URL))
@@ -121,6 +121,7 @@ public class MadeinHandler implements EventHandler<ItemImportEvent> {
             return processmMadeinJson(entity.getContent());
         });
         itemImportEvent.map.put(Corresponding.MADE_IN, result);
+        //System.out.println("made_in:" + itemImportEvent.map.get(Corresponding.MADE_IN));
     }
 
     private String processmMadeinJson(InputStream inputStream) throws IOException {

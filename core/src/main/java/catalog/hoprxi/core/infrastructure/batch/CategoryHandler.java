@@ -81,5 +81,6 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
             //System.out.println("正确的类别id：" + parentId);
             itemImportEvent.map.put(Corresponding.CATEGORY, parentId);
         }
+        //System.out.println("category:" +itemImportEvent.map.get(Corresponding.CATEGORY));
     }
 }

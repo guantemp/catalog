@@ -53,12 +53,13 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
         if (ss.length > 1)
             query = query + "|^" + ss[1] + "$";
         Brand[] brands = BRAND_QUERY.queryByName(query);
-        if (brands.length != 0)
+        if (brands.length != 0) {
             itemImportEvent.map.put(Corresponding.BRAND, brands[0].id());
-        else {
+        } else {
             Brand temp = ss.length > 1 ? new Brand(BRAND_REPO.nextIdentity(), new Name(ss[0], ss[1])) : new Brand(BRAND_REPO.nextIdentity(), ss[0]);
             BRAND_REPO.save(temp);
             itemImportEvent.map.put(Corresponding.BRAND, temp.id());
         }
+        //System.out.println("brand:" +itemImportEvent.map.get(Corresponding.BRAND));
     }
 }

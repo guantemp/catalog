@@ -44,13 +44,14 @@ public class PsqlItemImportWithDisruptor {
             correspondings = DEFAULT_CORR;
         Disruptor<ItemImportEvent> disruptor = new Disruptor<>(
                 ItemImportEvent::new,
-                4096,
+                1024,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
                 new YieldingWaitStrategy()
         );
         disruptor.handleEventsWith(new IdHandler(), new NameHandler(), new BarcodeHandler(), new CategoryHandler(), new BrandHandler(),
-                new GrandHandler(), new MadeinHandler()).then(new AssembleHandler());
+                new GrandHandler(), new MadeinHandler(), new SpecHandler(), new ShelfLifeHandler(), new RetailPriceHandler(),
+                new MemeberPriceHandler(), new VipPriceHandler()).then(new AssembleHandler());
         disruptor.start();
         RingBuffer<ItemImportEvent> ringBuffer = disruptor.getRingBuffer();
         ItemProducer producer = new ItemProducer(ringBuffer);

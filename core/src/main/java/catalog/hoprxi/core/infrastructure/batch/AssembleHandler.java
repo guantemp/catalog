@@ -30,13 +30,14 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
         if (itemImportEvent.verify != Verify.OK) {
-            System.out.println(itemImportEvent.verify);
+            System.out.println(itemImportEvent.verify + ":" + itemImportEvent.map.get(Corresponding.BARCODE));
             //未通过验证处理
         } else {
             EnumMap<Corresponding, String> map = itemImportEvent.map;
             StringJoiner joiner = new StringJoiner(",", "(", ")");
             joiner.add(map.get(Corresponding.ID)).add(map.get(Corresponding.NAME)).add(map.get(Corresponding.BARCODE)).add(map.get(Corresponding.CATEGORY))
-                    .add(map.get(Corresponding.BRAND)).add(map.get(Corresponding.GRADE)).add(map.get(Corresponding.MADE_IN));
+                    .add(map.get(Corresponding.BRAND)).add(map.get(Corresponding.GRADE)).add(map.get(Corresponding.MADE_IN)).add(map.get(Corresponding.SPEC))
+                    .add(map.get(Corresponding.SHELF_LIFE)).add(map.get(Corresponding.RETAIL_PRICE)).add(map.get(Corresponding.MEMBER_PRICE)).add(map.get(Corresponding.VIP_PRICE));
             System.out.println(joiner.toString());
         }
     }
