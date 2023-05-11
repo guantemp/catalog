@@ -32,7 +32,7 @@ public class MemeberPriceHandler implements EventHandler<ItemImportEvent> {
         Unit systemUnit = Unit.of(itemImportEvent.map.get(Corresponding.UNIT));
         StringJoiner joiner = new StringJoiner(",", "'{\"name\":\"会员价\",\"price\": ", "}'");
         StringJoiner subJoiner = new StringJoiner(",", "{", "}");
-        subJoiner.add("\"number\":" + itemImportEvent.map.get(Corresponding.RETAIL_PRICE));
+        subJoiner.add("\"number\":" + itemImportEvent.map.get(Corresponding.MEMBER_PRICE));
         subJoiner.add("\"currencyCode\":\"CNY\"");
         subJoiner.add("\"unit\":\"" + systemUnit.name() + "\"");
         joiner.add(subJoiner.toString());

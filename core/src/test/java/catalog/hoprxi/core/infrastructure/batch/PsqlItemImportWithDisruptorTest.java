@@ -21,6 +21,7 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.SQLException;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -30,7 +31,7 @@ import java.io.IOException;
 public class PsqlItemImportWithDisruptorTest {
 
     @Test
-    public void testImportItemXlsFrom() throws IOException {
+    public void testImportItemXlsFrom() throws IOException, SQLException {
         File file = new File("F:/developer/catalog/jc.xls");
         FileInputStream fis = new FileInputStream(file);
         Corresponding[] correspondings = new Corresponding[]{Corresponding.NAME, Corresponding.BARCODE,

@@ -16,26 +16,22 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.domain.model.price.Unit;
 import com.lmax.disruptor.EventHandler;
-
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2023-05-09
+ * @version 0.0.1 builder 2023-05-10
  */
-public class VipPriceHandler implements EventHandler<ItemImportEvent> {
+public class FailedValidationHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        Unit systemUnit = Unit.of(itemImportEvent.map.get(Corresponding.UNIT));
-        StringJoiner joiner = new StringJoiner(",", "'{\"name\":\"VIP\",\"price\": ", "}'");
-        StringJoiner subJoiner = new StringJoiner(",", "{", "}");
-        subJoiner.add("\"number\":" + (itemImportEvent.map.get(Corresponding.VIP_PRICE) == null ? "0" : itemImportEvent.map.get(Corresponding.VIP_PRICE)));
-        subJoiner.add("\"currencyCode\":\"CNY\"");
-        subJoiner.add("\"unit\":\"" + systemUnit.name() + "\"");
-        joiner.add(subJoiner.toString());
-        itemImportEvent.map.put(Corresponding.VIP_PRICE, joiner.toString());
+        switch (itemImportEvent.verify) {
+            case BARCODE_EXIST:
+            case BARCODE_REPEAT:
+            case BARCODE_CHECK_SUM_ERROR:
+                System.out.println(itemImportEvent.verify + ":" + itemImportEvent.map.get(Corresponding.BARCODE));
+                break;
+        }
     }
 }

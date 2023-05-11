@@ -44,6 +44,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 /***
@@ -74,6 +75,9 @@ public class AppTest {
         }
         joiner.add("upload");
         System.out.println(joiner);
+        AtomicInteger number = new AtomicInteger(0);
+        for (int i = 0; i < 10; i++)
+            System.out.println(number.incrementAndGet());
     }
 
     @Test

@@ -25,6 +25,7 @@ import org.apache.poi.ss.usermodel.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.RoundingMode;
+import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -39,20 +40,32 @@ import java.util.concurrent.Executors;
 public class PsqlItemImportWithDisruptor {
     private static final Corresponding[] DEFAULT_CORR = Corresponding.values();
 
-    public void importItemXlsFrom(InputStream is, Corresponding[] correspondings) throws IOException {
+    public void importItemXlsFrom(InputStream is, Corresponding[] correspondings) throws IOException, SQLException {
         if (correspondings == null || correspondings.length == 0)
             correspondings = DEFAULT_CORR;
         Disruptor<ItemImportEvent> disruptor = new Disruptor<>(
                 ItemImportEvent::new,
-                1024,
+                64,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
                 new YieldingWaitStrategy()
         );
+
+        Disruptor<ExecuteSqlEvent> executeDisruptor = new Disruptor<>(
+                ExecuteSqlEvent::new,
+                128,
+                Executors.defaultThreadFactory(),
+                ProducerType.SINGLE,
+                new YieldingWaitStrategy()
+        );
+        executeDisruptor.handleEventsWith(new PsqlItemExecuteHandler());
+        executeDisruptor.start();
+
         disruptor.handleEventsWith(new IdHandler(), new NameHandler(), new BarcodeHandler(), new CategoryHandler(), new BrandHandler(),
                 new GrandHandler(), new MadeinHandler(), new SpecHandler(), new ShelfLifeHandler(), new RetailPriceHandler(),
-                new MemeberPriceHandler(), new VipPriceHandler()).then(new AssembleHandler());
+                new MemeberPriceHandler(), new VipPriceHandler()).then(new AssembleHandler(executeDisruptor.getRingBuffer()), new FailedValidationHandler());
         disruptor.start();
+
         RingBuffer<ItemImportEvent> ringBuffer = disruptor.getRingBuffer();
         ItemProducer producer = new ItemProducer(ringBuffer);
         Workbook workbook = WorkbookFactory.create(is);
@@ -68,6 +81,7 @@ public class PsqlItemImportWithDisruptor {
             }
             producer.onData(map);
         }
+        executeDisruptor.shutdown();
         disruptor.shutdown();
     }
 

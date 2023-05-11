@@ -17,9 +17,11 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.RingBuffer;
 
 import java.util.EnumMap;
 import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -27,18 +29,36 @@ import java.util.StringJoiner;
  * @version 0.0.1 builder 2023-05-08
  */
 public class AssembleHandler implements EventHandler<ItemImportEvent> {
+    private final RingBuffer<ExecuteSqlEvent> ringBuffer;
+    private AtomicInteger number = new AtomicInteger(0);
+
+    public AssembleHandler(RingBuffer<ExecuteSqlEvent> ringBuffer) {
+        this.ringBuffer = ringBuffer;
+    }
+
+    public void onData(String sql) {
+        long sequence = ringBuffer.next();
+        try {
+            // sequence位置取出的事件是空事件
+            ExecuteSqlEvent event = ringBuffer.get(sequence);
+            // 空事件添加业务信息
+            event.sql = sql;
+        } finally {
+            // 发布
+            ringBuffer.publish(sequence);
+        }
+    }
+
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
-        if (itemImportEvent.verify != Verify.OK) {
-            System.out.println(itemImportEvent.verify + ":" + itemImportEvent.map.get(Corresponding.BARCODE));
-            //未通过验证处理
-        } else {
+        if (itemImportEvent.verify == Verify.OK) {
             EnumMap<Corresponding, String> map = itemImportEvent.map;
             StringJoiner joiner = new StringJoiner(",", "(", ")");
             joiner.add(map.get(Corresponding.ID)).add(map.get(Corresponding.NAME)).add(map.get(Corresponding.BARCODE)).add(map.get(Corresponding.CATEGORY))
                     .add(map.get(Corresponding.BRAND)).add(map.get(Corresponding.GRADE)).add(map.get(Corresponding.MADE_IN)).add(map.get(Corresponding.SPEC))
                     .add(map.get(Corresponding.SHELF_LIFE)).add(map.get(Corresponding.RETAIL_PRICE)).add(map.get(Corresponding.MEMBER_PRICE)).add(map.get(Corresponding.VIP_PRICE));
-            System.out.println(joiner.toString());
+            //System.out.println(number.incrementAndGet());
+            onData(joiner.toString());
         }
     }
 }
