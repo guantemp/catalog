@@ -36,13 +36,14 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
         this.ringBuffer = ringBuffer;
     }
 
-    public void onData(String sql) {
+    public void onData(String sql, int count) {
         long sequence = ringBuffer.next();
         try {
             // sequence位置取出的事件是空事件
             ExecuteSqlEvent event = ringBuffer.get(sequence);
             // 空事件添加业务信息
             event.sql = sql;
+            event.count = count;
         } finally {
             // 发布
             ringBuffer.publish(sequence);
@@ -56,9 +57,10 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
             StringJoiner joiner = new StringJoiner(",", "(", ")");
             joiner.add(map.get(Corresponding.ID)).add(map.get(Corresponding.NAME)).add(map.get(Corresponding.BARCODE)).add(map.get(Corresponding.CATEGORY))
                     .add(map.get(Corresponding.BRAND)).add(map.get(Corresponding.GRADE)).add(map.get(Corresponding.MADE_IN)).add(map.get(Corresponding.SPEC))
-                    .add(map.get(Corresponding.SHELF_LIFE)).add(map.get(Corresponding.RETAIL_PRICE)).add(map.get(Corresponding.MEMBER_PRICE)).add(map.get(Corresponding.VIP_PRICE));
+                    .add(map.get(Corresponding.SHELF_LIFE)).add(map.get(Corresponding.LATEST_RECEIPT_PRICE)).add(map.get(Corresponding.RETAIL_PRICE))
+                    .add(map.get(Corresponding.MEMBER_PRICE)).add(map.get(Corresponding.VIP_PRICE));
             //System.out.println(number.incrementAndGet());
-            onData(joiner.toString());
+            onData(joiner.toString(), number.incrementAndGet());
         }
     }
 }

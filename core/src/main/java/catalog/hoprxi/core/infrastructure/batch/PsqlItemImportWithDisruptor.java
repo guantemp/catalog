@@ -62,7 +62,7 @@ public class PsqlItemImportWithDisruptor {
         executeDisruptor.start();
 
         disruptor.handleEventsWith(new IdHandler(), new NameHandler(), new BarcodeHandler(), new CategoryHandler(), new BrandHandler(),
-                new GrandHandler(), new MadeinHandler(), new SpecHandler(), new ShelfLifeHandler(), new RetailPriceHandler(),
+                new GrandHandler(), new MadeinHandler(), new SpecHandler(), new ShelfLifeHandler(), new LatestReceiptPriceHandler(), new RetailPriceHandler(),
                 new MemeberPriceHandler(), new VipPriceHandler()).then(new AssembleHandler(executeDisruptor.getRingBuffer()), new FailedValidationHandler());
         disruptor.start();
 

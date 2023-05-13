@@ -32,13 +32,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
     private static AtomicInteger number = new AtomicInteger(0);
-    StringJoiner sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,retail_price,member_price,vip_price) values ", "");
+    StringJoiner sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,latest_receipt_price,retail_price,member_price,vip_price) values ", "");
     private Connection connection = null;
     private Statement statement = null;
 
     public PsqlItemExecuteHandler() throws SQLException {
         connection = PsqlUtil.getConnection();
-        connection.setAutoCommit(false);
+        if (connection.getAutoCommit())
+            connection.setAutoCommit(false);
         statement = connection.createStatement();
     }
 
@@ -47,14 +48,16 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
         sql.add(executeSqlEvent.sql);
         int i = number.incrementAndGet();
         if (i % 128 == 0) {
-            System.out.println(sql.toString());
+            //System.out.println(sql.toString());
             statement.addBatch(sql.toString());
-            sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,retail_price,member_price,vip_price) values ", "");
+            sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,latest_receipt_price,retail_price,member_price,vip_price) values ", "");
         }
         if (i % 512 == 0) {
             statement.executeBatch();
             connection.commit();
             statement.clearBatch();
+            System.out.println(i);
+            System.out.println(executeSqlEvent.count);
         }
     }
 }

@@ -35,7 +35,7 @@ public class PsqlItemImportWithDisruptorTest {
         File file = new File("F:/developer/catalog/jc.xls");
         FileInputStream fis = new FileInputStream(file);
         Corresponding[] correspondings = new Corresponding[]{Corresponding.NAME, Corresponding.BARCODE,
-                Corresponding.SPEC, Corresponding.CATEGORY, Corresponding.BRAND, Corresponding.UNIT, Corresponding.MADE_IN, Corresponding.MEMBER_PRICE, Corresponding.RETAIL_PRICE};
+                Corresponding.SPEC, Corresponding.CATEGORY, Corresponding.BRAND, Corresponding.UNIT, Corresponding.MADE_IN, Corresponding.LATEST_RECEIPT_PRICE, Corresponding.RETAIL_PRICE};
         PsqlItemImportWithDisruptor itemImport = new PsqlItemImportWithDisruptor();
         itemImport.importItemXlsFrom(fis, correspondings);
     }

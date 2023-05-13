@@ -24,18 +24,16 @@ import java.util.StringJoiner;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2023-05-09
+ * @version 0.0.1 builder 2023-05-13
  */
-public class MemeberPriceHandler implements EventHandler<ItemImportEvent> {
+public class LatestReceiptPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         Unit systemUnit = Unit.of(itemImportEvent.map.get(Corresponding.UNIT));
-        StringJoiner joiner = new StringJoiner(",", "'{\"name\":\"会员价\",\"price\": ", "}'");
-        StringJoiner subJoiner = new StringJoiner(",", "{", "}");
-        subJoiner.add("\"number\":" + (itemImportEvent.map.get(Corresponding.MEMBER_PRICE) == null ? "0" : itemImportEvent.map.get(Corresponding.MEMBER_PRICE)));
-        subJoiner.add("\"currencyCode\":\"CNY\"");
-        subJoiner.add("\"unit\":\"" + systemUnit.name() + "\"");
-        joiner.add(subJoiner.toString());
-        itemImportEvent.map.put(Corresponding.MEMBER_PRICE, joiner.toString());
+        StringJoiner joiner = new StringJoiner(",", "'{", "}'");
+        joiner.add("\"number\":" + itemImportEvent.map.get(Corresponding.LATEST_RECEIPT_PRICE));
+        joiner.add("\"currencyCode\":\"CNY\"");
+        joiner.add("\"unit\":\"" + systemUnit.name() + "\"");
+        itemImportEvent.map.put(Corresponding.LATEST_RECEIPT_PRICE, joiner.toString());
     }
 }
