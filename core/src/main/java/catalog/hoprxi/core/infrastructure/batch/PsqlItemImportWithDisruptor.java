@@ -70,7 +70,7 @@ public class PsqlItemImportWithDisruptor {
         ItemProducer producer = new ItemProducer(ringBuffer);
         Workbook workbook = WorkbookFactory.create(is);
         Sheet sheet = workbook.getSheetAt(0);
-        for (int i = 1, j = sheet.getLastRowNum(); i < j; i++) {
+        for (int i = 1, j = sheet.getLastRowNum(); i <= j; i++) {
             Row row = sheet.getRow(i);
             EnumMap<Corresponding, String> map = new EnumMap<>(Corresponding.class);
             for (int m = 0, n = correspondings.length; m < n; m++) {
@@ -78,6 +78,10 @@ public class PsqlItemImportWithDisruptor {
                     continue;
                 Cell cell = row.getCell(m);
                 map.put(correspondings[m], readCellValue(cell));
+            }
+            if (i == j) {
+                map.put(Corresponding.LAST_ROW, String.valueOf(j));
+                System.out.println(map);
             }
             producer.onData(map);
         }

@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebInitParam;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -49,14 +48,16 @@ import java.util.UUID;
  * @version 0.0.1 builder 2023-03-02
  */
 @WebServlet(urlPatterns = {"/v1/upload"}, name = "upload", initParams = {@WebInitParam(name = "UPLOAD_DIRECTORY", value = "upload"),
-        @WebInitParam(name = "MEMORY_THRESHOLD", value = "4096"), @WebInitParam(name = "MAX_FILE_SIZE", value = "67108864")})
+        @WebInitParam(name = "MEMORY_THRESHOLD", value = "4096"), @WebInitParam(name = "MAX_FILE_SIZE", value = "67108864"),
+        @WebInitParam(name = "RENAME", value = "false")})
 public class UploadServlet extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(UploadServlet.class);
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
     @Override
-    public void init(ServletConfig config) throws ServletException {
+    public void init(ServletConfig config) {
         System.out.println(config.getInitParameter("MEMORY_THRESHOLD"));
+        System.out.println(config.getInitParameter("RENAME"));
     }
 
     @Override

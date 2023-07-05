@@ -18,20 +18,28 @@ package catalog.hoprxi.core.infrastructure.batch;
 
 import com.lmax.disruptor.EventHandler;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2023-05-10
  */
 public class FailedValidationHandler implements EventHandler<ItemImportEvent> {
+    private static AtomicInteger number = new AtomicInteger(0);
+
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         switch (itemImportEvent.verify) {
             case BARCODE_EXIST:
             case BARCODE_REPEAT:
             case BARCODE_CHECK_SUM_ERROR:
+                number.incrementAndGet();
                 System.out.println(itemImportEvent.verify + ":" + itemImportEvent.map.get(Corresponding.BARCODE));
                 break;
+        }
+        if (itemImportEvent.map.get(Corresponding.LAST_ROW) != null) {
+            System.out.println("Fail:" + number);
         }
     }
 }

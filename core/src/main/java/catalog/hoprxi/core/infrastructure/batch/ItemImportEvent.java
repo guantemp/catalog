@@ -26,4 +26,5 @@ import java.util.EnumMap;
 public class ItemImportEvent {
     EnumMap<Corresponding, String> map;
     Verify verify = Verify.OK;
+    int estimatedQuantity = 0;
 }

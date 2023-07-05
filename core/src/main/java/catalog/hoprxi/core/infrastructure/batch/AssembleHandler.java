@@ -52,8 +52,8 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
+        EnumMap<Corresponding, String> map = itemImportEvent.map;
         if (itemImportEvent.verify == Verify.OK) {
-            EnumMap<Corresponding, String> map = itemImportEvent.map;
             StringJoiner joiner = new StringJoiner(",", "(", ")");
             joiner.add(map.get(Corresponding.ID)).add(map.get(Corresponding.NAME)).add(map.get(Corresponding.BARCODE)).add(map.get(Corresponding.CATEGORY))
                     .add(map.get(Corresponding.BRAND)).add(map.get(Corresponding.GRADE)).add(map.get(Corresponding.MADE_IN)).add(map.get(Corresponding.SPEC))
@@ -61,6 +61,10 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
                     .add(map.get(Corresponding.MEMBER_PRICE)).add(map.get(Corresponding.VIP_PRICE));
             //System.out.println(number.incrementAndGet());
             onData(joiner.toString(), number.incrementAndGet());
+        }
+        if (map.get(Corresponding.LAST_ROW) != null) {//最后一行
+            onData("LAST_ROW", Integer.valueOf(map.get(Corresponding.LAST_ROW)));
+            System.out.println("ASSem:" + map.get(Corresponding.LAST_ROW));
         }
     }
 }

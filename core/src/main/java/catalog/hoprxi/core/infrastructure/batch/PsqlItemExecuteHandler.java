@@ -31,33 +31,42 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 0.0.1 builder 2023-05-09
  */
 public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
-    private static AtomicInteger number = new AtomicInteger(0);
+    private static AtomicInteger number = new AtomicInteger(1);
     StringJoiner sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,latest_receipt_price,retail_price,member_price,vip_price) values ", "");
     private Connection connection = null;
     private Statement statement = null;
 
     public PsqlItemExecuteHandler() throws SQLException {
         connection = PsqlUtil.getConnection();
-        if (connection.getAutoCommit())
-            connection.setAutoCommit(false);
+        //System.out.println("connection.getAutoCommit()" + connection.getAutoCommit());
+        connection.setAutoCommit(false);
         statement = connection.createStatement();
     }
 
     @Override
     public void onEvent(ExecuteSqlEvent executeSqlEvent, long l, boolean b) throws Exception {
-        sql.add(executeSqlEvent.sql);
-        int i = number.incrementAndGet();
-        if (i % 128 == 0) {
-            //System.out.println(sql.toString());
-            statement.addBatch(sql.toString());
-            sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,latest_receipt_price,retail_price,member_price,vip_price) values ", "");
-        }
-        if (i % 512 == 0) {
+        if ("LAST_ROW".equals(executeSqlEvent.sql)) {
+            System.out.println("LAST_ROW:::" + executeSqlEvent.sql);
             statement.executeBatch();
             connection.commit();
-            statement.clearBatch();
-            System.out.println(i);
-            System.out.println(executeSqlEvent.count);
+            connection.setAutoCommit(true);
+            connection.close();
+
+        } else {
+            sql.add(executeSqlEvent.sql);
+            int i = number.incrementAndGet();
+            if (i % 128 == 0) {
+                System.out.println(sql);
+                statement.addBatch(sql.toString());
+                sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,latest_receipt_price,retail_price,member_price,vip_price) values ", "");
+            }
+            if (i % 2048 == 0) {
+                statement.executeBatch();
+                connection.commit();
+                statement.clearBatch();
+                System.out.println(i);
+                System.out.println(executeSqlEvent.count);
+            }
         }
     }
 }
