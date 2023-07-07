@@ -32,7 +32,7 @@ public class PsqlItemImportWithDisruptorTest {
 
     @Test
     public void testImportItemXlsFrom() throws IOException, SQLException {
-        File file = new File("F:/developer/catalog/jc.xls");
+        File file = new File("F:/developer/catalog/jc_1.xls");
         FileInputStream fis = new FileInputStream(file);
         Corresponding[] correspondings = new Corresponding[]{Corresponding.NAME, Corresponding.BARCODE,
                 Corresponding.SPEC, Corresponding.CATEGORY, Corresponding.BRAND, Corresponding.UNIT, Corresponding.MADE_IN, Corresponding.LATEST_RECEIPT_PRICE, Corresponding.RETAIL_PRICE};

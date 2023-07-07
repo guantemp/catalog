@@ -16,33 +16,27 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import com.lmax.disruptor.RingBuffer;
-
-import java.util.EnumMap;
+import com.lmax.disruptor.ExceptionHandler;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2023-05-08
+ * @version 0.0.1 builder 2023-07-06
  */
-public class ItemProducer {
-    private final RingBuffer<ItemImportEvent> ringBuffer;
+public class DisruptorExceptionHandler<T> implements ExceptionHandler<T> {
 
-    public ItemProducer(RingBuffer<ItemImportEvent> ringBuffer) {
-        this.ringBuffer = ringBuffer;
+    @Override
+    public void handleEventException(Throwable throwable, long l, T t) {
+        System.out.println("throw:" + t);
     }
 
-    public void onData(EnumMap<Corresponding, String> map) {
-        long sequence = ringBuffer.next();
+    @Override
+    public void handleOnStartException(Throwable throwable) {
 
-        try {
-            // sequence位置取出的事件是空事件
-            ItemImportEvent event = ringBuffer.get(sequence);
-            // 空事件添加业务信息
-            event.map = map;
-        } finally {
-            // 发布
-            ringBuffer.publish(sequence);
-        }
+    }
+
+    @Override
+    public void handleOnShutdownException(Throwable throwable) {
+
     }
 }

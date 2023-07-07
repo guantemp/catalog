@@ -45,47 +45,35 @@ public class PsqlItemImportWithDisruptor {
             correspondings = DEFAULT_CORR;
         Disruptor<ItemImportEvent> disruptor = new Disruptor<>(
                 ItemImportEvent::new,
-                64,
+                32,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
                 new YieldingWaitStrategy()
         );
-
-        Disruptor<ExecuteSqlEvent> executeDisruptor = new Disruptor<>(
-                ExecuteSqlEvent::new,
-                128,
-                Executors.defaultThreadFactory(),
-                ProducerType.SINGLE,
-                new YieldingWaitStrategy()
-        );
-        executeDisruptor.handleEventsWith(new PsqlItemExecuteHandler());
-        executeDisruptor.start();
 
         disruptor.handleEventsWith(new IdHandler(), new NameHandler(), new BarcodeHandler(), new CategoryHandler(), new BrandHandler(),
                 new GrandHandler(), new MadeinHandler(), new SpecHandler(), new ShelfLifeHandler(), new LatestReceiptPriceHandler(), new RetailPriceHandler(),
-                new MemeberPriceHandler(), new VipPriceHandler()).then(new AssembleHandler(executeDisruptor.getRingBuffer()), new FailedValidationHandler());
+                new MemeberPriceHandler(), new VipPriceHandler()).then(new AssembleHandler(), new FailedValidationHandler());
         disruptor.start();
 
         RingBuffer<ItemImportEvent> ringBuffer = disruptor.getRingBuffer();
-        ItemProducer producer = new ItemProducer(ringBuffer);
         Workbook workbook = WorkbookFactory.create(is);
         Sheet sheet = workbook.getSheetAt(0);
         for (int i = 1, j = sheet.getLastRowNum(); i <= j; i++) {
             Row row = sheet.getRow(i);
             EnumMap<Corresponding, String> map = new EnumMap<>(Corresponding.class);
             for (int m = 0, n = correspondings.length; m < n; m++) {
-                if (correspondings[m] == Corresponding.IGNORE)
+                if (correspondings[m] == Corresponding.IGNORE || correspondings[m] == Corresponding.LAST_ROW)
                     continue;
                 Cell cell = row.getCell(m);
                 map.put(correspondings[m], readCellValue(cell));
             }
             if (i == j) {
                 map.put(Corresponding.LAST_ROW, String.valueOf(j));
-                System.out.println(map);
+                //System.out.println("读excel最后：" + map);
             }
-            producer.onData(map);
+            ringBuffer.publishEvent((event, sequence, rMap) -> event.setMap(rMap), map);
         }
-        executeDisruptor.shutdown();
         disruptor.shutdown();
     }
 

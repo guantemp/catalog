@@ -17,10 +17,16 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.EventTranslatorOneArg;
 import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.YieldingWaitStrategy;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
 
+import java.sql.SQLException;
 import java.util.EnumMap;
 import java.util.StringJoiner;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /***
@@ -29,25 +35,28 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 0.0.1 builder 2023-05-08
  */
 public class AssembleHandler implements EventHandler<ItemImportEvent> {
-    private final RingBuffer<ExecuteSqlEvent> ringBuffer;
     private AtomicInteger number = new AtomicInteger(0);
+    private static final EventTranslatorOneArg<ExecuteSqlEvent, String> TRANSLATOR =
+            (event, sequence, sql) -> event.sql = sql;
+    private static Disruptor<ExecuteSqlEvent> executeDisruptor;
+    private static RingBuffer<ExecuteSqlEvent> ringBuffer;
 
-    public AssembleHandler(RingBuffer<ExecuteSqlEvent> ringBuffer) {
-        this.ringBuffer = ringBuffer;
-    }
-
-    public void onData(String sql, int count) {
-        long sequence = ringBuffer.next();
+    static {
+        executeDisruptor = new Disruptor<>(
+                ExecuteSqlEvent::new,
+                64,
+                Executors.defaultThreadFactory(),
+                ProducerType.SINGLE,
+                new YieldingWaitStrategy()
+        );
+        //executeDisruptor.setDefaultExceptionHandler(new DisruptorExceptionHandler<>());
         try {
-            // sequence位置取出的事件是空事件
-            ExecuteSqlEvent event = ringBuffer.get(sequence);
-            // 空事件添加业务信息
-            event.sql = sql;
-            event.count = count;
-        } finally {
-            // 发布
-            ringBuffer.publish(sequence);
+            executeDisruptor.handleEventsWith(new PsqlItemExecuteHandler());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
+        executeDisruptor.start();
+        ringBuffer = executeDisruptor.getRingBuffer();
     }
 
     @Override
@@ -60,11 +69,12 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
                     .add(map.get(Corresponding.SHELF_LIFE)).add(map.get(Corresponding.LATEST_RECEIPT_PRICE)).add(map.get(Corresponding.RETAIL_PRICE))
                     .add(map.get(Corresponding.MEMBER_PRICE)).add(map.get(Corresponding.VIP_PRICE));
             //System.out.println(number.incrementAndGet());
-            onData(joiner.toString(), number.incrementAndGet());
+            ringBuffer.publishEvent(TRANSLATOR, joiner.toString());
         }
         if (map.get(Corresponding.LAST_ROW) != null) {//最后一行
-            onData("LAST_ROW", Integer.valueOf(map.get(Corresponding.LAST_ROW)));
-            System.out.println("ASSem:" + map.get(Corresponding.LAST_ROW));
+            ringBuffer.publishEvent(TRANSLATOR, "LAST_ROW");
+            executeDisruptor.shutdown();
         }
+
     }
 }
