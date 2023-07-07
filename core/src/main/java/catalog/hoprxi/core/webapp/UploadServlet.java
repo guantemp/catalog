@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebInitParam;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -47,24 +48,43 @@ import java.util.UUID;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-03-02
  */
-@WebServlet(urlPatterns = {"/v1/upload"}, name = "upload", initParams = {@WebInitParam(name = "UPLOAD_DIRECTORY", value = "upload"),
-        @WebInitParam(name = "MEMORY_THRESHOLD", value = "4096"), @WebInitParam(name = "MAX_FILE_SIZE", value = "67108864"),
-        @WebInitParam(name = "RENAME", value = "false")})
+@WebServlet(urlPatterns = {"/v1/upload"}, name = "upload", initParams = {@WebInitParam(name = "MEMORY_THRESHOLD", value = "4096"),
+        @WebInitParam(name = "MAX_FILE_SIZE", value = "67108864")})
 public class UploadServlet extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(UploadServlet.class);
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
+    private static final String UPLOAD_DIRECTORY = "upload";
 
     @Override
-    public void init(ServletConfig config) {
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+
         System.out.println(config.getInitParameter("MEMORY_THRESHOLD"));
-        System.out.println(config.getInitParameter("RENAME"));
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("text/html;charset=UTF-8");
+        response.getWriter().println("<html>");
+        response.getWriter().println("<head>");
+        response.getWriter().println("<title>文件上传</title>");
+        response.getWriter().println("</head>");
+        response.getWriter().println("<body>");
+        response.getWriter().println("<form action=\"upload\" method=\"post\" enctype=\"multipart/form-data\">");
+        response.getWriter().println("<p><input type=\"checkbox\" name=\"randomFileName\"/>重命名文件</p>");
+        response.getWriter().println("<p><input type=\"file\" name=\"file\"/></p>");
+        response.getWriter().println("<input type=\"submit\" value=\"上传\"/>");
+        response.getWriter().println("</form>");
+        response.getWriter().println("</body>");
+        response.getWriter().println("</html>");
+        response.getWriter().close();
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json; charset=UTF-8");
         JsonGenerator generator = jasonFactory.createGenerator(response.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
-        StringJoiner relativePath = new StringJoiner("/", request.getScheme() + "://" + request.getServerName(), "").add("/images");
+
         if (!ServletFileUpload.isMultipartContent(request)) {//是否文件表单
             generator.writeStartObject();
             generator.writeStringField("status", "fail");
@@ -103,6 +123,8 @@ public class UploadServlet extends HttpServlet {
             // 上传文件的最大阀值64*1024kb=64mb
             // upload.setSizeMax(64 * 1024 * 1024);
             boolean random = false;
+            String fileName = "";
+            StringJoiner urlPath = new StringJoiner("/", request.getScheme() + "://" + request.getServerName() + "/", "");
             try {
                 List<FileItem> items = upload.parseRequest(request);
                 for (FileItem item : items) {
@@ -113,26 +135,27 @@ public class UploadServlet extends HttpServlet {
                         String filepath = UploadServlet.class.getResource("/").toExternalForm();
                         String[] sss = filepath.split("/");
                         StringJoiner joiner = new StringJoiner("/", "", "/");
-                        for (int i = 0, j = sss.length - 1; i < j; i++) {
+                        for (int i = 0, j = sss.length - 1; i < j; i++) {//移除最后一个目录，通常是classes
                             joiner.add(sss[i]);
                         }
-                        joiner.add("upload");
-                        String fileName = item.getName();
-                        String folder = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                        relativePath.add(folder);
-                        final StringJoiner path = new StringJoiner("/", joiner.toString(), "")
-                                .add(folder);
-                        if (random) {
-                            String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf("."));
-                            String randomName = UUID.randomUUID() + extension;
-                            relativePath.add(randomName);
-                            path.add(randomName);
-                        } else {
-                            relativePath.add(fileName);
-                            path.add(fileName);
+                        final StringJoiner path = new StringJoiner("/", joiner.toString(), "");
+                        path.add(UPLOAD_DIRECTORY);
+                        if (true) {
+                            String folder = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                            urlPath.add(folder);
+                            path.add(folder);
                         }
-                        //System.out.println(path);
-                        LOGGER.info(path.toString());
+                        //上传文件的名字
+                        fileName = item.getName();
+                        if (random) {//随机重命名
+                            String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf("."));
+                            fileName = UUID.randomUUID() + extension;
+                        }
+                        urlPath.add(fileName);
+                        path.add(fileName);
+                        System.out.println(path);
+                        System.out.println(urlPath);
+
                         File uploadedFile = new File(new URI(path.toString()));
                         File fileParent = uploadedFile.getParentFile();
                         if (!fileParent.exists()) {
@@ -151,7 +174,8 @@ public class UploadServlet extends HttpServlet {
             }
             generator.writeStartObject();
             generator.writeStringField("status", "success");
-            generator.writeStringField("url", relativePath.toString());
+            generator.writeStringField("fileName", fileName);
+            generator.writeStringField("url", urlPath.toString());
             generator.writeEndObject();
         }
         generator.flush();

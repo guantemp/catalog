@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,7 @@
 
 package catalog.hoprxi;
 
-import catalog.hoprxi.core.webapp.BrandServlet;
-import catalog.hoprxi.core.webapp.CategoryServlet;
-import catalog.hoprxi.core.webapp.ItemServlet;
-import catalog.hoprxi.core.webapp.UnitServlet;
+import catalog.hoprxi.core.webapp.*;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.handlers.PathHandler;
@@ -50,7 +47,11 @@ public class App {
                         Servlets.servlet("itemServlet", ItemServlet.class)
                                 .addInitParam("database", "arangodb")
                                 .addInitParam("databaseName", "catalog")
-                                .addMapping("/v1/items/*"));
+                                .addMapping("/v1/items/*"),
+                        Servlets.servlet("uploadServlet", UploadServlet.class)
+                                //.addInitParam("UPLOAD_DIRECTORY", "temp")
+                                //.addInitParam("databaseName", "catalog")
+                                .addMapping("/v1/upload"));
         DeploymentManager manager = container.addDeployment(deploymentInfo);
         manager.deploy();
         PathHandler path = Handlers.path(Handlers.redirect("/core"))
@@ -61,5 +62,6 @@ public class App {
                 .setHandler(path)
                 .build();
         server.start();
+        System.out.println("start");
     }
 }
