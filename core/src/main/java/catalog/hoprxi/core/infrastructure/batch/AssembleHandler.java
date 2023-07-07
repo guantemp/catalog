@@ -44,7 +44,7 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
     static {
         executeDisruptor = new Disruptor<>(
                 ExecuteSqlEvent::new,
-                64,
+                128,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
                 new YieldingWaitStrategy()
@@ -75,6 +75,5 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
             ringBuffer.publishEvent(TRANSLATOR, "LAST_ROW");
             executeDisruptor.shutdown();
         }
-
     }
 }

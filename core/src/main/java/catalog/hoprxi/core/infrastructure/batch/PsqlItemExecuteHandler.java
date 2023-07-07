@@ -39,7 +39,8 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
     public PsqlItemExecuteHandler() throws SQLException {
         connection = PsqlUtil.getConnection();
         //System.out.println("connection.getAutoCommit()" + connection.getAutoCommit());
-        connection.setAutoCommit(false);
+        if (connection.getAutoCommit())
+            connection.setAutoCommit(false);
         statement = connection.createStatement();
     }
 
@@ -47,25 +48,26 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
     public void onEvent(ExecuteSqlEvent executeSqlEvent, long l, boolean b) throws Exception {
         //System.out.println("sql:" + executeSqlEvent.sql+":"+b);
         if ("LAST_ROW".equals(executeSqlEvent.sql)) {
-            System.out.println("LAST_ROW:::" + sql.toString());
+            //System.out.println("LAST_ROW:::" + sql.toString());
             statement.addBatch(sql.toString());
             statement.executeBatch();
             connection.commit();
+            statement.close();
             connection.setAutoCommit(true);
             connection.close();
         } else {
             sql.add(executeSqlEvent.sql);
             int i = number.incrementAndGet();
-            if (i % 128 == 0) {
+            if (i % 256 == 0) {
                 statement.addBatch(sql.toString());
                 sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,latest_receipt_price,retail_price,member_price,vip_price) values ", "");
             }
-            if (i % 2048 == 0) {
+            if (i % 1024 == 0) {
                 statement.executeBatch();
                 connection.commit();
                 statement.clearBatch();
-                System.out.println(i);
-                System.out.println(executeSqlEvent.count);
+                //System.out.println(i);
+                //System.out.println(executeSqlEvent.count);
             }
         }
     }

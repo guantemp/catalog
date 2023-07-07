@@ -66,7 +66,6 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
         if (itemViews.length != 0) {
             itemImportEvent.verify = Verify.BARCODE_EXIST;
             return;
-            //publish Already exists
         }
         itemImportEvent.map.put(Corresponding.BARCODE, "'" + bar.toPlanString() + "'");
         //System.out.println("barcode:"+itemImportEvent.map.get(Corresponding.BARCODE));

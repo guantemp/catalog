@@ -45,7 +45,7 @@ public class PsqlItemImportWithDisruptor {
             correspondings = DEFAULT_CORR;
         Disruptor<ItemImportEvent> disruptor = new Disruptor<>(
                 ItemImportEvent::new,
-                32,
+                256,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
                 new YieldingWaitStrategy()
