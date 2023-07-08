@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
     private static AtomicInteger number = new AtomicInteger(0);
-    StringJoiner sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,latest_receipt_price,retail_price,member_price,vip_price) values ", "");
+    StringJoiner sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,latest_receipt_price,retail_price,member_price,vip_price,show) values ", "");
     private Connection connection = null;
     private Statement statement = null;
 
@@ -60,7 +60,7 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
             int i = number.incrementAndGet();
             if (i % 128 == 0) {
                 statement.addBatch(sql.toString());
-                sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,latest_receipt_price,retail_price,member_price,vip_price) values ", "");
+                sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,latest_receipt_price,retail_price,member_price,vip_price,show) values ", "");
             }
             if (i % 1024 == 0) {
                 statement.executeBatch();

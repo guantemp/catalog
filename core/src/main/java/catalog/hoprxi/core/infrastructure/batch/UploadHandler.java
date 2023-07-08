@@ -55,8 +55,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 0.0.1 builder 2023-07-08
  */
 public class UploadHandler implements EventHandler<ItemImportEvent> {
-    //https://hoprxi.tooo.top/catalog/core/v1/upload
-    private static final String UPLOAD_URL = "http://127.0.0.1:8080/catalog/core/v1/upload";
+    private static final String UPLOAD_URL = "https://hoprxi.tooo.top/catalog/core/v1/upload";
     private static CloseableHttpClient httpClient;
 
     static {
@@ -94,22 +93,29 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
             String barcode = map.get(Corresponding.BARCODE);
             barcode = barcode.substring(1, barcode.length() - 1);
             File file = new File("F:\\developer\\catalog\\barcode\\" + barcode + ".jpg");
-            System.out.println(barcode + ":" + file.getCanonicalPath() + ":" + file.exists());
-            if (file.exists())
+            //System.out.println(barcode + ":" + file.getCanonicalPath() + ":" + file.exists());
+            if (file.exists()) {
                 number.incrementAndGet();
+                String show = uplaod(file);
+                map.put(Corresponding.SHOW, show);
+            }
         }
         if (map.get(Corresponding.LAST_ROW) != null) {
+            try {
+                httpClient.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             System.out.println("Exists:" + number);
         }
-
-   /*
-        File file = new File("F:\\developer\\catalog\\barcode\\077330012416.jpg");
+/*
+        File file = new File("F:\\developer\\catalog\\barcode\\6934665091254.jpg");
         uplaod(file);
-          */
 
+ */
     }
 
-    private void uplaod(File file) {
+    private String uplaod(File file) {
         try {
             // 创建httpget.
             HttpPost httpPost = new HttpPost(UPLOAD_URL);
@@ -138,16 +144,9 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
                 //EntityUtils.consume(entity);
                 return processUploadResult(entity.getContent());
             });
-            System.out.println(show);
+            return show;
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } finally {
-            // 关闭连接,释放资源
-            try {
-                httpClient.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
