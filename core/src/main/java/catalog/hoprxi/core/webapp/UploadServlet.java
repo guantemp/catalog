@@ -52,13 +52,13 @@ import java.util.UUID;
         @WebInitParam(name = "MAX_FILE_SIZE", value = "67108864")})
 public class UploadServlet extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(UploadServlet.class);
+    private static final String[] IMAGES_SUFFIX = {".jpg", ".png"};
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
-    private static final String UPLOAD_DIRECTORY = "upload";
+    private static final String UPLOAD_DIRECTORY = "upload/images";
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-
         System.out.println(config.getInitParameter("MEMORY_THRESHOLD"));
     }
 
@@ -124,11 +124,13 @@ public class UploadServlet extends HttpServlet {
             // upload.setSizeMax(64 * 1024 * 1024);
             boolean random = false;
             String fileName = "";
-            StringJoiner urlPath = new StringJoiner("/", request.getScheme() + "://" + request.getServerName() + "/", "");
+            //必须要在nginx的location中设置 proxy_set_header X-Forwarded-Proto  $scheme;或proxy_set_header X-Forwarded-Scheme  $scheme;
+            StringJoiner urlPath = new StringJoiner("/", request.getHeader("x-forwarded-proto") + "://" + request.getServerName() + "/images/", "");
             try {
                 List<FileItem> items = upload.parseRequest(request);
                 for (FileItem item : items) {
                     if (item.isFormField()) {//判断是否是文件流
+                        //System.out.println(item.getFieldName());
                         if ("randomFileName".equals(item.getFieldName()) && "on".equals(item.getString("UTF-8")))
                             random = true;
                     } else {
@@ -140,21 +142,22 @@ public class UploadServlet extends HttpServlet {
                         }
                         final StringJoiner path = new StringJoiner("/", joiner.toString(), "");
                         path.add(UPLOAD_DIRECTORY);
-                        if (true) {
+                        if (false) {//是否按日期分类
                             String folder = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                             urlPath.add(folder);
                             path.add(folder);
                         }
                         //上传文件的名字
                         fileName = item.getName();
-                        if (random) {//随机重命名
-                            String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf("."));
+                        //根据后缀名，分类到images或video中
+                        String extension = fileName.lastIndexOf(".") == -1 ? "" : fileName.substring(fileName.lastIndexOf("."));
+                        if (random) {//是否随机重命名
                             fileName = UUID.randomUUID() + extension;
                         }
                         urlPath.add(fileName);
                         path.add(fileName);
-                        System.out.println(path);
-                        System.out.println(urlPath);
+                        //System.out.println(path);
+                        //System.out.println(urlPath);
 
                         File uploadedFile = new File(new URI(path.toString()));
                         File fileParent = uploadedFile.getParentFile();
@@ -180,5 +183,14 @@ public class UploadServlet extends HttpServlet {
         }
         generator.flush();
         generator.close();
+    }
+
+    private boolean contain(String[] ss, String s) {
+        for (String t : ss) {
+            if (t.equals(s)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

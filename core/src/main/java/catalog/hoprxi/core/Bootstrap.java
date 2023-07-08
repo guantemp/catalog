@@ -52,7 +52,7 @@ public class Bootstrap {
                                 .addInitParam("databaseName", "catalog")
                                 .addMapping("/v1/items/*"),
                         Servlets.servlet("uploadServlet", UploadServlet.class)
-                                //.addInitParam("database", "arangodb")
+                                //.addInitParam("UPLOAD_DIRECTORY", "temp")
                                 //.addInitParam("databaseName", "catalog")
                                 .addMapping("/v1/upload"));
         DeploymentManager manager = container.addDeployment(deploymentInfo);

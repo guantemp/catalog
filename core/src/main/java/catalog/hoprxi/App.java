@@ -62,6 +62,5 @@ public class App {
                 .setHandler(path)
                 .build();
         server.start();
-        System.out.println("start");
     }
 }

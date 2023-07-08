@@ -58,7 +58,7 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
         } else {
             sql.add(executeSqlEvent.sql);
             int i = number.incrementAndGet();
-            if (i % 256 == 0) {
+            if (i % 128 == 0) {
                 statement.addBatch(sql.toString());
                 sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,latest_receipt_price,retail_price,member_price,vip_price) values ", "");
             }
