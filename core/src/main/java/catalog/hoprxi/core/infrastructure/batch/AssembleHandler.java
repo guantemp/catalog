@@ -48,7 +48,7 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
     static {
         executeDisruptor = new Disruptor<>(
                 ExecuteSqlEvent::new,
-                256,
+                128,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
                 new YieldingWaitStrategy()

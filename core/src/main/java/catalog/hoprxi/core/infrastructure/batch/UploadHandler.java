@@ -111,13 +111,12 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
 /*
         File file = new File("F:\\developer\\catalog\\barcode\\6934665091254.jpg");
         uplaod(file);
-
  */
     }
 
-    private String uplaod(File file) {
+    private String uplaod(File file) throws IOException {
         try {
-            // 创建httpget.
+            // 创建httpPost.
             HttpPost httpPost = new HttpPost(UPLOAD_URL);
 
             //setConnectTimeout：设置连接超时时间，单位毫秒。setConnectionRequestTimeout：设置从connect Manager获取Connection 超时时间，单位毫秒。这个属性是新加的属性，因为目前版本是可以共享连接池的。setSocketTimeout：请求获取数据的超时时间，单位毫秒。 如果访问一个接口，多少时间内无法返回数据，就直接放弃此次调用。
@@ -146,6 +145,7 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
             });
             return show;
         } catch (IOException e) {
+            System.out.println(file.getCanonicalPath());
             throw new RuntimeException(e);
         }
     }

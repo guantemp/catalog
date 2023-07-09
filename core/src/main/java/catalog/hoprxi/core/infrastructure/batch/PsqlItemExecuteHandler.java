@@ -66,8 +66,8 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
                 statement.executeBatch();
                 connection.commit();
                 statement.clearBatch();
-                //System.out.println(i);
-                //System.out.println(executeSqlEvent.count);
+                System.out.println(i);
+                System.out.println(executeSqlEvent.count);
             }
         }
     }
