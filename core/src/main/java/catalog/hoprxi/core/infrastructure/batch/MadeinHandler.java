@@ -166,6 +166,8 @@ public class MadeinHandler implements EventHandler<ItemImportEvent> {
             return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Black\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"name\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'";
         if (level != null && level.equals("COUNTRY"))
             return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\",\"code\":" + parentCode + ",\"country\":\"" + parentName + "\"}'";
+        if (level != null && level.equals("PROVINCE"))
+            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"city\":\"" + name + "\"}'";
         return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"city\":\"" + name + "\"}'";
     }
 }

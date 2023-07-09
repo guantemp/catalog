@@ -30,7 +30,9 @@ import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
 import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
+import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.config.Registry;
 import org.apache.hc.core5.http.config.RegistryBuilder;
 import org.apache.hc.core5.http.ssl.TLS;
@@ -42,6 +44,7 @@ import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -55,7 +58,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 0.0.1 builder 2023-07-08
  */
 public class UploadHandler implements EventHandler<ItemImportEvent> {
-    private static final String UPLOAD_URL = "https://hoprxi.tooo.top/catalog/core/v1/upload";
+    private static final String UPLOAD_URI = "https://hoprxi.tooo.top/catalog/core/v1/upload";
+    private final URI uri;
     private static CloseableHttpClient httpClient;
 
     static {
@@ -82,6 +86,15 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
 
         httpClient = httpClientBuilder.build();
     }
+
+    public UploadHandler() {
+        this.uri = URI.create(UPLOAD_URI);
+    }
+
+    public UploadHandler(URI uri) {
+        this.uri = uri;
+    }
+
 
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
     private AtomicInteger number = new AtomicInteger(0);
@@ -117,7 +130,7 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
     private String uplaod(File file) throws IOException {
         try {
             // 创建httpPost.
-            HttpPost httpPost = new HttpPost(UPLOAD_URL);
+            HttpPost httpPost = new HttpPost(uri);
 
             //setConnectTimeout：设置连接超时时间，单位毫秒。setConnectionRequestTimeout：设置从connect Manager获取Connection 超时时间，单位毫秒。这个属性是新加的属性，因为目前版本是可以共享连接池的。setSocketTimeout：请求获取数据的超时时间，单位毫秒。 如果访问一个接口，多少时间内无法返回数据，就直接放弃此次调用。
             //RequestConfig defaultRequestConfig = RequestConfig.custom().setConnectionRequestTimeout(5, TimeUnit.SECONDS).build();
@@ -125,25 +138,26 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
 
             MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
             multipartEntityBuilder.setCharset(StandardCharsets.UTF_8);
+            multipartEntityBuilder.addBinaryBody("file", file, ContentType.MULTIPART_FORM_DATA, file.getName());
 
             //ContentType type = ContentType.create("text/plain", StandardCharsets.UTF_8);
             //multipartEntityBuilder.addTextBody("randomFileName", "on", ContentType.TEXT_PLAIN);
 
-            multipartEntityBuilder.addBinaryBody("file", file);
-
             HttpEntity httpEntity = multipartEntityBuilder.build();
             httpPost.setEntity(httpEntity);
 
-            String show = httpClient.execute(httpPost, response -> {
+            return httpClient.execute(httpPost, response -> {
                 //System.out.println(response.getCode() + " " + response.getReasonPhrase() + " " + response.getVersion());
                 final HttpEntity entity = response.getEntity();
+                if (HttpStatus.SC_OK == response.getCode())
+                    return processUploadResult(entity.getContent());
+                else
+                    return null;
                 // do something useful with the response body
                 // and ensure it is fully consumed
-                //System.out.println(EntityUtils.toString(entity));
-                //EntityUtils.consume(entity);
-                return processUploadResult(entity.getContent());
+                // System.out.println(EntityUtils.toString(entity));
+                // EntityUtils.consume(entity);
             });
-            return show;
         } catch (IOException e) {
             System.out.println(file.getCanonicalPath());
             throw new RuntimeException(e);

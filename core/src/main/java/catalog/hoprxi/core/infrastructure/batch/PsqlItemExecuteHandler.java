@@ -32,9 +32,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
     private static AtomicInteger number = new AtomicInteger(0);
-    StringJoiner sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,latest_receipt_price,retail_price,member_price,vip_price,show) values ", "");
-    private Connection connection = null;
-    private Statement statement = null;
+    private final Connection connection;
+    private final Statement statement;
+    private StringJoiner sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,latest_receipt_price,retail_price,member_price,vip_price,show) values ", "");
 
     public PsqlItemExecuteHandler() throws SQLException {
         connection = PsqlUtil.getConnection();
@@ -66,8 +66,8 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
                 statement.executeBatch();
                 connection.commit();
                 statement.clearBatch();
-                System.out.println(i);
-                System.out.println(executeSqlEvent.count);
+                //System.out.println(i);
+                //System.out.println(executeSqlEvent.count);
             }
         }
     }
