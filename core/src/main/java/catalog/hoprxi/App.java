@@ -24,7 +24,9 @@ import io.undertow.servlet.Servlets;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
+import org.javamoney.moneta.Money;
 
+import javax.money.Monetary;
 import javax.servlet.ServletException;
 
 /**
@@ -32,6 +34,8 @@ import javax.servlet.ServletException;
  */
 public class App {
     public static void main(String[] args) throws ServletException {
+        Money money = Money.of(12, Monetary.getCurrency("USD"));
+        //System.out.println(money);
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentInfo deploymentInfo = Servlets.deployment()
                 .setClassLoader(App.class.getClassLoader())

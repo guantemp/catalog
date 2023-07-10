@@ -20,6 +20,7 @@ import catalog.hoprxi.core.application.query.ItemQueryService;
 import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.ItemRepository;
 import catalog.hoprxi.core.domain.model.price.Price;
+import catalog.hoprxi.core.domain.model.price.Unit;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBItemRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlItemRepository;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBItemQueryService;
@@ -27,6 +28,7 @@ import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQueryService;
 import com.fasterxml.jackson.core.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import org.javamoney.moneta.Money;
 import org.javamoney.moneta.format.CurrencyStyle;
 import salt.hoprxi.utils.NumberHelper;
 
@@ -52,7 +54,7 @@ import java.util.regex.Pattern;
 @WebServlet(urlPatterns = {"v1/items/*"}, name = "items", asyncSupported = true, initParams = {
         @WebInitParam(name = "database", value = "arangodb"), @WebInitParam(name = "databaseName", value = "catalog")})
 public class ItemServlet extends HttpServlet {
-    private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.CHINA)
+    private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
             .build());
     private static final int OFFSET = 0;
@@ -212,9 +214,13 @@ public class ItemServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        JsonParser parser = jasonFactory.createParser(req.getInputStream());
+
+    }
+
+    private ItemView red(JsonParser parser) throws IOException {
         String name = null, alias = null, barcode = null, brandId = null, categoryId = null, spec = null, grade = null, madeIn = null;
         Number latestReceiptPrice = null, retailPrice = null, memberPrice = null, vipPrice = null;
-        JsonParser parser = jasonFactory.createParser(req.getInputStream());
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();
             if (JsonToken.FIELD_NAME.equals(jsonToken)) {
@@ -248,6 +254,7 @@ public class ItemServlet extends HttpServlet {
                     case "latestReceiptPrice":
                         break;
                     case "retailPrice":
+                        System.out.println(readPrice(parser));
                         break;
                     case "memberPrice":
                         break;
@@ -255,15 +262,33 @@ public class ItemServlet extends HttpServlet {
                         break;
                     case "unit":
                         break;
-
                 }
             }
         }
-        validate(name, alias);
+        return null;
     }
 
-    private ItemView convert() {
-        return null;
+    private Price readPrice(JsonParser parser) throws IOException {
+        String currency = null, unit = null;
+        Number number = null;
+        while (parser.nextToken() != JsonToken.END_OBJECT) {
+            if (JsonToken.FIELD_NAME == parser.currentToken()) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "currency":
+                        currency = parser.getValueAsString();
+                        break;
+                    case "unit":
+                        unit = parser.getValueAsString();
+                        break;
+                    case "number":
+                        number = parser.getNumberValue();
+                        break;
+                }
+            }
+        }
+        return new Price(Money.of(number, currency), Unit.of(unit));
     }
 
     private void validate(String name, String alias) {

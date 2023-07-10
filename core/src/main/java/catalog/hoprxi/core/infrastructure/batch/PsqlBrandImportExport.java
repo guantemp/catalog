@@ -123,4 +123,9 @@ public class PsqlBrandImportExport implements BrandImportExportService {
         //设置垂直对齐的样式为居中对齐;
         style.setVerticalAlignment(VerticalAlignment.CENTER);
     }
+
+    @Override
+    public void importBrandFrom(InputStream is) {
+
+    }
 }

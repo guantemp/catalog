@@ -53,6 +53,10 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2022-07-09
  */
 public class AppTest {
+    private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.US)
+            .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
+            .build());
+    private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
     @Test
     public void testConfig() {
@@ -96,7 +100,6 @@ public class AppTest {
                 .build());
         RetailPrice retailPrice = new RetailPrice(new Price(Money.of(10.00, currency), Unit.DAI));
 
-        JsonFactory jasonFactory = new JsonFactory();
         JsonGenerator generator = jasonFactory.createGenerator(System.out, JsonEncoding.UTF8).useDefaultPrettyPrinter();
         generator.writeStartObject();
         generator.writeNumberField("offset", 0);
@@ -155,8 +158,63 @@ public class AppTest {
         System.out.println(nameConstructor.newInstance("中文变量", "3252", "dsgfd"));
 
         for (String s : "awr//er/qw/asfd".split("[^(//)]/")) {
-            System.out.println(s);
+            System.out.println("split:" + s);
         }
     }
 
+    @Test
+    void testPrice() throws IOException {
+        System.out.println("\njson测试:");
+        JsonParser parser = jasonFactory.createParser("{\n" +
+                "    \"name\": \"json.la\",\n" +
+                "    \"retailPrice\": {\n" +
+                "        \"unit\": \"盒\",\n" +
+                "        \"number\": 45.12355,\n" +
+                "        \"currency\": \"USD\"\n" +
+                "    },\n" +
+                "    \"alias\": \"sfsd\"\n" +
+                "}");
+        String name = null;
+        Price price = null;
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME == jsonToken) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "name":
+                        name = parser.getValueAsString();
+                        System.out.println(name);
+                        break;
+                    case "retailPrice":
+                        price = readPrice(parser);
+                        break;
+                }
+            }
+        }
+        System.out.println(MONETARY_AMOUNT_FORMAT.format(price.amount()));
+    }
+
+    private Price readPrice(JsonParser parser) throws IOException {
+        String currency = null, unit = null;
+        Number number = null;
+        while (parser.nextToken() != JsonToken.END_OBJECT) {
+            if (JsonToken.FIELD_NAME == parser.currentToken()) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "currency":
+                        currency = parser.getValueAsString();
+                        break;
+                    case "unit":
+                        unit = parser.getValueAsString();
+                        break;
+                    case "number":
+                        number = parser.getNumberValue();
+                        break;
+                }
+            }
+        }
+        return new Price(Money.of(number, currency), Unit.of(unit));
+    }
 }
