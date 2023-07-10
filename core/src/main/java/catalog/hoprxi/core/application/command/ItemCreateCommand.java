@@ -14,21 +14,12 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.batch;
-
-import catalog.hoprxi.core.application.batch.ItemCorrespondence;
-import catalog.hoprxi.core.domain.model.Grade;
-import com.lmax.disruptor.EventHandler;
+package catalog.hoprxi.core.application.command;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2023-05-08
+ * @version 0.0.1 builder 2023-07-10
  */
-public class GrandHandler implements EventHandler<ItemImportEvent> {
-    @Override
-    public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        Grade g = Grade.of(itemImportEvent.map.get(ItemCorrespondence.GRADE));
-        itemImportEvent.map.put(ItemCorrespondence.GRADE, "'" + g.name() + "'");
-    }
+public class ItemCreateCommand implements Command {
 }

@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
+import catalog.hoprxi.core.application.batch.ItemCorrespondence;
 import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
@@ -52,9 +53,9 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        String category = itemImportEvent.map.get(Corresponding.CATEGORY);
+        String category = itemImportEvent.map.get(ItemCorrespondence.CATEGORY);
         if (category == null || category.isEmpty() || category.equalsIgnoreCase("undefined") || category.equalsIgnoreCase(Label.CATEGORY_UNDEFINED)) {
-            itemImportEvent.map.put(Corresponding.CATEGORY, Category.UNDEFINED.id());
+            itemImportEvent.map.put(ItemCorrespondence.CATEGORY, Category.UNDEFINED.id());
             return;
         }
         if (ID_PATTERN.matcher(category).matches()) {
@@ -63,7 +64,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
         String[] ss = category.split("/");
         CategoryView[] categoryViews = CATEGORY_QUERY.queryByName("^" + ss[ss.length - 1] + "$");
         if (categoryViews.length >= 1) {
-            itemImportEvent.map.put(Corresponding.CATEGORY, categoryViews[0].getId());
+            itemImportEvent.map.put(ItemCorrespondence.CATEGORY, categoryViews[0].getId());
         } else {
             String parentId = CORE_PARENT_ID;
             Category temp;
@@ -79,7 +80,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
                 }
             }
             //System.out.println("正确的类别id：" + parentId);
-            itemImportEvent.map.put(Corresponding.CATEGORY, parentId);
+            itemImportEvent.map.put(ItemCorrespondence.CATEGORY, parentId);
         }
         //System.out.println("category:" +itemImportEvent.map.get(Corresponding.CATEGORY));
     }

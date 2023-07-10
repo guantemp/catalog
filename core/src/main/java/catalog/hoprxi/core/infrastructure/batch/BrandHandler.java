@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
+import catalog.hoprxi.core.application.batch.ItemCorrespondence;
 import catalog.hoprxi.core.application.query.BrandQueryService;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.Brand;
@@ -39,9 +40,9 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        String brand = itemImportEvent.map.get(Corresponding.BRAND);
+        String brand = itemImportEvent.map.get(ItemCorrespondence.BRAND);
         if (brand == null || brand.isEmpty() || brand.equalsIgnoreCase("undefined") || brand.equalsIgnoreCase(Label.BRAND_UNDEFINED)) {
-            itemImportEvent.map.put(Corresponding.BRAND, Brand.UNDEFINED.id());
+            itemImportEvent.map.put(ItemCorrespondence.BRAND, Brand.UNDEFINED.id());
             return;
         }
         if (ID_PATTERN.matcher(brand).matches()) {
@@ -54,11 +55,11 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
             query = query + "|^" + ss[1] + "$";
         Brand[] brands = BRAND_QUERY.queryByName(query);
         if (brands.length != 0) {
-            itemImportEvent.map.put(Corresponding.BRAND, brands[0].id());
+            itemImportEvent.map.put(ItemCorrespondence.BRAND, brands[0].id());
         } else {
             Brand temp = ss.length > 1 ? new Brand(BRAND_REPO.nextIdentity(), new Name(ss[0], ss[1])) : new Brand(BRAND_REPO.nextIdentity(), ss[0]);
             BRAND_REPO.save(temp);
-            itemImportEvent.map.put(Corresponding.BRAND, temp.id());
+            itemImportEvent.map.put(ItemCorrespondence.BRAND, temp.id());
         }
         //System.out.println("brand:" +itemImportEvent.map.get(Corresponding.BRAND));
     }

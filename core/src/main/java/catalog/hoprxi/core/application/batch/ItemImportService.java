@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.application.batch;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /***
@@ -25,5 +26,5 @@ import java.io.InputStream;
  */
 public interface ItemImportService {
 
-    void importItemCsvFrom(InputStream is);
+    void importItemFromXsl(InputStream is, ItemCorrespondence[] itemCorrespondences) throws IOException;
 }

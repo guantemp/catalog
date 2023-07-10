@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
+import catalog.hoprxi.core.application.batch.ItemCorrespondence;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -34,9 +35,9 @@ public class PsqlItemImportWithDisruptorTest {
     public void testImportItemXlsFrom() throws IOException, SQLException {
         File file = new File("F:/developer/catalog/jc.xls");
         FileInputStream fis = new FileInputStream(file);
-        Corresponding[] correspondings = new Corresponding[]{Corresponding.NAME, Corresponding.BARCODE,
-                Corresponding.SPEC, Corresponding.CATEGORY, Corresponding.BRAND, Corresponding.UNIT, Corresponding.MADE_IN, Corresponding.LATEST_RECEIPT_PRICE, Corresponding.RETAIL_PRICE};
+        ItemCorrespondence[] itemCorrespondences = new ItemCorrespondence[]{ItemCorrespondence.NAME, ItemCorrespondence.BARCODE,
+                ItemCorrespondence.SPEC, ItemCorrespondence.CATEGORY, ItemCorrespondence.BRAND, ItemCorrespondence.UNIT, ItemCorrespondence.MADE_IN, ItemCorrespondence.LATEST_RECEIPT_PRICE, ItemCorrespondence.RETAIL_PRICE};
         PsqlItemImportWithDisruptor itemImport = new PsqlItemImportWithDisruptor();
-        itemImport.importItemXlsFrom(fis, correspondings);
+        itemImport.importItemFromXsl(fis, itemCorrespondences);
     }
 }

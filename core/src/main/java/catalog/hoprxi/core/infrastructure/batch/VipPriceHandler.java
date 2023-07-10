@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
+import catalog.hoprxi.core.application.batch.ItemCorrespondence;
 import catalog.hoprxi.core.domain.model.price.Unit;
 import com.lmax.disruptor.EventHandler;
 
@@ -29,13 +30,13 @@ import java.util.StringJoiner;
 public class VipPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        Unit systemUnit = Unit.of(itemImportEvent.map.get(Corresponding.UNIT));
+        Unit systemUnit = Unit.of(itemImportEvent.map.get(ItemCorrespondence.UNIT));
         StringJoiner joiner = new StringJoiner(",", "'{\"name\":\"VIP\",\"price\": ", "}'");
         StringJoiner subJoiner = new StringJoiner(",", "{", "}");
-        subJoiner.add("\"number\":" + (itemImportEvent.map.get(Corresponding.VIP_PRICE) == null ? "0" : itemImportEvent.map.get(Corresponding.VIP_PRICE)));
+        subJoiner.add("\"number\":" + (itemImportEvent.map.get(ItemCorrespondence.VIP_PRICE) == null ? "0" : itemImportEvent.map.get(ItemCorrespondence.VIP_PRICE)));
         subJoiner.add("\"currencyCode\":\"CNY\"");
         subJoiner.add("\"unit\":\"" + systemUnit.name() + "\"");
         joiner.add(subJoiner.toString());
-        itemImportEvent.map.put(Corresponding.VIP_PRICE, joiner.toString());
+        itemImportEvent.map.put(ItemCorrespondence.VIP_PRICE, joiner.toString());
     }
 }

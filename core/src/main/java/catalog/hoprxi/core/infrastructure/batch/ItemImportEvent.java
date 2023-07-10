@@ -16,6 +16,8 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
+import catalog.hoprxi.core.application.batch.ItemCorrespondence;
+
 import java.util.EnumMap;
 
 /***
@@ -24,11 +26,11 @@ import java.util.EnumMap;
  * @version 0.0.1 builder 2023-05-08
  */
 public class ItemImportEvent {
-    EnumMap<Corresponding, String> map;
+    EnumMap<ItemCorrespondence, String> map;
     Verify verify = Verify.OK;
     int estimatedQuantity = 0;
 
-    public void setMap(EnumMap<Corresponding, String> map) {
+    public void setMap(EnumMap<ItemCorrespondence, String> map) {
         this.map = map;
     }
 }

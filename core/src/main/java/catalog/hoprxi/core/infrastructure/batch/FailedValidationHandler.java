@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
+import catalog.hoprxi.core.application.batch.ItemCorrespondence;
 import com.lmax.disruptor.EventHandler;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,10 +36,10 @@ public class FailedValidationHandler implements EventHandler<ItemImportEvent> {
             case BARCODE_REPEAT:
             case BARCODE_CHECK_SUM_ERROR:
                 number.incrementAndGet();
-                System.out.println(itemImportEvent.verify + ":" + itemImportEvent.map.get(Corresponding.BARCODE));
+                System.out.println(itemImportEvent.verify + ":" + itemImportEvent.map.get(ItemCorrespondence.BARCODE));
                 break;
         }
-        if (itemImportEvent.map.get(Corresponding.LAST_ROW) != null) {
+        if (itemImportEvent.map.get(ItemCorrespondence.LAST_ROW) != null) {
             System.out.println("Fail:" + number);
         }
     }

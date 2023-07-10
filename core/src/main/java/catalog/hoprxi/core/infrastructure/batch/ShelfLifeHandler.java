@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
+import catalog.hoprxi.core.application.batch.ItemCorrespondence;
 import com.lmax.disruptor.EventHandler;
 
 /***
@@ -26,6 +27,6 @@ import com.lmax.disruptor.EventHandler;
 public class ShelfLifeHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        itemImportEvent.map.put(Corresponding.SHELF_LIFE, "0");
+        itemImportEvent.map.put(ItemCorrespondence.SHELF_LIFE, "0");
     }
 }

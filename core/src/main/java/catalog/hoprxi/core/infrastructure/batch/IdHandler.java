@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
+import catalog.hoprxi.core.application.batch.ItemCorrespondence;
 import com.lmax.disruptor.EventHandler;
 import salt.hoprxi.id.LongId;
 
@@ -31,10 +32,10 @@ public class IdHandler implements EventHandler<ItemImportEvent> {
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
-        String id = itemImportEvent.map.get(Corresponding.ID);
+        String id = itemImportEvent.map.get(ItemCorrespondence.ID);
         if (id == null || id.isEmpty() || !ID_PATTERN.matcher(id).matches()) {
             id = String.valueOf(LongId.generate());
         }
-        itemImportEvent.map.put(Corresponding.ID, id);
+        itemImportEvent.map.put(ItemCorrespondence.ID, id);
     }
 }

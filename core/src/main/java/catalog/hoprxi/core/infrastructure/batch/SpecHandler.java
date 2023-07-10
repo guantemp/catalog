@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
+import catalog.hoprxi.core.application.batch.ItemCorrespondence;
 import com.lmax.disruptor.EventHandler;
 
 /***
@@ -26,9 +27,9 @@ import com.lmax.disruptor.EventHandler;
 public class SpecHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        String spec = itemImportEvent.map.get(Corresponding.SPEC);
+        String spec = itemImportEvent.map.get(ItemCorrespondence.SPEC);
         if (spec == null)
             spec = "";
-        itemImportEvent.map.put(Corresponding.SPEC, "'" + spec + "'");
+        itemImportEvent.map.put(ItemCorrespondence.SPEC, "'" + spec + "'");
     }
 }

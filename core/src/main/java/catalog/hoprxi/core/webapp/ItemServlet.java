@@ -34,6 +34,7 @@ import javax.money.format.AmountFormatQueryBuilder;
 import javax.money.format.MonetaryAmountFormat;
 import javax.money.format.MonetaryFormats;
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebInitParam;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -62,7 +63,8 @@ public class ItemServlet extends HttpServlet {
     private ItemRepository repository;
 
     @Override
-    public void init(ServletConfig config) {
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
         if (config != null) {
             String database = config.getInitParameter("database");
             System.out.println(database);
@@ -211,7 +213,7 @@ public class ItemServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String name = null, alias = null, barcode = null, brandId = null, categoryId = null, spec = null, grade = null, madeIn = null;
-        Number retailPrice = null, memberPrice = null, vipPrice = null;
+        Number latestReceiptPrice = null, retailPrice = null, memberPrice = null, vipPrice = null;
         JsonParser parser = jasonFactory.createParser(req.getInputStream());
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();
@@ -219,17 +221,49 @@ public class ItemServlet extends HttpServlet {
                 String fieldName = parser.getCurrentName();
                 parser.nextToken();
                 switch (fieldName) {
+                    case "barcode":
+                        barcode = parser.getValueAsString();
+                        break;
                     case "name":
                         name = parser.getValueAsString();
                         break;
                     case "alias":
                         alias = parser.getValueAsString();
                         break;
+                    case "spec":
+                        spec = parser.getValueAsString();
+                        break;
+                    case "categoryId":
+                        categoryId = parser.getValueAsString();
+                        break;
+                    case "brandId":
+                        brandId = parser.getValueAsString();
+                        break;
+                    case "grade":
+                        grade = parser.getValueAsString();
+                        break;
+                    case "madeIn":
+                        madeIn = parser.getValueAsString();
+                        break;
+                    case "latestReceiptPrice":
+                        break;
+                    case "retailPrice":
+                        break;
+                    case "memberPrice":
+                        break;
+                    case "vipPrice":
+                        break;
+                    case "unit":
+                        break;
 
                 }
             }
         }
         validate(name, alias);
+    }
+
+    private ItemView convert() {
+        return null;
     }
 
     private void validate(String name, String alias) {

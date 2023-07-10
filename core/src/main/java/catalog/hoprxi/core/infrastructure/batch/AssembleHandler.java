@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
+import catalog.hoprxi.core.application.batch.ItemCorrespondence;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventTranslatorOneArg;
 import com.lmax.disruptor.RingBuffer;
@@ -65,17 +66,17 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
-        EnumMap<Corresponding, String> map = itemImportEvent.map;
+        EnumMap<ItemCorrespondence, String> map = itemImportEvent.map;
         if (itemImportEvent.verify == Verify.OK) {
             StringJoiner joiner = new StringJoiner(",", "(", ")");
-            joiner.add(map.get(Corresponding.ID)).add(map.get(Corresponding.NAME)).add(map.get(Corresponding.BARCODE)).add(map.get(Corresponding.CATEGORY))
-                    .add(map.get(Corresponding.BRAND)).add(map.get(Corresponding.GRADE)).add(map.get(Corresponding.MADE_IN)).add(map.get(Corresponding.SPEC))
-                    .add(map.get(Corresponding.SHELF_LIFE)).add(map.get(Corresponding.LATEST_RECEIPT_PRICE)).add(map.get(Corresponding.RETAIL_PRICE))
-                    .add(map.get(Corresponding.MEMBER_PRICE)).add(map.get(Corresponding.VIP_PRICE)).add(map.get(Corresponding.SHOW));
+            joiner.add(map.get(ItemCorrespondence.ID)).add(map.get(ItemCorrespondence.NAME)).add(map.get(ItemCorrespondence.BARCODE)).add(map.get(ItemCorrespondence.CATEGORY))
+                    .add(map.get(ItemCorrespondence.BRAND)).add(map.get(ItemCorrespondence.GRADE)).add(map.get(ItemCorrespondence.MADE_IN)).add(map.get(ItemCorrespondence.SPEC))
+                    .add(map.get(ItemCorrespondence.SHELF_LIFE)).add(map.get(ItemCorrespondence.LATEST_RECEIPT_PRICE)).add(map.get(ItemCorrespondence.RETAIL_PRICE))
+                    .add(map.get(ItemCorrespondence.MEMBER_PRICE)).add(map.get(ItemCorrespondence.VIP_PRICE)).add(map.get(ItemCorrespondence.SHOW));
             //System.out.println(number.incrementAndGet());
             ringBuffer.publishEvent(TRANSLATOR, joiner.toString());
         }
-        if (map.get(Corresponding.LAST_ROW) != null) {//最后一行
+        if (map.get(ItemCorrespondence.LAST_ROW) != null) {//最后一行
             ringBuffer.publishEvent(TRANSLATOR, "LAST_ROW");
             executeDisruptor.shutdown();
         }

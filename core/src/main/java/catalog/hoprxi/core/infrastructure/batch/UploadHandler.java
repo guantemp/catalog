@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
+import catalog.hoprxi.core.application.batch.ItemCorrespondence;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -101,19 +102,19 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        EnumMap<Corresponding, String> map = itemImportEvent.map;
+        EnumMap<ItemCorrespondence, String> map = itemImportEvent.map;
         if (itemImportEvent.verify == Verify.OK) {
-            String barcode = map.get(Corresponding.BARCODE);
+            String barcode = map.get(ItemCorrespondence.BARCODE);
             barcode = barcode.substring(1, barcode.length() - 1);
             File file = new File("F:\\developer\\catalog\\barcode\\" + barcode + ".jpg");
             //System.out.println(barcode + ":" + file.getCanonicalPath() + ":" + file.exists());
             if (file.exists()) {
                 number.incrementAndGet();
                 String show = uplaod(file);
-                map.put(Corresponding.SHOW, show);
+                map.put(ItemCorrespondence.SHOW, show);
             }
         }
-        if (map.get(Corresponding.LAST_ROW) != null) {
+        if (map.get(ItemCorrespondence.LAST_ROW) != null) {
             try {
                 httpClient.close();
             } catch (IOException e) {

@@ -14,13 +14,13 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.batch;
+package catalog.hoprxi.core.application.batch;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2023-05-04
  */
-public enum Corresponding {
+public enum ItemCorrespondence {
     CHECK, ID, NAME, ALIAS, BARCODE, SPEC, GRADE, CATEGORY, BRAND, SHELF_LIFE, MADE_IN, UNIT, LATEST_RECEIPT_PRICE, RETAIL_PRICE, MEMBER_PRICE, VIP_PRICE, SHOW, IGNORE, LAST_ROW;
 }

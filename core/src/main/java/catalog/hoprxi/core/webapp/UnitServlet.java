@@ -22,7 +22,6 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -34,7 +33,7 @@ import java.io.IOException;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-09-09
  */
-@WebServlet(urlPatterns = {"v1/units"}, name = "unit")
+@WebServlet(urlPatterns = {"v1/units"}, name = "units")
 public class UnitServlet extends HttpServlet {
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
@@ -52,10 +51,5 @@ public class UnitServlet extends HttpServlet {
         generator.writeEndArray();
         generator.flush();
         generator.close();
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPost(req, resp);
     }
 }

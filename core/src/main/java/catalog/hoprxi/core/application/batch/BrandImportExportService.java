@@ -16,10 +16,13 @@
 
 package catalog.hoprxi.core.application.batch;
 
+import java.io.InputStream;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2023-01-07
  */
 public interface BrandImportExportService {
+    void importBrandFrom(InputStream is);
 }

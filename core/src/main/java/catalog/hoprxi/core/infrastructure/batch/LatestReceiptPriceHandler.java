@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
+import catalog.hoprxi.core.application.batch.ItemCorrespondence;
 import catalog.hoprxi.core.domain.model.price.Unit;
 import com.lmax.disruptor.EventHandler;
 
@@ -29,11 +30,11 @@ import java.util.StringJoiner;
 public class LatestReceiptPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        Unit systemUnit = Unit.of(itemImportEvent.map.get(Corresponding.UNIT));
+        Unit systemUnit = Unit.of(itemImportEvent.map.get(ItemCorrespondence.UNIT));
         StringJoiner joiner = new StringJoiner(",", "'{", "}'");
-        joiner.add("\"number\":" + itemImportEvent.map.get(Corresponding.LATEST_RECEIPT_PRICE));
+        joiner.add("\"number\":" + itemImportEvent.map.get(ItemCorrespondence.LATEST_RECEIPT_PRICE));
         joiner.add("\"currencyCode\":\"CNY\"");
         joiner.add("\"unit\":\"" + systemUnit.name() + "\"");
-        itemImportEvent.map.put(Corresponding.LATEST_RECEIPT_PRICE, joiner.toString());
+        itemImportEvent.map.put(ItemCorrespondence.LATEST_RECEIPT_PRICE, joiner.toString());
     }
 }
