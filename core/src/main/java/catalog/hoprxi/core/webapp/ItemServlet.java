@@ -19,8 +19,7 @@ package catalog.hoprxi.core.webapp;
 import catalog.hoprxi.core.application.query.ItemQueryService;
 import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.ItemRepository;
-import catalog.hoprxi.core.domain.model.price.Price;
-import catalog.hoprxi.core.domain.model.price.Unit;
+import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBItemRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlItemRepository;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBItemQueryService;
@@ -185,8 +184,15 @@ public class ItemServlet extends HttpServlet {
         generator.writeStringField("id", itemView.brandView().id());
         generator.writeStringField("name", itemView.brandView().name());
         generator.writeEndObject();
+
+        generator.writeObjectFieldStart("lastReceiptPrice");
+        Price price = itemView.lastReceiptPrice().price();
+        generator.writeStringField("amount", MONETARY_AMOUNT_FORMAT.format(price.amount()));
+        generator.writeStringField("unit", price.unit().toString());
+        generator.writeEndObject();
+
         generator.writeObjectFieldStart("retailPrice");
-        Price price = itemView.retailPrice().price();
+        price = itemView.retailPrice().price();
         generator.writeStringField("amount", MONETARY_AMOUNT_FORMAT.format(price.amount()));
         generator.writeStringField("unit", price.unit().toString());
         generator.writeEndObject();
@@ -220,7 +226,10 @@ public class ItemServlet extends HttpServlet {
 
     private ItemView red(JsonParser parser) throws IOException {
         String name = null, alias = null, barcode = null, brandId = null, categoryId = null, spec = null, grade = null, madeIn = null;
-        Number latestReceiptPrice = null, retailPrice = null, memberPrice = null, vipPrice = null;
+        LastReceiptPrice lastReceiptPrice;
+        RetailPrice retailPrice = null;
+        MemberPrice memberPrice = null;
+        VipPrice vipPrice = null;
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();
             if (JsonToken.FIELD_NAME.equals(jsonToken)) {
@@ -254,13 +263,14 @@ public class ItemServlet extends HttpServlet {
                     case "latestReceiptPrice":
                         break;
                     case "retailPrice":
-                        System.out.println(readPrice(parser));
+                        Price price = readPrice(parser);
+                        retailPrice = new RetailPrice(price);
                         break;
                     case "memberPrice":
+                        memberPrice = new MemberPrice(readPrice(parser));
                         break;
                     case "vipPrice":
-                        break;
-                    case "unit":
+                        vipPrice = new VipPrice(readPrice(parser));
                         break;
                 }
             }

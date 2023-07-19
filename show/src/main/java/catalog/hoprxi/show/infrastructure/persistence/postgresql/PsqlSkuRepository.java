@@ -14,12 +14,14 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.show.domain.model;
+package catalog.hoprxi.show.infrastructure.persistence.postgresql;
+
+import catalog.hoprxi.show.domain.model.SkuRepository;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2023-07-19
  */
-public class Spu {
+public class PsqlSkuRepository implements SkuRepository {
 }

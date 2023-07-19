@@ -21,5 +21,5 @@ package catalog.hoprxi.show.domain.model;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-07-19
  */
-public class Spu {
+public interface SkuRepository {
 }

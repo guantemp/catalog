@@ -129,7 +129,7 @@ public class ArangoDBItemRepository implements ItemRepository {
 
         String brandId = slice.get("brandId").getAsString();
         String categoryId = slice.get("categoryId").getAsString();
-        return new Item(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, categoryId, brandId);
+        return new Item(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.RMB_ZERO, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
     @Override

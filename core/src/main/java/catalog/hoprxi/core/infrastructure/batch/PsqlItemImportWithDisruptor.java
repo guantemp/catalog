@@ -54,7 +54,7 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
         );
 
         disruptor.handleEventsWith(new IdHandler(), new NameHandler(), new BarcodeHandler(), new CategoryHandler(), new BrandHandler(),
-                new GrandHandler(), new MadeinHandler(), new SpecHandler(), new ShelfLifeHandler(), new LatestReceiptPriceHandler(), new RetailPriceHandler(),
+                new GrandHandler(), new MadeinHandler(), new SpecHandler(), new ShelfLifeHandler(), new LastReceiptPriceHandler(), new RetailPriceHandler(),
                 new MemeberPriceHandler(), new VipPriceHandler()).then(new UploadHandler()).then(new AssembleHandler(), new FailedValidationHandler());
         disruptor.start();
 

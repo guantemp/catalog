@@ -16,11 +16,6 @@
 
 package catalog.hoprxi.show.domain.model;
 
-import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
-import catalog.hoprxi.core.domain.model.price.MemberPrice;
-import catalog.hoprxi.core.domain.model.price.RetailPrice;
-import catalog.hoprxi.core.domain.model.price.VipPrice;
-
 import java.net.URI;
 
 /***
@@ -29,12 +24,7 @@ import java.net.URI;
  * @version 0.0.1 builder 2023-03-01
  */
 public class Sku {
-    private String categoryId;
-    private String id;
     private Name name;
-    private MadeIn madeIn;
-    private RetailPrice retailPrice;
-    private MemberPrice memberPrice;
-    private VipPrice vipPrice;
+    private URI video;
     private URI[] images;
 }

@@ -21,10 +21,7 @@ import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
-import catalog.hoprxi.core.domain.model.price.MemberPrice;
-import catalog.hoprxi.core.domain.model.price.RetailPrice;
-import catalog.hoprxi.core.domain.model.price.Unit;
-import catalog.hoprxi.core.domain.model.price.VipPrice;
+import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.util.DomainRegistry;
 import com.arangodb.entity.DocumentField;
@@ -35,7 +32,7 @@ import java.util.StringJoiner;
 
 /**
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
- * @version 0.0.2 builder 2019-10-23
+ * @version 0.0.3 builder 2023-07-19
  * @since JDK8.0
  */
 public final class Item {
@@ -49,6 +46,7 @@ public final class Item {
     private String id;
     private Name name;
     private MadeIn madeIn;
+    private LastReceiptPrice lastReceiptPrice;
     private RetailPrice retailPrice;
     private MemberPrice memberPrice;
     private VipPrice vipPrice;
@@ -63,17 +61,17 @@ public final class Item {
      * @param spec
      * @param grade
      * @param shelfLife
+     * @param lastReceiptPrice
      * @param retailPrice
      * @param memberPrice
      * @param vipPrice
-     * @param categoryId  id of category
-     * @param brandId     id of brand
+     * @param categoryId       id of category
+     * @param brandId          id of brand
      * @throws IllegalArgumentException if id is null or id length range not in [1-36]
      *                                  if name is null
      *                                  if madeIn is null
      */
-    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, RetailPrice retailPrice,
-                MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
+    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
@@ -81,6 +79,7 @@ public final class Item {
         setSpecification(spec);
         setGrade(grade);
         setShelfLife(shelfLife);
+        setLastReceiptPrice(lastReceiptPrice);
         setRetailPrice(retailPrice);
         setMemberPrice(memberPrice);
         setVipPrice(vipPrice);
@@ -88,16 +87,17 @@ public final class Item {
         setBrandId(brandId);
     }
 
-    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
-        this(id, barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY, retailPrice, memberPrice, vipPrice, categoryId, brandId);
+    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice,
+                MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
+        this(id, barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY, lastReceiptPrice, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
-    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
-        this(id, barcode, name, madeIn, spec, grade, retailPrice, memberPrice, vipPrice, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
+        this(id, barcode, name, madeIn, spec, grade, lastReceiptPrice, retailPrice, memberPrice, vipPrice, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
     }
 
     public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, RetailPrice retailPrice) {
-        this(id, barcode, name, madeIn, spec, grade, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+        this(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.RMB_ZERO, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
     }
 
     private void setCategoryId(String categoryId) {
@@ -126,6 +126,17 @@ public final class Item {
         this.id = id;
     }
 
+    private void setRetailPrice(RetailPrice retailPrice) {
+        this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
+    }
+
+
+    private void setLastReceiptPrice(LastReceiptPrice lastReceiptPrice) {
+        if (lastReceiptPrice == null)
+            lastReceiptPrice = LastReceiptPrice.RMB_ZERO;
+        this.lastReceiptPrice = lastReceiptPrice;
+    }
+
 
     private void setVipPrice(VipPrice vipPrice) {
         Objects.requireNonNull(vipPrice, "vipPrice required");
@@ -139,10 +150,6 @@ public final class Item {
         if (memberPrice.price().unit() != Unit.PCS && memberPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("memberPrice unit must be consistent with retailPrice unit");
         this.memberPrice = memberPrice;
-    }
-
-    private void setRetailPrice(RetailPrice retailPrice) {
-        this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
     }
 
     private void setMadeIn(MadeIn madeIn) {
@@ -275,6 +282,10 @@ public final class Item {
         }
     }
 
+    public LastReceiptPrice lastReceiptPrice() {
+        return lastReceiptPrice;
+    }
+
     public RetailPrice retailPrice() {
         return retailPrice;
     }
@@ -338,7 +349,7 @@ public final class Item {
         return id != null ? id.hashCode() : 0;
     }
 
-    public ProhibitSellItem prohibitSell() {
+    public ProhibitSellItem toProhibitSell() {
         return new ProhibitSellItem(id, barcode, name, madeIn, spec, grade, shelfLife, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
@@ -352,6 +363,7 @@ public final class Item {
                 .add("id='" + id + "'")
                 .add("name=" + name)
                 .add("madeIn=" + madeIn)
+                .add("lastReceiptPrice=" + lastReceiptPrice)
                 .add("retailPrice=" + retailPrice)
                 .add("memberPrice=" + memberPrice)
                 .add("vipPrice=" + vipPrice)

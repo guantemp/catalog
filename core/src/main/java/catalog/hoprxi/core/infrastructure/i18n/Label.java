@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,6 +77,8 @@ public class Label extends NLS {
 
     public static String PRICE_RETAIL;
     public static String PRICE_MEMBER;
+
+    public static String PRICE_LAST_RECEIPT;
     public static String PRICE_VIP;
 
     public static String MADIN_SEPARATORS;

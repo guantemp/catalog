@@ -27,14 +27,17 @@ import java.util.StringJoiner;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-05-13
  */
-public class LatestReceiptPriceHandler implements EventHandler<ItemImportEvent> {
+public class LastReceiptPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         Unit systemUnit = Unit.of(itemImportEvent.map.get(ItemCorrespondence.UNIT));
-        StringJoiner joiner = new StringJoiner(",", "'{", "}'");
-        joiner.add("\"number\":" + itemImportEvent.map.get(ItemCorrespondence.LATEST_RECEIPT_PRICE));
-        joiner.add("\"currencyCode\":\"CNY\"");
-        joiner.add("\"unit\":\"" + systemUnit.name() + "\"");
-        itemImportEvent.map.put(ItemCorrespondence.LATEST_RECEIPT_PRICE, joiner.toString());
+        StringJoiner joiner = new StringJoiner(",", "'{\"name\":\"最近入库价\",\"price\": ", "}'");
+        StringJoiner subJoiner = new StringJoiner(",", "{", "}");
+        subJoiner.add("\"number\":" + (itemImportEvent.map.get(ItemCorrespondence.LAST_RECEIPT_PRICE) == null ? "0" : itemImportEvent.map.get(ItemCorrespondence.LAST_RECEIPT_PRICE)));
+        subJoiner.add("\"currencyCode\":\"CNY\"");
+        subJoiner.add("\"unit\":\"" + systemUnit.name() + "\"");
+        joiner.add(subJoiner.toString());
+        //System.out.println(joiner.toString());
+        itemImportEvent.map.put(ItemCorrespondence.LAST_RECEIPT_PRICE, joiner.toString());
     }
 }

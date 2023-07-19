@@ -71,7 +71,7 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
             StringJoiner joiner = new StringJoiner(",", "(", ")");
             joiner.add(map.get(ItemCorrespondence.ID)).add(map.get(ItemCorrespondence.NAME)).add(map.get(ItemCorrespondence.BARCODE)).add(map.get(ItemCorrespondence.CATEGORY))
                     .add(map.get(ItemCorrespondence.BRAND)).add(map.get(ItemCorrespondence.GRADE)).add(map.get(ItemCorrespondence.MADE_IN)).add(map.get(ItemCorrespondence.SPEC))
-                    .add(map.get(ItemCorrespondence.SHELF_LIFE)).add(map.get(ItemCorrespondence.LATEST_RECEIPT_PRICE)).add(map.get(ItemCorrespondence.RETAIL_PRICE))
+                    .add(map.get(ItemCorrespondence.SHELF_LIFE)).add(map.get(ItemCorrespondence.LAST_RECEIPT_PRICE)).add(map.get(ItemCorrespondence.RETAIL_PRICE))
                     .add(map.get(ItemCorrespondence.MEMBER_PRICE)).add(map.get(ItemCorrespondence.VIP_PRICE)).add(map.get(ItemCorrespondence.SHOW));
             //System.out.println(number.incrementAndGet());
             ringBuffer.publishEvent(TRANSLATOR, joiner.toString());

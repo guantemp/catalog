@@ -37,6 +37,7 @@ public class MemeberPriceHandler implements EventHandler<ItemImportEvent> {
         subJoiner.add("\"currencyCode\":\"CNY\"");
         subJoiner.add("\"unit\":\"" + systemUnit.name() + "\"");
         joiner.add(subJoiner.toString());
+       //System.out.println(joiner.toString());
         itemImportEvent.map.put(ItemCorrespondence.MEMBER_PRICE, joiner.toString());
     }
 }

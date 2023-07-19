@@ -21,11 +21,14 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.price.LastReceiptPrice;
 import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 
+import java.net.URI;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.StringJoiner;
 
@@ -45,9 +48,16 @@ public class ItemView {
     private final ShelfLife shelfLife;
     private BrandView brandView;
     private CategoryView categoryView;
+
+
+    private LastReceiptPrice lastReceiptPrice;
     private RetailPrice retailPrice;
     private MemberPrice memberPrice;
     private VipPrice vipPrice;
+    private URI video;
+
+    private URI[] images;
+
 
     public ItemView(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade) {
         this(id, barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY);
@@ -103,6 +113,14 @@ public class ItemView {
         return madeIn;
     }
 
+    public LastReceiptPrice lastReceiptPrice() {
+        return lastReceiptPrice;
+    }
+
+    public void setLastReceiptPrice(LastReceiptPrice lastReceiptPrice) {
+        this.lastReceiptPrice = lastReceiptPrice;
+    }
+
     public RetailPrice retailPrice() {
         return retailPrice;
     }
@@ -131,6 +149,16 @@ public class ItemView {
         return spec;
     }
 
+
+    public URI video() {
+        return video;
+    }
+
+    public URI[] images() {
+        return images;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -150,17 +178,20 @@ public class ItemView {
     public String toString() {
         return new StringJoiner(", ", ItemView.class.getSimpleName() + "[", "]")
                 .add("barcode=" + barcode)
-                .add("brandView=" + brandView)
-                .add("categoryView=" + categoryView)
                 .add("grade=" + grade)
                 .add("id='" + id + "'")
                 .add("name=" + name)
                 .add("madeIn=" + madeIn)
+                .add("spec=" + spec)
+                .add("shelfLife=" + shelfLife)
+                .add("brandView=" + brandView)
+                .add("categoryView=" + categoryView)
+                .add("lastReceiptPrice=" + lastReceiptPrice)
                 .add("retailPrice=" + retailPrice)
                 .add("memberPrice=" + memberPrice)
                 .add("vipPrice=" + vipPrice)
-                .add("spec=" + spec)
-                .add("shelfLife=" + shelfLife)
+                .add("video=" + video)
+                .add("images=" + Arrays.toString(images))
                 .toString();
     }
 

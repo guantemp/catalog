@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,17 +39,16 @@ public class CategoryValidatorService {
     static {
         Config config = ConfigFactory.load("database");
         String provider = config.hasPath("provider") ? config.getString("provider").toLowerCase() : "postgresql";
-        String database = config.hasPath("database") ? config.getString("database").toLowerCase() : "catalog";
+        String databaseName = config.hasPath("databaseName") ? config.getString("databaseName").toLowerCase() : "catalog";
         switch ((provider)) {
             case "psql":
-            case "postgres":
             case "postgresql":
-                repository = new PsqlCategoryRepository(database);
-                query = new PsqlCategoryQueryService(database);
+                repository = new PsqlCategoryRepository(databaseName);
+                query = new PsqlCategoryQueryService(databaseName);
                 break;
             case "arangodb":
-                repository = new ArangoDBCategoryRepository(database);
-                query = new ArangoDBCategoryQueryService(database);
+                repository = new ArangoDBCategoryRepository(databaseName);
+                query = new ArangoDBCategoryQueryService(databaseName);
                 break;
         }
     }

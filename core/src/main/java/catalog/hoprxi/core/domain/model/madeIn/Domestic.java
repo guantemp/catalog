@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.domain.model.madeIn;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
 /***
@@ -50,6 +51,14 @@ public class Domestic implements MadeIn {
     public String madeIn() {
         return city;
         //return new StringJoiner(Label.MADIN_SEPARATORS).add(province).add(city).toString();
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Domestic.class.getSimpleName() + "[", "]")
+                .add("city='" + city + "'")
+                .add("code='" + code + "'")
+                .toString();
     }
 
     @Override
