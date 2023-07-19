@@ -163,10 +163,10 @@ public class AppTest {
     }
 
     @Test
-    void testPrice() throws IOException {
-        System.out.println("\njson测试:");
+    void testReadJson() throws IOException {
+        System.out.println("\njson内部对象测试:");
         JsonParser parser = jasonFactory.createParser("{\n" +
-                "    \"name\": \"json.la\",\n" +
+                "    \"name\": \"读子对象\",\n" +
                 "    \"retailPrice\": {\n" +
                 "        \"unit\": \"盒\",\n" +
                 "        \"number\": 45.12355,\n" +
@@ -193,6 +193,9 @@ public class AppTest {
             }
         }
         System.out.println(MONETARY_AMOUNT_FORMAT.format(price.amount()));
+        System.out.println("\njson数组测试:");
+        parser = jasonFactory.createParser("{\"images\": [\"https://hoprxi.tooo.top/images/6948597500302.jpg\",\"https://hoprxi.tooo.top/images/6948597500302.jpg\"]}");
+        readArray(parser);
     }
 
     private Price readPrice(JsonParser parser) throws IOException {
@@ -216,5 +219,15 @@ public class AppTest {
             }
         }
         return new Price(Money.of(number, currency), Unit.of(unit));
+    }
+
+    private void readArray(JsonParser parser) throws IOException {
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (jsonToken == JsonToken.START_ARRAY) {
+                while (parser.nextToken() != JsonToken.END_ARRAY)
+                    System.out.println(parser.getValueAsString());
+            }
+        }
     }
 }
