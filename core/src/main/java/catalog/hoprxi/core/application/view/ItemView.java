@@ -56,6 +56,10 @@ public class ItemView {
     private VipPrice vipPrice;
     private URI video;
 
+    public void setImages(URI[] images) {
+        this.images = images;
+    }
+
     private URI[] images;
 
 

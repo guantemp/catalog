@@ -389,9 +389,9 @@ public class PsqlItemQueryService implements ItemQueryService {
         unit = Unit.valueOf(rs.getString("vip_price_unit"));
         VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
         itemView.setVipPrice(vipPrice);
-        for (URI uri : toImages(rs.getBinaryStream("show")))
-            System.out.println(barcode + ":" + uri);
-
+        itemView.setImages(toImages(rs.getBinaryStream("show")));
+        //for (URI uri : toImages(rs.getBinaryStream("show")))
+        //System.out.println(barcode + ":" + uri);
         return itemView;
     }
 

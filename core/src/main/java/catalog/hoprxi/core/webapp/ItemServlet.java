@@ -42,6 +42,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URI;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -206,6 +207,14 @@ public class ItemServlet extends HttpServlet {
         generator.writeStringField("amount", MONETARY_AMOUNT_FORMAT.format(price.amount()));
         generator.writeStringField("unit", price.unit().toString());
         generator.writeEndObject();
+        if (itemView.images().length >= 1) {
+            generator.writeArrayFieldStart("images");
+            for (URI uri : itemView.images()) {
+                //System.out.println(uri.toASCIIString());
+                generator.writeString(uri.toASCIIString());
+            }
+            generator.writeEndArray();
+        }
     }
 
     private void responseItemViews(JsonGenerator generator, ItemView[] itemViews) throws IOException {
@@ -231,8 +240,7 @@ public class ItemServlet extends HttpServlet {
         MemberPrice memberPrice = null;
         VipPrice vipPrice = null;
         while (!parser.isClosed()) {
-            JsonToken jsonToken = parser.nextToken();
-            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+            if (parser.nextToken() == JsonToken.FIELD_NAME) {
                 String fieldName = parser.getCurrentName();
                 parser.nextToken();
                 switch (fieldName) {
