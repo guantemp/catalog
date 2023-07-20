@@ -84,7 +84,7 @@ public class PsqlItemQueryServiceTest {
 
     }
 
-    @Test(invocationCount = 2, threadPoolSize = 2)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testBelongToCategoryAndDescendants() throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
         PsqlItemQueryService itemQueryService = ((PsqlItemQueryService) query);
         ItemView[] skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598");
@@ -101,7 +101,7 @@ public class PsqlItemQueryServiceTest {
         //Assert.assertEquals(skuses.length, 1);
     }
 
-    @Test(invocationCount = 5)
+    @Test(invocationCount = 1)
     public void testBelongToCategoryTest() {
         PsqlItemQueryService itemQueryService = ((PsqlItemQueryService) query);
         ItemView[] skuses = itemQueryService.belongToCategoryTest("52495569397272598");

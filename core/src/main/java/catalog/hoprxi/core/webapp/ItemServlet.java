@@ -54,7 +54,7 @@ import java.util.regex.Pattern;
 @WebServlet(urlPatterns = {"v1/items/*"}, name = "items", asyncSupported = true, initParams = {
         @WebInitParam(name = "database", value = "arangodb"), @WebInitParam(name = "databaseName", value = "catalog")})
 public class ItemServlet extends HttpServlet {
-    private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
+    private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.CHINA)
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
             .build());
     private static final int OFFSET = 0;

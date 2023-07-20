@@ -2,7 +2,6 @@ E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\domain\model\barcode\BarcodeGenerateServicesTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlItemRepositoryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\PsqlSetupTest.java
-E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\batch\PsqlItemImportTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\ArangoDBItemRepositoryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\ArangoDBCategoryQueryServiceTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\ArangoDBBrandRepositoryTest.java

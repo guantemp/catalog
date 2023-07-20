@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,13 @@
 package catalog.hoprxi.core.domain.model.price;
 
 import org.javamoney.moneta.Money;
+import org.javamoney.moneta.format.CurrencyStyle;
 
 import javax.money.Monetary;
 import javax.money.MonetaryAmount;
+import javax.money.format.AmountFormatQueryBuilder;
+import javax.money.format.MonetaryAmountFormat;
+import javax.money.format.MonetaryFormats;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -31,6 +35,10 @@ import java.util.Objects;
 public class Price {
     public static final Price RMB_ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.CHINA)), Unit.PCS);
     public static final Price USD_ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.US)), Unit.PCS);
+
+    private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
+            .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
+            .build());
     private MonetaryAmount amount;
     private Unit unit;
 
@@ -92,7 +100,7 @@ public class Price {
     @Override
     public String toString() {
         return "Price{" +
-                "amount=" + amount +
+                "amount=" + MONETARY_AMOUNT_FORMAT.format(amount) +
                 ", unit=" + unit +
                 '}';
     }

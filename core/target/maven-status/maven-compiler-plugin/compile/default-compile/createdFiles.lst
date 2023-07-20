@@ -152,7 +152,6 @@ catalog\hoprxi\core\application\command\CategoryChangeIconCommand.class
 catalog\hoprxi\core\domain\model\category\Category$1.class
 catalog\hoprxi\core\domain\model\shelfLife\ShelfLife$3.class
 catalog\hoprxi\core\domain\model\brand\AboutBrand.class
-catalog\hoprxi\core\infrastructure\batch\PsqlItemImport.class
 catalog\hoprxi\core\application\handle\Handle.class
 catalog\hoprxi\core\infrastructure\i18n\Label.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlProhibitSellItemRepository.class
