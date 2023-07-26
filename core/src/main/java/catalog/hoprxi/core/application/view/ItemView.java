@@ -77,6 +77,24 @@ public class ItemView {
         this.shelfLife = shelfLife;
     }
 
+    public ItemView(Barcode barcode, Grade grade, String id, Name name, MadeIn madeIn, Specification spec, ShelfLife shelfLife, BrandView brandView, CategoryView categoryView, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, URI video, URI[] images) {
+        this.barcode = barcode;
+        this.grade = grade;
+        this.id = id;
+        this.name = name;
+        this.madeIn = madeIn;
+        this.spec = spec;
+        this.shelfLife = shelfLife;
+        this.brandView = brandView;
+        this.categoryView = categoryView;
+        this.lastReceiptPrice = lastReceiptPrice;
+        this.retailPrice = retailPrice;
+        this.memberPrice = memberPrice;
+        this.vipPrice = vipPrice;
+        this.video = video;
+        this.images = images;
+    }
+
     public ShelfLife shelfLife() {
         return shelfLife;
     }

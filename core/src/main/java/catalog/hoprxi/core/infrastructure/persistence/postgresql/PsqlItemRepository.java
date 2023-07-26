@@ -276,7 +276,7 @@ public class PsqlItemRepository implements ItemRepository {
             generator.writeEndObject();
             generator.flush();
         } catch (IOException e) {
-            LOGGER.error("Not write RetailPrice as json", e);
+            LOGGER.error("Not write Price as json", e);
         }
         return output.toString();
     }

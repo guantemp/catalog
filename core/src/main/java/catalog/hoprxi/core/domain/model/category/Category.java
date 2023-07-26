@@ -117,7 +117,7 @@ public class Category {
     }
 
     public Category(String parentId, String id, String name) {
-        this(parentId, id, Name.of(name), null);
+        this(parentId, id, Name.valueOf(name), null);
     }
 
     public Category(String parentId, String id, Name name, String description) {
@@ -129,7 +129,7 @@ public class Category {
     }
 
     public Category(String parentId, String id, String name, String description, URI icon) {
-        this(parentId, id, Name.of(name), description, icon);
+        this(parentId, id, Name.valueOf(name), description, icon);
     }
 
     /**

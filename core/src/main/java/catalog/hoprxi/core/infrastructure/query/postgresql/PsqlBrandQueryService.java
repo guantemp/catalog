@@ -166,7 +166,7 @@ public class PsqlBrandQueryService implements BrandQueryService {
                             story = parser.getValueAsString();
                             break;
                         case "since":
-                            since = Year.of(parser.getIntValue());
+                            since = Year.valueOf(parser.getIntValue());
                             break;
                         case "homepage":
                             homepage = new URL(parser.getValueAsString());

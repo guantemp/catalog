@@ -115,7 +115,7 @@ public class UploadServlet extends HttpServlet {
                     if (pContentLength == -1) {
                         System.out.println("So far, " + pBytesRead + " bytes have been read.");
                     } else {
-                        System.out.println("So far, " + pBytesRead + " of " + pContentLength
+                        System.out.println("So far, " + pBytesRead + " valueOf " + pContentLength
                                 + " bytes have been read.");
                     }
                 }

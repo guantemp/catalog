@@ -64,16 +64,16 @@ public class ArangoDBItemRepositoryTest {
         categoryRepository.save(root);
         Category food = new Category("root", "food", new Name("食品", "food"), "可供人类食用或饮用的物质，包括加工食品，半成品和未加工食品，不包括烟草或只作药品用的物质");
         categoryRepository.save(food);
-        Category dairy = new Category("food", "dairy", Name.of("乳制品"), "使用牛乳或羊乳及其加工制品为主要原料，加入或不加入适量的维生素、矿物质和其他辅料，使用法律法规及标准规定所要求的条件，经加工制成的各种食品");
+        Category dairy = new Category("food", "dairy", Name.valueOf("乳制品"), "使用牛乳或羊乳及其加工制品为主要原料，加入或不加入适量的维生素、矿物质和其他辅料，使用法律法规及标准规定所要求的条件，经加工制成的各种食品");
         categoryRepository.save(dairy);
-        Category vegetable_products = new Category("food", " vegetable_products", Name.of("蔬菜制品"), "以蔬菜和食用菌为原料，采用腌制、干燥、油炸等工艺加工而成的各种蔬菜制品，即酱腌菜、蔬菜干制品、食用菌制品、其他蔬菜制品");
+        Category vegetable_products = new Category("food", " vegetable_products", Name.valueOf("蔬菜制品"), "以蔬菜和食用菌为原料，采用腌制、干燥、油炸等工艺加工而成的各种蔬菜制品，即酱腌菜、蔬菜干制品、食用菌制品、其他蔬菜制品");
         categoryRepository.save(vegetable_products);
         Category chemicals = new Category("root", "chemicals", new Name("日化", "chemicals"), "日用化学品,指人们平日常用的科技化学制品,包括洗发水、沐浴露、护肤、护发、化妆品等等");
         categoryRepository.save(chemicals);
         Category cosmetics = new Category("chemicals", "cosmetics", "化妆品",
                 "指以涂抹、喷洒或者其他类似方法，散布于人体表面的任何部位，如皮肤、毛发、指趾甲、唇齿等，以达到清洁、保养、美容、修饰和改变外观，或者修正人体气味，保持良好状态为目的的化学工业品或精细化工产品");
         categoryRepository.save(cosmetics);
-        Category skin = new Category("cosmetics", "skin", Name.of("肤用化妆品"));
+        Category skin = new Category("cosmetics", "skin", Name.valueOf("肤用化妆品"));
         categoryRepository.save(skin);
 
         Barcode barcode = BarcodeGenerateServices.createBarcode("6907861191394");

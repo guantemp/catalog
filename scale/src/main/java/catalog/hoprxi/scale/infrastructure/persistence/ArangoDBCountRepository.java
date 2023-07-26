@@ -223,7 +223,7 @@ public class ArangoDBCountRepository implements CountRepository {
                 madeIn = new Imported(madeInSlice.get("code").getAsString(), madeInSlice.get("country").getAsString());
             }
         }
-        Specification spec = Specification.rebulid(slice.get("spec").get("value").getAsString());
+        Specification spec = Specification.valueOf(slice.get("spec").get("value").getAsString());
         Grade grade = Grade.valueOf(slice.get("grade").getAsString());
         ShelfLife shelfLife = ShelfLife.rebuild(slice.get("shelfLife").get("days").getAsInt());
 

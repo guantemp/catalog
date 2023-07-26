@@ -65,8 +65,8 @@ public final class Item {
      * @param retailPrice
      * @param memberPrice
      * @param vipPrice
-     * @param categoryId       id of category
-     * @param brandId          id of brand
+     * @param categoryId       id valueOf category
+     * @param brandId          id valueOf brand
      * @throws IllegalArgumentException if id is null or id length range not in [1-36]
      *                                  if name is null
      *                                  if madeIn is null

@@ -18,8 +18,17 @@ package catalog.hoprxi.core.webapp;
 
 import catalog.hoprxi.core.application.query.ItemQueryService;
 import catalog.hoprxi.core.application.view.ItemView;
+import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.ItemRepository;
+import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.domain.model.Specification;
+import catalog.hoprxi.core.domain.model.barcode.Barcode;
+import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
+import catalog.hoprxi.core.domain.model.madeIn.Domestic;
+import catalog.hoprxi.core.domain.model.madeIn.Imported;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
+import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.persistence.ArangoDBItemRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlItemRepository;
 import catalog.hoprxi.core.infrastructure.query.ArangoDBItemQueryService;
@@ -58,7 +67,7 @@ public class ItemServlet extends HttpServlet {
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
             .build());
     private static final int OFFSET = 0;
-    private static final int LIMIT = 50;
+    private static final int LIMIT = 56;
     private static final String PRE_SUFFIX = ".*?";
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
     private ItemQueryService queryService;
@@ -187,6 +196,7 @@ public class ItemServlet extends HttpServlet {
         generator.writeEndObject();
 
         generator.writeObjectFieldStart("lastReceiptPrice");
+        generator.writeStringField("name", itemView.lastReceiptPrice().name());
         Price price = itemView.lastReceiptPrice().price();
         generator.writeStringField("amount", MONETARY_AMOUNT_FORMAT.format(price.amount()));
         generator.writeStringField("unit", price.unit().toString());
@@ -198,11 +208,13 @@ public class ItemServlet extends HttpServlet {
         generator.writeStringField("unit", price.unit().toString());
         generator.writeEndObject();
         generator.writeObjectFieldStart("memberPrice");
+        generator.writeStringField("name", itemView.memberPrice().name());
         price = itemView.memberPrice().price();
         generator.writeStringField("amount", MONETARY_AMOUNT_FORMAT.format(price.amount()));
         generator.writeStringField("unit", price.unit().toString());
         generator.writeEndObject();
         generator.writeObjectFieldStart("vipPrice");
+        generator.writeStringField("name", itemView.vipPrice().name());
         price = itemView.vipPrice().price();
         generator.writeStringField("amount", MONETARY_AMOUNT_FORMAT.format(price.amount()));
         generator.writeStringField("unit", price.unit().toString());
@@ -234,7 +246,13 @@ public class ItemServlet extends HttpServlet {
     }
 
     private ItemView red(JsonParser parser) throws IOException {
-        String name = null, alias = null, barcode = null, brandId = null, categoryId = null, spec = null, grade = null, madeIn = null;
+        Name name = Name.EMPTY;
+        MadeIn madeIn = MadeIn.UNKNOWN;
+        Grade grade = Grade.QUALIFIED;
+        Specification spec = Specification.UNDEFINED;
+        String brandId = null, categoryId = null;
+        String city = null, country = null, code = "156";
+        Barcode barcode = null;
         LastReceiptPrice lastReceiptPrice;
         RetailPrice retailPrice = null;
         MemberPrice memberPrice = null;
@@ -245,16 +263,13 @@ public class ItemServlet extends HttpServlet {
                 parser.nextToken();
                 switch (fieldName) {
                     case "barcode":
-                        barcode = parser.getValueAsString();
+                        barcode = BarcodeGenerateServices.createBarcode(parser.getValueAsString());
                         break;
                     case "name":
-                        name = parser.getValueAsString();
-                        break;
-                    case "alias":
-                        alias = parser.getValueAsString();
+                        name = readName(parser);
                         break;
                     case "spec":
-                        spec = parser.getValueAsString();
+                        spec = Specification.valueOf(parser.getValueAsString());
                         break;
                     case "categoryId":
                         categoryId = parser.getValueAsString();
@@ -263,10 +278,10 @@ public class ItemServlet extends HttpServlet {
                         brandId = parser.getValueAsString();
                         break;
                     case "grade":
-                        grade = parser.getValueAsString();
+                        grade = Grade.of(parser.getValueAsString());
                         break;
                     case "madeIn":
-                        madeIn = parser.getValueAsString();
+                        madeIn = readMadeIn(parser);
                         break;
                     case "latestReceiptPrice":
                         break;
@@ -283,7 +298,57 @@ public class ItemServlet extends HttpServlet {
                 }
             }
         }
+        ItemView view= new ItemView(repository.nextIdentity(), barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY);
+        vi
         return null;
+    }
+
+    private Name readName(JsonParser parser) throws IOException {
+        String name = null, alias = null;
+        while (parser.nextToken() != JsonToken.END_OBJECT) {
+            if (JsonToken.FIELD_NAME == parser.currentToken()) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "name":
+                        name = parser.getValueAsString();
+                        break;
+                    case "alias":
+                        alias = parser.getValueAsString();
+                        break;
+                }
+            }
+        }
+        return new Name(name, alias);
+    }
+
+    private MadeIn readMadeIn(JsonParser parser) throws IOException {
+        String city = null, country = null, code = "156";
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "city":
+                        city = parser.getValueAsString();
+                        break;
+                    case "country":
+                        country = parser.getValueAsString();
+                        break;
+                    case "code":
+                        code = parser.getValueAsString();
+                        break;
+                }
+            }
+        }
+        if (country != null) {
+            return new Imported(code, country);
+        }
+        if (city != null) {
+            return new Domestic(code, city);
+        }
+        return MadeIn.UNKNOWN;
     }
 
     private Price readPrice(JsonParser parser) throws IOException {

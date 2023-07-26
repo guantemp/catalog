@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,21 @@ public class Name {
     private String mnemonic;
     private String alias;
 
+    public static final Name EMPTY = new Name() {
+        @Override
+        public Name rename(String name, String alias) {
+            return this;
+        }
+    };
+
+    private Name() {
+        this.name = "";
+        this.mnemonic = "";
+        this.alias = "";
+    }
+
     /**
-     * Reconstructing constructors for designs of name classes
+     * Reconstructing constructors for designs valueOf name classes
      */
     private Name(String name, String mnemonic, String alias) {
         setName(name);
@@ -59,7 +72,7 @@ public class Name {
         this(name, name);
     }
 
-    public static Name of(String name) {
+    public static Name valueOf(String name) {
         return new Name(name);
     }
 

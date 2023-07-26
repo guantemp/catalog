@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ public class Specification {
         this.value = Objects.requireNonNull(value, "value required").trim();
     }
 
-    public static Specification rebulid(String value) {
+    public static Specification valueOf(String value) {
         if (value.equals(""))
             return UNDEFINED;
         return new Specification(value);

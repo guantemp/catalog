@@ -44,7 +44,7 @@ public class PsqlBrandImportExport implements BrandImportExportService {
         SXSSFWorkbook workbook = null;
         BufferedOutputStream bufferedOutPut = null;
         /*
-        MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
+        MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.valueOf(Locale.getDefault())
                 .set(CurrencyStyle.SYMBOL).set("pattern", "¤#,##0.0000")//"#,##0.00### ¤"
                 .build());
          */
