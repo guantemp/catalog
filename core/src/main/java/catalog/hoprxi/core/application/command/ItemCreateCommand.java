@@ -16,10 +16,97 @@
 
 package catalog.hoprxi.core.application.command;
 
+import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.domain.model.Specification;
+import catalog.hoprxi.core.domain.model.barcode.Barcode;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
+import catalog.hoprxi.core.domain.model.price.LastReceiptPrice;
+import catalog.hoprxi.core.domain.model.price.MemberPrice;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.VipPrice;
+import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2023-07-10
  */
 public class ItemCreateCommand implements Command {
+    private final Barcode barcode;
+    private final Grade grade;
+    private final Name name;
+    private final MadeIn madeIn;
+    private final Specification spec;
+    private final ShelfLife shelfLife;
+    private final String brandId;
+    private final String categoryId;
+
+    private final LastReceiptPrice lastReceiptPrice;
+    private final RetailPrice retailPrice;
+    private final MemberPrice memberPrice;
+    private final VipPrice vipPrice;
+
+    public ItemCreateCommand(Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
+        this.barcode = barcode;
+        this.grade = grade;
+        this.name = name;
+        this.madeIn = madeIn;
+        this.spec = spec;
+        this.shelfLife = shelfLife;
+        this.brandId = brandId;
+        this.categoryId = categoryId;
+        this.lastReceiptPrice = lastReceiptPrice;
+        this.retailPrice = retailPrice;
+        this.memberPrice = memberPrice;
+        this.vipPrice = vipPrice;
+    }
+
+    public Barcode getBarcode() {
+        return barcode;
+    }
+
+    public Grade getGrade() {
+        return grade;
+    }
+
+    public Name getName() {
+        return name;
+    }
+
+    public MadeIn getMadeIn() {
+        return madeIn;
+    }
+
+    public Specification getSpec() {
+        return spec;
+    }
+
+    public ShelfLife getShelfLife() {
+        return shelfLife;
+    }
+
+    public String getBrandId() {
+        return brandId;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public LastReceiptPrice getLastReceiptPrice() {
+        return lastReceiptPrice;
+    }
+
+    public RetailPrice getRetailPrice() {
+        return retailPrice;
+    }
+
+    public MemberPrice getMemberPrice() {
+        return memberPrice;
+    }
+
+    public VipPrice getVipPrice() {
+        return vipPrice;
+    }
 }

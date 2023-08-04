@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.handle;
+package catalog.hoprxi.core.application.handler;
 
 
 import catalog.hoprxi.core.application.command.Command;

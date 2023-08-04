@@ -189,6 +189,11 @@ public class ArangoDBItemQueryService implements ItemQueryService {
         return transform(slices);
     }
 
+    @Override
+    public ItemView[] serach(String regularExpression, long offset, int limit) {
+        return new ItemView[0];
+    }
+
     private ItemView[] transform(ArangoCursor<VPackSlice> slices) {
         List<ItemView> itemList = new ArrayList<>();
         while (slices.hasNext()) {

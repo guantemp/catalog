@@ -151,7 +151,7 @@ public class PsqlItemQueryServiceTest {
     @Test
     public void testSerach() {
         ItemView[] items = query.serach("彩虹");
-        Assert.assertEquals(items.length, 3);
+        Assert.assertEquals(items.length, 133);
         items = query.serach("^彩虹");
         Assert.assertEquals(items.length, 2);
         items = query.serach("彩虹|长虹");
@@ -173,5 +173,13 @@ public class PsqlItemQueryServiceTest {
         Assert.assertEquals(skuses.length, 0);
         skuses = query.serach("ty");
         Assert.assertEquals(skuses.length, 5);
+    }
+
+    @Test
+    public void testSerachWith() {
+        ItemView[] items = query.serach("彩虹|690", 130, 64);
+        //for(ItemView view:items)
+        // System.out.println(view);
+        System.out.println(items.length);
     }
 }

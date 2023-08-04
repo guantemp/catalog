@@ -71,4 +71,6 @@ public interface ItemQueryService {
      * @return matched result
      */
     ItemView[] serach(String regularExpression);
+
+    ItemView[] serach(String regularExpression, long offset, int limit);
 }

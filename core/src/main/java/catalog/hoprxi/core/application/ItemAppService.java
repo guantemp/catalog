@@ -16,6 +16,8 @@
 
 package catalog.hoprxi.core.application;
 
+import catalog.hoprxi.core.application.command.Command;
+import catalog.hoprxi.core.application.command.ItemCreateCommand;
 import catalog.hoprxi.core.domain.model.Item;
 import catalog.hoprxi.core.domain.model.ItemRepository;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
@@ -34,7 +36,7 @@ import com.typesafe.config.ConfigFactory;
  * @since JDK8.0
  * @version 0.0.2 2022-11-29
  */
-public class ItemAppervice {
+public class ItemAppService {
     private static ItemRepository itemRepository;
     private static CategoryRepository categoryRepository;
     private static BrandRepository brandRepository;
@@ -60,11 +62,19 @@ public class ItemAppervice {
         }
     }
 
-    public Item findItem(String id) {
-        return itemRepository.find(id);
+    public void createItem(Command itemCreateCommand) {
+        ItemCreateCommand createCommand = (ItemCreateCommand) itemCreateCommand;
+        Item item = new Item(itemRepository.nextIdentity(), createCommand.getBarcode(), createCommand.getName(), createCommand.getMadeIn(), createCommand.getSpec(),
+                createCommand.getGrade(), createCommand.getShelfLife(), createCommand.getLastReceiptPrice(), createCommand.getRetailPrice(), createCommand.getMemberPrice(),
+                createCommand.getVipPrice(), createCommand.getCategoryId(), createCommand.getBrandId());
+        itemRepository.save(item);
     }
 
-    public void batchImport() {
+    public void removeItem(Command ItemRemoveCommand) {
+
+    }
+
+    public void deleteItem(Command ItemDeleteCommand) {
 
     }
 }

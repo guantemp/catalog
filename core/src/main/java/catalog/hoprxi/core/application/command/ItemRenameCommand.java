@@ -19,15 +19,7 @@ package catalog.hoprxi.core.application.command;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2021-10-03
+ * @version 0.0.1 builder 2023-07-26
  */
-public class CreateItemCommand implements Command {
-    private String name;
-    private String alias;
-    private String barcode;
-    private String brandId;
-    private String categoryId;
-    private String spec;
-    private String grade;
-    private String madeIn;
+public class ItemRenameCommand implements Command {
 }
