@@ -64,6 +64,7 @@ import java.util.Objects;
 public class PsqlItemQueryService implements ItemQueryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQueryService.class);
     private static final Cache<String, ItemView> CACHE = CacheFactory.build("itemView");
+    private static final Cache<String, String[]> CACHES = CacheFactory.build("itemViews");
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
     private static Constructor<Name> nameConstructor;
 
@@ -87,14 +88,13 @@ public class PsqlItemQueryService implements ItemQueryService {
         ItemView itemView = CACHE.get(id);
         if (itemView != null) return itemView;
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String findSql = "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic' mnemonic,i.name::jsonb ->> 'alias' alias,i.barcode,\n" +
-                    "i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
+            final String sql = "select i.id, i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                     "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                     "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
                     "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
-                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show show\n" +
-                    "from item  i,category  c,brand  b\n" + "where i.id= ? and i.category_id = c.id and i.brand_id = b.id limit 1";
-            PreparedStatement ps = connection.prepareStatement(findSql);
+                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
+                    "from item  i,category  c,brand  b where i.id= ? and i.category_id = c.id and i.brand_id = b.id";
+            PreparedStatement ps = connection.prepareStatement(sql);
             ps.setLong(1, Long.parseLong(id));
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -112,13 +112,12 @@ public class PsqlItemQueryService implements ItemQueryService {
     @Override
     public ItemView[] belongToBrand(String brandId, int offset, int limit) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String sql = "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic'  mnemonic,i.name::jsonb ->> 'alias'  alias,i.barcode,\n" +
-                    "i.category_id,c.name::jsonb ->> 'name'  category_name,i.brand_id,b.name::jsonb ->> 'name'  brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
+            final String sql = "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                     "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                     "i.retail_price::jsonb ->> 'number'  retail_price_number,i.retail_price::jsonb ->> 'currencyCode'  retail_price_currencyCode,i.retail_price::jsonb ->> 'unit'  retail_price_unit,\n" +
                     "i.member_price::jsonb ->> 'name'  member_price_name,i.member_price::jsonb -> 'price' ->> 'number'  member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode'  member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit'  member_price_unit,\n" +
-                    "i.vip_price::jsonb ->> 'name'  vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number'  vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode'  vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit'  vip_price_unit,i.show show\n" +
-                    "from brand b left join item i on i.brand_id = b.id left join category c on c.id = i.category_id\n" + "where b.id = ? offset ? limit ?";
+                    "i.vip_price::jsonb ->> 'name'  vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number'  vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode'  vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit'  vip_price_unit,i.show\n" +
+                    "from item i left join brand b on i.brand_id = b.id left join category c on c.id = i.category_id where b.id = ? offset ? limit ?";
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setLong(1, Long.parseLong(brandId));
             ps.setLong(2, offset);
@@ -135,13 +134,12 @@ public class PsqlItemQueryService implements ItemQueryService {
     @Override
     public ItemView[] belongToCategory(String categoryId, long offset, int limit) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String sql = "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic'  mnemonic,i.name::jsonb ->> 'alias'  alias,i.barcode,\n" +
-                    "i.category_id,c.name::jsonb ->> 'name'  category_name,i.brand_id,b.name::jsonb ->> 'name'  brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
+            final String sql = "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                     "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                     "i.retail_price::jsonb ->> 'number'  retail_price_number,i.retail_price::jsonb ->> 'currencyCode'  retail_price_currencyCode,i.retail_price::jsonb ->> 'unit'  retail_price_unit,\n" +
                     "i.member_price::jsonb ->> 'name'  member_price_name,i.member_price::jsonb -> 'price' ->> 'number'  member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode'  member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit'  member_price_unit,\n" +
-                    "i.vip_price::jsonb ->> 'name'  vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number'  vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode'  vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit'  vip_price_unit,i.show show\n" +
-                    "from category  c left join item i on i.category_id = c.id left join brand b on b.id = i.brand_id\n" + "where c.id = ? offset ? limit ?";
+                    "i.vip_price::jsonb ->> 'name'  vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number'  vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode'  vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit'  vip_price_unit,i.show\n" +
+                    "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where c.id = ? offset ? limit ?";
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setLong(1, Long.parseLong(categoryId));
             ps.setLong(2, offset);
@@ -164,9 +162,8 @@ public class PsqlItemQueryService implements ItemQueryService {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             for (CategoryView categoryView : categoryViews) {
                 ItemView.CategoryView categoryViewTemp = new ItemView.CategoryView(categoryView.getId(), categoryView.getName().name());
-                String itemViewQuerySql = "select id,name::jsonb ->> 'name' name, name::jsonb ->> 'mnemonic' mnemonic,name::jsonb ->> 'alias' alias,barcode,\n" +
-                        "brand_id,grade,made_in,spec,shelf_life,\n" +
-                        //"i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
+                String itemViewQuerySql = "select id,\"name\"::jsonb ->> 'name' name,\"name\"::jsonb ->> 'mnemonic' mnemonic,\"name\"::jsonb ->> 'alias' alias,barcode,brand_id,grade,made_in,spec,shelf_life,\n" +
+                        "last_receipt_price::jsonb ->> 'name' last_receipt_price_name,last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                         "retail_price::jsonb ->> 'number' retail_price_number,retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
                         "member_price::jsonb ->> 'name' member_price_name,member_price::jsonb -> 'price' ->> 'number' member_price_number,member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
                         "vip_price::jsonb ->> 'name' vip_price_name,vip_price::jsonb -> 'price' ->> 'number' vip_price_number,vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,show\n" +
@@ -222,7 +219,7 @@ public class PsqlItemQueryService implements ItemQueryService {
                     "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                     "i.retail_price::jsonb ->> 'number'  retail_price_number,i.retail_price::jsonb ->> 'currencyCode'  retail_price_currencyCode,i.retail_price::jsonb ->> 'unit'  retail_price_unit,\n" +
                     "i.member_price::jsonb ->> 'name'  member_price_name,i.member_price::jsonb -> 'price' ->> 'number'  member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode'  member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit'  member_price_unit,\n" +
-                    "i.vip_price::jsonb ->> 'name'  vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number'  vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode'  vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit'  vip_price_unit,i.show show from item i, category c,brand b\n" +
+                    "i.vip_price::jsonb ->> 'name'  vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number'  vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode'  vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit'  vip_price_unit,i.show from item i, category c,brand b\n" +
                     "where c.id in (select id from category where root_id = (select root_id from category where id = ?)\n" +
                     "and \"left\" >= (select \"left\" from category where id = ?)\n" +
                     "and \"right\" <= (select \"right\" from category where id = ?))\n" +
@@ -248,7 +245,7 @@ public class PsqlItemQueryService implements ItemQueryService {
                     "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                     "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
                     "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
-                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show show\n" +
+                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
                     "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id offset ? limit ?";
             PreparedStatement ps = connection.prepareStatement(findSql);
             ps.setLong(1, offset);
@@ -280,13 +277,34 @@ public class PsqlItemQueryService implements ItemQueryService {
     @Override
     public ItemView[] queryByBarcode(String barcode) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String findSql = "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic' mnemonic,i.name::jsonb ->> 'alias' alias,i.barcode,\n" +
-                    "i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
+            final String findSql = "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,\n" +
+                    "i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                     "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                     "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
                     "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
-                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show show\n" +
+                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
                     "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.barcode ~ ?";
+            PreparedStatement ps = connection.prepareStatement(findSql);
+            ps.setString(1, barcode);
+            ResultSet rs = ps.executeQuery();
+            return transform(rs);
+        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
+                 IOException e) {
+            LOGGER.error("Can't rebuild itemView", e);
+        }
+        return new ItemView[0];
+    }
+
+    @Override
+    public ItemView[] accurateQueryByBarcode(String barcode) {
+        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+            final String findSql = "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,\n" +
+                    "i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
+                    "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
+                    "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
+                    "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
+                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
+                    "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.barcode = ?";
             PreparedStatement ps = connection.prepareStatement(findSql);
             ps.setString(1, barcode);
             ResultSet rs = ps.executeQuery();
@@ -301,37 +319,33 @@ public class PsqlItemQueryService implements ItemQueryService {
     @Override
     public ItemView[] serach(String regularExpression) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String findSql = "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic' mnemonic,i.name::jsonb ->> 'alias' alias,i.barcode,\n" +
-                    "i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
+            final String findSql = "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                     "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                     "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
                     "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
-                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show show\n" +
-                    "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.name::jsonb ->> 'name' ~ ?\n" +
+                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
+                    "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.barcode ~ ?" +
                     "union\n" +
-                    "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic' mnemonic,i.name::jsonb ->> 'alias' alias,i.barcode,\n" +
-                    "i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
+                    "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                     "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                     "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
                     "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
-                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show show\n" +
-                    "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.name::jsonb ->> 'alias' ~ ?\n" +
+                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
+                    "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where text(textsend_i(i.name ->> 'name')) ~ ltrim(text(textsend_i(?)), '\\x')\n" +
                     "union\n" +
-                    "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic' mnemonic,i.name::jsonb ->> 'alias' alias,i.barcode,\n" +
-                    "i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
+                    "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                     "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                     "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
                     "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
-                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show show\n" +
-                    "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.name::jsonb ->> 'mnemonic' ~ ?\n" +
+                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
+                    "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where text(textsend_i(i.name ->> 'alias')) ~ ltrim(text(textsend_i(?)), '\\x')\n" +
                     "union\n" +
-                    "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic' mnemonic,i.name::jsonb ->> 'alias' alias,i.barcode,\n" +
-                    "i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
+                    "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                     "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                     "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
                     "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
-                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show show\n" +
-                    "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.barcode ~ ?";
+                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
+                    "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.\"name\" ->> 'mnemonic' ~ ?";
             PreparedStatement ps = connection.prepareStatement(findSql);
             ps.setString(1, regularExpression);
             ps.setString(2, regularExpression);
@@ -348,37 +362,33 @@ public class PsqlItemQueryService implements ItemQueryService {
 
     @Override
     public ItemView[] serach(String regularExpression, long offset, int limit) {
-        final String sql = "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic' mnemonic,i.name::jsonb ->> 'alias' alias,i.barcode,\n" +
-                "i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
+        final String sql = "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                 "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                 "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
                 "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
-                "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show show\n" +
-                "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.name::jsonb ->> 'name' ~ ?\n" +
+                "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
+                "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.barcode ~ ?" +
                 "union\n" +
-                "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic' mnemonic,i.name::jsonb ->> 'alias' alias,i.barcode,\n" +
-                "i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
+                "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                 "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                 "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
                 "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
-                "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show show\n" +
-                "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.name::jsonb ->> 'alias' ~ ?\n" +
+                "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
+                "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where text(textsend_i(i.name ->> 'name')) ~ ltrim(text(textsend_i(?)), '\\x')\n" +
                 "union\n" +
-                "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic' mnemonic,i.name::jsonb ->> 'alias' alias,i.barcode,\n" +
-                "i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
+                "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                 "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                 "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
                 "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
-                "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show show\n" +
-                "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.name::jsonb ->> 'mnemonic' ~ ?\n" +
+                "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
+                "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where text(textsend_i(i.name ->> 'alias')) ~ ltrim(text(textsend_i(?)), '\\x')\n" +
                 "union\n" +
-                "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic' mnemonic,i.name::jsonb ->> 'alias' alias,i.barcode,\n" +
-                "i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
+                "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                 "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                 "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
                 "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
-                "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show show\n" +
-                "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.barcode ~ ? offset ? limit ?";
+                "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
+                "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.\"name\" ->> 'mnemonic' ~ ? offset ? limit ?";
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, regularExpression);
@@ -391,7 +401,6 @@ public class PsqlItemQueryService implements ItemQueryService {
             return transform(rs);
         } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
                  IOException e) {
-            System.out.println(e);
             LOGGER.error("Can't rebuild item", e);
         }
         return new ItemView[0];

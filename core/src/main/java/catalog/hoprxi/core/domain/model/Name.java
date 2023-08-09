@@ -83,7 +83,8 @@ public class Name {
     private void setAlias(String alias) {
         if (alias == null)
             alias = name;
-        alias = alias.trim();
+        else
+            alias = alias.trim();
         if (alias.length() > MAX_LENGTH)
             throw new IllegalArgumentException("alias length rang is 0-128");
         this.alias = alias;

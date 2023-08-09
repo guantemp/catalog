@@ -66,6 +66,8 @@ public interface ItemQueryService {
      */
     ItemView[] queryByBarcode(String barcode);
 
+    ItemView[] accurateQueryByBarcode(String barcode);
+
     /**
      * @param regularExpression is support regular,will search Name(name,alias,mnemonic),barcode
      * @return matched result

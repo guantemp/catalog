@@ -34,7 +34,7 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
     private static AtomicInteger number = new AtomicInteger(0);
     private final Connection connection;
     private final Statement statement;
-    private StringJoiner sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price,show) values ", "");
+    private StringJoiner sql = new StringJoiner(",", "insert into item (id,\"name\",barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price,show) values ", "");
 
     public PsqlItemExecuteHandler() throws SQLException {
         connection = PsqlUtil.getConnection();
@@ -58,16 +58,16 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
         } else {
             sql.add(executeSqlEvent.sql);
             int i = number.incrementAndGet();
-            if (i % 128 == 0) {
+            if (i % 256 == 0) {
+                //System.out.println(sql);
                 statement.addBatch(sql.toString());
-                sql = new StringJoiner(",", "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price,show) values ", "");
+                sql = new StringJoiner(",", "insert into item (id,\"name\",barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price,show) values ", "");
             }
-            if (i % 1024 == 0) {
+            if (i % 2048 == 0) {
                 statement.executeBatch();
                 connection.commit();
                 statement.clearBatch();
-                System.out.println(i);
-                //System.out.println(executeSqlEvent.count);
+                //System.out.println(i);
             }
         }
     }

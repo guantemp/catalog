@@ -130,10 +130,16 @@ public class ItemServlet extends HttpServlet {
                 ItemView[] itemViews = queryService.queryByBarcode(barcode);
                 responseItemViews(generator, itemViews);
             } else if (!key.isEmpty()) {
-                ItemView[] itemViews = queryService.serach(key, offset, limit);
-                itemViews = Arrays.stream(itemViews).filter(i -> categoryId.isEmpty() ? true : categoryId.equals(i.categoryView().id()))
-                        //.skip(offset).limit(limit)
-                        .toArray(ItemView[]::new);
+                ItemView[] itemViews;
+                if (!categoryId.isEmpty() || !brandId.isEmpty()) {
+                    itemViews = queryService.serach(key);
+                    itemViews = Arrays.stream(itemViews).filter(i -> categoryId.isEmpty() ? true : categoryId.equals(i.categoryView().id()))
+                            .filter(i -> brandId.isEmpty() ? true : brandId.equals(i.brandView().id()))
+                            .skip(offset).limit(limit)
+                            .toArray(ItemView[]::new);
+                } else {
+                    itemViews = queryService.serach(key, offset, limit);
+                }
                 System.out.println(itemViews.length);
                 responseItemViews(generator, itemViews);
             } else {

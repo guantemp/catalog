@@ -31,12 +31,16 @@ public class NameHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
         String name = itemImportEvent.map.get(ItemCorrespondence.NAME);
+        name = name.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
         String alias = itemImportEvent.map.get(ItemCorrespondence.ALIAS);
-        name = name.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\");
+        alias = alias == null ? name : alias.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
         StringJoiner joiner = new StringJoiner(",", "'{", "}'");
         joiner.add("\"name\":\"" + name + "\"");
         joiner.add("\"mnemonic\":\"" + PinYin.toShortPinYing(name) + "\"");
         joiner.add("\"alias\":\"" + (alias == null ? name : alias.replaceAll("'", "''")).replaceAll("\\\\", "\\\\\\\\") + "\"");
+        //StringJoiner joiner = new StringJoiner(",", "", "");
+        //joiner.add("'" + name + "'").add("'" + PinYin.toShortPinYing(name) + "'").add("'" + alias + "'");
+        //System.out.println(joiner);
         itemImportEvent.map.put(ItemCorrespondence.NAME, joiner.toString());
     }
 }

@@ -177,6 +177,11 @@ public class ArangoDBItemQueryService implements ItemQueryService {
     }
 
     @Override
+    public ItemView[] accurateQueryByBarcode(String barcode) {
+        return new ItemView[0];
+    }
+
+    @Override
     public ItemView[] serach(String regularExpression) {
         final String query = "WITH brand,category,item,barcode\n" +
                 "FOR i IN item FILTER i.regularExpression.regularExpression =~ @regularExpression || i.regularExpression.alias =~ @regularExpression || i.regularExpression.mnemonic =~ @regularExpression\n" +

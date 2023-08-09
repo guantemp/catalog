@@ -23,7 +23,6 @@ import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 
 import java.sql.SQLException;
 import java.util.EnumMap;
@@ -43,8 +42,6 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
     private static Disruptor<ExecuteSqlEvent> executeDisruptor;
     private static RingBuffer<ExecuteSqlEvent> ringBuffer;
 
-
-    private static CloseableHttpClient httpClient;
 
     static {
         executeDisruptor = new Disruptor<>(
