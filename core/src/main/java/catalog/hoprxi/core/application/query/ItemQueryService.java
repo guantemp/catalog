@@ -34,7 +34,7 @@ public interface ItemQueryService {
      * @param brandId
      * @return
      */
-    ItemView[] belongToBrand(String brandId, int offset, int limit);
+    ItemView[] belongToBrand(String brandId, long offset, int limit);
 
     /**
      * @param categoryId
@@ -44,9 +44,11 @@ public interface ItemQueryService {
 
     /**
      * @param categoryId
+     * @param offset
+     * @param limit
      * @return all item belong current category and descendants category
      */
-    ItemView[] belongToCategoryAndDescendants(String categoryId);
+    ItemView[] belongToCategoryAndDescendants(String categoryId, long offset, int limit);
 
     /**
      * @param offset
@@ -66,6 +68,10 @@ public interface ItemQueryService {
      */
     ItemView[] queryByBarcode(String barcode);
 
+    /**
+     * @param barcode
+     * @return
+     */
     ItemView[] accurateQueryByBarcode(String barcode);
 
     /**
@@ -74,5 +80,9 @@ public interface ItemQueryService {
      */
     ItemView[] serach(String regularExpression);
 
-    ItemView[] serach(String regularExpression, long offset, int limit);
+    /**
+     * @param expression is support regular(barcode mnemonic),name alias = like%name/alias%
+     * @return matched result
+     */
+    ItemView[] serach(String expression, long offset, int limit);
 }

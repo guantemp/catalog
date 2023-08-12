@@ -91,7 +91,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
     }
 
     @Override
-    public ItemView[] belongToBrand(String brandId, int offset, int limit) {
+    public ItemView[] belongToBrand(String brandId, long offset, int limit) {
         final String query = "WITH brand,category,item,barcode\n" +
                 "FOR br IN brand FILTER br._key == @brandId\n" +
                 "FOR i IN 1..1 INBOUND br._id belong LIMIT @offset,@limit\n" +
@@ -119,7 +119,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
     }
 
     @Override
-    public ItemView[] belongToCategoryAndDescendants(String categoryId) {
+    public ItemView[] belongToCategoryAndDescendants(String categoryId, long offset, int limit) {
         final String query = "WITH brand,category,item,barcode\n" +
                 "FOR c IN category FILTER c._key == @categoryId\n" +
                 "FOR i IN 1..1 INBOUND c._id belong LIMIT @offset,@limit\n" +
@@ -195,7 +195,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
     }
 
     @Override
-    public ItemView[] serach(String regularExpression, long offset, int limit) {
+    public ItemView[] serach(String expression, long offset, int limit) {
         return new ItemView[0];
     }
 
