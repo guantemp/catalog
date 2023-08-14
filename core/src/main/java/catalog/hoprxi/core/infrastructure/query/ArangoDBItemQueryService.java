@@ -182,7 +182,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
     }
 
     @Override
-    public ItemView[] serach(String regularExpression) {
+    public ItemView[] queryByRegular(String regularExpression) {
         final String query = "WITH brand,category,item,barcode\n" +
                 "FOR i IN item FILTER i.regularExpression.regularExpression =~ @regularExpression || i.regularExpression.alias =~ @regularExpression || i.regularExpression.mnemonic =~ @regularExpression\n" +
                 "FOR b IN 1..1 OUTBOUND i._id has\n" +
@@ -195,7 +195,7 @@ public class ArangoDBItemQueryService implements ItemQueryService {
     }
 
     @Override
-    public ItemView[] serach(String expression, long offset, int limit) {
+    public ItemView[] queryByName(String expression, long offset, int limit) {
         return new ItemView[0];
     }
 

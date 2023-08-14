@@ -57,7 +57,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2023-03-01
+ * @version 0.0.2 builder 2023-08-13
  */
 public class PsqlItemQueryService implements ItemQueryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQueryService.class);
@@ -91,7 +91,7 @@ public class PsqlItemQueryService implements ItemQueryService {
                     "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
                     "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
                     "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
-                    "from item  i,category  c,brand  b where i.id= ? and i.category_id = c.id and i.brand_id = b.id";
+                    "from item  i,category  c,brand  b where i.id= ? and i.category_id = c.id and i.brand_id = b.id limit 1";
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setLong(1, Long.parseLong(id));
             ResultSet rs = ps.executeQuery();
@@ -161,7 +161,7 @@ public class PsqlItemQueryService implements ItemQueryService {
                     "i.retail_price::jsonb ->> 'number'  retail_price_number,i.retail_price::jsonb ->> 'currencyCode'  retail_price_currencyCode,i.retail_price::jsonb ->> 'unit'  retail_price_unit,\n" +
                     "i.member_price::jsonb ->> 'name'  member_price_name,i.member_price::jsonb -> 'price' ->> 'number'  member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode'  member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit'  member_price_unit,\n" +
                     "i.vip_price::jsonb ->> 'name'  vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number'  vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode'  vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit'  vip_price_unit,i.show\n" +
-                    "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id\n" +
+                    "from category c left join item i on i.category_id = c.id left join brand b on b.id = i.brand_id\n" +
                     "where c.id in (select id from category where root_id = (select root_id from category where id = ?) and \"left\" >= (select \"left\" from category where id = ?)\n" +
                     "and \"right\" <= (select \"right\" from category where id =?)) offset ? limit ?";
             PreparedStatement ps = connection.prepareStatement(sql);
@@ -203,7 +203,6 @@ public class PsqlItemQueryService implements ItemQueryService {
         }
         return new ItemView[0];
     }
-
  */
 
     @Override
@@ -288,7 +287,7 @@ public class PsqlItemQueryService implements ItemQueryService {
     }
 
     @Override
-    public ItemView[] serach(String regularExpression) {
+    public ItemView[] queryByRegular(String regularExpression) {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             final String findSql = "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                     "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
@@ -332,7 +331,7 @@ public class PsqlItemQueryService implements ItemQueryService {
     }
 
     @Override
-    public ItemView[] serach(String expression, long offset, int limit) {
+    public ItemView[] queryByName(String expression, long offset, int limit) {
         final String sql = "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                 "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
                 "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +

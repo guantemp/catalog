@@ -134,28 +134,28 @@ public class PsqlItemQueryServiceTest {
 
     @Test
     public void testSerach() {
-        ItemView[] items = query.serach("彩虹");
+        ItemView[] items = query.queryByRegular("彩虹");
         Assert.assertEquals(items.length, 133);
-        items = query.serach("^彩虹");
+        items = query.queryByRegular("^彩虹");
         //Assert.assertEquals(items.length, 2);
-        items = query.serach("彩虹|长虹");
+        items = query.queryByRegular("彩虹|长虹");
         Assert.assertEquals(items.length, 0);
-        items = query.serach("不知道");
+        items = query.queryByRegular("不知道");
         Assert.assertEquals(items.length, 0);
-        items = query.serach("天友|长虹|彩虹");
+        items = query.queryByRegular("天友|长虹|彩虹");
         Assert.assertEquals(items.length, 0);
-        items = query.serach("^天友|长虹|彩虹");
+        items = query.queryByRegular("^天友|长虹|彩虹");
         Assert.assertEquals(items.length, 0);
 
-        ItemView[] skuses = query.serach("^ch");
+        ItemView[] skuses = query.queryByRegular("^ch");
         Assert.assertEquals(skuses.length, 3);
-        skuses = query.serach("qd");
+        skuses = query.queryByRegular("qd");
         Assert.assertEquals(skuses.length, 3);
-        skuses = query.serach("ch");
+        skuses = query.queryByRegular("ch");
         Assert.assertEquals(skuses.length, 4);
-        skuses = query.serach("chetr");
+        skuses = query.queryByRegular("chetr");
         Assert.assertEquals(skuses.length, 0);
-        skuses = query.serach("ty");
+        skuses = query.queryByRegular("ty");
         Assert.assertEquals(skuses.length, 5);
     }
 
@@ -186,7 +186,7 @@ public class PsqlItemQueryServiceTest {
 
     @Test
     public void testTestSerach() {
-        ItemView[] items = query.serach("彩虹|690", 130, 1000);
+        ItemView[] items = query.queryByName("彩虹|690", 130, 1000);
         //for(ItemView view:items)
         //System.out.println(view);
         System.out.println(items.length);

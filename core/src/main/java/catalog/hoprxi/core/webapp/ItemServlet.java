@@ -132,13 +132,13 @@ public class ItemServlet extends HttpServlet {
             } else if (!key.isEmpty()) {
                 ItemView[] itemViews;
                 if (!categoryId.isEmpty() || !brandId.isEmpty()) {
-                    itemViews = queryService.serach(key);
+                    itemViews = queryService.queryByRegular(key);
                     itemViews = Arrays.stream(itemViews).filter(i -> categoryId.isEmpty() ? true : categoryId.equals(i.categoryView().id()))
                             .filter(i -> brandId.isEmpty() ? true : brandId.equals(i.brandView().id()))
                             .skip(offset).limit(limit)
                             .toArray(ItemView[]::new);
                 } else {
-                    itemViews = queryService.serach(key, offset, limit);
+                    itemViews = queryService.queryByName(key, offset, limit);
                 }
                 System.out.println(itemViews.length);
                 responseItemViews(generator, itemViews);
@@ -191,7 +191,7 @@ public class ItemServlet extends HttpServlet {
                         itemViewSet.add(itemView);
                 }
                 if (!key.isEmpty()) {
-                    ItemView[] itemViews = queryService.serach(key, offset, limit);
+                    ItemView[] itemViews = queryService.queryByRegular(key, offset, limit);
                     itemViewSet.addAll(Arrays.asList(itemViews));
                 }
                 responseItemViews(generator, itemViewSet.toArray(new ItemView[0]));

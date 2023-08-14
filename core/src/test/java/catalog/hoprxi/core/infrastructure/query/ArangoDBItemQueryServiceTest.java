@@ -91,28 +91,28 @@ public class ArangoDBItemQueryServiceTest {
 
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testSerach() {
-        ItemView[] items = itemQueryService.serach("彩虹");
+        ItemView[] items = itemQueryService.queryByRegular("彩虹");
         Assert.assertEquals(items.length, 3);
-        items = itemQueryService.serach("^彩虹");
+        items = itemQueryService.queryByRegular("^彩虹");
         Assert.assertEquals(items.length, 2);
-        items = itemQueryService.serach("彩虹|长虹");
+        items = itemQueryService.queryByRegular("彩虹|长虹");
         Assert.assertEquals(items.length, 4);
-        items = itemQueryService.serach("不知道");
+        items = itemQueryService.queryByRegular("不知道");
         Assert.assertEquals(items.length, 0);
-        items = itemQueryService.serach("天友|长虹|彩虹");
+        items = itemQueryService.queryByRegular("天友|长虹|彩虹");
         Assert.assertEquals(items.length, 9);
-        items = itemQueryService.serach("^天友|长虹|彩虹");
+        items = itemQueryService.queryByRegular("^天友|长虹|彩虹");
         Assert.assertEquals(items.length, 7);
 
-        ItemView[] skuses = itemQueryService.serach("^ch");
+        ItemView[] skuses = itemQueryService.queryByRegular("^ch");
         Assert.assertEquals(skuses.length, 3);
-        skuses = itemQueryService.serach("qd");
+        skuses = itemQueryService.queryByRegular("qd");
         Assert.assertEquals(skuses.length, 3);
-        skuses = itemQueryService.serach("ch");
+        skuses = itemQueryService.queryByRegular("ch");
         Assert.assertEquals(skuses.length, 4);
-        skuses = itemQueryService.serach("chetr");
+        skuses = itemQueryService.queryByRegular("chetr");
         Assert.assertEquals(skuses.length, 0);
-        skuses = itemQueryService.serach("ty");
+        skuses = itemQueryService.queryByRegular("ty");
         Assert.assertEquals(skuses.length, 5);
     }
 }

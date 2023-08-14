@@ -21,7 +21,7 @@ import catalog.hoprxi.core.application.view.ItemView;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2021-10-15
+ * @version 0.0.2 builder 2023-08-13
  */
 public interface ItemQueryService {
     /**
@@ -75,14 +75,16 @@ public interface ItemQueryService {
     ItemView[] accurateQueryByBarcode(String barcode);
 
     /**
-     * @param regularExpression is support regular,will search Name(name,alias,mnemonic),barcode
+     * @param regularExpression is support regular,will search Name->>mnemonic,barcode
      * @return matched result
      */
-    ItemView[] serach(String regularExpression);
+    ItemView[] queryByRegular(String regularExpression);
 
     /**
-     * @param expression is support regular(barcode mnemonic),name alias = like%name/alias%
+     * @param expression is support name,alias
+     * @param offset
+     * @param limit
      * @return matched result
      */
-    ItemView[] serach(String expression, long offset, int limit);
+    ItemView[] queryByName(String expression, long offset, int limit);
 }
