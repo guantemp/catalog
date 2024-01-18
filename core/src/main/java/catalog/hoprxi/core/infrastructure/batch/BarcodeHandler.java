@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.application.batch.ItemCorrespondence;
+import catalog.hoprxi.core.application.batch.ItemMapping;
 import catalog.hoprxi.core.application.query.ItemQueryService;
 import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
@@ -39,11 +39,11 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
-        String barcode = itemImportEvent.map.get(ItemCorrespondence.BARCODE);
+        String barcode = itemImportEvent.map.get(ItemMapping.BARCODE);
         itemImportEvent.verify = Verify.OK;
         if (barcode == null || barcode.isEmpty()) {
             //根据设置规则生成店内码
-            itemImportEvent.map.put(ItemCorrespondence.BARCODE, BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(1, 1, "21")[0].toPlanString());
+            itemImportEvent.map.put(ItemMapping.BARCODE, BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(1, 1, "21")[0].toPlanString());
             return;
         }
         Barcode bar = null;
@@ -68,7 +68,7 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
             itemImportEvent.verify = Verify.BARCODE_EXIST;
             return;
         }
-        itemImportEvent.map.put(ItemCorrespondence.BARCODE, "'" + bar.toPlanString() + "'");
+        itemImportEvent.map.put(ItemMapping.BARCODE, "'" + bar.toPlanString() + "'");
         //System.out.println("barcode:"+itemImportEvent.map.get(Corresponding.BARCODE));
     }
 }

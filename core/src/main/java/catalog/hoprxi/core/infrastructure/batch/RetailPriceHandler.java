@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.application.batch.ItemCorrespondence;
+import catalog.hoprxi.core.application.batch.ItemMapping;
 import catalog.hoprxi.core.domain.model.price.Unit;
 import com.lmax.disruptor.EventHandler;
 
@@ -30,11 +30,11 @@ import java.util.StringJoiner;
 public class RetailPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        Unit systemUnit = Unit.of(itemImportEvent.map.get(ItemCorrespondence.UNIT));
+        Unit systemUnit = Unit.of(itemImportEvent.map.get(ItemMapping.UNIT));
         StringJoiner joiner = new StringJoiner(",", "'{", "}'");
-        joiner.add("\"number\":" + itemImportEvent.map.get(ItemCorrespondence.RETAIL_PRICE));
+        joiner.add("\"number\":" + itemImportEvent.map.get(ItemMapping.RETAIL_PRICE));
         joiner.add("\"currencyCode\":\"CNY\"");
         joiner.add("\"unit\":\"" + systemUnit.name() + "\"");
-        itemImportEvent.map.put(ItemCorrespondence.RETAIL_PRICE, joiner.toString());
+        itemImportEvent.map.put(ItemMapping.RETAIL_PRICE, joiner.toString());
     }
 }

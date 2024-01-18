@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.application.batch.ItemCorrespondence;
+import catalog.hoprxi.core.application.batch.ItemMapping;
 import com.lmax.disruptor.EventHandler;
 
 /***
@@ -27,6 +27,6 @@ import com.lmax.disruptor.EventHandler;
 public class ShelfLifeHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        itemImportEvent.map.put(ItemCorrespondence.SHELF_LIFE, "0");
+        itemImportEvent.map.put(ItemMapping.SHELF_LIFE, "0");
     }
 }

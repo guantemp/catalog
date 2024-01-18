@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.application.batch.ItemCorrespondence;
+import catalog.hoprxi.core.application.batch.ItemMapping;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -93,9 +93,9 @@ public class MadeinHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         ClassicHttpRequest httpGet = ClassicRequestBuilder.get(AREA_URL).build();
-        String madein = itemImportEvent.map.get(ItemCorrespondence.MADE_IN);
+        String madein = itemImportEvent.map.get(ItemMapping.MADE_IN);
         if (madein == null || madein.isEmpty()) {
-            itemImportEvent.map.put(ItemCorrespondence.MADE_IN, "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Black\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"name\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'");
+            itemImportEvent.map.put(ItemMapping.MADE_IN, "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Black\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"name\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'");
             return;
         }
         // 表单参数
@@ -121,7 +121,7 @@ public class MadeinHandler implements EventHandler<ItemImportEvent> {
             //EntityUtils.consume(entity);
             return processmMadeinJson(entity.getContent());
         });
-        itemImportEvent.map.put(ItemCorrespondence.MADE_IN, result);
+        itemImportEvent.map.put(ItemMapping.MADE_IN, result);
         //System.out.println("made_in:" + itemImportEvent.map.get(Corresponding.MADE_IN));
     }
 

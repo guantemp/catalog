@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.application.batch.ItemCorrespondence;
+import catalog.hoprxi.core.application.batch.ItemMapping;
 import catalog.hoprxi.core.domain.model.price.Unit;
 import com.lmax.disruptor.EventHandler;
 
@@ -30,14 +30,14 @@ import java.util.StringJoiner;
 public class LastReceiptPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        Unit systemUnit = Unit.of(itemImportEvent.map.get(ItemCorrespondence.UNIT));
+        Unit systemUnit = Unit.of(itemImportEvent.map.get(ItemMapping.UNIT));
         StringJoiner joiner = new StringJoiner(",", "'{\"name\":\"最近入库价\",\"price\": ", "}'");
         StringJoiner subJoiner = new StringJoiner(",", "{", "}");
-        subJoiner.add("\"number\":" + (itemImportEvent.map.get(ItemCorrespondence.LAST_RECEIPT_PRICE) == null ? "0" : itemImportEvent.map.get(ItemCorrespondence.LAST_RECEIPT_PRICE)));
+        subJoiner.add("\"number\":" + (itemImportEvent.map.get(ItemMapping.LAST_RECEIPT_PRICE) == null ? "0" : itemImportEvent.map.get(ItemMapping.LAST_RECEIPT_PRICE)));
         subJoiner.add("\"currencyCode\":\"CNY\"");
         subJoiner.add("\"unit\":\"" + systemUnit.name() + "\"");
         joiner.add(subJoiner.toString());
         //System.out.println(joiner.toString());
-        itemImportEvent.map.put(ItemCorrespondence.LAST_RECEIPT_PRICE, joiner.toString());
+        itemImportEvent.map.put(ItemMapping.LAST_RECEIPT_PRICE, joiner.toString());
     }
 }

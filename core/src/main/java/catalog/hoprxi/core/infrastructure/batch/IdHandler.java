@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.application.batch.ItemCorrespondence;
+import catalog.hoprxi.core.application.batch.ItemMapping;
 import com.lmax.disruptor.EventHandler;
 import salt.hoprxi.id.LongId;
 
@@ -32,10 +32,10 @@ public class IdHandler implements EventHandler<ItemImportEvent> {
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
-        String id = itemImportEvent.map.get(ItemCorrespondence.ID);
+        String id = itemImportEvent.map.get(ItemMapping.ID);
         if (id == null || id.isEmpty() || !ID_PATTERN.matcher(id).matches()) {
             id = String.valueOf(LongId.generate());
         }
-        itemImportEvent.map.put(ItemCorrespondence.ID, id);
+        itemImportEvent.map.put(ItemMapping.ID, id);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.application.batch.ItemCorrespondence;
+import catalog.hoprxi.core.application.batch.ItemMapping;
 import com.lmax.disruptor.EventHandler;
 
 /***
@@ -27,9 +27,9 @@ import com.lmax.disruptor.EventHandler;
 public class SpecHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        String spec = itemImportEvent.map.get(ItemCorrespondence.SPEC);
+        String spec = itemImportEvent.map.get(ItemMapping.SPEC);
         if (spec == null)
             spec = "";
-        itemImportEvent.map.put(ItemCorrespondence.SPEC, "'" + spec + "'");
+        itemImportEvent.map.put(ItemMapping.SPEC, "'" + spec + "'");
     }
 }

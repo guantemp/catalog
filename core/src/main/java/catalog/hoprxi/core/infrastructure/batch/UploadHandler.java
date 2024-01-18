@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.application.batch.ItemCorrespondence;
+import catalog.hoprxi.core.application.batch.ItemMapping;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -102,19 +102,19 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        EnumMap<ItemCorrespondence, String> map = itemImportEvent.map;
+        EnumMap<ItemMapping, String> map = itemImportEvent.map;
         if (itemImportEvent.verify == Verify.OK) {
-            String barcode = map.get(ItemCorrespondence.BARCODE);
+            String barcode = map.get(ItemMapping.BARCODE);
             barcode = barcode.substring(1, barcode.length() - 1);
             File file = new File("F:\\developer\\catalog\\barcode\\" + barcode + ".jpg");
             //System.out.println(barcode + ":" + file.getCanonicalPath() + ":" + file.exists());
             if (file.exists()) {
                 number.incrementAndGet();
                 String show = uplaod(file);
-                map.put(ItemCorrespondence.SHOW, show);
+                map.put(ItemMapping.SHOW, show);
             }
         }
-        if (map.get(ItemCorrespondence.LAST_ROW) != null) {
+        if (map.get(ItemMapping.LAST_ROW) != null) {
             try {
                 httpClient.close();
             } catch (IOException e) {

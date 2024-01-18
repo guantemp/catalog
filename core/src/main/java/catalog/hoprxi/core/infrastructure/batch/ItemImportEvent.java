@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.application.batch.ItemCorrespondence;
+import catalog.hoprxi.core.application.batch.ItemMapping;
 
 import java.util.EnumMap;
 
@@ -26,11 +26,11 @@ import java.util.EnumMap;
  * @version 0.0.1 builder 2023-05-08
  */
 public class ItemImportEvent {
-    EnumMap<ItemCorrespondence, String> map;
+    EnumMap<ItemMapping, String> map;
     Verify verify = Verify.OK;
     int estimatedQuantity = 0;
 
-    public void setMap(EnumMap<ItemCorrespondence, String> map) {
+    public void setMap(EnumMap<ItemMapping, String> map) {
         this.map = map;
     }
 }

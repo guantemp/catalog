@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.application.batch.ItemCorrespondence;
+import catalog.hoprxi.core.application.batch.ItemMapping;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventTranslatorOneArg;
 import com.lmax.disruptor.RingBuffer;
@@ -63,17 +63,17 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
-        EnumMap<ItemCorrespondence, String> map = itemImportEvent.map;
+        EnumMap<ItemMapping, String> map = itemImportEvent.map;
         if (itemImportEvent.verify == Verify.OK) {
             StringJoiner joiner = new StringJoiner(",", "(", ")");
-            joiner.add(map.get(ItemCorrespondence.ID)).add(map.get(ItemCorrespondence.NAME)).add(map.get(ItemCorrespondence.BARCODE)).add(map.get(ItemCorrespondence.CATEGORY))
-                    .add(map.get(ItemCorrespondence.BRAND)).add(map.get(ItemCorrespondence.GRADE)).add(map.get(ItemCorrespondence.MADE_IN)).add(map.get(ItemCorrespondence.SPEC))
-                    .add(map.get(ItemCorrespondence.SHELF_LIFE)).add(map.get(ItemCorrespondence.LAST_RECEIPT_PRICE)).add(map.get(ItemCorrespondence.RETAIL_PRICE))
-                    .add(map.get(ItemCorrespondence.MEMBER_PRICE)).add(map.get(ItemCorrespondence.VIP_PRICE)).add(map.get(ItemCorrespondence.SHOW));
+            joiner.add(map.get(ItemMapping.ID)).add(map.get(ItemMapping.NAME)).add(map.get(ItemMapping.BARCODE)).add(map.get(ItemMapping.CATEGORY))
+                    .add(map.get(ItemMapping.BRAND)).add(map.get(ItemMapping.GRADE)).add(map.get(ItemMapping.MADE_IN)).add(map.get(ItemMapping.SPEC))
+                    .add(map.get(ItemMapping.SHELF_LIFE)).add(map.get(ItemMapping.LAST_RECEIPT_PRICE)).add(map.get(ItemMapping.RETAIL_PRICE))
+                    .add(map.get(ItemMapping.MEMBER_PRICE)).add(map.get(ItemMapping.VIP_PRICE)).add(map.get(ItemMapping.SHOW));
             //System.out.println(number.incrementAndGet());
             ringBuffer.publishEvent(TRANSLATOR, joiner.toString());
         }
-        if (map.get(ItemCorrespondence.LAST_ROW) != null) {//最后一行
+        if (map.get(ItemMapping.LAST_ROW) != null) {//最后一行
             ringBuffer.publishEvent(TRANSLATOR, "LAST_ROW");
             executeDisruptor.shutdown();
         }

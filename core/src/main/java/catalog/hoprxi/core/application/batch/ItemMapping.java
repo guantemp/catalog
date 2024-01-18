@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,6 @@ package catalog.hoprxi.core.application.batch;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-05-04
  */
-public enum ItemCorrespondence {
+public enum ItemMapping {
     CHECK, ID, NAME, ALIAS, BARCODE, SPEC, GRADE, CATEGORY, BRAND, SHELF_LIFE, MADE_IN, UNIT, LAST_RECEIPT_PRICE, RETAIL_PRICE, MEMBER_PRICE, VIP_PRICE, SHOW, IGNORE, LAST_ROW;
 }

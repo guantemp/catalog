@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,5 +26,9 @@ import java.io.InputStream;
  */
 public interface ItemImportService {
 
-    void importItemFromXsl(InputStream is, ItemCorrespondence[] itemCorrespondences) throws IOException;
+    void importItemFromXsl(InputStream is, ItemMapping[] itemMappings) throws IOException;
+
+    void importItemFromCsv(InputStream is, ItemMapping[] itemMappings) throws IOException;
+
+    void importItemFromTxt(InputStream is, ItemMapping[] itemMappings) throws IOException;
 }

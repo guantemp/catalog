@@ -16,8 +16,8 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.application.batch.ItemCorrespondence;
 import catalog.hoprxi.core.application.batch.ItemImportService;
+import catalog.hoprxi.core.application.batch.ItemMapping;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -39,12 +39,12 @@ import java.util.concurrent.Executors;
  * @version 0.0.1 builder 2023-05-08
  */
 public class PsqlItemImportWithDisruptor implements ItemImportService {
-    private static final ItemCorrespondence[] DEFAULT_CORR = ItemCorrespondence.values();
+    private static final ItemMapping[] DEFAULT_CORR = ItemMapping.values();
 
     @Override
-    public void importItemFromXsl(InputStream is, ItemCorrespondence[] itemCorrespondences) throws IOException {
-        if (itemCorrespondences == null || itemCorrespondences.length == 0)
-            itemCorrespondences = DEFAULT_CORR;
+    public void importItemFromXsl(InputStream is, ItemMapping[] itemMappings) throws IOException {
+        if (itemMappings == null || itemMappings.length == 0)
+            itemMappings = DEFAULT_CORR;
         Disruptor<ItemImportEvent> disruptor = new Disruptor<>(
                 ItemImportEvent::new,
                 128,
@@ -63,20 +63,30 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
         Sheet sheet = workbook.getSheetAt(0);
         for (int i = 1, j = sheet.getLastRowNum(); i <= j; i++) {
             Row row = sheet.getRow(i);
-            EnumMap<ItemCorrespondence, String> map = new EnumMap<>(ItemCorrespondence.class);
-            for (int m = 0, n = itemCorrespondences.length; m < n; m++) {
-                if (itemCorrespondences[m] == ItemCorrespondence.IGNORE || itemCorrespondences[m] == ItemCorrespondence.LAST_ROW)
+            EnumMap<ItemMapping, String> map = new EnumMap<>(ItemMapping.class);
+            for (int m = 0, n = itemMappings.length; m < n; m++) {
+                if (itemMappings[m] == ItemMapping.IGNORE || itemMappings[m] == ItemMapping.LAST_ROW)
                     continue;
                 Cell cell = row.getCell(m);
-                map.put(itemCorrespondences[m], readCellValue(cell));
+                map.put(itemMappings[m], readCellValue(cell));
             }
             if (i == j) {
-                map.put(ItemCorrespondence.LAST_ROW, String.valueOf(j));
+                map.put(ItemMapping.LAST_ROW, String.valueOf(j));
                 //System.out.println("读excel最后：" + map);
             }
             ringBuffer.publishEvent((event, sequence, rMap) -> event.setMap(rMap), map);
         }
         disruptor.shutdown();
+    }
+
+    @Override
+    public void importItemFromCsv(InputStream is, ItemMapping[] itemMappings) throws IOException {
+
+    }
+
+    @Override
+    public void importItemFromTxt(InputStream is, ItemMapping[] itemMappings) throws IOException {
+
     }
 
     private String readCellValue(Cell cell) {

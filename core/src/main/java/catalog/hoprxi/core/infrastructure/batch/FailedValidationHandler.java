@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.application.batch.ItemCorrespondence;
+import catalog.hoprxi.core.application.batch.ItemMapping;
 import com.lmax.disruptor.EventHandler;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,10 +36,10 @@ public class FailedValidationHandler implements EventHandler<ItemImportEvent> {
             case BARCODE_REPEAT:
             case BARCODE_CHECK_SUM_ERROR:
                 number.incrementAndGet();
-                System.out.println(itemImportEvent.verify + ":" + itemImportEvent.map.get(ItemCorrespondence.BARCODE));
+                System.out.println(itemImportEvent.verify + ":" + itemImportEvent.map.get(ItemMapping.BARCODE));
                 break;
         }
-        if (itemImportEvent.map.get(ItemCorrespondence.LAST_ROW) != null) {
+        if (itemImportEvent.map.get(ItemMapping.LAST_ROW) != null) {
             System.out.println("Fail:" + number);
         }
     }

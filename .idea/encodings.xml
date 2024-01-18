@@ -3,7 +3,7 @@
   <component name="Encoding" defaultCharsetForPropertiesFiles="UTF-8">
     <file url="file://$PROJECT_DIR$/core" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/batch/ItemCorrespondence.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/batch/ItemMapping.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/command/ItemDeleteCommand.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/command/ItemRemoveCommand.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/command/ItemRenameCommand.java" charset="UTF-8" />
