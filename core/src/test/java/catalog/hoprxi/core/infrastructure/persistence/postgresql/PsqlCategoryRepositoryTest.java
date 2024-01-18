@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -229,10 +229,12 @@ public class PsqlCategoryRepositoryTest {
         Category beer = repository.find("496796322118291488");
         Assert.assertEquals(beer.parentId(), "496796322118291482");//washing
         beer.moveTo("496796322118291470");//drinks
+        System.out.println(beer);
         repository.save(beer);
         beer = repository.find("496796322118291488");
         Assert.assertEquals(beer.parentId(), "496796322118291470");//drinks
         Assert.assertEquals(beer.name().name(), "个人保健用卫生制剂");
+        System.out.println(beer);
 
         beer.rename("      啤酒    ", null);
         beer.changeDescription("是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");

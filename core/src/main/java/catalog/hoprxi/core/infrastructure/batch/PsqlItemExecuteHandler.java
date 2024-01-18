@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,9 +38,10 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
 
     public PsqlItemExecuteHandler() throws SQLException {
         connection = PsqlUtil.getConnection();
-        //System.out.println("connection.getAutoCommit()" + connection.getAutoCommit());
-        if (connection.getAutoCommit())
-            connection.setAutoCommit(false);
+        System.out.println("connection.getAutoCommit():" + connection.getAutoCommit());
+        //if (connection.getAutoCommit())
+        connection.setAutoCommit(false);
+        System.out.println("connection.getAutoCommit():" + connection.getAutoCommit());
         statement = connection.createStatement();
     }
 
@@ -48,7 +49,7 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
     public void onEvent(ExecuteSqlEvent executeSqlEvent, long l, boolean b) throws Exception {
         //System.out.println("sql:" + executeSqlEvent.sql+":"+b);
         if ("LAST_ROW".equals(executeSqlEvent.sql)) {
-            //System.out.println("LAST_ROW:::" + sql.toString());
+            System.out.println("LAST_ROW:::" + sql.toString());
             statement.addBatch(sql.toString());
             statement.executeBatch();
             connection.commit();
@@ -63,11 +64,11 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
                 statement.addBatch(sql.toString());
                 sql = new StringJoiner(",", "insert into item (id,\"name\",barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price,show) values ", "");
             }
-            if (i % 2048 == 0) {
+            if (i % 1024 == 0) {
                 statement.executeBatch();
                 connection.commit();
                 statement.clearBatch();
-                //System.out.println(i);
+                System.out.println(i);
             }
         }
     }

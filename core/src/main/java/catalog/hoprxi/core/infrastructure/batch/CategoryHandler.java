@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,12 +42,20 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
 
     public CategoryHandler() {
         CategoryView[] root = CATEGORY_QUERY.root();
+        if (root.length == 0)
+            categoryRepository.save(Category.UNDEFINED);
         Name rootName = new Name("商品分类", "root");
         for (CategoryView v : root) {
             if (v.getName().equals(rootName)) {
                 CORE_PARENT_ID = v.getId();
                 break;
             }
+        }
+        if (CORE_PARENT_ID == null) {
+            String rootId = categoryRepository.nextIdentity();
+            Category root1 = Category.root(rootId, rootName);
+            categoryRepository.save(root1);
+            CORE_PARENT_ID = rootId;
         }
     }
 

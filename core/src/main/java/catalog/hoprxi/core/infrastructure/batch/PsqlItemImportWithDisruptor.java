@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
 
         disruptor.handleEventsWith(new IdHandler(), new NameHandler(), new BarcodeHandler(), new CategoryHandler(), new BrandHandler(),
                 new GrandHandler(), new MadeinHandler(), new SpecHandler(), new ShelfLifeHandler(), new LastReceiptPriceHandler(), new RetailPriceHandler(),
-                new MemeberPriceHandler(), new VipPriceHandler()).then(new UploadHandler()).then(new AssembleHandler(), new FailedValidationHandler());
+                new MemeberPriceHandler(), new VipPriceHandler()).then(new AssembleHandler(), new FailedValidationHandler());
         disruptor.start();
 
         RingBuffer<ItemImportEvent> ringBuffer = disruptor.getRingBuffer();
