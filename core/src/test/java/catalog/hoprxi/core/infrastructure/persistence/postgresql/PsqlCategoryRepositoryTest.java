@@ -227,22 +227,19 @@ public class PsqlCategoryRepositoryTest {
     @Test(priority = 1, expectedExceptions = InvalidCategoryIdException.class)
     public void testSave() {
         Category beer = repository.find("496796322118291488");
-        Assert.assertEquals(beer.parentId(), "496796322118291482");//washing
-        beer.moveTo("496796322118291470");//drinks
-        System.out.println(beer);
-        repository.save(beer);
-        beer = repository.find("496796322118291488");
-        Assert.assertEquals(beer.parentId(), "496796322118291470");//drinks
-        Assert.assertEquals(beer.name().name(), "个人保健用卫生制剂");
         System.out.println(beer);
 
-        beer.rename("      啤酒    ", null);
+        Assert.assertEquals(beer.parentId(), "496796322118291482");//washing
+        beer.moveTo("496796322118291470");//drinks
+        beer.rename("      啤酒    ", "beer");
         beer.changeDescription("是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
-        beer.rename(null, "杂皮");
         repository.save(beer);
         beer = repository.find("496796322118291488");
-        Assert.assertEquals(beer.description(), "是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
+        System.out.println("updated:" + beer);
+        Assert.assertEquals(beer.parentId(), "496796322118291470");//drinks
         Assert.assertEquals(beer.name().name(), "啤酒");
+        Assert.assertEquals(beer.description(), "是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
+        Assert.assertEquals(beer.name().alias(), "beer");
 
         Category leisure_food = repository.find("496796322118291461");
         Assert.assertNotNull(leisure_food);

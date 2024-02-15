@@ -37,6 +37,9 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
     private static final Map<String, Barcode> BARCODE_MAP = new HashMap<>();
     private static final ItemQueryService ITEM_QUERY = new PsqlItemQueryService("catalog");
 
+    private int start = 1;
+    private String prefix = "20";
+
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
         String barcode = itemImportEvent.map.get(ItemMapping.BARCODE);

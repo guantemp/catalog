@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -214,12 +214,11 @@ public class PsqlCategoryRepository implements CategoryRepository {
         Statement statement = connection.createStatement();
         //需要移动的节点及子节点 left, right 值置为负值,归属到新的树形（root_id),移动节点的顶点parent_id设置为新的父节点的id值
         statement.addBatch("update category set \"left\"=0-\"left\",\"right\"=0-\"right\",root_id=" + targetRootId + " where \"left\">=" + left + " and \"right\"<=" + right);
-        StringBuilder updateSql = new StringBuilder("handle category set parent_id=").append(category.parentId()).append(",name='").append(toJson(category.name())).append("'");
-        if (category.description() != null)
-            updateSql.append(",description='").append(category.description()).append("'");
-        if (category.icon() != null)
-            updateSql.append(",logo_uri='").append(category.icon().toASCIIString()).append("'");
-        updateSql.append(" where id=").append(category.id());
+        StringBuilder updateSql = new StringBuilder("update category set parent_id=").append(category.parentId())
+                .append(",name='").append(toJson(category.name())).append("'")
+                .append(",description='").append(category.description()).append("'")
+                .append(",logo_uri='").append(category.icon() == null ? category.icon() : category.icon().toASCIIString()).append("'")
+                .append(" where id=").append(category.id());
         statement.addBatch(updateSql.toString());
         //被移动节点及子节点后面的节点往前移, 填充空缺位置
         statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and root_id=" + rootId);
