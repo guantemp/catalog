@@ -162,8 +162,9 @@ public class PsqlCategoryRepository implements CategoryRepository {
             preparedStatement.setLong(1, Long.parseLong(category.id()));
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
+                //not move from old tree
                 if (category.parentId().equals(resultSet.getString("parent_id"))) {
-                    String updateSql = "update category set name=?,description=?,logo_uri=? where id=?";
+                    final String updateSql = "update category set name=?,description=?,logo_uri=? where id=?";
                     PreparedStatement ps1 = connection.prepareStatement(updateSql);
                     name.setValue(toJson(category.name()));
                     ps1.setObject(1, name);
@@ -195,7 +196,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         }
     }
 
-    private void moveCategory(Connection connection, Category category, int left, int right, long rootId) throws SQLException {
+    private void moveCategory(Connection connection, Category category, int left, int right, long originalRootId) throws SQLException {
         int offset = right - left + 1;
         int targetRight = 0;
         long targetRootId = -1L;
@@ -207,12 +208,12 @@ public class PsqlCategoryRepository implements CategoryRepository {
             targetRootId = rs.getLong("root_id");
             targetRight = rs.getInt("right");
             //目标节点位于被移动节点后面
-            if (targetRootId == rootId && targetRight > right)
+            if (targetRootId == originalRootId && targetRight > right)
                 targetRight = targetRight - offset;
         }
         connection.setAutoCommit(false);
         Statement statement = connection.createStatement();
-        //需要移动的节点及子节点 left, right 值置为负值,归属到新的树形（root_id),移动节点的顶点parent_id设置为新的父节点的id值
+        //需要移动的节点及其子节点的 left, right 值置为负,归属到新的树形（root_id),移动节点的顶点parent_id设置为新的父节点的id值
         statement.addBatch("update category set \"left\"=0-\"left\",\"right\"=0-\"right\",root_id=" + targetRootId + " where \"left\">=" + left + " and \"right\"<=" + right);
         StringBuilder updateSql = new StringBuilder("update category set parent_id=").append(category.parentId())
                 .append(",name='").append(toJson(category.name())).append("'")
@@ -220,10 +221,10 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 .append(",logo_uri='").append(category.icon() == null ? category.icon() : category.icon().toASCIIString()).append("'")
                 .append(" where id=").append(category.id());
         statement.addBatch(updateSql.toString());
-        //被移动节点及子节点后面的节点往前移, 填充空缺位置
-        statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and root_id=" + rootId);
-        statement.addBatch("update category set \"right\"= \"right\"-" + offset + " where \"right\">" + right + " and root_id=" + rootId);
-        //被移动到父节点的队尾留出移动项目的空间
+        //原始树中被移动节点（含子节点）后面的节点往前移, 填充空缺位置
+        statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and root_id=" + originalRootId);
+        statement.addBatch("update category set \"right\"= \"right\"-" + offset + " where \"right\">" + right + " and root_id=" + originalRootId);
+        //目标树被移动到父节点的队尾留出移动项目的空间
         statement.addBatch("update category set \"left\"= \"left\"+" + offset + " where \"left\">" + targetRight + " and root_id=" + targetRootId);
         statement.addBatch("update category set \"right\"= \"right\"+" + offset + " where \"right\">=" + targetRight + " and root_id=" + targetRootId);
         //将负值记录填充到正确位置,队尾位置

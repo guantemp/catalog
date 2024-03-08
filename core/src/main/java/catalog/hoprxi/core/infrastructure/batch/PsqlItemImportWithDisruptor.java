@@ -47,7 +47,7 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
             itemMappings = DEFAULT_CORR;
         Disruptor<ItemImportEvent> disruptor = new Disruptor<>(
                 ItemImportEvent::new,
-                128,
+                256,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
                 new YieldingWaitStrategy()
@@ -77,16 +77,6 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
             ringBuffer.publishEvent((event, sequence, rMap) -> event.setMap(rMap), map);
         }
         disruptor.shutdown();
-    }
-
-    @Override
-    public void importItemFromCsv(InputStream is, ItemMapping[] itemMappings) throws IOException {
-
-    }
-
-    @Override
-    public void importItemFromTxt(InputStream is, ItemMapping[] itemMappings) throws IOException {
-
     }
 
     private String readCellValue(Cell cell) {
@@ -152,4 +142,16 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
         }
         return result;
     }
+
+    @Override
+    public void importItemFromCsv(InputStream is, ItemMapping[] itemMappings) throws IOException {
+
+    }
+
+    @Override
+    public void importItemFromTxt(InputStream is, ItemMapping[] itemMappings) throws IOException {
+
+    }
+
+
 }
