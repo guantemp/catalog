@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,10 +39,6 @@ public class Imported implements MadeIn {
         this.code = code;
     }
 
-    public String country() {
-        return country;
-    }
-
     @Override
     public String code() {
         return this.code;
@@ -71,7 +67,7 @@ public class Imported implements MadeIn {
     @Override
     public String toString() {
         return new StringJoiner(", ", Imported.class.getSimpleName() + "[", "]")
-                .add("country='" + country + "'")
+                .add("madeIn='" + country + "'")
                 .add("code='" + code + "'")
                 .toString();
     }

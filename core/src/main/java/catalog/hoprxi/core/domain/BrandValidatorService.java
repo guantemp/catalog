@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package catalog.hoprxi.core.domain;
 
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -39,9 +38,6 @@ public class BrandValidatorService {
             case "postgresql":
             case "psql":
                 repository = new PsqlBrandRepository(databaseName);
-                break;
-            case "arangodb":
-                repository = new ArangoDBBrandRepository(databaseName);
                 break;
         }
     }

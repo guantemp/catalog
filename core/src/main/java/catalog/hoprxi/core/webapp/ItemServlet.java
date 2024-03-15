@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
-import catalog.hoprxi.core.infrastructure.query.ArangoDBItemQueryService;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQueryService;
 import com.fasterxml.jackson.core.*;
 import com.typesafe.config.Config;
@@ -91,10 +90,6 @@ public class ItemServlet extends HttpServlet {
             case "postgresql":
                 //repository = new PsqlItemRepository("catalog");
                 queryService = new PsqlItemQueryService("catalog");
-                break;
-            case "arangodb":
-                //repository = new ArangoDBItemRepository("catalog");
-                queryService = new ArangoDBItemQueryService("catalog");
                 break;
         }
     }

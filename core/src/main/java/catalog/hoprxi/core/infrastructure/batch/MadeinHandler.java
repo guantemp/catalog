@@ -22,6 +22,8 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.lmax.disruptor.EventHandler;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
@@ -60,10 +62,12 @@ import java.util.List;
  * @version 0.0.1 builder 2023-05-09
  */
 public class MadeinHandler implements EventHandler<ItemImportEvent> {
-    private static final String AREA_URL = "https://hoprxi.tooo.top/area/v1/areas";
-    private static CloseableHttpClient httpClient;
+    private static final String AREA_URL;
+    private static final CloseableHttpClient httpClient;
 
     static {
+        Config areaUrl = ConfigFactory.load("core");
+        AREA_URL = areaUrl.hasPath("made_in_url") ? areaUrl.getString("made_in_url") : "https://www.hoprxi.com/v1/areas";
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         SSLContext sslContext = null;
         try {
@@ -95,7 +99,7 @@ public class MadeinHandler implements EventHandler<ItemImportEvent> {
         ClassicHttpRequest httpGet = ClassicRequestBuilder.get(AREA_URL).build();
         String madein = itemImportEvent.map.get(ItemMapping.MADE_IN);
         if (madein == null || madein.isEmpty()) {
-            itemImportEvent.map.put(ItemMapping.MADE_IN, "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Black\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"name\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'");
+            itemImportEvent.map.put(ItemMapping.MADE_IN, "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'");
             return;
         }
         // 表单参数
@@ -164,11 +168,11 @@ public class MadeinHandler implements EventHandler<ItemImportEvent> {
             }
         }
         if (code == null || code.equals("156"))
-            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Black\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"name\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'";
+            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'";
         if (level != null && level.equals("COUNTRY"))
-            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\",\"code\":" + parentCode + ",\"country\":\"" + parentName + "\"}'";
-        if (level != null && level.equals("PROVINCE"))
-            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"city\":\"" + name + "\"}'";
-        return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"city\":\"" + name + "\"}'";
+            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\",\"code\":" + parentCode + ",\"madeIn\":\"" + parentName + "\"}'";
+        //if (level != null && level.equals("PROVINCE"))
+        //return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"madeIn\":\"" + name + "\"}'";
+        return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"madeIn\":\"" + name + "\"}'";
     }
 }

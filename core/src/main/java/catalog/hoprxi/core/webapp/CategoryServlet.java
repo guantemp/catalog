@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
-import catalog.hoprxi.core.infrastructure.query.ArangoDBCategoryQueryService;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQueryService;
 import com.fasterxml.jackson.core.*;
 import com.typesafe.config.Config;
@@ -62,9 +61,6 @@ public class CategoryServlet extends HttpServlet {
         switch ((provider)) {
             case "postgresql":
                 categoryQueryService = new PsqlCategoryQueryService("catalog");
-                break;
-            case "arangodb":
-                categoryQueryService = new ArangoDBCategoryQueryService("catalog");
                 break;
         }
         categoryQueryService.root();

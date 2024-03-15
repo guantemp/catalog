@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,7 +121,7 @@ public class PsqlItemRepository implements ItemRepository {
     }
 
     private MadeIn toMadeIn(String json) throws IOException {
-        String _class = null, city = null, country = null, code = "156";
+        String _class = null, madeIn = null, code = "156";
         JsonFactory jasonFactory = new JsonFactory();
         JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
         while (!parser.isClosed()) {
@@ -133,24 +133,19 @@ public class PsqlItemRepository implements ItemRepository {
                     case "_class":
                         _class = parser.getValueAsString();
                         break;
-                    case "city":
-                        city = parser.getValueAsString();
-                        break;
-                    case "country":
-                        country = parser.getValueAsString();
-                        break;
                     case "code":
                         code = parser.getValueAsString();
+                        break;
+                    case "madeIn":
+                        madeIn = parser.getValueAsString();
                         break;
                 }
             }
         }
-        if ("156".equals(code))
-            return MadeIn.UNKNOWN;
-        else if (Domestic.class.getName().equals(_class)) {
-            return new Domestic(code, city);
+        if (Domestic.class.getName().equals(_class)) {
+            return new Domestic(code, madeIn);
         } else if (Imported.class.getName().equals(_class)) {
-            return new Imported(code, country);
+            return new Imported(code, madeIn);
         }
         return MadeIn.UNKNOWN;
     }
@@ -206,8 +201,8 @@ public class PsqlItemRepository implements ItemRepository {
             ps.setString(25, toJson(item.vipPrice()));
             ps.executeUpdate();
         } catch (SQLException e) {
-            System.out.println(e);
-            LOGGER.error("Can't save item{}", item, e);
+            //System.out.println(e);
+            LOGGER.error("Can't save item {}", item, e);
         }
     }
 
@@ -219,15 +214,11 @@ public class PsqlItemRepository implements ItemRepository {
             generator.writeStartObject();
             generator.writeStringField("_class", _class);
             generator.writeStringField("code", madeIn.code());
-            if (Domestic.class.getName().equals(_class)) {
-                generator.writeStringField("city", ((Domestic) madeIn).city());
-            } else if (Imported.class.getName().equals(_class)) {
-                generator.writeStringField("country", ((Imported) madeIn).country());
-            }
+            generator.writeStringField("madeIn", madeIn.madeIn());
             generator.writeEndObject();
             generator.flush();
         } catch (IOException e) {
-            LOGGER.error("Not write madeIn as json", e);
+            LOGGER.error("Not write madeIn {} as json", madeIn, e);
         }
         return output.toString();
     }

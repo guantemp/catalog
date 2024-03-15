@@ -27,11 +27,14 @@ import org.apache.poi.ss.usermodel.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.RoundingMode;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -146,6 +149,12 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
     @Override
     public void importItemFromCsv(InputStream is, ItemMapping[] itemMappings) throws IOException {
 
+        try (Stream<String> lines = Files.lines(Paths.get("asdas"))) {
+            lines.skip(1).map(line -> line.split(",")).forEach(columens -> {
+            });
+        } catch (IOException e) {
+
+        }
     }
 
     @Override

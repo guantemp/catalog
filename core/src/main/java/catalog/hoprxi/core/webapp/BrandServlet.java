@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import catalog.hoprxi.core.application.BrandAppService;
 import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.query.BrandQueryService;
 import catalog.hoprxi.core.domain.model.brand.Brand;
-import catalog.hoprxi.core.infrastructure.query.ArangoDBBrandQueryService;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlBrandQueryService;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
@@ -61,9 +60,6 @@ public class BrandServlet extends HttpServlet {
             case "postgresql":
             case "psql":
                 query = new PsqlBrandQueryService(databaseName);
-                break;
-            case "arangodb":
-                query = new ArangoDBBrandQueryService(databaseName);
                 break;
         }
     }

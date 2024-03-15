@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import catalog.hoprxi.core.application.command.CategoryCreateCommand;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
-import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
 
 import java.util.Objects;
 
@@ -34,7 +34,7 @@ public class CategoryCreateHandle implements Handle<CategoryCreateCommand> {
     @Override
     public void handle(CategoryCreateCommand command) {
         Objects.requireNonNull(command, "command required");
-        final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
+        final CategoryRepository repository = new PsqlCategoryRepository("catalog");
         Category category = new Category(command.getParentId(), repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
         repository.save(category);
     }

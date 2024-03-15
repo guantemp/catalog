@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
-import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -45,9 +44,6 @@ public class CategoryAppService {
         switch ((provider)) {
             case "postgresql":
                 repository = new PsqlCategoryRepository("catalog");
-                break;
-            case "arangodb":
-                repository = new ArangoDBCategoryRepository("catalog");
                 break;
         }
     }

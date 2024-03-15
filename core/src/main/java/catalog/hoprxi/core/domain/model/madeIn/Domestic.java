@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,10 +43,6 @@ public class Domestic implements MadeIn {
         this.code = code;
     }
 
-    public String city() {
-        return city;
-    }
-
     @Override
     public String madeIn() {
         return city;
@@ -56,7 +52,7 @@ public class Domestic implements MadeIn {
     @Override
     public String toString() {
         return new StringJoiner(", ", Domestic.class.getSimpleName() + "[", "]")
-                .add("city='" + city + "'")
+                .add("madeIn='" + city + "'")
                 .add("code='" + code + "'")
                 .toString();
     }

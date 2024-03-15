@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,12 +32,11 @@ public class Setup {
     public static void setup() throws SQLException {
         String provider = config.hasPath("provider") ? config.getString("provider") : "postgresql";
         switch ((provider)) {
+            case "psql":
             case "postgresql":
                 PsqlSetup.setup("catalog");
                 break;
-            case "arangodb":
-                ArangoDBSetup.setup("catalog");
-                break;
+
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,7 @@ package catalog.hoprxi.core.domain;
 import catalog.hoprxi.core.application.query.CategoryQueryService;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
-import catalog.hoprxi.core.infrastructure.persistence.ArangoDBCategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
-import catalog.hoprxi.core.infrastructure.query.ArangoDBCategoryQueryService;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQueryService;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -46,10 +44,7 @@ public class CategoryValidatorService {
                 repository = new PsqlCategoryRepository(databaseName);
                 query = new PsqlCategoryQueryService(databaseName);
                 break;
-            case "arangodb":
-                repository = new ArangoDBCategoryRepository(databaseName);
-                query = new ArangoDBCategoryQueryService(databaseName);
-                break;
+
         }
     }
 

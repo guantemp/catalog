@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandCreated;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import catalog.hoprxi.core.infrastructure.persistence.ArangoDBBrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
 import catalog.hoprxi.core.util.DomainRegistry;
 import com.typesafe.config.Config;
@@ -42,9 +41,6 @@ public class BrandCreateHandle implements Handle<BrandCreateCommand> {
         String provider = conf.hasPath("provider") ? conf.getString("provider") : "postgresql";
         String databaseName = conf.hasPath("databaseName") ? conf.getString("databaseName") : "catalog";
         switch ((provider)) {
-            case "arangodb":
-                repository = new ArangoDBBrandRepository(databaseName);
-                break;
             case "postgresql":
             case "psql":
             default:
