@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
-import com.arangodb.entity.DocumentField;
-import com.arangodb.velocypack.annotations.Expose;
 
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -31,12 +29,10 @@ import java.util.StringJoiner;
  * @version 0.0.1 builder 2019-06-19
  */
 public class ProhibitSellItem {
-    @Expose(serialize = false, deserialize = false)
     private Barcode barcode;
     private String brandId;
     private String categoryId;
     private Grade grade;
-    @DocumentField(DocumentField.Type.KEY)
     private String id;
     private Name name;
     private MadeIn madeIn;

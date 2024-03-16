@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import catalog.hoprxi.core.domain.CategoryValidatorService;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.util.DomainRegistry;
-import com.arangodb.entity.DocumentField;
 
 import java.net.URI;
 import java.util.Objects;
@@ -106,7 +105,6 @@ public class Category {
     private static final int ID_MAX_LENGTH = 48;
     private static final int DESCRIPTION_MAX_LENGTH = 512;
     private String description;
-    @DocumentField(DocumentField.Type.KEY)
     private String id;
     private Name name;
     private String parentId;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package catalog.hoprxi.core.domain.model.brand;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.util.DomainRegistry;
-import com.arangodb.entity.DocumentField;
 
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -41,7 +40,6 @@ public class Brand {
     };
     private static final int ID_MAX_LENGTH = 36;
     private AboutBrand about;
-    @DocumentField(DocumentField.Type.KEY)
     private String id;
     private Name name;
 
