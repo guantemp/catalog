@@ -24,11 +24,12 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.poi.ss.usermodel.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.RoundingMode;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -64,6 +65,7 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
         RingBuffer<ItemImportEvent> ringBuffer = disruptor.getRingBuffer();
         Workbook workbook = WorkbookFactory.create(is);
         Sheet sheet = workbook.getSheetAt(0);
+
         for (int i = 1, j = sheet.getLastRowNum(); i <= j; i++) {
             Row row = sheet.getRow(i);
             EnumMap<ItemMapping, String> map = new EnumMap<>(ItemMapping.class);
@@ -104,15 +106,7 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
                     } else {// 日期
                         sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     }
-                    try {
-                        result = sdf.format(cell.getDateCellValue());// 日期
-                    } catch (Exception e) {
-                        try {
-                            throw new Exception("exception on get date data !".concat(e.toString()));
-                        } catch (Exception e1) {
-                            e1.printStackTrace();
-                        }
-                    }
+                    result = sdf.format(cell.getDateCellValue());// 日期
                 } else {
                     //System.out.println(cell.getCellStyle().getDataFormatString());
                     NumberFormat nf = NumberFormat.getNumberInstance();
@@ -138,7 +132,7 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
                 result = cell.getCellFormula();
                 break;
             case BLANK:     // 空值
-            case ERROR:     // 故障
+            case ERROR:// 故障
                 break;
             default:
                 break;
@@ -148,13 +142,17 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
 
     @Override
     public void importItemFromCsv(InputStream is, ItemMapping[] itemMappings) throws IOException {
-
-        try (Stream<String> lines = Files.lines(Paths.get("asdas"))) {
-            lines.skip(1).map(line -> line.split(",")).forEach(columens -> {
-            });
-        } catch (IOException e) {
-
-        }
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+        Stream<String> lines = reader.lines();
+        lines.skip(1).map(line -> line.split(",")).forEach(columns -> {
+            EnumMap<ItemMapping, String> map = new EnumMap<>(ItemMapping.class);
+            for (int m = 0, n = itemMappings.length; m < n; m++) {
+                if (itemMappings[m] == ItemMapping.IGNORE || itemMappings[m] == ItemMapping.LAST_ROW)
+                    continue;
+                map.put(itemMappings[m], columns[m]);
+            }
+            System.out.println(map.get(ItemMapping.NAME));
+        });
     }
 
     @Override

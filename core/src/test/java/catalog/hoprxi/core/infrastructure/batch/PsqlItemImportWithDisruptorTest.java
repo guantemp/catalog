@@ -29,9 +29,9 @@ import java.io.IOException;
  * @version 0.0.1 builder 2023-05-08
  */
 public class PsqlItemImportWithDisruptorTest {
-
+/*
     @Test
-    public void testImportItemXlsFrom() throws IOException {
+    public void testImportItemXls() throws IOException {
         File file = new File("F:/developer/catalog/jc.xls");
         FileInputStream fis = new FileInputStream(file);
         ItemMapping[] itemMappings = new ItemMapping[]{ItemMapping.NAME, ItemMapping.BARCODE, ItemMapping.SPEC, ItemMapping.CATEGORY,
@@ -39,4 +39,15 @@ public class PsqlItemImportWithDisruptorTest {
         PsqlItemImportWithDisruptor itemImport = new PsqlItemImportWithDisruptor();
         itemImport.importItemFromXsl(fis, itemMappings);
     }
+*/
+@Test
+public void testImportItemFromCsv() throws IOException {
+    File file = new File("F:/developer/catalog/jc.csv");
+    FileInputStream fis = new FileInputStream(file);
+    ItemMapping[] itemMappings = new ItemMapping[]{ItemMapping.NAME, ItemMapping.BARCODE, ItemMapping.SPEC, ItemMapping.CATEGORY,
+            ItemMapping.BRAND, ItemMapping.UNIT, ItemMapping.MADE_IN, ItemMapping.LAST_RECEIPT_PRICE, ItemMapping.RETAIL_PRICE};
+    PsqlItemImportWithDisruptor itemImport = new PsqlItemImportWithDisruptor();
+    itemImport.importItemFromCsv(fis, itemMappings);
+}
+
 }
