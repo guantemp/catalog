@@ -38,7 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2023-05-08
  */

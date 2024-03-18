@@ -20,9 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-11-01
+ * @version 0.0.1 builder 2024-03-18
  */
 public interface ItemImportService {
 

@@ -27,7 +27,7 @@ import com.typesafe.config.ConfigFactory;
 import java.util.Collection;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
  * @version 0.0.2 2023-01-07
  */

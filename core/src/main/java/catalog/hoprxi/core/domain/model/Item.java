@@ -29,7 +29,7 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @version 0.0.3 builder 2023-07-19
  * @since JDK8.0
  */
