@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,31 +29,27 @@ import java.sql.Statement;
  * @version 0.0.1 builder 2022-08-22
  */
 public class PsqlSetup {
-    private static final String CREATE_BRAND_SQL = "create table if not exists brand ( id bigint not null primary key,name  jsonb, about jsonb );\n" +
-            "create index if not exists brand_name_index on brand USING gin (name);\n" +
+    private static final String DDL_BRAND = "CREATE TABLE public.brand (\n" +
+            "\tid int8 NOT NULL,\n" +
+            "\t\"name\" jsonb NULL,\n" +
+            "\tabout jsonb NULL,\n" +
+            "\tCONSTRAINT brand_pkey PRIMARY KEY (id));" +
             "insert into brand (id, name, about) values (-1, '{\"name\": \"undefined\", \"mnemonic\": \"undefined\",\"alias\": \"未定义\"}', null);";
-    private static final String CREATE_CATEGORY_SQL = "create table if not exists category\n" +
-            "(\n" +
-            "    id          bigint  not null\n" +
-            "        primary key,\n" +
-            "    name        jsonb,\n" +
-            "    description varchar(512),\n" +
-            "    logo_uri    varchar(512),\n" +
-            "    root_id     bigint  not null REFERENCES category (id),\n" +
-            "    parent_id   bigint  not null REFERENCES category (id),\n" +
-            "    \"left\"      integer not null,\n" +
-            "    \"right\"     integer not null\n" +
-            ");\n" +
-            "\n" +
-            "CREATE EXTENSION if not exists pg_trgm;\n" +
-            "create index if not exists category_name_index\n" +
-            "    on category using gin ((name ->> 'name') gin_trgm_ops);\n" +
-            "create index if not exists category_rootId_parentId_index\n" +
-            "    on category (root_id, parent_id);\n" +
-            "create index if not exists category_left_index\n" +
-            "    on category (\"left\");\n" +
-            "create index if not exists category_right_index\n" +
-            "    on category (\"right\");";
+    private static final String DDL_CATEGORY = "CREATE TABLE category (\n" +
+            "id int8 NOT NULL,\n" +
+            "\"name\" jsonb NULL,\n" +
+            "description varchar(512) NULL,\n" +
+            "logo_uri varchar(512) NULL,\n" +
+            "root_id int8 NOT NULL,\n" +
+            "parent_id int8 NOT NULL,\n" +
+            "\"left\" int4 NOT NULL,\n" +
+            "\"right\" int4 NOT NULL,\n" +
+            "CONSTRAINT category_pkey PRIMARY KEY (id),\n" +
+            "CONSTRAINT category_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.category(id),\n" +
+            "CONSTRAINT category_root_id_fkey FOREIGN KEY (root_id) REFERENCES public.category(id));\n" +
+            "CREATE INDEX category_left_index ON category USING btree (\"left\");\n" +
+            "CREATE INDEX category_right_index ON category USING btree (\"right\");\n" +
+            "CREATE INDEX category_rootid_parentid_index ON category USING btree (root_id, parent_id);";
     private static final String ddl = "create user hoprxi createdb password '';create database catalog";
 
     public static void setup(String databaseName) throws SQLException {
@@ -62,8 +58,8 @@ public class PsqlSetup {
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             connection.setAutoCommit(false);
             Statement statement = connection.createStatement();
-            statement.addBatch(CREATE_BRAND_SQL);
-            statement.addBatch(CREATE_CATEGORY_SQL);
+            statement.addBatch(DDL_BRAND);
+            statement.addBatch(DDL_CATEGORY);
             statement.executeBatch();
             connection.setAutoCommit(true);
             PsqlUtil.release(connection);

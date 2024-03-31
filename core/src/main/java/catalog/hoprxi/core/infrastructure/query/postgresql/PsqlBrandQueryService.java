@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,6 @@ import java.sql.SQLException;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -59,18 +58,12 @@ public class PsqlBrandQueryService implements BrandQueryService {
         }
     }
 
-    private final String databaseName;
-
-    public PsqlBrandQueryService(String databaseName) {
-        this.databaseName = Objects.requireNonNull(databaseName, "The databaseName parameter is required");
-    }
-
     @Override
     public Brand query(String id) {
         Brand brand = CACHE.get(id);
         if (brand != null)
             return brand;
-        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+        try (Connection connection = PsqlUtil.getReadConnection()) {
             final String findSql = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, Long.parseLong(id));
@@ -91,7 +84,7 @@ public class PsqlBrandQueryService implements BrandQueryService {
     public Brand[] queryAll(int offset, int limit) {
         final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo " +
                 "from brand a INNER JOIN (SELECT id FROM brand order by id desc offset ? LIMIT ?) b USING (id)";
-        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+        try (Connection connection = PsqlUtil.getReadConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setInt(1, offset);
             preparedStatement.setInt(2, limit);
@@ -110,7 +103,7 @@ public class PsqlBrandQueryService implements BrandQueryService {
                 "where name::jsonb->>'name' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
                 "where name::jsonb->>'mnemonic' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
                 "where name::jsonb->>'alias' ~ ?";
-        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+        try (Connection connection = PsqlUtil.getReadConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, name);
@@ -183,7 +176,7 @@ public class PsqlBrandQueryService implements BrandQueryService {
     @Override
     public int size() {
         final String query = "select count(*) from brand";
-        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+        try (Connection connection = PsqlUtil.getReadConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next())

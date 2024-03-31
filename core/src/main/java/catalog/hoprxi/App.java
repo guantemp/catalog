@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,18 +24,19 @@ import io.undertow.servlet.Servlets;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
-import org.javamoney.moneta.Money;
 
-import javax.money.Monetary;
 import javax.servlet.ServletException;
 
 /**
  * Hello world!
  */
 public class App {
-    public static void main(String[] args) throws ServletException {
-        Money money = Money.of(12, Monetary.getCurrency("USD"));
-        //System.out.println(money);
+    public static void main(String[] args) {
+        for (int i = 0, j = args.length; i < j; i++)
+            System.out.println(args[i]);
+    }
+
+    private void runServlet() throws ServletException {
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentInfo deploymentInfo = Servlets.deployment()
                 .setClassLoader(App.class.getClassLoader())

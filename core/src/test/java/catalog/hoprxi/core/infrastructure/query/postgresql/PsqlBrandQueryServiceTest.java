@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import static org.testng.Assert.assertEquals;
  * @version 0.0.1 builder 2022-10-18
  */
 public class PsqlBrandQueryServiceTest {
-    private static BrandQueryService query = new PsqlBrandQueryService("catalog");
+    private static BrandQueryService query = new PsqlBrandQueryService();
     private static BrandRepository repository = new PsqlBrandRepository("catalog");
 
     @BeforeClass

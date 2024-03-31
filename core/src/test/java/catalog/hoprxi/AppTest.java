@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringJoiner;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 /***
@@ -60,9 +59,12 @@ public class AppTest {
 
     @Test
     public void testConfig() {
-        Config test = ConfigFactory.load("database");
-        //System.out.println(test.getString("read.hikari.maximumPoolSize"));
-        List<? extends Config> reads = test.getConfigList("reads");
+        Config test = ConfigFactory.load("test");
+        System.out.println(test.getConfigList("databases").get(0));
+
+        Config database = ConfigFactory.load("database");
+        List<? extends Config> reads = database.getConfigList("reads");
+        System.out.println("database:");
         System.out.println(reads.size());
         int sum = 0;
         for (Config c : reads) {
@@ -78,10 +80,7 @@ public class AppTest {
             joiner.add(sss[i]);
         }
         joiner.add("upload");
-        System.out.println(joiner);
-        AtomicInteger number = new AtomicInteger(0);
-        for (int i = 0; i < 10; i++)
-            System.out.println(number.incrementAndGet());
+        System.out.println("update file: " + joiner);
     }
 
     @Test

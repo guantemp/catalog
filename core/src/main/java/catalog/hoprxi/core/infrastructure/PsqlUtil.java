@@ -33,15 +33,15 @@ import java.util.Properties;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-08-25
  */
-public class PsqlUtil {
+public final class PsqlUtil {
     private static final Config config;
     private static final Selector readsSelector = new Selector();
     private static HikariDataSource hikariDataSource;
 
     static {
-        Config cache = ConfigFactory.load("core");
-        Config units = ConfigFactory.load("database");
-        config = cache.withFallback(units);
+        Config core = ConfigFactory.load("core");
+        Config databases = ConfigFactory.load("database");
+        config = core.withFallback(databases);
         List<? extends Config> writes = config.getConfigList("writes");
         for (Config write : writes) {
             Properties props = new Properties();
@@ -50,49 +50,37 @@ public class PsqlUtil {
             props.setProperty("dataSource.portNumber", write.getString("port"));
             props.setProperty("dataSource.user", write.getString("user"));
             props.setProperty("dataSource.password", write.getString("password"));
-            props.put("maximumPoolSize", config.hasPath("hikari.maximumPoolSize") ? config.getInt("hikari.maximumPoolSize") : 5);
-            props.put("dataSource.logWriter", new PrintWriter(System.out));
-            HikariConfig hikariConfig = new HikariConfig(props);
-        }
-        List<? extends Config> reads = config.getConfigList("reads");
-        for (Config read : reads) {
-            Properties props = new Properties();
-            props.setProperty("dataSource.serverName", read.getString("host"));
-            props.setProperty("dataSource.portNumber", read.getString("port"));
-            props.setProperty("dataSource.user", read.getString("user"));
-            props.setProperty("dataSource.password", read.getString("password"));
-            props.setProperty("dataSource.databaseName", read.getString("databaseName"));
-            props.setProperty("dataSourceClassName", read.getString("hikari.dataSourceClassName"));
-            props.put("maximumPoolSize", read.hasPath("hikari.maximumPoolSize") ? read.getInt("hikari.maximumPoolSize") : 5);
-            props.put("dataSource.logWriter", new PrintWriter(System.out));
-            HikariConfig hikariConfig = new HikariConfig(props);
-            HikariDataSource dataSource = new HikariDataSource(hikariConfig);
-            readsSelector.add(new Selector.Divisor<>(read.hasPath("weight") ? read.getInt("weight") : 1, dataSource));
-        }
-    }
-
-    public static Connection getConnection(String databaseName) throws SQLException {
-        if (hikariDataSource == null) {
-            List<? extends Config> writes = config.getConfigList("writes");
-            Config write = writes.get(0);
-            Properties props = new Properties();
-            props.setProperty("dataSourceClassName", write.getString("hikari.dataSourceClassName"));
-            props.setProperty("dataSource.serverName", write.getString("host"));
-            props.setProperty("dataSource.portNumber", write.getString("port"));
-            props.setProperty("dataSource.user", write.getString("user"));
-            props.setProperty("dataSource.password", write.getString("password"));
-            props.setProperty("dataSource.databaseName", databaseName);
-            props.put("maximumPoolSize", config.hasPath("hikari.maximumPoolSize") ? config.getInt("hikari.maximumPoolSize") : 5);
+            props.setProperty("dataSource.databaseName", write.getString("databaseName"));
+            props.put("maximumPoolSize", config.hasPath("hikari.maximumPoolSize") ? config.getInt("hikari.maximumPoolSize") : Runtime.getRuntime().availableProcessors() * 2 + 1);
             props.put("dataSource.logWriter", new PrintWriter(System.out));
             HikariConfig hikariConfig = new HikariConfig(props);
             hikariDataSource = new HikariDataSource(hikariConfig);
         }
+        List<? extends Config> reads = config.getConfigList("reads");
+        for (Config read : reads) {
+            if (read.getString("provider").equals("postgresql") || read.getString("provider").equals("mysql")) {
+                Properties props = new Properties();
+                props.setProperty("dataSource.serverName", read.getString("host"));
+                props.setProperty("dataSource.portNumber", read.getString("port"));
+                props.setProperty("dataSource.user", read.getString("user"));
+                props.setProperty("dataSource.password", read.getString("password"));
+                props.setProperty("dataSource.databaseName", read.getString("databaseName"));
+                props.setProperty("dataSourceClassName", read.getString("hikari.dataSourceClassName"));
+                props.put("maximumPoolSize", read.hasPath("hikari.maximumPoolSize") ? read.getInt("hikari.maximumPoolSize") : Runtime.getRuntime().availableProcessors() * 2 + 1);
+                props.put("dataSource.logWriter", new PrintWriter(System.out));
+                HikariConfig hikariConfig = new HikariConfig(props);
+                HikariDataSource dataSource = new HikariDataSource(hikariConfig);
+                readsSelector.add(new Selector.Divisor<>(read.hasPath("weight") ? read.getInt("weight") : 1, dataSource));
+            }
+        }
+    }
+
+    public static Connection getConnection(String databaseName) throws SQLException {
         return hikariDataSource.getConnection();
     }
 
     public static Connection getConnection() throws SQLException {
-        String databaseName = config.hasPath("databaseName") ? config.getString("databaseName") : "catalog";
-        return getConnection(databaseName);
+        return readsSelector.<HikariDataSource>select().getConnection();
     }
 
     public static Connection getReadConnection() throws SQLException {

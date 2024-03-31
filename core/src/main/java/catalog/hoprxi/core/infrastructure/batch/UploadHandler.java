@@ -21,6 +21,8 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.lmax.disruptor.EventHandler;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
@@ -59,11 +61,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 0.0.1 builder 2023-07-08
  */
 public class UploadHandler implements EventHandler<ItemImportEvent> {
-    private static final String UPLOAD_URI = "https://hoprxi.tooo.top/catalog/core/v1/upload";
+    private static final String UPLOAD_URI;
     private final URI uri;
     private static CloseableHttpClient httpClient;
 
     static {
+        Config areaUrl = ConfigFactory.load("core");
+        UPLOAD_URI = areaUrl.hasPath("upload_url") ? areaUrl.getString("upload_url") : "https://hoprxi.tooo.top/catalog/core/v1/upload";
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         SSLContext sslContext = null;
         try {
@@ -95,7 +99,6 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
     public UploadHandler(URI uri) {
         this.uri = uri;
     }
-
 
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
     private AtomicInteger number = new AtomicInteger(0);

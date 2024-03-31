@@ -59,7 +59,7 @@ public class BrandServlet extends HttpServlet {
         switch ((provider)) {
             case "postgresql":
             case "psql":
-                query = new PsqlBrandQueryService(databaseName);
+                query = new PsqlBrandQueryService();
                 break;
         }
     }
