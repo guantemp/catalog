@@ -17,6 +17,8 @@
 package catalog.hoprxi;
 
 import catalog.hoprxi.core.webapp.*;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.handlers.PathHandler;
@@ -32,8 +34,13 @@ import javax.servlet.ServletException;
  */
 public class App {
     public static void main(String[] args) {
-        for (int i = 0, j = args.length; i < j; i++)
-            System.out.println(args[i]);
+        for (int i = 0, j = args.length; i < j; i++) {
+            if ("-iv".equals(args[i])) {
+                System.out.println(args[i + 1]);
+            }
+        }
+
+        Config test = ConfigFactory.load("databases");
     }
 
     private void runServlet() throws ServletException {

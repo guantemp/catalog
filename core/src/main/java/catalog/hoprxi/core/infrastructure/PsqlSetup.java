@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.infrastructure;
 
 
-import salt.hoprxi.crypto.application.PasswordService;
+import salt.hoprxi.crypto.PasswordService;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -28,7 +28,7 @@ import java.sql.Statement;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-08-22
  */
-public class PsqlSetup {
+public final class PsqlSetup {
     private static final String DDL_BRAND = "CREATE TABLE public.brand (\n" +
             "\tid int8 NOT NULL,\n" +
             "\t\"name\" jsonb NULL,\n" +
@@ -53,7 +53,7 @@ public class PsqlSetup {
     private static final String ddl = "create user hoprxi createdb password '';create database catalog";
 
     public static void setup(String databaseName) throws SQLException {
-        String password = PasswordService.generateVeryStrongPassword();
+        String password = PasswordService.nextStrongPasswd();
         String user = "create user catalog with password '" + password + "'";
         try (Connection connection = PsqlUtil.getConnection(databaseName)) {
             connection.setAutoCommit(false);

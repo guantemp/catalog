@@ -41,8 +41,9 @@ public class ElasticsearchBrandQueryService implements BrandQueryService {
 
     static {
         RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
-        builder.addHeader(HttpHeaders.AUTHORIZATION, "Basic ZWxhc3RpYzpRd2UxMjM0NjU=").addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=utf-8");
-        builder.addParameter("pretty", "true");
+        builder.addHeader(HttpHeaders.AUTHORIZATION, "Basic ZWxhc3RpYzpRd2UxMjM0NjU=")
+                .addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=utf-8")
+                .addParameter("pretty", "true");
         //builder.setHttpAsyncResponseConsumerFactory(
         //new HttpAsyncResponseConsumerFactory
         //.HeapBufferedResponseConsumerFactory(30 * 1024 * 1024 * 1024));

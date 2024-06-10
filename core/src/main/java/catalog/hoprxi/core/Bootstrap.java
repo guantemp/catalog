@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
 
 import javax.servlet.ServletException;
+import java.util.Properties;
+import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -34,7 +36,43 @@ import javax.servlet.ServletException;
  * @version 0.0.1 builder 2022-06-29
  */
 public class Bootstrap {
+    public static final Properties PARAMS = new Properties();
+    private static final Pattern EXCLUDE = Pattern.compile("^-{1,}.*");
+
     public static void main(String[] args) throws ServletException {
+        for (int i = 0, j = args.length; i < j; i++) {
+            switch (args[i]) {
+                case "-f":
+                case "--file":
+                    if (j > i + 1) {
+                        if (EXCLUDE.matcher(args[i + 1]).matches())
+                            break;
+                        else
+                            PARAMS.put("file", args[i + 1]);
+                    }
+                    if (j > i + 2) {
+                        if (EXCLUDE.matcher(args[i + 2]).matches())
+                            break;
+                        else
+                            PARAMS.put("fileProtect", args[i + 2]);
+                    }
+                    break;
+                case "-e":
+                case "--entries":
+                    int k = i + 1;
+                    while (k < j) {
+                        if (EXCLUDE.matcher(args[k]).matches())
+                            break;
+                        else
+                            PARAMS.put("fileProtect", args[k]);
+                        k++;
+                    }
+                    break;
+                case "-h":
+                case "--help":
+                    break;
+            }
+        }
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentInfo deploymentInfo = Servlets.deployment()
                 .setClassLoader(App.class.getClassLoader())
@@ -65,5 +103,10 @@ public class Bootstrap {
                 .setHandler(path)
                 .build();
         server.start();
+    }
+
+    private static final void procParam(Properties prop, String s) {
+        String[] ss = s.split(":");
+
     }
 }

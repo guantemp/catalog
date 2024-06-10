@@ -59,8 +59,8 @@ public class AppTest {
 
     @Test
     public void testConfig() {
-        Config test = ConfigFactory.load("test");
-        System.out.println(test.getConfigList("databases").get(0));
+        Config test = ConfigFactory.load("databases");
+        System.out.println("databases:" + test.getConfigList("databases"));
 
         Config database = ConfigFactory.load("database");
         List<? extends Config> reads = database.getConfigList("reads");

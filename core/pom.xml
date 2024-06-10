@@ -21,11 +21,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>catalog.hoprxi</groupId>
-    <artifactId>core</artifactId>
+    <artifactId>catalog-core</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>core</name>
+    <name>catalog-core</name>
     <!-- FIXME change it to the project's website -->
     <url>https://catalog.hoprxi.com</url>
 
@@ -173,6 +173,8 @@
                     <include>**/*.json</include>
                     <include>**/*.xml</include>
                     <include>**/*.xls</include>
+                    <include>**/*.jks</include>
+                    <include>**/*.p12</include>
                 </includes>
             </resource>
         </resources>
@@ -205,6 +207,8 @@
                                         <exclude>**/*.properties</exclude>
                                         <exclude>**/*.json</exclude>
                                         <exclude>**/*.xml</exclude>
+                                        <exclude>**/*.jks</exclude>
+                                        <exclude>**/*.p12</exclude>
                                     </includes>
                                     <filtering>true</filtering>
                                 </resource>

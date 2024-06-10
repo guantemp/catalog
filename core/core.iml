@@ -85,10 +85,9 @@
     <orderEntry type="library" name="Maven: org.jodd:jodd-core:5.1.6" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:id:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:crypto:1.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.bouncycastle:bcpkix-jdk15on:1.64" level="project" />
-    <orderEntry type="library" name="Maven: org.bouncycastle:bcprov-jdk15on:1.64" level="project" />
-    <orderEntry type="library" name="Maven: org.bouncycastle:bcmail-jdk15:1.46" level="project" />
-    <orderEntry type="library" name="Maven: org.bouncycastle:bcprov-jdk15:1.46" level="project" />
+    <orderEntry type="library" name="Maven: org.bouncycastle:bcpkix-jdk18on:1.78.1" level="project" />
+    <orderEntry type="library" name="Maven: org.bouncycastle:bcutil-jdk18on:1.78.1" level="project" />
+    <orderEntry type="library" name="Maven: org.bouncycastle:bcprov-jdk18on:1.78.1" level="project" />
     <orderEntry type="library" name="Maven: org.javamoney.moneta:moneta-core:1.4.2" level="project" />
     <orderEntry type="library" name="Maven: org.javamoney.moneta:moneta-convert:1.4.2" level="project" />
     <orderEntry type="library" name="Maven: org.javamoney.moneta:moneta-convert-imf:1.4.2" level="project" />
