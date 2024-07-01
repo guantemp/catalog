@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.scale.domain.model.weight_price.WeightMemberPrice;
 import catalog.hoprxi.scale.domain.model.weight_price.WeightRetailPrice;
 import catalog.hoprxi.scale.domain.model.weight_price.WeightVipPrice;
-import com.arangodb.velocypack.annotations.Expose;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -43,7 +42,6 @@ public class Weight {
     // @Expose(serialize = false, deserialize = false)
     private String categoryId;
     private Grade grade;
-    @Expose(serialize = false, deserialize = false)
     private Plu plu;
     private Name name;
     private Specification spec;

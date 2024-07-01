@@ -13,19 +13,25 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.scale.domain.model;
 
-
-import event.hoprxi.domain.model.DomainEventPublisher;
-import event.hoprxi.domain.model.impl.SimpleDomainEventPublisher;
+package catalog.hoprxi.core.application.query;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-07-05
+ * @version 0.0.1 builder 2024-06-15
  */
-public final class DomainRegistry {
-    public static DomainEventPublisher domainEventPublisher() {
-        return SimpleDomainEventPublisher.instance();
+public interface BrandJsonQuery {
+
+    default String query(String id) {
+        return "";
+    }
+
+    String queryAll(int offset, int limit);
+
+    String queryByName(String name);
+
+    default int count() {
+        return 0;
     }
 }

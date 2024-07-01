@@ -13,19 +13,29 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package catalog.hoprxi.scale.domain.model;
 
+package catalog.hoprxi.core.infrastructure;
 
-import event.hoprxi.domain.model.DomainEventPublisher;
-import event.hoprxi.domain.model.impl.SimpleDomainEventPublisher;
+import java.util.Properties;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2018-07-05
+ * @version 0.0.1 builder 2024-06-15
  */
-public final class DomainRegistry {
-    public static DomainEventPublisher domainEventPublisher() {
-        return SimpleDomainEventPublisher.instance();
+public class ElasticsearchUtil {
+    private static final Properties param = new Properties();
+
+    public static String host() {
+        return "slave.tooo.top";
     }
+
+    public static int port() {
+        return 9200;
+    }
+
+    public static String encrypted() {
+        return "Basic ZWxhc3RpYzpRd2UxMjM0NjU=";
+    }
+
 }

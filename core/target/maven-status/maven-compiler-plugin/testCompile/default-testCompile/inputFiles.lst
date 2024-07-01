@@ -5,6 +5,7 @@ E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persi
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\PsqlSetupTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlBrandRepositoryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\postgresql\PsqlCategoryQueryServiceTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\elasticsearch\ESBrandJsonQueryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\postgresql\PsqlBrandQueryServiceTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\AppTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\batch\PsqlItemImportWithDisruptorTest.java
@@ -14,3 +15,4 @@ E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\domain\model\GradeTe
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlCategoryRepositoryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\batch\UploadHandlerTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\batch\PsqlItemExportTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\SetupTest.java

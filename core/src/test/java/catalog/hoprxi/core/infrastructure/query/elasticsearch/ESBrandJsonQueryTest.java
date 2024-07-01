@@ -16,33 +16,30 @@
 
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
-import catalog.hoprxi.core.application.query.BrandQueryService;
+import catalog.hoprxi.core.application.query.BrandJsonQuery;
 import org.testng.annotations.Test;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2024-03-18
+ * @version 0.0.1 builder 2024-06-15
  */
-public class ElasticsearchBrandQueryServiceTest {
-    private static BrandQueryService service = new ElasticsearchBrandQueryService();
+public class ESBrandJsonQueryTest {
+    private static final BrandJsonQuery service = new ESBrandJsonQuery();
+
+    @Test
+    public void testQuery() {
+        System.out.println(service.query("8178519975776396"));
+        service.query("8178584324788650");
+        System.out.println(service.query("817884324788650"));
+    }
 
     @Test
     public void testQueryAll() {
     }
 
     @Test
-    public void testQuery() {
-        service.query("8178519975776396");
-        service.query("8178584324788650");
-        service.query("817884324788650");
-    }
-
-    @Test
     public void testQueryByName() {
-    }
-
-    @Test
-    public void testSize() {
+        service.queryByName("海天老抽");
     }
 }

@@ -17,7 +17,9 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.BrandQueryService;
+import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.Brand;
+import catalog.hoprxi.core.infrastructure.ElasticsearchUtil;
 import com.fasterxml.jackson.core.JsonFactory;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
@@ -28,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Objects;
+import java.lang.reflect.Constructor;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -37,27 +39,29 @@ import java.util.Objects;
  */
 public class ElasticsearchBrandQueryService implements BrandQueryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchBrandQueryService.class);
+    private static Constructor<Name> nameConstructor;
     private static final RequestOptions COMMON_OPTIONS;
 
     static {
+        try {
+            nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
+            nameConstructor.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("Not query Name class has such constructor", e);
+        }
         RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
-        builder.addHeader(HttpHeaders.AUTHORIZATION, "Basic ZWxhc3RpYzpRd2UxMjM0NjU=")
-                .addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=utf-8")
-                .addParameter("pretty", "true");
+        builder.addHeader(HttpHeaders.AUTHORIZATION, ElasticsearchUtil.encrypted())
+                .addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=utf-8");
         //builder.setHttpAsyncResponseConsumerFactory(
         //new HttpAsyncResponseConsumerFactory
         //.HeapBufferedResponseConsumerFactory(30 * 1024 * 1024 * 1024));
         COMMON_OPTIONS = builder.build();
     }
 
-    private final String index;
+
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
-
-    public ElasticsearchBrandQueryService(String index) {
-        this.index = Objects.requireNonNull(index, "The index is required");
-
-    }
 
     /**
      * @param offset
@@ -75,20 +79,19 @@ public class ElasticsearchBrandQueryService implements BrandQueryService {
      */
     @Override
     public Brand query(String id) {
-        RestClientBuilder builder = RestClient.builder(new HttpHost("slave.tooo.top", 9200, "https"));
+        RestClientBuilder builder = RestClient.builder(new HttpHost(ElasticsearchUtil.host(), ElasticsearchUtil.port(), "https"));
         RestClient client = builder.build();
-        Request request = new Request("GET", "/" + index + "/_doc/" + id);
+        Request request = new Request("GET", "/brand/_doc/" + id);
         request.setOptions(COMMON_OPTIONS);
-        System.out.println(request);
-        Response response = null;
         try {
-            response = client.performRequest(request);
-            response.getEntity().getContent();
+            Response response = client.performRequest(request);
+
+            System.out.println(response.getStatusLine());
             String responseBody = EntityUtils.toString(response.getEntity());
             System.out.println(responseBody);
 
         } catch (IOException e) {
-            System.out.println(e);
+            System.out.println("et:" + e);
             //throw new RuntimeException(e);
         }
 /*
@@ -125,7 +128,7 @@ public class ElasticsearchBrandQueryService implements BrandQueryService {
         return null;
     }
 
-    private Brand rebuilder(InputStream is) {
+    private Brand rebuild(InputStream is) {
         return null;
     }
 

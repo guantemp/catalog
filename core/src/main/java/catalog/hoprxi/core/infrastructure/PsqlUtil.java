@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure;
 
+import catalog.hoprxi.core.Bootstrap;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.zaxxer.hikari.HikariConfig;
@@ -25,20 +26,14 @@ import org.slf4j.LoggerFactory;
 import salt.hoprxi.crypto.util.AESUtil;
 import salt.hoprxi.utils.Selector;
 
-import javax.crypto.SecretKey;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -47,14 +42,15 @@ import java.util.Properties;
  */
 public final class PsqlUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlUtil.class);
-    private static final Config config;
+    private static final Pattern ENCRYPTED = Pattern.compile("^ENC:.*");
     private static final Selector readsSelector = new Selector();
     private static HikariDataSource hikariDataSource;
 
     static {
-        Config core = ConfigFactory.load("core");
-        Config databases = ConfigFactory.load("database");
-        config = core.withFallback(databases);
+        //Config core = ConfigFactory.load("core");
+        //Config databases = ConfigFactory.load("database");
+        //Config config = core.withFallback(databases);
+        Config config = ConfigFactory.load("database");
         List<? extends Config> writes = config.getConfigList("writes");
         for (Config write : writes) {
             if (write.getString("provider").equals("postgresql") || write.getString("provider").equals("psql") || write.getString("provider").equals("mysql")) {
@@ -62,8 +58,9 @@ public final class PsqlUtil {
                 props.setProperty("dataSourceClassName", write.getString("hikari.dataSourceClassName"));
                 props.setProperty("dataSource.serverName", write.getString("host"));
                 props.setProperty("dataSource.portNumber", write.getString("port"));
-                props.setProperty("dataSource.user", write.getString("user"));
-                props.setProperty("dataSource.password", write.getString("password"));
+                String entry = write.getString("host") + ":" + write.getString("port");
+                props.setProperty("dataSource.user", PsqlUtil.decrypt(entry, write.getString("user")));
+                props.setProperty("dataSource.password", PsqlUtil.decrypt(entry, write.getString("password")));
                 props.setProperty("dataSource.databaseName", write.getString("databaseName"));
                 props.put("maximumPoolSize", config.hasPath("hikari.maximumPoolSize") ? config.getInt("hikari.maximumPoolSize") : Runtime.getRuntime().availableProcessors() * 2 + 1);
                 props.put("dataSource.logWriter", new PrintWriter(System.out));
@@ -77,8 +74,9 @@ public final class PsqlUtil {
                 Properties props = new Properties();
                 props.setProperty("dataSource.serverName", read.getString("host"));
                 props.setProperty("dataSource.portNumber", read.getString("port"));
-                props.setProperty("dataSource.user", read.getString("user"));
-                props.setProperty("dataSource.password", read.getString("password"));
+                String entry = read.getString("host") + ":" + read.getString("port");
+                props.setProperty("dataSource.user", PsqlUtil.decrypt(entry, read.getString("user")));
+                props.setProperty("dataSource.password", PsqlUtil.decrypt(entry, read.getString("password")));
                 props.setProperty("dataSource.databaseName", read.getString("databaseName"));
                 props.setProperty("dataSourceClassName", read.getString("hikari.dataSourceClassName"));
                 props.put("maximumPoolSize", read.hasPath("hikari.maximumPoolSize") ? read.getInt("hikari.maximumPoolSize") : Runtime.getRuntime().availableProcessors() * 2 + 1);
@@ -108,20 +106,15 @@ public final class PsqlUtil {
         hikariDataSource.evictConnection(connection);
     }
 
-    private String decrypt(String securedPlainText, String entry, String entryPasswd, String fileName, String protectedPasswd) {
-        try (FileInputStream fis = new FileInputStream(fileName)) {
-            KeyStore keyStore = KeyStore.getInstance("JCEKS");
-            keyStore.load(fis, protectedPasswd.toCharArray());
-            if (keyStore.containsAlias(entry)) {
-                SecretKey secKey = (SecretKey) keyStore.getKey(entry, entryPasswd.toCharArray());
-                byte[] result = AESUtil.decryptSpec(Base64.getDecoder().decode(securedPlainText), secKey);
-                return Base64.getEncoder().encodeToString(result);
-            }
-        } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException |
-                 IOException e) {
-            LOGGER.error("Not get database user password,system will exit");
-            throw new RuntimeException(e);
+    private static String decrypt(String entry, String securedPlainText) {
+
+        if (ENCRYPTED.matcher(securedPlainText).matches()) {
+            securedPlainText = securedPlainText.split(":")[1];
+            byte[] aesData = Base64.getDecoder().decode(securedPlainText);
+            Bootstrap.SECRET_KEY_PARAMETER.get(entry);
+            byte[] decryptData = AESUtil.decryptSpec(aesData, Bootstrap.SECRET_KEY_PARAMETER.get(entry));
+            return new String(decryptData, StandardCharsets.UTF_8);
         }
-        return "";
+        return securedPlainText;
     }
 }

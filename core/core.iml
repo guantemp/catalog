@@ -50,7 +50,6 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.1" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:utils:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:cache:1.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: salt.hoprxi:to:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.carrotsearch:java-sizeof:0.0.5" level="project" />
     <orderEntry type="library" name="Maven: com.github.ben-manes.caffeine:caffeine:2.9.3" level="project" />
     <orderEntry type="library" name="Maven: com.google.errorprone:error_prone_annotations:2.10.0" level="project" />
@@ -83,6 +82,7 @@
     <orderEntry type="library" name="Maven: net.bytebuddy:byte-buddy:1.14.5" level="project" />
     <orderEntry type="library" name="Maven: org.jodd:jodd-bean:5.1.6" level="project" />
     <orderEntry type="library" name="Maven: org.jodd:jodd-core:5.1.6" level="project" />
+    <orderEntry type="library" name="Maven: salt.hoprxi:to:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:id:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: salt.hoprxi:crypto:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.bouncycastle:bcpkix-jdk18on:1.78.1" level="project" />
