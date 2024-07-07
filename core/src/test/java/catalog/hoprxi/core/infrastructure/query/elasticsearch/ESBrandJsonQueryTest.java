@@ -40,6 +40,6 @@ public class ESBrandJsonQueryTest {
 
     @Test
     public void testQueryByName() {
-        service.queryByName("海天老抽");
+        service.queryByName("老");
     }
 }

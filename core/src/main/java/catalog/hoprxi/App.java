@@ -17,8 +17,8 @@
 package catalog.hoprxi;
 
 import catalog.hoprxi.core.webapp.*;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.handlers.PathHandler;
@@ -28,6 +28,8 @@ import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
 
 import javax.servlet.ServletException;
+import java.io.IOException;
+import java.io.StringWriter;
 
 /**
  * Hello world!
@@ -39,8 +41,48 @@ public class App {
                 System.out.println(args[i + 1]);
             }
         }
+        JsonFactory jsonFactory = JsonFactory.builder().build();
+        StringWriter writer = new StringWriter();
+        try {
+            JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
+            generator.writeStartObject();
+            generator.writeNumberField("from", 0);
+            generator.writeNumberField("size", 400);
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("bool");
+            generator.writeObjectFieldStart("filter");
+            generator.writeObjectFieldStart("bool");
 
-        Config test = ConfigFactory.load("databases");
+            generator.writeArrayFieldStart("should");
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("multi_match");
+            generator.writeStringField("query", "海天");
+            generator.writeArrayFieldStart("fields");
+            generator.writeString("name.name");
+            generator.writeString("name.alias");
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("name.mnemonic", "海天");
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println(writer);
+        //Config test = ConfigFactory.load("databases");
     }
 
     private void runServlet() throws ServletException {

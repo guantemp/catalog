@@ -24,12 +24,12 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
-import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 
 /***
@@ -71,11 +71,12 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
                     parser.nextToken();
                     switch (fieldName) {
                         case "_source":
-                            result = parserSingle(parser);
+                            result = rebuildSingle(parser);
                             break;
                     }
                 }
             }
+            parser.close();
             client.close();
         } catch (IOException e) {
             if (LOGGER.isDebugEnabled())
@@ -84,7 +85,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         return result;
     }
 
-    private String parserSingle(JsonParser parser) throws IOException {
+    private String rebuildSingle(JsonParser parser) throws IOException {
         StringWriter writer = new StringWriter();
         JsonGenerator generator = jsonFactory.createGenerator(writer);
         generator.writeStartObject();
@@ -95,7 +96,6 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         }
         generator.writeEndObject();
         generator.close();
-        parser.close();
         return writer.toString();
     }
 
@@ -110,40 +110,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         RestClient client = builder.build();
         Request request = new Request("GET", "/brand/_search");
         request.setOptions(COMMON_OPTIONS);
-        String sql = "{\n" +
-                "    \"from\": 0,\n" +
-                "    \"size\": 400,\n" +
-                "    //\"profile\": true,\n" +
-                "    \"query\": {\n" +
-                "        \"bool\": {\n" +
-                "            \"filter\": [\n" +
-                "                {\n" +
-                "                    \"bool\": {\n" +
-                "                        \"should\": [\n" +
-                "                            {\n" +
-                "                                \"multi_match\": {\n" +
-                "                                    \"query\": \"" + name + "\",\n" +
-                "                                    \"fields\": [\n" +
-                "                                        \"name.name\",\n" +
-                "                                        \"name.alias\"\n" +
-                "                                    ]\n" +
-                "                                }\n" +
-                "                            },\n" +
-                "                            {\n" +
-                "                                \"term\": {\n" +
-                "                                    \"name.mnemonic\": \"" + name + "\"\n" +
-                "                                }\n" +
-                "                            }\n" +
-                "                        ]\n" +
-                "                    }\n" +
-                "                }\n" +
-                "            ]\n" +
-                "        }\n" +
-                "    }\n" +
-                "}";
-
-        System.out.println(sql);
-        request.setJsonEntity(sql);
+        request.setJsonEntity(queryNameJsonEntity(name));
         /*
         request.setEntity(new NStringEntity(
                 "{\"json\":\"text\"}",
@@ -151,13 +118,106 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
          */
         try {
             Response response = client.performRequest(request);
-            String responseBody = EntityUtils.toString(response.getEntity());
-            System.out.println(responseBody);
+            return rebuildBrands(response.getEntity().getContent());
+            //String responseBody = EntityUtils.toString(response.getEntity());
+            //System.out.println(responseBody);
         } catch (IOException e) {
             //System.out.println(e);
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug("e");
         }
-        return null;
+        return "";
+    }
+
+    private String queryNameJsonEntity(String name) {
+        StringWriter writer = new StringWriter();
+        try {
+            JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
+            generator.writeStartObject();
+            generator.writeNumberField("from", 0);
+            generator.writeNumberField("size", 400);
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("bool");
+            generator.writeObjectFieldStart("filter");
+            generator.writeObjectFieldStart("bool");
+
+            generator.writeArrayFieldStart("should");
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("multi_match");
+            generator.writeStringField("query", name);
+            generator.writeArrayFieldStart("fields");
+            generator.writeString("name.name");
+            generator.writeString("name.alias");
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("name.mnemonic", name);
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.close();
+        } catch (IOException e) {
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("e");
+        }
+        return writer.toString();
+    }
+
+    private String rebuildBrands(InputStream is) throws IOException {
+        StringWriter writer = new StringWriter();
+        JsonGenerator generator = jsonFactory.createGenerator(writer);
+
+        JsonParser parser = jsonFactory.createParser(is);
+        while (!parser.isClosed()) {
+            if (parser.nextToken() == JsonToken.FIELD_NAME && "hits".equals(parser.getCurrentName())) {
+                this.parseHits(parser, generator);
+                break;
+            }
+        }
+        return writer.toString();
+    }
+
+    private void parseHits(JsonParser parser, JsonGenerator generator) throws IOException {
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                String fieldName = parser.getCurrentName();
+                if (fieldName.equals("total")) {
+                    parserTotal(parser);
+                } else if (fieldName.equals("hits")) {
+                    parserInternalHits(parser);
+                }
+            }
+        }
+    }
+
+    private void parserTotal(JsonParser parser) throws IOException {
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                String fieldName = parser.getCurrentName();
+                if (fieldName.equals("value")) {
+                    parser.nextToken();
+                    System.out.println(parser.getValueAsInt());
+                    break;
+                }
+            }
+        }
+    }
+
+    private void parserInternalHits(JsonParser parser) throws IOException {
+        while (parser.nextToken() != JsonToken.END_ARRAY) {
+            System.out.println(parser.currentToken() + ":" + parser.getCurrentName());
+            if (parser.currentToken() == JsonToken.START_OBJECT && parser.getCurrentName().equals("_source"))
+                System.out.println(rebuildSingle(parser));
+        }
     }
 }
