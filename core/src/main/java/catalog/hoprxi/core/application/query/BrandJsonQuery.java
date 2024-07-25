@@ -27,11 +27,8 @@ public interface BrandJsonQuery {
         return "";
     }
 
-    String queryAll(int offset, int limit);
-
     String queryByName(String name);
 
-    default int count() {
-        return 0;
-    }
+
+    String queryAll(int offset, int limit);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,23 @@
  *  limitations under the License.
  */
 
-/**
- * @author Administrator
+package catalog.hoprxi.core.application.query;
+
+/***
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @since JDK8.0
+ * @version 0.0.1 builder 2024-07-14
  */
-package catalog.hoprxi.core.infrastructure.i18n;
+public interface CategoryJsonQuery {
+    default String query(String id) {
+        return "";
+    }
+
+    String queryByName(String name);
+
+    String queryChildren(String id);
+
+    String queryDescendant(String id);
+
+    String queryAll(int offset, int limit);
+}

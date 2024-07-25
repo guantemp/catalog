@@ -23,7 +23,6 @@ catalog\hoprxi\core\webapp\SearchServlet.class
 catalog\hoprxi\core\infrastructure\batch\PsqlBrandImportExport.class
 catalog\hoprxi\core\domain\model\shelfLife\Rang.class
 catalog\hoprxi\core\infrastructure\batch\UploadHandler.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\ElasticsearchBrandQueryService.class
 catalog\hoprxi\core\domain\model\shelfLife\ShelfLife$2.class
 catalog\hoprxi\core\domain\model\Name.class
 catalog\hoprxi\core\domain\model\category\InvalidCategoryIdException.class
@@ -94,7 +93,6 @@ catalog\hoprxi\core\domain\model\price\Unit$7.class
 catalog\hoprxi\core\infrastructure\batch\MemeberPriceHandler.class
 catalog\hoprxi\core\domain\model\brand\BrandCreated.class
 catalog\hoprxi\core\adapter\MadeInAdapter.class
-catalog\hoprxi\core\application\query\BrandJsonQueryService.class
 catalog\hoprxi\core\domain\model\brand\Brand$1.class
 catalog\hoprxi\core\domain\model\price\RetailPrice.class
 catalog\hoprxi\core\domain\model\price\Unit$4.class

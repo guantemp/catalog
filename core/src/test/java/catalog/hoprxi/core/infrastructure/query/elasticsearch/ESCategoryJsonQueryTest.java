@@ -16,26 +16,20 @@
 
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
-import catalog.hoprxi.core.application.query.BrandQueryService;
+import catalog.hoprxi.core.application.query.CategoryJsonQuery;
 import org.testng.annotations.Test;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2024-03-18
+ * @version 0.0.1 builder 2024-07-17
  */
-public class ElasticsearchBrandQueryServiceTest {
-    private static BrandQueryService service = new ElasticsearchBrandQueryService();
-
-    @Test
-    public void testQueryAll() {
-    }
+public class ESCategoryJsonQueryTest {
+    private static final CategoryJsonQuery service = new ESCategoryJsonQuery();
 
     @Test
     public void testQuery() {
-        service.query("8178519975776396");
-        service.query("8178584324788650");
-        service.query("817884324788650");
+        System.out.println(service.query("8178520749625496"));
     }
 
     @Test
@@ -43,6 +37,14 @@ public class ElasticsearchBrandQueryServiceTest {
     }
 
     @Test
-    public void testSize() {
+    public void testQueryChildren() {
+    }
+
+    @Test
+    public void testQueryDescendant() {
+    }
+
+    @Test
+    public void testQueryAll() {
     }
 }

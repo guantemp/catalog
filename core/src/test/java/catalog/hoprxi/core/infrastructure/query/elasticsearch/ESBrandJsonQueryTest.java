@@ -30,16 +30,17 @@ public class ESBrandJsonQueryTest {
     @Test
     public void testQuery() {
         System.out.println(service.query("8178519975776396"));
-        service.query("8178584324788650");
         System.out.println(service.query("817884324788650"));
     }
 
     @Test
     public void testQueryAll() {
+        System.out.println(service.queryAll(0, 20));
     }
 
     @Test
     public void testQueryByName() {
-        service.queryByName("老");
+        System.out.println(service.queryByName("老"));
+        System.out.println(service.queryByName("白萝卜"));
     }
 }

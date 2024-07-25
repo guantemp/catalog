@@ -107,7 +107,6 @@ public final class PsqlUtil {
     }
 
     private static String decrypt(String entry, String securedPlainText) {
-
         if (ENCRYPTED.matcher(securedPlainText).matches()) {
             securedPlainText = securedPlainText.split(":")[1];
             byte[] aesData = Base64.getDecoder().decode(securedPlainText);
