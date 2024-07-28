@@ -424,7 +424,7 @@ public class PsqlItemQueryService implements ItemQueryService {
     }
 
     private MadeIn toMadeIn(String json) throws IOException {
-        String _class = null, city = null, country = null, code = MadeIn.UNKNOWN.code();
+        String _class = null, madeIn = null, country = null, code = MadeIn.UNKNOWN.code();
         JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();
@@ -435,11 +435,8 @@ public class PsqlItemQueryService implements ItemQueryService {
                     case "_class":
                         _class = parser.getValueAsString();
                         break;
-                    case "city":
-                        city = parser.getValueAsString();
-                        break;
-                    case "country":
-                        country = parser.getValueAsString();
+                    case "madeIn":
+                        madeIn = parser.getValueAsString();
                         break;
                     case "code":
                         code = parser.getValueAsString();
@@ -450,9 +447,9 @@ public class PsqlItemQueryService implements ItemQueryService {
         if (MadeIn.UNKNOWN.code().equals(code)) {
             return MadeIn.UNKNOWN;
         } else if (Domestic.class.getName().equals(_class)) {
-            return new Domestic(code, city);
+            return new Domestic(code, madeIn);
         } else if (Imported.class.getName().equals(_class)) {
-            return new Imported(code, country);
+            return new Imported(code, madeIn);
         }
         return MadeIn.UNKNOWN;
     }

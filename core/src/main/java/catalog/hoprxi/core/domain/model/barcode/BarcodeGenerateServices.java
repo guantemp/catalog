@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ public class BarcodeGenerateServices {
     private static final DecimalFormat EAN_8_DECIMAL_FORMAT = new DecimalFormat("00000");
     private static final DecimalFormat EAN_13_DECIMAL_FORMAT = new DecimalFormat("0000000000");
 
+
     /**
      * @param barcode
      * @return
@@ -53,7 +54,7 @@ public class BarcodeGenerateServices {
      * @param barcode
      * @return
      */
-    public static Barcode createBarcodeWithChecksum(CharSequence barcode) {
+    public static Barcode createBarcodeCompleteChecksum(CharSequence barcode) {
         int checksum = EanCheckService.computeChecksum(barcode);
         String temp = barcode.toString() + checksum;
         return createBarcode(temp);

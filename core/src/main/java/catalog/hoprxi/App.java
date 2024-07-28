@@ -19,6 +19,8 @@ package catalog.hoprxi;
 import catalog.hoprxi.core.webapp.*;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.handlers.PathHandler;
@@ -26,15 +28,33 @@ import io.undertow.servlet.Servlets;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
+import salt.hoprxi.crypto.util.AESUtil;
 
+import javax.crypto.SecretKey;
 import javax.servlet.ServletException;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Hello world!
  */
 public class App {
+    public static final Map<String, SecretKey> SECRET_KEY_PARAMETER = new HashMap<>();
+    private static final Pattern ENCRYPTED = Pattern.compile("^ENC:.*");
+
     public static void main(String[] args) {
         for (int i = 0, j = args.length; i < j; i++) {
             if ("-iv".equals(args[i])) {
@@ -46,43 +66,95 @@ public class App {
         try {
             JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
             generator.writeStartObject();
-            generator.writeNumberField("from", 0);
-            generator.writeNumberField("size", 400);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
             generator.writeObjectFieldStart("filter");
             generator.writeObjectFieldStart("bool");
 
             generator.writeArrayFieldStart("should");
-
-            generator.writeStartObject();
-            generator.writeObjectFieldStart("multi_match");
-            generator.writeStringField("query", "海天");
-            generator.writeArrayFieldStart("fields");
-            generator.writeString("name.name");
-            generator.writeString("name.alias");
-            generator.writeEndArray();
-            generator.writeEndObject();
-            generator.writeEndObject();
-
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");
-            generator.writeStringField("name.mnemonic", "海天");
+            generator.writeStringField("id", "496796322118291470");
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("parent_id", "496796322118291470");
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndArray();
+
+            generator.writeEndObject();
+            generator.writeEndObject();
             generator.writeEndObject();
             generator.writeEndObject();
 
+            generator.writeArrayFieldStart("sort");
+            generator.writeStartObject();
+            generator.writeStringField("id", "asc");
+            generator.writeEndObject();
             generator.writeEndArray();
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeEndObject();
+
             generator.writeEndObject();
             generator.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println(e);
         }
         System.out.println(writer);
-        //Config test = ConfigFactory.load("databases");
+        App.decrypt();
+    }
+
+    private static void decrypt() {
+        loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"125.68.186.195:9200:Qwe123465El", "125.68.186.195:5432:Qwe123465Pg", "120.77.47.145:5432:Qwe123465Pg"});
+        Config config = ConfigFactory.load("databases");
+        List<? extends Config> writes = config.getConfigList("databases");
+        for (Config write : writes) {
+            if (write.getString("provider").equals("postgresql") || write.getString("provider").equals("psql") || write.getString("provider").equals("mysql")) {
+                String entry = write.getString("host") + ":" + write.getString("port");
+                String securedPlainText = write.getString("user");
+                if (ENCRYPTED.matcher(securedPlainText).matches()) {
+                    securedPlainText = securedPlainText.split(":")[1];
+                    byte[] aesData = Base64.getDecoder().decode(securedPlainText);
+                    byte[] decryptData = AESUtil.decryptSpec(aesData, SECRET_KEY_PARAMETER.get(entry));
+                    System.out.println("user:" + new String(decryptData, StandardCharsets.UTF_8));
+                }
+                securedPlainText = write.getString("password");
+                if (ENCRYPTED.matcher(securedPlainText).matches()) {
+                    securedPlainText = securedPlainText.split(":")[1];
+                    byte[] aesData = Base64.getDecoder().decode(securedPlainText);
+                    byte[] decryptData = AESUtil.decryptSpec(aesData, SECRET_KEY_PARAMETER.get(entry));
+                    System.out.println("password:" + new String(decryptData, StandardCharsets.UTF_8));
+                }
+            }
+        }
+    }
+
+    private static void loadSecretKey(String fileName, String protectedPasswd, String[] entries) {
+        try (InputStream fis = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName)) {
+            KeyStore keyStore = KeyStore.getInstance("JCEKS");
+            keyStore.load(fis, protectedPasswd.toCharArray());
+            for (String entry : entries) {
+                String[] ss = entry.split(":");
+                if (ss.length == 4)
+                    SECRET_KEY_PARAMETER.put(ss[0] + ":" + ss[1] + ":" + ss[2], (SecretKey) keyStore.getKey(ss[0] + ":" + ss[1] + ":" + ss[2], ss[3].toCharArray()));
+                if (ss.length == 3)
+                    SECRET_KEY_PARAMETER.put(ss[0] + ":" + ss[1], (SecretKey) keyStore.getKey(ss[0] + ":" + ss[1], ss[2].toCharArray()));
+                if (ss.length == 2) {
+                    //System.out.println(ss[0] + ":" + ss[1]);
+                    SECRET_KEY_PARAMETER.put(ss[0], (SecretKey) keyStore.getKey(ss[0], ss[1].toCharArray()));
+                }
+                if (ss.length == 1)
+                    //System.out.println(ss[0] + ":" + ss[1]);
+                    SECRET_KEY_PARAMETER.put(ss[0], (SecretKey) keyStore.getKey(ss[0], "".toCharArray()));
+            }
+        } catch (FileNotFoundException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
+            System.out.println("Not find key store file：" + fileName);
+        } catch (IOException e) {
+            System.out.println("Keystore password was incorrect: " + protectedPasswd);
+        } catch (UnrecoverableKeyException e) {
+            System.out.println("Is a bad key is used during decryption: " + "");
+        }
     }
 
     private void runServlet() throws ServletException {

@@ -244,7 +244,7 @@ public class PsqlItemExport implements ItemExportService {
             cell3.setCellStyle(topStyle);
             cell3.setCellValue("计价单位");
             comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 9, 0, 11, 3));
-            comment.setString(new XSSFRichTextString("单位规则：\n留空或不符合系统提供得单位的缺省为PCS"));
+            comment.setString(new XSSFRichTextString("单位规则：\n留空或不符合系统提供的单位的缺省为PCS"));
             cell3.setCellComment(comment);
             // 创建列
             SXSSFCell cell10 = firstrow.createCell(10);

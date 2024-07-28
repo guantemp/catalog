@@ -27,6 +27,7 @@ import com.lmax.disruptor.EventHandler;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -37,8 +38,8 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
     private static final Map<String, Barcode> BARCODE_MAP = new HashMap<>();
     private static final ItemQueryService ITEM_QUERY = new PsqlItemQueryService("catalog");
 
-    private int start = 1;
-    private String prefix = "20";
+    private static final AtomicInteger start = new AtomicInteger(1);
+    private String prefix = "21";
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
@@ -46,7 +47,7 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
         itemImportEvent.verify = Verify.OK;
         if (barcode == null || barcode.isEmpty()) {
             //根据设置规则生成店内码
-            itemImportEvent.map.put(ItemMapping.BARCODE, BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(1, 1, "21")[0].toPlanString());
+            itemImportEvent.map.put(ItemMapping.BARCODE, BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(start.getAndIncrement(), 1, prefix)[0].toPlanString());
             return;
         }
         Barcode bar = null;
@@ -54,7 +55,7 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
             bar = BarcodeGenerateServices.createBarcode(barcode);
         } catch (InvalidBarcodeException e) {
             try {
-                bar = BarcodeGenerateServices.createBarcodeWithChecksum(barcode);
+                bar = BarcodeGenerateServices.createBarcodeCompleteChecksum(barcode);
             } catch (InvalidBarcodeException f) {
                 itemImportEvent.verify = Verify.BARCODE_CHECK_SUM_ERROR;
                 return;

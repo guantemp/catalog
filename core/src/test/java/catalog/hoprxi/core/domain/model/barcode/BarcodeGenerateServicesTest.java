@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ public class BarcodeGenerateServicesTest {
     public void testCreateEANUPCBarcode() {
         Barcode barcode = BarcodeGenerateServices.createBarcode("2200056789296");
         System.out.println(barcode);
-        barcode = BarcodeGenerateServices.createBarcodeWithChecksum("693023999160");
+        barcode = BarcodeGenerateServices.createBarcodeCompleteChecksum("693023999160");
         System.out.println(barcode);
     }
 

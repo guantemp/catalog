@@ -22,6 +22,5 @@ package catalog.hoprxi.core.infrastructure.batch;
  * @version 0.0.1 builder 2023-05-09
  */
 public class ExecuteSqlEvent {
-    int count;
     String sql;
 }

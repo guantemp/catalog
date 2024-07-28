@@ -34,10 +34,15 @@ public class ESCategoryJsonQueryTest {
 
     @Test
     public void testQueryByName() {
+        System.out.println(service.queryByName("酒"));
+        System.out.println(service.queryByName("白萝卜"));
+        System.out.println(service.queryByName("wine"));
+        System.out.println(service.queryByName("oil"));
     }
 
     @Test
     public void testQueryChildren() {
+        System.out.println(service.queryChildren("496796322118291470"));
     }
 
     @Test
@@ -46,5 +51,7 @@ public class ESCategoryJsonQueryTest {
 
     @Test
     public void testQueryAll() {
+        System.out.println(service.queryAll(0, 2));
+        System.out.println(service.queryAll(0, 50));
     }
 }

@@ -14,22 +14,16 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.batch;
-
-import catalog.hoprxi.core.application.batch.ItemMapping;
-
-import java.util.EnumMap;
+package catalog.hoprxi.core.application.query;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2023-05-08
+ * @version 0.0.1 builder 2024-07-28
  */
-public class ItemImportEvent {
-    EnumMap<ItemMapping, String> map;
-    Verify verify = Verify.OK;
-
-    public void setMap(EnumMap<ItemMapping, String> map) {
-        this.map = map;
+public interface ItemJsonQuery {
+    default String query(String id) {
+        return "";
     }
+
 }

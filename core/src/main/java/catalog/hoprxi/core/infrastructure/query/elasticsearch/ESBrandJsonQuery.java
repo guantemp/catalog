@@ -171,7 +171,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         RestClient client = builder.build();
         Request request = new Request("GET", "/brand/_search");
         request.setOptions(COMMON_OPTIONS);
-        request.setJsonEntity(queryAllJsonEntity(offset, limit));
+        request.setJsonEntity(ESQueryJsonEntity.paginationQueryJsonEntity(offset, limit));
         try {
             Response response = client.performRequest(request);
             client.close();
@@ -181,26 +181,5 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
                 LOGGER.debug("Not query brands from {} to {}:", offset, limit, e);
         }
         return "";
-    }
-
-    private String queryAllJsonEntity(int offset, int limit) {
-        StringWriter writer = new StringWriter();
-        try {
-            JsonGenerator generator = jsonFactory.createGenerator(writer);
-            generator.writeStartObject();
-            generator.writeNumberField("from", offset);
-            generator.writeNumberField("size", limit);
-            generator.writeObjectFieldStart("query");
-            generator.writeFieldName("match_all");
-            generator.writeStartObject();
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.close();
-        } catch (IOException e) {
-            if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Cannot assemble request JSON", e);
-        }
-        return writer.toString();
     }
 }

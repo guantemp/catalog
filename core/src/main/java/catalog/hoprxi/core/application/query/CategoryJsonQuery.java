@@ -26,6 +26,8 @@ public interface CategoryJsonQuery {
         return "";
     }
 
+    String root();
+
     String queryByName(String name);
 
     String queryChildren(String id);
