@@ -61,40 +61,26 @@ public class App {
                 System.out.println(args[i + 1]);
             }
         }
+        String[] ss = "https://slave.tooo.top:9200".split(":");
+        for (String s : ss)
+            System.out.println(ss.length);
         JsonFactory jsonFactory = JsonFactory.builder().build();
         StringWriter writer = new StringWriter();
         try {
-            JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
+            JsonGenerator generator = jsonFactory.createGenerator(writer);
             generator.writeStartObject();
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
             generator.writeObjectFieldStart("filter");
-            generator.writeObjectFieldStart("bool");
-
-            generator.writeArrayFieldStart("should");
-            generator.writeStartObject();
-            generator.writeObjectFieldStart("term");
-            generator.writeStringField("id", "496796322118291470");
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeStartObject();
-            generator.writeObjectFieldStart("term");
-            generator.writeStringField("parent_id", "496796322118291470");
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeEndArray();
-
+            generator.writeObjectFieldStart("script");
+            generator.writeObjectFieldStart("script");
+            generator.writeStringField("lang", "painless");
+            generator.writeStringField("source", "doc['id'].value == doc['parent_id'].value");
             generator.writeEndObject();
             generator.writeEndObject();
             generator.writeEndObject();
             generator.writeEndObject();
-
-            generator.writeArrayFieldStart("sort");
-            generator.writeStartObject();
-            generator.writeStringField("id", "asc");
             generator.writeEndObject();
-            generator.writeEndArray();
-
             generator.writeEndObject();
             generator.close();
         } catch (IOException e) {
@@ -108,23 +94,25 @@ public class App {
         loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"125.68.186.195:9200:Qwe123465El", "125.68.186.195:5432:Qwe123465Pg", "120.77.47.145:5432:Qwe123465Pg"});
         Config config = ConfigFactory.load("databases");
-        List<? extends Config> writes = config.getConfigList("databases");
-        for (Config write : writes) {
-            if (write.getString("provider").equals("postgresql") || write.getString("provider").equals("psql") || write.getString("provider").equals("mysql")) {
-                String entry = write.getString("host") + ":" + write.getString("port");
-                String securedPlainText = write.getString("user");
-                if (ENCRYPTED.matcher(securedPlainText).matches()) {
-                    securedPlainText = securedPlainText.split(":")[1];
-                    byte[] aesData = Base64.getDecoder().decode(securedPlainText);
-                    byte[] decryptData = AESUtil.decryptSpec(aesData, SECRET_KEY_PARAMETER.get(entry));
-                    System.out.println("user:" + new String(decryptData, StandardCharsets.UTF_8));
-                }
-                securedPlainText = write.getString("password");
-                if (ENCRYPTED.matcher(securedPlainText).matches()) {
-                    securedPlainText = securedPlainText.split(":")[1];
-                    byte[] aesData = Base64.getDecoder().decode(securedPlainText);
-                    byte[] decryptData = AESUtil.decryptSpec(aesData, SECRET_KEY_PARAMETER.get(entry));
-                    System.out.println("password:" + new String(decryptData, StandardCharsets.UTF_8));
+        List<? extends Config> databases = config.getConfigList("databases");
+        for (Config database : databases) {
+            if ("write".equals(database.getString("type"))) {
+                if (database.getString("provider").equals("postgresql") || database.getString("provider").equals("psql") || database.getString("provider").equals("mysql")) {
+                    String entry = database.getString("host") + ":" + database.getString("port");
+                    String securedPlainText = database.getString("user");
+                    if (ENCRYPTED.matcher(securedPlainText).matches()) {
+                        securedPlainText = securedPlainText.split(":")[1];
+                        byte[] aesData = Base64.getDecoder().decode(securedPlainText);
+                        byte[] decryptData = AESUtil.decryptSpec(aesData, SECRET_KEY_PARAMETER.get(entry));
+                        System.out.println("user:" + new String(decryptData, StandardCharsets.UTF_8));
+                    }
+                    securedPlainText = database.getString("password");
+                    if (ENCRYPTED.matcher(securedPlainText).matches()) {
+                        securedPlainText = securedPlainText.split(":")[1];
+                        byte[] aesData = Base64.getDecoder().decode(securedPlainText);
+                        byte[] decryptData = AESUtil.decryptSpec(aesData, SECRET_KEY_PARAMETER.get(entry));
+                        System.out.println("password:" + new String(decryptData, StandardCharsets.UTF_8));
+                    }
                 }
             }
         }
@@ -136,17 +124,15 @@ public class App {
             keyStore.load(fis, protectedPasswd.toCharArray());
             for (String entry : entries) {
                 String[] ss = entry.split(":");
-                if (ss.length == 4)
-                    SECRET_KEY_PARAMETER.put(ss[0] + ":" + ss[1] + ":" + ss[2], (SecretKey) keyStore.getKey(ss[0] + ":" + ss[1] + ":" + ss[2], ss[3].toCharArray()));
-                if (ss.length == 3)
+                if (ss.length == 3)//https://slave.tooo.top:9200
                     SECRET_KEY_PARAMETER.put(ss[0] + ":" + ss[1], (SecretKey) keyStore.getKey(ss[0] + ":" + ss[1], ss[2].toCharArray()));
-                if (ss.length == 2) {
+                if (ss.length == 2) {//125.68.186.195:5432
                     //System.out.println(ss[0] + ":" + ss[1]);
                     SECRET_KEY_PARAMETER.put(ss[0], (SecretKey) keyStore.getKey(ss[0], ss[1].toCharArray()));
                 }
                 if (ss.length == 1)
                     //System.out.println(ss[0] + ":" + ss[1]);
-                    SECRET_KEY_PARAMETER.put(ss[0], (SecretKey) keyStore.getKey(ss[0], "".toCharArray()));
+                    SECRET_KEY_PARAMETER.put("security.keystore.aes.password", (SecretKey) keyStore.getKey("security.keystore.aes.password", "".toCharArray()));
             }
         } catch (FileNotFoundException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
             System.out.println("Not find key store file：" + fileName);

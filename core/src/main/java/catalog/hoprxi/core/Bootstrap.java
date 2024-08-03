@@ -24,22 +24,21 @@ import io.undertow.servlet.Servlets;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import salt.hoprxi.crypto.PasswordService;
 
 import javax.crypto.SecretKey;
 import javax.servlet.ServletException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /***
@@ -48,12 +47,13 @@ import java.util.regex.Pattern;
  * @version 0.0.2 builder 2024-06-14
  */
 public class Bootstrap {
-    public static final Map<String, SecretKey> SECRET_KEY_PARAMETER = new HashMap<>();
+    public static final Map<String, SecretKey> SECRET_KEY_MAP = new HashMap<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(Bootstrap.class);
     private static final Pattern EXCLUDE = Pattern.compile("^-{1,}.*");
 
-    public static void main(String[] args) throws ServletException, URISyntaxException {
+    public static void main(String[] args) throws ServletException {
         String fileName = null, fileProtectedPasswd = "";
-        List<String> entries = new ArrayList<>();
+        Set<String> entries = new HashSet<>();
         for (int i = 0, j = args.length; i < j; i++) {
             switch (args[i]) {
                 case "-f":
@@ -88,8 +88,7 @@ public class Bootstrap {
             }
         }
         Bootstrap.loadSecretKey(fileName, fileProtectedPasswd, entries);
-        System.out.println(SECRET_KEY_PARAMETER);
-        //System.out.println(Pattern.compile("^ENC:.*").matcher("PIzmXMtb46wCMJrxljK8gdHqp9sXr3y+SJ/2Q0VC5oM=").matches());
+        System.out.println(SECRET_KEY_MAP);
 
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentInfo deploymentInfo = Servlets.deployment()
@@ -123,25 +122,29 @@ public class Bootstrap {
         server.start();
     }
 
-    private static void loadSecretKey(String fileName, String protectedPasswd, List<String> entries) {
+    private static void loadSecretKey(String fileName, String protectedPasswd, Set<String> entries) {
         try (InputStream fis = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName)) {
             KeyStore keyStore = KeyStore.getInstance("JCEKS");
             keyStore.load(fis, protectedPasswd.toCharArray());
+            Enumeration<String> alias = keyStore.aliases();
+            while (alias.hasMoreElements()) {
+                entries.add(alias.nextElement());
+            }
             for (String entry : entries) {
                 String[] ss = entry.split(":");
-                if (ss.length == 3)
-                    SECRET_KEY_PARAMETER.put(ss[0] + ":" + ss[1], (SecretKey) keyStore.getKey(ss[0] + ":" + ss[1], ss[2].toCharArray()));
-                if (ss.length == 2) {
-                    //System.out.println(ss[0] + ":" + ss[1]);
-                    SECRET_KEY_PARAMETER.put(ss[0], (SecretKey) keyStore.getKey(ss[0], ss[1].toCharArray()));
-                }
+                if (ss.length == 3)//https://slave.tooo.top:9200
+                    SECRET_KEY_MAP.put(ss[0] + ":" + ss[1], (SecretKey) keyStore.getKey(ss[0] + ":" + ss[1], ss[2].toCharArray()));
+                if (ss.length == 2) //125.68.186.195:5432
+                    SECRET_KEY_MAP.put(ss[0], (SecretKey) keyStore.getKey(ss[0], ss[1].toCharArray()));
+                if (ss.length == 1)
+                    SECRET_KEY_MAP.put(PasswordService.KEYSTORE_ENTRY, (SecretKey) keyStore.getKey(PasswordService.KEYSTORE_ENTRY, "".toCharArray()));
             }
         } catch (FileNotFoundException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
-            System.out.println("Not find key store file：" + fileName);
+            LOGGER.error("Not find key store file {}", fileName, e);
         } catch (IOException e) {
-            System.out.println("Keystore password was incorrect: " + protectedPasswd);
+            LOGGER.error("Keystore protected password was incorrect {}", protectedPasswd, e);
         } catch (UnrecoverableKeyException e) {
-            System.out.println("Is a bad key is used during decryption: " + "");
+            LOGGER.error("Is a bad key is used during decryption", e);
         }
     }
 }

@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.BrandJsonQuery;
-import catalog.hoprxi.core.infrastructure.ElasticsearchUtil;
+import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -43,7 +43,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
 
     static {
         RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
-        builder.addHeader(HttpHeaders.AUTHORIZATION, ElasticsearchUtil.encrypted())
+        builder.addHeader(HttpHeaders.AUTHORIZATION, ESUtil.encrypt())
                 .addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=utf-8");
         //builder.setHttpAsyncResponseConsumerFactory(
         //new HttpAsyncResponseConsumerFactory
@@ -55,7 +55,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
 
     @Override
     public String query(String id) {
-        RestClientBuilder builder = RestClient.builder(new HttpHost(ElasticsearchUtil.host(), ElasticsearchUtil.port(), "https"));
+        RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/brand/_doc/" + id);
         request.setOptions(COMMON_OPTIONS);
@@ -91,7 +91,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
 
     @Override
     public String queryByName(String name) {
-        RestClientBuilder builder = RestClient.builder(new HttpHost(ElasticsearchUtil.host(), ElasticsearchUtil.port(), "https"));
+        RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/brand/_search");
         request.setOptions(COMMON_OPTIONS);
@@ -167,7 +167,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
 
     @Override
     public String queryAll(int offset, int limit) {
-        RestClientBuilder builder = RestClient.builder(new HttpHost(ElasticsearchUtil.host(), ElasticsearchUtil.port(), "https"));
+        RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/brand/_search");
         request.setOptions(COMMON_OPTIONS);

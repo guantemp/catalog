@@ -80,8 +80,8 @@ public class Setup {
         if (ENCRYPTED.matcher(securedPlainText).matches()) {
             securedPlainText = securedPlainText.split(":")[1];
             byte[] aesData = Base64.getDecoder().decode(securedPlainText);
-            Bootstrap.SECRET_KEY_PARAMETER.get(entry);
-            byte[] decryptData = AESUtil.decryptSpec(aesData, Bootstrap.SECRET_KEY_PARAMETER.get(entry));
+            Bootstrap.SECRET_KEY_MAP.get(entry);
+            byte[] decryptData = AESUtil.decryptSpec(aesData, Bootstrap.SECRET_KEY_MAP.get(entry));
             return new String(decryptData, StandardCharsets.UTF_8);
         }
         return securedPlainText;

@@ -16,15 +16,16 @@
 
 package catalog.hoprxi.core.infrastructure;
 
-import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2024-06-15
  */
-public class ElasticsearchUtil {
-    private static final Properties param = new Properties();
+public class ESUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ESUtil.class);
 
     public static String host() {
         return "slave.tooo.top";
@@ -34,8 +35,7 @@ public class ElasticsearchUtil {
         return 9200;
     }
 
-    public static String encrypted() {
+    public static String encrypt() {
         return "Basic ZWxhc3RpYzpRd2UxMjM0NjU=";
     }
-
 }

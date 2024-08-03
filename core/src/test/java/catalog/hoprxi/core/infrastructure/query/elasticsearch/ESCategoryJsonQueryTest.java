@@ -54,4 +54,9 @@ public class ESCategoryJsonQueryTest {
         System.out.println(service.queryAll(0, 2));
         System.out.println(service.queryAll(0, 50));
     }
+
+    @Test
+    public void testRoot() {
+        System.out.println(service.root());
+    }
 }
