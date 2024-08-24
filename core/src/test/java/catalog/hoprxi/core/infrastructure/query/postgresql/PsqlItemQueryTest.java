@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.CategoryQueryService;
-import catalog.hoprxi.core.application.query.ItemQueryService;
+import catalog.hoprxi.core.application.query.CategoryQuery;
+import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.view.ItemView;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -27,12 +27,12 @@ import org.testng.annotations.Test;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-11-21
  */
-public class PsqlItemQueryServiceTest {
+public class PsqlItemQueryTest {
     private static final String DATABASE_NAME = "catalog";
-    private static final ItemQueryService query = new PsqlItemQueryService(DATABASE_NAME);
+    private static final ItemQuery query = new PsqlItemQuery(DATABASE_NAME);
 
     static {
-        CategoryQueryService categoryQuery = new PsqlCategoryQueryService("catalog");
+        CategoryQuery categoryQuery = new PsqlCategoryQuery("catalog");
         categoryQuery.descendants("52495569397272599");
     }
 
@@ -80,7 +80,7 @@ public class PsqlItemQueryServiceTest {
 
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testBelongToCategoryAndDescendants() {
-        PsqlItemQueryService itemQueryService = ((PsqlItemQueryService) query);
+        PsqlItemQuery itemQueryService = ((PsqlItemQuery) query);
         ItemView[] skuses;
         skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598", 0, 5);
         Assert.assertEquals(skuses.length, 5);

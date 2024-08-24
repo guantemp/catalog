@@ -17,14 +17,14 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
-import catalog.hoprxi.core.application.query.CategoryQueryService;
+import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
-import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQueryService;
+import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQuery;
 import com.lmax.disruptor.EventHandler;
 
 import java.util.regex.Pattern;
@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 public class CategoryHandler implements EventHandler<ItemImportEvent> {
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{12,19}$");
     private static String CORE_PARENT_ID;
-    private final CategoryQueryService CATEGORY_QUERY = new PsqlCategoryQueryService("catalog");
+    private final CategoryQuery CATEGORY_QUERY = new PsqlCategoryQuery("catalog");
     private final CategoryRepository categoryRepository = new PsqlCategoryRepository("catalog");
 
     public CategoryHandler() {

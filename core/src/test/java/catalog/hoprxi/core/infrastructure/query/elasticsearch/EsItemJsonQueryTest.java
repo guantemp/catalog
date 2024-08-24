@@ -14,32 +14,50 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.query;
+package catalog.hoprxi.core.infrastructure.query.elasticsearch;
+
+import org.testng.annotations.Test;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2024-07-28
+ * @version 0.0.1 builder 2024-08-24
  */
-public interface ItemJsonQuery {
-    default String query(String id) {
-        return "";
+public class EsItemJsonQueryTest {
+
+    @Test
+    public void testQuery() {
     }
 
-    String queryByName(String name);
+    @Test
+    public void testQueryByName() {
+    }
 
-    String queryByBarcode(String barcode);
+    @Test
+    public void testQueryByBarcode() {
+    }
 
-    String queryByBarcode(String barcode, long offset, long size);
+    @Test
+    public void testTestQueryByBarcode() {
+    }
 
-    String accurateQueryByBarcode(String barcode);
+    @Test
+    public void testAccurateQueryByBarcode() {
+    }
 
-    String queryByBrand(String brandId);
+    @Test
+    public void testQueryByBrand() {
+    }
 
-    String queryByCategory(String categoryId);
+    @Test
+    public void testQueryByCategory() {
+    }
 
-    String queryByCategoryAndItsDescendants(String categoryId);
+    @Test
+    public void testQueryByCategoryAndItsDescendants() {
+    }
 
-    String query(int from, int size);
-
+    @Test
+    public void testTestQuery() {
+    }
 }

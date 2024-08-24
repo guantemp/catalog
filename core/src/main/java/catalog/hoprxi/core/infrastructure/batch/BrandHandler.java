@@ -17,13 +17,13 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
-import catalog.hoprxi.core.application.query.BrandQueryService;
+import catalog.hoprxi.core.application.query.BrandQuery;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
-import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlBrandQueryService;
+import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlBrandQuery;
 import com.lmax.disruptor.EventHandler;
 
 import java.util.regex.Pattern;
@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  */
 public class BrandHandler implements EventHandler<ItemImportEvent> {
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{12,19}$");
-    private static final BrandQueryService BRAND_QUERY = new PsqlBrandQueryService();
+    private static final BrandQuery BRAND_QUERY = new PsqlBrandQuery();
     private static final BrandRepository BRAND_REPO = new PsqlBrandRepository("catalog");
 
     @Override

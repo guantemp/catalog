@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.CategoryQueryService;
+import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
@@ -42,8 +42,8 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-10-20
  */
-public class PsqlCategoryQueryService implements CategoryQueryService, DomainEventSubscriber {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlCategoryQueryService.class);
+public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlCategoryQuery.class);
     private static Tree<CategoryView>[] trees;
     private static Constructor<Name> nameConstructor;
 
@@ -58,7 +58,7 @@ public class PsqlCategoryQueryService implements CategoryQueryService, DomainEve
 
     private final String databaseName;
 
-    public PsqlCategoryQueryService(String databaseName) {
+    public PsqlCategoryQuery(String databaseName) {
         this.databaseName = Objects.requireNonNull(databaseName, "The databaseName parameter is required");
         root();
     }

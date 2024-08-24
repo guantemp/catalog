@@ -16,58 +16,37 @@
 
 package catalog.hoprxi.core.application.query;
 
-import catalog.hoprxi.core.application.view.CategoryView;
+import catalog.hoprxi.core.domain.model.brand.Brand;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-10-20
+ * @version 0.0.1 builder 2021-10-16
  */
-public interface CategoryQueryService {
+public interface BrandQuery {
     /**
-     * @return all root
+     * @param offset
+     * @param limit
+     * @return
      */
-    CategoryView[] root();
-
-    /**
-     * @param id
-     * @return category key is id
-     */
-    CategoryView query(String id);
+    Brand[] queryAll(int offset, int limit);
 
     /**
      * @param id
      * @return
      */
-    CategoryView[] children(String id);
+    default Brand query(String id) {
+        return Brand.UNDEFINED;
+    }
 
     /**
-     * @param id
-     * @return descendants
-     */
-    CategoryView[] descendants(String id);
-
-    /**
-     * @param regularExpression
+     * @param name is support regular
      * @return
      */
-    CategoryView[] queryByName(String regularExpression);
+    Brand[] queryByName(String name);
 
     /**
-     * @param id
      * @return
      */
-    CategoryView[] siblings(String id);
-
-    /**
-     * @param id
-     * @return
-     */
-    CategoryView[] path(String id);
-
-    /**
-     * @param id
-     * @return
-     */
-    int depth(String id);
+    int size();
 }

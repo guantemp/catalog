@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.BrandQueryService;
+import catalog.hoprxi.core.application.query.BrandQuery;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
@@ -36,8 +36,8 @@ import static org.testng.Assert.assertEquals;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-10-18
  */
-public class PsqlBrandQueryServiceTest {
-    private static BrandQueryService query = new PsqlBrandQueryService();
+public class PsqlBrandQueryTest {
+    private static BrandQuery query = new PsqlBrandQuery();
     private static BrandRepository repository = new PsqlBrandRepository("catalog");
 
     @BeforeClass

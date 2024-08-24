@@ -18,10 +18,10 @@ package catalog.hoprxi.core.webapp;
 
 import catalog.hoprxi.core.application.CategoryAppService;
 import catalog.hoprxi.core.application.command.*;
-import catalog.hoprxi.core.application.query.CategoryQueryService;
+import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
-import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQueryService;
+import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQuery;
 import com.fasterxml.jackson.core.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -49,7 +49,7 @@ public class CategoryServlet extends HttpServlet {
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
     private static final CategoryAppService APP_SERVICE = new CategoryAppService();
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
-    private CategoryQueryService categoryQueryService;
+    private CategoryQuery categoryQuery;
 
     @Override
     public void init(ServletConfig config) {
@@ -60,10 +60,10 @@ public class CategoryServlet extends HttpServlet {
         String provider = conf.hasPath("provider") ? conf.getString("provider") : "postgresql";
         switch ((provider)) {
             case "postgresql":
-                categoryQueryService = new PsqlCategoryQueryService("catalog");
+                categoryQuery = new PsqlCategoryQuery("catalog");
                 break;
         }
-        categoryQueryService.root();
+        categoryQuery.root();
     }
 
     @Override
@@ -79,7 +79,7 @@ public class CategoryServlet extends HttpServlet {
                 if (parameters[1].equals("_search")) {//search
                     System.out.println(12);
                 } else {
-                    CategoryView view = categoryQueryService.query(parameters[1]);
+                    CategoryView view = categoryQuery.query(parameters[1]);
                     if (view != null) {
                         responseCategoryView(generator, view);
                     } else {//not query
@@ -89,17 +89,17 @@ public class CategoryServlet extends HttpServlet {
             } else if (parameters.length > 2 && parameters[2] != null) {
                 switch (parameters[2]) {
                     case "depth":
-                        int depth = categoryQueryService.depth(parameters[1]);
+                        int depth = categoryQuery.depth(parameters[1]);
                         generator.writeNumberField("depth", depth);
                         break;
                     case "path":
-                        CategoryView[] path = categoryQueryService.path(parameters[1]);
+                        CategoryView[] path = categoryQuery.path(parameters[1]);
                         for (CategoryView p : path) {
                             responseCategoryView(generator, p);
                         }
                         break;
                     case "children":
-                        CategoryView parent = categoryQueryService.query(parameters[1]);
+                        CategoryView parent = categoryQuery.query(parameters[1]);
                         if (parent == null)
                             responseNotFind(resp, generator, parameters[1]);
                         else {
@@ -107,7 +107,7 @@ public class CategoryServlet extends HttpServlet {
                         }
                         break;
                     case "descendants":
-                        CategoryView senior = categoryQueryService.query(parameters[1]);
+                        CategoryView senior = categoryQuery.query(parameters[1]);
                         if (senior == null)
                             responseNotFind(resp, generator, parameters[1]);
                         else {
@@ -117,7 +117,7 @@ public class CategoryServlet extends HttpServlet {
                 }
             }
         } else {//all category
-            CategoryView[] roots = categoryQueryService.root();
+            CategoryView[] roots = categoryQuery.root();
             generator.writeArrayFieldStart("categories");
             for (CategoryView root : roots) {
                 generator.writeStartObject();
@@ -155,7 +155,7 @@ public class CategoryServlet extends HttpServlet {
 
     private void responseChildren(JsonGenerator generator, CategoryView view) throws IOException {
         responseCategoryView(generator, view);
-        CategoryView[] children = categoryQueryService.children(view.getId());
+        CategoryView[] children = categoryQuery.children(view.getId());
         if (children.length >= 1) {
             generator.writeArrayFieldStart("children");
             for (CategoryView child : children) {
@@ -169,7 +169,7 @@ public class CategoryServlet extends HttpServlet {
 
     private void responseDescendants(JsonGenerator generator, CategoryView view) throws IOException {
         responseCategoryView(generator, view);
-        CategoryView[] children = categoryQueryService.children(view.getId());
+        CategoryView[] children = categoryQuery.children(view.getId());
         if (children.length >= 1) {
             generator.writeArrayFieldStart("children");
             for (CategoryView child : children) {

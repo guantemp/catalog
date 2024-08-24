@@ -23,7 +23,7 @@ import catalog.hoprxi.core.application.view.ItemView;
  * @since JDK8.0
  * @version 0.0.2 builder 2023-08-13
  */
-public interface ItemQueryService {
+public interface ItemQuery {
     /**
      * @param id
      * @return

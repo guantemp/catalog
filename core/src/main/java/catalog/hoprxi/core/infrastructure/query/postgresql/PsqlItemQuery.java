@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.ItemQueryService;
+import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
@@ -53,13 +53,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.2 builder 2023-08-13
  */
-public class PsqlItemQueryService implements ItemQueryService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQueryService.class);
+public class PsqlItemQuery implements ItemQuery {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQuery.class);
     private static final Cache<String, ItemView> CACHE = CacheFactory.build("itemView");
     private static final Cache<String, String[]> CACHES = CacheFactory.build("itemViews");
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
@@ -76,7 +77,7 @@ public class PsqlItemQueryService implements ItemQueryService {
 
     private final String databaseName;
 
-    public PsqlItemQueryService(String databaseName) {
+    public PsqlItemQuery(String databaseName) {
         this.databaseName = Objects.requireNonNull(databaseName, "The databaseName parameter is required");
     }
 

@@ -18,9 +18,9 @@ package catalog.hoprxi.core.webapp;
 
 import catalog.hoprxi.core.application.BrandAppService;
 import catalog.hoprxi.core.application.command.*;
-import catalog.hoprxi.core.application.query.BrandQueryService;
+import catalog.hoprxi.core.application.query.BrandQuery;
 import catalog.hoprxi.core.domain.model.brand.Brand;
-import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlBrandQueryService;
+import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlBrandQuery;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.typesafe.config.Config;
@@ -50,7 +50,7 @@ public class BrandServlet extends HttpServlet {
     private static final int LIMIT = 64;
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
     private BrandAppService appService = new BrandAppService();
-    private BrandQueryService query;
+    private BrandQuery query;
 
     public BrandServlet() {
         Config conf = ConfigFactory.load("database");
@@ -59,7 +59,7 @@ public class BrandServlet extends HttpServlet {
         switch ((provider)) {
             case "postgresql":
             case "psql":
-                query = new PsqlBrandQueryService();
+                query = new PsqlBrandQuery();
                 break;
         }
     }

@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.BrandQueryService;
+import catalog.hoprxi.core.application.query.BrandQuery;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
@@ -43,8 +43,8 @@ import java.util.List;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-10-18
  */
-public class PsqlBrandQueryService implements BrandQueryService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlBrandQueryService.class);
+public class PsqlBrandQuery implements BrandQuery {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlBrandQuery.class);
     private static final Cache<String, Brand> CACHE = CacheFactory.build("brand");
     private static Constructor<Name> nameConstructor;
 

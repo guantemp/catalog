@@ -20,7 +20,7 @@ import catalog.hoprxi.core.application.ItemAppService;
 import catalog.hoprxi.core.application.command.Command;
 import catalog.hoprxi.core.application.command.ItemCreateCommand;
 import catalog.hoprxi.core.application.command.ItemDeleteCommand;
-import catalog.hoprxi.core.application.query.ItemQueryService;
+import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
@@ -34,7 +34,7 @@ import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
-import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQueryService;
+import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQuery;
 import com.fasterxml.jackson.core.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -73,7 +73,7 @@ public class ItemServlet extends HttpServlet {
     private static final int LIMIT = 64;
     private static final String PRE_SUFFIX = ".*?";
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
-    private ItemQueryService queryService;
+    private ItemQuery queryService;
     private ItemAppService app = new ItemAppService();
 
     @Override
@@ -89,7 +89,7 @@ public class ItemServlet extends HttpServlet {
         switch ((provider)) {
             case "postgresql":
                 //repository = new PsqlItemRepository("catalog");
-                queryService = new PsqlItemQueryService("catalog");
+                queryService = new PsqlItemQuery("catalog");
                 break;
         }
     }

@@ -52,7 +52,7 @@ public class Bootstrap {
     private static final Pattern EXCLUDE = Pattern.compile("^-{1,}.*");
 
     public static void main(String[] args) throws ServletException {
-        String fileName = null, fileProtectedPasswd = "";
+        String fileName = "keystore.jks", fileProtectedPasswd = "";
         Set<String> entries = new HashSet<>();
         for (int i = 0, j = args.length; i < j; i++) {
             switch (args[i]) {
@@ -122,10 +122,10 @@ public class Bootstrap {
         server.start();
     }
 
-    private static void loadSecretKey(String fileName, String protectedPasswd, Set<String> entries) {
-        try (InputStream fis = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName)) {
+    private static void loadSecretKey(String keystoreFile, String keystoreFileProtectedPasswd, Set<String> entries) {
+        try (InputStream fis = Thread.currentThread().getContextClassLoader().getResourceAsStream(keystoreFile)) {
             KeyStore keyStore = KeyStore.getInstance("JCEKS");
-            keyStore.load(fis, protectedPasswd.toCharArray());
+            keyStore.load(fis, keystoreFileProtectedPasswd.toCharArray());
             Enumeration<String> alias = keyStore.aliases();
             while (alias.hasMoreElements()) {
                 entries.add(alias.nextElement());
@@ -140,9 +140,9 @@ public class Bootstrap {
                     SECRET_KEY_MAP.put(PasswordService.KEYSTORE_ENTRY, (SecretKey) keyStore.getKey(PasswordService.KEYSTORE_ENTRY, "".toCharArray()));
             }
         } catch (FileNotFoundException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
-            LOGGER.error("Not find key store file {}", fileName, e);
+            LOGGER.error("Not find key store file {}", keystoreFile, e);
         } catch (IOException e) {
-            LOGGER.error("Keystore protected password was incorrect {}", protectedPasswd, e);
+            LOGGER.error("Keystore protected password was incorrect {}", keystoreFileProtectedPasswd, e);
         } catch (UnrecoverableKeyException e) {
             LOGGER.error("Is a bad key is used during decryption", e);
         }
