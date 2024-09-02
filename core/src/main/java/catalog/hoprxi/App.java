@@ -72,12 +72,11 @@ public class App {
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
             generator.writeObjectFieldStart("filter");
-            generator.writeObjectFieldStart("script");
-            generator.writeObjectFieldStart("script");
-            generator.writeStringField("lang", "painless");
-            generator.writeStringField("source", "doc['id'].value == doc['parent_id'].value");
+
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("barcode.raw", "773301701166");
             generator.writeEndObject();
-            generator.writeEndObject();
+
             generator.writeEndObject();
             generator.writeEndObject();
             generator.writeEndObject();

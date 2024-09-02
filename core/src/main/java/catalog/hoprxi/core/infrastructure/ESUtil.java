@@ -16,8 +16,18 @@
 
 package catalog.hoprxi.core.infrastructure;
 
+import catalog.hoprxi.core.Bootstrap;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import salt.hoprxi.crypto.util.AESUtil;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.List;
+import java.util.Properties;
+import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -26,16 +36,43 @@ import org.slf4j.LoggerFactory;
  */
 public class ESUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(ESUtil.class);
+    private static final Pattern ENCRYPTED = Pattern.compile("^ENC:.*");
+    private static final Properties props = new Properties();
+
+    static {
+        Config config = ConfigFactory.load("databases");
+        List<? extends Config> databases = config.getConfigList("databases");
+        for (Config database : databases) {
+            if (database.getString("type").equals("read") && database.getString("provider").equals("elasticsearch")) {
+                props.put("host", database.getString("host"));
+                props.put("port", database.getInt("port"));
+                String entry = database.getString("host") + ":" + database.getString("port");
+                props.put("user", decrypt(entry, database.getString("user")));
+                props.put("password", decrypt(entry, database.getString("password")));
+            }
+        }
+    }
 
     public static String host() {
         return "slave.tooo.top";
     }
 
     public static int port() {
-        return 9200;
+        return Integer.parseInt(props.getProperty("port", "9200"));
     }
 
     public static String encrypt() {
-        return "Basic ZWxhc3RpYzpRd2UxMjM0NjU=";
+        return "Basic " + Base64.getEncoder().encodeToString((props.get("user") + ":" + props.get("password")).getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String decrypt(String entry, String securedPlainText) {
+        if (ENCRYPTED.matcher(securedPlainText).matches()) {
+            securedPlainText = securedPlainText.split(":")[1];
+            byte[] aesData = Base64.getDecoder().decode(securedPlainText);
+            Bootstrap.SECRET_KEY_MAP.get(entry);
+            byte[] decryptData = AESUtil.decryptSpec(aesData, Bootstrap.SECRET_KEY_MAP.get(entry));
+            return new String(decryptData, StandardCharsets.UTF_8);
+        }
+        return securedPlainText;
     }
 }

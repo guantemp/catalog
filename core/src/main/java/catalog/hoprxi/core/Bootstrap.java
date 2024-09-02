@@ -16,17 +16,8 @@
 
 package catalog.hoprxi.core;
 
-import catalog.hoprxi.core.webapp.*;
-import io.undertow.Handlers;
-import io.undertow.Undertow;
-import io.undertow.server.handlers.PathHandler;
-import io.undertow.servlet.Servlets;
-import io.undertow.servlet.api.DeploymentInfo;
-import io.undertow.servlet.api.DeploymentManager;
-import io.undertow.servlet.api.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import salt.hoprxi.crypto.PasswordService;
 
 import javax.crypto.SecretKey;
 import javax.servlet.ServletException;
@@ -50,6 +41,7 @@ public class Bootstrap {
     public static final Map<String, SecretKey> SECRET_KEY_MAP = new HashMap<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(Bootstrap.class);
     private static final Pattern EXCLUDE = Pattern.compile("^-{1,}.*");
+    private static final Pattern PASS = Pattern.compile("^P\\$.*");
 
     public static void main(String[] args) throws ServletException {
         String fileName = "keystore.jks", fileProtectedPasswd = "";
@@ -89,7 +81,7 @@ public class Bootstrap {
         }
         Bootstrap.loadSecretKey(fileName, fileProtectedPasswd, entries);
         System.out.println(SECRET_KEY_MAP);
-
+/*
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentInfo deploymentInfo = Servlets.deployment()
                 .setClassLoader(Bootstrap.class.getClassLoader())
@@ -120,24 +112,32 @@ public class Bootstrap {
                 .setHandler(path)
                 .build();
         server.start();
+
+ */
     }
 
-    private static void loadSecretKey(String keystoreFile, String keystoreFileProtectedPasswd, Set<String> entries) {
+    public static void loadSecretKey(String keystoreFile, String keystoreFileProtectedPasswd, Set<String> entries) {
         try (InputStream fis = Thread.currentThread().getContextClassLoader().getResourceAsStream(keystoreFile)) {
             KeyStore keyStore = KeyStore.getInstance("JCEKS");
             keyStore.load(fis, keystoreFileProtectedPasswd.toCharArray());
+            /*
             Enumeration<String> alias = keyStore.aliases();
             while (alias.hasMoreElements()) {
                 entries.add(alias.nextElement());
-            }
+            }*/
             for (String entry : entries) {
                 String[] ss = entry.split(":");
+                String rowPass = "";
+                if (PASS.matcher(ss[ss.length - 1]).matches()) {
+                    rowPass = ss[ss.length - 1].substring(2);
+                    ss = Arrays.copyOf(ss, ss.length - 1);
+                }
                 if (ss.length == 3)//https://slave.tooo.top:9200
-                    SECRET_KEY_MAP.put(ss[0] + ":" + ss[1], (SecretKey) keyStore.getKey(ss[0] + ":" + ss[1], ss[2].toCharArray()));
-                if (ss.length == 2) //125.68.186.195:5432
-                    SECRET_KEY_MAP.put(ss[0], (SecretKey) keyStore.getKey(ss[0], ss[1].toCharArray()));
+                    SECRET_KEY_MAP.put(ss[0] + ":" + ss[1] + ":" + ss[2], (SecretKey) keyStore.getKey(ss[0] + ":" + ss[1] + ":" + ss[2], rowPass.toCharArray()));
+                if (ss.length == 2)  //125.68.186.195:5432
+                    SECRET_KEY_MAP.put(ss[0] + ":" + ss[1], (SecretKey) keyStore.getKey(ss[0] + ":" + ss[1], rowPass.toCharArray()));
                 if (ss.length == 1)
-                    SECRET_KEY_MAP.put(PasswordService.KEYSTORE_ENTRY, (SecretKey) keyStore.getKey(PasswordService.KEYSTORE_ENTRY, "".toCharArray()));
+                    SECRET_KEY_MAP.put(ss[0], (SecretKey) keyStore.getKey(ss[0], rowPass.toCharArray()));
             }
         } catch (FileNotFoundException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
             LOGGER.error("Not find key store file {}", keystoreFile, e);

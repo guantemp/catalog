@@ -96,11 +96,6 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         Request request = new Request("GET", "/item/_search");
         request.setOptions(COMMON_OPTIONS);
         request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name));
-        /*
-        request.setEntity(new NStringEntity(
-                "{\"json\":\"text\"}",
-                ContentType.APPLICATION_JSON));
-         */
         try {
             Response response = client.performRequest(request);
             client.close();
@@ -177,7 +172,45 @@ public class EsItemJsonQuery implements ItemJsonQuery {
 
     @Override
     public String accurateQueryByBarcode(String barcode) {
-        return null;
+        RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
+        RestClient client = builder.build();
+        Request request = new Request("GET", "/item/_search");
+        request.setOptions(COMMON_OPTIONS);
+        request.setJsonEntity(queryBarcodeJsonEntity(barcode));
+        try {
+            Response response = client.performRequest(request);
+            client.close();
+            return rebuildItems(response.getEntity().getContent());
+        } catch (IOException e) {
+            //System.out.println(e);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("No search was found for anything resembling barcode {} item ", barcode, e);
+        }
+        return "";
+    }
+
+    private String queryBarcodeJsonEntity(String barcode) {
+        StringWriter writer = new StringWriter();
+        try {
+            JsonGenerator generator = jsonFactory.createGenerator(writer);
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("bool");
+            generator.writeObjectFieldStart("filter");
+
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("barcode.raw", barcode);
+            generator.writeEndObject();
+
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.close();
+        } catch (IOException e) {
+            LOGGER.error("Cannot assemble request JSON", e);
+        }
+        return writer.toString();
     }
 
     @Override

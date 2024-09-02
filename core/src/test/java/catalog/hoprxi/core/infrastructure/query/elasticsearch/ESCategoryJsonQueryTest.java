@@ -16,8 +16,12 @@
 
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
+import catalog.hoprxi.core.Bootstrap;
 import catalog.hoprxi.core.application.query.CategoryJsonQuery;
 import org.testng.annotations.Test;
+
+import java.util.Arrays;
+import java.util.HashSet;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -25,6 +29,11 @@ import org.testng.annotations.Test;
  * @version 0.0.1 builder 2024-07-17
  */
 public class ESCategoryJsonQueryTest {
+    static {
+        String[] entyies = new String[]{"125.68.186.195:9200:P$Qwe123465El", "125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "https://slave.tooo.top:9200"};
+        Bootstrap.loadSecretKey("keystore.jks", "Qwe123465", new HashSet<>(Arrays.asList(entyies)));
+    }
+
     private static final CategoryJsonQuery service = new ESCategoryJsonQuery();
 
     @Test
