@@ -16,18 +16,13 @@
 
 package catalog.hoprxi.core.infrastructure;
 
-import catalog.hoprxi.core.Bootstrap;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import salt.hoprxi.crypto.util.AESUtil;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -35,26 +30,28 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2024-06-15
  */
 public class ESUtil {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ESUtil.class);
-    private static final Pattern ENCRYPTED = Pattern.compile("^ENC:.*");
+    private static final String HOST = "slave.tooo.top";
     private static final Properties props = new Properties();
 
     static {
+        KeyStoreLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"slave.tooo.top:9200"});
+        //System.out.println(KeyStoreLoad.SECRET_KEY_PARAMETER);
         Config config = ConfigFactory.load("databases");
         List<? extends Config> databases = config.getConfigList("databases");
         for (Config database : databases) {
-            if (database.getString("type").equals("read") && database.getString("provider").equals("elasticsearch")) {
+            if (database.getString("provider").equals("elasticsearch") && (database.getString("type").equals("read") || database.getString("type").equals("R"))) {
                 props.put("host", database.getString("host"));
                 props.put("port", database.getInt("port"));
                 String entry = database.getString("host") + ":" + database.getString("port");
-                props.put("user", decrypt(entry, database.getString("user")));
-                props.put("password", decrypt(entry, database.getString("password")));
+                props.put("user", KeyStoreLoad.decrypt(entry, database.getString("user")));
+                props.put("password", KeyStoreLoad.decrypt(entry, database.getString("password")));
             }
         }
     }
 
     public static String host() {
-        return "slave.tooo.top";
+        return props.getProperty("host", HOST);
     }
 
     public static int port() {
@@ -63,16 +60,5 @@ public class ESUtil {
 
     public static String encrypt() {
         return "Basic " + Base64.getEncoder().encodeToString((props.get("user") + ":" + props.get("password")).getBytes(StandardCharsets.UTF_8));
-    }
-
-    private static String decrypt(String entry, String securedPlainText) {
-        if (ENCRYPTED.matcher(securedPlainText).matches()) {
-            securedPlainText = securedPlainText.split(":")[1];
-            byte[] aesData = Base64.getDecoder().decode(securedPlainText);
-            Bootstrap.SECRET_KEY_MAP.get(entry);
-            byte[] decryptData = AESUtil.decryptSpec(aesData, Bootstrap.SECRET_KEY_MAP.get(entry));
-            return new String(decryptData, StandardCharsets.UTF_8);
-        }
-        return securedPlainText;
     }
 }

@@ -24,8 +24,14 @@ import com.zaxxer.hikari.HikariDataSource;
 import salt.hoprxi.crypto.util.AESUtil;
 import salt.hoprxi.utils.Selector;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.Base64;
 import java.util.List;
@@ -42,7 +48,7 @@ public class Setup {
     private static final Pattern ENCRYPTED = Pattern.compile("^ENC:.*");
     private static final Selector WRITES_SELECTOR = new Selector();
 
-    public static void setup() throws SQLException {
+    public static void setup() throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         Config config = ConfigFactory.load("databases");
         List<? extends Config> databases = config.getConfigList("databases");
         for (Config database : databases) {
@@ -75,8 +81,7 @@ public class Setup {
         }
     }
 
-    private static String decrypt(String entry, String securedPlainText) {
-
+    private static String decrypt(String entry, String securedPlainText) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         if (ENCRYPTED.matcher(securedPlainText).matches()) {
             securedPlainText = securedPlainText.split(":")[1];
             byte[] aesData = Base64.getDecoder().decode(securedPlainText);

@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.crypto.SecretKey;
-import javax.servlet.ServletException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +42,7 @@ public class Bootstrap {
     private static final Pattern EXCLUDE = Pattern.compile("^-{1,}.*");
     private static final Pattern PASS = Pattern.compile("^P\\$.*");
 
-    public static void main(String[] args) throws ServletException {
+    public static void main(String[] args) {
         String fileName = "keystore.jks", fileProtectedPasswd = "";
         Set<String> entries = new HashSet<>();
         for (int i = 0, j = args.length; i < j; i++) {

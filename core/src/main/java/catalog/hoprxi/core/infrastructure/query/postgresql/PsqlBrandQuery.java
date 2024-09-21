@@ -63,7 +63,7 @@ public class PsqlBrandQuery implements BrandQuery {
         Brand brand = CACHE.get(id);
         if (brand != null)
             return brand;
-        try (Connection connection = PsqlUtil.getReadConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String findSql = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, Long.parseLong(id));
@@ -84,7 +84,7 @@ public class PsqlBrandQuery implements BrandQuery {
     public Brand[] queryAll(int offset, int limit) {
         final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo " +
                 "from brand a INNER JOIN (SELECT id FROM brand order by id desc offset ? LIMIT ?) b USING (id)";
-        try (Connection connection = PsqlUtil.getReadConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setInt(1, offset);
             preparedStatement.setInt(2, limit);
@@ -103,7 +103,7 @@ public class PsqlBrandQuery implements BrandQuery {
                 "where name::jsonb->>'name' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
                 "where name::jsonb->>'mnemonic' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
                 "where name::jsonb->>'alias' ~ ?";
-        try (Connection connection = PsqlUtil.getReadConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, name);
@@ -176,7 +176,7 @@ public class PsqlBrandQuery implements BrandQuery {
     @Override
     public int size() {
         final String query = "select count(*) from brand";
-        try (Connection connection = PsqlUtil.getReadConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next())

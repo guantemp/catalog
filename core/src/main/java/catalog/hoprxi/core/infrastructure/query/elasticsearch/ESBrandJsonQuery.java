@@ -83,6 +83,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             parser.close();
             client.close();
         } catch (IOException e) {
+            System.out.println(e);
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug("No brand with ID={} found", id, e);
         }
@@ -173,6 +174,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         request.setOptions(COMMON_OPTIONS);
         request.setJsonEntity(ESQueryJsonEntity.paginationQueryJsonEntity(offset, limit));
         try {
+
             Response response = client.performRequest(request);
             client.close();
             return rebuildBrands(response.getEntity().getContent());

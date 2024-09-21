@@ -30,22 +30,16 @@ import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
 import salt.hoprxi.crypto.util.AESUtil;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.servlet.ServletException;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
+import java.security.*;
 import java.security.cert.CertificateException;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -55,7 +49,7 @@ public class App {
     public static final Map<String, SecretKey> SECRET_KEY_PARAMETER = new HashMap<>();
     private static final Pattern ENCRYPTED = Pattern.compile("^ENC:.*");
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         for (int i = 0, j = args.length; i < j; i++) {
             if ("-iv".equals(args[i])) {
                 System.out.println(args[i + 1]);
@@ -86,10 +80,68 @@ public class App {
             System.out.println(e);
         }
         System.out.println(writer);
-        App.decrypt();
+        decrypt();
+        loadConfig();
     }
 
-    private static void decrypt() {
+    private static void loadConfig() {
+        String[] providers = new String[]{"mysql", "postgresql", "Oracle", "Microsoft SQL Server", "Db2"};
+        Config config = ConfigFactory.load("databases");
+        List<? extends Config> databases = config.getConfigList("databases");
+        for (Config database : databases) {
+            Properties props = new Properties();
+            String provider = database.getString("provider");
+            for (String p : providers) {
+                if (p.equalsIgnoreCase(provider)) {
+                    props.setProperty("dataSourceClassName", database.getString("hikari.dataSourceClassName"));
+                    props.setProperty("dataSource.serverName", database.getString("host"));
+                    props.setProperty("dataSource.portNumber", database.getString("port"));
+                    String entry = database.getString("host") + ":" + database.getString("port");
+                    props.setProperty("dataSource.user", decrypt(entry, database.getString("user")));
+                    props.setProperty("dataSource.password", decrypt(entry, database.getString("password")));
+                    props.setProperty("dataSource.databaseName", database.getString("databaseName"));
+                    props.put("maximumPoolSize", database.hasPath("hikari.maximumPoolSize") ? database.getInt("hikari.maximumPoolSize") : Runtime.getRuntime().availableProcessors() * 2 + 1);
+                    props.put("dataSource.logWriter", new PrintWriter(System.out));
+                    break;
+                }
+            }
+            switch (database.getString("type")) {
+                case "read":
+                case "R":
+
+                    break;
+                case "write":
+                case "W":
+                case "read/write":
+                case "R/W":
+                    System.out.println(props);
+                    //HikariConfig hikariConfig = new HikariConfig(props);
+                    //HikariDataSource hikariDataSource = new HikariDataSource(hikariConfig);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private static String decrypt(String entry, String securedPlainText) {
+        if (ENCRYPTED.matcher(securedPlainText).matches()) {
+            securedPlainText = securedPlainText.split(":")[1];
+            byte[] aesData = Base64.getDecoder().decode(securedPlainText);
+            //Bootstrap.SECRET_KEY_MAP.get(entry);
+            try {
+                byte[] decryptData = AESUtil.decryptSpec(aesData, SECRET_KEY_PARAMETER.get(entry));
+                return new String(decryptData, StandardCharsets.UTF_8);
+            } catch (InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException |
+                     NoSuchAlgorithmException | BadPaddingException | InvalidKeyException e) {
+                //LOGGER.error("decrypt entry={},securedPlainText={} exception", entry, securedPlainText, e);
+                throw new RuntimeException("Decrypt data exception", e);
+            }
+        }
+        return securedPlainText;
+    }
+
+    private static void decrypt() throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"125.68.186.195:9200:Qwe123465El", "125.68.186.195:5432:Qwe123465Pg", "120.77.47.145:5432:Qwe123465Pg"});
         Config config = ConfigFactory.load("databases");

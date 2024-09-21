@@ -18,6 +18,12 @@ package catalog.hoprxi.core.infrastructure;
 
 import org.testng.annotations.Test;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 
 /***
@@ -28,7 +34,7 @@ import java.sql.SQLException;
 public class SetupTest {
 
     @Test
-    public void testSetup() throws SQLException {
+    public void testSetup() throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         Setup.setup();
     }
 }
