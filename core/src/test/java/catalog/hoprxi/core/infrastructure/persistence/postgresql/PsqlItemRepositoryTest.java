@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,8 +46,8 @@ import java.util.Locale;
  */
 public class PsqlItemRepositoryTest {
     private static ItemRepository itemRepository = new PsqlItemRepository("catalog");
-    private static BrandRepository brandRepository = new PsqlBrandRepository("catalog");
-    private static CategoryRepository categoryRepository = new PsqlCategoryRepository("catalog");
+    private static BrandRepository brandRepository = new PsqlBrandRepository();
+    private static CategoryRepository categoryRepository = new PsqlCategoryRepository();
     private static CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
 
     @BeforeTest

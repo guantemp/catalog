@@ -60,7 +60,7 @@ public class CategoryServlet extends HttpServlet {
         String provider = conf.hasPath("provider") ? conf.getString("provider") : "postgresql";
         switch ((provider)) {
             case "postgresql":
-                categoryQuery = new PsqlCategoryQuery("catalog");
+                categoryQuery = new PsqlCategoryQuery();
                 break;
         }
         categoryQuery.root();

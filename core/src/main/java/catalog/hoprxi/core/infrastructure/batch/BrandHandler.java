@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
 public class BrandHandler implements EventHandler<ItemImportEvent> {
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{12,19}$");
     private static final BrandQuery BRAND_QUERY = new PsqlBrandQuery();
-    private static final BrandRepository BRAND_REPO = new PsqlBrandRepository("catalog");
+    private static final BrandRepository BRAND_REPO = new PsqlBrandRepository();
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {

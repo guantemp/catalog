@@ -47,7 +47,7 @@ public class KeyStoreLoad {
     private static final Pattern PASS = Pattern.compile("^P\\$.*");
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyStoreLoad.class);
 
-    static void loadSecretKey(String keystoreFile, String keystoreFileProtectedPasswd, String[] entries) {
+    public static void loadSecretKey(String keystoreFile, String keystoreFileProtectedPasswd, String[] entries) {
         try (InputStream fis = Thread.currentThread().getContextClassLoader().getResourceAsStream(keystoreFile)) {
             KeyStore keyStore = KeyStore.getInstance("JCEKS");
             keyStore.load(fis, keystoreFileProtectedPasswd.toCharArray());

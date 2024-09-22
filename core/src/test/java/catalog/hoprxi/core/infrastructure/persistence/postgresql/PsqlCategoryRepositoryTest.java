@@ -20,6 +20,7 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
+import catalog.hoprxi.core.infrastructure.KeyStoreLoad;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -32,10 +33,12 @@ import java.net.URI;
  * @version 0.0.1 builder 2022-09-26
  */
 public class PsqlCategoryRepositoryTest {
-    private static final CategoryRepository repository = new PsqlCategoryRepository("catalog");
+    private static final CategoryRepository repository = new PsqlCategoryRepository();
 
     @BeforeClass
     public void beforeClass() {
+        KeyStoreLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
         repository.save(Category.UNDEFINED);
         Category root = Category.root("496796322118291457", new Name("商品类别", "root"));
         repository.save(root);

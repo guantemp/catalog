@@ -41,8 +41,8 @@ public class CategoryValidatorService {
         switch ((provider)) {
             case "psql":
             case "postgresql":
-                repository = new PsqlCategoryRepository(databaseName);
-                query = new PsqlCategoryQuery(databaseName);
+                repository = new PsqlCategoryRepository();
+                query = new PsqlCategoryQuery();
                 break;
 
         }

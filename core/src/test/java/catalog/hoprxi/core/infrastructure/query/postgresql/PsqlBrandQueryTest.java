@@ -21,6 +21,7 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
+import catalog.hoprxi.core.infrastructure.KeyStoreLoad;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -38,10 +39,12 @@ import static org.testng.Assert.assertEquals;
  */
 public class PsqlBrandQueryTest {
     private static BrandQuery query = new PsqlBrandQuery();
-    private static BrandRepository repository = new PsqlBrandRepository("catalog");
+    private static BrandRepository repository = new PsqlBrandRepository();
 
     @BeforeClass
     public void beforeClass() throws MalformedURLException {
+        KeyStoreLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
         URL logo = new URL("https://www.hikvision.com/cn/images/logo.png");
         AboutBrand ab = new AboutBrand(new URL("https://www.hikvision.com/cn/"), logo, Year.of(2001), "海康威视是以视频为核心的物联网解决方案提供商，面向全球提供综合安防、智慧业务与大数据服务。" +
                 "海康威视秉承“专业、厚实、诚信”的经营理念，坚持将“成就客户、价值为本、诚信务实、追求卓越”核心价值观内化为行动准则，不断发展视频技术，服务人类。");

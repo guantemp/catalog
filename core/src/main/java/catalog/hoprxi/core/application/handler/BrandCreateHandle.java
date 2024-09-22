@@ -39,12 +39,11 @@ public class BrandCreateHandle implements Handle<BrandCreateCommand> {
     public BrandCreateHandle() {
         Config conf = ConfigFactory.load("database");
         String provider = conf.hasPath("provider") ? conf.getString("provider") : "postgresql";
-        String databaseName = conf.hasPath("databaseName") ? conf.getString("databaseName") : "catalog";
         switch ((provider)) {
             case "postgresql":
             case "psql":
             default:
-                repository = new PsqlBrandRepository(databaseName);
+                repository = new PsqlBrandRepository();
                 break;
         }
     }

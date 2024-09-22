@@ -48,8 +48,8 @@ public class ItemAppService {
             case "postgres":
             case "postgresql":
                 itemRepository = new PsqlItemRepository(database);
-                categoryRepository = new PsqlCategoryRepository(database);
-                brandRepository = new PsqlBrandRepository(database);
+                categoryRepository = new PsqlCategoryRepository();
+                brandRepository = new PsqlBrandRepository();
                 break;
         }
     }

@@ -32,7 +32,7 @@ public class PsqlItemQueryTest {
     private static final ItemQuery query = new PsqlItemQuery(DATABASE_NAME);
 
     static {
-        CategoryQuery categoryQuery = new PsqlCategoryQuery("catalog");
+        CategoryQuery categoryQuery = new PsqlCategoryQuery();
         categoryQuery.descendants("52495569397272599");
     }
 

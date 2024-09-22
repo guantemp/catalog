@@ -37,8 +37,8 @@ import java.util.regex.Pattern;
 public class CategoryHandler implements EventHandler<ItemImportEvent> {
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{12,19}$");
     private static String CORE_PARENT_ID;
-    private final CategoryQuery CATEGORY_QUERY = new PsqlCategoryQuery("catalog");
-    private final CategoryRepository categoryRepository = new PsqlCategoryRepository("catalog");
+    private final CategoryQuery CATEGORY_QUERY = new PsqlCategoryQuery();
+    private final CategoryRepository categoryRepository = new PsqlCategoryRepository();
 
     public CategoryHandler() {
         CategoryView[] root = CATEGORY_QUERY.root();

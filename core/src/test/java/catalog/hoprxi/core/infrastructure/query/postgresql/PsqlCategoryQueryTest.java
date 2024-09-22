@@ -21,6 +21,7 @@ import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import catalog.hoprxi.core.infrastructure.KeyStoreLoad;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
 import org.junit.Assert;
 import org.testng.annotations.AfterClass;
@@ -35,10 +36,12 @@ import java.net.URI;
  * @version 0.0.1 builder 2022-10-21
  */
 public class PsqlCategoryQueryTest {
-    private static final CategoryRepository repository = new PsqlCategoryRepository("catalog");
+    private static final CategoryRepository repository = new PsqlCategoryRepository();
 
     @BeforeClass
     public void beforeClass() {
+        KeyStoreLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
         repository.save(Category.UNDEFINED);
         Category root = Category.root("496796322118291457", new Name("商品分类", "root"));
         repository.save(root);
@@ -189,7 +192,7 @@ public class PsqlCategoryQueryTest {
 
     @Test(invocationCount = 2, threadPoolSize = 1)
     public void testRoot() {
-        CategoryQuery query = new PsqlCategoryQuery("catalog");
+        CategoryQuery query = new PsqlCategoryQuery();
         CategoryView[] root = query.root();
         Assert.assertEquals(3, root.length);
         for (CategoryView view : root)
@@ -198,7 +201,7 @@ public class PsqlCategoryQueryTest {
 
     @Test(invocationCount = 4, threadPoolSize = 1, dependsOnMethods = {"testDescendants"})
     public void testQuery() {
-        CategoryQuery query = new PsqlCategoryQuery("catalog");
+        CategoryQuery query = new PsqlCategoryQuery();
         CategoryView root = query.query("496796322118291457");
         Assert.assertTrue(root.isRoot());
         root = query.query(Category.UNDEFINED.id());
@@ -215,7 +218,7 @@ public class PsqlCategoryQueryTest {
 
     @Test(invocationCount = 4, threadPoolSize = 1, dependsOnMethods = {"testDescendants"})
     public void testChildren() {
-        CategoryQuery query = new PsqlCategoryQuery("catalog");
+        CategoryQuery query = new PsqlCategoryQuery();
         CategoryView[] sub = query.children("496796322118291457");//root
         Assert.assertEquals(5, sub.length);
         sub = query.children("496796322118291460");//food
@@ -230,7 +233,7 @@ public class PsqlCategoryQueryTest {
 
     @Test(invocationCount = 2, priority = 1, dependsOnMethods = {"testRoot"})
     public void testDescendants() {
-        CategoryQuery query = new PsqlCategoryQuery("catalog");
+        CategoryQuery query = new PsqlCategoryQuery();
         CategoryView[] descendants = query.descendants("496796322118291457");//root
         Assert.assertEquals(40, descendants.length);
         descendants = query.descendants("496796322118291490");//grand_oil
@@ -247,7 +250,7 @@ public class PsqlCategoryQueryTest {
 
     @Test(dependsOnMethods = {"testDescendants"}, invocationCount = 10)
     public void testQueryByName() {
-        CategoryQuery query = new PsqlCategoryQuery("catalog");
+        CategoryQuery query = new PsqlCategoryQuery();
         CategoryView[] result = query.queryByName("oil");
         Assert.assertEquals(11, result.length);
         result = query.queryByName("oil$");
@@ -261,7 +264,7 @@ public class PsqlCategoryQueryTest {
 
     @Test(dependsOnMethods = {"testDescendants"})
     public void testSiblings() {
-        CategoryQuery query = new PsqlCategoryQuery("catalog");
+        CategoryQuery query = new PsqlCategoryQuery();
         CategoryView[] siblings = query.siblings("496796322118291490");//grand_oil
         Assert.assertEquals(4, siblings.length);
         siblings = query.siblings("496796322118291492");//oil
@@ -276,7 +279,7 @@ public class PsqlCategoryQueryTest {
 
     @Test(dependsOnMethods = {"testDescendants"})
     public void testPath() {
-        CategoryQuery query = new PsqlCategoryQuery("catalog");
+        CategoryQuery query = new PsqlCategoryQuery();
         CategoryView[] path = query.path("496796322118291494");//rapeseed_oil
         Assert.assertEquals(4, path.length);
         path = query.path("49581450261846022");//instant_noodles
@@ -293,7 +296,7 @@ public class PsqlCategoryQueryTest {
 
     @Test(dependsOnMethods = {"testDescendants"})
     public void testDepth() {
-        CategoryQuery query = new PsqlCategoryQuery("catalog");
+        CategoryQuery query = new PsqlCategoryQuery();
         int depth = query.depth("496796322118291494");//rapeseed_oil
         Assert.assertEquals(4, depth);
         depth = query.depth("496796322118291490");//grain_oil

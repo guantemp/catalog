@@ -33,11 +33,10 @@ public class BrandValidatorService {
     static {
         Config config = ConfigFactory.load("database");
         String provider = config.hasPath("provider") ? config.getString("provider") : "postgresql";
-        String databaseName = config.hasPath("databaseName") ? config.getString("databaseName").toLowerCase() : "catalog";
         switch ((provider)) {
             case "postgresql":
             case "psql":
-                repository = new PsqlBrandRepository(databaseName);
+                repository = new PsqlBrandRepository();
                 break;
         }
     }

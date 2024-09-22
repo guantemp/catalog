@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Year;
-import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -62,17 +61,12 @@ public class PsqlBrandRepository implements BrandRepository {
         }
     }
 
-    private final String databaseName;
-
-    public PsqlBrandRepository(String databaseName) {
-        this.databaseName = Objects.requireNonNull(databaseName, "The databaseName parameter is required");
-    }
 
     @Override
     public Brand find(String id) {
         Brand brand = cache.get(id);
         if (brand == null) {
-            try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+            try (Connection connection = PsqlUtil.getConnection()) {
                 final String findSql = "select id,name,about from brand where id=? limit 1";
                 PreparedStatement preparedStatement = connection.prepareStatement(findSql);
                 preparedStatement.setLong(1, Long.parseLong(id));
@@ -163,7 +157,7 @@ public class PsqlBrandRepository implements BrandRepository {
 
     @Override
     public void delete(String id) {
-        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String removeSql = "delete from brand where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
             preparedStatement.setLong(1, Long.parseLong(id));
@@ -179,7 +173,7 @@ public class PsqlBrandRepository implements BrandRepository {
         name.setType("jsonb");
         PGobject about = new PGobject();
         about.setType("jsonb");
-        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             name.setValue(toJson(brand.name()));
             about.setValue(toJson(brand.about()));
             //insert into brand (id,name,about) values (?,?::jsonb,?::jsonb) 没有用PGobject修饰的sql

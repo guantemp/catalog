@@ -34,7 +34,7 @@ public class CategoryCreateHandle implements Handle<CategoryCreateCommand> {
     @Override
     public void handle(CategoryCreateCommand command) {
         Objects.requireNonNull(command, "command required");
-        final CategoryRepository repository = new PsqlCategoryRepository("catalog");
+        final CategoryRepository repository = new PsqlCategoryRepository();
         Category category = new Category(command.getParentId(), repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
         repository.save(category);
     }

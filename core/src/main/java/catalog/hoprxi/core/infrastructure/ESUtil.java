@@ -34,8 +34,6 @@ public class ESUtil {
     private static final Properties props = new Properties();
 
     static {
-        KeyStoreLoad.loadSecretKey("keystore.jks", "Qwe123465",
-                new String[]{"slave.tooo.top:9200"});
         //System.out.println(KeyStoreLoad.SECRET_KEY_PARAMETER);
         Config config = ConfigFactory.load("databases");
         List<? extends Config> databases = config.getConfigList("databases");

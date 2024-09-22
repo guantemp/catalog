@@ -43,7 +43,7 @@ public class CategoryAppService {
         String provider = conf.hasPath("provider") ? conf.getString("provider") : "postgresql";
         switch ((provider)) {
             case "postgresql":
-                repository = new PsqlCategoryRepository("catalog");
+                repository = new PsqlCategoryRepository();
                 break;
         }
     }

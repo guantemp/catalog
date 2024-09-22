@@ -28,7 +28,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -37,13 +36,9 @@ import java.util.regex.Pattern;
  */
 public final class PsqlUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlUtil.class);
-    private static final Pattern ENCRYPTED = Pattern.compile("^ENC:.*");
     private static HikariDataSource hikariDataSource;
 
     static {
-        KeyStoreLoad.loadSecretKey("keystore.jks", "Qwe123465",
-                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg"});
-        System.out.println(KeyStoreLoad.SECRET_KEY_PARAMETER);
         String[] providers = new String[]{"postgresql", "mysql", "Microsoft SQL Server", "Oracle", "Db2"};
         Config config = ConfigFactory.load("databases");
         List<? extends Config> databases = config.getConfigList("databases");
@@ -73,7 +68,7 @@ public final class PsqlUtil {
                 case "W":
                 case "read/write":
                 case "R/W":
-                    System.out.println(props);
+                    //System.out.println(props);
                     HikariConfig hikariConfig = new HikariConfig(props);
                     hikariDataSource = new HikariDataSource(hikariConfig);
                     break;

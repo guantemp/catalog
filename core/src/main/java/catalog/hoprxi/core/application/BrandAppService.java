@@ -42,7 +42,7 @@ public class BrandAppService {
             case "postgresql":
             case "psql":
             default:
-                repository = new PsqlBrandRepository(databaseName);
+                repository = new PsqlBrandRepository();
                 break;
         }
     }
