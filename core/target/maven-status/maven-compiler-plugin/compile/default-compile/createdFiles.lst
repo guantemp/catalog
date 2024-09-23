@@ -28,7 +28,6 @@ catalog\hoprxi\core\domain\model\Name.class
 catalog\hoprxi\core\domain\model\category\InvalidCategoryIdException.class
 catalog\hoprxi\core\infrastructure\batch\PsqlItemExport.class
 catalog\hoprxi\core\domain\model\ItemBarcodeChanged.class
-catalog\hoprxi\core\infrastructure\query\postgresql\PsqlCategoryQueryService.class
 catalog\hoprxi\core\domain\model\category\CategoryNodeMoved.class
 catalog\hoprxi\core\domain\model\price\Unit$28.class
 catalog\hoprxi\core\domain\model\price\Unit$35.class
@@ -73,7 +72,6 @@ catalog\hoprxi\core\domain\model\ItemMemberPriceChaned.class
 catalog\hoprxi\core\domain\model\price\Unit$16.class
 catalog\hoprxi\core\infrastructure\batch\BarcodeHandler.class
 catalog\hoprxi\core\domain\model\ItemGradeChanged.class
-catalog\hoprxi\core\infrastructure\query\postgresql\PsqlBrandQueryService.class
 catalog\hoprxi\core\domain\model\price\LastReceiptPrice.class
 catalog\hoprxi\core\domain\model\price\Unit$39.class
 catalog\hoprxi\core\domain\model\price\Unit$38.class
@@ -97,11 +95,9 @@ catalog\hoprxi\core\domain\model\brand\Brand$1.class
 catalog\hoprxi\core\domain\model\price\RetailPrice.class
 catalog\hoprxi\core\domain\model\price\Unit$4.class
 catalog\hoprxi\core\domain\model\shelfLife\Approach.class
-catalog\hoprxi\core\infrastructure\query\postgresql\PsqlItemQueryService.class
 catalog\hoprxi\core\webapp\UploadServlet.class
 catalog\hoprxi\core\application\ItemAppService.class
 catalog\hoprxi\core\domain\model\Item.class
-catalog\hoprxi\core\application\query\BrandQueryService.class
 catalog\hoprxi\core\domain\model\ItemCategoryReallocated.class
 catalog\hoprxi\core\domain\model\price\Unit$24.class
 catalog\hoprxi\core\application\BrandAppService.class
@@ -123,7 +119,6 @@ catalog\hoprxi\core\domain\model\brand\BrandRenamed.class
 catalog\hoprxi\core\application\command\ItemRemoveCommand.class
 catalog\hoprxi\core\domain\model\price\Unit$18.class
 catalog\hoprxi\core\domain\model\ItemMadeInChanged.class
-catalog\hoprxi\core\infrastructure\ElasticsearchUtil.class
 catalog\hoprxi\core\domain\model\price\Unit$5.class
 catalog\hoprxi\core\application\handler\CategoryCreateHandle.class
 catalog\hoprxi\core\domain\model\barcode\UPC_E.class
@@ -159,7 +154,6 @@ catalog\hoprxi\core\domain\model\price\Unit$10.class
 catalog\hoprxi\core\application\command\BrandCreateCommand.class
 catalog\hoprxi\core\domain\model\ItemVipPriceChaned.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlCategoryRepository.class
-catalog\hoprxi\core\application\query\ItemQueryService.class
 catalog\hoprxi\core\domain\model\Specification.class
 catalog\hoprxi\core\domain\model\price\Unit$3.class
 catalog\hoprxi\core\application\command\CategoryChangeIconCommand.class
@@ -186,7 +180,6 @@ catalog\hoprxi\core\application\CategoryAppService.class
 catalog\hoprxi\core\domain\model\price\Unit$25.class
 catalog\hoprxi\core\domain\model\ProhibitSellItemRepository.class
 catalog\hoprxi\core\infrastructure\batch\ExecuteSqlEvent.class
-catalog\hoprxi\core\application\query\CategoryQueryService.class
 catalog\hoprxi\core\domain\model\madeIn\MadeIn$1.class
 catalog\hoprxi\core\application\batch\ItemMapping.class
 catalog\hoprxi\core\domain\model\category\CategoryIconChanged.class

@@ -23,8 +23,6 @@ import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.Unit;
 import catalog.hoprxi.core.webapp.UploadServlet;
 import com.fasterxml.jackson.core.*;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 import org.javamoney.moneta.Money;
 import org.javamoney.moneta.format.CurrencyStyle;
 import org.testng.annotations.Test;
@@ -41,7 +39,6 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
@@ -59,20 +56,6 @@ public class AppTest {
 
     @Test
     public void testConfig() {
-        Config test = ConfigFactory.load("databases");
-        System.out.println("databases:" + test.getConfigList("databases"));
-
-        Config database = ConfigFactory.load("database");
-        List<? extends Config> reads = database.getConfigList("reads");
-        System.out.println("database:");
-        System.out.println(reads.size());
-        int sum = 0;
-        for (Config c : reads) {
-            sum = sum + (c.hasPath("weight") ? c.getInt("weight") : 1);
-            System.out.println(c.getString("host"));
-        }
-        System.out.println("sum: " + sum);
-        //System.out.println(test.getList("write").parallelStream().);
         String filePath = UploadServlet.class.getResource("/").toExternalForm();
         String[] sss = filePath.split("/");
         StringJoiner joiner = new StringJoiner("/", "", "/");

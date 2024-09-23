@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+  ~ Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>catalog.hoprxi</groupId>
-    <artifactId>scale</artifactId>
+    <artifactId>catalog-scale</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <name>scale</name>
@@ -39,12 +39,6 @@
             <groupId>catalog.hoprxi</groupId>
             <artifactId>core</artifactId>
             <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>7.3.0</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
