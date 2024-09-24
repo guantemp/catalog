@@ -23,24 +23,36 @@ import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.Unit;
 import catalog.hoprxi.core.webapp.UploadServlet;
 import com.fasterxml.jackson.core.*;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.javamoney.moneta.Money;
 import org.javamoney.moneta.format.CurrencyStyle;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+import salt.hoprxi.crypto.util.AESUtil;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import javax.money.format.AmountFormatQueryBuilder;
 import javax.money.format.MonetaryAmountFormat;
 import javax.money.format.MonetaryFormats;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.StringJoiner;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /***
@@ -54,6 +66,65 @@ public class AppTest {
             .build());
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
 
+    @BeforeTest
+    public void init() {
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200", "125.68.186.195:9200:P$Qwe123465El"});
+    }
+
+    @Test
+    public void testPattern() {
+        String[] test = {"69832423", "69821412", "697234", "998541", "69841", "市政府撒的", "9782"};
+        String[] result = Arrays.stream(test).filter(s -> Pattern.compile("^698\\d*").matcher(s).matches()).toArray(String[]::new);
+        System.out.println(result.length);
+        for (String s : result)
+            System.out.println(s);
+        System.out.println("pattern(.*?.*?):" + Pattern.compile(".*?.*?").matcher("45n").matches());
+        System.out.println("replace:" + "M&M's缤纷妙享包\\162克".replaceAll("\\\\", "\\\\\\\\"));
+
+        for (String s : "awr//er/qw/asfd".split("[^(//)]/")) {
+            System.out.println("split:" + s);
+        }
+        String[] ss = "https://slave.tooo.top:9200".split(":");
+        for (String s : ss)
+            System.out.println(s);
+
+        Pattern pattern = Pattern.compile(":P\\$.*");
+        Matcher m = pattern.matcher("125.68.186.195:5432:P$Qwe123465Pg");
+        if (m.find()) {
+            System.out.println("find:" + m.replaceFirst(""));
+            System.out.println("find: " + "125.68.186.195:5432:P$Qwe123465Pg".replaceFirst(":P\\$.*", ""));
+        }
+    }
+
+    @Test
+    public void testDecrtpt() throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+        final Pattern ENCRYPTED = Pattern.compile("^ENC:.*");
+        Config config = ConfigFactory.load("databases");
+        List<? extends Config> databases = config.getConfigList("databases");
+        for (Config database : databases) {
+            if ("write".equals(database.getString("type"))) {
+                if (database.getString("provider").equals("postgresql") || database.getString("provider").equals("psql") || database.getString("provider").equals("mysql")) {
+                    String entry = database.getString("host") + ":" + database.getString("port");
+                    String securedPlainText = database.getString("user");
+                    if (ENCRYPTED.matcher(securedPlainText).matches()) {
+                        securedPlainText = securedPlainText.split(":")[1];
+                        byte[] aesData = Base64.getDecoder().decode(securedPlainText);
+                        byte[] decryptData = AESUtil.decryptSpec(aesData, StoreKeyLoad.SECRET_KEY_PARAMETER.get(entry));
+                        System.out.println("user:" + new String(decryptData, StandardCharsets.UTF_8));
+                    }
+                    securedPlainText = database.getString("password");
+                    if (ENCRYPTED.matcher(securedPlainText).matches()) {
+                        securedPlainText = securedPlainText.split(":")[1];
+                        byte[] aesData = Base64.getDecoder().decode(securedPlainText);
+                        byte[] decryptData = AESUtil.decryptSpec(aesData, StoreKeyLoad.SECRET_KEY_PARAMETER.get(entry));
+                        System.out.println("password:" + new String(decryptData, StandardCharsets.UTF_8));
+                    }
+                }
+            }
+        }
+    }
+
     @Test
     public void testConfig() {
         String filePath = UploadServlet.class.getResource("/").toExternalForm();
@@ -63,19 +134,86 @@ public class AppTest {
             joiner.add(sss[i]);
         }
         joiner.add("upload");
-        System.out.println("update file: " + joiner);
+        System.out.println("update file path: " + joiner);
+
+        String[] providers = new String[]{"mysql", "postgresql", "Oracle", "Microsoft SQL Server", "Db2"};
+        Config config = ConfigFactory.load("databases");
+        List<? extends Config> databases = config.getConfigList("databases");
+        for (Config database : databases) {
+            Properties props = new Properties();
+            String provider = database.getString("provider");
+            for (String p : providers) {
+                if (p.equalsIgnoreCase(provider)) {
+                    props.setProperty("dataSourceClassName", database.getString("hikari.dataSourceClassName"));
+                    props.setProperty("dataSource.serverName", database.getString("host"));
+                    props.setProperty("dataSource.portNumber", database.getString("port"));
+                    String entry = database.getString("host") + ":" + database.getString("port");
+                    props.setProperty("dataSource.user", StoreKeyLoad.decrypt(entry, database.getString("user")));
+                    props.setProperty("dataSource.password", StoreKeyLoad.decrypt(entry, database.getString("password")));
+                    props.setProperty("dataSource.databaseName", database.getString("databaseName"));
+                    props.put("maximumPoolSize", database.hasPath("hikari.maximumPoolSize") ? database.getInt("hikari.maximumPoolSize") : Runtime.getRuntime().availableProcessors() * 2 + 1);
+                    props.put("dataSource.logWriter", new PrintWriter(System.out));
+                    break;
+                }
+            }
+            switch (database.getString("type")) {
+                case "read":
+                case "R":
+
+                    break;
+                case "write":
+                case "W":
+                case "read/write":
+                case "R/W":
+                    System.out.println(props);
+
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     @Test
     void testOther() throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        String[] test = {"69832423", "69821412", "697234", "998541", "69841", "市政府撒的", "9782"};
-        String[] result = Arrays.stream(test).filter(s -> Pattern.compile("^698\\d*").matcher(s).matches()).toArray(String[]::new);
-        //result="/".split("/");
-        System.out.println(result.length);
-        for (String s : result)
-            System.out.println(s);
-        System.out.println("pattern(.*?.*?):" + Pattern.compile(".*?.*?").matcher("45n").matches());
-        System.out.println("replace:" + "M&M's缤纷妙享包\\162克".replaceAll("\\\\", "\\\\\\\\"));
+        StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,description,logo_uri,root_id,\"left\",\"right\") values(")
+                .append(-1).append(",").append(-1).append(",'").append("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"alias\":\"我想改变\"}").append("','")
+                .append("dxgdfger").append("','").append(URI.create("https://www.example.com:8081/?k1=1&k1=2&k2=3&%E5%90%8D%E5%AD%97=%E5%BC%A0%E4%B8%89").toASCIIString())
+                .append("',").append(-1).append(",").append(2).append(",").append(2 + 1).append(")");
+        System.out.println("handle category set \"left\"=0-\"left\"-" + (5 - 4 - 1) + ",\"right\"=0-\"right\"-" + (5 - 4 - 1) + " where left<0");
+
+        Constructor<Name> nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
+        nameConstructor.setAccessible(true);
+        System.out.println(nameConstructor.newInstance("中文变量", "3252", "dsgfd"));
+    }
+
+    @Test
+    public void testWriteJson1() {
+        StringWriter writer = new StringWriter();
+        try {
+            JsonGenerator generator = jasonFactory.createGenerator(writer);
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("bool");
+            generator.writeObjectFieldStart("filter");
+
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("barcode.raw", "773301701166");
+            generator.writeEndObject();
+
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.close();
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+        System.out.println(writer);
+    }
+
+    @Test
+    public void testWriteJson2() throws IOException {
         CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
         MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
                 .set(CurrencyStyle.SYMBOL).set("pattern", "¤#,##0.0000")//"#,##0.00### ¤"
@@ -103,50 +241,11 @@ public class AppTest {
         generator.flush();
 
         System.out.println("money:" + new BigDecimal("1E+1").toPlainString());
-
-        String name = null, alias = null, mnemonic = null;
-        JsonParser parser = jasonFactory.createParser("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"alias\":\"我想改变\"}".getBytes(StandardCharsets.UTF_8));
-        JsonToken jsonToken;
-        while (!parser.isClosed()) {
-            jsonToken = parser.nextToken();
-            if (JsonToken.FIELD_NAME == jsonToken) {
-                String fieldName = parser.getCurrentName();
-                parser.nextToken();
-                switch (fieldName) {
-                    case "name":
-                        name = parser.getValueAsString();
-                        break;
-                    case "alias":
-                        alias = parser.getValueAsString();
-                        break;
-                    case "mnemonic":
-                        mnemonic = parser.getValueAsString();
-                        break;
-                }
-            }
-        }
-        System.out.println("namtrhrtuyretuyrwte" + name);
-        System.out.println(mnemonic);
-        System.out.println(alias);
-
-        StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,description,logo_uri,root_id,\"left\",\"right\") values(")
-                .append(-1).append(",").append(-1).append(",'").append("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"alias\":\"我想改变\"}").append("','")
-                .append("dxgdfger").append("','").append(URI.create("https://www.example.com:8081/?k1=1&k1=2&k2=3&%E5%90%8D%E5%AD%97=%E5%BC%A0%E4%B8%89").toASCIIString())
-                .append("',").append(-1).append(",").append(2).append(",").append(2 + 1).append(")");
-        System.out.println("handle category set \"left\"=0-\"left\"-" + (5 - 4 - 1) + ",\"right\"=0-\"right\"-" + (5 - 4 - 1) + " where left<0");
-
-        Constructor<Name> nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
-        nameConstructor.setAccessible(true);
-        System.out.println(nameConstructor.newInstance("中文变量", "3252", "dsgfd"));
-
-        for (String s : "awr//er/qw/asfd".split("[^(//)]/")) {
-            System.out.println("split:" + s);
-        }
     }
 
     @Test
-    void testReadJson() throws IOException {
-        System.out.println("\njson内部对象测试:");
+    void testReadJson1() throws IOException {
+        System.out.println("\n读json内部对象测试:");
         JsonParser parser = jasonFactory.createParser("{\n" +
                 "    \"name\": \"读子对象\",\n" +
                 "    \"retailPrice\": {\n" +
@@ -175,7 +274,7 @@ public class AppTest {
             }
         }
         System.out.println(MONETARY_AMOUNT_FORMAT.format(price.amount()));
-        System.out.println("\njson数组测试:");
+        System.out.println("\n读json数组测试:");
         parser = jasonFactory.createParser("{\"images\": [\"https://hoprxi.tooo.top/images/6948597500302.jpg\",\"https://hoprxi.tooo.top/images/6948597500302.jpg\"]}");
         readArray(parser);
     }
@@ -211,5 +310,33 @@ public class AppTest {
                     System.out.println(parser.getValueAsString());
             }
         }
+    }
+
+    @Test
+    void testReadJson2() throws IOException {
+        String name = null, alias = null, mnemonic = null;
+        JsonParser parser = jasonFactory.createParser("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"alias\":\"我想改变\"}".getBytes(StandardCharsets.UTF_8));
+        JsonToken jsonToken;
+        while (!parser.isClosed()) {
+            jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME == jsonToken) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "name":
+                        name = parser.getValueAsString();
+                        break;
+                    case "alias":
+                        alias = parser.getValueAsString();
+                        break;
+                    case "mnemonic":
+                        mnemonic = parser.getValueAsString();
+                        break;
+                }
+            }
+        }
+        System.out.println("namtrhrtuyretuyrwte" + name);
+        System.out.println(mnemonic);
+        System.out.println(alias);
     }
 }

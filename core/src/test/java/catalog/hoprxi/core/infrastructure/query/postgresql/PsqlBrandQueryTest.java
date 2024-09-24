@@ -21,10 +21,10 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import catalog.hoprxi.core.infrastructure.KeyStoreLoad;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -43,7 +43,7 @@ public class PsqlBrandQueryTest {
 
     @BeforeClass
     public void beforeClass() throws MalformedURLException {
-        KeyStoreLoad.loadSecretKey("keystore.jks", "Qwe123465",
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
         URL logo = new URL("https://www.hikvision.com/cn/images/logo.png");
         AboutBrand ab = new AboutBrand(new URL("https://www.hikvision.com/cn/"), logo, Year.of(2001), "海康威视是以视频为核心的物联网解决方案提供商，面向全球提供综合安防、智慧业务与大数据服务。" +

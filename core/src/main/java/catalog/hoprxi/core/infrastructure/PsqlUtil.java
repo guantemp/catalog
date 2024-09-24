@@ -22,6 +22,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -51,8 +52,8 @@ public final class PsqlUtil {
                     props.setProperty("dataSource.serverName", database.getString("host"));
                     props.setProperty("dataSource.portNumber", database.getString("port"));
                     String entry = database.getString("host") + ":" + database.getString("port");
-                    props.setProperty("dataSource.user", KeyStoreLoad.decrypt(entry, database.getString("user")));
-                    props.setProperty("dataSource.password", KeyStoreLoad.decrypt(entry, database.getString("password")));
+                    props.setProperty("dataSource.user", StoreKeyLoad.decrypt(entry, database.getString("user")));
+                    props.setProperty("dataSource.password", StoreKeyLoad.decrypt(entry, database.getString("password")));
                     props.setProperty("dataSource.databaseName", database.getString("databaseName"));
                     props.put("maximumPoolSize", database.hasPath("hikari.maximumPoolSize") ? database.getInt("hikari.maximumPoolSize") : Runtime.getRuntime().availableProcessors() * 2 + 1);
                     props.put("dataSource.logWriter", new PrintWriter(System.out));

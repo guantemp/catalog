@@ -18,6 +18,7 @@ package catalog.hoprxi.core.infrastructure;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -34,7 +35,7 @@ public class ESUtil {
     private static final Properties props = new Properties();
 
     static {
-        //System.out.println(KeyStoreLoad.SECRET_KEY_PARAMETER);
+        //System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER);
         Config config = ConfigFactory.load("databases");
         List<? extends Config> databases = config.getConfigList("databases");
         for (Config database : databases) {
@@ -42,8 +43,8 @@ public class ESUtil {
                 props.put("host", database.getString("host"));
                 props.put("port", database.getInt("port"));
                 String entry = database.getString("host") + ":" + database.getString("port");
-                props.put("user", KeyStoreLoad.decrypt(entry, database.getString("user")));
-                props.put("password", KeyStoreLoad.decrypt(entry, database.getString("password")));
+                props.put("user", StoreKeyLoad.decrypt(entry, database.getString("user")));
+                props.put("password", StoreKeyLoad.decrypt(entry, database.getString("password")));
             }
         }
     }

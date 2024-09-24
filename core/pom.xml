@@ -172,12 +172,12 @@
                                 <resource>
                                     <directory>src/main/resources</directory>
                                     <includes>
-                                        <exclude>**/*.conf</exclude>
-                                        <exclude>**/*.properties</exclude>
-                                        <exclude>**/*.json</exclude>
-                                        <exclude>**/*.xml</exclude>
-                                        <exclude>**/*.jks</exclude>
-                                        <exclude>**/*.p12</exclude>
+                                        <include>**/*.conf</include>
+                                        <include>**/*.properties</include>
+                                        <include>**/*.json</include>
+                                        <include>**/*.xml</include>
+                                        <include>**/*.jks</include>
+                                        <include>**/*.p12</include>
                                     </includes>
                                     <filtering>true</filtering>
                                 </resource>

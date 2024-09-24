@@ -21,12 +21,12 @@ import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
-import catalog.hoprxi.core.infrastructure.KeyStoreLoad;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
 import org.junit.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.net.URI;
 
@@ -40,7 +40,7 @@ public class PsqlCategoryQueryTest {
 
     @BeforeClass
     public void beforeClass() {
-        KeyStoreLoad.loadSecretKey("keystore.jks", "Qwe123465",
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
         repository.save(Category.UNDEFINED);
         Category root = Category.root("496796322118291457", new Name("商品分类", "root"));

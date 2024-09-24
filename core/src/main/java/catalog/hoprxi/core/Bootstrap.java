@@ -18,17 +18,10 @@ package catalog.hoprxi.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 
-import javax.crypto.SecretKey;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /***
@@ -37,10 +30,8 @@ import java.util.regex.Pattern;
  * @version 0.0.2 builder 2024-06-14
  */
 public class Bootstrap {
-    public static final Map<String, SecretKey> SECRET_KEY_MAP = new HashMap<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(Bootstrap.class);
     private static final Pattern EXCLUDE = Pattern.compile("^-{1,}.*");
-    private static final Pattern PASS = Pattern.compile("^P\\$.*");
 
     public static void main(String[] args) {
         String fileName = "keystore.jks", fileProtectedPasswd = "";
@@ -66,7 +57,7 @@ public class Bootstrap {
                 case "--entries":
                     int k = i + 1;
                     while (k < j) {
-                        if (EXCLUDE.matcher(args[k]).matches())
+                        if (EXCLUDE.matcher(args[k]).matches())//下一参数开始
                             break;
                         else
                             entries.add(args[k]);
@@ -78,8 +69,8 @@ public class Bootstrap {
                     break;
             }
         }
-        Bootstrap.loadSecretKey(fileName, fileProtectedPasswd, entries);
-        System.out.println(SECRET_KEY_MAP);
+        StoreKeyLoad.loadSecretKey(fileName, fileProtectedPasswd, entries.toArray(new String[0]));
+        System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER);
 /*
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentInfo deploymentInfo = Servlets.deployment()
@@ -115,35 +106,4 @@ public class Bootstrap {
  */
     }
 
-    public static void loadSecretKey(String keystoreFile, String keystoreFileProtectedPasswd, Set<String> entries) {
-        try (InputStream fis = Thread.currentThread().getContextClassLoader().getResourceAsStream(keystoreFile)) {
-            KeyStore keyStore = KeyStore.getInstance("JCEKS");
-            keyStore.load(fis, keystoreFileProtectedPasswd.toCharArray());
-            /*
-            Enumeration<String> alias = keyStore.aliases();
-            while (alias.hasMoreElements()) {
-                entries.add(alias.nextElement());
-            }*/
-            for (String entry : entries) {
-                String[] ss = entry.split(":");
-                String rowPass = "";
-                if (PASS.matcher(ss[ss.length - 1]).matches()) {
-                    rowPass = ss[ss.length - 1].substring(2);
-                    ss = Arrays.copyOf(ss, ss.length - 1);
-                }
-                if (ss.length == 3)//https://slave.tooo.top:9200
-                    SECRET_KEY_MAP.put(ss[0] + ":" + ss[1] + ":" + ss[2], (SecretKey) keyStore.getKey(ss[0] + ":" + ss[1] + ":" + ss[2], rowPass.toCharArray()));
-                if (ss.length == 2)  //125.68.186.195:5432
-                    SECRET_KEY_MAP.put(ss[0] + ":" + ss[1], (SecretKey) keyStore.getKey(ss[0] + ":" + ss[1], rowPass.toCharArray()));
-                if (ss.length == 1)
-                    SECRET_KEY_MAP.put(ss[0], (SecretKey) keyStore.getKey(ss[0], rowPass.toCharArray()));
-            }
-        } catch (FileNotFoundException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
-            LOGGER.error("Not find key store file {}", keystoreFile, e);
-        } catch (IOException e) {
-            LOGGER.error("Keystore protected password was incorrect {}", keystoreFileProtectedPasswd, e);
-        } catch (UnrecoverableKeyException e) {
-            LOGGER.error("Is a bad key is used during decryption", e);
-        }
-    }
 }

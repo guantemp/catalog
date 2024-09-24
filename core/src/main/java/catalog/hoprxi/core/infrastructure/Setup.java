@@ -16,12 +16,12 @@
 
 package catalog.hoprxi.core.infrastructure;
 
-import catalog.hoprxi.core.Bootstrap;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import salt.hoprxi.crypto.util.AESUtil;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 import salt.hoprxi.utils.Selector;
 
 import javax.crypto.BadPaddingException;
@@ -85,8 +85,7 @@ public class Setup {
         if (ENCRYPTED.matcher(securedPlainText).matches()) {
             securedPlainText = securedPlainText.split(":")[1];
             byte[] aesData = Base64.getDecoder().decode(securedPlainText);
-            Bootstrap.SECRET_KEY_MAP.get(entry);
-            byte[] decryptData = AESUtil.decryptSpec(aesData, Bootstrap.SECRET_KEY_MAP.get(entry));
+            byte[] decryptData = AESUtil.decryptSpec(aesData, StoreKeyLoad.SECRET_KEY_PARAMETER.get(entry));
             return new String(decryptData, StandardCharsets.UTF_8);
         }
         return securedPlainText;
