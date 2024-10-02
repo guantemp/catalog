@@ -18,11 +18,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.CategoryJsonQuery;
 import catalog.hoprxi.core.infrastructure.ESUtil;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import org.apache.http.HttpHeaders;
+import com.fasterxml.jackson.core.*;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.*;
 import org.slf4j.Logger;
@@ -38,18 +34,7 @@ import java.io.StringWriter;
  * @version 0.0.1 builder 2024-07-17
  */
 public class ESCategoryJsonQuery implements CategoryJsonQuery {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ESCategoryJsonQuery.class);
-    private static final RequestOptions COMMON_OPTIONS;
-
-    static {
-        RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
-        builder.addHeader(HttpHeaders.AUTHORIZATION, ESUtil.encrypt())
-                .addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=utf-8");
-        //builder.setHttpAsyncResponseConsumerFactory(
-        //new HttpAsyncResponseConsumerFactory
-        //.HeapBufferedResponseConsumerFactory(30 * 1024 * 1024 * 1024));
-        COMMON_OPTIONS = builder.build();
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.es");
 
     private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
@@ -58,7 +43,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/category/_doc/" + id);
-        request.setOptions(COMMON_OPTIONS);
+        request.setOptions(ESUtil.requestOptions());
         String result = "";
         try {
             Response response = client.performRequest(request);
@@ -82,8 +67,14 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             }
             parser.close();
             client.close();
+        } catch (ResponseException e) {
+            if (LOGGER.isWarnEnabled())
+                LOGGER.warn("The item(id={}) not found", id, e);
+        } catch (JsonParseException e) {
+            if (LOGGER.isWarnEnabled())
+                LOGGER.warn("Incorrect JSON format,value is={} ", e);
         } catch (IOException e) {
-            LOGGER.error("No category with ID={} found", id, e);
+            LOGGER.error("I/O failed", e);
         }
         return result;
     }
@@ -93,7 +84,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/category/_search");
-        request.setOptions(COMMON_OPTIONS);
+        request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(rootJsonEntity());
         try {
             Response response = client.performRequest(request);
@@ -136,7 +127,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/category/_search");
-        request.setOptions(COMMON_OPTIONS);
+        request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name));
         try {
             Response response = client.performRequest(request);
@@ -234,7 +225,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/category/_search");
-        request.setOptions(COMMON_OPTIONS);
+        request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(queryChildrenJsonEntity(id));
         try {
             Response response = client.performRequest(request);
@@ -299,7 +290,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/category/_search");
-        request.setOptions(COMMON_OPTIONS);
+        request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESQueryJsonEntity.paginationQueryJsonEntity(offset, limit));
         try {
             Response response = client.performRequest(request);

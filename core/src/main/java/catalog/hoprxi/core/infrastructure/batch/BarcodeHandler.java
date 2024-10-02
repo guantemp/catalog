@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class BarcodeHandler implements EventHandler<ItemImportEvent> {
     private static final Map<String, Barcode> BARCODE_MAP = new HashMap<>();
-    private static final ItemQuery ITEM_QUERY = new PsqlItemQuery("catalog");
+    private static final ItemQuery ITEM_QUERY = new PsqlItemQuery();
 
     private static final AtomicInteger start = new AtomicInteger(1);
     private String prefix = "21";

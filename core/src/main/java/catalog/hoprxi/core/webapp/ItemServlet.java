@@ -89,7 +89,7 @@ public class ItemServlet extends HttpServlet {
         switch ((provider)) {
             case "postgresql":
                 //repository = new PsqlItemRepository("catalog");
-                queryService = new PsqlItemQuery("catalog");
+                queryService = new PsqlItemQuery();
                 break;
         }
     }

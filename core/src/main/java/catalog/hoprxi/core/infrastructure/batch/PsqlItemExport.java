@@ -124,7 +124,7 @@ public class PsqlItemExport implements ItemExportService {
 
     @Override
     public void exportToXls(OutputStream outputStream) throws IOException {
-        ItemQuery query = new PsqlItemQuery("catalog");
+        ItemQuery query = new PsqlItemQuery();
         ItemView[] itemViews = query.queryAll(0, 2000);
         SXSSFWorkbook workbook = null;
         BufferedOutputStream bufferedOutPut = null;

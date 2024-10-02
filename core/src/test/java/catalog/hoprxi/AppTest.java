@@ -82,7 +82,7 @@ public class AppTest {
         System.out.println("pattern(.*?.*?):" + Pattern.compile(".*?.*?").matcher("45n").matches());
         System.out.println("replace:" + "M&M's缤纷妙享包\\162克".replaceAll("\\\\", "\\\\\\\\"));
 
-        for (String s : "awr//er/qw/asfd".split("[^(//)]/")) {
+        for (String s : "awr//er/qw/asfd".split("[^(/)]/")) {
             System.out.println("split:" + s);
         }
         String[] ss = "https://slave.tooo.top:9200".split(":");
@@ -127,7 +127,7 @@ public class AppTest {
 
     @Test
     public void testConfig() {
-        String filePath = UploadServlet.class.getResource("/").toExternalForm();
+        String filePath = Objects.requireNonNull(UploadServlet.class.getResource("/")).toExternalForm();
         String[] sss = filePath.split("/");
         StringJoiner joiner = new StringJoiner("/", "", "/");
         for (int i = 0, j = sss.length - 1; i < j; i++) {
@@ -175,7 +175,7 @@ public class AppTest {
     }
 
     @Test
-    void testOther() throws IOException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    void testOther() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,description,logo_uri,root_id,\"left\",\"right\") values(")
                 .append(-1).append(",").append(-1).append(",'").append("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"alias\":\"我想改变\"}").append("','")
                 .append("dxgdfger").append("','").append(URI.create("https://www.example.com:8081/?k1=1&k1=2&k2=3&%E5%90%8D%E5%AD%97=%E5%BC%A0%E4%B8%89").toASCIIString())
@@ -255,7 +255,7 @@ public class AppTest {
                 "    },\n" +
                 "    \"alias\": \"sfsd\"\n" +
                 "}");
-        String name = null;
+        String name;
         Price price = null;
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();
@@ -273,7 +273,7 @@ public class AppTest {
                 }
             }
         }
-        System.out.println(MONETARY_AMOUNT_FORMAT.format(price.amount()));
+        System.out.println(MONETARY_AMOUNT_FORMAT.format(Objects.requireNonNull(price).amount()));
         System.out.println("\n读json数组测试:");
         parser = jasonFactory.createParser("{\"images\": [\"https://hoprxi.tooo.top/images/6948597500302.jpg\",\"https://hoprxi.tooo.top/images/6948597500302.jpg\"]}");
         readArray(parser);

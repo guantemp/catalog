@@ -22,9 +22,11 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
-import org.elasticsearch.client.*;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,18 +40,7 @@ import java.io.StringWriter;
  * @version 0.0.1 builder 2024-06-15
  */
 public class ESBrandJsonQuery implements BrandJsonQuery {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ESBrandJsonQuery.class);
-    private static final RequestOptions COMMON_OPTIONS;
-
-    static {
-        RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
-        builder.addHeader(HttpHeaders.AUTHORIZATION, ESUtil.encrypt())
-                .addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=utf-8");
-        //builder.setHttpAsyncResponseConsumerFactory(
-        //new HttpAsyncResponseConsumerFactory
-        //.HeapBufferedResponseConsumerFactory(30 * 1024 * 1024 * 1024));
-        COMMON_OPTIONS = builder.build();
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.es");
 
     private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
@@ -58,8 +49,8 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/brand/_doc/" + id);
-        request.setOptions(COMMON_OPTIONS);
-        String result = "";
+        request.setOptions(ESUtil.requestOptions());
+        String result = "{}";
         try {
             Response response = client.performRequest(request);
             JsonParser parser = jsonFactory.createParser(response.getEntity().getContent());
@@ -83,9 +74,8 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             parser.close();
             client.close();
         } catch (IOException e) {
-            System.out.println(e);
-            if (LOGGER.isDebugEnabled())
-                LOGGER.debug("No brand with ID={} found", id, e);
+            if (LOGGER.isWarnEnabled())
+                LOGGER.warn("The brand(id={}) cannot retrieve", id, e);
         }
         return result;
     }
@@ -95,23 +85,17 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/brand/_search");
-        request.setOptions(COMMON_OPTIONS);
+        request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name));
-        /*
-        request.setEntity(new NStringEntity(
-                "{\"json\":\"text\"}",
-                ContentType.APPLICATION_JSON));
-         */
         try {
             Response response = client.performRequest(request);
             client.close();
             return rebuildBrands(response.getEntity().getContent());
         } catch (IOException e) {
-            //System.out.println(e);
-            if (LOGGER.isDebugEnabled())
-                LOGGER.debug("No search was found for anything resembling name {} brand ", name, e);
+            if (LOGGER.isWarnEnabled())
+                LOGGER.warn("No search was found for anything resembling name({}) brand", name, e);
         }
-        return "";
+        return "{}";
     }
 
     private String rebuildBrands(InputStream is) throws IOException {
@@ -171,17 +155,16 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/brand/_search");
-        request.setOptions(COMMON_OPTIONS);
+        request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESQueryJsonEntity.paginationQueryJsonEntity(offset, limit));
         try {
-
             Response response = client.performRequest(request);
             client.close();
             return rebuildBrands(response.getEntity().getContent());
         } catch (IOException e) {
-            if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Not query brands from {} to {}:", offset, limit, e);
+            if (LOGGER.isWarnEnabled())
+                LOGGER.warn("Not query brands from {} to {}:", offset, limit, e);
         }
-        return "";
+        return "{}";
     }
 }

@@ -28,8 +28,7 @@ import org.testng.annotations.Test;
  * @version 0.0.1 builder 2022-11-21
  */
 public class PsqlItemQueryTest {
-    private static final String DATABASE_NAME = "catalog";
-    private static final ItemQuery query = new PsqlItemQuery(DATABASE_NAME);
+    private static final ItemQuery query = new PsqlItemQuery();
 
     static {
         CategoryQuery categoryQuery = new PsqlCategoryQuery();

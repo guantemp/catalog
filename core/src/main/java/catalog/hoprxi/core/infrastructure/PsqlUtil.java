@@ -33,7 +33,7 @@ import java.util.Properties;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-08-25
+ * @version 0.0.2 builder 2024-09-25
  */
 public final class PsqlUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlUtil.class);
@@ -72,15 +72,12 @@ public final class PsqlUtil {
                     //System.out.println(props);
                     HikariConfig hikariConfig = new HikariConfig(props);
                     hikariDataSource = new HikariDataSource(hikariConfig);
+                    LOGGER.info("");
                     break;
                 default:
                     break;
             }
         }
-    }
-
-    public static Connection getConnection(String databaseName) throws SQLException {
-        return hikariDataSource.getConnection();
     }
 
     public static Connection getConnection() throws SQLException {

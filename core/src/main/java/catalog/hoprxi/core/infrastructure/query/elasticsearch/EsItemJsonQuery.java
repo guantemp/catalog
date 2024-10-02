@@ -22,9 +22,11 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
-import org.elasticsearch.client.*;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,17 +41,6 @@ import java.io.StringWriter;
  */
 public class EsItemJsonQuery implements ItemJsonQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger(EsItemJsonQuery.class);
-    private static final RequestOptions COMMON_OPTIONS;
-
-    static {
-        RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
-        builder.addHeader(HttpHeaders.AUTHORIZATION, ESUtil.encrypt())
-                .addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=utf-8");
-        //builder.setHttpAsyncResponseConsumerFactory(
-        //new HttpAsyncResponseConsumerFactory
-        //.HeapBufferedResponseConsumerFactory(30 * 1024 * 1024 * 1024));
-        COMMON_OPTIONS = builder.build();
-    }
 
     private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
@@ -58,7 +49,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/item/_doc/" + id);
-        request.setOptions(COMMON_OPTIONS);
+        request.setOptions(ESUtil.requestOptions());
         String result = "";
         try {
             Response response = client.performRequest(request);
@@ -94,7 +85,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/item/_search");
-        request.setOptions(COMMON_OPTIONS);
+        request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name));
         try {
             Response response = client.performRequest(request);
@@ -175,7 +166,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/item/_search");
-        request.setOptions(COMMON_OPTIONS);
+        request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(queryBarcodeJsonEntity(barcode));
         try {
             Response response = client.performRequest(request);

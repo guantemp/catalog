@@ -55,7 +55,7 @@ public final class PsqlSetup {
     public static void setup(String databaseName) throws SQLException {
         String password = PasswordService.nextStrongPasswd();
         String user = "create user catalog with password '" + password + "'";
-        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             connection.setAutoCommit(false);
             Statement statement = connection.createStatement();
             statement.addBatch(DDL_BRAND);

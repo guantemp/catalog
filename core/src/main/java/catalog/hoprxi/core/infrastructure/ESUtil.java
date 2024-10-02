@@ -18,6 +18,8 @@ package catalog.hoprxi.core.infrastructure;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import org.apache.http.HttpHeaders;
+import org.elasticsearch.client.RequestOptions;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.nio.charset.StandardCharsets;
@@ -34,6 +36,8 @@ public class ESUtil {
     private static final String HOST = "slave.tooo.top";
     private static final Properties props = new Properties();
 
+    private static final RequestOptions COMMON_OPTIONS;
+
     static {
         //System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER);
         Config config = ConfigFactory.load("databases");
@@ -47,6 +51,14 @@ public class ESUtil {
                 props.put("password", StoreKeyLoad.decrypt(entry, database.getString("password")));
             }
         }
+
+        RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
+        builder.addHeader(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString((props.get("user") + ":" + props.get("password")).getBytes(StandardCharsets.UTF_8)))
+                .addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=utf-8");
+        //builder.setHttpAsyncResponseConsumerFactory(
+        //new HttpAsyncResponseConsumerFactory
+        //.HeapBufferedResponseConsumerFactory(30 * 1024 * 1024 * 1024));
+        COMMON_OPTIONS = builder.build();
     }
 
     public static String host() {
@@ -57,7 +69,7 @@ public class ESUtil {
         return Integer.parseInt(props.getProperty("port", "9200"));
     }
 
-    public static String encrypt() {
-        return "Basic " + Base64.getEncoder().encodeToString((props.get("user") + ":" + props.get("password")).getBytes(StandardCharsets.UTF_8));
+    public static RequestOptions requestOptions() {
+        return COMMON_OPTIONS;
     }
 }
