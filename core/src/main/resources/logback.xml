@@ -44,8 +44,10 @@
             子标签<allowedRepetitions>：表示允许消息出现的重复次数上限，超过次数上限的记录请求将被丢弃
     -->
     <!-- 使用自定义的TurboFilter -->
+    <!--
     <turboFilter class="logback.SampleTurboFilter">
     </turboFilter>
+    -->
     <!-- 使用DuplicateTurboFilter -->
     <turboFilter class="ch.qos.logback.classic.turbo.DuplicateMessageFilter">
         <allowedRepetitions>1</allowedRepetitions>

@@ -33,13 +33,13 @@ public class ESQueryJsonEntity {
     private static final JsonFactory jsonFactory = JsonFactory.builder().build();
     private static final Logger LOGGER = LoggerFactory.getLogger(ESQueryJsonEntity.class);
 
-    public static String queryNameJsonEntity(String name) {
+    public static String queryNameJsonEntity(String name, int from, int size) {
         StringWriter writer = new StringWriter();
         try {
             JsonGenerator generator = jsonFactory.createGenerator(writer);
             generator.writeStartObject();
-            //generator.writeNumberField("from", 0);
-            //generator.writeNumberField("size", 400);
+            generator.writeNumberField("from", from);
+            generator.writeNumberField("size", size);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
             generator.writeObjectFieldStart("filter");
@@ -73,6 +73,51 @@ public class ESQueryJsonEntity {
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
         }
+        return writer.toString();
+
+    }
+
+    public static String queryNameJsonEntity(String name, int size) {
+        StringWriter writer = new StringWriter();
+        try {
+            JsonGenerator generator = jsonFactory.createGenerator(writer);
+            generator.writeStartObject();
+            //generator.writeNumberField("from", 0);
+            generator.writeNumberField("size", size);
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("bool");
+            generator.writeObjectFieldStart("filter");
+            generator.writeObjectFieldStart("bool");
+
+            generator.writeArrayFieldStart("should");
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("multi_match");
+            generator.writeStringField("query", name);
+            generator.writeArrayFieldStart("fields");
+            generator.writeString("name.name");
+            generator.writeString("name.alias");
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("name.mnemonic", name);
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.close();
+        } catch (IOException e) {
+            LOGGER.error("Cannot assemble request JSON", e);
+        }
+        System.out.println(writer.toString());
         return writer.toString();
     }
 

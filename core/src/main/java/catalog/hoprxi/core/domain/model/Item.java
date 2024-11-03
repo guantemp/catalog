@@ -33,7 +33,7 @@ import java.util.StringJoiner;
  * @version 0.0.3 builder 2023-07-19
  * @since JDK8.0
  */
-public final class Item {
+public class Item {
     private static final int ID_MAX_LENGTH = 48;
     private Barcode barcode;
     private String brandId;

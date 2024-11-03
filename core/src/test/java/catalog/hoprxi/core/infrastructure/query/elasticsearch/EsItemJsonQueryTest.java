@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
+import catalog.hoprxi.core.application.query.ItemJsonQuery;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
@@ -32,12 +33,16 @@ public class EsItemJsonQueryTest {
                 new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
 
+    private static final ItemJsonQuery service = new EsItemJsonQuery();
     @Test
     public void testQuery() {
+        System.out.println(service.query("13253320887810059"));
+        System.out.println(service.query("13253632537181515"));
     }
 
     @Test
     public void testQueryByName() {
+        System.out.println(service.queryByName("老抽"));
     }
 
     @Test

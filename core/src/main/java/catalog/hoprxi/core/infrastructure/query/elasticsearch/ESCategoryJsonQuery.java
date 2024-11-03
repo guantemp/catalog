@@ -35,6 +35,7 @@ import java.io.StringWriter;
  */
 public class ESCategoryJsonQuery implements CategoryJsonQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.es");
+    private static final int SIZE = 200;
 
     private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
@@ -128,7 +129,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         RestClient client = builder.build();
         Request request = new Request("GET", "/category/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name));
+        request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name, SIZE));
         try {
             Response response = client.performRequest(request);
             client.close();

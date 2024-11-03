@@ -40,7 +40,8 @@ import java.io.StringWriter;
  * @version 0.0.1 builder 2024-06-15
  */
 public class ESBrandJsonQuery implements BrandJsonQuery {
-    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.es");
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.es.brand");
+    private static final int SIZE = 200;
 
     private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
@@ -86,7 +87,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         RestClient client = builder.build();
         Request request = new Request("GET", "/brand/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name));
+        request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name, SIZE));
         try {
             Response response = client.performRequest(request);
             client.close();
@@ -100,7 +101,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
 
     private String rebuildBrands(InputStream is) throws IOException {
         StringWriter writer = new StringWriter();
-        JsonGenerator generator = jsonFactory.createGenerator(writer);
+        JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
         generator.writeStartObject();
         JsonParser parser = jsonFactory.createParser(is);
         while (!parser.isClosed()) {

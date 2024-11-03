@@ -41,6 +41,7 @@ import java.io.StringWriter;
  */
 public class EsItemJsonQuery implements ItemJsonQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger(EsItemJsonQuery.class);
+    private static final int SIZE = 1000;
 
     private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
@@ -86,13 +87,13 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         RestClient client = builder.build();
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name));
+        request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name, SIZE));
         try {
             Response response = client.performRequest(request);
             client.close();
             return rebuildItems(response.getEntity().getContent());
         } catch (IOException e) {
-            //System.out.println(e);
+            System.out.println(e);
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug("No search was found for anything resembling name {} item ", name, e);
         }
@@ -101,11 +102,11 @@ public class EsItemJsonQuery implements ItemJsonQuery {
 
     private String rebuildItems(InputStream is) throws IOException {
         StringWriter writer = new StringWriter();
-        JsonGenerator generator = jsonFactory.createGenerator(writer);
+        JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
         generator.writeStartObject();
         JsonParser parser = jsonFactory.createParser(is);
-        while (!parser.isClosed()) {
-            if (parser.nextToken() == JsonToken.FIELD_NAME && "hits".equals(parser.getCurrentName())) {
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME && "hits".equals(parser.getCurrentName())) {
                 parseHits(parser, generator);
                 break;
             }
@@ -136,12 +137,20 @@ public class EsItemJsonQuery implements ItemJsonQuery {
 
     private void parserInternalHits(JsonParser parser, JsonGenerator generator) throws IOException {
         generator.writeArrayFieldStart("items");
-        while (parser.nextToken() != JsonToken.END_ARRAY) {
-            //System.out.println(parser.currentToken() + ":" + parser.getCurrentName());
+        while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
                 generator.writeStartObject();
                 while (parser.nextToken() != null) {
-                    if ("_meta".equals(parser.getCurrentName()))
+                    //filter _meta
+                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.getCurrentName())) {
+                        while (parser.nextToken() != null) {
+                            if (parser.currentToken() == JsonToken.END_OBJECT && "_meta".equals(parser.getCurrentName())) {
+                                parser.nextToken();
+                                break;
+                            }
+                        }
+                    }
+                    if (parser.currentToken() == JsonToken.END_OBJECT && "_source".equals(parser.getCurrentName()))
                         break;
                     generator.copyCurrentEvent(parser);
                 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2019-04-28
+ * @version 0.0.2 builder 2024-10-31
  */
 public class ShelfLife {
     public final static ShelfLife SAME_DAY = new ShelfLife(0) {
@@ -64,6 +64,10 @@ public class ShelfLife {
         setDays(days);
     }
 
+    public ShelfLife(int days, TimeUnit unit) {
+        setDays(days);
+    }
+
     public static ShelfLife rebuild(int days) {
         if (days == 0)
             return SAME_DAY;
@@ -84,12 +88,8 @@ public class ShelfLife {
 
     private void setDays(int days) {
         if (days < 0 || days > 35640)
-            throw new IllegalArgumentException("Shelf life days 1-1095 days");
+            throw new IllegalArgumentException("Shelf life days 1-35640 days");
         this.days = days;
-    }
-
-    public TimeUnit unit() {
-        return TimeUnit.DAYS;
     }
 
     public int days() {
@@ -114,7 +114,7 @@ public class ShelfLife {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof ShelfLife)) return false;
 
         ShelfLife shelfLife = (ShelfLife) o;
 
