@@ -41,7 +41,7 @@ import java.io.StringWriter;
  */
 public class EsItemJsonQuery implements ItemJsonQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger(EsItemJsonQuery.class);
-    private static final int SIZE = 1000;
+    private static final int SIZE = 500;
 
     private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
@@ -62,8 +62,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
                     JsonGenerator generator = jsonFactory.createGenerator(writer);
                     generator.writeStartObject();
                     while (parser.nextToken() != null) {
-                        if ("_meta".equals(parser.getCurrentName()))
-                            break;
+                        if ("_meta".equals(parser.getCurrentName())) break;
                         generator.copyCurrentEvent(parser);
                     }
                     generator.writeEndObject();
@@ -75,8 +74,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             parser.close();
             client.close();
         } catch (IOException e) {
-            if (LOGGER.isDebugEnabled())
-                LOGGER.debug("No item with ID={} found", id, e);
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("No item with ID={} found", id, e);
         }
         return result;
     }
@@ -100,75 +98,57 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return "";
     }
 
-    private String rebuildItems(InputStream is) throws IOException {
-        StringWriter writer = new StringWriter();
-        JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
-        generator.writeStartObject();
-        JsonParser parser = jsonFactory.createParser(is);
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.FIELD_NAME && "hits".equals(parser.getCurrentName())) {
-                parseHits(parser, generator);
-                break;
-            }
+    @Override
+    public String queryByBarcode(String barcode, int size, String searchAfter) {
+        RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
+        RestClient client = builder.build();
+        Request request = new Request("GET", "/item/_search");
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(queryByBarcodeJsonEntity(barcode, size, searchAfter));
+        try {
+            Response response = client.performRequest(request);
+            client.close();
+            return rebuildItems(response.getEntity().getContent());
+        } catch (IOException e) {
+            System.out.println(e);
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("No search was found for anything resembling barcode {} item ", barcode, e);
         }
-        generator.writeEndObject();
-        generator.close();
+        return "";
+    }
+
+    private String queryByBarcodeJsonEntity(String barcode, int size, String searchAfter) {
+        StringWriter writer = new StringWriter();
+        try {
+            JsonGenerator generator = jsonFactory.createGenerator(writer);
+            generator.writeStartObject();
+            generator.writeNumberField("size", size);
+
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("bool");
+            generator.writeObjectFieldStart("filter");
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("barcode", barcode);
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeArrayFieldStart("sort");
+            generator.writeStartObject();
+            generator.writeStringField("barcode.raw", "asc");
+            generator.writeEndObject();
+            generator.writeEndArray();
+
+
+            generator.writeEndObject();
+            generator.close();
+        } catch (IOException e) {
+            LOGGER.error("Cannot assemble request JSON", e);
+        }
         return writer.toString();
     }
 
-    private void parseHits(JsonParser parser, JsonGenerator generator) throws IOException {
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                String fieldName = parser.getCurrentName();
-                if ("total".equals(fieldName)) {
-                    while (parser.nextToken() != null) {
-                        if (parser.currentToken() == JsonToken.FIELD_NAME && "value".equals(parser.getCurrentName())) {
-                            parser.nextToken();
-                            generator.writeNumberField("total", parser.getValueAsInt());
-                            break;
-                        }
-                    }
-                } else if ("hits".equals(fieldName)) {
-                    parserInternalHits(parser, generator);
-                }
-            }
-        }
-    }
-
-    private void parserInternalHits(JsonParser parser, JsonGenerator generator) throws IOException {
-        generator.writeArrayFieldStart("items");
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
-                generator.writeStartObject();
-                while (parser.nextToken() != null) {
-                    //filter _meta
-                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.getCurrentName())) {
-                        while (parser.nextToken() != null) {
-                            if (parser.currentToken() == JsonToken.END_OBJECT && "_meta".equals(parser.getCurrentName())) {
-                                parser.nextToken();
-                                break;
-                            }
-                        }
-                    }
-                    if (parser.currentToken() == JsonToken.END_OBJECT && "_source".equals(parser.getCurrentName()))
-                        break;
-                    generator.copyCurrentEvent(parser);
-                }
-                generator.writeEndObject();
-            }
-        }
-        generator.writeEndArray();
-    }
-
-    @Override
-    public String queryByBarcode(String barcode) {
-        return null;
-    }
-
-    @Override
-    public String queryByBarcode(String barcode, long offset, long size) {
-        return null;
-    }
 
     @Override
     public String accurateQueryByBarcode(String barcode) {
@@ -176,20 +156,19 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         RestClient client = builder.build();
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(queryBarcodeJsonEntity(barcode));
+        request.setJsonEntity(this.accurateQueryBarcodeJsonEntity(barcode));
         try {
             Response response = client.performRequest(request);
             client.close();
             return rebuildItems(response.getEntity().getContent());
         } catch (IOException e) {
-            //System.out.println(e);
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug("No search was found for anything resembling barcode {} item ", barcode, e);
         }
         return "";
     }
 
-    private String queryBarcodeJsonEntity(String barcode) {
+    private String accurateQueryBarcodeJsonEntity(String barcode) {
         StringWriter writer = new StringWriter();
         try {
             JsonGenerator generator = jsonFactory.createGenerator(writer);
@@ -229,7 +208,111 @@ public class EsItemJsonQuery implements ItemJsonQuery {
     }
 
     @Override
-    public String query(int from, int size) {
+    public String queryAll(int size, String[] searchAfter) {
+        StringWriter writer = new StringWriter();
+        try {
+            JsonGenerator generator = jsonFactory.createGenerator(writer);
+            generator.writeStartObject();
+            generator.writeNumberField("size", size);
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("match_all");
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeArrayFieldStart("sort");
+            generator.writeStartObject();
+            generator.writeStringField("id", "desc");
+            generator.writeEndObject();
+            generator.writeEndArray();
+
+            if (searchAfter.length > 0) {
+                generator.writeArrayFieldStart("search_after");
+                for (String s : searchAfter)
+                    generator.writeString(s);
+                generator.writeEndArray();
+            }
+
+            generator.writeEndObject();
+            generator.close();
+            generator.close();
+        } catch (IOException e) {
+            LOGGER.error("Cannot assemble request JSON", e);
+        }
+
         return null;
     }
+
+    private String rebuildItems(InputStream is) throws IOException {
+        StringWriter writer = new StringWriter();
+        JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
+        generator.writeStartObject();
+        JsonParser parser = jsonFactory.createParser(is);
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME && "hits".equals(parser.getCurrentName())) {
+                parseHits(parser, generator);
+                break;
+            }
+        }
+        generator.writeEndObject();
+        generator.close();
+        return writer.toString();
+    }
+
+    private void parseHits(JsonParser parser, JsonGenerator generator) throws IOException {
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                String fieldName = parser.getCurrentName();
+                if ("total".equals(fieldName)) {
+                    while (parser.nextToken() != null) {
+                        if (parser.currentToken() == JsonToken.FIELD_NAME && "value".equals(parser.getCurrentName())) {
+                            parser.nextToken();
+                            generator.writeNumberField("total", parser.getValueAsInt());
+                            break;
+                        }
+                    }
+                } else if ("hits".equals(fieldName)) {
+                    generator.writeArrayFieldStart("items");
+                    while (parser.nextToken() != null) {
+                        if (parser.getCurrentToken() == JsonToken.START_OBJECT) {
+                            generator.writeStartObject();
+                            this.parserSource(parser, generator);
+                            this.parserSort(parser, generator);
+                            generator.writeEndObject();
+                        }
+                        if (parser.currentToken() == JsonToken.END_ARRAY && "hits".equals(parser.getCurrentName())) {
+                            break;
+                        }
+                    }
+                    generator.writeEndArray();
+                }
+            }
+        }
+    }
+
+    private void parserSource(JsonParser parser, JsonGenerator generator) throws IOException {
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
+                while (parser.nextToken() != null) {
+                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.getCurrentName())) { //filter _meta
+                        break;
+                    }
+                    generator.copyCurrentEvent(parser);
+                }
+            }
+            if (parser.currentToken() == JsonToken.END_OBJECT && "_source".equals(parser.getCurrentName()))
+                break;
+        }
+    }
+
+    private void parserSort(JsonParser parser, JsonGenerator generator) throws IOException {
+        if (parser.nextToken() == JsonToken.FIELD_NAME && "sort".equals(parser.getCurrentName())) {
+            generator.copyCurrentEvent(parser);
+            while (parser.nextToken() != null) {
+                generator.copyCurrentEvent(parser);
+                if (parser.currentToken() == JsonToken.END_ARRAY && "sort".equals(parser.getCurrentName()))
+                    break;
+            }
+        }
+    }
 }
+

@@ -28,9 +28,7 @@ public interface ItemJsonQuery {
 
     String queryByName(String name);
 
-    String queryByBarcode(String barcode);
-
-    String queryByBarcode(String barcode, long offset, long size);
+    String queryByBarcode(String barcode, int size, String searchAfter);
 
     String accurateQueryByBarcode(String barcode);
 
@@ -40,6 +38,6 @@ public interface ItemJsonQuery {
 
     String queryByCategoryAndItsDescendants(String categoryId);
 
-    String query(int from, int size);
+    String queryAll(int size, String[] offset);
 
 }

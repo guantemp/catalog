@@ -33,12 +33,11 @@ public class ESQueryJsonEntity {
     private static final JsonFactory jsonFactory = JsonFactory.builder().build();
     private static final Logger LOGGER = LoggerFactory.getLogger(ESQueryJsonEntity.class);
 
-    public static String queryNameJsonEntity(String name, int from, int size) {
+    public static String queryNameJsonEntity(String name, int size, String search_after) {
         StringWriter writer = new StringWriter();
         try {
             JsonGenerator generator = jsonFactory.createGenerator(writer);
             generator.writeStartObject();
-            generator.writeNumberField("from", from);
             generator.writeNumberField("size", size);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
@@ -82,7 +81,6 @@ public class ESQueryJsonEntity {
         try {
             JsonGenerator generator = jsonFactory.createGenerator(writer);
             generator.writeStartObject();
-            //generator.writeNumberField("from", 0);
             generator.writeNumberField("size", size);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
@@ -117,7 +115,6 @@ public class ESQueryJsonEntity {
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
         }
-        System.out.println(writer.toString());
         return writer.toString();
     }
 

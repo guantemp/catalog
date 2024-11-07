@@ -47,14 +47,13 @@ public class EsItemJsonQueryTest {
 
     @Test
     public void testQueryByBarcode() {
-    }
-
-    @Test
-    public void testTestQueryByBarcode() {
+        System.out.println(service.queryByBarcode("565493", 1, ""));
     }
 
     @Test
     public void testAccurateQueryByBarcode() {
+        System.out.println(service.accurateQueryByBarcode("6902779313692"));
+        System.out.println(service.accurateQueryByBarcode("6920208924028"));
     }
 
     @Test

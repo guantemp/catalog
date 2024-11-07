@@ -64,7 +64,8 @@ public class AppTest {
     private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.US)
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
             .build());
-    private final JsonFactory jasonFactory = JsonFactory.builder().build();
+    private final JsonFactory jsonFactory
+            = JsonFactory.builder().build();
 
     @BeforeTest
     public void init() {
@@ -191,7 +192,7 @@ public class AppTest {
     public void testWriteJson1() {
         StringWriter writer = new StringWriter();
         try {
-            JsonGenerator generator = jasonFactory.createGenerator(writer);
+            JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
             generator.writeStartObject();
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
@@ -210,6 +211,36 @@ public class AppTest {
             System.out.println(e);
         }
         System.out.println(writer);
+
+        writer = new StringWriter();
+        try {
+            JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
+            generator.writeStartObject();
+            generator.writeNumberField("size", 500);
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("match_all");
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeArrayFieldStart("sort");
+            generator.writeStartObject();
+            generator.writeStringField("id", "desc");
+            generator.writeEndObject();
+            generator.writeEndArray();
+
+
+            generator.writeArrayFieldStart("search_after");
+            for (String s : new String[]{"13261704575891903 ", "13261583266136008"})
+                generator.writeString(s);
+            generator.writeEndArray();
+
+
+            generator.writeEndObject();
+            generator.close();
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+        System.out.println(writer);
     }
 
     @Test
@@ -220,7 +251,7 @@ public class AppTest {
                 .build());
         RetailPrice retailPrice = new RetailPrice(new Price(Money.of(10.00, currency), Unit.DAI));
 
-        JsonGenerator generator = jasonFactory.createGenerator(System.out, JsonEncoding.UTF8).useDefaultPrettyPrinter();
+        JsonGenerator generator = jsonFactory.createGenerator(System.out, JsonEncoding.UTF8).useDefaultPrettyPrinter();
         generator.writeStartObject();
         generator.writeNumberField("offset", 0);
         generator.writeNumberField("limit", 15);
@@ -246,7 +277,7 @@ public class AppTest {
     @Test
     void testReadJson1() throws IOException {
         System.out.println("\n读json内部对象测试:");
-        JsonParser parser = jasonFactory.createParser("{\n" +
+        JsonParser parser = jsonFactory.createParser("{\n" +
                 "    \"name\": \"读子对象\",\n" +
                 "    \"retailPrice\": {\n" +
                 "        \"unit\": \"盒\",\n" +
@@ -275,7 +306,7 @@ public class AppTest {
         }
         System.out.println(MONETARY_AMOUNT_FORMAT.format(Objects.requireNonNull(price).amount()));
         System.out.println("\n读json数组测试:");
-        parser = jasonFactory.createParser("{\"images\": [\"https://hoprxi.tooo.top/images/6948597500302.jpg\",\"https://hoprxi.tooo.top/images/6948597500302.jpg\"]}");
+        parser = jsonFactory.createParser("{\"images\": [\"https://hoprxi.tooo.top/images/6948597500302.jpg\",\"https://hoprxi.tooo.top/images/6948597500302.jpg\"]}");
         readArray(parser);
     }
 
@@ -315,7 +346,7 @@ public class AppTest {
     @Test
     void testReadJson2() throws IOException {
         String name = null, alias = null, mnemonic = null;
-        JsonParser parser = jasonFactory.createParser("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"alias\":\"我想改变\"}".getBytes(StandardCharsets.UTF_8));
+        JsonParser parser = jsonFactory.createParser("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"alias\":\"我想改变\"}".getBytes(StandardCharsets.UTF_8));
         JsonToken jsonToken;
         while (!parser.isClosed()) {
             jsonToken = parser.nextToken();
