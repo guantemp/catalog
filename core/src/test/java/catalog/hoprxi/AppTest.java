@@ -61,11 +61,10 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2022-07-09
  */
 public class AppTest {
-    private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.US)
+    private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
             .build());
-    private final JsonFactory jsonFactory
-            = JsonFactory.builder().build();
+    private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
     @BeforeTest
     public void init() {
@@ -216,6 +215,53 @@ public class AppTest {
         try {
             JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
             generator.writeStartObject();
+            generator.writeNumberField("from", 0);
+            generator.writeNumberField("size", 200);
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("bool");
+            generator.writeObjectFieldStart("filter");
+            generator.writeObjectFieldStart("bool");
+            generator.writeArrayFieldStart("should");
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("multi_match");
+            generator.writeStringField("query", "name");
+            generator.writeArrayFieldStart("fields");
+            generator.writeString("name.name");
+            generator.writeString("name.alias");
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("name.mnemonic", "name");
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeArrayFieldStart("sort");
+            generator.writeStartObject();
+            generator.writeStringField("id", "desc");
+            generator.writeEndObject();
+            generator.writeEndArray();
+
+            generator.writeEndObject();
+            generator.close();
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+        System.out.println(writer);
+
+        writer = new StringWriter();
+        try {
+            JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
+            generator.writeStartObject();
             generator.writeNumberField("size", 500);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("match_all");
@@ -277,14 +323,15 @@ public class AppTest {
     @Test
     void testReadJson1() throws IOException {
         System.out.println("\n读json内部对象测试:");
-        JsonParser parser = jsonFactory.createParser("{\n" +
-                "    \"name\": \"读子对象\",\n" +
+        JsonParser parser = jsonFactory.createParser("{}");
+        parser = jsonFactory.createParser("{\n" +
+                "    \"name\": \"name的子对象\",\n" +
                 "    \"retailPrice\": {\n" +
                 "        \"unit\": \"盒\",\n" +
-                "        \"number\": 45.12355,\n" +
-                "        \"currency\": \"USD\"\n" +
+                "        \"number\": 45.3,\n" +
+                "        \"currency\": \"CNY\"\n" +//USD
                 "    },\n" +
-                "    \"alias\": \"sfsd\"\n" +
+                "    \"alias\": \"sut个好fsd\"\n" +
                 "}");
         String name;
         Price price = null;
@@ -304,7 +351,7 @@ public class AppTest {
                 }
             }
         }
-        System.out.println(MONETARY_AMOUNT_FORMAT.format(Objects.requireNonNull(price).amount()));
+        System.out.println(MONETARY_AMOUNT_FORMAT.format(Objects.requireNonNull(price).amount()) + "/" + price.unit());
         System.out.println("\n读json数组测试:");
         parser = jsonFactory.createParser("{\"images\": [\"https://hoprxi.tooo.top/images/6948597500302.jpg\",\"https://hoprxi.tooo.top/images/6948597500302.jpg\"]}");
         readArray(parser);

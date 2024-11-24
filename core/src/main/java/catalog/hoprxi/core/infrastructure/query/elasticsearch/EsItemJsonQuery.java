@@ -85,7 +85,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         RestClient client = builder.build();
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name, SIZE));
+        request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name, 200, new String[0]));
         try {
             Response response = client.performRequest(request);
             client.close();
@@ -110,7 +110,6 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             client.close();
             return rebuildItems(response.getEntity().getContent());
         } catch (IOException e) {
-            System.out.println(e);
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug("No search was found for anything resembling barcode {} item ", barcode, e);
         }
@@ -209,6 +208,24 @@ public class EsItemJsonQuery implements ItemJsonQuery {
 
     @Override
     public String queryAll(int size, String[] searchAfter) {
+        StringWriter writer = queryAllJsonEntity(size, searchAfter);
+        RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
+        RestClient client = builder.build();
+        Request request = new Request("GET", "/item/_search");
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(writer.toString());
+        try {
+            Response response = client.performRequest(request);
+            client.close();
+            return rebuildItems(response.getEntity().getContent());
+        } catch (IOException e) {
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("No search was found for anything items ", e);
+        }
+        return "";
+    }
+
+    private StringWriter queryAllJsonEntity(int size, String[] searchAfter) {
         StringWriter writer = new StringWriter();
         try {
             JsonGenerator generator = jsonFactory.createGenerator(writer);
@@ -234,17 +251,15 @@ public class EsItemJsonQuery implements ItemJsonQuery {
 
             generator.writeEndObject();
             generator.close();
-            generator.close();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
         }
-
-        return null;
+        return writer;
     }
 
     private String rebuildItems(InputStream is) throws IOException {
         StringWriter writer = new StringWriter();
-        JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
+        JsonGenerator generator = jsonFactory.createGenerator(writer);
         generator.writeStartObject();
         JsonParser parser = jsonFactory.createParser(is);
         while (parser.nextToken() != null) {

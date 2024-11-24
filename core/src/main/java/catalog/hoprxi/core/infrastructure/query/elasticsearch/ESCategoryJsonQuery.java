@@ -129,7 +129,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         RestClient client = builder.build();
         Request request = new Request("GET", "/category/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name, SIZE));
+        request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name, SIZE, 1));
         try {
             Response response = client.performRequest(request);
             client.close();
@@ -292,7 +292,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         RestClient client = builder.build();
         Request request = new Request("GET", "/category/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESQueryJsonEntity.paginationQueryJsonEntity(offset, limit));
+        request.setJsonEntity(ESQueryJsonEntity.paginationQueryJsonEntity(offset, new String[0]));
         try {
             Response response = client.performRequest(request);
             client.close();

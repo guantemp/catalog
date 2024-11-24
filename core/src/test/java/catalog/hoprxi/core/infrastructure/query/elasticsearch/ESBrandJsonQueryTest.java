@@ -20,6 +20,9 @@ import catalog.hoprxi.core.application.query.BrandJsonQuery;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
+import java.io.IOException;
+import java.io.OutputStream;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
@@ -35,10 +38,29 @@ public class ESBrandJsonQueryTest {
 
     private static final BrandJsonQuery service = new ESBrandJsonQuery();
 
-    @Test
-    public void testQuery() {
-        System.out.println(service.query("8178519975776396"));
+    @Test(priority = 1, invocationCount = 12, threadPoolSize = 1)
+    public void testQuery1() {
+        System.out.println(service.query("495651176959596552"));
+        System.out.println(service.query(" 495651176959596602"));
+        System.out.println(service.query("-1"));
         System.out.println(service.query("817884324788650"));
+
+    }
+
+    @Test(priority = 2, invocationCount = 12, threadPoolSize = 1)
+    public void testQuery() throws IOException {
+        OutputStream os = ((ESBrandJsonQuery) service).queryT("495651176959596552");
+        System.out.println(os);
+        os.close();
+        os = ((ESBrandJsonQuery) service).queryT(" 495651176959596602");
+        System.out.println(os);
+        os.close();
+        os = ((ESBrandJsonQuery) service).queryT("-1");
+        System.out.println(os);
+        os.close();
+        os = ((ESBrandJsonQuery) service).queryT("817884324788650");
+        System.out.println(os);
+        os.close();
     }
 
     @Test
@@ -48,7 +70,7 @@ public class ESBrandJsonQueryTest {
 
     @Test
     public void testQueryByName() {
-        System.out.println(service.queryByName("老"));
-        System.out.println(service.queryByName("白萝卜"));
+        System.out.println(service.queryByName("天", 0, 20));
+        System.out.println(service.queryByName("白萝卜", 10, 5));
     }
 }

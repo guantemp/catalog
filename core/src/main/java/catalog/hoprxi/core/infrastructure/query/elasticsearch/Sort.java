@@ -14,25 +14,13 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.query;
+package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2024-11-17
+ * @version 0.0.1 builder 2024-11-24
  */
-public interface BrandJsonQuery {
-
-    String query(String id);
-
-    String queryByName(String name, int offset, int limit);
-
-
-    default String queryAll(int size, String[] searchAfter) {
-        return "{\"total\":0}";
-    }
-
-    default String queryAll(int offset, int size) {
-        return "{\"total\":0}";
-    }
+public enum Sort {
+    ID_ASC, ID_DESC, NAME_ASC, NAME_DESC
 }

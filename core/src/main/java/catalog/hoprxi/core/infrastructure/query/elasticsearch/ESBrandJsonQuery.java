@@ -18,10 +18,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.BrandJsonQuery;
 import catalog.hoprxi.core.infrastructure.ESUtil;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.*;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
@@ -30,9 +27,8 @@ import org.elasticsearch.client.RestClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
+import java.io.*;
+import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -41,12 +37,11 @@ import java.io.StringWriter;
  */
 public class ESBrandJsonQuery implements BrandJsonQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.es.brand");
-    private static final int SIZE = 200;
-
     private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
     @Override
     public String query(String id) {
+        id = Objects.requireNonNull(id, "id required").trim();
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/brand/_doc/" + id);
@@ -58,7 +53,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             while (!parser.isClosed()) {
                 if (parser.nextToken() == JsonToken.FIELD_NAME && "_source".equals(parser.getCurrentName())) {
                     parser.nextToken();
-                    StringWriter writer = new StringWriter();
+                    StringWriter writer = new StringWriter(1024);
                     JsonGenerator generator = jsonFactory.createGenerator(writer);
                     generator.writeStartObject();
                     while (parser.nextToken() != null) {
@@ -76,18 +71,52 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             client.close();
         } catch (IOException e) {
             if (LOGGER.isWarnEnabled())
-                LOGGER.warn("The brand(id={}) cannot retrieve", id, e);
+                LOGGER.warn("The brand(id={}) can't retrieve", id, e);
         }
         return result;
     }
 
+    public OutputStream queryT(String id) {
+        id = Objects.requireNonNull(id, "id required").trim();
+        RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
+        RestClient client = builder.build();
+        Request request = new Request("GET", "/brand/_doc/" + id);
+        request.setOptions(ESUtil.requestOptions());
+        OutputStream os = new ByteArrayOutputStream(1024);
+        try {
+            Response response = client.performRequest(request);
+            JsonParser parser = jsonFactory.createParser(response.getEntity().getContent());
+            while (!parser.isClosed()) {
+                if (parser.nextToken() == JsonToken.FIELD_NAME && "_source".equals(parser.getCurrentName())) {
+                    parser.nextToken();
+                    JsonGenerator generator = jsonFactory.createGenerator(os, JsonEncoding.UTF8);
+                    generator.writeStartObject();
+                    while (parser.nextToken() != null) {
+                        if ("_meta".equals(parser.getCurrentName()))
+                            break;
+                        generator.copyCurrentEvent(parser);
+                    }
+                    generator.writeEndObject();
+                    generator.close();
+                    break;
+                }
+            }
+            parser.close();
+            client.close();
+        } catch (IOException e) {
+            if (LOGGER.isWarnEnabled())
+                LOGGER.warn("The brand(id={}) can't retrieve", id, e);
+        }
+        return os;
+    }
+
     @Override
-    public String queryByName(String name) {
+    public String queryByName(String name, int offset, int limit) {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/brand/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name, SIZE));
+        request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name, offset, limit));
         try {
             Response response = client.performRequest(request);
             client.close();
@@ -128,43 +157,52 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
                         }
                     }
                 } else if ("hits".equals(fieldName)) {
-                    parserInternalHits(parser, generator);
+                    generator.writeArrayFieldStart("brands");
+                    while (parser.nextToken() != null) {
+                        if (parser.getCurrentToken() == JsonToken.START_OBJECT) {
+                            generator.writeStartObject();
+                            parserSource(parser, generator);
+                            generator.writeEndObject();
+                        }
+                        if (parser.currentToken() == JsonToken.END_ARRAY && "hits".equals(parser.getCurrentName())) {
+                            break;
+                        }
+                    }
+                    generator.writeEndArray();
                 }
             }
         }
     }
 
-    private void parserInternalHits(JsonParser parser, JsonGenerator generator) throws IOException {
-        generator.writeArrayFieldStart("brands");
-        while (parser.nextToken() != JsonToken.END_ARRAY) {
-            //System.out.println(parser.currentToken() + ":" + parser.getCurrentName());
+    private void parserSource(JsonParser parser, JsonGenerator generator) throws IOException {
+        while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
-                generator.writeStartObject();
                 while (parser.nextToken() != null) {
-                    if ("_meta".equals(parser.getCurrentName()))
+                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.getCurrentName())) { //filter _meta
                         break;
+                    }
                     generator.copyCurrentEvent(parser);
                 }
-                generator.writeEndObject();
             }
+            if (parser.currentToken() == JsonToken.END_OBJECT && "_source".equals(parser.getCurrentName()))
+                break;
         }
-        generator.writeEndArray();
     }
 
     @Override
-    public String queryAll(int offset, int limit) {
+    public String queryAll(int size, String[] searchAfter) {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/brand/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESQueryJsonEntity.paginationQueryJsonEntity(offset, limit));
+        request.setJsonEntity(ESQueryJsonEntity.paginationQueryJsonEntity(size, searchAfter));
         try {
             Response response = client.performRequest(request);
             client.close();
             return rebuildBrands(response.getEntity().getContent());
         } catch (IOException e) {
             if (LOGGER.isWarnEnabled())
-                LOGGER.warn("Not query brands from {} to {}:", offset, limit, e);
+                LOGGER.warn("Not query brands from {}:", searchAfter, e);
         }
         return "{}";
     }
