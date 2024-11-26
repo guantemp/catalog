@@ -16,6 +16,8 @@
 
 package catalog.hoprxi.core.application.query;
 
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.SortField;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
@@ -25,14 +27,29 @@ public interface BrandJsonQuery {
 
     String query(String id);
 
-    String queryByName(String name, int offset, int limit);
+    /**
+     * @param name      required(not NULL)
+     * @param offset    specified start.
+     * @param limit     specified size
+     * @param sortField Null or empty will be replaced with {@link SortField}
+     * @return
+     */
+    String queryByName(String name, int offset, int limit, SortField sortField);
+
+    default String queryByName(String name, int offset, int limit) {
+        return queryByName(name, offset, limit, SortField.ID_ASC);
+    }
 
 
-    default String queryAll(int size, String[] searchAfter) {
+    default String queryAll(int size, String[] searchAfter, SortField sortField) {
         return "{\"total\":0}";
     }
 
-    default String queryAll(int offset, int size) {
+    default String queryAll(int size) {
+        return queryAll(size, new String[0], SortField.ID_ASC);
+    }
+
+    default String queryAll(int offset, int limit, SortField sortField) {
         return "{\"total\":0}";
     }
 }

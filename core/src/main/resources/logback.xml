@@ -30,7 +30,7 @@
      scan（非必须）属性：默认为false，true表示扫描配置文件的变化并自动重新配置，默认每隔1分钟扫描一次；
      scanPeriod（非必须）属性：搭配scan属性使用，设置扫描的间隔时间
 -->
-<configuration debug="true" scan="true" scanPeriod="1 seconds">
+<configuration debug="true" scan="true" scanPeriod="3 seconds">
     <!-- 用于指定logger上下文名称，默认为default -->
     <contextName>logback</contextName>
 
@@ -179,7 +179,7 @@
 
     <!--不同业务产生的日志打印到不同文件中-->
     <appender name="API_HIS_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${LOG_HOME}/api_his_info.log</File>
+        <File>${FILE_PATH}/api_his_info.log</File>
         <append>true</append>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>INFO</level>
@@ -187,7 +187,7 @@
             <onMismatch>DENY</onMismatch>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/api_his_info.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <fileNamePattern>${FILE_PATH}/api_his_info.log.%d{yyyy-MM-dd}</fileNamePattern>
             <maxHistory>15</maxHistory>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
@@ -197,7 +197,7 @@
         </encoder>
     </appender>
     <appender name="API_HIS_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${LOG_HOME}/error_api_his.log</File>
+        <File>${FILE_PATH}/error_api_his.log</File>
         <append>true</append>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>ERROR</level>
@@ -205,7 +205,7 @@
             <onMismatch>DENY</onMismatch>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/error_api_his.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <fileNamePattern>${FILE_PATH}/error_api_his.log.%d{yyyy-MM-dd}</fileNamePattern>
             <maxHistory>15</maxHistory>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
@@ -216,7 +216,7 @@
     </appender>
 
     <appender name="API_IRON_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${LOG_HOME}/api_iron_info.log</File>
+        <File>${FILE_PATH}/api_iron_info.log</File>
         <append>true</append>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>INFO</level>
@@ -224,7 +224,7 @@
             <onMismatch>DENY</onMismatch>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/api_iron_info.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <fileNamePattern>${FILE_PATH}/api_iron_info.log.%d{yyyy-MM-dd}</fileNamePattern>
             <maxHistory>15</maxHistory>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
@@ -234,7 +234,7 @@
         </encoder>
     </appender>
     <appender name="API_IRON_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${LOG_HOME}/error_api_iron.log</File>
+        <File>${FILE_PATH}/error_api_iron.log</File>
         <append>true</append>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>ERROR</level>
@@ -242,7 +242,7 @@
             <onMismatch>DENY</onMismatch>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/error_api_iron.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <fileNamePattern>${FILE_PATH}/error_api_iron.log.%d{yyyy-MM-dd}</fileNamePattern>
             <maxHistory>15</maxHistory>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
@@ -256,6 +256,7 @@
     <!-- name:指定logger名称；level：指定logger的分配级别；additivity(非必须，默认为true)：设置appender叠加性 -->
     <logger name="catalog.hoprxi.core.es" level="debug" additivity="true">
         <appender-ref ref="time_file"></appender-ref>
+        <appender-ref ref="API_IRON_INFO"></appender-ref>
     </logger>
 
 </configuration>

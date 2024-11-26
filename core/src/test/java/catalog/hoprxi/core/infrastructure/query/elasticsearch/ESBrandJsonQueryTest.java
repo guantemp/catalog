@@ -38,39 +38,41 @@ public class ESBrandJsonQueryTest {
 
     private static final BrandJsonQuery service = new ESBrandJsonQuery();
 
-    @Test(priority = 1, invocationCount = 12, threadPoolSize = 1)
+    @Test(priority = 1, invocationCount = 1, threadPoolSize = 1)
     public void testQuery1() {
         System.out.println(service.query("495651176959596552"));
         System.out.println(service.query(" 495651176959596602"));
         System.out.println(service.query("-1"));
         System.out.println(service.query("817884324788650"));
-
     }
 
-    @Test(priority = 2, invocationCount = 12, threadPoolSize = 1)
+    @Test(priority = 2, invocationCount = 1, threadPoolSize = 1)
     public void testQuery() throws IOException {
-        OutputStream os = ((ESBrandJsonQuery) service).queryT("495651176959596552");
+        OutputStream os = ((ESBrandJsonQuery) service).queryForTest("495651176959596552");
         System.out.println(os);
         os.close();
-        os = ((ESBrandJsonQuery) service).queryT(" 495651176959596602");
+        os = ((ESBrandJsonQuery) service).queryForTest(" 495651176959596602");
         System.out.println(os);
         os.close();
-        os = ((ESBrandJsonQuery) service).queryT("-1");
+        os = ((ESBrandJsonQuery) service).queryForTest("-1");
         System.out.println(os);
         os.close();
-        os = ((ESBrandJsonQuery) service).queryT("817884324788650");
+        os = ((ESBrandJsonQuery) service).queryForTest("817884324788650");
         System.out.println(os);
         os.close();
     }
 
-    @Test
+    @Test(priority = 3)
     public void testQueryAll() {
-        System.out.println(service.queryAll(0, 20));
+        System.out.println(service.queryAll(100));
+        System.out.println(service.queryAll(50, new String[0], null));
+        System.out.println(service.queryAll(50, new String[]{"xcx"}, SortField.NAME_DESC));
     }
 
     @Test
     public void testQueryByName() {
-        System.out.println(service.queryByName("天", 0, 20));
-        System.out.println(service.queryByName("白萝卜", 10, 5));
+        System.out.println(service.queryByName("天", 0, 20, null));
+        System.out.println(service.queryByName("白萝卜", 10, 5, null));
+        System.out.println(service.queryByName("天", 0, 20, SortField.NAME_ASC));
     }
 }

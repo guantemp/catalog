@@ -16,11 +16,33 @@
 
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
+import java.util.Objects;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2024-11-24
  */
-public enum Sort {
-    ID_ASC, ID_DESC, NAME_ASC, NAME_DESC
+public enum SortField {
+    ID_ASC("id"), ID_DESC("id", false), NAME_ASC("name.mnemonic.raw"), NAME_DESC("name.mnemonic.raw", false);
+
+    private String field;
+    private boolean sort;
+
+    private SortField(String field) {
+        this(field, true);
+    }
+
+    private SortField(String field, boolean asc) {
+        this.field = Objects.requireNonNull(field, "field is required").trim();
+        this.sort = asc;
+    }
+
+    public String field() {
+        return field;
+    }
+
+    public String sort() {
+        return sort ? "asc" : "desc";
+    }
 }
