@@ -25,7 +25,13 @@ import catalog.hoprxi.core.infrastructure.query.elasticsearch.SortField;
  */
 public interface BrandJsonQuery {
 
-    String query(String id);
+    /**
+     * @param id
+     * @return
+     */
+    default String query(String id) {
+        return "{}";
+    }
 
     /**
      * @param name      required(not NULL)
@@ -36,19 +42,41 @@ public interface BrandJsonQuery {
      */
     String queryByName(String name, int offset, int limit, SortField sortField);
 
+    /**
+     * @param name
+     * @param offset
+     * @param limit
+     * @return
+     */
     default String queryByName(String name, int offset, int limit) {
         return queryByName(name, offset, limit, SortField.ID_ASC);
     }
 
 
+    /**
+     * @param size
+     * @param searchAfter
+     * @param sortField
+     * @return
+     */
     default String queryAll(int size, String[] searchAfter, SortField sortField) {
         return "{\"total\":0}";
     }
 
+    /**
+     * @param size
+     * @return
+     */
     default String queryAll(int size) {
         return queryAll(size, new String[0], SortField.ID_ASC);
     }
 
+    /**
+     * @param offset
+     * @param limit
+     * @param sortField
+     * @return
+     */
     default String queryAll(int offset, int limit, SortField sortField) {
         return "{\"total\":0}";
     }

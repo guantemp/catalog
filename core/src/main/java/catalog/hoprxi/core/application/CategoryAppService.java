@@ -59,7 +59,7 @@ public class CategoryAppService {
     }
 
     public void delete(CategoryDeleteCommand delete) {
-        Objects.requireNonNull(delete, "delete command required");
+        Objects.requireNonNull(delete, "remove command required");
         repository.remove(delete.id());
     }
 

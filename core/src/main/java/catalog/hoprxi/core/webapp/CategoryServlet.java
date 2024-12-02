@@ -301,7 +301,7 @@ public class CategoryServlet extends HttpServlet {
             if (parameters.length == 2) {
                 APP_SERVICE.delete(new CategoryDeleteCommand(parameters[1]));
                 generator.writeNumberField("code", 1004);
-                generator.writeStringField("message", "Success delete category");
+                generator.writeStringField("message", "Success remove category");
             }
         }
         generator.writeNumberField("execution time", System.currentTimeMillis() - start);

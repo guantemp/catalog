@@ -39,7 +39,7 @@ public class ESBrandJsonQueryTest {
     private static final BrandJsonQuery service = new ESBrandJsonQuery();
 
     @Test(priority = 1, invocationCount = 1, threadPoolSize = 1)
-    public void testQuery1() {
+    public void testQuery() {
         System.out.println(service.query("495651176959596552"));
         System.out.println(service.query(" 495651176959596602"));
         System.out.println(service.query("-1"));
@@ -47,7 +47,7 @@ public class ESBrandJsonQueryTest {
     }
 
     @Test(priority = 2, invocationCount = 1, threadPoolSize = 1)
-    public void testQuery() throws IOException {
+    public void testQueryForTest() throws IOException {
         OutputStream os = ((ESBrandJsonQuery) service).queryForTest("495651176959596552");
         System.out.println(os);
         os.close();

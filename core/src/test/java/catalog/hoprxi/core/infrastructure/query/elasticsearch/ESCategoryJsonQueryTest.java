@@ -37,7 +37,9 @@ public class ESCategoryJsonQueryTest {
 
     @Test
     public void testQuery() {
-        System.out.println(service.query("8178520749625496"));
+        System.out.println(service.query("496796322118291461"));
+        System.out.println(service.query("496796322118291472"));
+        System.out.println(service.query("-1"));
     }
 
     @Test

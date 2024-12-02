@@ -20,10 +20,7 @@ import catalog.hoprxi.core.application.query.BrandJsonQuery;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.*;
 import org.apache.http.HttpHost;
-import org.elasticsearch.client.Request;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +33,7 @@ import java.util.Objects;
  * @version 0.0.1 builder 2024-06-15
  */
 public class ESBrandJsonQuery implements BrandJsonQuery {
-    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.es.brand");
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.es.Brand");
     private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
     private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
@@ -65,8 +62,12 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
                     break;
                 }
             }
+        } catch (ResponseException e) {
+            LOGGER.warn("The brand(id={}) not found", id, e);
+        } catch (JsonParseException e) {
+            LOGGER.warn("Incorrect JSON format", e);
         } catch (IOException e) {
-            LOGGER.warn("The brand(id={}) can't retrieve", id, e);
+            LOGGER.error("I/O failed", e);
         }
         return result;
     }
@@ -74,18 +75,16 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
     @Deprecated
     public OutputStream queryForTest(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
-        RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
-        RestClient client = builder.build();
-        Request request = new Request("GET", "/brand/_doc/" + id);
-        request.setOptions(ESUtil.requestOptions());
-        OutputStream os = new ByteArrayOutputStream(1024);
-        try {
+        try (RestClient client = BUILDER.build()) {
+            Request request = new Request("GET", "/brand/_doc/" + id);
+            request.setOptions(ESUtil.requestOptions());
+            OutputStream os = new ByteArrayOutputStream(1024);
             Response response = client.performRequest(request);
             JsonParser parser = jsonFactory.createParser(response.getEntity().getContent());
             while (!parser.isClosed()) {
                 if (parser.nextToken() == JsonToken.FIELD_NAME && "_source".equals(parser.getCurrentName())) {
                     parser.nextToken();
-                    JsonGenerator generator = jsonFactory.createGenerator(os, JsonEncoding.UTF8);
+                    JsonGenerator generator = jsonFactory.createGenerator(os, JsonEncoding.UTF8).useDefaultPrettyPrinter();
                     generator.writeStartObject();
                     while (parser.nextToken() != null) {
                         if ("_meta".equals(parser.getCurrentName()))
@@ -97,13 +96,12 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
                     break;
                 }
             }
-            parser.close();
-            client.close();
+            return os;
         } catch (IOException e) {
             if (LOGGER.isWarnEnabled())
                 LOGGER.warn("The brand(id={}) can't retrieve", id, e);
         }
-        return os;
+        return null;
     }
 
     @Override
@@ -272,7 +270,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
 
     private String rebuildBrands(InputStream is) throws IOException {
         StringWriter writer = new StringWriter();
-        JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
+        JsonGenerator generator = jsonFactory.createGenerator(writer);
         generator.writeStartObject();
         JsonParser parser = jsonFactory.createParser(is);
         while (!parser.isClosed()) {

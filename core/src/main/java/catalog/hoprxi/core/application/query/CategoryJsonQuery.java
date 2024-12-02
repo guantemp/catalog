@@ -22,15 +22,21 @@ package catalog.hoprxi.core.application.query;
  * @version 0.0.1 builder 2024-07-14
  */
 public interface CategoryJsonQuery {
-    default String query(String id) {
-        return "";
-    }
+    /**
+     * @param id id of category
+     * @return
+     */
+    String query(String id);
 
     String root();
 
-    String queryByName(String name);
-
+    /**
+     * @param id
+     * @return
+     */
     String queryChildren(String id);
+
+    String queryByName(String name);
 
     String queryDescendant(String id);
 

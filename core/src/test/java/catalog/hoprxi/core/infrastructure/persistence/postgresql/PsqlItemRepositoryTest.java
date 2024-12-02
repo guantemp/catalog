@@ -34,6 +34,7 @@ import org.javamoney.moneta.Money;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
@@ -45,6 +46,13 @@ import java.util.Locale;
  * @version 0.0.1 builder 2022-10-14
  */
 public class PsqlItemRepositoryTest {
+    static {
+        //String[] entyies = new String[]{"125.68.186.195:9200:P$Qwe123465El", "125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "https://slave.tooo.top:9200"};
+        //Bootstrap.loadSecretKey("keystore.jks", "Qwe123465", new HashSet<>(Arrays.asList(entyies)));
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
+    }
+
     private static ItemRepository itemRepository = new PsqlItemRepository("catalog");
     private static BrandRepository brandRepository = new PsqlBrandRepository();
     private static CategoryRepository categoryRepository = new PsqlCategoryRepository();
@@ -157,36 +165,37 @@ public class PsqlItemRepositoryTest {
 /*
     @AfterTest
     public void tearDown() {
-        itemRepository.delete("52496163982907400");
-        itemRepository.delete("52496163982907401");
-        itemRepository.delete("52496163982907402");
-        itemRepository.delete("52496163982907403");
-        itemRepository.delete("52496163982907404");
-        itemRepository.delete("52496163982907405");
-        itemRepository.delete("52496321492179000");
-        itemRepository.delete("52496321492179001");
-        itemRepository.delete("52496321492179002");
-        itemRepository.delete("52496321492179003");
-        itemRepository.delete("52496321492179004");
-        itemRepository.delete("52496321492179005");
-        itemRepository.delete("52496321492179006");
-        itemRepository.delete("52496321492179007");
+        itemRepository.remove("52496163982907400");
+        itemRepository.remove("52496163982907401");
+        itemRepository.remove("52496163982907402");
+        itemRepository.remove("52496163982907403");
+        itemRepository.remove("52496163982907404");
+        itemRepository.remove("52496163982907405");
+        itemRepository.remove("52496321492179000");
+        itemRepository.remove("52496321492179001");
+        itemRepository.remove("52496321492179002");
+        itemRepository.remove("52496321492179003");
+        itemRepository.remove("52496321492179004");
+        itemRepository.remove("52496321492179005");
+        itemRepository.remove("52496321492179006");
+        itemRepository.remove("52496321492179007");
 
-        brandRepository.delete(Brand.UNDEFINED.id());
-        brandRepository.delete("52495569395175425");
-        brandRepository.delete("52495569395175426");
-        brandRepository.delete("52495569395175427");
+        brandRepository.remove(Brand.UNDEFINED.id());
+        brandRepository.remove("52495569395175425");
+        brandRepository.remove("52495569395175426");
+        brandRepository.remove("52495569395175427");
 
-        categoryRepository.delete(Category.UNDEFINED.id());
-        categoryRepository.delete("52495569397272593");
-        categoryRepository.delete("52495569397272594");
-        categoryRepository.delete("52495569397272595");
-        categoryRepository.delete("52495569397272596");
-        categoryRepository.delete("52495569397272597");
-        categoryRepository.delete("52495569397272598");
-        categoryRepository.delete("52495569397272599");
+        categoryRepository.remove(Category.UNDEFINED.id());
+        categoryRepository.remove("52495569397272593");
+        categoryRepository.remove("52495569397272594");
+        categoryRepository.remove("52495569397272595");
+        categoryRepository.remove("52495569397272596");
+        categoryRepository.remove("52495569397272597");
+        categoryRepository.remove("52495569397272598");
+        categoryRepository.remove("52495569397272599");
     }
  */
+
 
     @Test
     public void testSave() {

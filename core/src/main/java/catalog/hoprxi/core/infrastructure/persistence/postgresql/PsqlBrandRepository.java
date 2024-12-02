@@ -156,14 +156,14 @@ public class PsqlBrandRepository implements BrandRepository {
     }
 
     @Override
-    public void delete(String id) {
+    public void remove(String id) {
         try (Connection connection = PsqlUtil.getConnection()) {
-            final String removeSql = "delete from brand where id=?";
+            final String removeSql = "remove from brand where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
             preparedStatement.setLong(1, Long.parseLong(id));
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            LOGGER.error("Can't delete brand(id={})", id, e);
+            LOGGER.error("Can't remove brand(id={})", id, e);
         }
     }
 

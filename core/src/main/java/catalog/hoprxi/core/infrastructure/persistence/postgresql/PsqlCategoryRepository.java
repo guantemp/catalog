@@ -106,7 +106,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 connection.setAutoCommit(false);
                 Statement statement = connection.createStatement();
                 //移除所有后代
-                statement.addBatch("delete from category where \"left\">=" + left + " and \"right\"<=" + right + " and root_id=" + rootId);
+                statement.addBatch("remove from category where \"left\">=" + left + " and \"right\"<=" + right + " and root_id=" + rootId);
                 //所有大于left的其它类别前移
                 statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and root_id=" + rootId);
                 statement.addBatch("update category set \"right\"= \"right\"-" + offset + "where \"right\">" + right + " and root_id=" + rootId);
@@ -115,7 +115,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 connection.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            LOGGER.error("Can't delete category(id = {}) and children", id, e);
+            LOGGER.error("Can't remove category(id = {}) and children", id, e);
         }
     }
 

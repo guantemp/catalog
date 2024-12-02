@@ -22,6 +22,7 @@ import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,6 +36,13 @@ import static org.testng.Assert.*;
  * @version 0.0.1 builder 2022-09-20
  */
 public class PsqlBrandRepositoryTest {
+    static {
+        //String[] entyies = new String[]{"125.68.186.195:9200:P$Qwe123465El", "125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "https://slave.tooo.top:9200"};
+        //Bootstrap.loadSecretKey("keystore.jks", "Qwe123465", new HashSet<>(Arrays.asList(entyies)));
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
+    }
+
     private static BrandRepository repository = new PsqlBrandRepository();
 
     @BeforeClass
@@ -68,12 +76,12 @@ public class PsqlBrandRepositoryTest {
 /*
     @AfterClass
     public void afterClass() {
-        repository.delete("495651176959596552");
-        repository.delete("495651176959596578");
-        repository.delete("495651176959596546");
-        repository.delete("495651176959596602");
-        repository.delete("495651176959596634");
-        repository.delete(Brand.UNDEFINED.id());
+        repository.remove("495651176959596552");
+        repository.remove("495651176959596578");
+        repository.remove("495651176959596546");
+        repository.remove("495651176959596602");
+        repository.remove("495651176959596634");
+        repository.remove(Brand.UNDEFINED.id());
     }
 */
 

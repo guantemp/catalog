@@ -287,6 +287,35 @@ public class AppTest {
             System.out.println(e);
         }
         System.out.println(writer);
+
+        writer = new StringWriter();
+        try {
+            JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("bool");
+            generator.writeObjectFieldStart("filter");
+
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("parent_id", "55656");
+            generator.writeEndObject();
+
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeArrayFieldStart("sort");
+            generator.writeStartObject();
+            generator.writeStringField("id", "asc");
+            generator.writeEndObject();
+            generator.writeEndArray();
+
+            generator.writeEndObject();
+            generator.close();
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+        System.out.println(writer);
     }
 
     @Test

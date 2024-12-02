@@ -217,7 +217,7 @@ public class BrandServlet extends HttpServlet {
         generator.writeStartObject();
         generator.writeStringField("status", "success");
         generator.writeNumberField("code", 30103);
-        generator.writeStringField("message", "brand delete success");
+        generator.writeStringField("message", "brand remove success");
         generator.writeEndObject();
         generator.flush();
         generator.close();

@@ -73,12 +73,12 @@ public class PsqlBrandQueryTest {
 /*
     @AfterClass
     public void afterClass() {
-        repository.delete("495651176959596552");
-        repository.delete("495651176959596578");
-        repository.delete("495651176959596546");
-        repository.delete("495651176959596602");
-        repository.delete("495651176959596634");
-        repository.delete(Brand.UNDEFINED.id());
+        repository.remove("495651176959596552");
+        repository.remove("495651176959596578");
+        repository.remove("495651176959596546");
+        repository.remove("495651176959596602");
+        repository.remove("495651176959596634");
+        repository.remove(Brand.UNDEFINED.id());
     }
  */
 
