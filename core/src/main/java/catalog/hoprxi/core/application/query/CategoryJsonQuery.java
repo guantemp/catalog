@@ -28,17 +28,25 @@ public interface CategoryJsonQuery {
      */
     String query(String id);
 
+    /**
+     * @return all root node or '{}' if no root node
+     */
     String root();
+
+    /**
+     * @param id
+     * @return child node or "{}" if there are no child nodes
+     * @throws NullPointerException if id is null
+     */
+    String queryChildren(String id);
 
     /**
      * @param id
      * @return
      */
-    String queryChildren(String id);
+    String queryDescendant(String id);
 
     String queryByName(String name);
-
-    String queryDescendant(String id);
 
     String queryAll(int offset, int limit);
 }

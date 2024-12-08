@@ -18,6 +18,7 @@ package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
 import org.testng.annotations.Test;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,7 +30,11 @@ import java.io.IOException;
  * @version 0.0.1 builder 2023-05-08
  */
 public class PsqlItemImportWithDisruptorTest {
-/*
+    static {
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
+    }
+
     @Test
     public void testImportItemXls() throws IOException {
         File file = new File("F:/developer/catalog/jc.xls");
@@ -39,7 +44,7 @@ public class PsqlItemImportWithDisruptorTest {
         PsqlItemImportWithDisruptor itemImport = new PsqlItemImportWithDisruptor();
         itemImport.importItemFromXsl(fis, itemMappings);
     }
-*/
+/*
 @Test
 public void testImportItemFromCsv() throws IOException {
     File file = new File("F:/developer/catalog/jc.csv");
@@ -49,5 +54,5 @@ public void testImportItemFromCsv() throws IOException {
     PsqlItemImportWithDisruptor itemImport = new PsqlItemImportWithDisruptor();
     itemImport.importItemFromCsv(fis, itemMappings);
 }
-
+ */
 }

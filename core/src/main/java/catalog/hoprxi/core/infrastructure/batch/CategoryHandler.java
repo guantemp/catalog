@@ -40,6 +40,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
     private final CategoryQuery CATEGORY_QUERY = new PsqlCategoryQuery();
     private final CategoryRepository categoryRepository = new PsqlCategoryRepository();
 
+
     public CategoryHandler() {
         CategoryView[] root = CATEGORY_QUERY.root();
         if (root.length == 0)

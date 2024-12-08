@@ -25,21 +25,24 @@ public interface BrandRepository {
     /**
      * @param id
      * @return
+     * @throws NullPointerException if id is null
      */
     Brand find(String id);
 
     /**
-     * @return
+     * @return a long as String id
      */
     String nextIdentity();
 
     /**
-     * @param id
+     * @param id brand id
+     * @throws NullPointerException if id is null
      */
     void remove(String id);
 
     /**
-     * @param brand
+     * @param brand a brand object
+     * @throws NullPointerException if brand is null
      */
     void save(Brand brand);
 }

@@ -23,6 +23,7 @@ import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.sun.istack.internal.NotNull;
 import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +73,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         return null;
     }
 
-    private Category rebuild(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    private Category rebuild(@NotNull ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
         if (rs.next()) {
             String id = rs.getString("id");
             if (id.equals(Category.UNDEFINED.id())) return Category.UNDEFINED;
@@ -105,9 +106,9 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 long rootId = resultSet.getLong("root_id");
                 connection.setAutoCommit(false);
                 Statement statement = connection.createStatement();
-                //移除所有后代
+                //移除自己及所有后代
                 statement.addBatch("remove from category where \"left\">=" + left + " and \"right\"<=" + right + " and root_id=" + rootId);
-                //所有大于left的其它类别前移
+                //所有大于left的其它类前移
                 statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and root_id=" + rootId);
                 statement.addBatch("update category set \"right\"= \"right\"-" + offset + "where \"right\">" + right + " and root_id=" + rootId);
                 statement.executeBatch();
@@ -148,6 +149,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
 
     @Override
     public void save(Category category) {
+        Objects.requireNonNull(category, "category required");
         PGobject name = new PGobject();
         name.setType("jsonb");
         try (Connection connection = PsqlUtil.getConnection()) {
@@ -155,6 +157,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
             PreparedStatement preparedStatement = connection.prepareStatement(isExistsSql);
             preparedStatement.setLong(1, Long.parseLong(category.id()));
             ResultSet resultSet = preparedStatement.executeQuery();
+            //exists->update
             if (resultSet.next()) {
                 //not move from old tree
                 if (category.parentId().equals(resultSet.getString("parent_id"))) {
@@ -194,6 +197,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         int offset = right - left + 1;
         int targetRight = 0;
         long targetRootId = -1L;
+        //获取数据库中父节点
         final String targetSql = "select \"right\",root_id from category where id=?";
         PreparedStatement ps = connection.prepareStatement(targetSql);
         ps.setLong(1, Long.parseLong(category.parentId()));
@@ -208,7 +212,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         connection.setAutoCommit(false);
         Statement statement = connection.createStatement();
         //需要移动的节点及其子节点的 left, right 值置为负,归属到新的树形（root_id),移动节点的顶点parent_id设置为新的父节点的id值
-        statement.addBatch("update category set \"left\"=0-\"left\",\"right\"=0-\"right\",root_id=" + targetRootId + " where \"left\">=" + left + " and \"right\"<=" + right);
+        statement.addBatch("update category set \"left\"=0-\"left\",\"right\"=0-\"right\",root_id=" + targetRootId + " where \"left\">=" + left + " and \"right\"<=" + right + " and root_id=" + originalRootId);
         StringBuilder updateSql = new StringBuilder("update category set parent_id=").append(category.parentId())
                 .append(",name='").append(toJson(category.name())).append("'")
                 .append(",description='").append(category.description()).append("'")
@@ -222,7 +226,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         statement.addBatch("update category set \"left\"= \"left\"+" + offset + " where \"left\">" + targetRight + " and root_id=" + targetRootId);
         statement.addBatch("update category set \"right\"= \"right\"+" + offset + " where \"right\">=" + targetRight + " and root_id=" + targetRootId);
         //将负值记录填充到正确位置,队尾位置
-        statement.addBatch("update category set \"left\"=0-\"left\"-(" + (left - targetRight) + "),\"right\"=0-\"right\"-(" + (left - targetRight) + ") where \"left\"<0");
+        statement.addBatch("update category set \"left\"=0-\"left\"-(" + (left - targetRight) + "),\"right\"=0-\"right\"-(" + (left - targetRight) + ") where \"left\"<0 and root_id=" + targetRootId);
         //System.out.println("handle category set \"left\"=0-\"left\"-(" + (left - targetRight) + "),\"right\"=0-\"right\"-(" + (left - targetRight) + ") where \"left\"<0");
         statement.executeBatch();
         connection.commit();
@@ -251,6 +255,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 insertSql.append("'").append(category.icon().toASCIIString()).append("'");
             else insertSql.append((String) null);
             insertSql.append(")");
+            System.out.println(insertSql.toString());
             statement.addBatch(insertSql.toString());
             statement.executeBatch();
             connection.commit();

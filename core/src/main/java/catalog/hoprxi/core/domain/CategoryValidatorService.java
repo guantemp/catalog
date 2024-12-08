@@ -35,6 +35,7 @@ public class CategoryValidatorService {
     private static CategoryQuery query;
 
     static {
+
         Config config = ConfigFactory.load("database");
         String provider = config.hasPath("provider") ? config.getString("provider").toLowerCase() : "postgresql";
         String databaseName = config.hasPath("databaseName") ? config.getString("databaseName").toLowerCase() : "catalog";
