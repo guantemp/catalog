@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,7 +111,7 @@ public class UploadServlet extends HttpServlet {
                         return;
                     }
                     megaBytes = mBytes;
-                    System.out.println("We are currently reading item " + pItems);
+                    //System.out.println("We are currently reading item " + pItems);
                     if (pContentLength == -1) {
                         System.out.println("So far, " + pBytesRead + " bytes have been read.");
                     } else {
@@ -169,7 +169,7 @@ public class UploadServlet extends HttpServlet {
                         item.write(uploadedFile);//写入文件
                         item.delete();//删除临时文件
                         //InputStream uploadedStream = item.getInputStream();
-                        // uploadedStream.close();
+                        //uploadedStream.close();
                     }
                 }
             } catch (Exception e) {

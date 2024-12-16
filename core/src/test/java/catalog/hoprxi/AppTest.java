@@ -289,31 +289,35 @@ public class AppTest {
         System.out.println(writer);
 
         writer = new StringWriter();
-        try {
-            JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
+        try (JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter()) {
             generator.writeStartObject();
+            generator.writeNumberField("size", 9999);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
-            generator.writeObjectFieldStart("filter");
+            generator.writeArrayFieldStart("must");
 
-            generator.writeObjectFieldStart("term");
-            generator.writeStringField("parent_id", "55656");
-            generator.writeEndObject();
-
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeEndObject();
-
-            generator.writeArrayFieldStart("sort");
             generator.writeStartObject();
-            generator.writeStringField("id", "asc");
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("root_id", "1");
             generator.writeEndObject();
-            generator.writeEndArray();
+            generator.writeObjectFieldStart("range");
+            generator.writeObjectFieldStart("left");
+            generator.writeNumberField("gte", 66);
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeObjectFieldStart("range");
+            generator.writeObjectFieldStart("right");
+            generator.writeNumberField("lte", 81);
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
 
+            generator.writeEndArray();
             generator.writeEndObject();
-            generator.close();
+            generator.writeEndObject();
+            generator.writeEndObject();
         } catch (IOException e) {
-            System.out.println(e);
+            throw new RuntimeException(e);
         }
         System.out.println(writer);
     }

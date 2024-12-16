@@ -35,12 +35,12 @@ import java.util.Objects;
 public class ESBrandJsonQuery implements BrandJsonQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.infrastructure.query.elasticsearch.Brand");
     private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
+    private static final String EMPTY_CATEGORY = "{}";
     private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
     @Override
     public String query(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
-        String result = "{}";
         try (RestClient client = BUILDER.build()) {
             Request request = new Request("GET", "/brand/_doc/" + id);
             request.setOptions(ESUtil.requestOptions());
@@ -58,8 +58,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
                     }
                     generator.writeEndObject();
                     generator.close();
-                    result = writer.toString();
-                    break;
+                    return writer.toString();
                 }
             }
         } catch (ResponseException e) {
@@ -69,7 +68,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         } catch (IOException e) {
             LOGGER.error("I/O failed", e);
         }
-        return result;
+        return EMPTY_CATEGORY;
     }
 
     @Deprecated
@@ -264,7 +263,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             //System.out.println(e);
             LOGGER.error("Can't assemble pagination query json", e);
         }
-        System.out.println(writer.getBuffer().capacity());
+        //System.out.println(writer.getBuffer().capacity());
         return writer.toString();
     }
 

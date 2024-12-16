@@ -23,7 +23,6 @@ import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.sun.istack.internal.NotNull;
 import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +72,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         return null;
     }
 
-    private Category rebuild(@NotNull ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    private Category rebuild(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
         if (rs.next()) {
             String id = rs.getString("id");
             if (id.equals(Category.UNDEFINED.id())) return Category.UNDEFINED;
@@ -255,7 +254,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 insertSql.append("'").append(category.icon().toASCIIString()).append("'");
             else insertSql.append((String) null);
             insertSql.append(")");
-            System.out.println(insertSql.toString());
+            //System.out.println(insertSql.toString());
             statement.addBatch(insertSql.toString());
             statement.executeBatch();
             connection.commit();

@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 0.0.1 builder 2023-05-08
  */
 public class BarcodeHandler implements EventHandler<ItemImportEvent> {
-    private static final Map<String, Barcode> BARCODE_MAP = new HashMap<>();
+    private static final Map<String, Barcode> BARCODE_MAP = new HashMap<>(2480);
     private static final ItemQuery ITEM_QUERY = new PsqlItemQuery();
 
     private static final AtomicInteger start = new AtomicInteger(1);
@@ -50,7 +50,7 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
             itemImportEvent.map.put(ItemMapping.BARCODE, BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(start.getAndIncrement(), 1, prefix)[0].toPlanString());
             return;
         }
-        Barcode bar = null;
+        Barcode bar;
         try {
             bar = BarcodeGenerateServices.createBarcode(barcode);
         } catch (InvalidBarcodeException e) {

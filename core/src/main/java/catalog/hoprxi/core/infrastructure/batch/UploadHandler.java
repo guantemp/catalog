@@ -69,7 +69,7 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
         Config areaUrl = ConfigFactory.load("core");
         UPLOAD_URI = areaUrl.hasPath("upload_url") ? areaUrl.getString("upload_url") : "https://hoprxi.tooo.top/catalog/core/v1/upload";
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
-        SSLContext sslContext = null;
+        SSLContext sslContext;
         try {
             sslContext = SSLContexts.custom().loadTrustMaterial(null, (x509Certificates, s) -> true).build();
         } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
@@ -101,7 +101,7 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
     }
 
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
-    private AtomicInteger number = new AtomicInteger(0);
+    private final AtomicInteger number = new AtomicInteger(0);
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
