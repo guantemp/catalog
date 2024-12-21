@@ -28,7 +28,6 @@ public class Label extends NLS {
     public static String BRAND_UNDEFINED;
     public static String CATEGORY_UNDEFINED;
     public static String SPEC_NAME;
-
     public static String UNIT_BEI;
     public static String UNIT_BEN;
     public static String UNIT_CHUAN;

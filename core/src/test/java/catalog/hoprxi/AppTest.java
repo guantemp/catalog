@@ -199,17 +199,12 @@ public class AppTest {
 
             generator.writeObjectFieldStart("term");
             generator.writeStringField("barcode.raw", "773301701166");
-            generator.writeEndObject();
 
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeEndObject();
             generator.close();
         } catch (IOException e) {
             System.out.println(e);
         }
-        System.out.println(writer);
+        System.out.println("1:" + writer);
 
         writer = new StringWriter();
         try {
@@ -251,42 +246,34 @@ public class AppTest {
             generator.writeEndObject();
             generator.writeEndArray();
 
-            generator.writeEndObject();
+
             generator.close();
         } catch (IOException e) {
             System.out.println(e);
         }
-        System.out.println(writer);
+        System.out.println("2:" + writer);
 
         writer = new StringWriter();
         try {
             JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
             generator.writeStartObject();
-            generator.writeNumberField("size", 500);
             generator.writeObjectFieldStart("query");
-            generator.writeObjectFieldStart("match_all");
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("parent_id", "id");
             generator.writeEndObject();
             generator.writeEndObject();
 
             generator.writeArrayFieldStart("sort");
             generator.writeStartObject();
-            generator.writeStringField("id", "desc");
+            generator.writeStringField("id", "asc");
             generator.writeEndObject();
             generator.writeEndArray();
 
-
-            generator.writeArrayFieldStart("search_after");
-            for (String s : new String[]{"13261704575891903 ", "13261583266136008"})
-                generator.writeString(s);
-            generator.writeEndArray();
-
-
-            generator.writeEndObject();
             generator.close();
         } catch (IOException e) {
             System.out.println(e);
         }
-        System.out.println(writer);
+        System.out.println("3:" + writer);
 
         writer = new StringWriter();
         try (JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter()) {
@@ -319,7 +306,7 @@ public class AppTest {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println(writer);
+        System.out.println("4:" + writer);
     }
 
     @Test

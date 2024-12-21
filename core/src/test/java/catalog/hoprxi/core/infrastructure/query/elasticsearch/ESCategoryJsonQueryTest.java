@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.CategoryJsonQuery;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
@@ -32,14 +33,14 @@ public class ESCategoryJsonQueryTest {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
-
     private static final CategoryJsonQuery service = new ESCategoryJsonQuery();
 
     @Test
     public void testQuery() {
-        System.out.println(service.query("496796322118291461"));
-        System.out.println(service.query("496796322118291472"));
         System.out.println(service.query("-1"));
+        Assert.assertNotNull(service.query("-1"));
+        Assert.assertNotNull(service.query("143"));
+        Assert.assertEquals("{}", service.query("19"));
     }
 
     @Test
@@ -52,11 +53,14 @@ public class ESCategoryJsonQueryTest {
 
     @Test
     public void testQueryChildren() {
-        System.out.println(service.queryChildren("496796322118291470"));
+        System.out.println(service.queryChildren("151"));
+        System.out.println(service.queryChildren("1514"));
     }
 
     @Test
     public void testQueryDescendant() {
+        System.out.println(service.queryDescendant("1"));
+        System.out.println(service.queryDescendant("-1"));
     }
 
     @Test
