@@ -29,11 +29,11 @@ public enum SortField {
     private String field;
     private boolean sort;
 
-    private SortField(String field) {
+    SortField(String field) {
         this(field, true);
     }
 
-    private SortField(String field, boolean asc) {
+    SortField(String field, boolean asc) {
         this.field = Objects.requireNonNull(field, "field is required").trim();
         this.sort = asc;
     }

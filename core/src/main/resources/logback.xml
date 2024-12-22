@@ -30,9 +30,9 @@
      scan（非必须）属性：默认为false，true表示扫描配置文件的变化并自动重新配置，默认每隔1分钟扫描一次；
      scanPeriod（非必须）属性：搭配scan属性使用，设置扫描的间隔时间
 -->
-<configuration debug="true" scan="true" scanPeriod="3 seconds">
+<configuration debug="false" scan="true" scanPeriod="5 seconds">
     <!-- 用于指定logger上下文名称，默认为default -->
-    <contextName>logback</contextName>
+    <contextName>catalog_logback</contextName>
 
     <!-- 设置变量FILE_PATH，用于指定名为FILE的appender的目的文件存放的目录,勿在 LogBack 的配置中使用相对路径
     <property name="FILE_PATH" value="D:/"></property>-->
@@ -91,59 +91,27 @@
         </encoder>
     </appender>
     <!--
-        ***********************以最小窗体为指定的滚动规则的appender*****************************
-        RollingFileAppender类型的appender中必须包含4个子标签：<file>、<rollingPolicy>、<triggerPolicy>、<encoder>
-        <rollingPolicy>标签用于指定滚动规则，该标签有一个属性class：用于指定实现具体的滚动规则的类。
-        <triggerPolicy>标签用于指定发生滚动的条件，该标签有一个属性class：用于指定具体滚动条件的类。
-        <rollingPolicy>和<triggerPolicy>中具体包含哪些子标签是由class属性指定的类来决定的，因为不同的类有不同的参数，从而需要不同的标签来传参
-     -->
-    <!-- 该appender的功能是将记录信息以特定格式写到文件,当文件达到20MB时，创建以特定规则新的 文件，之后的记录会写到新文件-->
-    <appender name="rollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <!-- 在第一次触发滚动之前记录将会写到该文件中 -->
-        <file>${FILE_PATH}/rolling.log</file>
-        <!--
-            前提条件：class的值为FixedWindowRollingPolicy，表示以最小窗体为指定的滚动规则
-            RollingPolicy标签必须子标签：<fileNamePattern>、<minIndex>、<maxIndex>
-            <fileNamePattern>:表示滚动条件达到后，创建文件名的规则，其中"%i"代表数字1~5。第一次触发条件，创建文件rolling1.log，并且记录开始写到这个文件中
-             <minIndex>与<maxIndex>共同决定了文件的个数
-         -->
-        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${FILE_PATH}/rolling%i.log</fileNamePattern>
-            <minIndex>1</minIndex>
-            <maxIndex>5</maxIndex>
-        </rollingPolicy>
-        <!--
-            <triggeringPolicy>功能：用于限制文件大小
-            前提条件：class的值为SizeBasedTriggeringPolicy，表示以文件大小为触发条件
-            只有一个子标签<maxFileSize>用于指定触发条件
-         -->
-        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <maxFileSize>20MB</maxFileSize>
-        </triggeringPolicy>
-        <encoder charset="UTF-8">
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{0} -%msg%n</pattern>
-        </encoder>
-    </appender>
-    <!--
     *****************************根据时间滚动 为滚动规则和条件的appender(最常用)***********************
     -->
     <!-- 该appender的功能：将记录信息以特定格式写到文件,当文件达到20MB时，创建以时间为特定规则新的 文件，之后的记录会写到新文件，
     文件个数最多维持10个，文件达到10个 后删除旧的文件-->
-    <appender name="time_file" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <!-- TimeBasedRollingPolicy实现了RollingPolicy与TriggeringPolicy，
+    <appender name="size_time_file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- TimeBasedRollingPolicy/SizeBasedRollingPolicy/SizeAndTimeBasedRollingPolicy实现了RollingPolicy与TriggeringPolicy，
             因此只需要<rollingPolicy>标签，不需要<TriggeringPolicy>标签
             <rollingPolicy>标签有两个子标签：<fileNamePattern>、<maxHistory>
             <fileNamePattern>：用于指定文件名命名规则
             <maxHistory>：保留文件的个数，超过了就删除创建时间最久的文件
          -->
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- 文件名 -->
             <fileNamePattern>${FILE_PATH}/%d{yyyy-MM-dd}.log</fileNamePattern>
             <!--日志文件保留天数-->
-            <maxHistory>15</maxHistory>
+            <maxHistory>45</maxHistory>
             <!--日志文件最大的大小-->
-            <MaxFileSize>9MB</MaxFileSize>
+            <MaxFileSize>20MB</MaxFileSize>
+            <totalSizeCap>2GB</totalSizeCap>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            <!-- <maxIndex>5</maxIndex> -->
         </rollingPolicy>
         <encoder charset="UTF-8">
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{0} -%msg%n</pattern>
@@ -214,48 +182,14 @@
             <charset>UTF-8</charset>
         </encoder>
     </appender>
-
-    <appender name="API_IRON_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${FILE_PATH}/api_iron_info.log</File>
-        <append>true</append>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>INFO</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${FILE_PATH}/api_iron_info.log.%d{yyyy-MM-dd}</fileNamePattern>
-            <maxHistory>15</maxHistory>
-            <cleanHistoryOnStart>true</cleanHistoryOnStart>
-        </rollingPolicy>
-        <encoder charset="UTF-8">
-            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %level [%thread] %file:%line - %msg%n</pattern>
-            <charset>UTF-8</charset>
-        </encoder>
-    </appender>
-    <appender name="API_IRON_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${FILE_PATH}/error_api_iron.log</File>
-        <append>true</append>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>ERROR</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${FILE_PATH}/error_api_iron.log.%d{yyyy-MM-dd}</fileNamePattern>
-            <maxHistory>15</maxHistory>
-            <cleanHistoryOnStart>true</cleanHistoryOnStart>
-        </rollingPolicy>
-        <encoder charset="UTF-8">
-            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %level [%thread] %file:%line - %msg%n</pattern>
-            <charset>UTF-8</charset>
-        </encoder>
-    </appender>
     <!-- level属性：指定根logger的分配级别 -->
+    <root level="warn">
+        <appender-ref ref="STDOUT"></appender-ref>
+    </root>
 
     <!-- name:指定logger名称；level：指定logger的分配级别；additivity(非必须，默认为true)：设置appender叠加性 -->
     <logger name="catalog.hoprxi.core.es" level="debug" additivity="true">
-        <appender-ref ref="time_file"></appender-ref>
+        <appender-ref ref="size_time_file"></appender-ref>
         <appender-ref ref="API_IRON_INFO"></appender-ref>
     </logger>
 

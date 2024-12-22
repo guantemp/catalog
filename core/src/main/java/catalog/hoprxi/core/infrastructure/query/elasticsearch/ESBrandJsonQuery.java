@@ -35,8 +35,8 @@ import java.util.Objects;
 public class ESBrandJsonQuery implements BrandJsonQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.infrastructure.query.elasticsearch.Brand");
     private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
-    private static final String EMPTY_CATEGORY = "{}";
-    private final JsonFactory jsonFactory = JsonFactory.builder().build();
+    private static final String EMPTY_BRAND = "{}";
+    private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
     @Override
     public String query(String id) {
@@ -45,11 +45,11 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             Request request = new Request("GET", "/brand/_doc/" + id);
             request.setOptions(ESUtil.requestOptions());
             Response response = client.performRequest(request);
-            JsonParser parser = jsonFactory.createParser(response.getEntity().getContent());
+            JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
             while (!parser.isClosed()) {
                 if (parser.nextToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
-                    StringWriter writer = new StringWriter(1024);
-                    JsonGenerator generator = jsonFactory.createGenerator(writer);
+                    StringWriter writer = new StringWriter(256);
+                    JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
                     generator.writeStartObject();
                     while (parser.nextToken() != null) {
                         if ("_meta".equals(parser.getCurrentName()))
@@ -68,7 +68,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         } catch (IOException e) {
             LOGGER.error("I/O failed", e);
         }
-        return EMPTY_CATEGORY;
+        return EMPTY_BRAND;
     }
 
     @Deprecated
@@ -79,11 +79,11 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             request.setOptions(ESUtil.requestOptions());
             OutputStream os = new ByteArrayOutputStream(1024);
             Response response = client.performRequest(request);
-            JsonParser parser = jsonFactory.createParser(response.getEntity().getContent());
+            JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
             while (!parser.isClosed()) {
                 if (parser.nextToken() == JsonToken.FIELD_NAME && "_source".equals(parser.getCurrentName())) {
                     parser.nextToken();
-                    JsonGenerator generator = jsonFactory.createGenerator(os, JsonEncoding.UTF8).useDefaultPrettyPrinter();
+                    JsonGenerator generator = JSON_FACTORY.createGenerator(os, JsonEncoding.UTF8).useDefaultPrettyPrinter();
                     generator.writeStartObject();
                     while (parser.nextToken() != null) {
                         if ("_meta".equals(parser.getCurrentName()))
@@ -122,7 +122,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
 
     private String queryNameJsonEntity(String name, int offset, int limit, SortField sortField) {
         StringWriter writer = new StringWriter(384);
-        try (JsonGenerator generator = jsonFactory.createGenerator(writer)) {
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeNumberField("from", offset);
             generator.writeNumberField("size", limit);
@@ -190,7 +190,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
 
     private String paginationQueryJsonEntity(int size, String[] searchAfter, SortField sortField) {
         StringWriter writer = new StringWriter(128);
-        try (JsonGenerator generator = jsonFactory.createGenerator(writer)) {
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeNumberField("size", size);
             generator.writeObjectFieldStart("query");
@@ -242,7 +242,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
 
     private String paginationQueryJsonEntity(int offset, int limit, SortField sortField) {
         StringWriter writer = new StringWriter(96);
-        try (JsonGenerator generator = jsonFactory.createGenerator(writer)) {
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeNumberField("from", offset);
             generator.writeNumberField("size", limit);
@@ -269,9 +269,9 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
 
     private String rebuildBrands(InputStream is) throws IOException {
         StringWriter writer = new StringWriter();
-        JsonGenerator generator = jsonFactory.createGenerator(writer);
+        JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
         generator.writeStartObject();
-        JsonParser parser = jsonFactory.createParser(is);
+        JsonParser parser = JSON_FACTORY.createParser(is);
         while (!parser.isClosed()) {
             if (parser.nextToken() == JsonToken.FIELD_NAME && "hits".equals(parser.getCurrentName())) {
                 parseHits(parser, generator);

@@ -207,11 +207,10 @@ public class AppTest {
         System.out.println("1:" + writer);
 
         writer = new StringWriter();
-        try {
-            JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter();
+        try (JsonGenerator generator = jsonFactory.createGenerator(writer)) {
             generator.writeStartObject();
-            generator.writeNumberField("from", 0);
-            generator.writeNumberField("size", 200);
+            generator.writeNumberField("from", 2);
+            generator.writeNumberField("size", 5);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
             generator.writeObjectFieldStart("filter");
@@ -242,12 +241,9 @@ public class AppTest {
 
             generator.writeArrayFieldStart("sort");
             generator.writeStartObject();
-            generator.writeStringField("id", "desc");
+            generator.writeStringField("id", "asc");
             generator.writeEndObject();
             generator.writeEndArray();
-
-
-            generator.close();
         } catch (IOException e) {
             System.out.println(e);
         }
@@ -276,7 +272,7 @@ public class AppTest {
         System.out.println("3:" + writer);
 
         writer = new StringWriter();
-        try (JsonGenerator generator = jsonFactory.createGenerator(writer).useDefaultPrettyPrinter()) {
+        try (JsonGenerator generator = jsonFactory.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeNumberField("size", 9999);
             generator.writeObjectFieldStart("query");
@@ -285,24 +281,34 @@ public class AppTest {
 
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");
-            generator.writeStringField("root_id", "1");
+            generator.writeStringField("root_id", "345");
             generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeStartObject();
             generator.writeObjectFieldStart("range");
             generator.writeObjectFieldStart("left");
-            generator.writeNumberField("gte", 66);
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeObjectFieldStart("range");
-            generator.writeObjectFieldStart("right");
-            generator.writeNumberField("lte", 81);
+            generator.writeNumberField("gte", 3);
             generator.writeEndObject();
             generator.writeEndObject();
             generator.writeEndObject();
 
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("range");
+            generator.writeObjectFieldStart("right");
+            generator.writeNumberField("lte", 55);
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
             generator.writeEndArray();
             generator.writeEndObject();
             generator.writeEndObject();
+
+            generator.writeArrayFieldStart("sort");
+            generator.writeStartObject();
+            generator.writeStringField("left", "asc");
             generator.writeEndObject();
+            generator.writeEndArray();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

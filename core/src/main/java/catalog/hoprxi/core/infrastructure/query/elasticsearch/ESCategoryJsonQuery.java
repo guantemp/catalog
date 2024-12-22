@@ -32,7 +32,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2024-07-17
+ * @version 0.0.2 builder 2024-12-22
  */
 public class ESCategoryJsonQuery implements CategoryJsonQuery {
     private static final String EMPTY_CATEGORY = "{}";
@@ -187,11 +187,11 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             LOGGER.error("I/O failed", e);
             throw new RuntimeException(e);
         }
-        return null;
+        return EMPTY_CATEGORY;
     }
 
     private String queryDescendantJsonEntity(String rootId, int left, int right) {
-        StringWriter writer = new StringWriter(224);
+        StringWriter writer = new StringWriter(256);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeNumberField("size", 9999);
@@ -245,7 +245,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         try (RestClient client = BUILDER.build()) {
             Request request = new Request("GET", "/category/_search");
             request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(ESQueryJsonEntity.queryNameJsonEntity(name, 1, 1));
+            request.setJsonEntity(queryNameJsonEntity(name));
             Response response = client.performRequest(request);
             return rebuildCategories(response.getEntity().getContent(), false);
         } catch (IOException e) {
@@ -254,20 +254,147 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         return EMPTY_CATEGORY;
     }
 
+    private String queryNameJsonEntity(String name) {
+        Objects.requireNonNull(name, "name is required");
+        StringWriter writer = new StringWriter();
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+            generator.writeStartObject();
+            generator.writeNumberField("size", 999);
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("bool");
+            generator.writeObjectFieldStart("filter");
+            generator.writeObjectFieldStart("bool");
+            generator.writeArrayFieldStart("should");
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("multi_match");
+            generator.writeStringField("query", name);
+            generator.writeArrayFieldStart("fields");
+            generator.writeString("name.name");
+            generator.writeString("name.alias");
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("name.mnemonic", name);
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeArrayFieldStart("sort");
+            generator.writeStartObject();
+            generator.writeStringField("id", "asc");
+            generator.writeEndObject();
+            generator.writeEndArray();
+
+            generator.writeEndObject();
+        } catch (IOException e) {
+            LOGGER.error("Can't assemble name request json", e);
+        }
+        return writer.toString();
+    }
 
     @Override
-    public String queryAll(int offset, int limit) {
+    public String path(String id) {
+        id = Objects.requireNonNull(id, "id required").trim();
         try (RestClient client = BUILDER.build()) {
-            Request request = new Request("GET", "/category/_search");
+            String rootId = "-1";
+            int left = 1, right = 1;
+            Request request = new Request("GET", "/category/_doc/" + id);
             request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(ESQueryJsonEntity.paginationQueryJsonEntity(limit, new String[0]));
             Response response = client.performRequest(request);
-            return rebuildCategories(response.getEntity().getContent(), false);
+            JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
+            while (!parser.isClosed()) {
+                JsonToken jsonToken = parser.nextToken();
+                if (JsonToken.FIELD_NAME == jsonToken) {
+                    String fieldName = parser.getCurrentName();
+                    parser.nextToken();
+                    switch (fieldName) {
+                        case "root_id":
+                            rootId = parser.getValueAsString();
+                            break;
+                        case "left":
+                            left = parser.getValueAsInt();
+                            break;
+                        case "right":
+                            right = parser.getValueAsInt();
+                            break;
+                    }
+                }
+            }
+            request = new Request("GET", "/category/_search");
+            request.setOptions(ESUtil.requestOptions());
+            request.setJsonEntity(queryPathJsonEntity(rootId, left, right));
+            response = client.performRequest(request);
+            return rebuildCategories(response.getEntity().getContent(), true);
+        } catch (ResponseException e) {
+            LOGGER.warn("The category(id={}) not found", id, e);
+        } catch (JsonParseException e) {
+            LOGGER.warn("Incorrect JSON format", e);
         } catch (IOException e) {
-            LOGGER.debug("Not query brands from {} to {}:", offset, limit, e);
+            LOGGER.error("I/O failed", e);
+            throw new RuntimeException(e);
         }
         return EMPTY_CATEGORY;
     }
+
+    private String queryPathJsonEntity(String rootId, int left, int right) {
+        StringWriter writer = new StringWriter(256);
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+            generator.writeStartObject();
+            generator.writeNumberField("size", 9999);
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("bool");
+            generator.writeArrayFieldStart("must");
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("root_id", rootId);
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("range");
+            generator.writeObjectFieldStart("left");
+            generator.writeNumberField("lte", left);
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("range");
+            generator.writeObjectFieldStart("right");
+            generator.writeNumberField("gte", right);
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeArrayFieldStart("sort");
+            generator.writeStartObject();
+            generator.writeStringField("left", "asc");
+            generator.writeEndObject();
+            generator.writeEndArray();
+
+            generator.writeEndObject();
+        } catch (IOException e) {
+            LOGGER.error("Cannot assemble request JSON", e);
+            throw new RuntimeException(e);
+        }
+        //System.out.println(writer.getBuffer().capacity());
+        return writer.toString();
+    }
+
 
     private String rebuildCategories(InputStream is, boolean tree) throws IOException {
         StringWriter writer = new StringWriter(1024);

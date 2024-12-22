@@ -64,13 +64,13 @@ public class ESCategoryJsonQueryTest {
     }
 
     @Test
-    public void testQueryAll() {
-        System.out.println(service.queryAll(0, 2));
-        System.out.println(service.queryAll(0, 50));
+    public void testRoot() {
+        System.out.println(service.root());
     }
 
     @Test
-    public void testRoot() {
-        System.out.println(service.root());
+    public void testPath() {
+        System.out.println(service.path("1514"));
+        System.out.println(service.path("-1"));
     }
 }

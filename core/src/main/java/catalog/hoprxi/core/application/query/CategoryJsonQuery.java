@@ -48,5 +48,6 @@ public interface CategoryJsonQuery {
 
     String queryByName(String name);
 
-    String queryAll(int offset, int limit);
+    String path(String id);
+
 }

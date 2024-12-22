@@ -97,8 +97,7 @@ public class ESQueryJsonEntity {
         if (limit < 0)
             limit = 1;
         StringWriter writer = new StringWriter();
-        try {
-            JsonGenerator generator = jsonFactory.createGenerator(writer);
+        try (JsonGenerator generator = jsonFactory.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeNumberField("from", offset);
             generator.writeNumberField("size", limit);
@@ -137,7 +136,6 @@ public class ESQueryJsonEntity {
             generator.writeEndArray();
 
             generator.writeEndObject();
-            generator.close();
         } catch (IOException e) {
             LOGGER.error("Can't assemble name request json", e);
         }
