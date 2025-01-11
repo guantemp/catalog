@@ -16,32 +16,34 @@
 
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
+import catalog.hoprxi.core.application.query.QueryFilter;
+import com.fasterxml.jackson.core.JsonGenerator;
+
+import java.io.IOException;
 import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2024-11-24
+ * @version 0.0.1 builder 2025-01-06
  */
-public enum SortField {
-    EMPTY("empty"), ID_ASC("id"), ID_DESC("id", false), NAME_ASC("name.mnemonic.raw"), NAME_DESC("name.mnemonic.raw", false), BARCODE_ASC("barcode.raw"), BARCODE_DESC("barcode.raw", false);
-    private String field;
-    private boolean sort;
+public class BrandFilter implements QueryFilter {
+    private String brandId;
 
-    SortField(String field) {
-        this(field, true);
+    public BrandFilter(String brandId) {
+        this.brandId = Objects.requireNonNull(brandId, "brand id required");
     }
 
-    SortField(String field, boolean asc) {
-        this.field = Objects.requireNonNull(field, "field is required").trim();
-        this.sort = asc;
-    }
-
-    public String field() {
-        return field;
-    }
-
-    public String sort() {
-        return sort ? "asc" : "desc";
+    @Override
+    public void filter(JsonGenerator generator) {
+        try {
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("brand.id", brandId);
+            generator.writeEndObject();
+            generator.writeEndObject();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

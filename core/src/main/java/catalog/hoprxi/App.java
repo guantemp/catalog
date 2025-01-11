@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,20 +25,14 @@ import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.servlet.ServletException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 /**
  * Hello world!
  */
 public class App {
 
-    public static void main(String[] args) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+    public static void main(String[] args) {
         for (int i = 0, j = args.length; i < j; i++) {
             if ("-iv".equals(args[i])) {
                 System.out.println(args[i + 1]);

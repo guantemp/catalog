@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,8 +52,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
                     JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
                     generator.writeStartObject();
                     while (parser.nextToken() != null) {
-                        if ("_meta".equals(parser.getCurrentName()))
-                            break;
+                        if ("_meta".equals(parser.getCurrentName())) break;
                         generator.copyCurrentEvent(parser);
                     }
                     generator.writeEndObject();

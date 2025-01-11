@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,30 @@
 
 package catalog.hoprxi.core.application.query;
 
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.SortField;
+import org.redisson.api.search.query.QueryFilter;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2024-07-28
  */
 public interface ItemJsonQuery {
-    default String query(String id) {
-        return "";
-    }
-
-    String queryByName(String name);
+    /**
+     * @param id of item
+     * @return product value,EMPTY will return if not find
+     */
+    String query(String id);
 
     String queryByBarcode(String barcode, int size, String searchAfter);
 
     String accurateQueryByBarcode(String barcode);
 
-    String queryByBrand(String brandId);
+    String query(String key, int size, String searchAfter, SortField sortField);
 
-    String queryByCategory(String categoryId);
-
-    String queryByCategoryAndItsDescendants(String categoryId);
+    String query(String key, QueryFilter[] filters, int size, String searchAfter, SortField sortField);
 
     String queryAll(int size, String[] offset);
+
 
 }

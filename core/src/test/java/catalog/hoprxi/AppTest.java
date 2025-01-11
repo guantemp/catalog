@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,15 @@
 
 package catalog.hoprxi;
 
+import catalog.hoprxi.core.application.query.QueryFilter;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.Unit;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.BrandFilter;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.CategoryFilter;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.SortField;
 import catalog.hoprxi.core.webapp.UploadServlet;
 import com.fasterxml.jackson.core.*;
 import com.typesafe.config.Config;
@@ -75,18 +79,16 @@ public class AppTest {
     @Test
     public void testPattern() {
         String[] test = {"69832423", "69821412", "697234", "998541", "69841", "市政府撒的", "9782"};
-        String[] result = Arrays.stream(test).filter(s -> Pattern.compile("^698\\d*").matcher(s).matches()).toArray(String[]::new);
-        System.out.println(result.length);
+        String[] result = Arrays.stream(test).filter(s -> Pattern.compile("^\\d{1,13}$").matcher(s).matches()).toArray(String[]::new);
         for (String s : result)
             System.out.println(s);
         System.out.println("pattern(.*?.*?):" + Pattern.compile(".*?.*?").matcher("45n").matches());
-        System.out.println("replace:" + "M&M's缤纷妙享包\\162克".replaceAll("\\\\", "\\\\\\\\"));
+        System.out.println("replace M&M's缤纷妙享包(\\)162克 result:" + "M&M's缤纷妙享包\\162克".replaceAll("\\\\", ""));
 
         for (String s : "awr//er/qw/asfd".split("[^(/)]/")) {
             System.out.println("split:" + s);
         }
-        String[] ss = "https://slave.tooo.top:9200".split(":");
-        for (String s : ss)
+        for (String s : "https://slave.tooo.top:9200".split(":"))
             System.out.println(s);
 
         Pattern pattern = Pattern.compile(":P\\$.*");
@@ -95,6 +97,13 @@ public class AppTest {
             System.out.println("find:" + m.replaceFirst(""));
             System.out.println("find: " + "125.68.186.195:5432:P$Qwe123465Pg".replaceFirst(":P\\$.*", ""));
         }
+
+        String[] ascii = {"lzifhda", "6982yhjhb", "dfhy在线234", "150g", "69算法841", "658zxf市政府撒的", "9sdgrdgre782", "125kgertuy", "69821412"};
+        result = Arrays.stream(ascii).filter(s -> Pattern.matches("\\w+\\d?", s)).toArray(String[]::new);
+        System.out.println("match ascii");
+        for (String s : result)
+            System.out.println(s);
+
     }
 
     @Test
@@ -344,6 +353,88 @@ public class AppTest {
         generator.flush();
 
         System.out.println("money:" + new BigDecimal("1E+1").toPlainString());
+    }
+
+    @Test
+    public void testWriteJson3() throws IOException {
+        String key = "6931";
+        Pattern BARCODE = Pattern.compile("^\\d{1,13}$");
+        JsonGenerator generator = jsonFactory.createGenerator(System.out, JsonEncoding.UTF8).useDefaultPrettyPrinter();
+        generator.writeStartObject();
+        generator.writeNumberField("size", 200);
+        generator.writeObjectFieldStart("query");
+        QueryFilter[] filters = new QueryFilter[]{new BrandFilter("-1"), new CategoryFilter(new String[]{"-1", "62078023226734874"})};
+        if (filters.length > 0) {
+            generator.writeObjectFieldStart("bool");
+            generator.writeArrayFieldStart("must");
+        }
+        if (BARCODE.matcher(key).matches()) {
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("barcode", key);
+            generator.writeEndObject();
+            generator.writeEndObject();
+        } else {
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("bool");
+            generator.writeArrayFieldStart("should");
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("multi_match");
+            generator.writeStringField("query", key);
+            generator.writeArrayFieldStart("fields");
+            generator.writeString("name.name");
+            generator.writeString("name.alias");
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("name.mnemonic", key);
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+        }
+        for (QueryFilter filter : filters) {
+            filter.filter(generator);
+        }
+        generator.writeEndArray();
+        generator.writeEndObject();
+        generator.writeEndObject();
+
+        generator.writeArrayFieldStart("sort");
+        generator.writeStartObject();
+        generator.writeStringField(SortField.ID_ASC.field(), SortField.ID_ASC.sort());
+        generator.writeEndObject();
+        generator.writeEndArray();
+
+        generator.writeObjectFieldStart("aggs");
+
+        generator.writeObjectFieldStart("brand_aggs");
+        generator.writeObjectFieldStart("multi_terms");
+        generator.writeNumberField("size", 30);
+        generator.writeArrayFieldStart("terms");
+        generator.writeStartObject();
+        generator.writeStringField("field", "brand.id");
+        generator.writeEndObject();
+        generator.writeStartObject();
+        generator.writeStringField("field", "brand.name");
+        generator.writeEndObject();
+        generator.writeEndArray();
+        generator.writeEndObject();
+        generator.writeEndObject();
+        generator.writeEndObject();
+
+        String[] searchAfter = new String[0];
+        if (searchAfter.length > 0) {
+            generator.writeArrayFieldStart("search_after");
+            for (String s : searchAfter)
+                generator.writeString(s);
+            generator.writeEndArray();
+        }
+        generator.writeEndObject();
+        generator.flush();
     }
 
     @Test

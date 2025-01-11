@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,10 @@ import salt.hoprxi.crypto.util.StoreKeyLoad;
  */
 public class ESCategoryJsonQueryTest {
     static {
-        //String[] entyies = new String[]{"125.68.186.195:9200:P$Qwe123465El", "125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "https://slave.tooo.top:9200"};
-        //Bootstrap.loadSecretKey("keystore.jks", "Qwe123465", new HashSet<>(Arrays.asList(entyies)));
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
+
     private static final CategoryJsonQuery service = new ESCategoryJsonQuery();
 
     @Test
@@ -60,7 +59,7 @@ public class ESCategoryJsonQueryTest {
     @Test
     public void testQueryDescendant() {
         System.out.println(service.queryDescendant("1"));
-        System.out.println(service.queryDescendant("-1"));
+        Assert.assertNotNull(service.queryDescendant("-1"));
     }
 
     @Test

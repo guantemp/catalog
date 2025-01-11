@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,6 +65,8 @@ public class ESBrandJsonQueryTest {
     @Test(priority = 3)
     public void testQueryAll() {
         System.out.println(service.queryAll(100));
+        System.out.println(service.queryAll(100, 5, null));
+        System.out.println(service.queryAll(100, 5, SortField.NAME_DESC));
         System.out.println(service.queryAll(50, new String[0], null));
         System.out.println(service.queryAll(50, new String[]{"xcx"}, SortField.NAME_DESC));
     }

@@ -14,19 +14,15 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.batch;
+package catalog.hoprxi.core.application.query;
 
-import catalog.hoprxi.core.application.batch.ItemMapping;
-import com.lmax.disruptor.EventHandler;
+import com.fasterxml.jackson.core.JsonGenerator;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2023-05-09
+ * @version 0.0.1 builder 2025-01-03
  */
-public class ShelfLifeHandler implements EventHandler<ItemImportEvent> {
-    @Override
-    public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        itemImportEvent.map.put(ItemMapping.SHELF_LIFE, "0");
-    }
+public interface QueryFilter {
+    void filter(JsonGenerator generator);
 }

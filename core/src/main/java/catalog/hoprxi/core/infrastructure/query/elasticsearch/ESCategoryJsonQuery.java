@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ import java.util.Objects;
  */
 public class ESCategoryJsonQuery implements CategoryJsonQuery {
     private static final String EMPTY_CATEGORY = "{}";
+
+    private static final int MAX_SIZE = 9999;
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.es");
     private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
@@ -54,22 +56,20 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
                     JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
                     generator.writeStartObject();
                     while (parser.nextToken() != null) {
-                        if ("_meta".equals(parser.getCurrentName()))
-                            break;
+                        if ("_meta".equals(parser.getCurrentName())) break;
                         generator.copyCurrentEvent(parser);
                     }
                     generator.writeEndObject();
                     generator.close();
-                    //System.out.println(writer.getBuffer().capacity());
                     return writer.toString();
                 }
             }
         } catch (ResponseException e) {
-            LOGGER.warn("The item(id={}) not found", id, e);
+            LOGGER.warn("The category (id = {}) not found.", id, e);
         } catch (JsonParseException e) {
-            LOGGER.warn("Incorrect JSON format", e);
+            LOGGER.warn("Incorrect JSON format.", e);
         } catch (IOException e) {
-            LOGGER.error("I/O failed", e);
+            LOGGER.error("I/O failed.", e);
         }
         return EMPTY_CATEGORY;
     }
@@ -127,7 +127,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
-            generator.writeNumberField("size", 9999);
+            generator.writeNumberField("size", MAX_SIZE);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("term");
             generator.writeStringField("parent_id", id);
@@ -194,7 +194,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         StringWriter writer = new StringWriter(256);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
-            generator.writeNumberField("size", 9999);
+            generator.writeNumberField("size", MAX_SIZE);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
             generator.writeArrayFieldStart("must");
@@ -259,7 +259,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
-            generator.writeNumberField("size", 999);
+            generator.writeNumberField("size", MAX_SIZE);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
             generator.writeObjectFieldStart("filter");
@@ -349,7 +349,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         StringWriter writer = new StringWriter(256);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
-            generator.writeNumberField("size", 9999);
+            generator.writeNumberField("size", MAX_SIZE);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
             generator.writeArrayFieldStart("must");
@@ -402,11 +402,8 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             JsonParser parser = JSON_FACTORY.createParser(is);
             while (!parser.isClosed()) {
                 if (parser.nextToken() == JsonToken.FIELD_NAME && "hits".equals(parser.getCurrentName())) {
-                    if (tree)
-                        parseHitsAsTree(parser, generator);
-                    else
-                        parseHits(parser, generator);
-                    break;
+                    if (tree) parseHitsAsTree(parser, generator);
+                    else parseHits(parser, generator);
                 }
             }
         }
@@ -419,8 +416,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
                 while (parser.nextToken() != null) {
-                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.getCurrentName()))
-                        break;
+                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.getCurrentName())) break;
                     generator.copyCurrentEvent(parser);
                     if (parser.currentToken() == JsonToken.FIELD_NAME) {
                         String fileName = parser.getCurrentName();

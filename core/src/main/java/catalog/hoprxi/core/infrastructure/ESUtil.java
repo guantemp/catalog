@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,9 +33,8 @@ import java.util.Properties;
  * @version 0.0.1 builder 2024-06-15
  */
 public class ESUtil {
-    private static final String HOST = "slave.tooo.top";
+    private static final String DEFAULT_HOST = "slave.tooo.top";
     private static final Properties props = new Properties();
-
     private static final RequestOptions COMMON_OPTIONS;
 
     static {
@@ -63,7 +62,7 @@ public class ESUtil {
     }
 
     public static String host() {
-        return props.getProperty("host", HOST);
+        return props.getProperty("host", DEFAULT_HOST);
     }
 
     public static int port() {
