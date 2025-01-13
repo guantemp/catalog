@@ -17,7 +17,6 @@
 package catalog.hoprxi.core.application.query;
 
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.SortField;
-import org.redisson.api.search.query.QueryFilter;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -31,15 +30,13 @@ public interface ItemJsonQuery {
      */
     String query(String id);
 
-    String queryByBarcode(String barcode, int size, String searchAfter);
-
     String accurateQueryByBarcode(String barcode);
 
     String query(String key, int size, String searchAfter, SortField sortField);
 
-    String query(String key, QueryFilter[] filters, int size, String searchAfter, SortField sortField);
+    String query(String key, QueryFilter[] filters, int size, String[] searchAfter, SortField sortField);
 
     String queryAll(int size, String[] offset);
 
-
+    String queryAll(int size, String searchAfter, SortField sortField);
 }

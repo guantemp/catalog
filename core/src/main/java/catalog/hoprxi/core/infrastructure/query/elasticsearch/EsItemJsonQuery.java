@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
+import catalog.hoprxi.core.application.query.QueryFilter;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -27,7 +28,6 @@ import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
-import org.redisson.api.search.query.QueryFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2024-08-15
+ * @version 0.0.1 builder 2025-01-11
  */
 public class EsItemJsonQuery implements ItemJsonQuery {
     private static final String EMPTY_ITEM = "{}";
@@ -68,7 +68,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
                     }
                     generator.writeEndObject();
                     generator.close();
-                    System.out.println(writer.getBuffer().capacity());
+                    //System.out.println(writer.getBuffer().capacity());
                     return writer.toString();
                 }
             }
@@ -76,50 +76,6 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             LOGGER.warn("No item with ID={} found", id, e);
         }
         return EMPTY_ITEM;
-    }
-
-    @Override
-    public String queryByBarcode(String barcode, int size, String searchAfter) {
-        try (RestClient client = BUILDER.build()) {
-            Request request = new Request("GET", "/item/_search");
-            request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(queryByBarcodeJsonEntity(barcode, size, searchAfter));
-            Response response = client.performRequest(request);
-            client.close();
-            return rebuildItems(response.getEntity().getContent());
-        } catch (IOException e) {
-            LOGGER.debug("No search was found for anything resembling barcode {} item ", barcode, e);
-        }
-        return EMPTY_ITEM;
-    }
-
-    private String queryByBarcodeJsonEntity(String barcode, int size, String searchAfter) {
-        StringWriter writer = new StringWriter();
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
-            generator.writeStartObject();
-            generator.writeNumberField("size", size);
-
-            generator.writeObjectFieldStart("query");
-            generator.writeObjectFieldStart("bool");
-            generator.writeObjectFieldStart("filter");
-            generator.writeObjectFieldStart("term");
-            generator.writeStringField("barcode", barcode);
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeEndObject();
-
-            generator.writeArrayFieldStart("sort");
-            generator.writeStartObject();
-            generator.writeStringField("barcode.raw", "asc");
-            generator.writeEndObject();
-            generator.writeEndArray();
-
-            generator.writeEndObject();
-        } catch (IOException e) {
-            LOGGER.error("Cannot assemble request JSON", e);
-        }
-        return writer.toString();
     }
 
 
@@ -179,9 +135,21 @@ public class EsItemJsonQuery implements ItemJsonQuery {
     }
 
     @Override
-    public String query(String key, QueryFilter[] filters, int size, String searchAfter, SortField sortField) {
+    public String query(String key, QueryFilter[] filters, int size, String[] searchAfter, SortField sortField) {
+        try (RestClient client = BUILDER.build()) {
+            Request request = new Request("GET", "/item/_search");
+            request.setOptions(ESUtil.requestOptions());
+            //System.out.println(queryJsonEntity(key, new QueryFilter[0], size, new String[0], sortField));
+            request.setJsonEntity(queryJsonEntity(key, new QueryFilter[0], size, new String[0], sortField));
+            Response response = client.performRequest(request);
+            return rebuildItems(response.getEntity().getContent());
+        } catch (IOException e) {
+            System.out.println(e);
+            LOGGER.warn("No search was found for anything resembling key = {} item ", key, e);
+        }
         return EMPTY_ITEM;
     }
+
 
     private String queryJsonEntity(String key, QueryFilter[] filters, int size, String[] searchAfter, SortField sortField) {
         Objects.requireNonNull(key, "key is required");
@@ -192,10 +160,8 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             generator.writeStartObject();
             generator.writeNumberField("size", size);
             generator.writeObjectFieldStart("query");
-            if (filters.length > 0) {
-                generator.writeObjectFieldStart("bool");
-                generator.writeArrayFieldStart("must");
-            }
+            generator.writeObjectFieldStart("bool");
+            generator.writeArrayFieldStart("must");
             if (BARCODE.matcher(key).matches()) {
                 generator.writeStartObject();
                 generator.writeObjectFieldStart("term");
@@ -224,9 +190,13 @@ public class EsItemJsonQuery implements ItemJsonQuery {
                 generator.writeEndObject();
                 generator.writeEndObject();
             }
-            generator.writeEndObject();
+            for (QueryFilter filter : filters) {
+                filter.filter(generator);
+            }
             generator.writeEndArray();
             generator.writeEndObject();
+            generator.writeEndObject();
+
 
             generator.writeArrayFieldStart("sort");
             generator.writeStartObject();
@@ -258,6 +228,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
                 generator.writeEndArray();
             }
             generator.writeEndObject();
+            generator.flush();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
         }
@@ -315,6 +286,11 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return writer;
     }
 
+    @Override
+    public String queryAll(int size, String searchAfter, SortField sortField) {
+        return null;
+    }
+
     private String rebuildItems(InputStream is) throws IOException {
         StringWriter writer = new StringWriter();
         JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
@@ -367,6 +343,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
                 while (parser.nextToken() != null) {
                     if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.getCurrentName())) break;
+                    //System.out.println(parser.currentToken()+":"+parser.getCurrentName());
                     generator.copyCurrentEvent(parser);
                 }
             }

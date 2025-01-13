@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
+import catalog.hoprxi.core.application.query.QueryFilter;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
@@ -33,6 +34,7 @@ public class EsItemJsonQueryTest {
     }
 
     private static final ItemJsonQuery service = new EsItemJsonQuery();
+
     @Test
     public void testQuery() {
         System.out.println(service.query("62078192003431444"));
@@ -41,26 +43,14 @@ public class EsItemJsonQueryTest {
     }
 
     @Test
-    public void testQueryByBarcode() {
-        System.out.println(service.queryByBarcode("6903", 12, ""));
+    public void testQuery1() {
+        System.out.println(service.query("6931", new QueryFilter[0], 2, new String[0], SortField.ID_ASC));
     }
 
     @Test
     public void testAccurateQueryByBarcode() {
         System.out.println(service.accurateQueryByBarcode("6902779313692"));
         System.out.println(service.accurateQueryByBarcode("6920208924028"));
-    }
-
-    @Test
-    public void testQueryByBrand() {
-    }
-
-    @Test
-    public void testQueryByCategory() {
-    }
-
-    @Test
-    public void testQueryByCategoryAndItsDescendants() {
     }
 
     @Test
