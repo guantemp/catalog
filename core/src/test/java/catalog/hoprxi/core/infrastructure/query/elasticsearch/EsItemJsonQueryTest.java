@@ -32,7 +32,6 @@ public class EsItemJsonQueryTest {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
-
     private static final ItemJsonQuery service = new EsItemJsonQuery();
 
     @Test
@@ -43,8 +42,9 @@ public class EsItemJsonQueryTest {
     }
 
     @Test
-    public void testQuery1() {
-        System.out.println(service.query("6931", new QueryFilter[0], 2, new String[0], SortField.ID_ASC));
+    public void testQueryFilter() {
+        System.out.println(service.query("693", new QueryFilter[]{new CategoryFilter(new String[]{"-1", "62078023226734874"})}, 1, new String[0], SortField.BARCODE_DESC));
+        System.out.println(service.query("6931", new QueryFilter[]{new CategoryFilter(new String[]{"-1", "62078023226734874"})}, 100, new String[0], SortField.ID_ASC));
     }
 
     @Test

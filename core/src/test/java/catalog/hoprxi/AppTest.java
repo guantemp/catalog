@@ -410,7 +410,6 @@ public class AppTest {
         generator.writeEndArray();
 
         generator.writeObjectFieldStart("aggs");
-
         generator.writeObjectFieldStart("brand_aggs");
         generator.writeObjectFieldStart("multi_terms");
         generator.writeNumberField("size", 30);
@@ -420,6 +419,19 @@ public class AppTest {
         generator.writeEndObject();
         generator.writeStartObject();
         generator.writeStringField("field", "brand.name");
+        generator.writeEndObject();
+        generator.writeEndArray();
+        generator.writeEndObject();
+        generator.writeEndObject();
+        generator.writeObjectFieldStart("category_aggs");
+        generator.writeObjectFieldStart("multi_terms");
+        generator.writeNumberField("size", 30);
+        generator.writeArrayFieldStart("terms");
+        generator.writeStartObject();
+        generator.writeStringField("field", "category.id");
+        generator.writeEndObject();
+        generator.writeStartObject();
+        generator.writeStringField("field", "category.name");
         generator.writeEndObject();
         generator.writeEndArray();
         generator.writeEndObject();

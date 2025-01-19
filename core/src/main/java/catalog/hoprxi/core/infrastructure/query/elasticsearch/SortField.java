@@ -24,7 +24,10 @@ import java.util.Objects;
  * @version 0.0.1 builder 2024-11-24
  */
 public enum SortField {
-    EMPTY("empty"), ID_ASC("id"), ID_DESC("id", false), NAME_ASC("name.mnemonic.raw"), NAME_DESC("name.mnemonic.raw", false), BARCODE_ASC("barcode.raw"), BARCODE_DESC("barcode.raw", false);
+    ID_ASC("id"), ID_DESC("id", false), NAME_ASC("name.mnemonic.raw"), NAME_DESC("name.mnemonic.raw", false),
+    BARCODE_ASC("barcode.raw"), BARCODE_DESC("barcode.raw", false), MADE_IN_ASC("madeIn.code"), MADE_IN_DESC("madeIn.code", false),
+    LAST_RECEIPT_PRICE_ASC("last_receipt_price.price.number"), LAST_RECEIPT_PRICE_DESC("last_receipt_price.price.number", false),
+    RETAIL_PRICE_ASC("retail_price.price.number"), RETAIL_PRICE_DESC("retail_price.price.number", false);
     private String field;
     private boolean sort;
 

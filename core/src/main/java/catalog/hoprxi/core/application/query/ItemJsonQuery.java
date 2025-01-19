@@ -32,11 +32,17 @@ public interface ItemJsonQuery {
 
     String accurateQueryByBarcode(String barcode);
 
+    String query(String key, int size, String searchAfter);
+
     String query(String key, int size, String searchAfter, SortField sortField);
+
+    String query(String key, int size, String[] searchAfter, SortField sortField);
 
     String query(String key, QueryFilter[] filters, int size, String[] searchAfter, SortField sortField);
 
-    String queryAll(int size, String[] offset);
+    String queryAll(int size);
 
-    String queryAll(int size, String searchAfter, SortField sortField);
+    String queryAll(int size, String[] searchAfter);
+
+    String queryAll(int size, String[] searchAfter, SortField sortField);
 }
