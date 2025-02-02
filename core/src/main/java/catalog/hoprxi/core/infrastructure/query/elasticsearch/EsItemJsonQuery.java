@@ -112,6 +112,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             generator.writeEndObject();
             generator.writeEndObject();
             generator.writeEndObject();
+            generator.writeBooleanField("track_scores", false);
             generator.writeEndObject();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
@@ -153,8 +154,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
 
     private String queryJsonEntity(String key, QueryFilter[] filters, int size, String[] searchAfter, SortField sortField) {
         Objects.requireNonNull(key, "key is required");
-        if (size < 0)
-            size = 0;
+        if (size < 0) size = 0;
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -197,7 +197,6 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             generator.writeEndObject();
             generator.writeEndObject();
 
-
             generator.writeArrayFieldStart("sort");
             generator.writeStartObject();
             generator.writeStringField(sortField.field(), sortField.sort());
@@ -239,6 +238,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
                     generator.writeString(s);
                 generator.writeEndArray();
             }
+            generator.writeBooleanField("track_scores", false);
             generator.writeEndObject();
             generator.flush();
         } catch (IOException e) {
@@ -247,15 +247,13 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return writer.toString();
     }
 
-
     @Override
-    public String queryAll(int size) {
-        return null;
-    }
-
-    @Override
-    public String queryAll(int size, String[] searchAfter) {
-        StringWriter writer = queryAllJsonEntity(size, searchAfter);
+    public String queryAll(int from, int size, SortField sortField) {
+        if (from < 0) from = 0;
+        if (size < 0) throw new IllegalArgumentException("It has to be greater than zero");
+        if (from + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
+        if (sortField == null) sortField = SortField.ID_DESC;
+        StringWriter writer = queryAllJsonEntity(from, size, sortField);
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/item/_search");
@@ -266,13 +264,64 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             client.close();
             return rebuildItems(response.getEntity().getContent());
         } catch (IOException e) {
-            if (LOGGER.isDebugEnabled())
-                LOGGER.debug("No search was found for anything items ", e);
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("No search was found for anything items ", e);
         }
-        return "";
+        return EMPTY_ITEM;
     }
 
-    private StringWriter queryAllJsonEntity(int size, String[] searchAfter) {
+    private StringWriter queryAllJsonEntity(int from, int size, SortField sortField) {
+        StringWriter writer = new StringWriter();
+        try {
+            JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
+            generator.writeStartObject();
+            generator.writeNumberField("from", from);
+            generator.writeNumberField("size", size);
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("match_all");
+            generator.writeEndObject();//query
+            generator.writeEndObject();//match_all
+
+            generator.writeArrayFieldStart("sort");
+            generator.writeStartObject();
+            generator.writeStringField(sortField.field(), sortField.sort());
+            generator.writeEndObject();
+            generator.writeEndArray(); //sort
+
+            generator.writeBooleanField("track_scores", false);
+            generator.writeEndObject();//root
+            generator.close();
+        } catch (IOException e) {
+            LOGGER.error("Cannot assemble request JSON", e);
+            throw new IllegalStateException("Cannot assemble request JSON");
+        }
+        return writer;
+    }
+
+    @Override
+    public String queryAll(int size, String searchAfter, SortField sortField) {
+        if (size < 0)
+            throw new IllegalArgumentException("It has to be greater than zero");
+        if (searchAfter == null)
+            searchAfter = "";
+        if (sortField == null)
+            sortField = SortField.ID_DESC;
+        StringWriter writer = queryAllJsonEntity(size, searchAfter, sortField);
+        RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
+        RestClient client = builder.build();
+        Request request = new Request("GET", "/item/_search");
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(writer.toString());
+        try {
+            Response response = client.performRequest(request);
+            client.close();
+            return rebuildItems(response.getEntity().getContent());
+        } catch (IOException e) {
+            if (LOGGER.isDebugEnabled()) LOGGER.debug("No search was found for anything items ", e);
+        }
+        return EMPTY_ITEM;
+    }
+
+    private StringWriter queryAllJsonEntity(int size, String searchAfter, SortField sortField) {
         StringWriter writer = new StringWriter();
         try {
             JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
@@ -285,14 +334,13 @@ public class EsItemJsonQuery implements ItemJsonQuery {
 
             generator.writeArrayFieldStart("sort");
             generator.writeStartObject();
-            generator.writeStringField("id", "desc");
+            generator.writeStringField(sortField.field(), sortField.sort());
             generator.writeEndObject();
             generator.writeEndArray();
 
-            if (searchAfter.length > 0) {
+            if (searchAfter != null && !searchAfter.isEmpty()) {
                 generator.writeArrayFieldStart("search_after");
-                for (String s : searchAfter)
-                    generator.writeString(s);
+                generator.writeString(searchAfter);
                 generator.writeEndArray();
             }
 
@@ -300,13 +348,9 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             generator.close();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
+            throw new IllegalStateException("Cannot assemble request JSON");
         }
         return writer;
-    }
-
-    @Override
-    public String queryAll(int size, String[] searchAfter, SortField sortField) {
-        return null;
     }
 
     private String rebuildItems(InputStream is) throws IOException {

@@ -40,9 +40,7 @@ public interface ItemJsonQuery {
 
     String query(String key, QueryFilter[] filters, int size, String[] searchAfter, SortField sortField);
 
-    String queryAll(int size);
+    String queryAll(int from, int size, SortField sortField);
 
-    String queryAll(int size, String[] searchAfter);
-
-    String queryAll(int size, String[] searchAfter, SortField sortField);
+    String queryAll(int size, String searchAfter, SortField sortField);
 }

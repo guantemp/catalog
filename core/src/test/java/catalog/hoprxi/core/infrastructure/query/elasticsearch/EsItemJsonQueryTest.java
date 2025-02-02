@@ -55,6 +55,8 @@ public class EsItemJsonQueryTest {
 
     @Test
     public void testQueryAll() {
-        System.out.println(service.queryAll(500, new String[0]));
+        System.out.println(service.queryAll(2, 10, null));
+        System.out.println(service.queryAll(0, 9, SortField.BARCODE_DESC));
+        System.out.println(service.queryAll(50, "9588868020855", SortField.BARCODE_ASC));
     }
 }
