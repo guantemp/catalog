@@ -30,17 +30,46 @@ public interface ItemJsonQuery {
      */
     String query(String id);
 
-    String accurateQueryByBarcode(String barcode);
+    /**
+     * @param barcode
+     * @return
+     */
+    String queryByBarcode(String barcode);
 
-    String query(String key, int size, String searchAfter);
+    /**
+     * @param key
+     * @param filters
+     * @param size
+     * @param searchAfter
+     * @param sortField
+     * @return
+     * @throws IllegalArgumentException if size<=0 or size >10000
+     */
+    String query(String key, QueryFilter[] filters, int size, String searchAfter, SortField sortField);
 
-    String query(String key, int size, String searchAfter, SortField sortField);
+    default String query(QueryFilter[] filters, int size, String searchAfter, SortField sortField) {
+        return query(null, filters, size, searchAfter, sortField);
+    }
 
-    String query(String key, int size, String[] searchAfter, SortField sortField);
+    default String query(int size, String searchAfter, SortField sortField) {
+        return query(new QueryFilter[0], size, searchAfter, sortField);
+    }
 
-    String query(String key, QueryFilter[] filters, int size, String[] searchAfter, SortField sortField);
+    default String query(String key, int size, String searchAfter, SortField sortField) {
+        return query(key, new QueryFilter[0], size, searchAfter, sortField);
+    }
 
-    String queryAll(int from, int size, SortField sortField);
+    String query(String key, QueryFilter[] filters, int from, int size, SortField sortField);
 
-    String queryAll(int size, String searchAfter, SortField sortField);
+    default String query(QueryFilter[] filters, int from, int size, SortField sortField) {
+        return query(null, filters, from, size, sortField);
+    }
+
+    default String query(int from, int size, SortField sortField) {
+        return query(null, new QueryFilter[0], from, size, sortField);
+    }
+
+    default String query(int from, int size) {
+        return query(null, new QueryFilter[0], from, size, SortField.ID_DESC);
+    }
 }
