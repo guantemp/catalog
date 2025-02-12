@@ -110,45 +110,6 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return writer.toString();
     }
 
-    private static void writeAggs(JsonGenerator generator, int size) throws IOException {
-        generator.writeObjectFieldStart("aggs");
-        generator.writeObjectFieldStart("brand_aggs");
-        generator.writeObjectFieldStart("multi_terms");
-        generator.writeNumberField("size", size);
-        generator.writeArrayFieldStart("terms");
-        generator.writeStartObject();
-        generator.writeStringField("field", "brand.id");
-        generator.writeEndObject();
-        generator.writeStartObject();
-        generator.writeStringField("field", "brand.name");
-        generator.writeEndObject();
-        generator.writeEndArray();
-        generator.writeEndObject();
-        generator.writeEndObject();
-        generator.writeObjectFieldStart("category_aggs");
-        generator.writeObjectFieldStart("multi_terms");
-        generator.writeNumberField("size", size);
-        generator.writeArrayFieldStart("terms");
-        generator.writeStartObject();
-        generator.writeStringField("field", "category.id");
-        generator.writeEndObject();
-        generator.writeStartObject();
-        generator.writeStringField("field", "category.name");
-        generator.writeEndObject();
-        generator.writeEndArray();
-        generator.writeEndObject();
-        generator.writeEndObject();
-        generator.writeEndObject();
-    }
-
-    private static void writeSortField(JsonGenerator generator, SortField sortField) throws IOException {
-        generator.writeArrayFieldStart("sort");
-        generator.writeStartObject();
-        generator.writeStringField(sortField.field(), sortField.sort());
-        generator.writeEndObject();
-        generator.writeEndArray();
-    }
-
     @Override
     public String queryByBarcode(String barcode) {
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
@@ -209,6 +170,45 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return writer.toString();
     }
 
+    private static void writeAggs(JsonGenerator generator, int size) throws IOException {
+        generator.writeObjectFieldStart("aggs");
+        generator.writeObjectFieldStart("brand_aggs");
+        generator.writeObjectFieldStart("multi_terms");
+        generator.writeNumberField("size", size);
+        generator.writeArrayFieldStart("terms");
+        generator.writeStartObject();
+        generator.writeStringField("field", "brand.id");
+        generator.writeEndObject();
+        generator.writeStartObject();
+        generator.writeStringField("field", "brand.name");
+        generator.writeEndObject();
+        generator.writeEndArray();
+        generator.writeEndObject();
+        generator.writeEndObject();
+        generator.writeObjectFieldStart("category_aggs");
+        generator.writeObjectFieldStart("multi_terms");
+        generator.writeNumberField("size", size);
+        generator.writeArrayFieldStart("terms");
+        generator.writeStartObject();
+        generator.writeStringField("field", "category.id");
+        generator.writeEndObject();
+        generator.writeStartObject();
+        generator.writeStringField("field", "category.name");
+        generator.writeEndObject();
+        generator.writeEndArray();
+        generator.writeEndObject();
+        generator.writeEndObject();
+        generator.writeEndObject();
+    }
+
+    private static void writeSortField(JsonGenerator generator, SortField sortField) throws IOException {
+        generator.writeArrayFieldStart("sort");
+        generator.writeStartObject();
+        generator.writeStringField(sortField.field(), sortField.sort());
+        generator.writeEndObject();
+        generator.writeEndArray();
+    }
+
     @Override
     public String query(String key, QueryFilter[] filters, int from, int size, SortField sortField) {
         if (from < 0 || from > 10000) throw new IllegalArgumentException("from must lager 10000");
@@ -218,8 +218,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             sortField = SortField.ID_DESC;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
-        System.out.println(queryAllJsonEntity(key, filters, from, size, sortField));
-        StringWriter writer = queryAllJsonEntity(key, filters, from, size, sortField);
+        StringWriter writer = queryJsonEntity(key, filters, from, size, sortField);
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/item/_search");
@@ -235,7 +234,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return EMPTY_ITEM;
     }
 
-    private StringWriter queryAllJsonEntity(String key, QueryFilter[] filters, int from, int size, SortField sortField) {
+    private StringWriter queryJsonEntity(String key, QueryFilter[] filters, int from, int size, SortField sortField) {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -256,11 +255,11 @@ public class EsItemJsonQuery implements ItemJsonQuery {
 
     private void writeMain(JsonGenerator generator, String key, QueryFilter[] filters) throws IOException {
         generator.writeObjectFieldStart("query");
-        if (key == null || key.isEmpty()) {
+        if (key == null || key.isEmpty()) {//not key ,query all
             if (filters.length == 0) {
                 generator.writeObjectFieldStart("match_all");
                 generator.writeEndObject();//match_all
-            } else {
+            } else {//add filter
                 generator.writeObjectFieldStart("bool");
                 generator.writeArrayFieldStart("must");
                 for (QueryFilter filter : filters) {
@@ -272,7 +271,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         } else {
             generator.writeObjectFieldStart("bool");
             generator.writeArrayFieldStart("must");
-            if (BARCODE.matcher(key).matches()) {
+            if (BARCODE.matcher(key).matches()) {//only barcode query
                 generator.writeStartObject();
                 generator.writeObjectFieldStart("term");
                 generator.writeStringField("barcode", key);
@@ -330,7 +329,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         }
         generator.writeEndObject();
         generator.close();
-        System.out.println(writer.getBuffer().capacity());
+        //System.out.println(writer.getBuffer().capacity());
         return writer.toString();
     }
 

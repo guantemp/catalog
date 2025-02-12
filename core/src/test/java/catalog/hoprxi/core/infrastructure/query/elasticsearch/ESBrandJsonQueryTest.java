@@ -35,7 +35,6 @@ public class ESBrandJsonQueryTest {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
-
     private static final BrandJsonQuery service = new ESBrandJsonQuery();
 
     @Test(priority = 1, invocationCount = 1, threadPoolSize = 1)
@@ -59,22 +58,23 @@ public class ESBrandJsonQueryTest {
         os.close();
         os = ((ESBrandJsonQuery) service).queryForTest("817884324788650");
         System.out.println(os);
-        os.close();
+        if (os != null)
+            os.close();
     }
 
     @Test(priority = 3)
     public void testQueryAll() {
-        System.out.println(service.queryAll(100));
-        System.out.println(service.queryAll(100, 5, null));
-        System.out.println(service.queryAll(100, 5, SortField.NAME_DESC));
-        System.out.println(service.queryAll(50, new String[0], null));
-        System.out.println(service.queryAll(50, new String[]{"xcx"}, SortField.NAME_DESC));
+        System.out.println(service.query(100));
+        System.out.println(service.query(100, 5, null));
+        System.out.println(service.query(100, 5, SortField.NAME_DESC));
+        System.out.println(service.query(50, "", null));
+        System.out.println(service.query(50, "xcx", SortField.NAME_DESC));
     }
 
     @Test
     public void testQueryByName() {
-        System.out.println(service.queryByName("天", 0, 20, null));
-        System.out.println(service.queryByName("白萝卜", 10, 5, null));
-        System.out.println(service.queryByName("天", 0, 20, SortField.NAME_ASC));
+        System.out.println(service.query("天", 0, 20, null));
+        System.out.println(service.query("白萝卜", 10, 5, null));
+        System.out.println(service.query("天", 0, 20, SortField.NAME_ASC));
     }
 }

@@ -14,39 +14,23 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.query;
+package catalog.hoprxi.core.domain.model.barcode;
+
+import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2024-07-14
+ * @version 0.0.1 builder 2025-02-09
  */
-public interface CategoryJsonQuery {
-    /**
-     * @param id id of category
-     * @return
-     */
-    String query(String id);
+public class BarcodeValidServices {
+    private static final Pattern BARCODE = Pattern.compile("^\\d{1,14}$");
 
-    /**
-     * @return all root node or '{}' if no root node
-     */
-    String root();
+    public static boolean valid(String barcode) {
+        return BARCODE.matcher(barcode).matches();
+    }
 
-    /**
-     * @param id
-     * @return child node or "{}" if there are no child nodes
-     * @throws NullPointerException if id is null
-     */
-    String queryChildren(String id);
-
-    /**
-     * @param id
-     * @return
-     */
-    String queryDescendant(String id);
-
-    String queryByName(String name);
-
-    String path(String id);
+    public static boolean valid(long barcode) {
+        return valid(String.valueOf((barcode)));
+    }
 }

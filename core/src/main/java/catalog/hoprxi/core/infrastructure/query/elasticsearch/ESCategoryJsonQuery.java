@@ -36,7 +36,6 @@ import java.util.Objects;
  */
 public class ESCategoryJsonQuery implements CategoryJsonQuery {
     private static final String EMPTY_CATEGORY = "{}";
-
     private static final int MAX_SIZE = 9999;
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.es");
     private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));

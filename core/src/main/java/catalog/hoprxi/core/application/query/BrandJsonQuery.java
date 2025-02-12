@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ public interface BrandJsonQuery {
      * @param sortField Null or empty will be replaced with {@link SortField}
      * @return
      */
-    String queryByName(String name, int offset, int limit, SortField sortField);
+    String query(String name, int offset, int limit, SortField sortField);
 
     /**
      * @param name
@@ -48,8 +48,8 @@ public interface BrandJsonQuery {
      * @param limit
      * @return
      */
-    default String queryByName(String name, int offset, int limit) {
-        return queryByName(name, offset, limit, SortField.ID_ASC);
+    default String query(String name, int offset, int limit) {
+        return query(name, offset, limit, SortField.ID_ASC);
     }
 
 
@@ -59,16 +59,14 @@ public interface BrandJsonQuery {
      * @param sortField
      * @return
      */
-    default String queryAll(int size, String[] searchAfter, SortField sortField) {
-        return "{\"total\":0}";
-    }
+    String query(int size, String searchAfter, SortField sortField);
 
     /**
      * @param size
      * @return
      */
-    default String queryAll(int size) {
-        return queryAll(size, new String[0], SortField.ID_ASC);
+    default String query(int size) {
+        return query(size, null, SortField.ID_DESC);
     }
 
     /**
@@ -77,7 +75,5 @@ public interface BrandJsonQuery {
      * @param sortField
      * @return
      */
-    default String queryAll(int offset, int limit, SortField sortField) {
-        return "{\"total\":0}";
-    }
+    String query(int offset, int limit, SortField sortField);
 }

@@ -96,17 +96,21 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             }
             return os;
         } catch (IOException e) {
-            if (LOGGER.isWarnEnabled())
-                LOGGER.warn("The brand(id={}) can't retrieve", id, e);
+            LOGGER.error("The brand(id={}) can't retrieve", id, e);
         }
         return null;
     }
 
     @Override
-    public String queryByName(String name, int offset, int limit, SortField sortField) {
+    public String query(String name, int offset, int limit, SortField sortField) {
         Objects.requireNonNull(name, "name is required");
-        if (sortField == null)
-            sortField = SortField.ID_ASC;
+        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("The offset value range is 0-10000");
+        if (limit < 0 || limit > 10000) throw new IllegalArgumentException("The size value range is 0-10000");
+        if (limit + offset > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
+        if (sortField == null) {
+            sortField = SortField.ID_DESC;
+            LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
         try (RestClient client = BUILDER.build()) {
             Request request = new Request("GET", "/brand/_search");
             request.setOptions(ESUtil.requestOptions());
@@ -114,9 +118,9 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             Response response = client.performRequest(request);
             return rebuildBrands(response.getEntity().getContent());
         } catch (IOException e) {
-            LOGGER.warn("No search was found for anything resembling name({}) brand", name, e);
+            LOGGER.error("No search was found for anything resembling name({}) brand", name, e);
         }
-        return "{}";
+        return EMPTY_BRAND;
     }
 
     private String queryNameJsonEntity(String name, int offset, int limit, SortField sortField) {
@@ -168,13 +172,12 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
     }
 
     @Override
-    public String queryAll(int size, String[] searchAfter, SortField sortField) {
-        if (size < 0 || size > 10000)
-            throw new IllegalArgumentException("size must be can't be negative and less than or equal to: [10000].");
-        if (searchAfter == null)
-            throw new IllegalArgumentException("searchAfter required");
-        if (sortField == null)
-            sortField = SortField.ID_ASC;
+    public String query(int size, String searchAfter, SortField sortField) {
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("The size value range is 0-10000");
+        if (sortField == null) {
+            sortField = SortField.ID_DESC;
+            LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
         try (RestClient client = BUILDER.build()) {
             Request request = new Request("GET", "/brand/_search");
             request.setOptions(ESUtil.requestOptions());
@@ -182,12 +185,12 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             Response response = client.performRequest(request);
             return rebuildBrands(response.getEntity().getContent());
         } catch (IOException e) {
-            LOGGER.warn("Not brand found from {}:", searchAfter, e);
+            LOGGER.error("Not brand found from {}:", searchAfter, e);
         }
-        return "{}";
+        return EMPTY_BRAND;
     }
 
-    private String paginationQueryJsonEntity(int size, String[] searchAfter, SortField sortField) {
+    private String paginationQueryJsonEntity(int size, String searchAfter, SortField sortField) {
         StringWriter writer = new StringWriter(128);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -204,29 +207,28 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             generator.writeEndObject();
             generator.writeEndArray();
 
-            if (searchAfter.length > 0) {
+            if (searchAfter != null && !searchAfter.isEmpty()) {
                 generator.writeArrayFieldStart("search_after");
-                for (String s : searchAfter)
-                    generator.writeString(s);
+                generator.writeString(searchAfter);
                 generator.writeEndArray();
             }
             generator.writeEndObject();
         } catch (IOException e) {
-            System.out.println(e);
             LOGGER.error("Can't assemble pagination query json", e);
         }
-        //System.out.println(writer.getBuffer().capacity());
         return writer.toString();
     }
 
     @Override
-    public String queryAll(int offset, int limit, SortField sortField) {
+    public String query(int offset, int limit, SortField sortField) {
         if (offset < 0) throw new IllegalArgumentException("offset can't be negative");
         if (limit < 0) throw new IllegalArgumentException("limit can't be negative");
         if (offset + limit > 10000)
-            throw new IllegalArgumentException("from + size must be less than or equal to: [10000].");
-        if (sortField == null)
-            sortField = SortField.ID_ASC;
+            throw new IllegalArgumentException("offset + limit must be less than or equal to: [10000].");
+        if (sortField == null) {
+            sortField = SortField.ID_DESC;
+            LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
         try (RestClient client = BUILDER.build()) {
             Request request = new Request("GET", "/brand/_search");
             request.setOptions(ESUtil.requestOptions());
@@ -234,9 +236,9 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             Response response = client.performRequest(request);
             return rebuildBrands(response.getEntity().getContent());
         } catch (IOException e) {
-            LOGGER.warn("Not brand found from {} to {}:", offset, offset + limit, e);
+            LOGGER.error("Not brand found from {} to {}:", offset, offset + limit, e);
         }
-        return "{}";
+        return EMPTY_BRAND;
     }
 
     private String paginationQueryJsonEntity(int offset, int limit, SortField sortField) {
@@ -249,17 +251,16 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             generator.writeFieldName("match_all");
             generator.writeStartObject();
             generator.writeEndObject();
-            generator.writeEndObject();
+            generator.writeEndObject();//query
 
             generator.writeArrayFieldStart("sort");
             generator.writeStartObject();
             generator.writeStringField(sortField.field(), sortField.sort());
             generator.writeEndObject();
-            generator.writeEndArray();
+            generator.writeEndArray();//sort
 
-            generator.writeEndObject();
+            generator.writeEndObject();//root
         } catch (IOException e) {
-            //System.out.println(e);
             LOGGER.error("Can't assemble pagination query json", e);
         }
         //System.out.println(writer.getBuffer().capacity());
