@@ -47,4 +47,12 @@ public enum SortField {
     public String sort() {
         return sort ? "asc" : "desc";
     }
+
+    public static SortField of(String s) {
+        for (SortField sortField : values()) {
+            if (sortField.toString().equals(s))
+                return sortField;
+        }
+        return SortField.ID_DESC;
+    }
 }

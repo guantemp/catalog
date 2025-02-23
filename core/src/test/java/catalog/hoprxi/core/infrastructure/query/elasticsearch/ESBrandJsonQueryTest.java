@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.BrandJsonQuery;
+import catalog.hoprxi.core.application.query.QueryException;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
@@ -37,12 +38,13 @@ public class ESBrandJsonQueryTest {
     }
     private static final BrandJsonQuery service = new ESBrandJsonQuery();
 
-    @Test(priority = 1, invocationCount = 1, threadPoolSize = 1)
+    @Test(priority = 1, invocationCount = 1, threadPoolSize = 1, expectedExceptions = QueryException.class)
     public void testQuery() {
-        System.out.println(service.query("495651176959596552"));
-        System.out.println(service.query(" 495651176959596602"));
-        System.out.println(service.query("-1"));
-        System.out.println(service.query("817884324788650"));
+        System.out.println(service.query(495651176959596552l));
+        System.out.println(service.query(495651176959596602l));
+        System.out.println(service.query(62078079843547680l));
+        System.out.println(service.query(-1l));
+        System.out.println(service.query(817884324788650l));
     }
 
     @Test(priority = 2, invocationCount = 1, threadPoolSize = 1)
@@ -64,11 +66,11 @@ public class ESBrandJsonQueryTest {
 
     @Test(priority = 3)
     public void testQueryAll() {
-        System.out.println(service.query(100));
         System.out.println(service.query(100, 5, null));
         System.out.println(service.query(100, 5, SortField.NAME_DESC));
-        System.out.println(service.query(50, "", null));
-        System.out.println(service.query(50, "xcx", SortField.NAME_DESC));
+        System.out.println(service.query(0, 128, SortField.ID_DESC));
+        System.out.println(service.query(16, "", SortField.NAME_ASC));
+        System.out.println(service.query(16, "xcx", SortField.NAME_DESC));
     }
 
     @Test

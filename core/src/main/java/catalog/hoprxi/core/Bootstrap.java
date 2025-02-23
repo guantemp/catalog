@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,19 @@
 
 package catalog.hoprxi.core;
 
+import catalog.hoprxi.core.webapp.*;
+import io.undertow.Handlers;
+import io.undertow.Undertow;
+import io.undertow.server.handlers.PathHandler;
+import io.undertow.servlet.Servlets;
+import io.undertow.servlet.api.DeploymentInfo;
+import io.undertow.servlet.api.DeploymentManager;
+import io.undertow.servlet.api.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
+import javax.servlet.ServletException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -33,7 +42,7 @@ public class Bootstrap {
     private static final Logger LOGGER = LoggerFactory.getLogger(Bootstrap.class);
     private static final Pattern EXCLUDE = Pattern.compile("^-{1,}.*");
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ServletException {
         String fileName = "keystore.jks", fileProtectedPasswd = "";
         Set<String> entries = new HashSet<>();
         for (int i = 0, j = args.length; i < j; i++) {
@@ -71,7 +80,7 @@ public class Bootstrap {
         }
         StoreKeyLoad.loadSecretKey(fileName, fileProtectedPasswd, entries.toArray(new String[0]));
         System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER);
-/*
+
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentInfo deploymentInfo = Servlets.deployment()
                 .setClassLoader(Bootstrap.class.getClassLoader())
@@ -91,7 +100,9 @@ public class Bootstrap {
                         Servlets.servlet("uploadServlet", UploadServlet.class)
                                 //.addInitParam("UPLOAD_DIRECTORY", "temp")
                                 //.addInitParam("databaseName", "catalog")
-                                .addMapping("/v1/upload"));
+                                .addMapping("/v1/upload"),
+                        Servlets.servlet("brandServlet2", BrandServlet2.class)
+                                .addMapping("/v2/brands/*"));
         DeploymentManager manager = container.addDeployment(deploymentInfo);
         manager.deploy();
         PathHandler path = Handlers.path(Handlers.redirect("/core"))
@@ -102,8 +113,6 @@ public class Bootstrap {
                 .setHandler(path)
                 .build();
         server.start();
-
- */
     }
 
 }

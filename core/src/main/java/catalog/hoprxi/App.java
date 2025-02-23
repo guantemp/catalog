@@ -24,6 +24,7 @@ import io.undertow.servlet.Servlets;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import javax.servlet.ServletException;
 
@@ -31,16 +32,21 @@ import javax.servlet.ServletException;
  * Hello world!
  */
 public class App {
+    static {
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
+    }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ServletException {
         for (int i = 0, j = args.length; i < j; i++) {
             if ("-iv".equals(args[i])) {
                 System.out.println(args[i + 1]);
             }
         }
+
     }
 
-    private void runServlet() throws ServletException {
+    private static void runServlet() throws ServletException {
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentInfo deploymentInfo = Servlets.deployment()
                 .setClassLoader(App.class.getClassLoader())
@@ -60,7 +66,10 @@ public class App {
                         Servlets.servlet("uploadServlet", UploadServlet.class)
                                 //.addInitParam("UPLOAD_DIRECTORY", "temp")
                                 //.addInitParam("databaseName", "catalog")
-                                .addMapping("/v1/upload"));
+                                .addMapping("/v1/upload"),
+                        Servlets.servlet("brandServlet2", BrandServlet2.class)
+                                .addMapping("/v2/brands/*"));
+
         DeploymentManager manager = container.addDeployment(deploymentInfo);
         manager.deploy();
         PathHandler path = Handlers.path(Handlers.redirect("/core"))
