@@ -61,14 +61,14 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
                 }
             }
         } catch (ResponseException e) {
-            LOGGER.error("The brand(id={}) not found", id, e);
-            throw new QueryException("The brand not found", e);
+            LOGGER.info("The brand(id={}) not found", id, e);
+            throw new QueryException(String.format("The brand(id=%s) not found", id), e);
         } catch (JsonParseException e) {
             LOGGER.error("Incorrect JSON format", e);
-            throw new QueryException("The brand not found", e);
+            throw new QueryException(String.format("The brand(id=%s) not found", id), e);
         } catch (IOException e) {
             LOGGER.error("I/O failed", e);
-            throw new QueryException("The brand not found", e);
+            throw new QueryException(String.format("The brand(id=%s) not found", id), e);
         }
         return EMPTY_BRAND;
     }
@@ -122,7 +122,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             return rebuildBrands(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("No search was found for anything resembling name({}) brand", name, e);
-            throw new QueryException("No search was found for anything resembling name brand", e);
+            throw new QueryException(String.format("No search was found for anything resembling name(%s) brand", name), e);
         }
     }
 
@@ -167,7 +167,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         generator.writeEndArray();
 
         generator.writeEndObject();
-        generator.flush();
+        generator.close();
         //System.out.println(writer.getBuffer().capacity());
         return writer.toString();
     }
@@ -187,7 +187,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             return rebuildBrands(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("Not brand found from {}:", searchAfter, e);
-            throw new QueryException("No brand found", e);
+            throw new QueryException(String.format("Not brand found from %s", searchAfter), e);
         }
     }
 
@@ -214,7 +214,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             generator.writeEndArray();
         }
         generator.writeEndObject();
-        generator.flush();
+        generator.close();
         return writer.toString();
     }
 
@@ -236,7 +236,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
             return rebuildBrands(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("Not brand found from {} to {}:", offset, offset + limit, e);
-            throw new QueryException("Not brand found from {} to {}", e);
+            throw new QueryException(String.format("Not brand found from %d to %d", offset, offset + limit), e);
         }
     }
 
@@ -259,7 +259,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         generator.writeEndArray();//sort
 
         generator.writeEndObject();//root
-        generator.flush();
+        generator.close();
         //System.out.println(writer.getBuffer().capacity());
         //System.out.println(writer);
         return writer.toString();

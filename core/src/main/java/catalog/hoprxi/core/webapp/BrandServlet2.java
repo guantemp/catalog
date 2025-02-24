@@ -16,16 +16,17 @@
 
 package catalog.hoprxi.core.webapp;
 
-import catalog.hoprxi.core.application.command.BrandChangeAboutCommand;
-import catalog.hoprxi.core.application.command.CategoryRenameCommand;
-import catalog.hoprxi.core.application.command.Command;
+import catalog.hoprxi.core.application.BrandAppService;
+import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.query.BrandJsonQuery;
+import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandJsonQuery;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.SortField;
 import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import salt.hoprxi.utils.NumberHelper;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -49,6 +50,7 @@ public class BrandServlet2 extends HttpServlet {
     private static final int LIMIT = 64;
     private final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private final BrandJsonQuery jsonQuery = new ESBrandJsonQuery();
+    private BrandAppService appService = new BrandAppService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -59,15 +61,25 @@ public class BrandServlet2 extends HttpServlet {
         if (pretty) generator.useDefaultPrettyPrinter();
         if (pathInfo != null) {
             long id = NumberHelper.longOf(pathInfo.substring(1), 0l);
-            String result = jsonQuery.query(id);
-            copyRaw(generator, result);
-        } else {//query name/all
+            try {
+                String result = jsonQuery.query(id);
+                copyRaw(generator, result);
+            } catch (QueryException e) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                generator.writeStartObject();
+                generator.writeStringField("status", "miss");
+                generator.writeNumberField("code", 30101);
+                generator.writeStringField("message", String.format("No brand with id=%d found", id));
+                generator.writeEndObject();
+            }
+        } else {//query by name
             String name = Optional.ofNullable(req.getParameter("name")).orElse("");
             String searchAfter = Optional.ofNullable(req.getParameter("searchAfter")).orElse("");
             int offset = NumberHelper.intOf(req.getParameter("offset"), OFFSET);
             int limit = NumberHelper.intOf(req.getParameter("limit"), LIMIT);
             String sort = Optional.ofNullable(req.getParameter("sort")).orElse("");
             SortField sortField = SortField.of(sort);
+            //System.out.println(sortField);
             if (name.isEmpty()) {
                 if (searchAfter.isEmpty()) {
                     copyRaw(generator, jsonQuery.query(offset, limit, sortField));
@@ -79,6 +91,7 @@ public class BrandServlet2 extends HttpServlet {
             }
         }
         generator.flush();
+        generator.close();
     }
 
     private void copyRaw(JsonGenerator generator, String result) throws IOException {
@@ -89,7 +102,69 @@ public class BrandServlet2 extends HttpServlet {
     }
 
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String name = null, alias = null, story = null;
+        URL logo = null, homepage = null;
+        Year since = null;
+        JsonParser parser = JSON_FACTORY.createParser(req.getInputStream());
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "name":
+                        name = parser.getValueAsString();
+                        break;
+                    case "alias":
+                        alias = parser.getValueAsString();
+                        break;
+                    case "story":
+                        story = parser.getValueAsString();
+                        break;
+                    case "homepage":
+                        homepage = parser.readValueAs(URL.class);
+                        break;
+                    case "logo":
+                        logo = parser.readValueAs(URL.class);
+                        break;
+                    case "since":
+                        since = parser.readValueAs(Year.class);
+                        break;
+                }
+            }
+        }
+        BrandCreateCommand brandCreateCommand = new BrandCreateCommand(name, alias, homepage, logo, since, story);
+        Brand brand = appService.createBrand(brandCreateCommand);
+        JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
+                .setPrettyPrinter(new DefaultPrettyPrinter());
+        resp.setContentType("application/json; charset=UTF-8");
+        generator.writeObjectFieldStart("brand");
+        responseBrand(generator, brand);
+        generator.writeEndObject();
+        generator.flush();
+        generator.close();
+    }
+
+    private void responseBrand(JsonGenerator generator, Brand brand) throws IOException {
+        generator.writeStringField("id", brand.id());
+        generator.writeObjectFieldStart("name");
+        generator.writeStringField("name", brand.name().name());
+        generator.writeStringField("mnemonic", brand.name().mnemonic());
+        generator.writeStringField("alias", brand.name().alias());
+        generator.writeEndObject();
+        if (brand.about() != null) {
+            generator.writeObjectFieldStart("about");
+            generator.writeStringField("homepage", brand.about().homepage().toExternalForm());
+            generator.writeStringField("logo", brand.about().logo().toExternalForm());
+            generator.writeNumberField("since", brand.about().since().getValue());
+            generator.writeStringField("story", brand.about().story());
+            generator.writeEndObject();
+        }
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         if (pathInfo != null) {
             String id = pathInfo.substring(1);
@@ -129,6 +204,37 @@ public class BrandServlet2 extends HttpServlet {
                 commands.add(new CategoryRenameCommand(id, name, alias));
             if (story != null || homepage != null || logo != null || since != null)
                 commands.add(new BrandChangeAboutCommand(id, logo, homepage, since, story));
+            appService.handle(commands);
+            resp.setContentType("application/json; charset=UTF-8");
+            JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
+                    .setPrettyPrinter(new DefaultPrettyPrinter());
+            generator.writeStartObject();
+            generator.writeStringField("status", "success");
+            generator.writeNumberField("code", 30102);
+            generator.writeStringField("message", "brand handle success");
+            generator.writeEndObject();
+            generator.flush();
+            generator.close();
         }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String pathInfo = req.getPathInfo();
+        if (pathInfo != null) {
+            String[] parameters = pathInfo.split("/");
+            BrandDeleteCommand command = new BrandDeleteCommand(parameters[1]);
+            appService.delete(command);
+        }
+        resp.setContentType("application/json; charset=UTF-8");
+        JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
+                .setPrettyPrinter(new DefaultPrettyPrinter());
+        generator.writeStartObject();
+        generator.writeStringField("status", "success");
+        generator.writeNumberField("code", 30103);
+        generator.writeStringField("message", "brand remove success");
+        generator.writeEndObject();
+        generator.flush();
+        generator.close();
     }
 }

@@ -50,7 +50,7 @@ public enum SortField {
 
     public static SortField of(String s) {
         for (SortField sortField : values()) {
-            if (sortField.toString().equals(s))
+            if (sortField.toString().equalsIgnoreCase(s))
                 return sortField;
         }
         return SortField.ID_DESC;

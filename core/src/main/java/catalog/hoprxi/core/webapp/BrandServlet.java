@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,6 @@ import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlBrandQuery;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 import salt.hoprxi.utils.NumberHelper;
 
 import javax.servlet.annotation.WebServlet;
@@ -53,6 +51,8 @@ public class BrandServlet extends HttpServlet {
     private BrandQuery query;
 
     public BrandServlet() {
+        query = new PsqlBrandQuery();
+        /*
         Config conf = ConfigFactory.load("database");
         String provider = conf.hasPath("provider") ? conf.getString("provider") : "postgresql";
         String databaseName = conf.hasPath("databaseName") ? conf.getString("databaseName") : "catalog";
@@ -62,6 +62,8 @@ public class BrandServlet extends HttpServlet {
                 query = new PsqlBrandQuery();
                 break;
         }
+
+         */
     }
 
     @Override

@@ -36,11 +36,12 @@ import java.util.regex.Pattern;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2024-06-14
+ * @version 0.0.2 builder 2025-02-23
  */
 public class Bootstrap {
     private static final Logger LOGGER = LoggerFactory.getLogger(Bootstrap.class);
     private static final Pattern EXCLUDE = Pattern.compile("^-{1,}.*");
+    private static final int PORT = 9000;
 
     public static void main(String[] args) throws ServletException {
         String fileName = "keystore.jks", fileProtectedPasswd = "";
@@ -75,11 +76,20 @@ public class Bootstrap {
                     break;
                 case "-h":
                 case "--help":
+                    System.out.println("Non-option arguments:\n" +
+                            "command              \n" +
+                            "\n" +
+                            "Option                         Description        \n" +
+                            "------                         -----------        \n" +
+                            "-f, --file <filename>          A file that stores the key\n" +
+                            "-e <KeyValuePair>              encrypt a passwd\n" +
+                            "-l, --list                     entries in the keystore\n" +
+                            "-h, --help                     Show help          \n");
                     break;
             }
         }
         StoreKeyLoad.loadSecretKey(fileName, fileProtectedPasswd, entries.toArray(new String[0]));
-        System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER);
+        //System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER);
 
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentInfo deploymentInfo = Servlets.deployment()
@@ -109,10 +119,10 @@ public class Bootstrap {
                 .addPrefixPath(deploymentInfo.getContextPath(), manager.start());
 
         Undertow server = Undertow.builder()
-                .addHttpListener(9000, "0.0.0.0")
+                .addHttpListener(PORT, "0.0.0.0")
                 .setHandler(path)
                 .build();
         server.start();
+        LOGGER.info("System start....");
     }
-
 }

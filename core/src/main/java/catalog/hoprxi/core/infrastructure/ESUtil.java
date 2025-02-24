@@ -46,7 +46,7 @@ public class ESUtil {
                 props.put("host", database.getString("host"));
                 props.put("port", database.getInt("port"));
                 String entry = database.getString("host") + ":" + database.getString("port");
-                System.out.println(database.getString("user"));
+                //System.out.println(database.getString("user"));
                 props.put("user", StoreKeyLoad.decrypt(entry, database.getString("user")));
                 props.put("password", StoreKeyLoad.decrypt(entry, database.getString("password")));
             }
