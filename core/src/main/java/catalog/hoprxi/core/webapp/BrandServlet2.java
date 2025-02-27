@@ -27,6 +27,7 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import salt.hoprxi.utils.NumberHelper;
 
+import javax.servlet.annotation.WebInitParam;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -44,7 +45,7 @@ import java.util.Optional;
  * @version 0.0.1 builder 2024-11-26
  */
 
-@WebServlet(urlPatterns = {"v2/brands/*"}, name = "brands", asyncSupported = true)
+@WebServlet(urlPatterns = {"v2/brands/*"}, name = "brands", asyncSupported = true, initParams = {@WebInitParam(name = "query", value = "es")})
 public class BrandServlet2 extends HttpServlet {
     private static final int OFFSET = 0;
     private static final int LIMIT = 64;
@@ -90,7 +91,6 @@ public class BrandServlet2 extends HttpServlet {
                 copyRaw(generator, jsonQuery.query(name, offset, limit, sortField));
             }
         }
-        generator.flush();
         generator.close();
     }
 
@@ -136,17 +136,16 @@ public class BrandServlet2 extends HttpServlet {
         }
         BrandCreateCommand brandCreateCommand = new BrandCreateCommand(name, alias, homepage, logo, since, story);
         Brand brand = appService.createBrand(brandCreateCommand);
-        JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
-                .setPrettyPrinter(new DefaultPrettyPrinter());
+        JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
+        boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
+        if (pretty) generator.useDefaultPrettyPrinter();
         resp.setContentType("application/json; charset=UTF-8");
-        generator.writeObjectFieldStart("brand");
         responseBrand(generator, brand);
-        generator.writeEndObject();
-        generator.flush();
         generator.close();
     }
 
     private void responseBrand(JsonGenerator generator, Brand brand) throws IOException {
+        generator.writeObjectFieldStart("brand");
         generator.writeStringField("id", brand.id());
         generator.writeObjectFieldStart("name");
         generator.writeStringField("name", brand.name().name());
@@ -161,6 +160,7 @@ public class BrandServlet2 extends HttpServlet {
             generator.writeStringField("story", brand.about().story());
             generator.writeEndObject();
         }
+        generator.writeEndObject();
     }
 
     @Override

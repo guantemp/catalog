@@ -34,12 +34,14 @@ import java.util.Properties;
  */
 public class ESUtil {
     private static final String DEFAULT_HOST = "slave.tooo.top";
+    private static final String DEFAULT_DATABASE_NAME = "catalog";
     private static final Properties props = new Properties();
     private static final RequestOptions COMMON_OPTIONS;
 
     static {
         //System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER);
         Config config = ConfigFactory.load("databases");
+        props.put("databaseName", config.getString("databaseName"));
         List<? extends Config> databases = config.getConfigList("databases");
         for (Config database : databases) {
             if (database.getString("provider").equals("elasticsearch") && (database.getString("type").equals("read") || database.getString("type").equals("R"))) {
@@ -63,6 +65,10 @@ public class ESUtil {
 
     public static String host() {
         return props.getProperty("host", DEFAULT_HOST);
+    }
+
+    public static String databasePrefix() {
+        return props.getProperty("databaseName", DEFAULT_DATABASE_NAME);
     }
 
     public static int port() {

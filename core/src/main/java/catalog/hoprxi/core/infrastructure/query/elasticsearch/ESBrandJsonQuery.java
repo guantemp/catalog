@@ -39,8 +39,11 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
     private static final String EMPTY_BRAND = "";
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
+    private static final String SEARCH_PREFIX = "/" + ESUtil.databasePrefix() + "_brand/_search";
+
     @Override
     public String query(long id) {
+        //Request request = new Request("GET", "/"+ESUtil.databasePrefx()+"_brand/_doc/" + id);
         Request request = new Request("GET", "/brand/_doc/" + id);
         request.setOptions(ESUtil.requestOptions());
         try (RestClient client = BUILDER.build()) {
