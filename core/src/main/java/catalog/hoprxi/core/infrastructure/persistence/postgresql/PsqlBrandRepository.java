@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import catalog.hoprxi.core.infrastructure.PsqlUtil;
+import catalog.hoprxi.core.infrastructure.DataSourceUtil;
 import com.fasterxml.jackson.core.*;
 import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
@@ -66,16 +66,18 @@ public class PsqlBrandRepository implements BrandRepository {
     public Brand find(String id) {
         Brand brand = cache.get(id);
         if (brand == null) {
-            try (Connection connection = PsqlUtil.getConnection()) {
+            try (Connection connection = DataSourceUtil.getConnection()) {
                 final String findSql = "select id,name,about from brand where id=? limit 1";
                 PreparedStatement preparedStatement = connection.prepareStatement(findSql);
                 preparedStatement.setLong(1, Long.parseLong(id));
                 ResultSet rs = preparedStatement.executeQuery();
                 brand = rebuild(rs);
                 cache.put(id, brand);
-            } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
-                     IllegalAccessException e) {
+            } catch (SQLException e) {
                 LOGGER.error("Can't rebuild brand with (id = {})", id, e);
+            } catch (IOException | InvocationTargetException | InstantiationException |
+                     IllegalAccessException e) {
+
             }
         }
         return brand;
@@ -157,7 +159,7 @@ public class PsqlBrandRepository implements BrandRepository {
 
     @Override
     public void remove(String id) {
-        try (Connection connection = PsqlUtil.getConnection()) {
+        try (Connection connection = DataSourceUtil.getConnection()) {
             final String removeSql = "remove from brand where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
             preparedStatement.setLong(1, Long.parseLong(id));
@@ -173,7 +175,7 @@ public class PsqlBrandRepository implements BrandRepository {
         name.setType("jsonb");
         PGobject about = new PGobject();
         about.setType("jsonb");
-        try (Connection connection = PsqlUtil.getConnection()) {
+        try (Connection connection = DataSourceUtil.getConnection()) {
             name.setValue(toJson(brand.name()));
             about.setValue(toJson(brand.about()));
             //insert into brand (id,name,about) values (?,?::jsonb,?::jsonb) 没有用PGobject修饰的sql

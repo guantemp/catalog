@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,15 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure;
+package catalog.hoprxi.core.application.setup;
 
-
-import salt.hoprxi.crypto.PasswordService;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2022-08-22
  */
-public final class PsqlSetup {
+public final class PsqlSetup extends Setup {
     private static final String DDL_BRAND = "CREATE TABLE public.brand (\n" +
             "\tid int8 NOT NULL,\n" +
             "\t\"name\" jsonb NULL,\n" +
@@ -52,17 +46,5 @@ public final class PsqlSetup {
             "CREATE INDEX category_rootid_parentid_index ON category USING btree (root_id, parent_id);";
     private static final String ddl = "create user hoprxi createdb password '';create database catalog";
 
-    public static void setup(String databaseName) throws SQLException {
-        String password = PasswordService.nextStrongPasswd();
-        String user = "create user catalog with password '" + password + "'";
-        try (Connection connection = PsqlUtil.getConnection()) {
-            connection.setAutoCommit(false);
-            Statement statement = connection.createStatement();
-            statement.addBatch(DDL_BRAND);
-            statement.addBatch(DDL_CATEGORY);
-            statement.executeBatch();
-            connection.setAutoCommit(true);
-            PsqlUtil.release(connection);
-        }
-    }
+
 }

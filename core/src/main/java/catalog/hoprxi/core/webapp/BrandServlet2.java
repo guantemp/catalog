@@ -27,6 +27,8 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import salt.hoprxi.utils.NumberHelper;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebInitParam;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -45,13 +47,21 @@ import java.util.Optional;
  * @version 0.0.1 builder 2024-11-26
  */
 
-@WebServlet(urlPatterns = {"v2/brands/*"}, name = "brands", asyncSupported = true, initParams = {@WebInitParam(name = "query", value = "es")})
+@WebServlet(urlPatterns = {"v2/brands/*"}, name = "brands", asyncSupported = true, initParams = {@WebInitParam(name = "queryImpl", value = "es")})
 public class BrandServlet2 extends HttpServlet {
     private static final int OFFSET = 0;
     private static final int LIMIT = 64;
     private final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private final BrandJsonQuery jsonQuery = new ESBrandJsonQuery();
-    private BrandAppService appService = new BrandAppService();
+    private final BrandAppService appService = new BrandAppService();
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        if (config != null) {
+            String queryImpl = config.getInitParameter("queryImpl");
+        }
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public class ShelfLifeService {
         return false;
     }
 
-    public boolean isOverdueCommodity(Item item, LocalDate dateOfManufacture) {
+    public boolean isApproachingDate(Item item, LocalDate dateOfManufacture) {
         return false;
     }
 

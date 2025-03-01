@@ -35,11 +35,13 @@ import java.util.Objects;
  * @version 0.0.2 builder 2024-12-22
  */
 public class ESCategoryJsonQuery implements CategoryJsonQuery {
-    private static final String EMPTY_CATEGORY = "{}";
+    private static final String EMPTY_CATEGORY = "";
     private static final int MAX_SIZE = 9999;
-    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.es");
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.infrastructure.query.elasticsearch.Category");
     private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
+
+    private static final String SEARCH_PREFIX = "/" + ESUtil.database() + "_category";
 
     @Override
     public String query(String id) {

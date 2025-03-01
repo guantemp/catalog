@@ -16,19 +16,23 @@
 
 package catalog.hoprxi.core.infrastructure;
 
-import org.testng.annotations.Test;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 
-import java.sql.SQLException;
+import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-08-25
+ * @version 0.0.1 builder 2025-03-01
  */
-public class PsqlSetupTest {
+public final class DecryptUtil {
+    private static final Pattern ENCRYPTED = Pattern.compile("^ENC:.*");
 
-    @Test
-    public void testSetup() throws SQLException {
-        //PsqlSetup.setup();
+    public static String decrypt(String entry, String securedPlainText) {
+        if (ENCRYPTED.matcher(securedPlainText).matches()) {
+            securedPlainText = securedPlainText.split(":")[1];
+            return StoreKeyLoad.decrypt(entry, securedPlainText);
+        }
+        return securedPlainText;
     }
 }

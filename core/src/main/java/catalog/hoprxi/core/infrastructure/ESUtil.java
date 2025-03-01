@@ -20,7 +20,6 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.apache.http.HttpHeaders;
 import org.elasticsearch.client.RequestOptions;
-import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -49,8 +48,8 @@ public class ESUtil {
                 props.put("port", database.getInt("port"));
                 String entry = database.getString("host") + ":" + database.getString("port");
                 //System.out.println(database.getString("user"));
-                props.put("user", StoreKeyLoad.decrypt(entry, database.getString("user")));
-                props.put("password", StoreKeyLoad.decrypt(entry, database.getString("password")));
+                props.put("user", DecryptUtil.decrypt(entry, database.getString("user")));
+                props.put("password", DecryptUtil.decrypt(entry, database.getString("password")));
             }
         }
 
@@ -67,7 +66,7 @@ public class ESUtil {
         return props.getProperty("host", DEFAULT_HOST);
     }
 
-    public static String databasePrefix() {
+    public static String database() {
         return props.getProperty("databaseName", DEFAULT_DATABASE_NAME);
     }
 

@@ -31,7 +31,7 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2024-06-15
+ * @version 0.0.2 builder 2025-03-01
  */
 public class ESBrandJsonQuery implements BrandJsonQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.infrastructure.query.elasticsearch.Brand");
@@ -39,11 +39,11 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
     private static final String EMPTY_BRAND = "";
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
-    private static final String SEARCH_PREFIX = "/" + ESUtil.databasePrefix() + "_brand/_search";
+    private static final String SEARCH_PREFIX = "/" + ESUtil.database() + "_brand";
 
     @Override
     public String query(long id) {
-        //Request request = new Request("GET", "/"+ESUtil.databasePrefx()+"_brand/_doc/" + id);
+        //Request request = new Request("GET", "/"+ESUtil.databasePrefx()+"/_doc/" + id);
         Request request = new Request("GET", "/brand/_doc/" + id);
         request.setOptions(ESUtil.requestOptions());
         try (RestClient client = BUILDER.build()) {

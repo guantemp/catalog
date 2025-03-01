@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package catalog.hoprxi.core.infrastructure.query.postgresql;
 import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
-import catalog.hoprxi.core.infrastructure.PsqlUtil;
+import catalog.hoprxi.core.infrastructure.DataSourceUtil;
 import event.hoprxi.domain.model.DomainEvent;
 import event.hoprxi.domain.model.DomainEventSubscriber;
 import org.slf4j.Logger;
@@ -70,7 +70,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
             return categoryViews;
         } else {
             List<CategoryView> categoryViewList = new ArrayList<>();
-            try (Connection connection = PsqlUtil.getConnection()) {
+            try (Connection connection = DataSourceUtil.getConnection()) {
                 final String rootSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri,\"right\" - \"left\" as distance from category where id = parent_id";
                 PreparedStatement preparedStatement = connection.prepareStatement(rootSql);
                 ResultSet rs = preparedStatement.executeQuery();
@@ -97,7 +97,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
                 return t.value(identifiable);
             }
         }
-        try (Connection connection = PsqlUtil.getConnection()) {
+        try (Connection connection = DataSourceUtil.getConnection()) {
             final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri,\"right\" - \"left\" as distance from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, Long.parseLong(id));
@@ -148,7 +148,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
     }
 
     private void queryAndFillChildren(Tree<CategoryView> tree, CategoryView parent, String id) {
-        try (Connection connection = PsqlUtil.getConnection()) {
+        try (Connection connection = DataSourceUtil.getConnection()) {
             final String childrenSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri,\"right\" - \"left\" as distance from category where parent_id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(childrenSql);
             preparedStatement.setLong(1, Long.parseLong(id));
@@ -180,7 +180,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
     }
 
     public void queryAndFillDescendants(Tree<CategoryView> tree, String id) {
-        try (Connection connection = PsqlUtil.getConnection()) {
+        try (Connection connection = DataSourceUtil.getConnection()) {
             final String descendantsSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri,\"right\" - \"left\" as distance from category \n" +
                     "where root_id = (select root_id from category where id = ?)\n" +
                     "  and \"left\" >= (select \"left\" from category where id = ?)\n" +
@@ -204,7 +204,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
     @Override
     public CategoryView[] queryByName(String regularExpression) {
         List<CategoryView> categoryViewList = new ArrayList<>();
-        try (Connection connection = PsqlUtil.getConnection()) {
+        try (Connection connection = DataSourceUtil.getConnection()) {
             final String searchSql = "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,logo_uri,\"right\" - \"left\" as distance from category where name::jsonb ->> 'name' ~ ?\n" +
                     "union\n" +
                     "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,logo_uri,\"right\" - \"left\" as distance from category where name::jsonb ->> 'alias' ~ ?\n" +

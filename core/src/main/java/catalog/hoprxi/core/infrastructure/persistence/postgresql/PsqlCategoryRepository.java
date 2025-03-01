@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package catalog.hoprxi.core.infrastructure.persistence.postgresql;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
-import catalog.hoprxi.core.infrastructure.PsqlUtil;
+import catalog.hoprxi.core.infrastructure.DataSourceUtil;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -59,7 +59,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     @Override
     public Category find(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
-        try (Connection connection = PsqlUtil.getConnection()) {
+        try (Connection connection = DataSourceUtil.getConnection()) {
             final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, Long.parseLong(id));
@@ -93,7 +93,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     @Override
     public void remove(String id) {
         id = Objects.requireNonNull(id, "id required").trim();
-        try (Connection connection = PsqlUtil.getConnection()) {
+        try (Connection connection = DataSourceUtil.getConnection()) {
             final String removeSql = "select \"left\",\"right\",root_id from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
             preparedStatement.setLong(1, Long.parseLong(id));
@@ -121,7 +121,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
 
     @Override
     public Category[] root() {
-        try (Connection connection = PsqlUtil.getConnection()) {
+        try (Connection connection = DataSourceUtil.getConnection()) {
             List<Category> categoryList = new ArrayList<>();
             final String rootSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri from category where id = parent_id";
             PreparedStatement preparedStatement = connection.prepareStatement(rootSql);
@@ -151,7 +151,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         Objects.requireNonNull(category, "category required");
         PGobject name = new PGobject();
         name.setType("jsonb");
-        try (Connection connection = PsqlUtil.getConnection()) {
+        try (Connection connection = DataSourceUtil.getConnection()) {
             final String isExistsSql = "select id,parent_id,\"left\",\"right\",root_id from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(isExistsSql);
             preparedStatement.setLong(1, Long.parseLong(category.id()));

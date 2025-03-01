@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -35,8 +34,8 @@ import java.util.Properties;
  * @since JDK8.0
  * @version 0.0.2 builder 2024-09-25
  */
-public final class PsqlUtil {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlUtil.class);
+public final class DataSourceUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceUtil.class);
     private static HikariDataSource hikariDataSource;
 
     static {
@@ -52,8 +51,8 @@ public final class PsqlUtil {
                     props.setProperty("dataSource.serverName", database.getString("host"));
                     props.setProperty("dataSource.portNumber", database.getString("port"));
                     String entry = database.getString("host") + ":" + database.getString("port");
-                    props.setProperty("dataSource.user", StoreKeyLoad.decrypt(entry, database.getString("user")));
-                    props.setProperty("dataSource.password", StoreKeyLoad.decrypt(entry, database.getString("password")));
+                    props.setProperty("dataSource.user", DecryptUtil.decrypt(entry, database.getString("user")));
+                    props.setProperty("dataSource.password", DecryptUtil.decrypt(entry, database.getString("password")));
                     props.setProperty("dataSource.databaseName", database.getString("databaseName"));
                     props.put("maximumPoolSize", database.hasPath("hikari.maximumPoolSize") ? database.getInt("hikari.maximumPoolSize") : Runtime.getRuntime().availableProcessors() * 2 + 1);
                     props.put("dataSource.logWriter", new PrintWriter(System.out));
@@ -90,4 +89,5 @@ public final class PsqlUtil {
             return;
         hikariDataSource.evictConnection(connection);
     }
+
 }
