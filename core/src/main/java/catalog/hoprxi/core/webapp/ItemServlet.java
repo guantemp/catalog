@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -278,7 +278,8 @@ public class ItemServlet extends HttpServlet {
         MadeIn madeIn = MadeIn.UNKNOWN;
         Grade grade = Grade.QUALIFIED;
         Specification spec = Specification.UNDEFINED;
-        String brandId = Brand.UNDEFINED.id(), categoryId = Category.UNDEFINED.id();
+        long brandId = Brand.UNDEFINED.id();
+        String categoryId = Category.UNDEFINED.id();
         Barcode barcode = null;
         LastReceiptPrice lastReceiptPrice = LastReceiptPrice.RMB_ZERO;
         RetailPrice retailPrice = RetailPrice.RMB_ZERO;
@@ -320,7 +321,7 @@ public class ItemServlet extends HttpServlet {
                         categoryId = readId(parser);
                         break;
                     case "brand":
-                        brandId = readId(parser);
+                        brandId = NumberHelper.longOf(readId(parser));
                         break;
                 }
             }

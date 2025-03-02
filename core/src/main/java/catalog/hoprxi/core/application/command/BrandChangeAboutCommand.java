@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,13 +25,13 @@ import java.time.Year;
  * @version 0.0.1 2019-05-19
  */
 public class BrandChangeAboutCommand implements Command {
-    private final String id;
+    private final long id;
     private URL logo;
     private Year since;
     private String story;
     private URL homepage;
 
-    public BrandChangeAboutCommand(String id, URL logo, URL homepage, Year since, String story) {
+    public BrandChangeAboutCommand(long id, URL logo, URL homepage, Year since, String story) {
         this.id = id;
         this.logo = logo;
         this.since = since;
@@ -39,7 +39,7 @@ public class BrandChangeAboutCommand implements Command {
         this.homepage = homepage;
     }
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 

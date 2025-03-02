@@ -42,24 +42,24 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         String brand = itemImportEvent.map.get(ItemMapping.BRAND);
         if (brand == null || brand.isEmpty() || brand.equalsIgnoreCase("undefined") || brand.equalsIgnoreCase(Label.BRAND_UNDEFINED)) {
-            itemImportEvent.map.put(ItemMapping.BRAND, Brand.UNDEFINED.id());
+            itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(Brand.UNDEFINED.id()));
             return;
         }
         if (ID_PATTERN.matcher(brand).matches()) {
             //System.out.println("我直接用的id：" + brand);
             return;
         }
-        String[] ss = brand.split("/");
+        String[] ss = brand.split("/");//name/alias
         String query = "^" + ss[0] + "$";
         if (ss.length > 1)
             query = query + "|^" + ss[1] + "$";
         Brand[] brands = BRAND_QUERY.queryByName(query);
         if (brands.length != 0) {
-            itemImportEvent.map.put(ItemMapping.BRAND, brands[0].id());
+            itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(brands[0].id()));
         } else {
             Brand temp = ss.length > 1 ? new Brand(BRAND_REPO.nextIdentity(), new Name(ss[0], ss[1])) : new Brand(BRAND_REPO.nextIdentity(), ss[0]);
             BRAND_REPO.save(temp);
-            itemImportEvent.map.put(ItemMapping.BRAND, temp.id());
+            itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(temp.id()));
         }
         //System.out.println("brand:" +itemImportEvent.map.get(Corresponding.BRAND));
     }

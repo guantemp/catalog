@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,19 @@
 
 package catalog.hoprxi.core.application.command;
 
-import java.util.Objects;
-
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2023-01-07
  */
 public class BrandDeleteCommand implements Command {
-    private final String id;
+    private final long id;
 
-    public BrandDeleteCommand(String id) {
-        this.id = Objects.requireNonNull(id, "id is required").trim();
+    public BrandDeleteCommand(long id) {
+        this.id = id;
     }
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 
@@ -39,13 +37,13 @@ public class BrandDeleteCommand implements Command {
         if (this == o) return true;
         if (!(o instanceof BrandDeleteCommand)) return false;
 
-        BrandDeleteCommand that = (BrandDeleteCommand) o;
+        BrandDeleteCommand command = (BrandDeleteCommand) o;
 
-        return Objects.equals(id, that.id);
+        return id == command.id;
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        return (int) (id ^ (id >>> 32));
     }
 }

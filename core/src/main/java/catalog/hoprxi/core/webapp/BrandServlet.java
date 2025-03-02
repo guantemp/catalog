@@ -154,7 +154,7 @@ public class BrandServlet extends HttpServlet {
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         if (pathInfo != null) {
-            String id = pathInfo.substring(1);
+            long id = NumberHelper.longOf(pathInfo.substring(1));
             String name = null, alias = null, story = null;
             URL logo = null, homepage = null;
             Year since = null;
@@ -188,7 +188,7 @@ public class BrandServlet extends HttpServlet {
             }
             List<Command> commands = new ArrayList<>();
             if (name != null || alias != null)
-                commands.add(new CategoryRenameCommand(id, name, alias));
+                commands.add(new BrandRenameCommand(id, name, alias));
             if (story != null || homepage != null || logo != null || since != null)
                 commands.add(new BrandChangeAboutCommand(id, logo, homepage, since, story));
             appService.handle(commands);
@@ -210,7 +210,8 @@ public class BrandServlet extends HttpServlet {
         String pathInfo = req.getPathInfo();
         if (pathInfo != null) {
             String[] parameters = pathInfo.split("/");
-            BrandDeleteCommand command = new BrandDeleteCommand(parameters[1]);
+            long id = NumberHelper.longOf(parameters[1]);
+            BrandDeleteCommand command = new BrandDeleteCommand(id);
             appService.delete(command);
         }
         resp.setContentType("application/json; charset=UTF-8");
@@ -236,7 +237,7 @@ public class BrandServlet extends HttpServlet {
     }
 
     private void responseBrand(JsonGenerator generator, Brand brand) throws IOException {
-        generator.writeStringField("id", brand.id());
+        generator.writeNumberField("id", brand.id());
         generator.writeObjectFieldStart("name");
         generator.writeStringField("name", brand.name().name());
         generator.writeStringField("mnemonic", brand.name().mnemonic());

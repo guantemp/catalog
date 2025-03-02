@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ public class BrandRenamed implements DomainEvent {
     private String mnemonic;
     private String alias;
     private LocalDateTime occurredOn;
-    private String id;
+    private long id;
     private int version;
 
 
@@ -40,7 +40,7 @@ public class BrandRenamed implements DomainEvent {
      * @param mnemonic
      * @param alias
      */
-    public BrandRenamed(String id, String name, String mnemonic, String alias) {
+    public BrandRenamed(long id, String name, String mnemonic, String alias) {
         this.id = id;
         this.name = name;
         this.mnemonic = mnemonic;
@@ -58,7 +58,7 @@ public class BrandRenamed implements DomainEvent {
     /**
      * @return the id
      */
-    public String id() {
+    public long id() {
         return id;
     }
 

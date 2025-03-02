@@ -46,8 +46,8 @@ public class BrandValidatorService {
         }
     }
 
-    public static boolean isBrandExist(String id) {
-        if (id.equals(Brand.UNDEFINED.id()))
+    public static boolean isBrandExist(long id) {
+        if (Brand.UNDEFINED.id() == id)
             return true;
         Brand brand = repository.find(id);
         return brand != null;

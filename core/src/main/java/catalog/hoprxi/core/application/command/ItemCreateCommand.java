@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ public class ItemCreateCommand implements Command {
     private final MadeIn madeIn;
     private final Specification spec;
     private final ShelfLife shelfLife;
-    private final String brandId;
+    private final long brandId;
     private final String categoryId;
 
     private final LastReceiptPrice lastReceiptPrice;
@@ -47,7 +47,7 @@ public class ItemCreateCommand implements Command {
     private final MemberPrice memberPrice;
     private final VipPrice vipPrice;
 
-    public ItemCreateCommand(Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
+    public ItemCreateCommand(Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, long brandId) {
         this.barcode = barcode;
         this.grade = grade;
         this.name = name;
@@ -86,7 +86,7 @@ public class ItemCreateCommand implements Command {
         return shelfLife;
     }
 
-    public String getBrandId() {
+    public long getBrandId() {
         return brandId;
     }
 

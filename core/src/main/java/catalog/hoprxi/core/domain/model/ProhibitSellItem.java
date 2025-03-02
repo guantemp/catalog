@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import java.util.StringJoiner;
  */
 public class ProhibitSellItem {
     private Barcode barcode;
-    private String brandId;
+    private long brandId;
     private String categoryId;
     private Grade grade;
     private String id;
@@ -56,7 +56,7 @@ public class ProhibitSellItem {
      * @param categoryId
      */
     protected ProhibitSellItem(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-                               Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String brandId, String categoryId) {
+                               Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, long brandId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
@@ -71,7 +71,7 @@ public class ProhibitSellItem {
     }
 
     protected ProhibitSellItem(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-                               Grade grade, ShelfLife shelfLife, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String brandId, String categoryId) {
+                               Grade grade, ShelfLife shelfLife, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, long brandId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
@@ -106,8 +106,8 @@ public class ProhibitSellItem {
         this.categoryId = categoryId;
     }
 
-    private void setBrandId(String brandId) {
-        this.brandId = Objects.requireNonNull(brandId, "brand id required").trim();
+    private void setBrandId(long brandId) {
+        this.brandId = brandId;
     }
 
     private void setVipPrice(VipPrice vipPrice) {
@@ -168,7 +168,7 @@ public class ProhibitSellItem {
         return barcode;
     }
 
-    public String brandId() {
+    public long brandId() {
         return brandId;
     }
 
@@ -209,7 +209,7 @@ public class ProhibitSellItem {
     }
 
     public Item permitSell() {
-        return new Item(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.RMB_ZERO, retailPrice, memberPrice, vipPrice, brandId, categoryId);
+        return new Item(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.RMB_ZERO, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
     @Override

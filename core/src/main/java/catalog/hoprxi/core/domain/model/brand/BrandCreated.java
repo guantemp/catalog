@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,11 +35,11 @@ public class BrandCreated implements DomainEvent {
     private final String name;
     private final String alias;
     private final String mnemonic;
-    private final String id;
+    private final long id;
     private final LocalDateTime occurredOn;
     private final int version;
 
-    public BrandCreated(String id, String name, String mnemonic, String alias, URL homePage, URL logo, Year since, String story) {
+    public BrandCreated(long id, String name, String mnemonic, String alias, URL homePage, URL logo, Year since, String story) {
         this.logo = logo;
         this.since = since;
         this.story = story;
@@ -52,7 +52,7 @@ public class BrandCreated implements DomainEvent {
         this.occurredOn = LocalDateTime.now();
     }
 
-    public BrandCreated(String name, String alias, String mnemonic, String id) {
+    public BrandCreated(long id, String name, String alias, String mnemonic) {
         this.name = name;
         this.alias = alias;
         this.mnemonic = mnemonic;

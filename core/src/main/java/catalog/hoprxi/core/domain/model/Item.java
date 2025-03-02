@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import java.util.StringJoiner;
 public class Item {
     private static final int ID_MAX_LENGTH = 48;
     private Barcode barcode;
-    private String brandId;
+    private long brandId;
     private String categoryId;
     private Grade grade;
     private String id;
@@ -67,7 +67,7 @@ public class Item {
      *                                  if name is null
      *                                  if madeIn is null
      */
-    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
+    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, long brandId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
@@ -84,7 +84,7 @@ public class Item {
     }
 
     public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice,
-                MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
+                MemberPrice memberPrice, VipPrice vipPrice, String categoryId, long brandId) {
         this(id, barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY, lastReceiptPrice, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
@@ -103,9 +103,8 @@ public class Item {
         this.categoryId = categoryId;
     }
 
-    private void setBrandId(String brandId) {
-        brandId = Objects.requireNonNull(brandId, "brandId required").trim();
-        if (!brandId.equals(Brand.UNDEFINED.id()) && !BrandValidatorService.isBrandExist(brandId))
+    private void setBrandId(long brandId) {
+        if (!BrandValidatorService.isBrandExist(brandId))
             throw new IllegalArgumentException("brandId isn't effective");
         this.brandId = brandId;
     }
@@ -270,9 +269,8 @@ public class Item {
      * @throws IllegalArgumentException if brandId is <code>NULL</code>
      *                                  brandId is not valid
      */
-    public void moveToNewBrand(String brandId) {
-        brandId = Objects.requireNonNull(brandId, "brandId required").trim();
-        if (!this.brandId.equals(brandId)) {
+    public void moveToNewBrand(long brandId) {
+        if (this.brandId != brandId) {
             setBrandId(brandId);
             DomainRegistry.domainEventPublisher().publish(new ItemBrandReallocated(id, brandId));
         }
@@ -298,7 +296,7 @@ public class Item {
         return barcode;
     }
 
-    public String brandId() {
+    public long brandId() {
         return brandId;
     }
 
@@ -346,7 +344,7 @@ public class Item {
     }
 
     public ProhibitSellItem toProhibitSell() {
-        return new ProhibitSellItem(id, barcode, name, madeIn, spec, grade, shelfLife, retailPrice, memberPrice, vipPrice, brandId, categoryId);
+        return new ProhibitSellItem(id, barcode, name, madeIn, spec, grade, shelfLife, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,18 +27,18 @@ public interface BrandRepository {
      * @return
      * @throws NullPointerException if id is null
      */
-    Brand find(String id);
+    Brand find(long id);
 
     /**
      * @return a long as String id
      */
-    String nextIdentity();
+    long nextIdentity();
 
     /**
      * @param id brand id
      * @throws NullPointerException if id is null
      */
-    void remove(String id);
+    void remove(long id);
 
     /**
      * @param brand a brand object

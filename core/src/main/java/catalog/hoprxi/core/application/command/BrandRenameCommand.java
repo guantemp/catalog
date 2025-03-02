@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,18 +21,18 @@ package catalog.hoprxi.core.application.command;
  * @since JDK8.0
  * @version 0.0.1 2019-05-19
  */
-public class BrandRenameCommand {
-    private String id;
+public class BrandRenameCommand implements Command {
+    private long id;
     private String name;
     private String alias;
 
-    public BrandRenameCommand(String id, String name, String alias) {
+    public BrandRenameCommand(long id, String name, String alias) {
         this.id = id;
         this.name = name;
         this.alias = alias;
     }
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 

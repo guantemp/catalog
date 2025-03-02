@@ -40,7 +40,6 @@ public class ESUtil {
     static {
         //System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER);
         Config config = ConfigFactory.load("databases");
-        props.put("databaseName", config.getString("databaseName"));
         List<? extends Config> databases = config.getConfigList("databases");
         for (Config database : databases) {
             if (database.getString("provider").equals("elasticsearch") && (database.getString("type").equals("read") || database.getString("type").equals("R"))) {
@@ -50,6 +49,7 @@ public class ESUtil {
                 //System.out.println(database.getString("user"));
                 props.put("user", DecryptUtil.decrypt(entry, database.getString("user")));
                 props.put("password", DecryptUtil.decrypt(entry, database.getString("password")));
+                props.put("databaseName", config.getString("databaseName"));
             }
         }
 

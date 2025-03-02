@@ -126,8 +126,8 @@ public class PsqlBrandQuery implements BrandQuery {
     }
 
     private Brand rebuild(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        String id = rs.getString("id");
-        if (Brand.UNDEFINED.id().equals(id))
+        long id = rs.getLong("id");
+        if (Brand.UNDEFINED.id() == id)
             return Brand.UNDEFINED;
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
         AboutBrand about = null;

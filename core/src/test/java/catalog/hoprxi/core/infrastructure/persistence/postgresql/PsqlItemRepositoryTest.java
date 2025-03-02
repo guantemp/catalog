@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,11 +61,11 @@ public class PsqlItemRepositoryTest {
     @BeforeTest
     public void setUp() {
         brandRepository.save(Brand.UNDEFINED);
-        Brand caihong = new Brand("52495569395175425", new Name("彩虹"));
+        Brand caihong = new Brand(52495569395175425l, new Name("彩虹"));
         brandRepository.save(caihong);
-        Brand tianyou = new Brand("52495569395175426", new Name("天友"));
+        Brand tianyou = new Brand(52495569395175426l, new Name("天友"));
         brandRepository.save(tianyou);
-        Brand changhong = new Brand("52495569395175427", new Name("长虹"));
+        Brand changhong = new Brand(52495569395175427l, new Name("长虹"));
         brandRepository.save(changhong);
 
         categoryRepository.save((Category.UNDEFINED));

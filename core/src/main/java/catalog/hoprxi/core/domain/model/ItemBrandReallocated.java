@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,11 @@ import java.time.LocalDateTime;
  */
 public class ItemBrandReallocated implements DomainEvent {
     private String id;
-    private String brandId;
+    private long brandId;
     private LocalDateTime occurredOn;
     private int version;
 
-    public ItemBrandReallocated(String id, String brandId) {
+    public ItemBrandReallocated(String id, long brandId) {
         this.id = id;
         this.brandId = brandId;
         occurredOn = LocalDateTime.now();
@@ -52,7 +52,7 @@ public class ItemBrandReallocated implements DomainEvent {
         return id;
     }
 
-    public String brandId() {
+    public long brandId() {
         return brandId;
     }
 }

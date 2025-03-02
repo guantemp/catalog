@@ -50,7 +50,7 @@ public class PsqlBrandRepository implements BrandRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlBrandRepository.class);
     private static Constructor<Name> nameConstructor;
 
-    private static Cache<String, Brand> cache = CacheFactory.build("brand");
+    private static Cache<Long, Brand> cache = CacheFactory.build("brand");
 
     static {
         try {
@@ -58,26 +58,25 @@ public class PsqlBrandRepository implements BrandRepository {
             nameConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
             LOGGER.error("Name class no such constructor", e);
+            throw new RuntimeException("Name class no such constructor", e);
         }
     }
 
-
     @Override
-    public Brand find(String id) {
+    public Brand find(long id) {
         Brand brand = cache.get(id);
         if (brand == null) {
             try (Connection connection = DataSourceUtil.getConnection()) {
                 final String findSql = "select id,name,about from brand where id=? limit 1";
                 PreparedStatement preparedStatement = connection.prepareStatement(findSql);
-                preparedStatement.setLong(1, Long.parseLong(id));
+                preparedStatement.setLong(1, id);
                 ResultSet rs = preparedStatement.executeQuery();
                 brand = rebuild(rs);
                 cache.put(id, brand);
-            } catch (SQLException e) {
-                LOGGER.error("Can't rebuild brand with (id = {})", id, e);
-            } catch (IOException | InvocationTargetException | InstantiationException |
+            } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
                      IllegalAccessException e) {
-
+                LOGGER.error("Can't rebuild brand with (id = {})", id, e);
+                throw new RuntimeException(String.format("Can't rebuild brand with (id = %s)", id), e);
             }
         }
         return brand;
@@ -85,8 +84,8 @@ public class PsqlBrandRepository implements BrandRepository {
 
     private Brand rebuild(ResultSet resultSet) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
         if (resultSet.next()) {
-            String id = resultSet.getString("id");
-            if (Brand.UNDEFINED.id().equals(id))
+            long id = resultSet.getLong("id");
+            if (Brand.UNDEFINED.id() == id)
                 return Brand.UNDEFINED;
             Name name = toName(resultSet.getString("name"));
             AboutBrand about = toAboutBrand(resultSet.getString("about"));
@@ -153,16 +152,16 @@ public class PsqlBrandRepository implements BrandRepository {
     }
 
     @Override
-    public String nextIdentity() {
-        return String.valueOf(LongId.generate());
+    public long nextIdentity() {
+        return LongId.generate();
     }
 
     @Override
-    public void remove(String id) {
+    public void remove(long id) {
         try (Connection connection = DataSourceUtil.getConnection()) {
             final String removeSql = "remove from brand where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
-            preparedStatement.setLong(1, Long.parseLong(id));
+            preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error("Can't remove brand(id={})", id, e);
@@ -181,7 +180,7 @@ public class PsqlBrandRepository implements BrandRepository {
             //insert into brand (id,name,about) values (?,?::jsonb,?::jsonb) 没有用PGobject修饰的sql
             final String replaceInto = "insert into brand (id,name,about) values (?,?,?) on conflict(id) do update set name=?,about=?";
             PreparedStatement ps = connection.prepareStatement(replaceInto);
-            ps.setLong(1, Long.parseLong(brand.id()));
+            ps.setLong(1, brand.id());
             ps.setObject(2, name);
             ps.setObject(3, about);
             ps.setObject(4, name);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,11 +34,11 @@ public class BrandAboutChanged implements DomainEvent {
     private final Year since;
     private final String story;
     private final URL homePage;
-    private final String id;
+    private final long id;
     private final LocalDateTime occurredOn;
     private final int version;
 
-    public BrandAboutChanged(String id, URL logo, URL homePage, Year since, String story) {
+    public BrandAboutChanged(long id, URL logo, URL homePage, Year since, String story) {
         super();
         this.id = id;
         this.logo = logo;
@@ -52,17 +52,29 @@ public class BrandAboutChanged implements DomainEvent {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof BrandAboutChanged)) return false;
+
         BrandAboutChanged that = (BrandAboutChanged) o;
-        return version == that.version &&
-                Objects.equals(id, that.id) &&
-                Objects.equals(occurredOn, that.occurredOn);
+
+        if (id != that.id) return false;
+        if (version != that.version) return false;
+        if (!Objects.equals(logo, that.logo)) return false;
+        if (!Objects.equals(since, that.since)) return false;
+        if (!Objects.equals(story, that.story)) return false;
+        if (!Objects.equals(homePage, that.homePage)) return false;
+        return Objects.equals(occurredOn, that.occurredOn);
     }
 
     @Override
     public int hashCode() {
-
-        return Objects.hash(id, occurredOn, version);
+        int result = logo != null ? logo.hashCode() : 0;
+        result = 31 * result + (since != null ? since.hashCode() : 0);
+        result = 31 * result + (story != null ? story.hashCode() : 0);
+        result = 31 * result + (homePage != null ? homePage.hashCode() : 0);
+        result = 31 * result + (int) (id ^ (id >>> 32));
+        result = 31 * result + (occurredOn != null ? occurredOn.hashCode() : 0);
+        result = 31 * result + version;
+        return result;
     }
 
     public URL logo() {
@@ -81,7 +93,7 @@ public class BrandAboutChanged implements DomainEvent {
         return homePage;
     }
 
-    public String id() {
+    public long id() {
         return id;
     }
 
