@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.CategoryJsonQuery;
+import catalog.hoprxi.core.application.query.QueryException;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.*;
 import org.apache.http.HttpHost;
@@ -44,8 +45,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
     private static final String SEARCH_PREFIX = "/" + ESUtil.database() + "_category";
 
     @Override
-    public String query(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
+    public String query(long id) {
         try (RestClient client = BUILDER.build()) {
             Request request = new Request("GET", "/category/_doc/" + id);
             request.setOptions(ESUtil.requestOptions());
@@ -65,12 +65,9 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
                     return writer.toString();
                 }
             }
-        } catch (ResponseException e) {
-            LOGGER.warn("The category (id = {}) not found.", id, e);
-        } catch (JsonParseException e) {
-            LOGGER.warn("Incorrect JSON format.", e);
         } catch (IOException e) {
-            LOGGER.error("I/O failed.", e);
+            LOGGER.warn("The category (id = {}) not found.", id, e);
+            throw new QueryException(String.format("The category (id = {}) not found.", id), e);
         }
         return EMPTY_CATEGORY;
     }
@@ -83,14 +80,10 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             request.setJsonEntity(rootJsonEntity());
             Response response = client.performRequest(request);
             return rebuildCategories(response.getEntity().getContent(), false);
-        } catch (ResponseException e) {
-            LOGGER.warn("No search was found for anything resembling root categories", e);
-        } catch (JsonParseException e) {
-            LOGGER.warn("Incorrect JSON format", e);
         } catch (IOException e) {
-            LOGGER.error("I/O failed", e);
+            LOGGER.warn("No search was found for anything resembling root categories", e);
+            throw new QueryException("No search was found for anything resembling root categories", e);
         }
-        return EMPTY_CATEGORY;
     }
 
     private String rootJsonEntity() {
@@ -111,27 +104,27 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
     }
 
     @Override
-    public String queryChildren(String id) {
+    public String queryChildren(long id) {
         try (RestClient client = BUILDER.build()) {
             Request request = new Request("GET", "/category/_search");
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(queryChildrenJsonEntity(id));
             Response response = client.performRequest(request);
-            return rebuildCategories(response.getEntity().getContent(), false);
+            return rebuildCategories(response.getEntity().getContent(), true);
         } catch (IOException e) {
             LOGGER.warn("There are no related category(id={}) available ", id, e);
+            throw new QueryException(String.format("There are no related category(id=%d) available", id), e);
         }
-        return EMPTY_CATEGORY;
     }
 
-    private String queryChildrenJsonEntity(String id) {
+    private String queryChildrenJsonEntity(long id) {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeNumberField("size", MAX_SIZE);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("term");
-            generator.writeStringField("parent_id", id);
+            generator.writeNumberField("parent_id", id);
             generator.writeEndObject();
             generator.writeEndObject();
 
@@ -142,14 +135,12 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             generator.writeEndArray();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
-            throw new RuntimeException(e);
         }
         return writer.toString();
     }
 
     @Override
-    public String queryDescendant(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
+    public String queryDescendant(long id) {
         try (RestClient client = BUILDER.build()) {
             String rootId = "-1";
             int left = 1, right = 1;
@@ -180,15 +171,10 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             request.setJsonEntity(queryDescendantJsonEntity(rootId, left, right));
             response = client.performRequest(request);
             return rebuildCategories(response.getEntity().getContent(), true);
-        } catch (ResponseException e) {
-            LOGGER.warn("The category(id={}) not found", id, e);
-        } catch (JsonParseException e) {
-            LOGGER.warn("Incorrect JSON format", e);
         } catch (IOException e) {
-            LOGGER.error("I/O failed", e);
-            throw new RuntimeException(e);
+            LOGGER.error("There are no related category(id={}) available", e);
+            throw new QueryException(String.format("There are no related category(id=%d) available", id), e);
         }
-        return EMPTY_CATEGORY;
     }
 
     private String queryDescendantJsonEntity(String rootId, int left, int right) {
@@ -235,7 +221,6 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             generator.writeEndObject();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
-            throw new RuntimeException(e);
         }
         //System.out.println(writer.getBuffer().capacity());
         return writer.toString();
@@ -303,8 +288,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
     }
 
     @Override
-    public String path(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
+    public String path(long id) {
         try (RestClient client = BUILDER.build()) {
             String rootId = "-1";
             int left = 1, right = 1;
@@ -390,7 +374,6 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             generator.writeEndObject();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
-            throw new RuntimeException(e);
         }
         //System.out.println(writer.getBuffer().capacity());
         return writer.toString();

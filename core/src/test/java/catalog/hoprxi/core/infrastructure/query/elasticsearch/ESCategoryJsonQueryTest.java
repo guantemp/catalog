@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.CategoryJsonQuery;
+import catalog.hoprxi.core.application.query.QueryException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
@@ -34,12 +35,12 @@ public class ESCategoryJsonQueryTest {
 
     private static final CategoryJsonQuery service = new ESCategoryJsonQuery();
 
-    @Test
+    @Test(expectedExceptions = QueryException.class)
     public void testQuery() {
-        System.out.println(service.query("-1"));
-        Assert.assertNotNull(service.query("-1"));
-        Assert.assertNotNull(service.query("143"));
-        Assert.assertEquals("{}", service.query("19"));
+        System.out.println(service.query(-1));
+        Assert.assertNotNull(service.query(-1));
+        Assert.assertNotNull(service.query(143));
+        Assert.assertEquals("", service.query(19));
     }
 
     @Test
@@ -52,14 +53,14 @@ public class ESCategoryJsonQueryTest {
 
     @Test
     public void testQueryChildren() {
-        System.out.println(service.queryChildren("151"));
-        System.out.println(service.queryChildren("1514"));
+        System.out.println(service.queryChildren(151));
+        System.out.println(service.queryChildren(1514));
     }
 
     @Test
     public void testQueryDescendant() {
-        System.out.println(service.queryDescendant("1"));
-        Assert.assertNotNull(service.queryDescendant("-1"));
+        System.out.println(service.queryDescendant(1));
+        Assert.assertNotNull(service.queryDescendant(-1));
     }
 
     @Test
@@ -69,7 +70,7 @@ public class ESCategoryJsonQueryTest {
 
     @Test
     public void testPath() {
-        System.out.println(service.path("1514"));
-        System.out.println(service.path("-1"));
+        System.out.println(service.path(1514));
+        System.out.println(service.path(-1));
     }
 }

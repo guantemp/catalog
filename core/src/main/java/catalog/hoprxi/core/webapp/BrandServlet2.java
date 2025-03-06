@@ -47,19 +47,19 @@ import java.util.Optional;
  * @version 0.0.1 builder 2024-11-26
  */
 
-@WebServlet(urlPatterns = {"v2/brands/*"}, name = "brands", asyncSupported = true, initParams = {@WebInitParam(name = "queryImpl", value = "es")})
+@WebServlet(urlPatterns = {"v2/brands/*"}, name = "brands", asyncSupported = true, initParams = {@WebInitParam(name = "query", value = "es")})
 public class BrandServlet2 extends HttpServlet {
     private static final int OFFSET = 0;
     private static final int LIMIT = 64;
-    private final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-    private final BrandJsonQuery jsonQuery = new ESBrandJsonQuery();
-    private final BrandAppService appService = new BrandAppService();
+    private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
+    private final BrandJsonQuery query = new ESBrandJsonQuery();
+    private final BrandAppService app = new BrandAppService();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         if (config != null) {
-            String queryImpl = config.getInitParameter("queryImpl");
+            String query = config.getInitParameter("queryImpl");
         }
     }
 
@@ -71,16 +71,24 @@ public class BrandServlet2 extends HttpServlet {
         boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
         if (pretty) generator.useDefaultPrettyPrinter();
         if (pathInfo != null) {
-            long id = NumberHelper.longOf(pathInfo.substring(1), 0l);
+            String path = pathInfo.substring(1);
             try {
-                String result = jsonQuery.query(id);
+                long id = Long.parseLong(path);
+                String result = query.query(id);
                 copyRaw(generator, result);
             } catch (QueryException e) {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 generator.writeStartObject();
                 generator.writeStringField("status", "miss");
+                generator.writeNumberField("code", 30102);
+                generator.writeStringField("message", String.format("No brand with id=%d found", path));
+                generator.writeEndObject();
+            } catch (NumberFormatException e) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                generator.writeStartObject();
+                generator.writeStringField("status", "Error RESTful path");
                 generator.writeNumberField("code", 30101);
-                generator.writeStringField("message", String.format("No brand with id=%d found", id));
+                generator.writeStringField("message", String.format("RESTful path(%s), not long type", path));
                 generator.writeEndObject();
             }
         } else {//query by name
@@ -93,12 +101,12 @@ public class BrandServlet2 extends HttpServlet {
             //System.out.println(sortField);
             if (name.isEmpty()) {
                 if (searchAfter.isEmpty()) {
-                    copyRaw(generator, jsonQuery.query(offset, limit, sortField));
+                    copyRaw(generator, query.query(offset, limit, sortField));
                 } else {
-                    copyRaw(generator, jsonQuery.query(limit, searchAfter, sortField));
+                    copyRaw(generator, query.query(limit, searchAfter, sortField));
                 }
             } else {
-                copyRaw(generator, jsonQuery.query(name, offset, limit, sortField));
+                copyRaw(generator, query.query(name, offset, limit, sortField));
             }
         }
         generator.close();
@@ -145,7 +153,7 @@ public class BrandServlet2 extends HttpServlet {
             }
         }
         BrandCreateCommand brandCreateCommand = new BrandCreateCommand(name, alias, homepage, logo, since, story);
-        Brand brand = appService.createBrand(brandCreateCommand);
+        Brand brand = app.createBrand(brandCreateCommand);
         JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
         boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
         if (pretty) generator.useDefaultPrettyPrinter();
@@ -214,7 +222,7 @@ public class BrandServlet2 extends HttpServlet {
                 commands.add(new BrandRenameCommand(id, name, alias));
             if (story != null || homepage != null || logo != null || since != null)
                 commands.add(new BrandChangeAboutCommand(id, logo, homepage, since, story));
-            appService.handle(commands);
+            app.handle(commands);
             resp.setContentType("application/json; charset=UTF-8");
             JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
                     .setPrettyPrinter(new DefaultPrettyPrinter());
@@ -235,7 +243,7 @@ public class BrandServlet2 extends HttpServlet {
             String[] parameters = pathInfo.split("/");
             long id = NumberHelper.longOf(parameters[1]);
             BrandDeleteCommand command = new BrandDeleteCommand(id);
-            appService.delete(command);
+            app.delete(command);
         }
         resp.setContentType("application/json; charset=UTF-8");
         JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)

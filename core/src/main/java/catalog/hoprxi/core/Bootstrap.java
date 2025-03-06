@@ -104,15 +104,17 @@ public class Bootstrap {
                         Servlets.servlet("categoryServlet", CategoryServlet.class)
                                 .addMapping("/v1/categories/*"),
                         Servlets.servlet("itemServlet", ItemServlet.class)
-                                .addInitParam("database", "arangodb")
                                 .addInitParam("databaseName", "catalog")
                                 .addMapping("/v1/items/*"),
                         Servlets.servlet("uploadServlet", UploadServlet.class)
-                                //.addInitParam("UPLOAD_DIRECTORY", "temp")
-                                //.addInitParam("databaseName", "catalog")
+                                .addInitParam("UPLOAD_DIRECTORY", "temp")
                                 .addMapping("/v1/upload"),
                         Servlets.servlet("brandServlet2", BrandServlet2.class)
-                                .addMapping("/v2/brands/*"));
+                                .addInitParam("query", "es")
+                                .addMapping("/v2/brands/*"),
+                        Servlets.servlet("categoryServlet2", CategoryServlet2.class)
+                                .addInitParam("query", "es")
+                                .addMapping("/v2/categories/*"));
         DeploymentManager manager = container.addDeployment(deploymentInfo);
         manager.deploy();
         PathHandler path = Handlers.path(Handlers.redirect("/core"))

@@ -23,30 +23,37 @@ package catalog.hoprxi.core.application.query;
  */
 public interface CategoryJsonQuery {
     /**
-     * @param id id of category
+     * @param id of category
      * @return
      */
-    String query(String id);
+    String query(long id);
 
     /**
-     * @return all root node or '{}' if no root node
+     * @return all root node or "" if no root node
      */
     String root();
 
     /**
-     * @param id
-     * @return child node or "{}" if there are no child nodes
-     * @throws NullPointerException if id is null
+     * @param id of category
+     * @return child node or "" if there are no child nodes
      */
-    String queryChildren(String id);
+    String queryChildren(long id);
 
     /**
-     * @param id
+     * @param id of category
+     * @return descendant node or "" if there are no descendant nodes
+     */
+    String queryDescendant(long id);
+
+    /**
+     * @param name
      * @return
      */
-    String queryDescendant(String id);
-
     String queryByName(String name);
 
-    String path(String id);
+    /**
+     * @param id of category
+     * @return
+     */
+    String path(long id);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,12 +36,15 @@ import java.net.URI;
  * @version 0.0.1 builder 2022-10-21
  */
 public class PsqlCategoryQueryTest {
+    static {
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
+    }
+
     private static final CategoryRepository repository = new PsqlCategoryRepository();
 
     @BeforeClass
     public void beforeClass() {
-        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
-                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
         repository.save(Category.UNDEFINED);
         Category root = Category.root("496796322118291457", new Name("商品分类", "root"));
         repository.save(root);
@@ -231,7 +234,7 @@ public class PsqlCategoryQueryTest {
         Assert.assertEquals(2, sub.length);
     }
 
-    @Test(invocationCount = 2, priority = 1, dependsOnMethods = {"testRoot"})
+    @Test(invocationCount = 1, priority = 1, dependsOnMethods = {"testRoot"})
     public void testDescendants() {
         CategoryQuery query = new PsqlCategoryQuery();
         CategoryView[] descendants = query.descendants("496796322118291457");//root
