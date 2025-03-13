@@ -40,6 +40,7 @@ public class ESCategoryJsonQueryTest {
         System.out.println(service.query(-1));
         Assert.assertNotNull(service.query(-1));
         Assert.assertNotNull(service.query(143));
+        System.out.println(service.query(121));
         Assert.assertEquals("", service.query(19));
     }
 
@@ -54,13 +55,19 @@ public class ESCategoryJsonQueryTest {
     @Test
     public void testQueryChildren() {
         System.out.println(service.queryChildren(151));
+        System.out.println("\n");
         System.out.println(service.queryChildren(1514));
+        System.out.println("\n");
+        System.out.println(service.queryChildren(711));
+        System.out.println("\n");
+        System.out.println(service.queryChildren(1));
     }
 
-    @Test
+    @Test(priority = 2)
     public void testQueryDescendant() {
         System.out.println(service.queryDescendant(1));
         Assert.assertNotNull(service.queryDescendant(-1));
+        System.out.println(service.queryDescendant(14));
     }
 
     @Test

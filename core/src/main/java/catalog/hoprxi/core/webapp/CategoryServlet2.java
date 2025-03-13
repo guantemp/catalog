@@ -46,7 +46,7 @@ import java.util.Optional;
 public class CategoryServlet2 extends HttpServlet {
     private static final CategoryAppService APP = new CategoryAppService();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-    private CategoryJsonQuery query = new ESCategoryJsonQuery();
+    private CategoryJsonQuery query;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -58,7 +58,6 @@ public class CategoryServlet2 extends HttpServlet {
                 case "ES":
                 default:
                     query = new ESCategoryJsonQuery();
-                    System.out.println("init");
                     break;
             }
         }

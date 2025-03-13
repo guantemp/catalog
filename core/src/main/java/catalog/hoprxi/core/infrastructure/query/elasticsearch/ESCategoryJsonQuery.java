@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Objects;
+import java.util.Stack;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -51,7 +52,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             request.setOptions(ESUtil.requestOptions());
             Response response = client.performRequest(request);
             JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
-            while (!parser.isClosed()) {
+            while (parser.nextToken() != null) {
                 if (parser.nextToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
                     StringWriter writer = new StringWriter(512);
                     JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
@@ -79,7 +80,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(rootJsonEntity());
             Response response = client.performRequest(request);
-            return rebuildCategories(response.getEntity().getContent(), false);
+            return rebuildCategories(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.warn("No search was found for anything resembling root categories", e);
             throw new QueryException("No search was found for anything resembling root categories", e);
@@ -110,12 +111,13 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(queryChildrenJsonEntity(id));
             Response response = client.performRequest(request);
-            return rebuildCategories(response.getEntity().getContent(), true);
+            return rebuildCategories(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.warn("There are no related category(id={}) available ", id, e);
             throw new QueryException(String.format("There are no related category(id=%d) available", id), e);
         }
     }
+
 
     private String queryChildrenJsonEntity(long id) {
         StringWriter writer = new StringWriter();
@@ -123,10 +125,11 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             generator.writeStartObject();
             generator.writeNumberField("size", MAX_SIZE);
             generator.writeObjectFieldStart("query");
+
             generator.writeObjectFieldStart("term");
             generator.writeNumberField("parent_id", id);
             generator.writeEndObject();
-            generator.writeEndObject();
+            generator.writeEndObject();//query
 
             generator.writeArrayFieldStart("sort");
             generator.writeStartObject();
@@ -142,7 +145,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
     @Override
     public String queryDescendant(long id) {
         try (RestClient client = BUILDER.build()) {
-            String rootId = "-1";
+            long rootId = -1l;
             int left = 1, right = 1;
             Request request = new Request("GET", "/category/_doc/" + id);
             request.setOptions(ESUtil.requestOptions());
@@ -155,7 +158,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
                     parser.nextToken();
                     switch (fieldName) {
                         case "root_id":
-                            rootId = parser.getValueAsString();
+                            rootId = parser.getValueAsLong();
                             break;
                         case "left":
                             left = parser.getValueAsInt();
@@ -170,14 +173,14 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(queryDescendantJsonEntity(rootId, left, right));
             response = client.performRequest(request);
-            return rebuildCategories(response.getEntity().getContent(), true);
+            return writeDescendantAsTree(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("There are no related category(id={}) available", e);
             throw new QueryException(String.format("There are no related category(id=%d) available", id), e);
         }
     }
 
-    private String queryDescendantJsonEntity(String rootId, int left, int right) {
+    private String queryDescendantJsonEntity(long rootId, int left, int right) {
         StringWriter writer = new StringWriter(256);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -188,7 +191,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
 
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");
-            generator.writeStringField("root_id", rootId);
+            generator.writeNumberField("root_id", rootId);
             generator.writeEndObject();
             generator.writeEndObject();
 
@@ -208,9 +211,9 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             generator.writeEndObject();
             generator.writeEndObject();
 
-            generator.writeEndArray();
-            generator.writeEndObject();
-            generator.writeEndObject();
+            generator.writeEndArray();//must
+            generator.writeEndObject();//bool
+            generator.writeEndObject();//query
 
             generator.writeArrayFieldStart("sort");
             generator.writeStartObject();
@@ -226,6 +229,76 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         return writer.toString();
     }
 
+    private String writeDescendantAsTree(InputStream is) throws IOException {
+        StringWriter writer = new StringWriter(1024);
+        Stack<Integer> stack = new Stack<>();
+        try (JsonParser parser = JSON_FACTORY.createParser(is); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+            generator.writeStartObject();//start
+            while (parser.nextToken() != null) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME && "total".equals(parser.getCurrentName())) {
+                    while (parser.nextToken() != null) {
+                        if (parser.currentToken() == JsonToken.FIELD_NAME && "value".equals(parser.getCurrentName())) {
+                            parser.nextToken();
+                            generator.writeNumberField("total", parser.getValueAsInt());
+                            break;
+                        }
+                    }
+                }
+                if (parser.currentToken() == JsonToken.START_ARRAY && "hits".equals(parser.getCurrentName())) {
+                    generator.writeObjectFieldStart("categories");
+                    boolean first = true;
+                    while (parser.nextToken() != null) {
+                        if (parser.currentToken() == JsonToken.END_ARRAY && "hits".equals(parser.getCurrentName()))
+                            break;
+                        int currentLeft = 1, currentRight = 1;
+                        if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {//root source
+                            if (!first)//第一次已写categories
+                                generator.writeStartObject();
+                            while (parser.nextToken() != null) {
+                                if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.getCurrentName()))
+                                    break;//end _source
+                                generator.copyCurrentEvent(parser);
+                                if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                                    String fileName = parser.getCurrentName();
+                                    parser.nextToken();
+                                    generator.copyCurrentEvent(parser);
+                                    switch (fileName) {
+                                        case "left":
+                                            currentLeft = parser.getValueAsInt();
+                                            break;
+                                        case "right":
+                                            currentRight = parser.getValueAsInt();
+                                            break;
+                                    }
+                                }
+                            }
+                            first = false;
+                        }//end source
+                        if (currentRight - currentLeft == 1) {//叶子
+                            generator.writeEndObject();
+                        }
+                        if (currentRight - currentLeft > 1) {
+                            generator.writeArrayFieldStart("children");
+                            stack.push(currentRight);
+                        }
+                        while (!stack.isEmpty() && stack.peek() - currentRight == 1) {
+                            generator.writeEndArray();
+                            generator.writeEndObject();
+                            currentRight = stack.pop();
+                        }
+                    }//end hits
+                    while (!stack.isEmpty()) {
+                        generator.writeEndArray();
+                        generator.writeEndObject();
+                        stack.pop();
+                    }
+                }
+            }
+            generator.writeEndObject();//end
+        }
+        return writer.toString();
+    }
+
     @Override
     public String queryByName(String name) {
         try (RestClient client = BUILDER.build()) {
@@ -233,7 +306,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(queryNameJsonEntity(name));
             Response response = client.performRequest(request);
-            return rebuildCategories(response.getEntity().getContent(), false);
+            return rebuildCategories(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.debug("No search was found for anything resembling name {} category ", name, e);
         }
@@ -318,7 +391,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(queryPathJsonEntity(rootId, left, right));
             response = client.performRequest(request);
-            return rebuildCategories(response.getEntity().getContent(), true);
+            return rebuildCategories(response.getEntity().getContent());
         } catch (ResponseException e) {
             LOGGER.warn("The category(id={}) not found", id, e);
         } catch (JsonParseException e) {
@@ -380,119 +453,51 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
     }
 
 
-    private String rebuildCategories(InputStream is, boolean tree) throws IOException {
+    private String rebuildCategories(InputStream is) throws IOException {
         StringWriter writer = new StringWriter(1024);
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer).useDefaultPrettyPrinter()) {
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             JsonParser parser = JSON_FACTORY.createParser(is);
-            while (!parser.isClosed()) {
-                if (parser.nextToken() == JsonToken.FIELD_NAME && "hits".equals(parser.getCurrentName())) {
-                    if (tree) parseHitsAsTree(parser, generator);
-                    else parseHits(parser, generator);
+            while (parser.nextToken() != null) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME && "hits".equals(parser.getCurrentName())) {
+                    writeHits(parser, generator);
                 }
             }
         }
         return writer.toString();
     }
 
-    private void parseHitsAsTree(JsonParser parser, JsonGenerator generator) throws IOException {
+    private void writeHits(JsonParser parser, JsonGenerator generator) throws IOException {
         generator.writeStartObject();
-        int left = 0, right = 0;
         while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME && "total".equals(parser.getCurrentName())) {
                 while (parser.nextToken() != null) {
-                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.getCurrentName())) break;
-                    generator.copyCurrentEvent(parser);
-                    if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                        String fileName = parser.getCurrentName();
+                    if (parser.currentToken() == JsonToken.FIELD_NAME && "value".equals(parser.getCurrentName())) {
                         parser.nextToken();
-                        generator.copyCurrentEvent(parser);
-                        switch (fileName) {
-                            case "left":
-                                left = parser.getValueAsInt();
-                                break;
-                            case "right":
-                                right = parser.getValueAsInt();
-                                break;
-                        }
-                    }
-                }
-                if (right - left > 1) {
-                    parserSourceAsTree(parser, generator);
-                }
-            }
-        }
-    }
-
-    private void parserSourceAsTree(JsonParser parser, JsonGenerator generator) throws IOException {
-        generator.writeArrayFieldStart("children");
-        int left = 0, right = 0;
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
-                generator.writeStartObject();
-                while (parser.nextToken() != null) {
-                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.getCurrentName()))
+                        generator.writeNumberField("total", parser.getValueAsInt());
                         break;
-                    //System.out.println(parser.currentToken() + ":" + parser.currentName());
-                    generator.copyCurrentEvent(parser);
-                    if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                        String fileName = parser.getCurrentName();
-                        parser.nextToken();
-                        generator.copyCurrentEvent(parser);
-                        switch (fileName) {
-                            case "left":
-                                left = parser.getValueAsInt();
-                                break;
-                            case "right":
-                                right = parser.getValueAsInt();
-                                break;
-                        }
                     }
-                }
-                if (right - left == 1) {
-                    generator.writeEndObject();
-                } else if (right - left > 1) {
-                    parserSourceAsTree(parser, generator);
                 }
             }
-        }
-        generator.writeEndArray();
-        generator.writeEndObject();
-    }
-
-    private void parseHits(JsonParser parser, JsonGenerator generator) throws IOException {
-        generator.writeStartObject();
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                String fieldName = parser.getCurrentName();
-                if ("total".equals(fieldName)) {
-                    while (parser.nextToken() != null) {
-                        if (parser.currentToken() == JsonToken.FIELD_NAME && "value".equals(parser.getCurrentName())) {
-                            parser.nextToken();
-                            generator.writeNumberField("total", parser.getValueAsInt());
-                            break;
-                        }
+            if (parser.currentToken() == JsonToken.START_ARRAY && "hits".equals(parser.getCurrentName())) {
+                generator.writeArrayFieldStart("categories");
+                while (parser.nextToken() != null) {
+                    if (parser.getCurrentToken() == JsonToken.START_OBJECT) {
+                        generator.writeStartObject();
+                        writeSource(parser, generator);
+                        writeSort(parser, generator);
+                        generator.writeEndObject();
                     }
-                } else if ("hits".equals(fieldName)) {
-                    generator.writeArrayFieldStart("categories");
-                    while (parser.nextToken() != null) {
-                        if (parser.getCurrentToken() == JsonToken.START_OBJECT) {
-                            generator.writeStartObject();
-                            parserSource(parser, generator);
-                            parserSort(parser, generator);
-                            generator.writeEndObject();
-                        }
-                        if (parser.currentToken() == JsonToken.END_ARRAY && "hits".equals(parser.getCurrentName())) {
-                            break;
-                        }
+                    if (parser.currentToken() == JsonToken.END_ARRAY && "hits".equals(parser.getCurrentName())) {
+                        break;
                     }
-                    generator.writeEndArray();
                 }
+                generator.writeEndArray();
             }
         }
         generator.writeEndObject();
     }
 
-    private void parserSource(JsonParser parser, JsonGenerator generator) throws IOException {
+    private void writeSource(JsonParser parser, JsonGenerator generator) throws IOException {
         while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
                 while (parser.nextToken() != null) {
@@ -507,7 +512,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
         }
     }
 
-    private void parserSort(JsonParser parser, JsonGenerator generator) throws IOException {
+    private void writeSort(JsonParser parser, JsonGenerator generator) throws IOException {
         if (parser.nextToken() == JsonToken.FIELD_NAME && "sort".equals(parser.getCurrentName())) {
             generator.copyCurrentEvent(parser);
             while (parser.nextToken() != null) {
