@@ -24,7 +24,7 @@ public interface CategoryRepository {
 
     /**
      * @param id
-     * @return
+     * @return a category with current id or null if not find
      */
     Category find(long id);
 

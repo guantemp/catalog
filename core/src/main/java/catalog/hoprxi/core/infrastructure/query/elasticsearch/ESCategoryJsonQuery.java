@@ -39,7 +39,7 @@ import java.util.Stack;
 public class ESCategoryJsonQuery implements CategoryJsonQuery {
     private static final String EMPTY_CATEGORY = "";
     private static final int MAX_SIZE = 9999;
-    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.infrastructure.query.elasticsearch.Category");
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Category");
     private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 

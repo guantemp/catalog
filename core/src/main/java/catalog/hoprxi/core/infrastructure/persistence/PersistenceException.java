@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,14 +14,14 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.query;
+package catalog.hoprxi.core.infrastructure.persistence;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2025-02-23
+ * @version 0.0.1 builder 2025-03-18
  */
-public class QueryException extends RuntimeException {
+public class PersistenceException extends RuntimeException {
     /**
      * Constructs a new runtime exception with the specified detail message and
      * cause.  <p>Note that the detail message associated with
@@ -36,8 +36,7 @@ public class QueryException extends RuntimeException {
      *                unknown.)
      * @since 1.4
      */
-    public QueryException(String message, Throwable cause) {
+    public PersistenceException(String message, Throwable cause) {
         super(message, cause, false, false);
     }
-
 }

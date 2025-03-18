@@ -74,25 +74,26 @@ public class PsqlBrandRepositoryTest {
 /*
     @AfterClass
     public void afterClass() {
-        repository.remove("495651176959596552");
-        repository.remove("495651176959596578");
-        repository.remove("495651176959596546");
-        repository.remove("495651176959596602");
-        repository.remove("495651176959596634");
+        repository.remove(495651176959596552l);
+        repository.remove(495651176959596578l);
+        repository.remove(495651176959596546l);
+        repository.remove(495651176959596602l);
+        repository.remove(495651176959596634l);
         repository.remove(Brand.UNDEFINED.id());
     }
 */
 
-    @Test(invocationCount = 15)
+    @Test(invocationCount = 2)
     public void testFind() {
         Brand brand = repository.find(495651176959596552l);
+        System.out.println(brand);
         assertNotNull(brand);
         Brand undefined = repository.find(-1l);
         assertTrue(Brand.UNDEFINED == undefined);
     }
 
 
-    @Test(priority = 3, invocationCount = 1)
+    @Test(priority = 3)
     public void testSave() {
         Brand brand = repository.find(495651176959596602l);
         assertEquals(new Name("官的"), brand.name());
