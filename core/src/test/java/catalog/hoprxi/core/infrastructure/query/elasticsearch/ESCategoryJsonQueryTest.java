@@ -41,6 +41,7 @@ public class ESCategoryJsonQueryTest {
         Assert.assertNotNull(service.query(-1));
         Assert.assertNotNull(service.query(143));
         System.out.println(service.query(121));
+        System.out.println(service.query(62078013263165440l));
         Assert.assertEquals("", service.query(19));
     }
 

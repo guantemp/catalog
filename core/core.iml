@@ -117,7 +117,6 @@
     <orderEntry type="library" name="Maven: org.apache.httpcomponents.client5:httpclient5:5.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents.core5:httpcore5:5.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents.core5:httpcore5-h2:5.2" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains:annotations:26.0.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.testng:testng:7.3.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.beust:jcommander:1.78" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.apache.ant:ant:1.10.3" level="project" />

@@ -34,7 +34,7 @@ import java.util.Objects;
  * @version 0.0.2 builder 2025-03-01
  */
 public class ESBrandJsonQuery implements BrandJsonQuery {
-    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.infrastructure.query.elasticsearch.Brand");
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Brand");
     private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
     private static final String EMPTY_BRAND = "";
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();

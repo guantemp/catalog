@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ public class PsqlItemQueryTest {
 
     static {
         CategoryQuery categoryQuery = new PsqlCategoryQuery();
-        categoryQuery.descendants("52495569397272599");
+        categoryQuery.descendants(52495569397272599l);
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1)

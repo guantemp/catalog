@@ -74,6 +74,7 @@ public class BrandServlet2 extends HttpServlet {
             String path = pathInfo.substring(1);
             try {
                 long id = Long.parseLong(path);
+                System.out.println(id);
                 String result = query.query(id);
                 copyRaw(generator, result);
             } catch (QueryException e) {
@@ -231,7 +232,6 @@ public class BrandServlet2 extends HttpServlet {
             generator.writeNumberField("code", 30102);
             generator.writeStringField("message", "brand handle success");
             generator.writeEndObject();
-            generator.flush();
             generator.close();
         }
     }
@@ -253,7 +253,6 @@ public class BrandServlet2 extends HttpServlet {
         generator.writeNumberField("code", 30103);
         generator.writeStringField("message", "brand remove success");
         generator.writeEndObject();
-        generator.flush();
         generator.close();
     }
 }

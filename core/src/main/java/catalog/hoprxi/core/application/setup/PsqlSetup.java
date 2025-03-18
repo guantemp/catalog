@@ -44,7 +44,11 @@ public final class PsqlSetup extends Setup {
             "CREATE INDEX category_left_index ON category USING btree (\"left\");\n" +
             "CREATE INDEX category_right_index ON category USING btree (\"right\");\n" +
             "CREATE INDEX category_rootid_parentid_index ON category USING btree (root_id, parent_id);";
-    private static final String ddl = "create user hoprxi createdb password '';create database catalog";
+    private static final String CREATE = "create user hoprxi createdb password '';create database catalog";
 
 
+    @Override
+    public void setup() {
+
+    }
 }

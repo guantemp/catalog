@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ package catalog.hoprxi.core.application.command;
  * @version 0.0.1 builder 2022-06-24
  */
 public class CategoryDeleteCommand implements Command {
-    private String id;
+    private long id;
 
-    public CategoryDeleteCommand(String id) {
+    public CategoryDeleteCommand(long id) {
         this.id = id;
     }
 
-    public String id() {
+    public long id() {
         return id;
     }
 
@@ -39,11 +39,11 @@ public class CategoryDeleteCommand implements Command {
 
         CategoryDeleteCommand that = (CategoryDeleteCommand) o;
 
-        return id != null ? id.equals(that.id) : that.id == null;
+        return id == that.id;
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        return (int) (id ^ (id >>> 32));
     }
 }

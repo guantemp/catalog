@@ -89,5 +89,4 @@ public final class DataSourceUtil {
             return;
         hikariDataSource.evictConnection(connection);
     }
-
 }

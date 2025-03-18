@@ -37,7 +37,7 @@ public class Item {
     private static final int ID_MAX_LENGTH = 48;
     private Barcode barcode;
     private long brandId;
-    private String categoryId;
+    private long categoryId;
     private Grade grade;
     private String id;
     private Name name;
@@ -67,7 +67,7 @@ public class Item {
      *                                  if name is null
      *                                  if madeIn is null
      */
-    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, long brandId) {
+    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
@@ -84,7 +84,7 @@ public class Item {
     }
 
     public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice,
-                MemberPrice memberPrice, VipPrice vipPrice, String categoryId, long brandId) {
+                MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         this(id, barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY, lastReceiptPrice, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
@@ -96,9 +96,8 @@ public class Item {
         this(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.RMB_ZERO, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
     }
 
-    private void setCategoryId(String categoryId) {
-        categoryId = Objects.requireNonNull(categoryId, "categoryId required").trim();
-        if (!categoryId.equals(Category.UNDEFINED.id()) && !CategoryValidatorService.isCategoryExist(categoryId))
+    private void setCategoryId(long categoryId) {
+        if (categoryId != Category.UNDEFINED.id() && !CategoryValidatorService.isCategoryExist(categoryId))
             throw new IllegalArgumentException("categoryId isn't effective");
         this.categoryId = categoryId;
     }
@@ -256,11 +255,10 @@ public class Item {
      * @throws IllegalArgumentException if categoryId is <code>NULL</code>
      *                                  categoryId is not valid
      */
-    public void moveToNewCategory(String categoryId) {
-        categoryId = Objects.requireNonNull(categoryId, "categoryId required").trim();
-        if (!this.categoryId.equals(categoryId)) {
+    public void moveToNewCategory(long categoryId) {
+        if (this.categoryId != categoryId) {
             setCategoryId(categoryId);
-            DomainRegistry.domainEventPublisher().publish(new ItemCategoryReallocated(id, categoryId));
+            //DomainRegistry.domainEventPublisher().publish(new ItemCategoryReallocated(id, categoryId));
         }
     }
 
@@ -300,7 +298,7 @@ public class Item {
         return brandId;
     }
 
-    public String categoryId() {
+    public long categoryId() {
         return categoryId;
     }
 

@@ -35,7 +35,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -89,8 +88,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
     }
 
     @Override
-    public CategoryView query(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
+    public CategoryView query(long id) {
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
             if (t.contain(identifiable)) {
@@ -100,7 +98,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
         try (Connection connection = DataSourceUtil.getConnection()) {
             final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri,\"right\" - \"left\" as distance from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
-            preparedStatement.setLong(1, Long.parseLong(id));
+            preparedStatement.setLong(1, id);
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next()) {
                 CategoryView view = rebuild(rs);
@@ -120,8 +118,8 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
     }
 
     private CategoryView rebuild(ResultSet rs) throws SQLException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        String id = rs.getString("id");
-        String parentId = rs.getString("parent_id");
+        long id = rs.getLong("id");
+        long parentId = rs.getLong("parent_id");
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
         String description = rs.getString("description");
         URI icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri"));
@@ -131,8 +129,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
 
 
     @Override
-    public CategoryView[] children(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
+    public CategoryView[] children(long id) {
         CategoryView[] children = new CategoryView[0];
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> tree : trees) {
@@ -147,11 +144,11 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
         return children;
     }
 
-    private void queryAndFillChildren(Tree<CategoryView> tree, CategoryView parent, String id) {
+    private void queryAndFillChildren(Tree<CategoryView> tree, CategoryView parent, long id) {
         try (Connection connection = DataSourceUtil.getConnection()) {
             final String childrenSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri,\"right\" - \"left\" as distance from category where parent_id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(childrenSql);
-            preparedStatement.setLong(1, Long.parseLong(id));
+            preparedStatement.setLong(1, id);
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()) {
                 CategoryView view = rebuild(rs);
@@ -163,8 +160,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
     }
 
     @Override
-    public CategoryView[] descendants(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
+    public CategoryView[] descendants(long id) {
         CategoryView[] descendants = new CategoryView[0];
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> tree : trees) {
@@ -179,7 +175,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
         return descendants;
     }
 
-    public void queryAndFillDescendants(Tree<CategoryView> tree, String id) {
+    public void queryAndFillDescendants(Tree<CategoryView> tree, long id) {
         try (Connection connection = DataSourceUtil.getConnection()) {
             final String descendantsSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri,\"right\" - \"left\" as distance from category \n" +
                     "where root_id = (select root_id from category where id = ?)\n" +
@@ -187,10 +183,9 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
                     "  and \"right\" <= (select \"right\" from category where id = ?)\n" +
                     "order by \"left\"";
             PreparedStatement preparedStatement = connection.prepareStatement(descendantsSql);
-            long sqlId = Long.parseLong(id);
-            preparedStatement.setLong(1, sqlId);
-            preparedStatement.setLong(2, sqlId);
-            preparedStatement.setLong(3, sqlId);
+            preparedStatement.setLong(1, id);
+            preparedStatement.setLong(2, id);
+            preparedStatement.setLong(3, id);
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()) {
                 CategoryView view = rebuild(rs);
@@ -225,8 +220,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
     }
 
     @Override
-    public CategoryView[] siblings(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
+    public CategoryView[] siblings(long id) {
         CategoryView[] siblings = new CategoryView[0];
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> tree : trees) {
@@ -239,8 +233,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
     }
 
     @Override
-    public CategoryView[] path(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
+    public CategoryView[] path(long id) {
         CategoryView[] path = new CategoryView[0];
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
@@ -252,7 +245,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
     }
 
     @Override
-    public int depth(String id) {
+    public int depth(long id) {
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> tree : trees) {
             if (tree.contain(identifiable))

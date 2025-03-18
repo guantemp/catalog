@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,11 @@ import java.util.Objects;
  * @version 0.0.1 builder 2022-07-05
  */
 public class CategoryChangeIconCommand implements Command {
-    private String id;
+    private long id;
     private URI icon;
 
-    public CategoryChangeIconCommand(String id, URI icon) {
-        this.id = Objects.requireNonNull(id, "id required").trim();
+    public CategoryChangeIconCommand(long id, URI icon) {
+        this.id = id;
         this.icon = icon;
     }
 
@@ -37,7 +37,7 @@ public class CategoryChangeIconCommand implements Command {
         return icon;
     }
 
-    public String id() {
+    public long id() {
         return id;
     }
 
@@ -48,11 +48,14 @@ public class CategoryChangeIconCommand implements Command {
 
         CategoryChangeIconCommand that = (CategoryChangeIconCommand) o;
 
-        return id != null ? id.equals(that.id) : that.id == null;
+        if (id != that.id) return false;
+        return Objects.equals(icon, that.icon);
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        int result = (int) (id ^ (id >>> 32));
+        result = 31 * result + (icon != null ? icon.hashCode() : 0);
+        return result;
     }
 }

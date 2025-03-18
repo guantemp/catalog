@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,11 @@ import java.time.LocalDateTime;
  */
 public class CategoryNodeMoved implements DomainEvent {
     private final LocalDateTime occurredOn;
-    private final String id;
-    private final String movedId;
+    private final long id;
+    private final long movedId;
     private final int version;
 
-    public CategoryNodeMoved(String id, String movedId) {
+    public CategoryNodeMoved(long id, long movedId) {
         this.id = id;
         this.movedId = movedId;
         this.occurredOn = LocalDateTime.now();
@@ -48,11 +48,11 @@ public class CategoryNodeMoved implements DomainEvent {
         return 0;
     }
 
-    public String id() {
+    public long id() {
         return id;
     }
 
-    public String movedId() {
+    public long movedId() {
         return movedId;
     }
 }

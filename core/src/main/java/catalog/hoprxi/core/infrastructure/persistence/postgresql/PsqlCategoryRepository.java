@@ -57,12 +57,11 @@ public class PsqlCategoryRepository implements CategoryRepository {
     }
 
     @Override
-    public Category find(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
+    public Category find(long id) {
         try (Connection connection = DataSourceUtil.getConnection()) {
             final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
-            preparedStatement.setLong(1, Long.parseLong(id));
+            preparedStatement.setLong(1, id);
             ResultSet rs = preparedStatement.executeQuery();
             return rebuild(rs);
         } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
@@ -74,9 +73,9 @@ public class PsqlCategoryRepository implements CategoryRepository {
 
     private Category rebuild(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
         if (rs.next()) {
-            String id = rs.getString("id");
-            if (id.equals(Category.UNDEFINED.id())) return Category.UNDEFINED;
-            String parent_id = rs.getString("parent_id");
+            long id = rs.getLong("id");
+            if (id == Category.UNDEFINED.id()) return Category.UNDEFINED;
+            long parent_id = rs.getLong("parent_id");
             Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
             String description = rs.getString("description");
             URI icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri"));
@@ -86,17 +85,16 @@ public class PsqlCategoryRepository implements CategoryRepository {
     }
 
     @Override
-    public String nextIdentity() {
-        return String.valueOf(LongId.generate());
+    public long nextIdentity() {
+        return LongId.generate();
     }
 
     @Override
-    public void remove(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
+    public void remove(long id) {
         try (Connection connection = DataSourceUtil.getConnection()) {
             final String removeSql = "select \"left\",\"right\",root_id from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
-            preparedStatement.setLong(1, Long.parseLong(id));
+            preparedStatement.setLong(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
                 int right = resultSet.getInt("right");
@@ -127,12 +125,12 @@ public class PsqlCategoryRepository implements CategoryRepository {
             PreparedStatement preparedStatement = connection.prepareStatement(rootSql);
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()) {
-                String id = rs.getString("id");
-                if (id.equals(Category.UNDEFINED.id())) {
+                long id = rs.getLong("id");
+                if (id == Category.UNDEFINED.id()) {
                     categoryList.add(Category.UNDEFINED);
                     continue;
                 }
-                String parent_id = rs.getString("parent_id");
+                long parent_id = rs.getLong("parent_id");
                 Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
                 String description = rs.getString("description");
                 URI icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri"));
@@ -154,19 +152,19 @@ public class PsqlCategoryRepository implements CategoryRepository {
         try (Connection connection = DataSourceUtil.getConnection()) {
             final String isExistsSql = "select id,parent_id,\"left\",\"right\",root_id from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(isExistsSql);
-            preparedStatement.setLong(1, Long.parseLong(category.id()));
+            preparedStatement.setLong(1, category.id());
             ResultSet resultSet = preparedStatement.executeQuery();
             //exists->update
             if (resultSet.next()) {
                 //not move from old tree
-                if (category.parentId().equals(resultSet.getString("parent_id"))) {
+                if (category.parentId() == resultSet.getLong("parent_id")) {
                     final String updateSql = "update category set name=?,description=?,logo_uri=? where id=?";
                     PreparedStatement ps1 = connection.prepareStatement(updateSql);
                     name.setValue(toJson(category.name()));
                     ps1.setObject(1, name);
                     ps1.setString(2, category.description());
                     ps1.setString(3, category.icon() == null ? null : category.icon().toASCIIString());
-                    ps1.setLong(4, Long.parseLong(category.id()));
+                    ps1.setLong(4, category.id());
                     ps1.executeUpdate();
                 } else {
                     moveCategory(connection, category, resultSet.getInt("left"), resultSet.getInt("right"), resultSet.getLong("root_id"));
@@ -175,13 +173,13 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 if (category.isRoot()) {
                     final String insertRoot = "insert into category (id,parent_id,name,description,logo_uri,root_id,\"left\",\"right\") values (?,?,?,?,?,?,1,2)";
                     PreparedStatement ps1 = connection.prepareStatement(insertRoot);
-                    ps1.setLong(1, Long.parseLong(category.id()));
-                    ps1.setLong(2, Long.parseLong(category.parentId()));
+                    ps1.setLong(1, category.id());
+                    ps1.setLong(2, category.parentId());
                     name.setValue(toJson(category.name()));
                     ps1.setObject(3, name);
                     ps1.setString(4, category.description());
                     ps1.setString(5, category.icon() == null ? null : category.icon().toASCIIString());
-                    ps1.setLong(6, Long.parseLong(category.id()));
+                    ps1.setLong(6, category.id());
                     ps1.executeUpdate();
                 } else {
                     insertNewCategory(category, connection);
@@ -199,7 +197,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         //获取数据库中父节点
         final String targetSql = "select \"right\",root_id from category where id=?";
         PreparedStatement ps = connection.prepareStatement(targetSql);
-        ps.setLong(1, Long.parseLong(category.parentId()));
+        ps.setLong(1, category.parentId());
         ResultSet rs = ps.executeQuery();
         if (rs.next()) {
             targetRootId = rs.getLong("root_id");
@@ -236,7 +234,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     private void insertNewCategory(Category category, Connection connection) throws SQLException {
         final String parentSql = "select \"right\",root_id from category where id=?";
         PreparedStatement ps = connection.prepareStatement(parentSql);
-        ps.setLong(1, Long.parseLong(category.parentId()));
+        ps.setLong(1, category.parentId());
         ResultSet rs = ps.executeQuery();
         if (rs.next()) {
             int right = rs.getInt("right");

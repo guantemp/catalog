@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,23 +21,24 @@ import catalog.hoprxi.core.domain.model.Name;
 import event.hoprxi.domain.model.DomainEvent;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2020-05-05
+ * @version 0.0.2 builder 2025-03-18
  */
 public class CategoryRenamed implements DomainEvent {
     private final Name name;
     private final LocalDateTime occurredOn;
-    private final String id;
+    private final long id;
     private final int version;
 
     /**
      * @param id
      * @param name
      */
-    public CategoryRenamed(String id, Name name) {
+    public CategoryRenamed(long id, Name name) {
         this.id = id;
         this.name = name;
         this.occurredOn = LocalDateTime.now();
@@ -47,21 +48,21 @@ public class CategoryRenamed implements DomainEvent {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof CategoryRenamed)) return false;
 
         CategoryRenamed that = (CategoryRenamed) o;
 
+        if (id != that.id) return false;
         if (version != that.version) return false;
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        if (occurredOn != null ? !occurredOn.equals(that.occurredOn) : that.occurredOn != null) return false;
-        return id != null ? id.equals(that.id) : that.id == null;
+        if (!Objects.equals(name, that.name)) return false;
+        return Objects.equals(occurredOn, that.occurredOn);
     }
 
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (occurredOn != null ? occurredOn.hashCode() : 0);
-        result = 31 * result + (id != null ? id.hashCode() : 0);
+        result = 31 * result + (int) (id ^ (id >>> 32));
         result = 31 * result + version;
         return result;
     }
@@ -81,7 +82,7 @@ public class CategoryRenamed implements DomainEvent {
     /**
      * @return the id
      */
-    public String id() {
+    public long id() {
         return id;
     }
 

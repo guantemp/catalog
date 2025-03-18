@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,25 +25,25 @@ import java.util.Objects;
  * @version 0.0.1 builder 2022-06-24
  */
 public class CategoryCreateCommand implements Command {
-    private String parentId;
+    private long parentId;
     private String name;
     private String alias;
     private URI logo;
     private String description;
 
-    public CategoryCreateCommand(String parentId, String name, String alias, String description, URI logo) {
-        this.parentId = Objects.requireNonNull(parentId, "parentId required").trim();
+    public CategoryCreateCommand(long parentId, String name, String alias, String description, URI logo) {
+        this.parentId = parentId;
         this.name = Objects.requireNonNull(name, "name required").trim();
         this.alias = alias;
         this.logo = logo;
         this.description = description;
     }
 
-    public String getParentId() {
+    public long getParentId() {
         return parentId;
     }
 
-    public void setParentId(String parentId) {
+    public void setParentId(long parentId) {
         this.parentId = parentId;
     }
 
@@ -86,16 +86,20 @@ public class CategoryCreateCommand implements Command {
 
         CategoryCreateCommand that = (CategoryCreateCommand) o;
 
-        if (!Objects.equals(parentId, that.parentId)) return false;
+        if (parentId != that.parentId) return false;
         if (!Objects.equals(name, that.name)) return false;
-        return Objects.equals(alias, that.alias);
+        if (!Objects.equals(alias, that.alias)) return false;
+        if (!Objects.equals(logo, that.logo)) return false;
+        return Objects.equals(description, that.description);
     }
 
     @Override
     public int hashCode() {
-        int result = parentId != null ? parentId.hashCode() : 0;
+        int result = (int) (parentId ^ (parentId >>> 32));
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (alias != null ? alias.hashCode() : 0);
+        result = 31 * result + (logo != null ? logo.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
         return result;
     }
 }

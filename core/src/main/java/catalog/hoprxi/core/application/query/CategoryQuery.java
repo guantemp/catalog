@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,19 +33,19 @@ public interface CategoryQuery {
      * @param id
      * @return category key is id
      */
-    CategoryView query(String id);
+    CategoryView query(long id);
 
     /**
      * @param id
      * @return
      */
-    CategoryView[] children(String id);
+    CategoryView[] children(long id);
 
     /**
      * @param id
      * @return descendants
      */
-    CategoryView[] descendants(String id);
+    CategoryView[] descendants(long id);
 
     /**
      * @param regularExpression
@@ -57,17 +57,17 @@ public interface CategoryQuery {
      * @param id
      * @return
      */
-    CategoryView[] siblings(String id);
+    CategoryView[] siblings(long id);
 
     /**
      * @param id
      * @return
      */
-    CategoryView[] path(String id);
+    CategoryView[] path(long id);
 
     /**
      * @param id
      * @return
      */
-    int depth(String id);
+    int depth(long id);
 }

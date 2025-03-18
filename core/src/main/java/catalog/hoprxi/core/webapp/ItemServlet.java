@@ -279,7 +279,7 @@ public class ItemServlet extends HttpServlet {
         Grade grade = Grade.QUALIFIED;
         Specification spec = Specification.UNDEFINED;
         long brandId = Brand.UNDEFINED.id();
-        String categoryId = Category.UNDEFINED.id();
+        long categoryId = Category.UNDEFINED.id();
         Barcode barcode = null;
         LastReceiptPrice lastReceiptPrice = LastReceiptPrice.RMB_ZERO;
         RetailPrice retailPrice = RetailPrice.RMB_ZERO;
@@ -321,7 +321,7 @@ public class ItemServlet extends HttpServlet {
                         categoryId = readId(parser);
                         break;
                     case "brand":
-                        brandId = NumberHelper.longOf(readId(parser));
+                        brandId = readId(parser);
                         break;
                 }
             }
@@ -401,15 +401,15 @@ public class ItemServlet extends HttpServlet {
     }
 
     //read category or brand id
-    private String readId(JsonParser parser) throws IOException {
-        String id = null;
+    private long readId(JsonParser parser) throws IOException {
+        long id = 0;
         while (parser.nextToken() != JsonToken.END_OBJECT) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
                 String fieldName = parser.getCurrentName();
                 parser.nextToken();
                 switch (fieldName) {
                     case "id":
-                        id = parser.getValueAsString();
+                        id = parser.getValueAsLong();
                         break;
                 }
             }

@@ -47,10 +47,8 @@ import java.util.Locale;
  */
 public class PsqlItemRepositoryTest {
     static {
-        //String[] entyies = new String[]{"125.68.186.195:9200:P$Qwe123465El", "125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "https://slave.tooo.top:9200"};
-        //Bootstrap.loadSecretKey("keystore.jks", "Qwe123465", new HashSet<>(Arrays.asList(entyies)));
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
-                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
+                new String[]{"120.77.47.145:6543:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
 
     private static ItemRepository itemRepository = new PsqlItemRepository("catalog");
@@ -69,19 +67,19 @@ public class PsqlItemRepositoryTest {
         brandRepository.save(changhong);
 
         categoryRepository.save((Category.UNDEFINED));
-        Category root = Category.root("52495569397272599", new Name("item测试分类", "root"));
+        Category root = Category.root(52495569397272599l, new Name("item测试分类", "root"));
         categoryRepository.save(root);
-        Category food = new Category("52495569397272599", "52495569397272598", new Name("食品", "food"), "可供人类食用或饮用的物质，包括加工食品，半成品和未加工食品，不包括烟草或只作药品用的物质");
+        Category food = new Category(52495569397272599l, 52495569397272598l, new Name("食品", "food"), "可供人类食用或饮用的物质，包括加工食品，半成品和未加工食品，不包括烟草或只作药品用的物质");
         categoryRepository.save(food);
-        Category dairy = new Category("52495569397272598", "52495569397272597", new Name("乳制品", "dairy"), "使用牛乳或羊乳及其加工制品为主要原料，加入或不加入适量的维生素、矿物质和其他辅料，使用法律法规及标准规定所要求的条件，经加工制成的各种食品");
+        Category dairy = new Category(52495569397272598l, 52495569397272597l, new Name("乳制品", "dairy"), "使用牛乳或羊乳及其加工制品为主要原料，加入或不加入适量的维生素、矿物质和其他辅料，使用法律法规及标准规定所要求的条件，经加工制成的各种食品");
         categoryRepository.save(dairy);
-        Category vegetable_products = new Category("52495569397272598", "52495569397272596", new Name("蔬菜制品", " vegetable_products"), "以蔬菜和食用菌为原料，采用腌制、干燥、油炸等工艺加工而成的各种蔬菜制品，即酱腌菜、蔬菜干制品、食用菌制品、其他蔬菜制品");
+        Category vegetable_products = new Category(52495569397272598l, 52495569397272596l, new Name("蔬菜制品", " vegetable_products"), "以蔬菜和食用菌为原料，采用腌制、干燥、油炸等工艺加工而成的各种蔬菜制品，即酱腌菜、蔬菜干制品、食用菌制品、其他蔬菜制品");
         categoryRepository.save(vegetable_products);
-        Category chemicals = new Category("52495569397272599", "52495569397272595", new Name("日化", "chemicals"), "日用化学品,指人们平日常用的科技化学制品,包括洗发水、沐浴露、护肤、护发、化妆品等等");
+        Category chemicals = new Category(52495569397272599l, 52495569397272595l, new Name("日化", "chemicals"), "日用化学品,指人们平日常用的科技化学制品,包括洗发水、沐浴露、护肤、护发、化妆品等等");
         categoryRepository.save(chemicals);
-        Category cosmetics = new Category("52495569397272595", "52495569397272594", new Name("化妆品", "cosmetics"), "指以涂抹、喷洒或者其他类似方法，散布于人体表面的任何部位，如皮肤、毛发、指趾甲、唇齿等，以达到清洁、保养、美容、修饰和改变外观，或者修正人体气味，保持良好状态为目的的化学工业品或精细化工产品");
+        Category cosmetics = new Category(52495569397272595l, 52495569397272594l, new Name("化妆品", "cosmetics"), "指以涂抹、喷洒或者其他类似方法，散布于人体表面的任何部位，如皮肤、毛发、指趾甲、唇齿等，以达到清洁、保养、美容、修饰和改变外观，或者修正人体气味，保持良好状态为目的的化学工业品或精细化工产品");
         categoryRepository.save(cosmetics);
-        Category skin = new Category("52495569397272594", "52495569397272593", new Name("肤用化妆品", "skin"));
+        Category skin = new Category(52495569397272594l, 52495569397272593l, new Name("肤用化妆品", "skin"));
         categoryRepository.save(skin);
 
 
@@ -212,7 +210,7 @@ public class PsqlItemRepositoryTest {
         six.changeBarcode(new EAN_13("6923555240728"));
         six.changeRetailPrice(new RetailPrice(new Price(Money.of(39.9, currency), Unit.TI)));
         six.changeGrade(Grade.PREMIUM);
-        six.moveToNewCategory("52495569397272598");
+        six.moveToNewCategory(52495569397272598l);
         itemRepository.save(six);
         six = itemRepository.find("52496321492179000");
         Assert.assertEquals(six.barcode(), BarcodeGenerateServices.createBarcode("6923555240728"));

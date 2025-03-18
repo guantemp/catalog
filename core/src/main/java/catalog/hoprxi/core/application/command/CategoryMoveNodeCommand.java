@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,35 +16,33 @@
 
 package catalog.hoprxi.core.application.command;
 
-import java.util.Objects;
-
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2022-07-04
  */
 public class CategoryMoveNodeCommand implements Command {
-    private String id;
-    private String parentId;
+    private long id;
+    private long parentId;
 
-    public CategoryMoveNodeCommand(String id, String parentId) {
+    public CategoryMoveNodeCommand(long id, long parentId) {
         setId(id);
         setParentId(parentId);
     }
 
-    private void setId(String id) {
-        this.id = Objects.requireNonNull(id, "id required").trim();
+    private void setId(long id) {
+        this.id = id;
     }
 
-    private void setParentId(String parentId) {
-        this.parentId = Objects.requireNonNull(parentId, "parentId required").trim();
+    private void setParentId(long parentId) {
+        this.parentId = parentId;
     }
 
-    public String id() {
+    public long id() {
         return id;
     }
 
-    public String parentId() {
+    public long parentId() {
         return parentId;
     }
 
@@ -55,11 +53,14 @@ public class CategoryMoveNodeCommand implements Command {
 
         CategoryMoveNodeCommand that = (CategoryMoveNodeCommand) o;
 
-        return id != null ? id.equals(that.id) : that.id == null;
+        if (id != that.id) return false;
+        return parentId == that.parentId;
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        int result = (int) (id ^ (id >>> 32));
+        result = 31 * result + (int) (parentId ^ (parentId >>> 32));
+        return result;
     }
 }

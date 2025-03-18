@@ -40,14 +40,14 @@ public class ItemCreateCommand implements Command {
     private final Specification spec;
     private final ShelfLife shelfLife;
     private final long brandId;
-    private final String categoryId;
+    private final long categoryId;
 
     private final LastReceiptPrice lastReceiptPrice;
     private final RetailPrice retailPrice;
     private final MemberPrice memberPrice;
     private final VipPrice vipPrice;
 
-    public ItemCreateCommand(Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, long brandId) {
+    public ItemCreateCommand(Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         this.barcode = barcode;
         this.grade = grade;
         this.name = name;
@@ -90,7 +90,7 @@ public class ItemCreateCommand implements Command {
         return brandId;
     }
 
-    public String getCategoryId() {
+    public long getCategoryId() {
         return categoryId;
     }
 

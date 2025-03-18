@@ -47,7 +47,7 @@ import java.time.Year;
  * @version 0.0.1 builder 2022-08-21
  */
 public class PsqlBrandRepository implements BrandRepository {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlBrandRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Brand");
     private static Constructor<Name> nameConstructor;
 
     private static Cache<Long, Brand> cache = CacheFactory.build("brand");

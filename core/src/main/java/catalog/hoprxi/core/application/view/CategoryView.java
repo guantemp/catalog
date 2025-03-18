@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package catalog.hoprxi.core.application.view;
 import catalog.hoprxi.core.domain.model.Name;
 
 import java.net.URI;
-import java.util.Objects;
 import java.util.StringJoiner;
 
 /***
@@ -29,15 +28,15 @@ import java.util.StringJoiner;
  */
 public class CategoryView {
     private static final String PLACEHOLDER = "placeholder";
-    private final String id;
+    private final long id;
     private final Name name;
     private String description;
-    private String parentId;
+    private long parentId;
     private URI icon;
     private boolean isLeaf;
 
-    public CategoryView(String parentId, String id, Name name, String description, URI icon, boolean isLeaf) {
-        this.id = Objects.requireNonNull(id, "id required");
+    public CategoryView(long parentId, long id, Name name, String description, URI icon, boolean isLeaf) {
+        this.id = id;
         this.description = description;
         this.name = name;
         this.parentId = parentId;
@@ -45,12 +44,12 @@ public class CategoryView {
         this.isLeaf = isLeaf;
     }
 
-    public static CategoryView identifiableCategoryView(String id) {
+    public static CategoryView identifiableCategoryView(long id) {
         return new CategoryView(id, id, Name.valueOf(PLACEHOLDER), null, null, true);
     }
 
     public boolean isRoot() {
-        return id.equals(parentId);
+        return id == parentId;
     }
 
     public String getDescription() {
@@ -61,7 +60,7 @@ public class CategoryView {
         this.description = description;
     }
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 
@@ -69,11 +68,11 @@ public class CategoryView {
         return name;
     }
 
-    public String getParentId() {
+    public long getParentId() {
         return parentId;
     }
 
-    public void setParentId(String parentId) {
+    public void setParentId(long parentId) {
         this.parentId = parentId;
     }
 
@@ -98,14 +97,14 @@ public class CategoryView {
         if (this == o) return true;
         if (!(o instanceof CategoryView)) return false;
 
-        CategoryView that = (CategoryView) o;
+        CategoryView view = (CategoryView) o;
 
-        return Objects.equals(id, that.id);
+        return id == view.id;
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        return (int) (id ^ (id >>> 32));
     }
 
     @Override

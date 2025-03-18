@@ -94,7 +94,7 @@ public class PsqlItemRepository implements ItemRepository {
         String id = rs.getString("id");
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
         Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
-        String categoryId = rs.getString("category_id");
+        long categoryId = rs.getLong("category_id");
         long brandId = rs.getLong("brand_id");
         Grade grade = Grade.valueOf(rs.getString("grade"));
         MadeIn madeIn = toMadeIn(rs.getString("made_in"));
@@ -177,7 +177,7 @@ public class PsqlItemRepository implements ItemRepository {
             ps.setLong(1, Long.parseLong(item.id()));
             ps.setString(2, toJson(item.name()));
             ps.setString(3, String.valueOf(item.barcode().barcode()));
-            ps.setLong(4, Long.parseLong(item.categoryId()));
+            ps.setLong(4, item.categoryId());
             ps.setLong(5, item.brandId());
             ps.setString(6, item.grade().name());
             ps.setString(7, toJson(item.madeIn()));
@@ -189,7 +189,7 @@ public class PsqlItemRepository implements ItemRepository {
             ps.setString(13, toJson(item.vipPrice()));
             ps.setString(14, toJson(item.name()));
             ps.setString(15, String.valueOf(item.barcode().barcode()));
-            ps.setLong(16, Long.parseLong(item.categoryId()));
+            ps.setLong(16, item.categoryId());
             ps.setLong(17, item.brandId());
             ps.setString(18, item.grade().name());
             ps.setString(19, toJson(item.madeIn()));

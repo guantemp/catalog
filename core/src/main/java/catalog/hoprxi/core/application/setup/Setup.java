@@ -16,16 +16,7 @@
 
 package catalog.hoprxi.core.application.setup;
 
-import catalog.hoprxi.core.infrastructure.DecryptUtil;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import salt.hoprxi.utils.Selector;
-
-import java.io.PrintWriter;
-import java.util.List;
-import java.util.Properties;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -36,37 +27,6 @@ public abstract class Setup {
 
     private static final Selector WRITES_SELECTOR = new Selector();
 
-    public static void setup() {
-        Config config = ConfigFactory.load("databases");
-        List<? extends Config> databases = config.getConfigList("databases");
-        for (Config database : databases) {
-            String type = database.getString("type");
-            switch (type) {
-                case "r":
-                case "read":
-
-                    break;
-                case "w":
-                case "write":
-                    Properties props = new Properties();
-                    props.setProperty("dataSourceClassName", database.getString("hikari.dataSourceClassName"));
-                    props.setProperty("dataSource.serverName", database.getString("host"));
-                    props.setProperty("dataSource.portNumber", database.getString("port"));
-                    String entry = database.getString("host") + ":" + database.getString("port");
-                    props.setProperty("dataSource.user", DecryptUtil.decrypt(entry, database.getString("user")));
-                    props.setProperty("dataSource.password", DecryptUtil.decrypt(entry, database.getString("password")));
-                    props.setProperty("dataSource.databaseName", database.getString("databaseName"));
-                    props.put("maximumPoolSize", config.hasPath("hikari.maximumPoolSize") ? config.getInt("hikari.maximumPoolSize") : Runtime.getRuntime().availableProcessors() * 2 + 1);
-                    props.put("dataSource.logWriter", new PrintWriter(System.out));
-                    HikariConfig hikariConfig = new HikariConfig(props);
-                    HikariDataSource dataSource = new HikariDataSource(hikariConfig);
-                    WRITES_SELECTOR.add(new Selector.Divisor<>(database.hasPath("weight") ? database.getInt("weight") : 1, dataSource));
-                    break;
-            }
-            System.out.println(type);
-            String provider = database.hasPath("provider") ? database.getString("provider") : "postgresql";
-            System.out.println(provider);
-        }
-    }
+    public abstract void setup();
 
 }

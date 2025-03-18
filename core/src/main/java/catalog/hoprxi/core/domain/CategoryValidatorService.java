@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,6 @@ public class CategoryValidatorService {
     private static CategoryQuery query;
 
     static {
-
         Config config = ConfigFactory.load("database");
         String provider = config.hasPath("provider") ? config.getString("provider").toLowerCase() : "postgresql";
         String databaseName = config.hasPath("databaseName") ? config.getString("databaseName").toLowerCase() : "catalog";
@@ -49,13 +48,13 @@ public class CategoryValidatorService {
         }
     }
 
-    public static boolean isCategoryExist(String categoryId) {
-        if (categoryId.equals(Category.UNDEFINED.id())) return true;
+    public static boolean isCategoryExist(long categoryId) {
+        if (categoryId == Category.UNDEFINED.id()) return true;
         Category category = repository.find(categoryId);
         return category != null;
     }
 
-    public static boolean isCurrentCategoryDescendant(String currentId, String descendantId) {
+    public static boolean isCurrentCategoryDescendant(long currentId, long descendantId) {
         return false;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package catalog.hoprxi.core.domain.model.category;
 import event.hoprxi.domain.model.DomainEvent;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -28,10 +29,10 @@ import java.time.LocalDateTime;
 public class CategoryDescriptionChanged implements DomainEvent {
     private final String description;
     private final LocalDateTime occurredOn;
-    private final String id;
+    private final long id;
     private final int version;
 
-    public CategoryDescriptionChanged(String description, String id) {
+    public CategoryDescriptionChanged(long id, String description) {
         this.description = description;
         this.id = id;
         this.occurredOn = LocalDateTime.now();
@@ -42,8 +43,30 @@ public class CategoryDescriptionChanged implements DomainEvent {
         return description;
     }
 
-    public String id() {
+    public long id() {
         return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CategoryDescriptionChanged)) return false;
+
+        CategoryDescriptionChanged that = (CategoryDescriptionChanged) o;
+
+        if (id != that.id) return false;
+        if (version != that.version) return false;
+        if (!Objects.equals(description, that.description)) return false;
+        return Objects.equals(occurredOn, that.occurredOn);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = description != null ? description.hashCode() : 0;
+        result = 31 * result + (occurredOn != null ? occurredOn.hashCode() : 0);
+        result = 31 * result + (int) (id ^ (id >>> 32));
+        result = 31 * result + version;
+        return result;
     }
 
     @Override

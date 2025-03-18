@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ public class CategoryServlet extends HttpServlet {
                 if (parameters[1].equals("_search")) {//search
                     System.out.println(12);
                 } else {
-                    CategoryView view = categoryQuery.query(parameters[1]);
+                    CategoryView view = categoryQuery.query(Long.parseLong(parameters[1]));
                     if (view != null) {
                         responseCategoryView(generator, view);
                     } else {//not query
@@ -87,19 +87,20 @@ public class CategoryServlet extends HttpServlet {
                     }
                 }
             } else if (parameters.length > 2 && parameters[2] != null) {
+                long id = Long.parseLong(parameters[1]);
                 switch (parameters[2]) {
                     case "depth":
-                        int depth = categoryQuery.depth(parameters[1]);
+                        int depth = categoryQuery.depth(id);
                         generator.writeNumberField("depth", depth);
                         break;
                     case "path":
-                        CategoryView[] path = categoryQuery.path(parameters[1]);
+                        CategoryView[] path = categoryQuery.path(id);
                         for (CategoryView p : path) {
                             responseCategoryView(generator, p);
                         }
                         break;
                     case "children":
-                        CategoryView parent = categoryQuery.query(parameters[1]);
+                        CategoryView parent = categoryQuery.query(id);
                         if (parent == null)
                             responseNotFind(resp, generator, parameters[1]);
                         else {
@@ -107,7 +108,7 @@ public class CategoryServlet extends HttpServlet {
                         }
                         break;
                     case "descendants":
-                        CategoryView senior = categoryQuery.query(parameters[1]);
+                        CategoryView senior = categoryQuery.query(id);
                         if (senior == null)
                             responseNotFind(resp, generator, parameters[1]);
                         else {
@@ -138,8 +139,8 @@ public class CategoryServlet extends HttpServlet {
     }
 
     private void responseCategoryView(JsonGenerator generator, CategoryView view) throws IOException {
-        generator.writeStringField("id", view.getId());
-        generator.writeStringField("parentId", view.getParentId());
+        generator.writeNumberField("id", view.getId());
+        generator.writeNumberField("parentId", view.getParentId());
         generator.writeBooleanField("isLeaf", view.isLeaf());
         generator.writeObjectFieldStart("name");
         generator.writeStringField("name", view.getName().name());
@@ -183,7 +184,8 @@ public class CategoryServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String name = null, alias = null, description = null, icon = null, parentId = null;
+        String name = null, alias = null, description = null, icon = null;
+        long parentId = 0;
         JsonParser parser = jasonFactory.createParser(req.getInputStream());
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();
@@ -192,7 +194,7 @@ public class CategoryServlet extends HttpServlet {
                 parser.nextToken();
                 switch (fieldName) {
                     case "parentId":
-                        parentId = parser.getValueAsString();
+                        parentId = parser.getValueAsLong();
                         break;
                     case "name":
                         name = parser.getValueAsString();
@@ -299,7 +301,7 @@ public class CategoryServlet extends HttpServlet {
         if (pathInfo != null) {
             String[] parameters = pathInfo.split("/");
             if (parameters.length == 2) {
-                APP_SERVICE.delete(new CategoryDeleteCommand(parameters[1]));
+                APP_SERVICE.delete(new CategoryDeleteCommand(Long.parseLong(parameters[1])));
                 generator.writeNumberField("code", 1004);
                 generator.writeStringField("message", "Success remove category");
             }
@@ -312,7 +314,8 @@ public class CategoryServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String name = null, alias = null, description = null, icon = null, parentId = null, id = null;
+        String name = null, alias = null, description = null, icon = null;
+        long parentId = 0, id = 0;
         JsonParser parser = jasonFactory.createParser(req.getInputStream());
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();
@@ -321,10 +324,10 @@ public class CategoryServlet extends HttpServlet {
                 parser.nextToken();
                 switch (fieldName) {
                     case "id":
-                        id = parser.getValueAsString();
+                        id = parser.getValueAsLong();
                         break;
                     case "parentId":
-                        parentId = parser.getValueAsString();
+                        parentId = parser.getValueAsLong();
                         break;
                     case "name":
                         name = parser.getValueAsString();
@@ -342,7 +345,6 @@ public class CategoryServlet extends HttpServlet {
             }
         }
         List<Command> commands = new ArrayList<>();
-        if (parentId != null)
             commands.add(new CategoryMoveNodeCommand(id, parentId));
         if (name != null || alias != null)
             commands.add(new CategoryRenameCommand(id, name, alias));
@@ -365,7 +367,7 @@ public class CategoryServlet extends HttpServlet {
             generator.writeEndObject();
         } catch (InvalidCategoryIdException e) {
             generator.writeStartObject();
-            responseNotFind(resp, generator, id);
+            //responseNotFind(resp, generator, id);
             generator.writeEndObject();
         }
         generator.flush();

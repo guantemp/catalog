@@ -53,7 +53,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             Response response = client.performRequest(request);
             JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
             while (parser.nextToken() != null) {
-                if (parser.nextToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
+                if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
                     StringWriter writer = new StringWriter(512);
                     JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
                     generator.writeStartObject();
@@ -125,11 +125,25 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             generator.writeStartObject();
             generator.writeNumberField("size", MAX_SIZE);
             generator.writeObjectFieldStart("query");
-
+            generator.writeObjectFieldStart("bool");
+            // 写入 must 数组
+            generator.writeArrayFieldStart("must");
+            generator.writeStartObject();
             generator.writeObjectFieldStart("term");
             generator.writeNumberField("parent_id", id);
-            generator.writeEndObject();
-            generator.writeEndObject();//query
+            generator.writeEndObject(); // term
+            generator.writeEndObject(); // must 中的对象
+            generator.writeEndArray(); // must
+            // 写入 must_not 数组
+            generator.writeArrayFieldStart("must_not");
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeNumberField("id", id);
+            generator.writeEndObject(); // term
+            generator.writeEndObject(); // must_not 中的对象
+            generator.writeEndArray(); // must_not
+            generator.writeEndObject(); // bool
+            generator.writeEndObject(); // query
 
             generator.writeArrayFieldStart("sort");
             generator.writeStartObject();

@@ -16,16 +16,9 @@
 
 package catalog.hoprxi.core.infrastructure;
 
+import catalog.hoprxi.core.application.setup.PsqlSetup;
 import catalog.hoprxi.core.application.setup.Setup;
 import org.testng.annotations.Test;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.sql.SQLException;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -35,7 +28,8 @@ import java.sql.SQLException;
 public class SetupTest {
 
     @Test
-    public void testSetup() throws SQLException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
-        Setup.setup();
+    public void testSetup() {
+        Setup setup = new PsqlSetup();
+        setup.setup();
     }
 }

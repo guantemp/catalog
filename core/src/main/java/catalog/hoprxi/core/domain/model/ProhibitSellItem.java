@@ -31,7 +31,7 @@ import java.util.StringJoiner;
 public class ProhibitSellItem {
     private Barcode barcode;
     private long brandId;
-    private String categoryId;
+    private long categoryId;
     private Grade grade;
     private String id;
     private Name name;
@@ -56,7 +56,7 @@ public class ProhibitSellItem {
      * @param categoryId
      */
     protected ProhibitSellItem(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-                               Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, long brandId) {
+                               Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
@@ -71,7 +71,7 @@ public class ProhibitSellItem {
     }
 
     protected ProhibitSellItem(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-                               Grade grade, ShelfLife shelfLife, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, long brandId) {
+                               Grade grade, ShelfLife shelfLife, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
@@ -102,7 +102,7 @@ public class ProhibitSellItem {
         this.madeIn = Objects.requireNonNull(madeIn, "madeIn required");
     }
 
-    private void setCategoryId(String categoryId) {
+    private void setCategoryId(long categoryId) {
         this.categoryId = categoryId;
     }
 
@@ -159,8 +159,8 @@ public class ProhibitSellItem {
     /**
      * @param categoryId
      */
-    public void moveToCategory(String categoryId) {
-        if (!this.categoryId.equals(categoryId))
+    public void moveToCategory(long categoryId) {
+        if (this.categoryId != categoryId)
             setCategoryId(categoryId);
     }
 
@@ -172,7 +172,7 @@ public class ProhibitSellItem {
         return brandId;
     }
 
-    public String categoryId() {
+    public long categoryId() {
         return categoryId;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package catalog.hoprxi.core.application.command;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -25,21 +24,17 @@ import java.util.StringJoiner;
  * @version 0.0.1 builder 2022-07-04
  */
 public class CategoryRenameCommand implements Command {
-    private String id;
+    private long id;
     private String name;
     private String alias;
 
-    public CategoryRenameCommand(String id, String name, String alias) {
-        setId(id);
+    public CategoryRenameCommand(long id, String name, String alias) {
+        this.id = id;
         this.name = name;
         this.alias = alias;
     }
 
-    private void setId(String id) {
-        this.id = Objects.requireNonNull(id, "id required").trim();
-    }
-
-    public String id() {
+    public long id() {
         return id;
     }
 
@@ -58,20 +53,16 @@ public class CategoryRenameCommand implements Command {
 
         CategoryRenameCommand that = (CategoryRenameCommand) o;
 
-        return Objects.equals(id, that.id);
+        if (id != that.id) return false;
+        if (!Objects.equals(name, that.name)) return false;
+        return Objects.equals(alias, that.alias);
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", CategoryRenameCommand.class.getSimpleName() + "[", "]")
-                .add("id='" + id + "'")
-                .add("name='" + name + "'")
-                .add("alias='" + alias + "'")
-                .toString();
+        int result = (int) (id ^ (id >>> 32));
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (alias != null ? alias.hashCode() : 0);
+        return result;
     }
 }

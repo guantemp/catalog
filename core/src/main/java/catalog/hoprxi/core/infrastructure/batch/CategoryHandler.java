@@ -36,27 +36,26 @@ import java.util.regex.Pattern;
  */
 public class CategoryHandler implements EventHandler<ItemImportEvent> {
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{12,19}$");
-    private static String CORE_PARENT_ID;
+    private static long ROOT_ID;
     private final CategoryQuery CATEGORY_QUERY = new PsqlCategoryQuery();
-    private final CategoryRepository categoryRepository = new PsqlCategoryRepository();
-
+    private final CategoryRepository repository = new PsqlCategoryRepository();
 
     public CategoryHandler() {
         CategoryView[] root = CATEGORY_QUERY.root();
         if (root.length == 0)
-            categoryRepository.save(Category.UNDEFINED);
+            repository.save(Category.UNDEFINED);
         Name rootName = new Name("商品分类", "root");
         for (CategoryView v : root) {
             if (v.getName().equals(rootName)) {
-                CORE_PARENT_ID = v.getId();
+                ROOT_ID = v.getId();
                 break;
             }
         }
-        if (CORE_PARENT_ID == null) {
-            String rootId = categoryRepository.nextIdentity();
+        if (ROOT_ID == 0) {
+            long rootId = repository.nextIdentity();
             Category root1 = Category.root(rootId, rootName);
-            categoryRepository.save(root1);
-            CORE_PARENT_ID = rootId;
+            repository.save(root1);
+            ROOT_ID = rootId;
         }
     }
 
@@ -64,7 +63,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         String category = itemImportEvent.map.get(ItemMapping.CATEGORY);
         if (category == null || category.isEmpty() || category.equalsIgnoreCase("undefined") || category.equalsIgnoreCase(Label.CATEGORY_UNDEFINED)) {
-            itemImportEvent.map.put(ItemMapping.CATEGORY, Category.UNDEFINED.id());
+            itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNDEFINED.id()));
             return;
         }
         if (ID_PATTERN.matcher(category).matches()) {
@@ -73,15 +72,15 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
         String[] ss = category.split("/");
         CategoryView[] categoryViews = CATEGORY_QUERY.queryByName("^" + ss[ss.length - 1] + "$");
         if (categoryViews.length >= 1) {
-            itemImportEvent.map.put(ItemMapping.CATEGORY, categoryViews[0].getId());
+            itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(categoryViews[0].getId()));
         } else {
-            String parentId = CORE_PARENT_ID;
+            long parentId = ROOT_ID;
             Category temp;
             for (String s : ss) {
                 categoryViews = CATEGORY_QUERY.queryByName("^" + s + "$");
                 if (categoryViews.length == 0) {
-                    temp = new Category(parentId, categoryRepository.nextIdentity(), s);
-                    categoryRepository.save(temp);
+                    temp = new Category(parentId, repository.nextIdentity(), s);
+                    repository.save(temp);
                     //System.out.println("新建：" + temp);
                     parentId = temp.id();
                 } else {
@@ -89,7 +88,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
                 }
             }
             //System.out.println("正确的类别id：" + parentId);
-            itemImportEvent.map.put(ItemMapping.CATEGORY, parentId);
+            itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(parentId));
         }
         //System.out.println("category:" +itemImportEvent.map.get(Corresponding.CATEGORY));
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,8 +50,8 @@ public class CategoryAppService {
 
     public CategoryView create(CategoryCreateCommand command) {
         Objects.requireNonNull(command, "command required");
-        String parentId = command.getParentId();
-        Category category = (parentId == null || parentId.isEmpty()) ?
+        long parentId = command.getParentId();
+        Category category = parentId == 0 ?
                 Category.root(repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo())
                 : new Category(command.getParentId(), repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
         repository.save(category);
@@ -63,7 +63,7 @@ public class CategoryAppService {
         repository.remove(delete.id());
     }
 
-    public CategoryView update(String id, List<Command> commands) {
+    public CategoryView update(long id, List<Command> commands) {
         Category category = repository.find(id);
         if (category == null)
             throw new InvalidCategoryIdException("Id not exists");
