@@ -20,6 +20,7 @@ import catalog.hoprxi.core.application.BrandAppService;
 import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.query.BrandJsonQuery;
 import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandJsonQuery;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.SortField;
@@ -67,50 +68,49 @@ public class BrandServlet2 extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         resp.setContentType("application/json; charset=UTF-8");
-        JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
-        boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
-        if (pretty) generator.useDefaultPrettyPrinter();
-        if (pathInfo != null) {
-            String path = pathInfo.substring(1);
-            try {
-                long id = Long.parseLong(path);
-                System.out.println(id);
-                String result = query.query(id);
-                copyRaw(generator, result);
-            } catch (QueryException e) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                generator.writeStartObject();
-                generator.writeStringField("status", "miss");
-                generator.writeNumberField("code", 30102);
-                generator.writeStringField("message", String.format("No brand with id=%d found", path));
-                generator.writeEndObject();
-            } catch (NumberFormatException e) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                generator.writeStartObject();
-                generator.writeStringField("status", "Error RESTful path");
-                generator.writeNumberField("code", 30101);
-                generator.writeStringField("message", String.format("RESTful path(%s), not long type", path));
-                generator.writeEndObject();
-            }
-        } else {//query by name
-            String name = Optional.ofNullable(req.getParameter("name")).orElse("");
-            String searchAfter = Optional.ofNullable(req.getParameter("searchAfter")).orElse("");
-            int offset = NumberHelper.intOf(req.getParameter("offset"), OFFSET);
-            int limit = NumberHelper.intOf(req.getParameter("limit"), LIMIT);
-            String sort = Optional.ofNullable(req.getParameter("sort")).orElse("");
-            SortField sortField = SortField.of(sort);
-            //System.out.println(sortField);
-            if (name.isEmpty()) {
-                if (searchAfter.isEmpty()) {
-                    copyRaw(generator, query.query(offset, limit, sortField));
-                } else {
-                    copyRaw(generator, query.query(limit, searchAfter, sortField));
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)) {
+            boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
+            if (pretty) generator.useDefaultPrettyPrinter();
+            if (pathInfo != null) {
+                String path = pathInfo.substring(1);
+                try {
+                    long id = Long.parseLong(path);
+                    String result = query.query(id);
+                    copyRaw(generator, result);
+                } catch (QueryException e) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    generator.writeStartObject();
+                    generator.writeStringField("status", "miss");
+                    generator.writeNumberField("code", 30102);
+                    generator.writeStringField("message", String.format("No brand with id %s was found", path));
+                    generator.writeEndObject();
+                } catch (NumberFormatException e) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    generator.writeStartObject();
+                    generator.writeStringField("status", "Error RESTful path");
+                    generator.writeNumberField("code", 30101);
+                    generator.writeStringField("message", String.format("The id(%s) value needs to be a long integer", path));
+                    generator.writeEndObject();
                 }
-            } else {
-                copyRaw(generator, query.query(name, offset, limit, sortField));
+            } else {//query by name
+                String name = Optional.ofNullable(req.getParameter("name")).orElse("");
+                String searchAfter = Optional.ofNullable(req.getParameter("searchAfter")).orElse("");
+                int offset = NumberHelper.intOf(req.getParameter("offset"), OFFSET);
+                int limit = NumberHelper.intOf(req.getParameter("limit"), LIMIT);
+                String sort = Optional.ofNullable(req.getParameter("sort")).orElse("");
+                SortField sortField = SortField.of(sort);
+                //System.out.println(sortField);
+                if (name.isEmpty()) {
+                    if (searchAfter.isEmpty()) {
+                        copyRaw(generator, query.query(offset, limit, sortField));
+                    } else {
+                        copyRaw(generator, query.query(limit, searchAfter, sortField));
+                    }
+                } else {
+                    copyRaw(generator, query.query(name, offset, limit, sortField));
+                }
             }
         }
-        generator.close();
     }
 
     private void copyRaw(JsonGenerator generator, String result) throws IOException {
@@ -125,42 +125,45 @@ public class BrandServlet2 extends HttpServlet {
         String name = null, alias = null, story = null;
         URL logo = null, homepage = null;
         Year since = null;
-        JsonParser parser = JSON_FACTORY.createParser(req.getInputStream());
-        while (!parser.isClosed()) {
-            JsonToken jsonToken = parser.nextToken();
-            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
-                String fieldName = parser.getCurrentName();
-                parser.nextToken();
-                switch (fieldName) {
-                    case "name":
-                        name = parser.getValueAsString();
-                        break;
-                    case "alias":
-                        alias = parser.getValueAsString();
-                        break;
-                    case "story":
-                        story = parser.getValueAsString();
-                        break;
-                    case "homepage":
-                        homepage = parser.readValueAs(URL.class);
-                        break;
-                    case "logo":
-                        logo = parser.readValueAs(URL.class);
-                        break;
-                    case "since":
-                        since = parser.readValueAs(Year.class);
-                        break;
+        try (JsonParser parser = JSON_FACTORY.createParser(req.getInputStream()); JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)) {
+            while (parser.nextToken() != null) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                    String fieldName = parser.getCurrentName();
+                    parser.nextToken();
+                    switch (fieldName) {
+                        case "name":
+                            name = parser.getValueAsString();
+                            break;
+                        case "alias":
+                            alias = parser.getValueAsString();
+                            break;
+                        case "story":
+                            story = parser.getValueAsString();
+                            break;
+                        case "homepage":
+                            homepage = parser.readValueAs(URL.class);
+                            break;
+                        case "logo":
+                            logo = parser.readValueAs(URL.class);
+                            break;
+                        case "since":
+                            since = parser.readValueAs(Year.class);
+                            break;
+                    }
                 }
             }
+            BrandCreateCommand brandCreateCommand = new BrandCreateCommand(name, alias, homepage, logo, since, story);
+            Brand brand = app.createBrand(brandCreateCommand);
+            boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
+            if (pretty) generator.useDefaultPrettyPrinter();
+            resp.setContentType("application/json; charset=UTF-8");
+            generator.writeStartObject();
+            generator.writeStringField("status", "success");
+            generator.writeNumberField("code", 20200);
+            generator.writeStringField("message", "brand is created");
+            responseBrand(generator, brand);
+            generator.writeEndObject();
         }
-        BrandCreateCommand brandCreateCommand = new BrandCreateCommand(name, alias, homepage, logo, since, story);
-        Brand brand = app.createBrand(brandCreateCommand);
-        JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
-        boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
-        if (pretty) generator.useDefaultPrettyPrinter();
-        resp.setContentType("application/json; charset=UTF-8");
-        responseBrand(generator, brand);
-        generator.close();
     }
 
     private void responseBrand(JsonGenerator generator, Brand brand) throws IOException {
@@ -172,11 +175,12 @@ public class BrandServlet2 extends HttpServlet {
         generator.writeStringField("alias", brand.name().alias());
         generator.writeEndObject();
         if (brand.about() != null) {
+            AboutBrand about = brand.about();
             generator.writeObjectFieldStart("about");
-            generator.writeStringField("homepage", brand.about().homepage().toExternalForm());
-            generator.writeStringField("logo", brand.about().logo().toExternalForm());
-            generator.writeNumberField("since", brand.about().since().getValue());
-            generator.writeStringField("story", brand.about().story());
+            generator.writeStringField("homepage", about.homepage() == null ? "" : about.homepage().toExternalForm());
+            generator.writeStringField("logo", about.logo() == null ? "" : about.logo().toExternalForm());
+            generator.writeNumberField("since", about.since() == null ? -1 : about.since().getValue());
+            generator.writeStringField("story", about.story() == null ? "" : about.story());
             generator.writeEndObject();
         }
         generator.writeEndObject();

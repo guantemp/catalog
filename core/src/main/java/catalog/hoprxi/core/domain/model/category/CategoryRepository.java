@@ -15,6 +15,8 @@
  */
 package catalog.hoprxi.core.domain.model.category;
 
+import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0
@@ -37,8 +39,9 @@ public interface CategoryRepository {
      * Delete the current category exclude if it's has not subclasses
      *
      * @param id
+     * @throws PersistenceException
      */
-    void remove(long id);
+    void remove(long id) throws PersistenceException;
 
     /**
      * @return category root
@@ -47,6 +50,7 @@ public interface CategoryRepository {
 
     /**
      * @param category
+     * @throws PersistenceException if can't save
      */
-    void save(Category category);
+    void save(Category category) throws PersistenceException;
 }

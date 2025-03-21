@@ -43,7 +43,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
 
     @Override
     public String query(long id) {
-        System.out.println(SEARCH_PREFIX + "/_doc/" + id);
+        //System.out.println(SEARCH_PREFIX + "/_doc/" + id);
         //Request request = new Request("GET", "/"+ESUtil.databasePrefx()+"/_doc/" + id);
         Request request = new Request("GET", "/brand/_doc/" + id);
         request.setOptions(ESUtil.requestOptions());

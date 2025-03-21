@@ -95,7 +95,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     }
 
     @Override
-    public void remove(long id) {
+    public void remove(long id) throws PersistenceException {
         try (Connection connection = DataSourceUtil.getConnection()) {
             final String removeSql = "select \"left\",\"right\",root_id from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);

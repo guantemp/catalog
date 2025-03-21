@@ -68,7 +68,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             }
         } catch (IOException e) {
             LOGGER.warn("The category (id = {}) not found.", id, e);
-            throw new QueryException(String.format("The category (id = {}) not found.", id), e);
+            throw new QueryException(String.format("The category (id = %s) not found.", id), e);
         }
         return EMPTY_CATEGORY;
     }
@@ -159,15 +159,14 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
     @Override
     public String queryDescendant(long id) {
         try (RestClient client = BUILDER.build()) {
-            long rootId = -1l;
+            long rootId = -1;
             int left = 1, right = 1;
             Request request = new Request("GET", "/category/_doc/" + id);
             request.setOptions(ESUtil.requestOptions());
             Response response = client.performRequest(request);
             JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
-            while (!parser.isClosed()) {
-                JsonToken jsonToken = parser.nextToken();
-                if (JsonToken.FIELD_NAME == jsonToken) {
+            while (parser.nextToken() != null) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME) {
                     String fieldName = parser.getCurrentName();
                     parser.nextToken();
                     switch (fieldName) {
@@ -189,7 +188,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             response = client.performRequest(request);
             return writeDescendantAsTree(response.getEntity().getContent());
         } catch (IOException e) {
-            LOGGER.error("There are no related category(id={}) available", e);
+            LOGGER.error("There are no related category(id={}) available", id, e);
             throw new QueryException(String.format("There are no related category(id=%d) available", id), e);
         }
     }

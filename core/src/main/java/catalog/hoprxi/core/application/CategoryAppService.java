@@ -48,14 +48,14 @@ public class CategoryAppService {
         }
     }
 
-    public CategoryView create(CategoryCreateCommand command) {
+    public Category create(CategoryCreateCommand command) {
         Objects.requireNonNull(command, "command required");
         long parentId = command.getParentId();
         Category category = parentId == 0 ?
                 Category.root(repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo())
                 : new Category(command.getParentId(), repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
         repository.save(category);
-        return category.toView();
+        return category;
     }
 
     public void delete(CategoryDeleteCommand delete) {

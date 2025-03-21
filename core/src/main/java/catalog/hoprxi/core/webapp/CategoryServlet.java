@@ -215,7 +215,7 @@ public class CategoryServlet extends HttpServlet {
         CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(icon));
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
         try {
-            CategoryView view = APP_SERVICE.create(command);
+            CategoryView view = null;
             generator.writeStartObject();
             if (view != null) {
                 responseCategoryView(generator, view);

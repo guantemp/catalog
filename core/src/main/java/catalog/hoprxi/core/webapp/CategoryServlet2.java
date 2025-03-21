@@ -21,7 +21,9 @@ import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.query.CategoryJsonQuery;
 import catalog.hoprxi.core.application.query.QueryException;
 import catalog.hoprxi.core.application.view.CategoryView;
+import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
+import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESCategoryJsonQuery;
 import com.fasterxml.jackson.core.*;
 import salt.hoprxi.utils.NumberHelper;
@@ -50,6 +52,7 @@ public class CategoryServlet2 extends HttpServlet {
     private static final CategoryAppService APP = new CategoryAppService();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private CategoryJsonQuery query;
+    ;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -64,7 +67,6 @@ public class CategoryServlet2 extends HttpServlet {
                     break;
             }
         }
-        //query.root();
     }
 
     @Override
@@ -78,24 +80,21 @@ public class CategoryServlet2 extends HttpServlet {
                 String[] paths = pathInfo.split("/");
                 if (paths.length == 2) {
                     try {
-                        long id = Long.parseLong(paths[1]);
-                        System.out.println(id);
-                        String result = query.query(id);
-                        System.out.println(result);
+                        String result = query.query(Long.parseLong(paths[1]));
                         copy(generator, result);
                     } catch (QueryException e) {
                         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                         generator.writeStartObject();
                         generator.writeStringField("status", "miss");
                         generator.writeNumberField("code", 30202);
-                        generator.writeStringField("message", String.format("No category with id(%s) found", paths[1]));
+                        generator.writeStringField("message", String.format("No category with id %s was found", paths[1]));
                         generator.writeEndObject();
                     } catch (NumberFormatException e) {
                         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                         generator.writeStartObject();
-                        generator.writeStringField("status", "Error RESTful path");
-                        generator.writeNumberField("code", 30201);
-                        generator.writeStringField("message", String.format("RESTful path(%s), not long type", paths[1]));
+                        generator.writeStringField("status", "Error id value");
+                        generator.writeNumberField("code", 30404);
+                        generator.writeStringField("message", String.format("The id(%s) value needs to be a long integer", paths[1]));
                         generator.writeEndObject();
                     }
                 } else if (paths.length > 2 && !paths[2].isEmpty()) {
@@ -114,16 +113,15 @@ public class CategoryServlet2 extends HttpServlet {
                         default:
                             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                             generator.writeStartObject();
-                            generator.writeStringField("status", "Invalid RESTful request path");
+                            generator.writeStringField("status", "Invalid RESTful keyword");
                             generator.writeNumberField("code", 30203);
-                            generator.writeStringField("message", String.format("Invalid RESTful request path(%s)", pathInfo));
+                            generator.writeStringField("message", "Invalid RESTful keyword,Support usage path,children,DSC(descendants)");
                             generator.writeEndObject();
                             break;
                     }
                 }
             } else {
                 String query_keyword = Optional.ofNullable(req.getParameter("query")).orElse("");
-                //System.out.println(sortField);
                 if (query_keyword.isEmpty()) {
                     copy(generator, query.root());
                 } else {
@@ -141,22 +139,120 @@ public class CategoryServlet2 extends HttpServlet {
     }
 
     @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        try (JsonParser parser = JSON_FACTORY.createParser(req.getInputStream()); JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)) {
+            boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
+            if (pretty) generator.useDefaultPrettyPrinter();
+            String name = null, alias = null, description = null;
+            URI icon = null;
+            long parentId = 0;
+            while (parser.nextToken() != null) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                    String fieldName = parser.getCurrentName();
+                    parser.nextToken();
+                    switch (fieldName) {
+                        case "parentId":
+                            parentId = parser.getValueAsLong();
+                            break;
+                        case "name":
+                            name = parser.getValueAsString();
+                            break;
+                        case "alias":
+                            alias = parser.getValueAsString();
+                            break;
+                        case "description":
+                            description = parser.getValueAsString();
+                            break;
+                        case "icon":
+                            icon = parser.readValueAs(URI.class);
+                            break;
+                    }
+                }
+            }
+            //valid param
+
+            //validParamers()
+            CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, icon);
+
+            try {
+                Category category = APP.create(command);
+                generator.writeStartObject();
+                generator.writeStringField("status", "success");
+                generator.writeNumberField("code", 30200);
+                generator.writeStringField("message", "category is created");
+                responseCategory(generator, category);
+                generator.writeEndObject();
+            } catch (InvalidCategoryIdException e) {
+                generator.writeStartObject();
+                generator.writeStringField("status", "FAIL");
+                generator.writeStringField("code", "10_05_01");
+                generator.writeStringField("message", "ParenId is not valid");
+                generator.writeEndObject();
+            } catch (PersistenceException e) {
+                generator.writeStringField("status", "FAIL");
+                generator.writeStringField("code", "10_05_01");
+                generator.writeStringField("message", "Do nothing");
+            }
+        }
+    }
+
+    private void responseCategory(JsonGenerator generator, Category category) throws IOException {
+        generator.writeObjectFieldStart("category");
+        generator.writeNumberField("id", category.id());
+        generator.writeNumberField("parentId", category.parentId());
+        generator.writeObjectFieldStart("name");
+        generator.writeStringField("name", category.name().name());
+        generator.writeStringField("mnemonic", category.name().mnemonic());
+        generator.writeStringField("alias", category.name().alias());
+        generator.writeEndObject();
+        if (category.description() != null)
+            generator.writeStringField("description", category.description());
+        //System.out.println(view.getIcon().toASCIIString());
+        if (category.icon() != null)
+            generator.writeStringField("icon", category.icon().toString());
+        generator.writeEndObject();
+    }
+
+
+    @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)) {
-            long start = System.currentTimeMillis();
             resp.setContentType("application/json; charset=UTF-8");
-            generator.writeStartObject();
             String pathInfo = req.getPathInfo();
             if (pathInfo != null) {
                 String[] parameters = pathInfo.split("/");
                 if (parameters.length == 2) {
-                    APP.delete(new CategoryDeleteCommand(Long.parseLong(parameters[1])));
-                    generator.writeNumberField("code", 1004);
-                    generator.writeStringField("message", "Success remove category");
+                    try {
+                        APP.delete(new CategoryDeleteCommand(Long.parseLong(parameters[1])));
+                        generator.writeStartObject();
+                        generator.writeStringField("status", "success");
+                        generator.writeNumberField("code", 30200);
+                        generator.writeStringField("message", "category and Descendant removed");
+                        generator.writeEndObject();
+                    } catch (PersistenceException e) {
+                        resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        generator.writeStartObject();
+                        generator.writeStringField("status", "miss");
+                        generator.writeNumberField("code", 30404);
+                        generator.writeStringField("message", "Category not found");
+                        generator.writeEndObject();
+                    } catch (NumberFormatException e) {
+                        resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        generator.writeStartObject();
+                        generator.writeStringField("status", "error");
+                        generator.writeNumberField("code", 30404);
+                        generator.writeStringField("message", "The ID value is of type long");
+                        generator.writeEndObject();
+                    }
                 }
+            } else {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                generator.writeStartObject();
+                generator.writeStringField("status", "Invalid RESTful request path");
+                generator.writeNumberField("code", 30404);
+                generator.writeStringField("message", "request path include the correct ID");
+                generator.writeEndObject();
             }
-            generator.writeNumberField("execution time", System.currentTimeMillis() - start);
-            generator.writeEndObject();
         }
     }
 
@@ -166,8 +262,7 @@ public class CategoryServlet2 extends HttpServlet {
             String name = null, alias = null, description = null, icon = null;
             long parentId = 0, id = 0;
             while (parser.nextToken() != null) {
-                JsonToken jsonToken = parser.currentToken();
-                if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME) {
                     String fieldName = parser.getCurrentName();
                     parser.nextToken();
                     switch (fieldName) {
