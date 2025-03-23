@@ -82,7 +82,7 @@ public class BrandServlet extends HttpServlet {
                 generator.writeEndObject();
             } else {
                 generator.writeStringField("status", "miss");
-                generator.writeNumberField("code", 30101);
+                generator.writeNumberField("code", 01);
                 generator.writeStringField("message", MessageFormat.format("No brand with id={0} found", id));
             }
         } else {//query all

@@ -2,7 +2,6 @@ catalog\hoprxi\core\infrastructure\batch\IdHandler.class
 catalog\hoprxi\core\infrastructure\batch\LastReceiptPriceHandler.class
 catalog\hoprxi\core\domain\model\barcode\ISBN.class
 catalog\hoprxi\core\infrastructure\batch\BrandHandler.class
-catalog\hoprxi\core\domain\model\category\Category$2.class
 catalog\hoprxi\core\infrastructure\batch\Verify.class
 catalog\hoprxi\core\application\handler\BrandCreateHandle.class
 catalog\hoprxi\core\Bootstrap.class
@@ -180,7 +179,6 @@ catalog\hoprxi\core\domain\model\madeIn\MadeIn$1.class
 catalog\hoprxi\core\application\batch\ItemMapping.class
 catalog\hoprxi\core\domain\model\category\CategoryIconChanged.class
 catalog\hoprxi\core\domain\model\category\Category.class
-catalog\hoprxi\core\domain\model\category\Category$3.class
 catalog\hoprxi\core\domain\model\shelfLife\ShelfLifeService$OnSchedule.class
 catalog\hoprxi\core\domain\model\price\Unit$26.class
 catalog\hoprxi\core\domain\model\price\Unit$1.class

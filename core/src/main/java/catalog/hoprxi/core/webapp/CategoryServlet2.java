@@ -20,7 +20,6 @@ import catalog.hoprxi.core.application.CategoryAppService;
 import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.query.CategoryJsonQuery;
 import catalog.hoprxi.core.application.query.QueryException;
-import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
@@ -40,6 +39,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -49,10 +49,10 @@ import java.util.Optional;
 @WebServlet(urlPatterns = {"v2/categories/*"}, name = "categories", asyncSupported = true,
         initParams = {@WebInitParam(name = "query", value = "es")})
 public class CategoryServlet2 extends HttpServlet {
+    private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
     private static final CategoryAppService APP = new CategoryAppService();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private CategoryJsonQuery query;
-    ;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -115,7 +115,7 @@ public class CategoryServlet2 extends HttpServlet {
                             generator.writeStartObject();
                             generator.writeStringField("status", "Invalid RESTful keyword");
                             generator.writeNumberField("code", 30203);
-                            generator.writeStringField("message", "Invalid RESTful keyword,Support usage path,children,DSC(descendants)");
+                            generator.writeStringField("message", String.format("Invalid RESTful keyword %s,Support usage : path,children,DSC(descendants)", paths[2]));
                             generator.writeEndObject();
                             break;
                     }
@@ -141,10 +141,7 @@ public class CategoryServlet2 extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try (JsonParser parser = JSON_FACTORY.createParser(req.getInputStream()); JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)) {
-            boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
-            if (pretty) generator.useDefaultPrettyPrinter();
-            String name = null, alias = null, description = null;
-            URI icon = null;
+            String name = null, alias = null, description = null, icon = "";
             long parentId = 0;
             while (parser.nextToken() != null) {
                 if (parser.currentToken() == JsonToken.FIELD_NAME) {
@@ -164,16 +161,20 @@ public class CategoryServlet2 extends HttpServlet {
                             description = parser.getValueAsString();
                             break;
                         case "icon":
-                            icon = parser.readValueAs(URI.class);
+                            icon = parser.getValueAsString();
                             break;
                     }
                 }
             }
-            //valid param
-
-            //validParamers()
-            CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, icon);
-
+            /*valid param
+            if(!validate(generator,false,parentId,name,alias,description,uri)){
+                return;
+            }
+            */
+            CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(icon));
+            resp.setContentType("application/json; charset=UTF-8");
+            boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
+            if (pretty) generator.useDefaultPrettyPrinter();
             try {
                 Category category = APP.create(command);
                 generator.writeStartObject();
@@ -194,6 +195,105 @@ public class CategoryServlet2 extends HttpServlet {
                 generator.writeStringField("message", "Do nothing");
             }
         }
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        try (JsonParser parser = JSON_FACTORY.createParser(req.getInputStream()); JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)) {
+            String name = null, alias = null, description = null, icon = "";
+            long parentId = Long.MIN_VALUE, id = 0;
+            while (parser.nextToken() != null) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                    String fieldName = parser.getCurrentName();
+                    parser.nextToken();
+                    switch (fieldName) {
+                        case "id":
+                            id = parser.getValueAsLong();
+                            break;
+                        case "parentId":
+                            parentId = parser.getValueAsLong();
+                            break;
+                        case "name":
+                            name = parser.getValueAsString();
+                            break;
+                        case "alias":
+                            alias = parser.getValueAsString();
+                            break;
+                        case "description":
+                            description = parser.getValueAsString();
+                            break;
+                        case "icon":
+                            icon = parser.getValueAsString();
+                            break;
+                    }
+                }
+            }
+            List<Command> commands = new ArrayList<>();
+            if (parentId != Long.MIN_VALUE)
+                commands.add(new CategoryMoveNodeCommand(id, parentId));
+            if (name != null || alias != null)
+                commands.add(new CategoryRenameCommand(id, name, alias));
+            if (description != null)
+                commands.add(new CategoryChangeDescriptionCommand(id, description));
+            if (icon != null)
+                commands.add(new CategoryChangeIconCommand(id, URI.create(icon)));
+            Category category = APP.update(id, commands);
+
+            boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
+            if (pretty) generator.useDefaultPrettyPrinter();
+            resp.setContentType("application/json; charset=UTF-8");
+            if (category != null) {
+                generator.writeStartObject();
+                generator.writeStringField("status", "success");
+                generator.writeNumberField("code", 30200);
+                generator.writeStringField("message", "Category has been modified");
+                responseCategory(generator, category);
+                generator.writeEndObject();
+            } else {
+                generator.writeStartObject();
+                generator.writeStringField("status", "FAIL");
+                generator.writeStringField("code", "10_05_03");
+                generator.writeStringField("message", "Do nothing");
+                generator.writeEndObject();
+            }
+        } catch (InvalidCategoryIdException e) {
+            //generator.writeStartObject();
+            //responseNotFind(resp, generator, id);
+            //generator.writeEndObject();
+        }
+    }
+
+    private boolean validate(JsonGenerator generator, boolean root, String parentId, String name, String alias, String description, String uri) throws IOException {
+        boolean result = true;
+        if (!root && (parentId == null || parentId.isEmpty())) {
+            generator.writeStartObject();
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_01");
+            generator.writeStringField("message", "ParenId is required");
+            generator.writeEndObject();
+            result = false;
+        }
+        if (name == null || name.isEmpty()) {
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_02");
+            generator.writeStringField("message", "name is required");
+        }
+        if (alias != null && alias.length() > 256) {
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_03");
+            generator.writeStringField("message", "alias length rang is 1-256");
+        }
+        if (description != null && description.length() > 512) {
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_04");
+            generator.writeStringField("message", "description length rang is 1-512");
+        }
+        if (uri != null && !URI_REGEX.matcher(uri).matches()) {
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_05");
+            generator.writeStringField("message", "description length rang is 1-512");
+        }
+        return result;
     }
 
     private void responseCategory(JsonGenerator generator, Category category) throws IOException {
@@ -256,62 +356,4 @@ public class CategoryServlet2 extends HttpServlet {
         }
     }
 
-    @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        try (JsonParser parser = JSON_FACTORY.createParser(req.getInputStream()); JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)) {
-            String name = null, alias = null, description = null, icon = null;
-            long parentId = 0, id = 0;
-            while (parser.nextToken() != null) {
-                if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                    String fieldName = parser.getCurrentName();
-                    parser.nextToken();
-                    switch (fieldName) {
-                        case "id":
-                            id = parser.getValueAsLong();
-                            break;
-                        case "parentId":
-                            parentId = parser.getValueAsLong();
-                            break;
-                        case "name":
-                            name = parser.getValueAsString();
-                            break;
-                        case "alias":
-                            alias = parser.getValueAsString();
-                            break;
-                        case "description":
-                            description = parser.getValueAsString();
-                            break;
-                        case "icon":
-                            icon = parser.getValueAsString();
-                            break;
-                    }
-                }
-            }
-            List<Command> commands = new ArrayList<>();
-            commands.add(new CategoryMoveNodeCommand(id, parentId));
-            if (name != null || alias != null)
-                commands.add(new CategoryRenameCommand(id, name, alias));
-            if (description != null)
-                commands.add(new CategoryChangeDescriptionCommand(id, description));
-            if (icon != null)
-                commands.add(new CategoryChangeIconCommand(id, URI.create(icon)));
-
-            resp.setContentType("application/json; charset=UTF-8");
-
-            CategoryView view = APP.update(id, commands);
-            generator.writeStartObject();
-            if (view != null) {
-                //responseCategoryView(generator, view);
-            } else {
-                generator.writeStringField("status", "FAIL");
-                generator.writeStringField("code", "10_05_03");
-                generator.writeStringField("message", "Do nothing");
-            }
-            generator.writeEndObject();
-        } catch (InvalidCategoryIdException e) {
-            //generator.writeStartObject();
-            //responseNotFind(resp, generator, id);
-            //generator.writeEndObject();
-        }
-    }
 }

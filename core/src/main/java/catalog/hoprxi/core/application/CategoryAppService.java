@@ -17,7 +17,6 @@
 package catalog.hoprxi.core.application;
 
 import catalog.hoprxi.core.application.command.*;
-import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
@@ -63,7 +62,7 @@ public class CategoryAppService {
         repository.remove(delete.id());
     }
 
-    public CategoryView update(long id, List<Command> commands) {
+    public Category update(long id, List<Command> commands) {
         Category category = repository.find(id);
         if (category == null)
             throw new InvalidCategoryIdException("Id not exists");
@@ -81,10 +80,14 @@ public class CategoryAppService {
                     CategoryChangeIconCommand changeIcon = (CategoryChangeIconCommand) command;
                     category.changeIcon(changeIcon.icon());
                     break;
+                case "CategoryMoveNodeCommand":
+                    CategoryMoveNodeCommand moveNode = (CategoryMoveNodeCommand) command;
+                    category.moveTo(moveNode.parentId());
+                    break;
             }
-            repository.save(category);
         }
-        return category.toView();
+        repository.save(category);
+        return category;
     }
 
 }

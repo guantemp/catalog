@@ -57,8 +57,8 @@ public class App {
                                 .addMapping("/v1/units"),
                         Servlets.servlet("brandServlet", BrandServlet.class)
                                 .addMapping("/v1/brands/*"),
-                        Servlets.servlet("categoryServlet", CategoryServlet.class)
-                                .addMapping("/v1/categories/*"),
+                        //Servlets.servlet("categoryServlet", CategoryServlet.class)
+                        //.addMapping("/v1/categories/*"),
                         Servlets.servlet("itemServlet", ItemServlet.class)
                                 .addInitParam("database", "arangodb")
                                 .addInitParam("databaseName", "catalog")

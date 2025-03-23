@@ -20,6 +20,7 @@ import catalog.hoprxi.core.application.CategoryAppService;
 import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.view.CategoryView;
+import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQuery;
 import com.fasterxml.jackson.core.*;
@@ -81,7 +82,7 @@ public class CategoryServlet extends HttpServlet {
                 } else {
                     CategoryView view = categoryQuery.query(Long.parseLong(parameters[1]));
                     if (view != null) {
-                        responseCategoryView(generator, view);
+                        //responseCategoryView(generator, view);
                     } else {//not query
                         responseNotFind(resp, generator, parameters[1]);
                     }
@@ -96,7 +97,7 @@ public class CategoryServlet extends HttpServlet {
                     case "path":
                         CategoryView[] path = categoryQuery.path(id);
                         for (CategoryView p : path) {
-                            responseCategoryView(generator, p);
+                            //responseCategoryView(generator, p);
                         }
                         break;
                     case "children":
@@ -104,7 +105,7 @@ public class CategoryServlet extends HttpServlet {
                         if (parent == null)
                             responseNotFind(resp, generator, parameters[1]);
                         else {
-                            responseChildren(generator, parent);
+                            //responseChildren(generator, parent);
                         }
                         break;
                     case "descendants":
@@ -112,7 +113,7 @@ public class CategoryServlet extends HttpServlet {
                         if (senior == null)
                             responseNotFind(resp, generator, parameters[1]);
                         else {
-                            responseDescendants(generator, senior);
+                            //responseDescendants(generator, senior);
                         }
                         break;
                 }
@@ -122,7 +123,7 @@ public class CategoryServlet extends HttpServlet {
             generator.writeArrayFieldStart("categories");
             for (CategoryView root : roots) {
                 generator.writeStartObject();
-                responseDescendants(generator, root);
+                //responseDescendants(generator, root);
                 generator.writeEndObject();
             }
             generator.writeEndArray();
@@ -138,44 +139,44 @@ public class CategoryServlet extends HttpServlet {
         generator.writeStringField("message", "Not query category(id=" + id + ")");
     }
 
-    private void responseCategoryView(JsonGenerator generator, CategoryView view) throws IOException {
-        generator.writeNumberField("id", view.getId());
-        generator.writeNumberField("parentId", view.getParentId());
-        generator.writeBooleanField("isLeaf", view.isLeaf());
+    private void responseCategoryView(JsonGenerator generator, Category view) throws IOException {
+        generator.writeNumberField("id", view.id());
+        generator.writeNumberField("parentId", view.parentId());
+        //generator.writeBooleanField("isLeaf", view.isLeaf());
         generator.writeObjectFieldStart("name");
-        generator.writeStringField("name", view.getName().name());
-        generator.writeStringField("mnemonic", view.getName().mnemonic());
-        generator.writeStringField("alias", view.getName().alias());
+        generator.writeStringField("name", view.name().name());
+        generator.writeStringField("mnemonic", view.name().mnemonic());
+        generator.writeStringField("alias", view.name().alias());
         generator.writeEndObject();
-        if (view.getDescription() != null)
-            generator.writeStringField("description", view.getDescription());
+        if (view.description() != null)
+            generator.writeStringField("description", view.description());
         //System.out.println(view.getIcon().toASCIIString());
-        if (view.getIcon() != null)
-            generator.writeStringField("icon", view.getIcon().toString());
+        if (view.icon() != null)
+            generator.writeStringField("icon", view.icon().toString());
     }
 
-    private void responseChildren(JsonGenerator generator, CategoryView view) throws IOException {
+    private void responseChildren(JsonGenerator generator, Category view) throws IOException {
         responseCategoryView(generator, view);
-        CategoryView[] children = categoryQuery.children(view.getId());
+        CategoryView[] children = categoryQuery.children(view.id());
         if (children.length >= 1) {
             generator.writeArrayFieldStart("children");
             for (CategoryView child : children) {
                 generator.writeStartObject();
-                responseCategoryView(generator, child);
+                //responseCategoryView(generator, child);
                 generator.writeEndObject();
             }
             generator.writeEndArray();
         }
     }
 
-    private void responseDescendants(JsonGenerator generator, CategoryView view) throws IOException {
+    private void responseDescendants(JsonGenerator generator, Category view) throws IOException {
         responseCategoryView(generator, view);
-        CategoryView[] children = categoryQuery.children(view.getId());
+        CategoryView[] children = categoryQuery.children(view.id());
         if (children.length >= 1) {
             generator.writeArrayFieldStart("children");
             for (CategoryView child : children) {
                 generator.writeStartObject();
-                responseDescendants(generator, child);
+                //responseDescendants(generator, child);
                 generator.writeEndObject();
             }
             generator.writeEndArray();
@@ -215,7 +216,7 @@ public class CategoryServlet extends HttpServlet {
         CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(icon));
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
         try {
-            CategoryView view = null;
+            Category view = APP_SERVICE.create(command);
             generator.writeStartObject();
             if (view != null) {
                 responseCategoryView(generator, view);
@@ -345,7 +346,7 @@ public class CategoryServlet extends HttpServlet {
             }
         }
         List<Command> commands = new ArrayList<>();
-            commands.add(new CategoryMoveNodeCommand(id, parentId));
+        commands.add(new CategoryMoveNodeCommand(id, parentId));
         if (name != null || alias != null)
             commands.add(new CategoryRenameCommand(id, name, alias));
         if (description != null)
@@ -355,7 +356,7 @@ public class CategoryServlet extends HttpServlet {
         resp.setContentType("application/json; charset=UTF-8");
         JsonGenerator generator = jasonFactory.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
         try {
-            CategoryView view = APP_SERVICE.update(id, commands);
+            Category view = APP_SERVICE.update(id, commands);
             generator.writeStartObject();
             if (view != null) {
                 responseCategoryView(generator, view);
