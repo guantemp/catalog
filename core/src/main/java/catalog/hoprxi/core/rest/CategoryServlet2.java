@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.webapp;
+package catalog.hoprxi.core.rest;
 
 import catalog.hoprxi.core.application.CategoryAppService;
 import catalog.hoprxi.core.application.command.*;
@@ -237,29 +237,28 @@ public class CategoryServlet2 extends HttpServlet {
                 commands.add(new CategoryChangeDescriptionCommand(id, description));
             if (icon != null)
                 commands.add(new CategoryChangeIconCommand(id, URI.create(icon)));
-            Category category = APP.update(id, commands);
-
             boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
             if (pretty) generator.useDefaultPrettyPrinter();
             resp.setContentType("application/json; charset=UTF-8");
-            if (category != null) {
+            try {
+                Category category = APP.update(id, commands);
                 generator.writeStartObject();
                 generator.writeStringField("status", "success");
                 generator.writeNumberField("code", 30200);
                 generator.writeStringField("message", "Category has been modified");
                 responseCategory(generator, category);
                 generator.writeEndObject();
-            } else {
+            } catch (InvalidCategoryIdException e) {
                 generator.writeStartObject();
                 generator.writeStringField("status", "FAIL");
-                generator.writeStringField("code", "10_05_03");
-                generator.writeStringField("message", "Do nothing");
+                generator.writeStringField("code", "10_05_01");
+                generator.writeStringField("message", "ParenId is not valid");
                 generator.writeEndObject();
+            } catch (PersistenceException e) {
+                generator.writeStringField("status", "FAIL");
+                generator.writeStringField("code", "10_05_01");
+                generator.writeStringField("message", "Do nothing");
             }
-        } catch (InvalidCategoryIdException e) {
-            //generator.writeStartObject();
-            //responseNotFind(resp, generator, id);
-            //generator.writeEndObject();
         }
     }
 
@@ -348,9 +347,9 @@ public class CategoryServlet2 extends HttpServlet {
             } else {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 generator.writeStartObject();
-                generator.writeStringField("status", "Invalid RESTful request path");
-                generator.writeNumberField("code", 30404);
-                generator.writeStringField("message", "request path include the correct ID");
+                generator.writeStringField("status", "FAIL");
+                generator.writeStringField("code", "10_05_01");
+                generator.writeStringField("message", "Do nothing");
                 generator.writeEndObject();
             }
         }

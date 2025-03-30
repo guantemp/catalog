@@ -68,7 +68,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             }
         } catch (IOException e) {
             LOGGER.warn("The category (id = {}) not found.", id, e);
-            throw new QueryException(String.format("The category (id = %s) not found.", id), e);
+            throw new QueryException(String.format("The category (id = %d) not found.", id), e);
         }
         return EMPTY_CATEGORY;
     }

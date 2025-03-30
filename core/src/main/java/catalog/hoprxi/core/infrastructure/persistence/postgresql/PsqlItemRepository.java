@@ -25,6 +25,7 @@ import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.DataSourceUtil;
+import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
 import com.fasterxml.jackson.core.*;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
@@ -70,7 +71,7 @@ public class PsqlItemRepository implements ItemRepository {
     }
 
     @Override
-    public Item find(String id) {
+    public Item find(long id) {
         try (Connection connection = DataSourceUtil.getConnection()) {
             final String findSql = "select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,barcode,category_id," +
                     "brand_id,grade,made_in,spec,shelf_life,retail_price::jsonb->>'number' as retail_price_number,retail_price::jsonb->>'currencyCode' as retail_price_currencyCode,retail_price::jsonb->>'unit' as retail_price_unit," +
@@ -79,7 +80,7 @@ public class PsqlItemRepository implements ItemRepository {
                     "vip_price::jsonb ->> 'name' as vip_price_name, vip_price::jsonb -> 'price' ->> 'number' as vip_price_number, vip_price::jsonb -> 'price' ->> 'currencyCode' as vip_price_currencyCode, vip_price::jsonb -> 'price' ->> 'unit' as vip_price_unit " +
                     "from item where id=? limit 1";
             PreparedStatement ps = connection.prepareStatement(findSql);
-            ps.setLong(1, Long.parseLong(id));
+            ps.setLong(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next())
                 return rebuild(rs);
@@ -91,7 +92,7 @@ public class PsqlItemRepository implements ItemRepository {
     }
 
     private Item rebuild(ResultSet rs) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
-        String id = rs.getString("id");
+        long id = rs.getLong("id");
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
         Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
         long categoryId = rs.getLong("category_id");
@@ -151,16 +152,16 @@ public class PsqlItemRepository implements ItemRepository {
     }
 
     @Override
-    public String nextIdentity() {
-        return String.valueOf(LongId.generate());
+    public long nextIdentity() {
+        return LongId.generate();
     }
 
     @Override
-    public void remove(String id) {
+    public void remove(long id) {
         try (Connection connection = DataSourceUtil.getConnection()) {
             final String removeSql = "remove from item where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
-            preparedStatement.setLong(1, Long.parseLong(id));
+            preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error("Can't remove from item(id={})", id, e);
@@ -172,9 +173,9 @@ public class PsqlItemRepository implements ItemRepository {
         try (Connection connection = DataSourceUtil.getConnection()) {
             final String insertOrReplaceSql = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price) " +
                     "values (?,?::jsonb,?,?,?,?::grade,?::jsonb,?,?,?::jsonb,?::jsonb,?::jsonb,?::jsonb) " +
-                    "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,spec=?,shelf_life=?,last_receipt_price=?::jsonb,retail_price=?::jsonb,member_price=?::jsonb,vip_price=?::jsonb";
+                    "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,spec=?,shelf_life=?,last_receipt_price=?::jsonb,retail_price=?::jsonb,member_price=?::jsonb,vip_price=EXCLUDED.vip_price";
             PreparedStatement ps = connection.prepareStatement(insertOrReplaceSql);
-            ps.setLong(1, Long.parseLong(item.id()));
+            ps.setLong(1, item.id());
             ps.setString(2, toJson(item.name()));
             ps.setString(3, String.valueOf(item.barcode().barcode()));
             ps.setLong(4, item.categoryId());
@@ -198,11 +199,10 @@ public class PsqlItemRepository implements ItemRepository {
             ps.setString(22, toJson(item.lastReceiptPrice()));
             ps.setString(23, toJson(item.retailPrice()));
             ps.setString(24, toJson(item.memberPrice()));
-            ps.setString(25, toJson(item.vipPrice()));
             ps.executeUpdate();
         } catch (SQLException e) {
-            //System.out.println(e);
-            LOGGER.error("Can't save item {}", item, e);
+            LOGGER.error("Can't save item{}", item, e);
+            throw new PersistenceException(String.format("Can't save Item(%s)", item), e);
         }
     }
 

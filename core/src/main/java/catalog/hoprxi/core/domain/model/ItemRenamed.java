@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,10 @@ public class ItemRenamed implements DomainEvent {
     private String alias;
     private String mnemonic;
     private LocalDateTime occurredOn;
-    private String id;
+    private long id;
     private int version;
 
-    public ItemRenamed(String id, String name, String mnemonic, String alias) {
+    public ItemRenamed(long id, String name, String mnemonic, String alias) {
         this.id = id;
         this.name = name;
         this.mnemonic = mnemonic;
@@ -65,7 +65,7 @@ public class ItemRenamed implements DomainEvent {
         return mnemonic;
     }
 
-    public String id() {
+    public long id() {
         return id;
     }
 }

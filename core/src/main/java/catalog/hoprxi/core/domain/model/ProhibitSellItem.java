@@ -33,7 +33,7 @@ public class ProhibitSellItem {
     private long brandId;
     private long categoryId;
     private Grade grade;
-    private String id;
+    private long id;
     private Name name;
     private MadeIn madeIn;
     private RetailPrice retailPrice;
@@ -55,7 +55,7 @@ public class ProhibitSellItem {
      * @param brandId
      * @param categoryId
      */
-    protected ProhibitSellItem(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
+    protected ProhibitSellItem(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
                                Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         setId(id);
         setBarcode(barcode);
@@ -70,7 +70,7 @@ public class ProhibitSellItem {
         setBrandId(brandId);
     }
 
-    protected ProhibitSellItem(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
+    protected ProhibitSellItem(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
                                Grade grade, ShelfLife shelfLife, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         setId(id);
         setBarcode(barcode);
@@ -132,7 +132,7 @@ public class ProhibitSellItem {
         this.spec = spec;
     }
 
-    private void setId(String id) {
+    private void setId(long id) {
         this.id = id;
     }
 
@@ -180,7 +180,7 @@ public class ProhibitSellItem {
         return grade;
     }
 
-    public String id() {
+    public long id() {
         return id;
     }
 
@@ -215,26 +215,26 @@ public class ProhibitSellItem {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof ProhibitSellItem)) return false;
 
         ProhibitSellItem that = (ProhibitSellItem) o;
 
-        return id != null ? id.equals(that.id) : that.id == null;
+        return id == that.id;
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        return (int) (id ^ (id >>> 32));
     }
 
     @Override
     public String toString() {
         return new StringJoiner(", ", ProhibitSellItem.class.getSimpleName() + "[", "]")
+                .add("id='" + id + "'")
                 .add("barcode=" + barcode)
                 .add("brandId='" + brandId + "'")
                 .add("categoryId='" + categoryId + "'")
                 .add("grade=" + grade)
-                .add("id='" + id + "'")
                 .add("name=" + name)
                 .add("madeIn=" + madeIn)
                 .add("retailPrice=" + retailPrice)

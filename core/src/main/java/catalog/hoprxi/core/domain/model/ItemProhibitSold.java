@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,10 +27,10 @@ import java.time.LocalDateTime;
  */
 public class ItemProhibitSold implements DomainEvent {
     private LocalDateTime occurredOn;
-    private String id;
+    private long id;
     private int version;
 
-    public ItemProhibitSold(String id) {
+    public ItemProhibitSold(long id) {
         this.id = id;
         occurredOn = LocalDateTime.now();
         version = 1;

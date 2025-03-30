@@ -20,6 +20,7 @@ import catalog.hoprxi.core.domain.CategoryValidatorService;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
@@ -34,12 +35,11 @@ import java.util.StringJoiner;
  * @since JDK8.0
  */
 public class Item {
-    private static final int ID_MAX_LENGTH = 48;
     private Barcode barcode;
     private long brandId;
     private long categoryId;
     private Grade grade;
-    private String id;
+    private final long id;
     private Name name;
     private MadeIn madeIn;
     private LastReceiptPrice lastReceiptPrice;
@@ -67,8 +67,8 @@ public class Item {
      *                                  if name is null
      *                                  if madeIn is null
      */
-    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
-        setId(id);
+    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
+        this.id = id;
         setBarcode(barcode);
         setName(name);
         setMadeIn(madeIn);
@@ -83,16 +83,16 @@ public class Item {
         setBrandId(brandId);
     }
 
-    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice,
+    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice,
                 MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         this(id, barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY, lastReceiptPrice, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
-    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
+    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
         this(id, barcode, name, madeIn, spec, grade, lastReceiptPrice, retailPrice, memberPrice, vipPrice, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
     }
 
-    public Item(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, RetailPrice retailPrice) {
+    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, RetailPrice retailPrice) {
         this(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.RMB_ZERO, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
     }
 
@@ -113,12 +113,6 @@ public class Item {
         this.spec = spec;
     }
 
-    private void setId(String id) {
-        id = Objects.requireNonNull(id, "id required").trim();
-        if (id.isEmpty() || id.length() > ID_MAX_LENGTH)
-            throw new IllegalArgumentException("id length range is 1 to " + ID_MAX_LENGTH);
-        this.id = id;
-    }
 
     private void setRetailPrice(RetailPrice retailPrice) {
         this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
@@ -252,8 +246,8 @@ public class Item {
 
     /**
      * @param categoryId
-     * @throws IllegalArgumentException if categoryId is <code>NULL</code>
-     *                                  categoryId is not valid
+     * @throws IllegalArgumentException   if categoryId is <code>NULL</code>
+     * @throws InvalidCategoryIdException categoryId is not valid
      */
     public void moveToNewCategory(long categoryId) {
         if (this.categoryId != categoryId) {
@@ -306,7 +300,7 @@ public class Item {
         return grade;
     }
 
-    public String id() {
+    public long id() {
         return id;
     }
 
@@ -329,16 +323,16 @@ public class Item {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Item)) return false;
 
         Item item = (Item) o;
 
-        return Objects.equals(id, item.id);
+        return id == item.id;
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        return (int) (id ^ (id >>> 32));
     }
 
     public ProhibitSellItem toProhibitSell() {
@@ -348,11 +342,11 @@ public class Item {
     @Override
     public String toString() {
         return new StringJoiner(", ", Item.class.getSimpleName() + "[", "]")
+                .add("id='" + id + "'")
                 .add("barcode=" + barcode)
                 .add("brandId='" + brandId + "'")
                 .add("categoryId='" + categoryId + "'")
                 .add("grade=" + grade)
-                .add("id='" + id + "'")
                 .add("name=" + name)
                 .add("madeIn=" + madeIn)
                 .add("lastReceiptPrice=" + lastReceiptPrice)

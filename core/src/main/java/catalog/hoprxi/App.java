@@ -16,7 +16,7 @@
 
 package catalog.hoprxi;
 
-import catalog.hoprxi.core.webapp.*;
+import catalog.hoprxi.core.rest.*;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.handlers.PathHandler;

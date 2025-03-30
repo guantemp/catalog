@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +28,14 @@ import java.time.LocalDateTime;
  * @version 0.0.1 2022-10-18
  */
 public class ItemVipPriceChaned implements DomainEvent {
-    private String id;
+    private long id;
     private String name;
     private MonetaryAmount amount;
     private Unit unit;
     private LocalDateTime occurredOn;
     private int version;
 
-    public ItemVipPriceChaned(String id, String name, MonetaryAmount amount, Unit unit) {
+    public ItemVipPriceChaned(long id, String name, MonetaryAmount amount, Unit unit) {
         this.id = id;
         this.name = name;
         this.amount = amount;
@@ -44,7 +44,7 @@ public class ItemVipPriceChaned implements DomainEvent {
         version = 1;
     }
 
-    public String id() {
+    public long id() {
         return id;
     }
 

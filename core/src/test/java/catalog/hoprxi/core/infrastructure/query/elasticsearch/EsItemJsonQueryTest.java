@@ -18,6 +18,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
 import catalog.hoprxi.core.application.query.QueryFilter;
+import catalog.hoprxi.core.application.query.filter.CategoryFilter;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;

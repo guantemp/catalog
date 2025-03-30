@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@ import java.time.LocalDateTime;
  * @version 0.0.1 2019-05-02
  */
 public class ItemMadeInChanged implements DomainEvent {
-    private String id;
+    private long id;
     private String madeIn;
     private String code;
     private LocalDateTime occurredOn;
     private int version;
 
-    public ItemMadeInChanged(String id, String code, String madeIn) {
+    public ItemMadeInChanged(long id, String code, String madeIn) {
         this.id = id;
         this.madeIn = madeIn;
         this.code = code;
@@ -50,7 +50,7 @@ public class ItemMadeInChanged implements DomainEvent {
         return version;
     }
 
-    public String id() {
+    public long id() {
         return id;
     }
 

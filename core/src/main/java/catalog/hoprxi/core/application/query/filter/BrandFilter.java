@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.query.elasticsearch;
+package catalog.hoprxi.core.application.query.filter;
 
 import catalog.hoprxi.core.application.query.QueryFilter;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -25,32 +25,21 @@ import java.util.Objects;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2025-01-03
+ * @version 0.0.1 builder 2025-01-06
  */
-public class CategoryFilter implements QueryFilter {
-    private String[] categoryIds;
+public class BrandFilter implements QueryFilter {
+    private String brandId;
 
-    public CategoryFilter(String[] categoryIds) {
-        if (categoryIds == null)
-            this.categoryIds = new String[0];
-        this.categoryIds = categoryIds;
+    public BrandFilter(String brandId) {
+        this.brandId = Objects.requireNonNull(brandId, "brand id required");
     }
-
-    public CategoryFilter(String categoryId) {
-        Objects.requireNonNull(categoryId, "categoryId is required");
-        this.categoryIds = new String[]{categoryId};
-    }
-
 
     @Override
     public void filter(JsonGenerator generator) {
         try {
             generator.writeStartObject();
-            generator.writeObjectFieldStart("terms");
-            generator.writeArrayFieldStart("category.id");
-            for (String categoryId : categoryIds)
-                generator.writeString(categoryId);
-            generator.writeEndArray();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("brand.id", brandId);
             generator.writeEndObject();
             generator.writeEndObject();
         } catch (IOException e) {

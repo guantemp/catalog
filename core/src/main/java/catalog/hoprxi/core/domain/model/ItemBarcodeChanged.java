@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,12 +27,12 @@ import java.time.LocalDateTime;
  * @version 0.0.1 2019-05-02
  */
 public class ItemBarcodeChanged implements DomainEvent {
-    private final String id;
+    private final long id;
     private final Barcode barcode;
     private final LocalDateTime occurredOn;
     private final int version;
 
-    public ItemBarcodeChanged(String id, Barcode barcode) {
+    public ItemBarcodeChanged(long id, Barcode barcode) {
         this.id = id;
         this.barcode = barcode;
         occurredOn = LocalDateTime.now();
@@ -49,7 +49,7 @@ public class ItemBarcodeChanged implements DomainEvent {
         return version;
     }
 
-    public String id() {
+    public long id() {
         return id;
     }
 

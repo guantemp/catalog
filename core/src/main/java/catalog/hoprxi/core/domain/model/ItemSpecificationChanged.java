@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +26,12 @@ import java.time.LocalDateTime;
  * @version 0.0.1 2019-05-02
  */
 public class ItemSpecificationChanged implements DomainEvent {
-    private String id;
+    private long id;
     private Specification spec;
     private LocalDateTime occurredOn;
     private int version;
 
-    public ItemSpecificationChanged(String id, Specification spec) {
+    public ItemSpecificationChanged(long id, Specification spec) {
         this.id = id;
         this.spec = spec;
         occurredOn = LocalDateTime.now();
@@ -48,7 +48,7 @@ public class ItemSpecificationChanged implements DomainEvent {
         return version;
     }
 
-    public String id() {
+    public long id() {
         return id;
     }
 

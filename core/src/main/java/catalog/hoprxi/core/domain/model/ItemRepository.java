@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,17 +26,17 @@ public interface ItemRepository {
      * @param id
      * @return
      */
-    Item find(String id);
+    Item find(long id);
 
     /**
      * @return
      */
-    String nextIdentity();
+    long nextIdentity();
 
     /**
      * @param id
      */
-    void remove(String id);
+    void remove(long id);
 
     /**
      * @param item

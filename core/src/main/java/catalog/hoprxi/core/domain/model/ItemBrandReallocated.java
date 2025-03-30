@@ -26,12 +26,12 @@ import java.time.LocalDateTime;
  * @version 0.0.1 2019-05-02
  */
 public class ItemBrandReallocated implements DomainEvent {
-    private String id;
+    private long id;
     private long brandId;
     private LocalDateTime occurredOn;
     private int version;
 
-    public ItemBrandReallocated(String id, long brandId) {
+    public ItemBrandReallocated(long id, long brandId) {
         this.id = id;
         this.brandId = brandId;
         occurredOn = LocalDateTime.now();
@@ -48,7 +48,7 @@ public class ItemBrandReallocated implements DomainEvent {
         return version;
     }
 
-    public String id() {
+    public long id() {
         return id;
     }
 

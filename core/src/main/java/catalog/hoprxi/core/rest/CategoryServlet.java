@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.webapp;
+package catalog.hoprxi.core.rest;
 
 import catalog.hoprxi.core.application.CategoryAppService;
 import catalog.hoprxi.core.application.command.*;

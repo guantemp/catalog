@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
  * @version 0.0.1 2019-11-11
  */
 public class ItemCreated implements DomainEvent {
-    private String id;
+    private long id;
     private LocalDateTime occurredOn;
     private int version;
 

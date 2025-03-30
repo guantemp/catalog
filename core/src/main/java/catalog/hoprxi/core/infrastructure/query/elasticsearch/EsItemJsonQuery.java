@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
+import catalog.hoprxi.core.application.query.QueryException;
 import catalog.hoprxi.core.application.query.QueryFilter;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -42,39 +43,42 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2025-01-11
  */
 public class EsItemJsonQuery implements ItemJsonQuery {
-    private static final String EMPTY_ITEM = "{}";
-    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.es");
+    private static final String EMPTY_ITEM = "";
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.item");
     private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private static final Pattern BARCODE = Pattern.compile("^\\d{1,13}$");
 
-    @Override
-    public String query(String id) {
-        try (RestClient client = BUILDER.build()) {
-            Request request = new Request("GET", "/item/_doc/" + id);
-            request.setOptions(ESUtil.requestOptions());
-            Response response = client.performRequest(request);
-            JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
-            while (!parser.isClosed()) {
-                if (parser.nextToken() == JsonToken.FIELD_NAME && "_source".equals(parser.getCurrentName())) {
-                    parser.nextToken();
-                    StringWriter writer = new StringWriter(1024);
-                    JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
-                    generator.writeStartObject();
-                    while (parser.nextToken() != null) {
-                        if ("_meta".equals(parser.getCurrentName())) break;
-                        generator.copyCurrentEvent(parser);
-                    }
-                    generator.writeEndObject();
-                    generator.close();
-                    //System.out.println(writer.getBuffer().capacity());
-                    return writer.toString();
-                }
-            }
-        } catch (IOException e) {
-            LOGGER.warn("No item with ID={} found", id, e);
-        }
-        return EMPTY_ITEM;
+    private static void writeAggs(JsonGenerator generator, int size) throws IOException {
+        generator.writeObjectFieldStart("aggs");
+        generator.writeObjectFieldStart("brand_aggs");
+        generator.writeObjectFieldStart("multi_terms");
+        generator.writeNumberField("size", size);
+        generator.writeArrayFieldStart("terms");
+        generator.writeStartObject();
+        generator.writeStringField("field", "brand.id");
+        generator.writeEndObject();
+        generator.writeStartObject();
+        generator.writeStringField("field", "brand.name");
+        generator.writeEndObject();
+        generator.writeEndArray();
+        generator.writeEndObject();
+        generator.writeEndObject();//end brand_aggs
+
+        generator.writeObjectFieldStart("category_aggs");
+        generator.writeObjectFieldStart("multi_terms");
+        generator.writeNumberField("size", size);
+        generator.writeArrayFieldStart("terms");
+        generator.writeStartObject();
+        generator.writeStringField("field", "category.id");
+        generator.writeEndObject();
+        generator.writeStartObject();
+        generator.writeStringField("field", "category.name");
+        generator.writeEndObject();
+        generator.writeEndArray();
+        generator.writeEndObject();
+        generator.writeEndObject();//end category_aggs
+        generator.writeEndObject();//end eggs
     }
 
 
@@ -129,26 +133,30 @@ public class EsItemJsonQuery implements ItemJsonQuery {
     }
 
     @Override
-    public String query(String key, QueryFilter[] filters, int size, String searchAfter, SortField sortField) {
-        if (size < 0 || size > 10000)
-            throw new IllegalArgumentException("size must lager 10000");
-        if (searchAfter == null || searchAfter.isEmpty()) {
-            LOGGER.info("searchAfter is empty");
-        }
-        if (sortField == null) {
-            sortField = SortField.ID_DESC;
-            LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
-        }
+    public String query(long id) {
         try (RestClient client = BUILDER.build()) {
-            Request request = new Request("GET", "/item/_search");
+            Request request = new Request("GET", "/item/_doc/" + id);
             request.setOptions(ESUtil.requestOptions());
-            System.out.println(queryJsonEntity(key, filters, size, searchAfter, sortField));
-            request.setJsonEntity(queryJsonEntity(key, filters, size, searchAfter, sortField));
             Response response = client.performRequest(request);
-            return rebuildItems(response.getEntity().getContent());
+            JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
+            while (parser.nextToken() != null) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME && "_source".equals(parser.getCurrentName())) {
+                    parser.nextToken();
+                    StringWriter writer = new StringWriter(1024);
+                    JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
+                    generator.writeStartObject();
+                    while (parser.nextToken() != null) {
+                        if ("_meta".equals(parser.getCurrentName())) break;
+                        generator.copyCurrentEvent(parser);
+                    }
+                    generator.writeEndObject();
+                    generator.close();
+                    return writer.toString();
+                }
+            }
         } catch (IOException e) {
-            //System.out.println(e);
-            LOGGER.warn("No search was found for anything resembling key = {} item ", key, e);
+            LOGGER.warn("No item with ID={} found", id, e);
+            throw new QueryException(String.format("The item (id = %s) not found.", id), e);
         }
         return EMPTY_ITEM;
     }
@@ -170,35 +178,29 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return writer.toString();
     }
 
-    private static void writeAggs(JsonGenerator generator, int size) throws IOException {
-        generator.writeObjectFieldStart("aggs");
-        generator.writeObjectFieldStart("brand_aggs");
-        generator.writeObjectFieldStart("multi_terms");
-        generator.writeNumberField("size", size);
-        generator.writeArrayFieldStart("terms");
-        generator.writeStartObject();
-        generator.writeStringField("field", "brand.id");
-        generator.writeEndObject();
-        generator.writeStartObject();
-        generator.writeStringField("field", "brand.name");
-        generator.writeEndObject();
-        generator.writeEndArray();
-        generator.writeEndObject();
-        generator.writeEndObject();
-        generator.writeObjectFieldStart("category_aggs");
-        generator.writeObjectFieldStart("multi_terms");
-        generator.writeNumberField("size", size);
-        generator.writeArrayFieldStart("terms");
-        generator.writeStartObject();
-        generator.writeStringField("field", "category.id");
-        generator.writeEndObject();
-        generator.writeStartObject();
-        generator.writeStringField("field", "category.name");
-        generator.writeEndObject();
-        generator.writeEndArray();
-        generator.writeEndObject();
-        generator.writeEndObject();
-        generator.writeEndObject();
+    @Override
+    public String query(String key, QueryFilter[] filters, int size, String searchAfter, SortField sortField) {
+        if (size < 0 || size > 10000)
+            throw new IllegalArgumentException("size must lager 10000");
+        if (searchAfter == null || searchAfter.isEmpty()) {
+            LOGGER.info("searchAfter is empty");
+        }
+        if (sortField == null) {
+            sortField = SortField.ID_DESC;
+            LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
+        try (RestClient client = BUILDER.build()) {
+            Request request = new Request("GET", "/item/_search");
+            request.setOptions(ESUtil.requestOptions());
+            //System.out.println(queryJsonEntity(key, filters, size, searchAfter, sortField));
+            request.setJsonEntity(queryJsonEntity(key, filters, size, searchAfter, sortField));
+            Response response = client.performRequest(request);
+            return rebuildItems(response.getEntity().getContent());
+        } catch (IOException e) {
+            //System.out.println(e);
+            LOGGER.warn("No search was found for anything resembling key = {} item ", key, e);
+        }
+        return EMPTY_ITEM;
     }
 
     private static void writeSortField(JsonGenerator generator, SortField sortField) throws IOException {
@@ -310,27 +312,28 @@ public class EsItemJsonQuery implements ItemJsonQuery {
 
     private String rebuildItems(InputStream is) throws IOException {
         StringWriter writer = new StringWriter(1536);
-        JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
-        generator.writeStartObject();
-        JsonParser parser = JSON_FACTORY.createParser(is);
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                //System.out.println(parser.currentToken() + ":" + parser.getCurrentName());
-                String fieldName = parser.getCurrentName();
-                if ("hits".equals(fieldName)) {
-                    parseHits(parser, generator);
-                } else if ("aggregations".equals(fieldName)) {
-                    do {
-                        generator.copyCurrentEvent(parser);
-                        parser.nextToken();
-                    } while (!(parser.currentToken() == JsonToken.END_OBJECT && "aggregations".equals(parser.getCurrentName())));
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+            generator.writeStartObject();
+            JsonParser parser = JSON_FACTORY.createParser(is);
+            while (parser.nextToken() != null) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                    //System.out.println(parser.currentToken() + ":" + parser.getCurrentName());
+                    String fieldName = parser.getCurrentName();
+                    if ("hits".equals(fieldName)) {
+                        parseHits(parser, generator);
+                    } else if ("aggregations".equals(fieldName)) {
+                        do {
+                            generator.copyCurrentEvent(parser);
+                            parser.nextToken();
+                        } while (!(parser.currentToken() == JsonToken.END_OBJECT && "aggregations".equals(parser.getCurrentName())));
+                    }
                 }
             }
+            generator.writeEndObject();
+            generator.close();
+            //System.out.println(writer.getBuffer().capacity());
+            return writer.toString();
         }
-        generator.writeEndObject();
-        generator.close();
-        //System.out.println(writer.getBuffer().capacity());
-        return writer.toString();
     }
 
     private void parseHits(JsonParser parser, JsonGenerator generator) throws IOException {

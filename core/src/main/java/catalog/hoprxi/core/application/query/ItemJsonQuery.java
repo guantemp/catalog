@@ -28,7 +28,7 @@ public interface ItemJsonQuery {
      * @param id of item
      * @return product value,EMPTY will return if not find
      */
-    String query(String id);
+    String query(long id);
 
     /**
      * @param barcode

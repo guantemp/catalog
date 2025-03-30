@@ -183,7 +183,6 @@ public class PsqlBrandRepository implements BrandRepository {
         } catch (SQLException e) {
             LOGGER.error("Can't save brand{}", brand, e);
             throw new PersistenceException(String.format("Can't save brand(%s)", brand), e);
-
         }
     }
 

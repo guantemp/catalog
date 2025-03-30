@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core;
 
-import catalog.hoprxi.core.webapp.*;
+import catalog.hoprxi.core.rest.*;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.handlers.PathHandler;
@@ -114,7 +114,12 @@ public class Bootstrap {
                                 .addMapping("/v2/brands/*"),
                         Servlets.servlet("categoryServlet2", CategoryServlet2.class)
                                 .addInitParam("query", "es")
-                                .addMapping("/v2/categories/*"));
+                                .addMapping("/v2/categories/*"),
+                        Servlets.servlet("itemServlet2", ItemServlet2.class)
+                                .addInitParam("query", "es")
+                                .addMapping("/v2/items/*")
+                );
+
         DeploymentManager manager = container.addDeployment(deploymentInfo);
         manager.deploy();
         PathHandler path = Handlers.path(Handlers.redirect("/core"))
