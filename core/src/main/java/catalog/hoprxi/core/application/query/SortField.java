@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.query.elasticsearch;
+package catalog.hoprxi.core.application.query;
 
 import java.util.Objects;
 
@@ -24,35 +24,30 @@ import java.util.Objects;
  * @version 0.0.1 builder 2024-11-24
  */
 public enum SortField {
-    ID_ASC("id"), ID_DESC("id", false), NAME_ASC("name.mnemonic.raw"), NAME_DESC("name.mnemonic.raw", false),
-    BARCODE_ASC("barcode.raw"), BARCODE_DESC("barcode.raw", false), MADE_IN_ASC("madeIn.code"), MADE_IN_DESC("madeIn.code", false),
-    LAST_RECEIPT_PRICE_ASC("last_receipt_price.price.number"), LAST_RECEIPT_PRICE_DESC("last_receipt_price.price.number", false),
-    RETAIL_PRICE_ASC("retail_price.price.number"), RETAIL_PRICE_DESC("retail_price.price.number", false);
+    ID("id"), _ID("id"), NAME("name.mnemonic.raw"), _NAME("name.mnemonic.raw"),
+    BARCODE("barcode.raw"), _BARCODE("barcode.raw"), MADE_IN("madeIn.code"), _MADE_IN("madeIn.code"),
+    LAST_RECEIPT_PRICE("last_receipt_price.price.number"), _LAST_RECEIPT_PRICE("last_receipt_price.price.number"),
+    RETAIL_PRICE("retail_price.price.number"), _RETAIL_PRICE("retail_price.price.number");
     private String field;
-    private boolean sort;
+
 
     SortField(String field) {
-        this(field, true);
-    }
-
-    SortField(String field, boolean asc) {
         this.field = Objects.requireNonNull(field, "field is required").trim();
-        this.sort = asc;
     }
 
     public String field() {
         return field;
     }
 
-    public String sort() {
-        return sort ? "asc" : "desc";
-    }
-
     public static SortField of(String s) {
         for (SortField sortField : values()) {
-            if (sortField.toString().equalsIgnoreCase(s))
+            if (sortField.name().equalsIgnoreCase(s))
                 return sortField;
         }
-        return SortField.ID_DESC;
+        return SortField._ID;
+    }
+
+    public String sort() {
+        return name().charAt(0) == '_' ? "desc" : "asc";
     }
 }

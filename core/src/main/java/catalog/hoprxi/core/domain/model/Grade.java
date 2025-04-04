@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ public enum Grade {
      */
     public static Grade of(String s) {
         for (Grade grade : values()) {
-            if (grade.name().equalsIgnoreCase(s) || grade.toString().equalsIgnoreCase(s))
+            if (grade.name().equalsIgnoreCase(s))
                 return grade;
         }
         return Grade.QUALIFIED;

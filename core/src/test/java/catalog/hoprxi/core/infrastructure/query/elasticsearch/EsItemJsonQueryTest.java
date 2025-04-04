@@ -17,8 +17,9 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
-import catalog.hoprxi.core.application.query.QueryFilter;
-import catalog.hoprxi.core.application.query.filter.CategoryFilter;
+import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.SortField;
+import catalog.hoprxi.core.application.query.filter.CategoryFilterItem;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
@@ -39,15 +40,15 @@ public class EsItemJsonQueryTest {
 
     @Test
     public void testQuery() {
-        System.out.println(service.query("62078192003431444"));
-        Assert.assertNotNull(service.query("62078526044092825"));
-        System.out.println(service.query("3635768734650054656"));
+        System.out.println(service.query(62078192003431444l));
+        Assert.assertNotNull(service.query(62078526044092825l));
+        System.out.println(service.query(3635768734650054656l));
     }
 
     @Test
     public void testQueryKey() {
-        System.out.println(service.query("693", new QueryFilter[]{new CategoryFilter(new String[]{"62078023226734874"})}, 1, null, SortField.BARCODE_DESC));
-        System.out.println(service.query("6931", new QueryFilter[]{new CategoryFilter(new String[]{"62078023226734874"})}, 50, "", SortField.ID_ASC));
+        System.out.println(service.query("693", new ItemQueryFilter[]{new CategoryFilterItem(new String[]{"62078023226734874"})}, 1, null, SortField._BARCODE));
+        System.out.println(service.query("6931", new ItemQueryFilter[]{new CategoryFilterItem(new String[]{"62078023226734874"})}, 50, "", SortField.ID));
     }
 
     @Test
@@ -58,13 +59,13 @@ public class EsItemJsonQueryTest {
 
     @Test
     public void testQuerySearchAfter() {
-        System.out.println(service.query(50, "9588868020855", SortField.BARCODE_ASC));
-        System.out.println(service.query(new QueryFilter[]{new CategoryFilter(new String[]{"62080074300112015"})}, 50, null, null));
+        System.out.println(service.query(50, "9588868020855", SortField.BARCODE));
+        System.out.println(service.query(new ItemQueryFilter[]{new CategoryFilterItem(new String[]{"62080074300112015"})}, 50, null, null));
     }
 
     @Test
     public void testQueryFrom() {
         System.out.println(service.query(2, 48, null));
-        System.out.println(service.query(0, 50, SortField.BARCODE_DESC));
+        System.out.println(service.query(0, 50, SortField._BARCODE));
     }
 }

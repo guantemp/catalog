@@ -50,9 +50,11 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
         //System.out.println("sql:" + executeSqlEvent.sql+":"+b);
         if ("LAST_ROW".equals(executeSqlEvent.sql)) {
             System.out.println("LAST_ROW:::" + sql.toString());
-            statement.addBatch(sql.toString());
-            statement.executeBatch();
-            connection.commit();
+            if (number.intValue() != 0) {
+                statement.addBatch(sql.toString());
+                statement.executeBatch();
+                connection.commit();
+            }
             statement.close();
             connection.setAutoCommit(true);
             connection.close();
@@ -68,7 +70,7 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
                 statement.executeBatch();
                 connection.commit();
                 statement.clearBatch();
-                System.out.println(i);
+                //System.out.println(i);
             }
         }
     }

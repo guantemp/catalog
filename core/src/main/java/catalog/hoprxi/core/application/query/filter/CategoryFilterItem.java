@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.application.query.filter;
 
-import catalog.hoprxi.core.application.query.QueryFilter;
+import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
@@ -27,16 +27,16 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 builder 2025-01-03
  */
-public class CategoryFilter implements QueryFilter {
+public class CategoryFilterItem implements ItemQueryFilter {
     private String[] categoryIds;
 
-    public CategoryFilter(String[] categoryIds) {
+    public CategoryFilterItem(String[] categoryIds) {
         if (categoryIds == null)
             this.categoryIds = new String[0];
         this.categoryIds = categoryIds;
     }
 
-    public CategoryFilter(String categoryId) {
+    public CategoryFilterItem(String categoryId) {
         Objects.requireNonNull(categoryId, "categoryId is required");
         this.categoryIds = new String[]{categoryId};
     }

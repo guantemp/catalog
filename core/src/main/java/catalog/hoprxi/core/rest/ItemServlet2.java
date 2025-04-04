@@ -19,8 +19,9 @@ package catalog.hoprxi.core.rest;
 import catalog.hoprxi.core.application.ItemAppService;
 import catalog.hoprxi.core.application.command.ItemCreateCommand;
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
+import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.QueryException;
-import catalog.hoprxi.core.application.query.QueryFilter;
+import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
@@ -34,7 +35,6 @@ import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.EsItemJsonQuery;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.SortField;
 import com.fasterxml.jackson.core.*;
 import org.javamoney.moneta.Money;
 import org.javamoney.moneta.format.CurrencyStyle;
@@ -60,7 +60,7 @@ public class ItemServlet2 extends HttpServlet {
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
             .build());
     private static final int OFFSET = 0;
-    private static final int LIMIT = 64;
+    private static final int SIZE = 64;
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private final ItemJsonQuery query = new EsItemJsonQuery();
     private final ItemAppService app = new ItemAppService();
@@ -95,23 +95,20 @@ public class ItemServlet2 extends HttpServlet {
                     }
                 }
             } else {
-                String keyword = Optional.ofNullable(req.getParameter("keyword")).orElse("");
-                String searchAfter = Optional.ofNullable(req.getParameter("searchAfter")).orElse("");
+                String query = Optional.ofNullable(req.getParameter("q")).orElse("");
+                String cursor = Optional.ofNullable(req.getParameter("cursor")).orElse("");
                 int offset = NumberHelper.intOf(req.getParameter("offset"), OFFSET);
-                int limit = NumberHelper.intOf(req.getParameter("limit"), LIMIT);
+                int size = NumberHelper.intOf(req.getParameter("size"), SIZE);
                 String sort = Optional.ofNullable(req.getParameter("sort")).orElse("");
                 SortField sortField = SortField.of(sort);
-                String filter = Optional.ofNullable(req.getParameter("sort")).orElse("{}");
-
-                if (keyword.isEmpty()) {
-                    if (searchAfter.isEmpty()) {
-                        copy(generator, query.query(offset, limit, sortField));
-                        System.out.println("d都是这个");
+                if (query.isEmpty()) {
+                    if (cursor.isEmpty()) {
+                        copy(generator, this.query.query(offset, size, sortField));
                     } else {
-                        copy(generator, query.query(limit, searchAfter, sortField));
+                        copy(generator, this.query.query(size, cursor, sortField));
                     }
                 } else {
-                    query.query(keyword, new QueryFilter[0], 128, "", null);
+                    this.query.query(query, new ItemQueryFilter[0], 128, "", null);
                     //copy(generator, query.query(keyword, offset, limit, sortField));
                 }
             }

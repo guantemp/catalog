@@ -18,6 +18,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.BrandJsonQuery;
 import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.*;
 import org.apache.http.HttpHost;
@@ -115,7 +116,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         if (limit < 0 || limit > 10000) throw new IllegalArgumentException("The size value range is 0-10000");
         if (limit + offset > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
         if (sortField == null) {
-            sortField = SortField.ID_DESC;
+            sortField = SortField._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         Request request = new Request("GET", "/brand/_search");
@@ -180,7 +181,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
     public String query(int size, String searchAfter, SortField sortField) {
         if (size < 0 || size > 10000) throw new IllegalArgumentException("The size value range is 0-10000");
         if (sortField == null) {
-            sortField = SortField.ID_DESC;
+            sortField = SortField._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         Request request = new Request("GET", "/brand/_search");
@@ -229,7 +230,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         if (offset + limit > 10000)
             throw new IllegalArgumentException("offset + limit must be less than or equal to: [10000].");
         if (sortField == null) {
-            sortField = SortField.ID_DESC;
+            sortField = SortField._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         Request request = new Request("GET", "/brand/_search");

@@ -17,8 +17,9 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
+import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.QueryException;
-import catalog.hoprxi.core.application.query.QueryFilter;
+import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -161,7 +162,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return EMPTY_ITEM;
     }
 
-    private String queryJsonEntity(String key, QueryFilter[] filters, int size, String searchAfter, SortField sortField) {
+    private String queryJsonEntity(String key, ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField) {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -179,14 +180,14 @@ public class EsItemJsonQuery implements ItemJsonQuery {
     }
 
     @Override
-    public String query(String key, QueryFilter[] filters, int size, String searchAfter, SortField sortField) {
+    public String query(String key, ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField) {
         if (size < 0 || size > 10000)
             throw new IllegalArgumentException("size must lager 10000");
         if (searchAfter == null || searchAfter.isEmpty()) {
             LOGGER.info("searchAfter is empty");
         }
         if (sortField == null) {
-            sortField = SortField.ID_DESC;
+            sortField = SortField._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         try (RestClient client = BUILDER.build()) {
@@ -212,12 +213,12 @@ public class EsItemJsonQuery implements ItemJsonQuery {
     }
 
     @Override
-    public String query(String key, QueryFilter[] filters, int from, int size, SortField sortField) {
+    public String query(String key, ItemQueryFilter[] filters, int from, int size, SortField sortField) {
         if (from < 0 || from > 10000) throw new IllegalArgumentException("from must lager 10000");
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (from + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
         if (sortField == null) {
-            sortField = SortField.ID_DESC;
+            sortField = SortField._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         StringWriter writer = queryJsonEntity(key, filters, from, size, sortField);
@@ -236,7 +237,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return EMPTY_ITEM;
     }
 
-    private StringWriter queryJsonEntity(String key, QueryFilter[] filters, int from, int size, SortField sortField) {
+    private StringWriter queryJsonEntity(String key, ItemQueryFilter[] filters, int from, int size, SortField sortField) {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -255,7 +256,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return writer;
     }
 
-    private void writeMain(JsonGenerator generator, String key, QueryFilter[] filters) throws IOException {
+    private void writeMain(JsonGenerator generator, String key, ItemQueryFilter[] filters) throws IOException {
         generator.writeObjectFieldStart("query");
         if (key == null || key.isEmpty()) {//not key ,query all
             if (filters.length == 0) {
@@ -264,7 +265,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             } else {//add filter
                 generator.writeObjectFieldStart("bool");
                 generator.writeArrayFieldStart("must");
-                for (QueryFilter filter : filters) {
+                for (ItemQueryFilter filter : filters) {
                     filter.filter(generator);
                 }
                 generator.writeEndArray();//must
@@ -301,7 +302,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
                 generator.writeEndObject();
                 generator.writeEndObject();
             }
-            for (QueryFilter filter : filters) {
+            for (ItemQueryFilter filter : filters) {
                 filter.filter(generator);
             }
             generator.writeEndArray();//must

@@ -16,15 +16,15 @@
 
 package catalog.hoprxi;
 
-import catalog.hoprxi.core.application.query.QueryFilter;
-import catalog.hoprxi.core.application.query.filter.BrandFilter;
-import catalog.hoprxi.core.application.query.filter.CategoryFilter;
+import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.SortField;
+import catalog.hoprxi.core.application.query.filter.BrandFilterItem;
+import catalog.hoprxi.core.application.query.filter.CategoryFilterItem;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.Unit;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.SortField;
 import catalog.hoprxi.core.rest.UploadServlet;
 import com.fasterxml.jackson.core.*;
 import com.typesafe.config.Config;
@@ -363,7 +363,7 @@ public class AppTest {
         generator.writeStartObject();
         generator.writeNumberField("size", 200);
         generator.writeObjectFieldStart("query");
-        QueryFilter[] filters = new QueryFilter[]{new BrandFilter("-1"), new CategoryFilter(new String[]{"-1", "62078023226734874"})};
+        ItemQueryFilter[] filters = new ItemQueryFilter[]{new BrandFilterItem("-1"), new CategoryFilterItem(new String[]{"-1", "62078023226734874"})};
         if (filters.length > 0) {
             generator.writeObjectFieldStart("bool");
             generator.writeArrayFieldStart("must");
@@ -396,7 +396,7 @@ public class AppTest {
             generator.writeEndObject();
             generator.writeEndObject();
         }
-        for (QueryFilter filter : filters) {
+        for (ItemQueryFilter filter : filters) {
             filter.filter(generator);
         }
         generator.writeEndArray();
@@ -405,7 +405,7 @@ public class AppTest {
 
         generator.writeArrayFieldStart("sort");
         generator.writeStartObject();
-        generator.writeStringField(SortField.ID_ASC.field(), SortField.ID_ASC.sort());
+        generator.writeStringField(SortField.ID.field(), SortField.ID.sort());
         generator.writeEndObject();
         generator.writeEndArray();
 

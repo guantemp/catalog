@@ -14,51 +14,36 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.query.elasticsearch;
+package catalog.hoprxi.core.application.query.filter;
 
-import catalog.hoprxi.core.application.query.QueryFilter;
+import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
+import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2025-01-03
+ * @version 0.0.1 builder 2025-01-06
  */
-public class priceRangFilter implements QueryFilter {
-    private PriceType type;
-    private Number low;
-    private Number high;
+public class BrandFilterItem implements ItemQueryFilter {
+    private String brandId;
 
-    public priceRangFilter(PriceType type, Number low, Number high) {
-        this.type = type;
-        this.low = low;
-        this.high = high;
+    public BrandFilterItem(String brandId) {
+        this.brandId = Objects.requireNonNull(brandId, "brand id required");
     }
 
     @Override
     public void filter(JsonGenerator generator) {
         try {
-            generator.writeEndObject();
-            generator.writeObjectFieldStart("rang");
-            switch (type) {
-                case RETAIL_PRICE:
-                    generator.writeObjectFieldStart("retail_price.number");
-                    break;
-            }
-            generator.writeObjectFieldStart("retail_price.number");
-            generator.writeNumberField("gte", 1);
-            generator.writeNumberField("lte", 10);
-            generator.writeEndObject();
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("brand.id", brandId);
             generator.writeEndObject();
             generator.writeEndObject();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public enum PriceType {
-        RETAIL_PRICE, last_receipt_price, vip_price, member_price
     }
 }

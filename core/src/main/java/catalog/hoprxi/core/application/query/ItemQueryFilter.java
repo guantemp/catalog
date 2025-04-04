@@ -23,6 +23,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * @since JDK8.0
  * @version 0.0.1 builder 2025-01-03
  */
-public interface QueryFilter {
+public interface ItemQueryFilter {
     void filter(JsonGenerator generator);
 }

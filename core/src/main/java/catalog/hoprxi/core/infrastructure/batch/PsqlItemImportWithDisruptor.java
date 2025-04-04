@@ -19,7 +19,7 @@ package catalog.hoprxi.core.infrastructure.batch;
 import catalog.hoprxi.core.application.batch.ItemImportService;
 import catalog.hoprxi.core.application.batch.ItemMapping;
 import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.YieldingWaitStrategy;
+import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.poi.ss.usermodel.*;
@@ -51,10 +51,11 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
             itemMappings = DEFAULT_CORR;
         Disruptor<ItemImportEvent> disruptor = new Disruptor<>(
                 ItemImportEvent::new,
-                256,
+                512,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
-                new YieldingWaitStrategy()
+                new SleepingWaitStrategy()
+                //new YieldingWaitStrategy()
         );
 
         disruptor.handleEventsWith(new IdHandler(), new NameHandler(), new BarcodeHandler(), new CategoryHandler(), new BrandHandler(),

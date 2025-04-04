@@ -20,10 +20,10 @@ import catalog.hoprxi.core.application.BrandAppService;
 import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.query.BrandJsonQuery;
 import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandJsonQuery;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.SortField;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import salt.hoprxi.utils.NumberHelper;
@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.Year;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,8 +52,9 @@ import java.util.Optional;
 @WebServlet(urlPatterns = {"v2/brands/*"}, name = "brands", asyncSupported = true, initParams = {@WebInitParam(name = "query", value = "es")})
 public class BrandServlet2 extends HttpServlet {
     private static final int OFFSET = 0;
-    private static final int LIMIT = 64;
+    private static final int SIZE = 64;
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
+    private static final EnumSet<SortField> SUPPORT_SORT_FIELD = EnumSet.of(SortField._ID, SortField.ID, SortField.NAME, SortField._NAME);
     private final BrandJsonQuery query = new ESBrandJsonQuery();
     private final BrandAppService app = new BrandAppService();
 
@@ -93,21 +95,27 @@ public class BrandServlet2 extends HttpServlet {
                     generator.writeEndObject();
                 }
             } else {//query by name
-                String name = Optional.ofNullable(req.getParameter("name")).orElse("");
-                String searchAfter = Optional.ofNullable(req.getParameter("searchAfter")).orElse("");
+                String query = Optional.ofNullable(req.getParameter("q")).orElse("");
+                String cursor = Optional.ofNullable(req.getParameter("cursor")).orElse("");
                 int offset = NumberHelper.intOf(req.getParameter("offset"), OFFSET);
-                int limit = NumberHelper.intOf(req.getParameter("limit"), LIMIT);
+                int size = NumberHelper.intOf(req.getParameter("size"), SIZE);
                 String sort = Optional.ofNullable(req.getParameter("sort")).orElse("");
                 SortField sortField = SortField.of(sort);
-                //System.out.println(sortField);
-                if (name.isEmpty()) {
-                    if (searchAfter.isEmpty()) {
-                        copyRaw(generator, query.query(offset, limit, sortField));
+                if (!SUPPORT_SORT_FIELD.contains(sortField)) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    generator.writeStartObject();
+                    generator.writeStringField("status", "Error sort filed");
+                    generator.writeNumberField("code", 30101);
+                    generator.writeStringField("message", String.format("The filed(%s) not support", sortField.name()));
+                    generator.writeEndObject();
+                } else if (query.isEmpty()) {
+                    if (cursor.isEmpty()) {
+                        copyRaw(generator, this.query.query(offset, size, sortField));
                     } else {
-                        copyRaw(generator, query.query(limit, searchAfter, sortField));
+                        copyRaw(generator, this.query.query(size, cursor, sortField));
                     }
                 } else {
-                    copyRaw(generator, query.query(name, offset, limit, sortField));
+                    copyRaw(generator, this.query.query(query, offset, size, sortField));
                 }
             }
         }
@@ -195,9 +203,8 @@ public class BrandServlet2 extends HttpServlet {
             URL logo = null, homepage = null;
             Year since = null;
             JsonParser parser = JSON_FACTORY.createParser(req.getInputStream());
-            while (!parser.isClosed()) {
-                JsonToken jsonToken = parser.nextToken();
-                if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+            while (parser.nextToken() != null) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME) {
                     String fieldName = parser.getCurrentName();
                     parser.nextToken();
                     switch (fieldName) {
@@ -229,8 +236,7 @@ public class BrandServlet2 extends HttpServlet {
                 commands.add(new BrandChangeAboutCommand(id, logo, homepage, since, story));
             app.handle(commands);
             resp.setContentType("application/json; charset=UTF-8");
-            JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)
-                    .setPrettyPrinter(new DefaultPrettyPrinter());
+            JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8);
             generator.writeStartObject();
             generator.writeStringField("status", "success");
             generator.writeNumberField("code", 30102);

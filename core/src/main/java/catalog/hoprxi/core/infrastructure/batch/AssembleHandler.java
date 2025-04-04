@@ -28,7 +28,6 @@ import java.sql.SQLException;
 import java.util.EnumMap;
 import java.util.StringJoiner;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -36,7 +35,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 0.0.1 builder 2023-05-08
  */
 public class AssembleHandler implements EventHandler<ItemImportEvent> {
-    private AtomicInteger number = new AtomicInteger(0);
     private static final EventTranslatorOneArg<ExecuteSqlEvent, String> TRANSLATOR =
             (event, sequence, sql) -> event.sql = sql;
     private static Disruptor<ExecuteSqlEvent> executeDisruptor;
@@ -46,7 +44,7 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
     static {
         executeDisruptor = new Disruptor<>(
                 ExecuteSqlEvent::new,
-                128,
+                256,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
                 new YieldingWaitStrategy()
