@@ -35,7 +35,6 @@ public interface ItemJsonQuery {
     String queryByBarcode(String barcode);
 
     /**
-     * @param key
      * @param filters
      * @param size
      * @param searchAfter
@@ -43,31 +42,19 @@ public interface ItemJsonQuery {
      * @return
      * @throws IllegalArgumentException if size<=0 or size >10000
      */
-    String query(String key, ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField);
-
-    default String query(ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField) {
-        return query(null, filters, size, searchAfter, sortField);
-    }
+    String query(ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField);
 
     default String query(int size, String searchAfter, SortField sortField) {
         return query(new ItemQueryFilter[0], size, searchAfter, sortField);
     }
 
-    default String query(String key, int size, String searchAfter, SortField sortField) {
-        return query(key, new ItemQueryFilter[0], size, searchAfter, sortField);
-    }
-
-    String query(String key, ItemQueryFilter[] filters, int from, int size, SortField sortField);
-
-    default String query(ItemQueryFilter[] filters, int from, int size, SortField sortField) {
-        return query(null, filters, from, size, sortField);
-    }
+    String query(ItemQueryFilter[] filters, int from, int size, SortField sortField);
 
     default String query(int from, int size, SortField sortField) {
-        return query(null, new ItemQueryFilter[0], from, size, sortField);
+        return query(new ItemQueryFilter[0], from, size, sortField);
     }
 
     default String query(int from, int size) {
-        return query(null, new ItemQueryFilter[0], from, size, SortField._ID);
+        return query(new ItemQueryFilter[0], from, size, SortField._ID);
     }
 }

@@ -38,8 +38,6 @@ public class KeywordFilter implements ItemQueryFilter {
     @Override
     public void filter(JsonGenerator generator) {
         try {
-            generator.writeObjectFieldStart("bool");
-            generator.writeArrayFieldStart("must");
             if (BARCODE.matcher(keyword).matches()) {//only barcode query
                 generator.writeStartObject();
                 generator.writeObjectFieldStart("term");
@@ -50,6 +48,7 @@ public class KeywordFilter implements ItemQueryFilter {
                 generator.writeStartObject();
                 generator.writeObjectFieldStart("bool");
                 generator.writeArrayFieldStart("should");
+
                 generator.writeStartObject();
                 generator.writeObjectFieldStart("multi_match");
                 generator.writeStringField("query", keyword);
@@ -59,14 +58,16 @@ public class KeywordFilter implements ItemQueryFilter {
                 generator.writeEndArray();
                 generator.writeEndObject();
                 generator.writeEndObject();
+
                 generator.writeStartObject();
                 generator.writeObjectFieldStart("term");
                 generator.writeStringField("name.mnemonic", keyword);
                 generator.writeEndObject();
                 generator.writeEndObject();
-                generator.writeEndObject();
-                generator.writeEndObject();
-                generator.writeEndObject();
+
+                generator.writeEndObject();//end should
+                generator.writeEndObject();//end bool
+                generator.writeEndObject();//end
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

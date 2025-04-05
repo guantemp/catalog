@@ -20,6 +20,8 @@ import catalog.hoprxi.core.application.query.ItemJsonQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.application.query.filter.CategoryFilterItem;
+import catalog.hoprxi.core.application.query.filter.KeywordFilter;
+import catalog.hoprxi.core.application.query.filter.PriceRangFilter;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
@@ -35,6 +37,7 @@ public class EsItemJsonQueryTest {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
+
     private static final ItemJsonQuery service = new EsItemJsonQuery();
 
 
@@ -47,8 +50,9 @@ public class EsItemJsonQueryTest {
 
     @Test
     public void testQueryKey() {
-        System.out.println(service.query("693", new ItemQueryFilter[]{new CategoryFilterItem(new String[]{"62078023226734874"})}, 1, null, SortField._BARCODE));
-        System.out.println(service.query("6931", new ItemQueryFilter[]{new CategoryFilterItem(new String[]{"62078023226734874"})}, 50, "", SortField.ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new String[]{"62078023226734874"})}, 1, null, SortField._BARCODE));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilterItem(new String[]{"62078023226734874"})}, 50, "", SortField.ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new String[]{"62078023226734874"}), new PriceRangFilter(PriceRangFilter.PriceType.RETAIL, 1.1, 2), new PriceRangFilter(PriceRangFilter.PriceType.LAST_RECEIPT, 1.1, 1.2)}, 50, "", SortField.ID));
     }
 
     @Test

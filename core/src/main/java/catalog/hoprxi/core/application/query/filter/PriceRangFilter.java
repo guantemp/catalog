@@ -28,10 +28,10 @@ import java.io.IOException;
  */
 public class PriceRangFilter implements ItemQueryFilter {
     private PriceType type;
-    private Number low;
-    private Number high;
+    private double low;
+    private double high;
 
-    public PriceRangFilter(PriceType type, Number low, Number high) {
+    public PriceRangFilter(PriceType type, double low, double high) {
         this.type = type;
         this.low = low;
         this.high = high;
@@ -40,16 +40,24 @@ public class PriceRangFilter implements ItemQueryFilter {
     @Override
     public void filter(JsonGenerator generator) {
         try {
-            generator.writeEndObject();
-            generator.writeObjectFieldStart("rang");
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("range");
             switch (type) {
-                case RETAIL_PRICE:
+                case RETAIL:
                     generator.writeObjectFieldStart("retail_price.number");
                     break;
+                case LAST_RECEIPT:
+                    generator.writeObjectFieldStart("last_receipt_price.price.number");
+                    break;
+                case MEMBER:
+                    generator.writeObjectFieldStart("member_price.price.number");
+                    break;
+                case VIP:
+                    generator.writeObjectFieldStart("vip_price.price.number");
+                    break;
             }
-            generator.writeObjectFieldStart("retail_price.number");
-            generator.writeNumberField("gte", 1);
-            generator.writeNumberField("lte", 10);
+            generator.writeNumberField("lte", high);
+            generator.writeNumberField("gte", low);
             generator.writeEndObject();
             generator.writeEndObject();
             generator.writeEndObject();
@@ -59,6 +67,6 @@ public class PriceRangFilter implements ItemQueryFilter {
     }
 
     public enum PriceType {
-        RETAIL_PRICE, last_receipt_price, vip_price, member_price
+        RETAIL, LAST_RECEIPT, VIP, MEMBER
     }
 }

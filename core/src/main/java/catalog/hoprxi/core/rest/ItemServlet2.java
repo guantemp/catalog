@@ -108,7 +108,7 @@ public class ItemServlet2 extends HttpServlet {
                         copy(generator, this.query.query(size, cursor, sortField));
                     }
                 } else {
-                    this.query.query(query, new ItemQueryFilter[0], 128, "", null);
+                    this.query.query(new ItemQueryFilter[0], 128, "", null);
                     //copy(generator, query.query(keyword, offset, limit, sortField));
                 }
             }

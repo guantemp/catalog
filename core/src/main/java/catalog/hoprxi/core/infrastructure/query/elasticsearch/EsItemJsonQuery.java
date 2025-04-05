@@ -162,25 +162,8 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return EMPTY_ITEM;
     }
 
-    private String queryJsonEntity(String key, ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField) {
-        StringWriter writer = new StringWriter();
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
-            generator.writeStartObject();
-            generator.writeNumberField("size", size);
-            writeMain(generator, key, filters);
-            writeSortField(generator, sortField);
-            writeSearchAfter(generator, searchAfter);
-            writeAggs(generator, 20);
-            generator.writeEndObject();
-            generator.flush();
-        } catch (IOException e) {
-            LOGGER.error("Cannot assemble request JSON", e);
-        }
-        return writer.toString();
-    }
-
     @Override
-    public String query(String key, ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField) {
+    public String query(ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField) {
         if (size < 0 || size > 10000)
             throw new IllegalArgumentException("size must lager 10000");
         if (searchAfter == null || searchAfter.isEmpty()) {
@@ -194,14 +177,31 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             Request request = new Request("GET", "/item/_search");
             request.setOptions(ESUtil.requestOptions());
             //System.out.println(queryJsonEntity(key, filters, size, searchAfter, sortField));
-            request.setJsonEntity(queryJsonEntity(key, filters, size, searchAfter, sortField));
+            request.setJsonEntity(queryJsonEntity(filters, size, searchAfter, sortField));
             Response response = client.performRequest(request);
             return rebuildItems(response.getEntity().getContent());
         } catch (IOException e) {
             //System.out.println(e);
-            LOGGER.warn("No search was found for anything resembling key = {} item ", key, e);
+            LOGGER.warn("No search was found for anything resembling key = {} item ", e);
         }
         return EMPTY_ITEM;
+    }
+
+    private String queryJsonEntity(ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField) {
+        StringWriter writer = new StringWriter();
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+            generator.writeStartObject();
+            generator.writeNumberField("size", size);
+            writeMain(generator, filters);
+            writeSortField(generator, sortField);
+            writeSearchAfter(generator, searchAfter);
+            writeAggs(generator, 20);
+            generator.writeEndObject();
+            generator.flush();
+        } catch (IOException e) {
+            LOGGER.error("Cannot assemble request JSON", e);
+        }
+        return writer.toString();
     }
 
     private static void writeSortField(JsonGenerator generator, SortField sortField) throws IOException {
@@ -213,7 +213,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
     }
 
     @Override
-    public String query(String key, ItemQueryFilter[] filters, int from, int size, SortField sortField) {
+    public String query(ItemQueryFilter[] filters, int from, int size, SortField sortField) {
         if (from < 0 || from > 10000) throw new IllegalArgumentException("from must lager 10000");
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (from + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
@@ -221,7 +221,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             sortField = SortField._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
-        StringWriter writer = queryJsonEntity(key, filters, from, size, sortField);
+        StringWriter writer = queryJsonEntity(filters, from, size, sortField);
         RestClientBuilder builder = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
         RestClient client = builder.build();
         Request request = new Request("GET", "/item/_search");
@@ -237,18 +237,18 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return EMPTY_ITEM;
     }
 
-    private StringWriter queryJsonEntity(String key, ItemQueryFilter[] filters, int from, int size, SortField sortField) {
+    private StringWriter queryJsonEntity(ItemQueryFilter[] filters, int from, int size, SortField sortField) {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeNumberField("from", from);
             generator.writeNumberField("size", size);
-            writeMain(generator, key, filters);
+            writeMain(generator, filters);
             writeSortField(generator, sortField);
             writeAggs(generator, 20);
             generator.writeBooleanField("track_scores", false);
             generator.writeEndObject();//root
-            generator.flush();
+            //generator.flush();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
             throw new IllegalStateException("Cannot assemble request JSON");
@@ -256,52 +256,14 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return writer;
     }
 
-    private void writeMain(JsonGenerator generator, String key, ItemQueryFilter[] filters) throws IOException {
+    private void writeMain(JsonGenerator generator, ItemQueryFilter[] filters) throws IOException {
         generator.writeObjectFieldStart("query");
-        if (key == null || key.isEmpty()) {//not key ,query all
-            if (filters.length == 0) {
-                generator.writeObjectFieldStart("match_all");
-                generator.writeEndObject();//match_all
-            } else {//add filter
-                generator.writeObjectFieldStart("bool");
-                generator.writeArrayFieldStart("must");
-                for (ItemQueryFilter filter : filters) {
-                    filter.filter(generator);
-                }
-                generator.writeEndArray();//must
-                generator.writeEndObject();//bool
-            }
+        if (filters.length == 0) {
+            generator.writeObjectFieldStart("match_all");
+            generator.writeEndObject();//match_all
         } else {
             generator.writeObjectFieldStart("bool");
             generator.writeArrayFieldStart("must");
-            if (BARCODE.matcher(key).matches()) {//only barcode query
-                generator.writeStartObject();
-                generator.writeObjectFieldStart("term");
-                generator.writeStringField("barcode", key);
-                generator.writeEndObject();
-                generator.writeEndObject();
-            } else {
-                generator.writeStartObject();
-                generator.writeObjectFieldStart("bool");
-                generator.writeArrayFieldStart("should");
-                generator.writeStartObject();
-                generator.writeObjectFieldStart("multi_match");
-                generator.writeStringField("query", key);
-                generator.writeArrayFieldStart("fields");
-                generator.writeString("name.name");
-                generator.writeString("name.alias");
-                generator.writeEndArray();
-                generator.writeEndObject();
-                generator.writeEndObject();
-                generator.writeStartObject();
-                generator.writeObjectFieldStart("term");
-                generator.writeStringField("name.mnemonic", key);
-                generator.writeEndObject();
-                generator.writeEndObject();
-                generator.writeEndObject();
-                generator.writeEndObject();
-                generator.writeEndObject();
-            }
             for (ItemQueryFilter filter : filters) {
                 filter.filter(generator);
             }
