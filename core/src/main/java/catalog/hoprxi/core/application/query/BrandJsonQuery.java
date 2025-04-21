@@ -32,7 +32,7 @@ public interface BrandJsonQuery {
     }
 
     /**
-     * @param name      required(not NULL)
+     * @param name      allowd <code>NULL</code> or empty
      * @param offset    specified start.
      * @param limit     specified size
      * @param sortField Null or empty will be replaced with {@link SortField#_ID}
@@ -49,9 +49,17 @@ public interface BrandJsonQuery {
      * @see #query(String, int, int, SortField)
      */
     default String query(String name, int offset, int limit) {
-        return query(name, offset, limit, SortField.ID);
+        return query(name, offset, limit, SortField._ID);
     }
 
+    /**
+     * @param offset
+     * @param limit
+     * @return
+     */
+    default String query(int offset, int limit, SortField sortField) {
+        return query("", offset, limit, sortField);
+    }
 
     /**
      * @param size
@@ -59,13 +67,17 @@ public interface BrandJsonQuery {
      * @param sortField
      * @return
      */
-    String query(int size, String searchAfter, SortField sortField);
+    String query(String name, int size, String searchAfter, SortField sortField);
 
     /**
-     * @param offset
-     * @param limit
+     * @param size
+     * @param searchAfter
      * @param sortField
      * @return
      */
-    String query(int offset, int limit, SortField sortField);
+    default String query(int size, String searchAfter, SortField sortField) {
+        return query("", size, searchAfter, sortField);
+    }
+
+
 }

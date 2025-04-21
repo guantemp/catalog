@@ -53,12 +53,16 @@ public class EsItemJsonQueryTest {
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new String[]{"62078023226734874"})}, 1, null, SortField._BARCODE));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilterItem(new String[]{"62078023226734874"})}, 50, "", SortField.ID));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new String[]{"62078023226734874"}), new PriceRangFilter(PriceRangFilter.PriceType.RETAIL, 1.1, 2), new PriceRangFilter(PriceRangFilter.PriceType.LAST_RECEIPT, 1.1, 1.2)}, 50, "", SortField.ID));
+        System.out.println(service.query(100, 30, SortField.ID));
     }
 
-    @Test
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void testAccurateQueryByBarcode() {
-        System.out.println(service.queryByBarcode("6902779313692"));
-        System.out.println(service.queryByBarcode("6920208924028"));
+        System.out.println(service.queryByBarcode("6900404523737"));
+        System.out.println(service.queryByBarcode("6901028025102"));
+        System.out.println(service.queryByBarcode("dsgf"));
+        System.out.println(service.queryByBarcode(""));
+        System.out.println(service.queryByBarcode(null));
     }
 
     @Test

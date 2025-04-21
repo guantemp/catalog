@@ -71,7 +71,8 @@ public class ESBrandJsonQueryTest {
         System.out.println(service.query(100, 5, SortField._NAME));
         System.out.println(service.query(0, 128, SortField._ID));
         System.out.println(service.query(16, "", SortField.NAME));
-        System.out.println(service.query(16, "xcx", SortField._NAME));
+        System.out.println(service.query(16, "62078470412941622", SortField.ID));
+        System.out.println(service.query("", 8, "62078807563681609", SortField.ID));
     }
 
     @Test

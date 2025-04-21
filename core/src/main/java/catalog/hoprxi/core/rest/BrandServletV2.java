@@ -50,7 +50,7 @@ import java.util.Optional;
  */
 
 @WebServlet(urlPatterns = {"v2/brands/*"}, name = "brands", asyncSupported = true, initParams = {@WebInitParam(name = "query", value = "es")})
-public class BrandServlet2 extends HttpServlet {
+public class BrandServletV2 extends HttpServlet {
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
@@ -108,14 +108,14 @@ public class BrandServlet2 extends HttpServlet {
                     generator.writeNumberField("code", 30101);
                     generator.writeStringField("message", String.format("The filed(%s) not support", sortField.name()));
                     generator.writeEndObject();
-                } else if (query.isEmpty()) {
-                    if (cursor.isEmpty()) {
-                        copyRaw(generator, this.query.query(offset, size, sortField));
-                    } else {
-                        copyRaw(generator, this.query.query(size, cursor, sortField));
-                    }
                 } else {
-                    copyRaw(generator, this.query.query(query, offset, size, sortField));
+                    resp.addHeader("Link", "https://www.hoprxi.com/core/v2/brands?cursor=;rel=prev");
+                    resp.addHeader("Link", "https://www.hoprxi.com/core/v2/brands;rel=next;");
+                    if (cursor.isEmpty()) {
+                        copyRaw(generator, this.query.query(query, offset, size, sortField));
+                    } else {
+                        copyRaw(generator, this.query.query(query, size, cursor, sortField));
+                    }
                 }
             }
         }

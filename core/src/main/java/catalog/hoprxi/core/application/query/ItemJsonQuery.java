@@ -24,13 +24,14 @@ package catalog.hoprxi.core.application.query;
 public interface ItemJsonQuery {
     /**
      * @param id of item
-     * @return product value,EMPTY will return if not find
+     * @return item value,EMPTY will return if not find
      */
     String query(long id);
 
     /**
      * @param barcode
      * @return
+     * @throws IllegalArgumentException if barcode isn't a valid
      */
     String queryByBarcode(String barcode);
 
@@ -40,14 +41,35 @@ public interface ItemJsonQuery {
      * @param searchAfter
      * @param sortField
      * @return
-     * @throws IllegalArgumentException if size<=0 or size >10000
      */
     String query(ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField);
 
+    /**
+     * @param size
+     * @param searchAfter
+     * @param sortField
+     * @return
+     */
     default String query(int size, String searchAfter, SortField sortField) {
         return query(new ItemQueryFilter[0], size, searchAfter, sortField);
     }
 
+    /**
+     * @param size
+     * @param searchAfter
+     * @return
+     */
+    default String query(int size, String searchAfter) {
+        return query(new ItemQueryFilter[0], size, searchAfter, SortField._ID);
+    }
+
+    /**
+     * @param filters
+     * @param from
+     * @param size
+     * @param sortField
+     * @return
+     */
     String query(ItemQueryFilter[] filters, int from, int size, SortField sortField);
 
     default String query(int from, int size, SortField sortField) {

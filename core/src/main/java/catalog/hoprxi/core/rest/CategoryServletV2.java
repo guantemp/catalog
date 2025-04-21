@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
  */
 @WebServlet(urlPatterns = {"v2/categories/*"}, name = "categories", asyncSupported = true,
         initParams = {@WebInitParam(name = "query", value = "es")})
-public class CategoryServlet2 extends HttpServlet {
+public class CategoryServletV2 extends HttpServlet {
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
     private static final CategoryAppService APP = new CategoryAppService();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();

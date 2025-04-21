@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,8 +78,8 @@ public class BarcodeGenerateServicesTest {
         Barcode[] eans = BarcodeGenerateServices.couponBarcodeGenerate(325, 30);
         for (Barcode e : eans)
             System.out.println(e);
-        System.out.println("Filter number 4(mantissa):");
-        eans = BarcodeGenerateServices.couponBarcodeGenerate(110, 5, new int[]{4});
+        System.out.println("Filter number 4,7(mantissa):");
+        eans = BarcodeGenerateServices.couponBarcodeGenerate(110, 5, new int[]{4, 7});
         for (Barcode e : eans)
             System.out.println(e);
     }

@@ -55,7 +55,7 @@ import java.util.Optional;
  * @since JDK8.0
  * @version 0.0.1 builder 2025-03-24
  */
-public class ItemServlet2 extends HttpServlet {
+public class ItemServletV2 extends HttpServlet {
     private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.CHINA)
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
             .build());
@@ -74,7 +74,14 @@ public class ItemServlet2 extends HttpServlet {
             resp.setContentType("application/json; charset=UTF-8");
             if (pathInfo != null) {
                 String[] paths = pathInfo.split("/");
-                if (paths.length == 2) {
+                if (paths.length == 0) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    generator.writeStartObject();
+                    generator.writeStringField("status", "Unfounded id");
+                    generator.writeNumberField("code", 30405);
+                    generator.writeStringField("message", "An id value is required, such as /123");
+                    generator.writeEndObject();
+                } else if (paths.length == 2) {
                     try {
                         String result = query.query(Long.parseLong(paths[1]));
                         copy(generator, result);
@@ -90,29 +97,28 @@ public class ItemServlet2 extends HttpServlet {
                         generator.writeStartObject();
                         generator.writeStringField("status", "Error id value");
                         generator.writeNumberField("code", 30404);
-                        generator.writeStringField("message", String.format("The id(%s) value needs to be a long integer", paths[1]));
+                        generator.writeStringField("message", String.format("The id(%s) value needs to be a long", paths[1]));
                         generator.writeEndObject();
                     }
                 }
             } else {
-                String query = Optional.ofNullable(req.getParameter("q")).orElse("");
                 String cursor = Optional.ofNullable(req.getParameter("cursor")).orElse("");
+                String query = Optional.ofNullable(req.getParameter("q")).orElse("");
                 int offset = NumberHelper.intOf(req.getParameter("offset"), OFFSET);
                 int size = NumberHelper.intOf(req.getParameter("size"), SIZE);
                 String sort = Optional.ofNullable(req.getParameter("sort")).orElse("");
                 SortField sortField = SortField.of(sort);
-                if (query.isEmpty()) {
-                    if (cursor.isEmpty()) {
-                        copy(generator, this.query.query(offset, size, sortField));
-                    } else {
-                        copy(generator, this.query.query(size, cursor, sortField));
-                    }
+                if (cursor.isEmpty()) {
+                    copy(generator, this.query.query(parseFilter(query), offset, size, sortField));
                 } else {
-                    this.query.query(new ItemQueryFilter[0], 128, "", null);
-                    //copy(generator, query.query(keyword, offset, limit, sortField));
+                    copy(generator, this.query.query(parseFilter(query), size, cursor, sortField));
                 }
             }
         }
+    }
+
+    private ItemQueryFilter[] parseFilter(String filter) {
+        return new ItemQueryFilter[0];
     }
 
     private void copy(JsonGenerator generator, String result) throws IOException {

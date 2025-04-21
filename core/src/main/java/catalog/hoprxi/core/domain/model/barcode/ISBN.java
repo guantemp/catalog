@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,12 +32,12 @@ public class ISBN extends EAN_13 {
     }
 
     @Override
-    public boolean checkFeature(CharSequence barcode) {
+    public boolean isCorrectChecksum(CharSequence barcode) {
         Matcher matcher = BARCODE_PATTERN.matcher(barcode);
         if (!matcher.matches()) {
             throw new InvalidBarcodeException("error barcode format");
         }
-        return super.checkFeature(barcode);
+        return super.isCorrectChecksum(barcode);
     }
 }
 

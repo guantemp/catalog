@@ -111,7 +111,6 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
 
     @Override
     public String query(String name, int offset, int limit, SortField sortField) {
-        Objects.requireNonNull(name, "name is required");
         if (offset < 0 || offset > 10000) throw new IllegalArgumentException("The offset value range is 0-10000");
         if (limit < 0 || limit > 10000) throw new IllegalArgumentException("The size value range is 0-10000");
         if (limit + offset > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
@@ -122,7 +121,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         Request request = new Request("GET", "/brand/_search");
         request.setOptions(ESUtil.requestOptions());
         try (RestClient client = BUILDER.build()) {
-            request.setJsonEntity(queryNameJsonEntity(name, offset, limit, sortField));
+            request.setJsonEntity(writeQueryJsonEntity(name, offset, limit, sortField));
             Response response = client.performRequest(request);
             return rebuildBrands(response.getEntity().getContent());
         } catch (IOException e) {
@@ -131,54 +130,63 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         }
     }
 
-    private String queryNameJsonEntity(String name, int offset, int limit, SortField sortField) throws IOException {
+    private String writeQueryJsonEntity(String name, int offset, int limit, SortField sortField) throws IOException {
         StringWriter writer = new StringWriter(384);
-        JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
-        generator.writeStartObject();
-        generator.writeNumberField("from", offset);
-        generator.writeNumberField("size", limit);
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+            generator.writeStartObject();
+            generator.writeNumberField("from", offset);
+            generator.writeNumberField("size", limit);
+            writeQueryJson(name, sortField, generator);
+            generator.writeEndObject();
+            generator.flush();
+            //System.out.println(writer.getBuffer().capacity());
+            return writer.toString();
+        }
+    }
+
+    private void writeQueryJson(String name, SortField sortField, JsonGenerator generator) throws IOException {
         generator.writeObjectFieldStart("query");
-        generator.writeObjectFieldStart("bool");
-        generator.writeObjectFieldStart("filter");
-        generator.writeObjectFieldStart("bool");
-        generator.writeArrayFieldStart("should");
+        if (name == null || name.isEmpty()) {
+            generator.writeObjectFieldStart("match_all");
+            generator.writeEndObject();//match_all
+        } else {
+            generator.writeObjectFieldStart("bool");
+            generator.writeObjectFieldStart("filter");
+            generator.writeObjectFieldStart("bool");
+            generator.writeArrayFieldStart("should");
 
-        generator.writeStartObject();
-        generator.writeObjectFieldStart("multi_match");
-        generator.writeStringField("query", name);
-        generator.writeArrayFieldStart("fields");
-        generator.writeString("name.name");
-        generator.writeString("name.alias");
-        generator.writeEndArray();
-        generator.writeEndObject();
-        generator.writeEndObject();
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("multi_match");
+            generator.writeStringField("query", name);
+            generator.writeArrayFieldStart("fields");
+            generator.writeString("name.name");
+            generator.writeString("name.alias");
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
 
-        generator.writeStartObject();
-        generator.writeObjectFieldStart("term");
-        generator.writeStringField("name.mnemonic", name);
-        generator.writeEndObject();
-        generator.writeEndObject();
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("name.mnemonic", name);
+            generator.writeEndObject();
+            generator.writeEndObject();
 
-        generator.writeEndArray();
-        generator.writeEndObject();
-        generator.writeEndObject();
-        generator.writeEndObject();
-        generator.writeEndObject();
+            generator.writeEndArray();//end should
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+        }
+        generator.writeEndObject();//end query
 
         generator.writeArrayFieldStart("sort");
         generator.writeStartObject();
         generator.writeStringField(sortField.field(), sortField.sort());
         generator.writeEndObject();
         generator.writeEndArray();
-
-        generator.writeEndObject();
-        generator.close();
-        //System.out.println(writer.getBuffer().capacity());
-        return writer.toString();
     }
 
     @Override
-    public String query(int size, String searchAfter, SortField sortField) {
+    public String query(String name, int size, String searchAfter, SortField sortField) {
         if (size < 0 || size > 10000) throw new IllegalArgumentException("The size value range is 0-10000");
         if (sortField == null) {
             sortField = SortField._ID;
@@ -187,7 +195,7 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         Request request = new Request("GET", "/brand/_search");
         request.setOptions(ESUtil.requestOptions());
         try (RestClient client = BUILDER.build()) {
-            request.setJsonEntity(this.paginationQueryJsonEntity(size, searchAfter, sortField));
+            request.setJsonEntity(this.writeSearchAfterQueryJsonEntity(name, size, searchAfter, sortField));
             Response response = client.performRequest(request);
             return rebuildBrands(response.getEntity().getContent());
         } catch (IOException e) {
@@ -196,22 +204,12 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         }
     }
 
-    private String paginationQueryJsonEntity(int size, String searchAfter, SortField sortField) throws IOException {
+    private String writeSearchAfterQueryJsonEntity(String name, int size, String searchAfter, SortField sortField) throws IOException {
         StringWriter writer = new StringWriter(128);
         JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
         generator.writeStartObject();
         generator.writeNumberField("size", size);
-        generator.writeObjectFieldStart("query");
-        generator.writeFieldName("match_all");
-        generator.writeStartObject();
-        generator.writeEndObject();
-        generator.writeEndObject();
-
-        generator.writeArrayFieldStart("sort");
-        generator.writeStartObject();
-        generator.writeStringField(sortField.field(), sortField.sort());
-        generator.writeEndObject();
-        generator.writeEndArray();
+        writeQueryJson(name, sortField, generator);
 
         if (searchAfter != null && !searchAfter.isEmpty()) {
             generator.writeArrayFieldStart("search_after");
@@ -220,53 +218,6 @@ public class ESBrandJsonQuery implements BrandJsonQuery {
         }
         generator.writeEndObject();
         generator.close();
-        return writer.toString();
-    }
-
-    @Override
-    public String query(int offset, int limit, SortField sortField) {
-        if (offset < 0) throw new IllegalArgumentException("offset can't be negative");
-        if (limit < 0) throw new IllegalArgumentException("limit can't be negative");
-        if (offset + limit > 10000)
-            throw new IllegalArgumentException("offset + limit must be less than or equal to: [10000].");
-        if (sortField == null) {
-            sortField = SortField._ID;
-            LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
-        }
-        Request request = new Request("GET", "/brand/_search");
-        request.setOptions(ESUtil.requestOptions());
-        try (RestClient client = BUILDER.build()) {
-            request.setJsonEntity(this.paginationQueryJsonEntity(offset, limit, sortField));
-            Response response = client.performRequest(request);
-            return rebuildBrands(response.getEntity().getContent());
-        } catch (IOException e) {
-            LOGGER.error("Not brand found from {} to {}:", offset, offset + limit, e);
-            throw new QueryException(String.format("Not brand found from %d to %d", offset, offset + limit), e);
-        }
-    }
-
-    private String paginationQueryJsonEntity(int offset, int limit, SortField sortField) throws IOException {
-        StringWriter writer = new StringWriter(96);
-        JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
-        generator.writeStartObject();
-        generator.writeNumberField("from", offset);
-        generator.writeNumberField("size", limit);
-        generator.writeObjectFieldStart("query");
-        generator.writeFieldName("match_all");
-        generator.writeStartObject();
-        generator.writeEndObject();
-        generator.writeEndObject();//query
-
-        generator.writeArrayFieldStart("sort");
-        generator.writeStartObject();
-        generator.writeStringField(sortField.field(), sortField.sort());
-        generator.writeEndObject();
-        generator.writeEndArray();//sort
-
-        generator.writeEndObject();//root
-        generator.close();
-        //System.out.println(writer.getBuffer().capacity());
-        //System.out.println(writer);
         return writer.toString();
     }
 

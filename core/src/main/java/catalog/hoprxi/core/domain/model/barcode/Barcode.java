@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,15 @@ import java.util.StringJoiner;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
- * @version 0.0.2 2021-09-19
+ * @version 0.0.3 2025-4-21
  */
 public abstract class Barcode {
     protected CharSequence barcode;
 
     public Barcode(CharSequence barcode) {
         Objects.requireNonNull(barcode, "barcode is required");
-        if (checkFeature(barcode))
-            throw new InvalidBarcodeException("Invalid barcode");
+        if (!isCorrectChecksum(barcode))
+            throw new InvalidBarcodeException(String.format("The barcode(%s) checksum is invalid", barcode));
         this.barcode = barcode;
     }
 
@@ -41,7 +41,7 @@ public abstract class Barcode {
         return barcode.toString();
     }
 
-    public abstract boolean checkFeature(CharSequence barcode);
+    public abstract boolean isCorrectChecksum(CharSequence barcode);
 
     @Override
     public boolean equals(Object o) {

@@ -109,13 +109,13 @@ public class Bootstrap {
                         Servlets.servlet("uploadServlet", UploadServlet.class)
                                 .addInitParam("UPLOAD_DIRECTORY", "temp")
                                 .addMapping("/v1/upload"),
-                        Servlets.servlet("brandServlet2", BrandServlet2.class)
+                        Servlets.servlet("brandServlet2", BrandServletV2.class)
                                 .addInitParam("query", "es")
                                 .addMapping("/v2/brands/*"),
-                        Servlets.servlet("categoryServlet2", CategoryServlet2.class)
+                        Servlets.servlet("categoryServlet2", CategoryServletV2.class)
                                 .addInitParam("query", "es")
                                 .addMapping("/v2/categories/*"),
-                        Servlets.servlet("itemServlet2", ItemServlet2.class)
+                        Servlets.servlet("itemServlet2", ItemServletV2.class)
                                 .addInitParam("query", "es")
                                 .addMapping("/v2/items/*")
                 );

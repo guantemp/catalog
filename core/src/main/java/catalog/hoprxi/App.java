@@ -67,7 +67,7 @@ public class App {
                                 //.addInitParam("UPLOAD_DIRECTORY", "temp")
                                 //.addInitParam("databaseName", "catalog")
                                 .addMapping("/v1/upload"),
-                        Servlets.servlet("brandServlet2", BrandServlet2.class)
+                        Servlets.servlet("brandServlet2", BrandServletV2.class)
                                 .addMapping("/v2/brands/*"));
 
         DeploymentManager manager = container.addDeployment(deploymentInfo);

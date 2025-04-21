@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,30 +25,31 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2021-09-19
  */
 public class EanCheckService {
-    private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{7}$|^\\d{11}$|^\\d{12}$");
+    private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{7}$|^\\d{11,12}$");
 
     /**
      * @param barcode
      * @return
      */
-    public static boolean checkChecksum(CharSequence barcode) {
+    public static boolean isChecksum(CharSequence barcode) {
         try {
             int checksum = computeChecksum(barcode.subSequence(0, barcode.length() - 1));
-            return checksum != barcode.charAt(barcode.length() - 1) - '0';
-        } catch (InvalidBarcodeException e) {
-            return true;
+            //System.out.println(checksum == barcode.charAt(barcode.length() - 1) - '0');
+            return checksum == barcode.charAt(barcode.length() - 1) - '0';
+        } catch (IllegalArgumentException e) {
+            return false;
         }
     }
 
     /**
      * @param barcode
      * @return
-     * @throws InvalidBarcodeException
+     * @throws IllegalArgumentException if barcode isn't digit and length isn't 7,11,12
      */
-    public static int computeChecksum(CharSequence barcode) throws InvalidBarcodeException {
+    public static int computeChecksum(CharSequence barcode) {
         Matcher matcher = BARCODE_PATTERN.matcher(barcode);
         if (!matcher.matches()) {
-            throw new InvalidBarcodeException("Error barcode format");
+            throw new IllegalArgumentException("Error barcode format,need digit and length is 7,11,12");
         }
         int sum = 0;
         for (int i = 0, j = barcode.length() - 1, k = j; i <= j; i++, k--) {
