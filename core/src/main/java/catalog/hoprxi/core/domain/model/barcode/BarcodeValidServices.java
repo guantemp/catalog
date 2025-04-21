@@ -27,7 +27,7 @@ public class BarcodeValidServices {
     private static final Pattern BARCODE = Pattern.compile("^\\d{8}$|^\\d{12,14}$");
 
     public static boolean valid(String barcode) {
-        return BARCODE.matcher(barcode).matches() ? EanCheckService.isChecksum(barcode) : false;
+        return barcode == null ? false : BARCODE.matcher(barcode).matches() ? EanCheckService.isChecksum(barcode) : false;
     }
 
     public static boolean valid(long barcode) {

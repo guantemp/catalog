@@ -42,38 +42,64 @@ public class EsItemJsonQueryTest {
 
 
     @Test
-    public void testQuery() {
+    public void testQueryId() {
         System.out.println(service.query(62078192003431444l));
         Assert.assertNotNull(service.query(62078526044092825l));
         System.out.println(service.query(3635768734650054656l));
     }
 
     @Test
-    public void testQueryKey() {
+    public void testQueryPage() {
+        System.out.println(service.query(100, 30));
+        System.out.println(service.query(0, 20, SortField._BARCODE));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new String[]{"62078023226734874"})}, 0, 10, SortField._BARCODE));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new String[]{"62078023226734874"}), new PriceRangFilter(PriceRangFilter.PriceType.RETAIL, 1.1, 2), new PriceRangFilter(PriceRangFilter.PriceType.LAST_RECEIPT, 1.1, 1.2)}, 15, 5, SortField.ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilterItem(new String[]{"62078023226734874"})}, 50, 10, SortField.ID));
+    }
+
+    @Test
+    public void testQueryByBarcode() {
+        System.out.println(service.queryByBarcode("6900404523737"));
+        System.out.println(service.queryByBarcode("6901028025102"));
+        System.out.println(service.queryByBarcode("6901586110814"));
+        try {
+            service.queryByBarcode("690158611081");
+            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
+        } catch (IllegalArgumentException e) {
+            // 验证异常信息
+            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
+        }
+        try {
+            service.queryByBarcode("dsgf");
+            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
+        } catch (IllegalArgumentException e) {
+            // 验证异常信息
+            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
+        }
+        try {
+            service.queryByBarcode("");
+            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
+        } catch (IllegalArgumentException e) {
+            // 验证异常信息
+            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
+        }
+        try {
+            service.queryByBarcode(null);
+            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
+        } catch (IllegalArgumentException e) {
+            // 验证异常信息
+            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
+        }
+    }
+
+    @Test
+    public void testQueryPageSearchAfter() {
+        System.out.println(service.query(50, "9588868020855", SortField.BARCODE));
+        System.out.println(service.query(new ItemQueryFilter[]{new CategoryFilterItem(new String[]{"62080074300112015"})}, 50, null, null));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new String[]{"62078023226734874"})}, 1, null, SortField._BARCODE));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilterItem(new String[]{"62078023226734874"})}, 50, "", SortField.ID));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new String[]{"62078023226734874"}), new PriceRangFilter(PriceRangFilter.PriceType.RETAIL, 1.1, 2), new PriceRangFilter(PriceRangFilter.PriceType.LAST_RECEIPT, 1.1, 1.2)}, 50, "", SortField.ID));
-        System.out.println(service.query(100, 30, SortField.ID));
+
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class)
-    public void testAccurateQueryByBarcode() {
-        System.out.println(service.queryByBarcode("6900404523737"));
-        System.out.println(service.queryByBarcode("6901028025102"));
-        System.out.println(service.queryByBarcode("dsgf"));
-        System.out.println(service.queryByBarcode(""));
-        System.out.println(service.queryByBarcode(null));
-    }
-
-    @Test
-    public void testQuerySearchAfter() {
-        System.out.println(service.query(50, "9588868020855", SortField.BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new CategoryFilterItem(new String[]{"62080074300112015"})}, 50, null, null));
-    }
-
-    @Test
-    public void testQueryFrom() {
-        System.out.println(service.query(2, 48, null));
-        System.out.println(service.query(0, 50, SortField._BARCODE));
-    }
 }

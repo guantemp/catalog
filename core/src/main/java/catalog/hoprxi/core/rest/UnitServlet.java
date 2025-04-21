@@ -50,6 +50,7 @@ public class UnitServlet extends HttpServlet {
                 generator.writeString(unit.toString());
             }
             generator.writeEndArray();
+            generator.flush();
         }
     }
 }

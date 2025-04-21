@@ -133,7 +133,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         try (RestClient client = BUILDER.build()) {
             Request request = new Request("GET", "/item/_search");
             request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(queryBarcodeJsonEntity(barcode));
+            request.setJsonEntity(writeQueryBarcodeJson(barcode));
             Response response = client.performRequest(request);
             return rebuildItems(response.getEntity().getContent());
         } catch (IOException e) {
@@ -142,7 +142,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
         return EMPTY_ITEM;
     }
 
-    private String queryBarcodeJsonEntity(String barcode) {
+    private String writeQueryBarcodeJson(String barcode) {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -198,6 +198,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             writeAggs(generator, AGGS_SIZE);
             generator.writeBooleanField("track_scores", false);
             generator.writeEndObject();//root
+            generator.flush();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
             throw new IllegalStateException("Cannot assemble request JSON");
@@ -254,6 +255,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             writeAggs(generator, AGGS_SIZE);
             generator.writeBooleanField("track_scores", false);
             generator.writeEndObject();
+            generator.flush();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
         }
@@ -276,6 +278,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
                             generator.copyCurrentEvent(parser);
                             parser.nextToken();
                         } while (!(parser.currentToken() == JsonToken.END_OBJECT && "aggregations".equals(parser.getCurrentName())));
+                        generator.writeEndObject();
                     }
                 }
             }
