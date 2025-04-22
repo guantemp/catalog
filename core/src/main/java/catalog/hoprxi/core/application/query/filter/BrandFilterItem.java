@@ -20,7 +20,6 @@ import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
-import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -28,22 +27,33 @@ import java.util.Objects;
  * @version 0.0.1 builder 2025-01-06
  */
 public class BrandFilterItem implements ItemQueryFilter {
-    private String brandId;
+    private long[] ids;
 
-    public BrandFilterItem(String brandId) {
-        this.brandId = Objects.requireNonNull(brandId, "brand id required");
+    public BrandFilterItem(long[] brandIds) {
+        ids = brandIds == null ? new long[0] : brandIds;
+    }
+
+    public BrandFilterItem(long brandIds) {
+        ids = new long[]{brandIds};
     }
 
     @Override
-    public void filter(JsonGenerator generator) {
-        try {
+    public void filter(JsonGenerator generator) throws IOException {
+        if (ids.length == 1) {
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");
-            generator.writeStringField("brand.id", brandId);
+            generator.writeNumberField("brand.id", ids[0]);
             generator.writeEndObject();
             generator.writeEndObject();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } else {
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("terms");
+            generator.writeArrayFieldStart("brand.id");
+            for (long id : ids)
+                generator.writeNumber(id);
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
         }
     }
 }

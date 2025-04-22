@@ -28,33 +28,38 @@ import java.util.Objects;
  * @version 0.0.1 builder 2025-01-03
  */
 public class CategoryFilterItem implements ItemQueryFilter {
-    private String[] categoryIds;
+    private long[] categoryIds;
 
-    public CategoryFilterItem(String[] categoryIds) {
-        if (categoryIds == null)
-            this.categoryIds = new String[0];
-        this.categoryIds = categoryIds;
+    public CategoryFilterItem(long[] categoryIds) {
+        this.categoryIds = categoryIds == null ? new long[0] : categoryIds;
     }
 
-    public CategoryFilterItem(String categoryId) {
+    public CategoryFilterItem(long categoryId) {
         Objects.requireNonNull(categoryId, "categoryId is required");
-        this.categoryIds = new String[]{categoryId};
+        this.categoryIds = new long[]{categoryId};
     }
 
 
     @Override
-    public void filter(JsonGenerator generator) {
-        try {
+    public void filter(JsonGenerator generator) throws IOException {
+        if (categoryIds.length == 0) {
+            return;
+        }
+        if (categoryIds.length == 1) {
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeNumberField("category.id", categoryIds[0]);
+            generator.writeEndObject();
+            generator.writeEndObject();
+        } else {
             generator.writeStartObject();
             generator.writeObjectFieldStart("terms");
             generator.writeArrayFieldStart("category.id");
-            for (String categoryId : categoryIds)
-                generator.writeString(categoryId);
+            for (long categoryId : categoryIds)
+                generator.writeNumber(categoryId);
             generator.writeEndArray();
             generator.writeEndObject();
             generator.writeEndObject();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 }

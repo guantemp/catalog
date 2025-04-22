@@ -363,7 +363,7 @@ public class AppTest {
         generator.writeStartObject();
         generator.writeNumberField("size", 200);
         generator.writeObjectFieldStart("query");
-        ItemQueryFilter[] filters = new ItemQueryFilter[]{new BrandFilterItem("-1"), new CategoryFilterItem(new String[]{"-1", "62078023226734874"})};
+        ItemQueryFilter[] filters = new ItemQueryFilter[]{new BrandFilterItem(-1), new CategoryFilterItem(new long[]{-1, 62078023226734874l})};
         if (filters.length > 0) {
             generator.writeObjectFieldStart("bool");
             generator.writeArrayFieldStart("must");

@@ -46,7 +46,7 @@ import java.io.StringWriter;
 public class EsItemJsonQuery implements ItemJsonQuery {
     private static final String EMPTY_ITEM = "";
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.item");
-    private static final int AGGS_SIZE = 20;
+    private static final int AGGS_SIZE = 15;
     private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
@@ -175,6 +175,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         StringWriter writer = writeQueryJson(filters, from, size, sortField);
+        //System.out.println(writer);
         try (RestClient client = BUILDER.build()) {
             Request request = new Request("GET", "/item/_search");
             request.setOptions(ESUtil.requestOptions());

@@ -19,6 +19,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SortField;
+import catalog.hoprxi.core.application.query.filter.BrandFilterItem;
 import catalog.hoprxi.core.application.query.filter.CategoryFilterItem;
 import catalog.hoprxi.core.application.query.filter.KeywordFilter;
 import catalog.hoprxi.core.application.query.filter.PriceRangFilter;
@@ -52,9 +53,11 @@ public class EsItemJsonQueryTest {
     public void testQueryPage() {
         System.out.println(service.query(100, 30));
         System.out.println(service.query(0, 20, SortField._BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new String[]{"62078023226734874"})}, 0, 10, SortField._BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new String[]{"62078023226734874"}), new PriceRangFilter(PriceRangFilter.PriceType.RETAIL, 1.1, 2), new PriceRangFilter(PriceRangFilter.PriceType.LAST_RECEIPT, 1.1, 1.2)}, 15, 5, SortField.ID));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilterItem(new String[]{"62078023226734874"})}, 50, 10, SortField.ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693")}, 0, 10, SortField._BARCODE));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(null)}, 0, 10, SortField.BARCODE));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new long[]{62078023226734874l}), new BrandFilterItem(62083691847465266l)}, 0, 10, SortField._BARCODE));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new long[]{62078023226734874l}), new PriceRangFilter(PriceRangFilter.PriceType.RETAIL, 1.1, 2), new PriceRangFilter(PriceRangFilter.PriceType.LAST_RECEIPT, 1.1, 1.2)}, 15, 5, SortField.ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilterItem(new long[]{62078023226734874l})}, 50, 10, SortField.ID));
     }
 
     @Test
@@ -95,10 +98,10 @@ public class EsItemJsonQueryTest {
     @Test
     public void testQueryPageSearchAfter() {
         System.out.println(service.query(50, "9588868020855", SortField.BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new CategoryFilterItem(new String[]{"62080074300112015"})}, 50, null, null));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new String[]{"62078023226734874"})}, 1, null, SortField._BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilterItem(new String[]{"62078023226734874"})}, 50, "", SortField.ID));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new String[]{"62078023226734874"}), new PriceRangFilter(PriceRangFilter.PriceType.RETAIL, 1.1, 2), new PriceRangFilter(PriceRangFilter.PriceType.LAST_RECEIPT, 1.1, 1.2)}, 50, "", SortField.ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new CategoryFilterItem(62080074300112015l)}, 50, null, null));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new long[]{62078023226734874l})}, 1, null, SortField._BARCODE));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilterItem(new long[]{62078023226734874l})}, 50, "", SortField.ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new long[]{62078023226734874l}), new PriceRangFilter(PriceRangFilter.PriceType.RETAIL, 1.1, 2), new PriceRangFilter(PriceRangFilter.PriceType.LAST_RECEIPT, 1.1, 1.2)}, 50, "", SortField.ID));
 
     }
 

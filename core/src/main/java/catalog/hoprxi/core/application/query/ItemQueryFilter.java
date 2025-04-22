@@ -18,11 +18,13 @@ package catalog.hoprxi.core.application.query;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 
+import java.io.IOException;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2025-01-03
  */
 public interface ItemQueryFilter {
-    void filter(JsonGenerator generator);
+    void filter(JsonGenerator generator) throws IOException;
 }
