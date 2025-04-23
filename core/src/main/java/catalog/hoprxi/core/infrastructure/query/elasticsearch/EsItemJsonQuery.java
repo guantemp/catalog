@@ -175,7 +175,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         StringWriter writer = writeQueryJson(filters, from, size, sortField);
-        //System.out.println(writer);
+        //System.out.println("\n"+writer);
         try (RestClient client = BUILDER.build()) {
             Request request = new Request("GET", "/item/_search");
             request.setOptions(ESUtil.requestOptions());
@@ -239,7 +239,6 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             Response response = client.performRequest(request);
             return rebuildItems(response.getEntity().getContent());
         } catch (IOException e) {
-            //System.out.println(e);
             LOGGER.warn("No search was found for anything resembling key = {} item ", e);
         }
         return EMPTY_ITEM;
@@ -293,9 +292,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
     private void parseHits(JsonParser parser, JsonGenerator generator) throws IOException {
         while (parser.nextToken() != null) {
             //System.out.println(parser.currentToken() + ":" + parser.getCurrentName());
-            if (parser.currentToken() == JsonToken.END_OBJECT && "hits".equals(parser.getCurrentName())) {
-                break;
-            }
+            if (parser.currentToken() == JsonToken.END_OBJECT && "hits".equals(parser.getCurrentName())) break;
             if (parser.currentToken() == JsonToken.FIELD_NAME) {
                 String fieldName = parser.getCurrentName();
                 if ("total".equals(fieldName)) {
@@ -311,8 +308,8 @@ public class EsItemJsonQuery implements ItemJsonQuery {
                     while (parser.nextToken() != null) {
                         if (parser.getCurrentToken() == JsonToken.START_OBJECT) {
                             generator.writeStartObject();
-                            this.parserSource(parser, generator);
-                            this.parserSort(parser, generator);
+                            parserSource(parser, generator);
+                            parserSort(parser, generator);
                             generator.writeEndObject();
                         }
                         if (parser.currentToken() == JsonToken.END_ARRAY && "hits".equals(parser.getCurrentName())) {

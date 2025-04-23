@@ -58,6 +58,7 @@ public class EsItemJsonQueryTest {
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new long[]{62078023226734874l}), new BrandFilterItem(62083691847465266l)}, 0, 10, SortField._BARCODE));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new long[]{62078023226734874l}), new PriceRangFilter(PriceRangFilter.PriceType.RETAIL, 1.1, 2), new PriceRangFilter(PriceRangFilter.PriceType.LAST_RECEIPT, 1.1, 1.2)}, 15, 5, SortField.ID));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilterItem(new long[]{62078023226734874l})}, 50, 10, SortField.ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("伊利")}, 10, 1, SortField._RETAIL_PRICE));
     }
 
     @Test
@@ -101,8 +102,7 @@ public class EsItemJsonQueryTest {
         System.out.println(service.query(new ItemQueryFilter[]{new CategoryFilterItem(62080074300112015l)}, 50, null, null));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new long[]{62078023226734874l})}, 1, null, SortField._BARCODE));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilterItem(new long[]{62078023226734874l})}, 50, "", SortField.ID));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new long[]{62078023226734874l}), new PriceRangFilter(PriceRangFilter.PriceType.RETAIL, 1.1, 2), new PriceRangFilter(PriceRangFilter.PriceType.LAST_RECEIPT, 1.1, 1.2)}, 50, "", SortField.ID));
-
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new long[]{62078023226734874l}), new PriceRangFilter(PriceRangFilter.PriceType.RETAIL, 1.1, 2), new PriceRangFilter(PriceRangFilter.PriceType.LAST_RECEIPT, 1.1, 1.2)}, 50, null, SortField._ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("伊利")}, 10, "258", SortField._RETAIL_PRICE));
     }
-
 }

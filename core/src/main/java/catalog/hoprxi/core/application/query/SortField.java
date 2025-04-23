@@ -24,10 +24,12 @@ import java.util.Objects;
  * @version 0.0.1 builder 2024-11-24
  */
 public enum SortField {
-    ID("id"), _ID("id"), NAME("name.mnemonic.raw"), _NAME("name.mnemonic.raw"),
-    BARCODE("barcode.raw"), _BARCODE("barcode.raw"), MADE_IN("madeIn.code"), _MADE_IN("madeIn.code"),
+    ID("id"), _ID("id"), NAME("name.mnemonic.raw"), _NAME("name.mnemonic.raw"), BARCODE("barcode.raw"), _BARCODE("barcode.raw"), MADE_IN("madeIn.code"), _MADE_IN("madeIn.code"),
+    GRADE("grade"), _GRADE("grade"), SPEC("spec"), _SPEC("spec"), CATEGORY("category.name"), _CATEGORY("category.name"), BRAND("brand.name"), _BRAND("brand.name"),
     LAST_RECEIPT_PRICE("last_receipt_price.price.number"), _LAST_RECEIPT_PRICE("last_receipt_price.price.number"),
-    RETAIL_PRICE("retail_price.price.number"), _RETAIL_PRICE("retail_price.price.number");
+    RETAIL_PRICE("retail_price.number"), _RETAIL_PRICE("retail_price.number"),
+    MEMBER_PRICE("member_price.price.number"), _MEMBER_PRICE("member_price.price.number"),
+    VIP_PRICE("vip_price.price.number"), _VIP_PRICE("vip_price.price.number");
     private String field;
 
 

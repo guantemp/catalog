@@ -20,6 +20,7 @@ import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /***
@@ -28,49 +29,45 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2025-04-04
  */
 public class KeywordFilter implements ItemQueryFilter {
-    private static final Pattern BARCODE = Pattern.compile("^\\d{1,13}$");
+    private static final Pattern BARCODE = Pattern.compile("^\\d{2,13}$");
     private String keyword;
 
     public KeywordFilter(String keyword) {
-        this.keyword = keyword;
+        this.keyword = Objects.requireNonNull(keyword, "keyword required");
     }
 
     @Override
-    public void filter(JsonGenerator generator) {
-        try {
-            if (BARCODE.matcher(keyword).matches()) {//only barcode query
-                generator.writeStartObject();
-                generator.writeObjectFieldStart("term");
-                generator.writeStringField("barcode", keyword);
-                generator.writeEndObject();
-                generator.writeEndObject();
-            } else {
-                generator.writeStartObject();
-                generator.writeObjectFieldStart("bool");
-                generator.writeArrayFieldStart("should");
+    public void filter(JsonGenerator generator) throws IOException {
+        if (BARCODE.matcher(keyword).matches()) {//only barcode query
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("barcode", keyword);
+            generator.writeEndObject();
+            generator.writeEndObject();
+        } else {
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("bool");
+            generator.writeArrayFieldStart("should");
 
-                generator.writeStartObject();
-                generator.writeObjectFieldStart("multi_match");
-                generator.writeStringField("query", keyword);
-                generator.writeArrayFieldStart("fields");
-                generator.writeString("name.name");
-                generator.writeString("name.alias");
-                generator.writeEndArray();
-                generator.writeEndObject();
-                generator.writeEndObject();
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("multi_match");
+            generator.writeStringField("query", keyword);
+            generator.writeArrayFieldStart("fields");
+            generator.writeString("name.name");
+            generator.writeString("name.alias");
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
 
-                generator.writeStartObject();
-                generator.writeObjectFieldStart("term");
-                generator.writeStringField("name.mnemonic", keyword);
-                generator.writeEndObject();
-                generator.writeEndObject();
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("name.mnemonic", keyword);
+            generator.writeEndObject();
+            generator.writeEndObject();
 
-                generator.writeEndObject();//end should
-                generator.writeEndObject();//end bool
-                generator.writeEndObject();//end
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            generator.writeEndArray();//end should
+            generator.writeEndObject();//end bool
+            generator.writeEndObject();//end
         }
     }
 }
