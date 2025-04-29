@@ -24,36 +24,30 @@ import java.io.IOException;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2025-01-06
+ * @version 0.0.1 builder 2025-04-29
  */
-public class BrandFilterItem implements ItemQueryFilter {
-    private long[] ids;
+public class MemberPriceFilter implements ItemQueryFilter {
+    private final Number mix;
+    private final Number max;
 
-    public BrandFilterItem(long[] brandIds) {
-        ids = brandIds == null ? new long[0] : brandIds;
-    }
-
-    public BrandFilterItem(long brandIds) {
-        ids = new long[]{brandIds};
+    public MemberPriceFilter(Number mix, Number max) {
+        if (mix == null && max == null)
+            throw new IllegalArgumentException("mmin.max cannot all be NULL");
+        this.mix = mix;
+        this.max = max;
     }
 
     @Override
     public void filter(JsonGenerator generator) throws IOException {
-        if (ids.length == 1) {
-            generator.writeStartObject();
-            generator.writeObjectFieldStart("term");
-            generator.writeNumberField("brand.id", ids[0]);
-            generator.writeEndObject();
-            generator.writeEndObject();
-        } else {
-            generator.writeStartObject();
-            generator.writeObjectFieldStart("terms");
-            generator.writeArrayFieldStart("brand.id");
-            for (long id : ids)
-                generator.writeNumber(id);
-            generator.writeEndArray();
-            generator.writeEndObject();
-            generator.writeEndObject();
-        }
+        generator.writeStartObject();
+        generator.writeObjectFieldStart("range");
+        generator.writeObjectFieldStart("member_price.price.number");
+        if (mix != null)
+            generator.writeNumberField("gte", mix.doubleValue());
+        if (max != null)
+            generator.writeNumberField("lte", max.doubleValue());
+        generator.writeEndObject();//end retail_price.number
+        generator.writeEndObject();
+        generator.writeEndObject();
     }
 }

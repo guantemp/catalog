@@ -67,7 +67,7 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
 
     static {
         Config areaUrl = ConfigFactory.load("core");
-        UPLOAD_URI = areaUrl.hasPath("upload_url") ? areaUrl.getString("upload_url") : "https://hoprxi.tooo.top/catalog/core/v1/upload";
+        UPLOAD_URI = areaUrl.hasPath("upload_url") ? areaUrl.getString("upload_url") : "https://www.hoprxi.com/catalog/core/v1/upload";
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         SSLContext sslContext;
         try {

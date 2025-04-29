@@ -175,7 +175,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         StringWriter writer = writeQueryJson(filters, from, size, sortField);
-        //System.out.println("\n"+writer);
+        System.out.println("\n" + writer);
         try (RestClient client = BUILDER.build()) {
             Request request = new Request("GET", "/item/_search");
             request.setOptions(ESUtil.requestOptions());

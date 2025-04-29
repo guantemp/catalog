@@ -18,20 +18,20 @@ package catalog.hoprxi;
 
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SortField;
-import catalog.hoprxi.core.application.query.filter.BrandFilterItem;
-import catalog.hoprxi.core.application.query.filter.CategoryFilterItem;
+import catalog.hoprxi.core.application.query.filter.BrandFilter;
+import catalog.hoprxi.core.application.query.filter.CategoryFilter;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.Unit;
+import catalog.hoprxi.core.infrastructure.DecryptUtil;
 import catalog.hoprxi.core.rest.UploadServlet;
 import com.fasterxml.jackson.core.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.javamoney.moneta.Money;
 import org.javamoney.moneta.format.CurrencyStyle;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.AESUtil;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
@@ -65,16 +65,16 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2022-07-09
  */
 public class AppTest {
+    static {
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:6543:P$Qwe123465Pg", "slave.tooo.top:9200"});
+    }
+
     private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
             .build());
     private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
-    @BeforeTest
-    public void init() {
-        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
-                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200", "125.68.186.195:9200:P$Qwe123465El"});
-    }
 
     @Test
     public void testPattern() {
@@ -119,6 +119,7 @@ public class AppTest {
                     if (ENCRYPTED.matcher(securedPlainText).matches()) {
                         securedPlainText = securedPlainText.split(":")[1];
                         byte[] aesData = Base64.getDecoder().decode(securedPlainText);
+                        System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER.get(entry));
                         byte[] decryptData = AESUtil.decryptSpec(aesData, StoreKeyLoad.SECRET_KEY_PARAMETER.get(entry));
                         System.out.println("user:" + new String(decryptData, StandardCharsets.UTF_8));
                     }
@@ -136,6 +137,7 @@ public class AppTest {
 
     @Test
     public void testConfig() {
+        System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER);
         String filePath = Objects.requireNonNull(UploadServlet.class.getResource("/")).toExternalForm();
         String[] sss = filePath.split("/");
         StringJoiner joiner = new StringJoiner("/", "", "/");
@@ -157,8 +159,8 @@ public class AppTest {
                     props.setProperty("dataSource.serverName", database.getString("host"));
                     props.setProperty("dataSource.portNumber", database.getString("port"));
                     String entry = database.getString("host") + ":" + database.getString("port");
-                    props.setProperty("dataSource.user", StoreKeyLoad.decrypt(entry, database.getString("user")));
-                    props.setProperty("dataSource.password", StoreKeyLoad.decrypt(entry, database.getString("password")));
+                    props.setProperty("dataSource.user", DecryptUtil.decrypt(entry, database.getString("user")));
+                    props.setProperty("dataSource.password", DecryptUtil.decrypt(entry, database.getString("password")));
                     props.setProperty("dataSource.databaseName", database.getString("databaseName"));
                     props.put("maximumPoolSize", database.hasPath("hikari.maximumPoolSize") ? database.getInt("hikari.maximumPoolSize") : Runtime.getRuntime().availableProcessors() * 2 + 1);
                     props.put("dataSource.logWriter", new PrintWriter(System.out));
@@ -363,7 +365,7 @@ public class AppTest {
         generator.writeStartObject();
         generator.writeNumberField("size", 200);
         generator.writeObjectFieldStart("query");
-        ItemQueryFilter[] filters = new ItemQueryFilter[]{new BrandFilterItem(-1), new CategoryFilterItem(new long[]{-1, 62078023226734874l})};
+        ItemQueryFilter[] filters = new ItemQueryFilter[]{new BrandFilter(-1), new CategoryFilter(new long[]{-1, 62078023226734874l})};
         if (filters.length > 0) {
             generator.writeObjectFieldStart("bool");
             generator.writeArrayFieldStart("must");

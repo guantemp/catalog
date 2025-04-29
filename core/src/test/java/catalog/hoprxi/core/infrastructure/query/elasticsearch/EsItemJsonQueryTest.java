@@ -19,10 +19,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SortField;
-import catalog.hoprxi.core.application.query.filter.BrandFilterItem;
-import catalog.hoprxi.core.application.query.filter.CategoryFilterItem;
-import catalog.hoprxi.core.application.query.filter.KeywordFilter;
-import catalog.hoprxi.core.application.query.filter.PriceRangFilter;
+import catalog.hoprxi.core.application.query.filter.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
@@ -54,10 +51,10 @@ public class EsItemJsonQueryTest {
         System.out.println(service.query(100, 30));
         System.out.println(service.query(0, 20, SortField._BARCODE));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693")}, 0, 10, SortField._BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(null)}, 0, 10, SortField.BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new long[]{62078023226734874l}), new BrandFilterItem(62083691847465266l)}, 0, 10, SortField._BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new long[]{62078023226734874l}), new PriceRangFilter(PriceRangFilter.PriceType.RETAIL, 1.1, 2), new PriceRangFilter(PriceRangFilter.PriceType.LAST_RECEIPT, 1.1, 1.2)}, 15, 5, SortField.ID));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilterItem(new long[]{62078023226734874l})}, 50, 10, SortField.ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilter(null)}, 0, 10, SortField.BARCODE));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilter(new long[]{62078023226734874l}), new BrandFilter(62083691847465266l)}, 12, 10, SortField._BARCODE));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilter(new long[]{62078023226734874l}), new RetailPriceFilter(1.1, 2), new LastReceiptPriceFilter(null, 1.2)}, 0, 9, SortField._ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilter(new long[]{62078023226734874l})}, 50, 10, SortField.ID));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("伊利")}, 10, 1, SortField._RETAIL_PRICE));
     }
 
@@ -99,10 +96,10 @@ public class EsItemJsonQueryTest {
     @Test
     public void testQueryPageSearchAfter() {
         System.out.println(service.query(50, "9588868020855", SortField.BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new CategoryFilterItem(62080074300112015l)}, 50, null, null));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new long[]{62078023226734874l})}, 1, null, SortField._BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilterItem(new long[]{62078023226734874l})}, 50, "", SortField.ID));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilterItem(new long[]{62078023226734874l}), new PriceRangFilter(PriceRangFilter.PriceType.RETAIL, 1.1, 2), new PriceRangFilter(PriceRangFilter.PriceType.LAST_RECEIPT, 1.1, 1.2)}, 50, null, SortField._ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new CategoryFilter(62080074300112015l)}, 50, null, null));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilter(new long[]{62078023226734874l})}, 1, null, SortField._BARCODE));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilter(new long[]{62078023226734874l})}, 50, "", SortField.ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilter(new long[]{62078023226734874l}), new RetailPriceFilter(1.1, 2), new LastReceiptPriceFilter(1.1, 1.2)}, 50, null, SortField._ID));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("伊利")}, 10, "258", SortField._RETAIL_PRICE));
     }
 }

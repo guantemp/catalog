@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
 /***
@@ -69,5 +70,27 @@ public class KeywordFilter implements ItemQueryFilter {
             generator.writeEndObject();//end bool
             generator.writeEndObject();//end
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof KeywordFilter)) return false;
+
+        KeywordFilter that = (KeywordFilter) o;
+
+        return Objects.equals(keyword, that.keyword);
+    }
+
+    @Override
+    public int hashCode() {
+        return keyword != null ? keyword.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", KeywordFilter.class.getSimpleName() + "[", "]")
+                .add("keyword='" + keyword + "'")
+                .toString();
     }
 }

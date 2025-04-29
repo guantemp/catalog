@@ -53,7 +53,7 @@ import java.util.UUID;
 public class UploadServlet extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(UploadServlet.class);
     private static final String[] IMAGES_SUFFIX = {".jpg", ".png"};
-    private final JsonFactory jasonFactory = JsonFactory.builder().build();
+    private final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private static final String UPLOAD_DIRECTORY = "upload/images";
 
     @Override
@@ -83,7 +83,7 @@ public class UploadServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json; charset=UTF-8");
-        JsonGenerator generator = jasonFactory.createGenerator(response.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
+        JsonGenerator generator = JSON_FACTORY.createGenerator(response.getOutputStream(), JsonEncoding.UTF8).useDefaultPrettyPrinter();
 
         if (!ServletFileUpload.isMultipartContent(request)) {//是否文件表单
             generator.writeStartObject();

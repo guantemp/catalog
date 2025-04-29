@@ -22,6 +22,9 @@ import catalog.hoprxi.core.application.query.ItemJsonQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.QueryException;
 import catalog.hoprxi.core.application.query.SortField;
+import catalog.hoprxi.core.application.query.filter.BrandFilter;
+import catalog.hoprxi.core.application.query.filter.CategoryFilter;
+import catalog.hoprxi.core.application.query.filter.KeywordFilter;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
@@ -47,6 +50,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -104,21 +109,76 @@ public class ItemServletV2 extends HttpServlet {
             } else {
                 String cursor = Optional.ofNullable(req.getParameter("cursor")).orElse("");
                 String query = Optional.ofNullable(req.getParameter("q")).orElse("");
+                String filter = Optional.ofNullable(req.getParameter("filter")).orElse("");
                 int offset = NumberHelper.intOf(req.getParameter("offset"), OFFSET);
                 int size = NumberHelper.intOf(req.getParameter("size"), SIZE);
                 String sort = Optional.ofNullable(req.getParameter("sort")).orElse("");
                 SortField sortField = SortField.of(sort);
                 if (cursor.isEmpty()) {
-                    copy(generator, this.query.query(parseFilter(query), offset, size, sortField));
+                    copy(generator, this.query.query(parseFilter(query, filter), offset, size, sortField));
                 } else {
-                    copy(generator, this.query.query(parseFilter(query), size, cursor, sortField));
+                    copy(generator, this.query.query(parseFilter(query, filter), size, cursor, sortField));
                 }
             }
         }
     }
 
-    private ItemQueryFilter[] parseFilter(String filter) {
-        return new ItemQueryFilter[0];
+    private ItemQueryFilter[] parseFilter(String query, String filter) {
+        List<ItemQueryFilter> filterList = new ArrayList<>();
+        if (!query.isEmpty())
+            filterList.add(new KeywordFilter(query));
+        String[] filters = filter.split(";");//Project separation
+        for (String s : filters) {
+            String[] con = s.split(":");//Project name : Project value
+            if (con.length == 2) {
+                switch (con[0]) {
+                    case "cid":
+                    case "categoryId":
+                        parseCid(filterList, con[1]);
+                        break;
+                    case "bid":
+                    case "brandId":
+                        parseBid(filterList, con[1]);
+                        break;
+                    case "retail_price":
+                        parseRetailPrice(filterList, con[1]);
+                        break;
+                }
+            }
+        }
+        for (ItemQueryFilter f : filterList)
+            System.out.println(f);
+        return filterList.toArray(new ItemQueryFilter[0]);
+    }
+
+    private void parseRetailPrice(List<ItemQueryFilter> filterList, String retail_price) {
+        if (!retail_price.isEmpty()) {
+            String[] ss = retail_price.split("\\.{3}");
+            for (String s : ss)
+                System.out.println("price:" + s);
+        }
+    }
+
+    private void parseBid(List<ItemQueryFilter> filterList, String bids) {
+        if (!bids.isEmpty()) {
+            String[] ss = bids.split(",");
+            long[] brandIds = new long[ss.length];
+            for (int i = 0; i < ss.length; i++) {
+                brandIds[i] = Long.parseLong(ss[i]);
+            }
+            filterList.add(new BrandFilter(brandIds));
+        }
+    }
+
+    private void parseCid(List<ItemQueryFilter> filterList, String cids) {
+        if (!cids.isEmpty()) {
+            String[] ss = cids.split(",");
+            long[] categoryIds = new long[ss.length];
+            for (int i = 0; i < ss.length; i++) {
+                categoryIds[i] = Long.parseLong(ss[i]);
+            }
+            filterList.add(new CategoryFilter(categoryIds));
+        }
     }
 
     private void copy(JsonGenerator generator, String result) throws IOException {

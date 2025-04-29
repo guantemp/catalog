@@ -9,9 +9,9 @@
     <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/command/ItemRenameCommand.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/handler/ItemCreateHandler.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/query/ItemQueryFilter.java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/query/filter/BrandFilterItem.java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/query/filter/CategoryFilterItem.java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/query/filter/PriceRangFilter.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/query/filter/BrandFilter.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/query/filter/CategoryFilter.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/application/query/filter/PriceFilter.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/domain/model/Show.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/infrastructure/i18n" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/core/src/main/java/catalog/hoprxi/core/infrastructure/query/elasticsearch/ESBrandJsonQuery.java" charset="UTF-8" />

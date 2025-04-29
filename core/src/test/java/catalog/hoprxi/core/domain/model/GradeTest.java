@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,8 @@ public class GradeTest {
 
     @Test
     public void testOf() {
-        Assert.assertEquals(Grade.ONE_LEVEL, Grade.of("一等品"));
-        Assert.assertEquals(Grade.PREMIUM, Grade.of("优等品"));
-        Assert.assertEquals(Grade.QUALIFIED, Grade.of("合格品"));
+        Assert.assertEquals(Grade.ONE_LEVEL, Grade.of("ONE_LEVEL"));
+        Assert.assertEquals(Grade.PREMIUM, Grade.of("PREMIUM"));//优等品
         Assert.assertEquals(Grade.QUALIFIED, Grade.of("QUALIFIED"));
         Assert.assertEquals(Grade.QUALIFIED, Grade.of("qualifIED"));
     }
