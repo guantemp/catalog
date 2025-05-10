@@ -39,7 +39,6 @@ public class BrandAppService {
     public BrandAppService() {
         Config conf = ConfigFactory.load("databases");
         String provider = conf.hasPath("provider") ? conf.getString("provider") : "postgresql";
-        String databaseName = conf.hasPath("databaseName") ? conf.getString("databaseName") : "catalog";
         switch ((provider)) {
             case "postgresql":
             case "psql":

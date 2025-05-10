@@ -154,7 +154,7 @@ public class PsqlBrandRepository implements BrandRepository {
     @Override
     public void remove(long id) {
         try (Connection connection = DataSourceUtil.getConnection()) {
-            final String removeSql = "remove from brand where id=?";
+            final String removeSql = "delete from brand where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();

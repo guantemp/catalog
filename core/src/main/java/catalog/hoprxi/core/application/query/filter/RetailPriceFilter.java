@@ -20,6 +20,8 @@ import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
+import java.util.Objects;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -27,7 +29,6 @@ import java.io.IOException;
  * @version 0.0.1 builder 2025-04-29
  */
 public class RetailPriceFilter implements ItemQueryFilter {
-
     private final Number mix;
     private final Number max;
 
@@ -51,5 +52,31 @@ public class RetailPriceFilter implements ItemQueryFilter {
         generator.writeEndObject();//end retail_price.number
         generator.writeEndObject();
         generator.writeEndObject();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof RetailPriceFilter)) return false;
+
+        RetailPriceFilter that = (RetailPriceFilter) o;
+
+        if (!Objects.equals(mix, that.mix)) return false;
+        return Objects.equals(max, that.max);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = mix != null ? mix.hashCode() : 0;
+        result = 31 * result + (max != null ? max.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", RetailPriceFilter.class.getSimpleName() + "[", "]")
+                .add("mix=" + mix)
+                .add("max=" + max)
+                .toString();
     }
 }

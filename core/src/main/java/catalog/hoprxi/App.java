@@ -16,7 +16,10 @@
 
 package catalog.hoprxi;
 
-import catalog.hoprxi.core.rest.*;
+import catalog.hoprxi.core.rest.BrandServlet;
+import catalog.hoprxi.core.rest.ItemServlet;
+import catalog.hoprxi.core.rest.UnitServlet;
+import catalog.hoprxi.core.rest.UploadServlet;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.handlers.PathHandler;
@@ -67,7 +70,7 @@ public class App {
                                 //.addInitParam("UPLOAD_DIRECTORY", "temp")
                                 //.addInitParam("databaseName", "catalog")
                                 .addMapping("/v1/upload"),
-                        Servlets.servlet("brandServlet2", BrandServletV2.class)
+                        Servlets.servlet("brandServlet2", BrandServlet.class)
                                 .addMapping("/v2/brands/*"));
 
         DeploymentManager manager = container.addDeployment(deploymentInfo);

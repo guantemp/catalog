@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ package catalog.hoprxi.core.application.handler;
 
 import catalog.hoprxi.core.application.command.Command;
 
+import java.net.MalformedURLException;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
@@ -28,7 +30,7 @@ public interface Handle<T extends Command> {
     /**
      * @param command
      */
-    void handle(T command);
+    void handle(T command) throws MalformedURLException;
 
     void undo();
 }

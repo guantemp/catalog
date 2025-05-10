@@ -22,9 +22,7 @@ import catalog.hoprxi.core.application.query.ItemJsonQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.QueryException;
 import catalog.hoprxi.core.application.query.SortField;
-import catalog.hoprxi.core.application.query.filter.BrandFilter;
-import catalog.hoprxi.core.application.query.filter.CategoryFilter;
-import catalog.hoprxi.core.application.query.filter.KeywordFilter;
+import catalog.hoprxi.core.application.query.filter.*;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
@@ -46,6 +44,8 @@ import salt.hoprxi.utils.NumberHelper;
 import javax.money.format.AmountFormatQueryBuilder;
 import javax.money.format.MonetaryAmountFormat;
 import javax.money.format.MonetaryFormats;
+import javax.servlet.annotation.WebInitParam;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -60,6 +60,9 @@ import java.util.Optional;
  * @since JDK8.0
  * @version 0.0.1 builder 2025-03-24
  */
+
+@WebServlet(urlPatterns = {"v2/items/*"}, name = "items", asyncSupported = true,
+        initParams = {@WebInitParam(name = "query", value = "es"), @WebInitParam(name = "project_separation", value = ";")})
 public class ItemServletV2 extends HttpServlet {
     private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.CHINA)
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
@@ -141,7 +144,20 @@ public class ItemServletV2 extends HttpServlet {
                         parseBid(filterList, con[1]);
                         break;
                     case "retail_price":
+                    case "r_price":
                         parseRetailPrice(filterList, con[1]);
+                        break;
+                    case "last_receipt_price":
+                    case "lst_rcpt_price":
+                        parseLastReceiptPrice(filterList, con[1]);
+                        break;
+                    case "member_price":
+                    case "m_price":
+                        parseMemberPrice(filterList, con[1]);
+                        break;
+                    case "vip_price":
+                    case "v_price":
+                        parseVipPrice(filterList, con[1]);
                         break;
                 }
             }
@@ -153,9 +169,37 @@ public class ItemServletV2 extends HttpServlet {
 
     private void parseRetailPrice(List<ItemQueryFilter> filterList, String retail_price) {
         if (!retail_price.isEmpty()) {
-            String[] ss = retail_price.split("\\.{3}");
-            for (String s : ss)
-                System.out.println("price:" + s);
+            String[] ss = retail_price.split(",");
+            if (ss.length == 2) {
+                filterList.add(new RetailPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
+            }
+        }
+    }
+
+    private void parseMemberPrice(List<ItemQueryFilter> filterList, String member_price) {
+        if (!member_price.isEmpty()) {
+            String[] ss = member_price.split(",");
+            if (ss.length == 2) {
+                filterList.add(new MemberPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
+            }
+        }
+    }
+
+    private void parseVipPrice(List<ItemQueryFilter> filterList, String vip_price) {
+        if (!vip_price.isEmpty()) {
+            String[] ss = vip_price.split(",");
+            if (ss.length == 2) {
+                filterList.add(new VipPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
+            }
+        }
+    }
+
+    private void parseLastReceiptPrice(List<ItemQueryFilter> filterList, String last_receipt_price) {
+        if (!last_receipt_price.isEmpty()) {
+            String[] ss = last_receipt_price.split(",");
+            if (ss.length == 2) {
+                filterList.add(new LastReceiptPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
+            }
         }
     }
 
@@ -166,7 +210,7 @@ public class ItemServletV2 extends HttpServlet {
             for (int i = 0; i < ss.length; i++) {
                 brandIds[i] = Long.parseLong(ss[i]);
             }
-            filterList.add(new BrandFilter(brandIds));
+            filterList.add(new BrandIdFilter(brandIds));
         }
     }
 
@@ -177,7 +221,7 @@ public class ItemServletV2 extends HttpServlet {
             for (int i = 0; i < ss.length; i++) {
                 categoryIds[i] = Long.parseLong(ss[i]);
             }
-            filterList.add(new CategoryFilter(categoryIds));
+            filterList.add(new CategoryIdFilter(categoryIds));
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ import catalog.hoprxi.core.util.DomainRegistry;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import java.net.MalformedURLException;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
@@ -49,7 +51,7 @@ public class BrandCreateHandle implements Handle<BrandCreateCommand> {
     }
 
     @Override
-    public void handle(BrandCreateCommand command) {
+    public void handle(BrandCreateCommand command) throws MalformedURLException {
         Name name = new Name(command.getName(), command.getAlias());
         AboutBrand about = new AboutBrand(command.getLogo(), command.getHomepage(), command.getSince(), command.getStory());
         Brand brand = new Brand(repository.nextIdentity(), name, about);
