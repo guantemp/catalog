@@ -70,8 +70,8 @@ public class ItemServletV2 extends HttpServlet {
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-    private final ItemJsonQuery query = new EsItemJsonQuery();
-    private final ItemAppService app = new ItemAppService();
+    private static final ItemJsonQuery QUERY = new EsItemJsonQuery();
+    private static final ItemAppService APP = new ItemAppService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -91,7 +91,7 @@ public class ItemServletV2 extends HttpServlet {
                     generator.writeEndObject();
                 } else if (paths.length == 2) {
                     try {
-                        String result = query.query(Long.parseLong(paths[1]));
+                        String result = QUERY.query(Long.parseLong(paths[1]));
                         copy(generator, result);
                     } catch (QueryException e) {
                         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -118,9 +118,9 @@ public class ItemServletV2 extends HttpServlet {
                 String sort = Optional.ofNullable(req.getParameter("sort")).orElse("");
                 SortField sortField = SortField.of(sort);
                 if (cursor.isEmpty()) {
-                    copy(generator, this.query.query(parseFilter(query, filter), offset, size, sortField));
+                    copy(generator, this.QUERY.query(parseFilter(query, filter), offset, size, sortField));
                 } else {
-                    copy(generator, this.query.query(parseFilter(query, filter), size, cursor, sortField));
+                    copy(generator, this.QUERY.query(parseFilter(query, filter), size, cursor, sortField));
                 }
             }
         }
@@ -236,7 +236,7 @@ public class ItemServletV2 extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try (JsonParser parser = JSON_FACTORY.createParser(req.getInputStream()); JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)) {
             ItemCreateCommand itemCreateCommand = read(parser);
-            app.createItem(itemCreateCommand);
+            APP.createItem(itemCreateCommand);
             resp.setContentType("application/json; charset=UTF-8");
             generator.writeStartObject();
             generator.writeEndObject();

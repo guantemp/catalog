@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,18 +29,20 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-06-24
  */
-public class CategoryCreateHandle implements Handle<CategoryCreateCommand> {
+public class CategoryCreateHandler implements Handler<CategoryCreateCommand, String> {
 
     @Override
-    public void handle(CategoryCreateCommand command) {
+    public String handle(CategoryCreateCommand command) {
         Objects.requireNonNull(command, "command required");
         final CategoryRepository repository = new PsqlCategoryRepository();
         Category category = new Category(command.getParentId(), repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
         repository.save(category);
+        return null;
     }
 
     @Override
-    public void undo() {
+    public String undo() {
         //final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
+        return null;
     }
 }

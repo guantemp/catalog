@@ -26,11 +26,11 @@ import java.net.MalformedURLException;
  * @since JDK8.0
  * @version 0.0.1 2022-06-24
  */
-public interface Handle<T extends Command> {
+public interface Handler<T extends Command, R> {
     /**
      * @param command
      */
-    void handle(T command) throws MalformedURLException;
+    R handle(T command) throws MalformedURLException;
 
-    void undo();
+    R undo();
 }

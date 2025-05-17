@@ -24,34 +24,18 @@ import catalog.hoprxi.core.domain.model.brand.BrandCreated;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
 import catalog.hoprxi.core.util.DomainRegistry;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
-import java.net.MalformedURLException;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2023-01-07
  */
-public class BrandCreateHandle implements Handle<BrandCreateCommand> {
+public class BrandCreateHandler implements Handler<BrandCreateCommand, String> {
 
-    private final BrandRepository repository;
-
-    public BrandCreateHandle() {
-        Config conf = ConfigFactory.load("database");
-        String provider = conf.hasPath("provider") ? conf.getString("provider") : "postgresql";
-        switch ((provider)) {
-            case "postgresql":
-            case "psql":
-            default:
-                repository = new PsqlBrandRepository();
-                break;
-        }
-    }
+    private final BrandRepository repository = new PsqlBrandRepository();
 
     @Override
-    public void handle(BrandCreateCommand command) throws MalformedURLException {
+    public String handle(BrandCreateCommand command) {
         Name name = new Name(command.getName(), command.getAlias());
         AboutBrand about = new AboutBrand(command.getLogo(), command.getHomepage(), command.getSince(), command.getStory());
         Brand brand = new Brand(repository.nextIdentity(), name, about);
@@ -61,10 +45,12 @@ public class BrandCreateHandle implements Handle<BrandCreateCommand> {
         if (brand.about() != null)
             created = new BrandCreated(brand.id(), brand.name().name(), brand.name().mnemonic(), brand.name().alias());
         DomainRegistry.domainEventPublisher().publish(created);
+        return null;
     }
 
     @Override
-    public void undo() {
+    public String undo() {
 
+        return null;
     }
 }

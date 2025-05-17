@@ -112,7 +112,7 @@ public class Bootstrap {
                         Servlets.servlet("brandServlet2", BrandServlet.class)
                                 .addInitParam("query", "es")
                                 .addMapping("/v2/brands/*"),
-                        Servlets.servlet("categoryServlet2", CategoryServletV2.class)
+                        Servlets.servlet("categoryServlet2", CategoryServlet.class)
                                 .addInitParam("query", "es")
                                 .addMapping("/v2/categories/*"),
                         Servlets.servlet("itemServlet2", ItemServletV2.class)
