@@ -30,7 +30,7 @@ import catalog.hoprxi.core.util.DomainRegistry;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-01-07
  */
-public class BrandCreateHandler implements Handler<BrandCreateCommand, String> {
+public class BrandHandler implements Handler<BrandCreateCommand, String> {
 
     private final BrandRepository repository = new PsqlBrandRepository();
 

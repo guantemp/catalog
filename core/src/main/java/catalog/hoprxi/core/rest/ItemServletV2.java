@@ -71,7 +71,7 @@ public class ItemServletV2 extends HttpServlet {
     private static final int SIZE = 64;
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private static final ItemJsonQuery QUERY = new EsItemJsonQuery();
-    private static final ItemAppService APP = new ItemAppService();
+    private final ItemAppService app = new ItemAppService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -236,7 +236,7 @@ public class ItemServletV2 extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try (JsonParser parser = JSON_FACTORY.createParser(req.getInputStream()); JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)) {
             ItemCreateCommand itemCreateCommand = read(parser);
-            APP.createItem(itemCreateCommand);
+            app.createItem(itemCreateCommand);
             resp.setContentType("application/json; charset=UTF-8");
             generator.writeStartObject();
             generator.writeEndObject();

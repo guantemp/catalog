@@ -84,8 +84,7 @@ public class BrandAppService {
 
     private void rename(Brand brand, BrandRenameCommand command) {
         if (brand != null) {
-            Name name = new Name(command.getName(), command.getAlias());
-            brand.rename(name);
+            brand.name().rename(command.getName(), command.getAlias());
         }
     }
 

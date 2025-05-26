@@ -56,7 +56,7 @@ public class BrandServlet extends HttpServlet {
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private static final EnumSet<SortField> SUPPORT_SORT_FIELD = EnumSet.of(SortField._ID, SortField.ID, SortField.NAME, SortField._NAME);
     private static final BrandJsonQuery QUERY = new ESBrandJsonQuery();
-    private static final BrandAppService APP = new BrandAppService();
+    private final BrandAppService app = new BrandAppService();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -161,7 +161,7 @@ public class BrandServlet extends HttpServlet {
                 }
             }
             BrandCreateCommand brandCreateCommand = new BrandCreateCommand(name, alias, homepage, logo, since, story);
-            Brand brand = APP.createBrand(brandCreateCommand);
+            Brand brand = app.createBrand(brandCreateCommand);
             boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
             if (pretty) generator.useDefaultPrettyPrinter();
             resp.setContentType("application/json; charset=UTF-8");
@@ -234,7 +234,7 @@ public class BrandServlet extends HttpServlet {
                     commands.add(new BrandRenameCommand(id, name, alias));
                 if (story != null || homepage != null || logo != null || since != null)
                     commands.add(new BrandChangeAboutCommand(id, logo, homepage, since, story));
-                APP.handle(commands);
+                app.handle(commands);
                 boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
                 if (pretty) generator.useDefaultPrettyPrinter();
                 resp.setContentType("application/json; charset=UTF-8");
@@ -255,7 +255,7 @@ public class BrandServlet extends HttpServlet {
         if (pathInfo != null) {
             long id = NumberHelper.longOf(pathInfo.substring(1));
             BrandDeleteCommand command = new BrandDeleteCommand(id);
-            APP.delete(command);
+            app.delete(command);
         }
         resp.setContentType("application/json; charset=UTF-8");
         JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)

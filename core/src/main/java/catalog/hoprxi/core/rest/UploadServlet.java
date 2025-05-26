@@ -71,7 +71,7 @@ public class UploadServlet extends HttpServlet {
         response.getWriter().println("</head>");
         response.getWriter().println("<body>");
         response.getWriter().println("<form action=\"upload\" method=\"post\" enctype=\"multipart/form-data\">");
-        response.getWriter().println("<p><input type=\"checkbox\" name=\"randomFileName\"/>重命名文件</p>");
+        response.getWriter().println("<p><input type=\"checkbox\" name=\"randomFileName\"/>文件名随机重命名</p>");
         response.getWriter().println("<p><input type=\"file\" name=\"file\"/></p>");
         response.getWriter().println("<input type=\"submit\" value=\"上传\"/>");
         response.getWriter().println("</form>");

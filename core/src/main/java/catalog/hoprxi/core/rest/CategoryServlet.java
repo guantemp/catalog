@@ -50,7 +50,7 @@ import java.util.regex.Pattern;
         initParams = {@WebInitParam(name = "query", value = "es")})
 public class CategoryServlet extends HttpServlet {
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
-    private static final CategoryAppService APP = new CategoryAppService();
+    private final CategoryAppService app = new CategoryAppService();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private static final CategoryJsonQuery QUERY = new ESCategoryJsonQuery();
 
@@ -177,7 +177,7 @@ public class CategoryServlet extends HttpServlet {
             boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
             if (pretty) generator.useDefaultPrettyPrinter();
             try {
-                Category category = APP.create(command);
+                Category category = app.create(command);
                 generator.writeStartObject();
                 generator.writeStringField("status", "success");
                 generator.writeNumberField("code", 2020010);
@@ -242,7 +242,7 @@ public class CategoryServlet extends HttpServlet {
             if (pretty) generator.useDefaultPrettyPrinter();
             resp.setContentType("application/json; charset=UTF-8");
             try {
-                Category category = APP.update(id, commands);
+                Category category = app.update(id, commands);
                 generator.writeStartObject();
                 generator.writeStringField("status", "success");
                 generator.writeNumberField("code", 2020020);
@@ -323,7 +323,7 @@ public class CategoryServlet extends HttpServlet {
                 String[] parameters = pathInfo.split("/");
                 if (parameters.length == 2) {
                     try {
-                        APP.delete(new CategoryDeleteCommand(Long.parseLong(parameters[1])));
+                        app.delete(new CategoryDeleteCommand(Long.parseLong(parameters[1])));
                         generator.writeStartObject();
                         generator.writeNumberField("code", 2020030);
                         generator.writeStringField("status", "success");
