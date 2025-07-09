@@ -38,7 +38,7 @@ import java.net.URI;
 public class PsqlCategoryQueryTest {
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
-                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
+                new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
 
     private static final CategoryRepository repository = new PsqlCategoryRepository();

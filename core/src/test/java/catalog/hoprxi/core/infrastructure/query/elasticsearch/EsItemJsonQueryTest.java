@@ -33,7 +33,7 @@ public class EsItemJsonQueryTest {
 
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
-                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
+                new String[]{"slave.tooo.top:9200"});
     }
 
     private static final ItemJsonQuery service = new EsItemJsonQuery();

@@ -17,7 +17,9 @@
 package catalog.hoprxi.core.rest;
 
 import catalog.hoprxi.core.application.ItemAppService;
+import catalog.hoprxi.core.application.command.Command;
 import catalog.hoprxi.core.application.command.ItemCreateCommand;
+import catalog.hoprxi.core.application.command.ItemDeleteCommand;
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.QueryException;
@@ -44,6 +46,8 @@ import salt.hoprxi.utils.NumberHelper;
 import javax.money.format.AmountFormatQueryBuilder;
 import javax.money.format.MonetaryAmountFormat;
 import javax.money.format.MonetaryFormats;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebInitParam;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -69,9 +73,19 @@ public class ItemServletV2 extends HttpServlet {
             .build());
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
+    private static final String MINI_SEPARATION = ",";
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private static final ItemJsonQuery QUERY = new EsItemJsonQuery();
     private final ItemAppService app = new ItemAppService();
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        if (config != null) {
+            String query = config.getInitParameter("query");
+            System.out.println(query);
+        }
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -82,14 +96,14 @@ public class ItemServletV2 extends HttpServlet {
             resp.setContentType("application/json; charset=UTF-8");
             if (pathInfo != null) {
                 String[] paths = pathInfo.split("/");
-                if (paths.length == 0) {
+                if (paths.length == 0) {//No id
                     resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     generator.writeStartObject();
                     generator.writeStringField("status", "Unfounded id");
                     generator.writeNumberField("code", 30405);
                     generator.writeStringField("message", "An id value is required, such as /123");
                     generator.writeEndObject();
-                } else if (paths.length == 2) {
+                } else if (paths.length == 2) {//id query
                     try {
                         String result = QUERY.query(Long.parseLong(paths[1]));
                         copy(generator, result);
@@ -98,14 +112,14 @@ public class ItemServletV2 extends HttpServlet {
                         generator.writeStartObject();
                         generator.writeStringField("status", "miss");
                         generator.writeNumberField("code", 30202);
-                        generator.writeStringField("message", String.format("No category with id %s was found", paths[1]));
+                        generator.writeStringField("message", String.format("No category with id(%s) was found", paths[1]));
                         generator.writeEndObject();
                     } catch (NumberFormatException e) {
                         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                         generator.writeStartObject();
                         generator.writeStringField("status", "Error id value");
                         generator.writeNumberField("code", 30404);
-                        generator.writeStringField("message", String.format("The id(%s) value needs to be a long", paths[1]));
+                        generator.writeStringField("message", String.format("The id(%s) value needs to be a integer", paths[1]));
                         generator.writeEndObject();
                     }
                 }
@@ -162,14 +176,14 @@ public class ItemServletV2 extends HttpServlet {
                 }
             }
         }
-        for (ItemQueryFilter f : filterList)
-            System.out.println(f);
+        //for (ItemQueryFilter f : filterList)
+        //System.out.println(f);
         return filterList.toArray(new ItemQueryFilter[0]);
     }
 
     private void parseRetailPrice(List<ItemQueryFilter> filterList, String retail_price) {
         if (!retail_price.isEmpty()) {
-            String[] ss = retail_price.split(",");
+            String[] ss = retail_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
                 filterList.add(new RetailPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
             }
@@ -178,7 +192,7 @@ public class ItemServletV2 extends HttpServlet {
 
     private void parseMemberPrice(List<ItemQueryFilter> filterList, String member_price) {
         if (!member_price.isEmpty()) {
-            String[] ss = member_price.split(",");
+            String[] ss = member_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
                 filterList.add(new MemberPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
             }
@@ -187,7 +201,7 @@ public class ItemServletV2 extends HttpServlet {
 
     private void parseVipPrice(List<ItemQueryFilter> filterList, String vip_price) {
         if (!vip_price.isEmpty()) {
-            String[] ss = vip_price.split(",");
+            String[] ss = vip_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
                 filterList.add(new VipPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
             }
@@ -196,7 +210,7 @@ public class ItemServletV2 extends HttpServlet {
 
     private void parseLastReceiptPrice(List<ItemQueryFilter> filterList, String last_receipt_price) {
         if (!last_receipt_price.isEmpty()) {
-            String[] ss = last_receipt_price.split(",");
+            String[] ss = last_receipt_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
                 filterList.add(new LastReceiptPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
             }
@@ -205,7 +219,7 @@ public class ItemServletV2 extends HttpServlet {
 
     private void parseBid(List<ItemQueryFilter> filterList, String bids) {
         if (!bids.isEmpty()) {
-            String[] ss = bids.split(",");
+            String[] ss = bids.split(MINI_SEPARATION);
             long[] brandIds = new long[ss.length];
             for (int i = 0; i < ss.length; i++) {
                 brandIds[i] = Long.parseLong(ss[i]);
@@ -216,7 +230,7 @@ public class ItemServletV2 extends HttpServlet {
 
     private void parseCid(List<ItemQueryFilter> filterList, String cids) {
         if (!cids.isEmpty()) {
-            String[] ss = cids.split(",");
+            String[] ss = cids.split(MINI_SEPARATION);
             long[] categoryIds = new long[ss.length];
             for (int i = 0; i < ss.length; i++) {
                 categoryIds[i] = Long.parseLong(ss[i]);
@@ -276,10 +290,10 @@ public class ItemServletV2 extends HttpServlet {
                         madeIn = readMadeIn(parser);
                         break;
                     case "latestReceiptPrice":
+                        lastReceiptPrice = new LastReceiptPrice(readPrice(parser));
                         break;
                     case "retailPrice":
-                        Price price = readPrice(parser);
-                        retailPrice = new RetailPrice(price);
+                        retailPrice = new RetailPrice(readPrice(parser));
                         break;
                     case "memberPrice":
                         memberPrice = new MemberPrice(readPrice(parser));
@@ -385,5 +399,26 @@ public class ItemServletV2 extends HttpServlet {
             }
         }
         return id;
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        try (JsonParser parser = JSON_FACTORY.createParser(req.getInputStream()); JsonGenerator generator = JSON_FACTORY.createGenerator(resp.getOutputStream(), JsonEncoding.UTF8)) {
+            ItemCreateCommand itemCreateCommand = read(parser);
+
+            resp.setContentType("application/json; charset=UTF-8");
+            generator.writeStartObject();
+            generator.writeEndObject();
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String pathInfo = req.getPathInfo();
+        if (pathInfo != null) {
+            String id = pathInfo.substring(1);
+            Command itemDeleteCommand = new ItemDeleteCommand(id);
+            app.deleteItem(itemDeleteCommand);
+        }
     }
 }

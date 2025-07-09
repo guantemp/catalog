@@ -30,7 +30,7 @@ import salt.hoprxi.crypto.util.StoreKeyLoad;
 public class ESCategoryJsonQueryTest {
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
-                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
+                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "129.28.29.105:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
 
     private static final CategoryJsonQuery service = new ESCategoryJsonQuery();

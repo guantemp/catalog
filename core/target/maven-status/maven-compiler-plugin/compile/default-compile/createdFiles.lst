@@ -3,7 +3,6 @@ catalog\hoprxi\core\infrastructure\batch\LastReceiptPriceHandler.class
 catalog\hoprxi\core\domain\model\barcode\ISBN.class
 catalog\hoprxi\core\infrastructure\batch\BrandHandler.class
 catalog\hoprxi\core\infrastructure\batch\Verify.class
-catalog\hoprxi\core\application\handler\BrandCreateHandle.class
 catalog\hoprxi\core\Bootstrap.class
 catalog\hoprxi\core\infrastructure\batch\ItemImportEvent.class
 catalog\hoprxi\core\domain\model\Grade$4.class
@@ -12,13 +11,11 @@ catalog\hoprxi\core\domain\model\brand\BrandDeleted.class
 catalog\hoprxi\core\domain\model\price\Unit$27.class
 catalog\hoprxi\core\domain\model\barcode\Barcode.class
 catalog\hoprxi\core\domain\model\price\Unit$21.class
-catalog\hoprxi\core\webapp\UploadServlet$1.class
 catalog\hoprxi\core\application\command\CategoryMoveNodeCommand.class
 catalog\hoprxi\core\domain\model\barcode\UPC_A.class
 catalog\hoprxi\core\domain\BrandValidatorService.class
 catalog\hoprxi\core\infrastructure\batch\AssembleHandler.class
 catalog\hoprxi\core\infrastructure\batch\CategoryHandler.class
-catalog\hoprxi\core\webapp\SearchServlet.class
 catalog\hoprxi\core\infrastructure\batch\PsqlBrandImportExport.class
 catalog\hoprxi\core\domain\model\shelfLife\Rang.class
 catalog\hoprxi\core\infrastructure\batch\UploadHandler.class
@@ -45,7 +42,6 @@ catalog\hoprxi\core\domain\model\price\Unit$34.class
 catalog\hoprxi\core\infrastructure\batch\VipPriceHandler.class
 catalog\hoprxi\core\domain\model\price\Unit$13.class
 catalog\hoprxi\core\application\command\BrandChangeAboutCommand.class
-catalog\hoprxi\core\application\handler\Handle.class
 catalog\hoprxi\core\infrastructure\batch\FailedValidationHandler.class
 catalog\hoprxi\core\domain\model\price\Price.class
 catalog\hoprxi\core\domain\model\brand\Brand.class
@@ -91,7 +87,6 @@ catalog\hoprxi\core\domain\model\brand\Brand$1.class
 catalog\hoprxi\core\domain\model\price\RetailPrice.class
 catalog\hoprxi\core\domain\model\price\Unit$4.class
 catalog\hoprxi\core\domain\model\shelfLife\Approach.class
-catalog\hoprxi\core\webapp\UploadServlet.class
 catalog\hoprxi\core\application\ItemAppService.class
 catalog\hoprxi\core\domain\model\Item.class
 catalog\hoprxi\core\domain\model\ItemCategoryReallocated.class
@@ -116,12 +111,9 @@ catalog\hoprxi\core\application\command\ItemRemoveCommand.class
 catalog\hoprxi\core\domain\model\price\Unit$18.class
 catalog\hoprxi\core\domain\model\ItemMadeInChanged.class
 catalog\hoprxi\core\domain\model\price\Unit$5.class
-catalog\hoprxi\core\application\handler\CategoryCreateHandle.class
 catalog\hoprxi\core\domain\model\barcode\UPC_E.class
-catalog\hoprxi\core\webapp\BrandServlet.class
 catalog\hoprxi\core\domain\model\ItemBrandReallocated.class
 catalog\hoprxi\core\domain\model\madeIn\Domestic.class
-catalog\hoprxi\core\webapp\ItemServlet.class
 catalog\hoprxi\core\domain\model\price\MemberPrice.class
 catalog\hoprxi\core\domain\model\madeIn\Imported.class
 catalog\hoprxi\core\application\command\BrandRenameCommand.class
@@ -136,7 +128,6 @@ catalog\hoprxi\core\infrastructure\batch\PsqlItemImportWithDisruptor.class
 catalog\hoprxi\core\domain\model\category\CategoryRenamed.class
 catalog\hoprxi\core\domain\model\price\Unit$33.class
 catalog\hoprxi\core\domain\model\price\Unit$23.class
-catalog\hoprxi\core\webapp\UnitServlet.class
 catalog\hoprxi\core\util\DomainRegistry.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlBrandRepository.class
 catalog\hoprxi\core\infrastructure\batch\FailedValidationHandler$1.class
@@ -162,7 +153,6 @@ catalog\hoprxi\core\infrastructure\batch\NameHandler.class
 catalog\hoprxi\core\domain\model\price\Unit$19.class
 catalog\hoprxi\core\infrastructure\batch\ShelfLifeHandler.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlItemRepository.class
-catalog\hoprxi\core\webapp\CategoryServlet.class
 catalog\hoprxi\core\application\command\CategoryRenameCommand.class
 catalog\hoprxi\core\application\batch\BrandImportExportService.class
 catalog\hoprxi\core\domain\model\shelfLife\Limit.class

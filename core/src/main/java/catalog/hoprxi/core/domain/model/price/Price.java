@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import javax.money.format.MonetaryAmountFormat;
 import javax.money.format.MonetaryFormats;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -82,11 +83,11 @@ public class Price {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Price)) return false;
 
         Price price = (Price) o;
 
-        if (amount != null ? !amount.equals(price.amount) : price.amount != null) return false;
+        if (!Objects.equals(amount, price.amount)) return false;
         return unit == price.unit;
     }
 
@@ -99,9 +100,9 @@ public class Price {
 
     @Override
     public String toString() {
-        return "Price{" +
-                "amount=" + MONETARY_AMOUNT_FORMAT.format(amount) +
-                ", unit=" + unit +
-                '}';
+        return new StringJoiner(", ", Price.class.getSimpleName() + "[", "]")
+                .add("amount=" + amount)
+                .add("unit=" + unit)
+                .toString();
     }
 }

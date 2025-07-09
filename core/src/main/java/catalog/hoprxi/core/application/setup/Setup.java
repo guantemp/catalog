@@ -21,12 +21,16 @@ import salt.hoprxi.utils.Selector;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.2 builder 2024-06-14
+ * @version 0.0.2 builder 2025-07-09
  */
-public abstract class Setup {
+public class Setup {
 
     private static final Selector WRITES_SELECTOR = new Selector();
 
-    public abstract void setup();
+    public void setup() {
+
+    }
+
+    ;
 
 }

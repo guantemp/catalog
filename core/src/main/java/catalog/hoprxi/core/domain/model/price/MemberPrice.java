@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 import java.util.Locale;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -67,9 +68,8 @@ public class MemberPrice {
 
     @Override
     public String toString() {
-        return "MemberPrice{" +
-                "price=" + price +
-                ", name='" + name + '\'' +
-                '}';
+        return new StringJoiner(", ", MemberPrice.class.getSimpleName() + "[", "]")
+                .add("name='" + name + "'").add("price=" + price)
+                .toString();
     }
 }

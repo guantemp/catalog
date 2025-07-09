@@ -17,19 +17,17 @@
 package catalog.hoprxi.core.infrastructure;
 
 import catalog.hoprxi.core.application.setup.PsqlSetup;
-import catalog.hoprxi.core.application.setup.Setup;
 import org.testng.annotations.Test;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2024-06-14
+ * @version 0.0.2 builder 2025-07-09
  */
 public class SetupTest {
 
     @Test
     public void testSetup() {
-        Setup setup = new PsqlSetup();
-        setup.setup();
+        PsqlSetup.setup();
     }
 }

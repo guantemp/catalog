@@ -21,6 +21,7 @@ import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.view.ItemView;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -28,6 +29,11 @@ import org.testng.annotations.Test;
  * @version 0.0.1 builder 2022-11-21
  */
 public class PsqlItemQueryTest {
+    static {
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "slave.tooo.top:9200"});
+    }
+
     private static final ItemQuery query = new PsqlItemQuery();
 
     static {

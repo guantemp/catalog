@@ -20,16 +20,19 @@ package catalog.hoprxi.core.application.setup;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-08-22
+ * @version 0.0.2 builder 2025-07-09
  */
-public final class PsqlSetup extends Setup {
+public final class PsqlSetup {
+    private static final String DDL_USER = "create user hoprxi createdb password '';";
+    private static final String DDL_DATABASE = "create database catalog";
     private static final String DDL_BRAND = "CREATE TABLE public.brand (\n" +
-            "\tid int8 NOT NULL,\n" +
-            "\t\"name\" jsonb NULL,\n" +
-            "\tabout jsonb NULL,\n" +
-            "\tCONSTRAINT brand_pkey PRIMARY KEY (id));" +
+            "id int8 NOT NULL,\n" +
+            "\"name\" jsonb NULL,\n" +
+            "about jsonb NULL,\n" +
+            "CONSTRAINT brand_pkey PRIMARY KEY (id));" +
+            "CREATE INDEX brand_name_index ON brand USING gin (((name ->> 'name'::text)) gin_trgm_ops);" +
             "insert into brand (id, name, about) values (-1, '{\"name\": \"undefined\", \"mnemonic\": \"undefined\",\"alias\": \"未定义\"}', null);";
-    private static final String DDL_CATEGORY = "CREATE TABLE category (\n" +
+    private static final String DDL_CATEGORY = "CREATE table if not exists category (\n" +
             "id int8 NOT NULL,\n" +
             "\"name\" jsonb NULL,\n" +
             "description varchar(512) NULL,\n" +
@@ -39,16 +42,16 @@ public final class PsqlSetup extends Setup {
             "\"left\" int4 NOT NULL,\n" +
             "\"right\" int4 NOT NULL,\n" +
             "CONSTRAINT category_pkey PRIMARY KEY (id),\n" +
-            "CONSTRAINT category_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.category(id),\n" +
-            "CONSTRAINT category_root_id_fkey FOREIGN KEY (root_id) REFERENCES public.category(id));\n" +
-            "CREATE INDEX category_left_index ON category USING btree (\"left\");\n" +
-            "CREATE INDEX category_right_index ON category USING btree (\"right\");\n" +
-            "CREATE INDEX category_rootid_parentid_index ON category USING btree (root_id, parent_id);";
-    private static final String CREATE = "create user hoprxi createdb password '';create database catalog";
+            "CONSTRAINT category_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES category(id),\n" +
+            "CONSTRAINT category_root_id_fkey FOREIGN KEY (root_id) REFERENCES category(id)\n" +
+            ");\n" +
+            "CREATE INDEX category_left_index ON category USING btree (root_id,\"left\");\n" +
+            "CREATE INDEX category_right_index ON category USING btree (root_id,\"right\");\n" +
+            "CREATE INDEX category_parentid_index ON category USING btree (parent_id);\n" +
+            "CREATE INDEX category_full_index ON category USING btree (id,\"left\",\"right\",root_id);";
 
-
-    @Override
-    public void setup() {
+    public static void setup() {
 
     }
+
 }
