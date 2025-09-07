@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
 import catalog.hoprxi.core.application.query.BrandQuery;
+import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
@@ -27,6 +28,7 @@ import salt.hoprxi.cache.Cache;
 import salt.hoprxi.cache.CacheFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
@@ -58,8 +60,9 @@ public class PsqlBrandQuery implements BrandQuery {
         }
     }
 
-    @Override
-    public Brand query(String id) {
+
+
+    public Brand search(String id) {
         Brand brand = CACHE.get(id);
         if (brand != null)
             return brand;
@@ -80,7 +83,7 @@ public class PsqlBrandQuery implements BrandQuery {
         return null;
     }
 
-    @Override
+
     public Brand[] queryAll(int offset, int limit) {
         final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo " +
                 "from brand a INNER JOIN (SELECT id FROM brand order by id desc offset ? LIMIT ?) b USING (id)";
@@ -97,7 +100,7 @@ public class PsqlBrandQuery implements BrandQuery {
         return new Brand[0];
     }
 
-    @Override
+
     public Brand[] queryByName(String name) {
         final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
                 "where name::jsonb->>'name' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
@@ -173,7 +176,7 @@ public class PsqlBrandQuery implements BrandQuery {
             return new AboutBrand(homepage, logo, since, story);
         }
      */
-    @Override
+
     public int size() {
         final String query = "select count(*) from brand";
         try (Connection connection = DataSourceUtil.getConnection()) {
@@ -185,5 +188,20 @@ public class PsqlBrandQuery implements BrandQuery {
             LOGGER.error("Can't get brand count", e);
         }
         return 0;
+    }
+
+    @Override
+    public InputStream find(long id) {
+        return BrandQuery.super.find(id);
+    }
+
+    @Override
+    public InputStream search(String name, int offset, int size, SortField sortField) {
+        return null;
+    }
+
+    @Override
+    public InputStream search(String name, int size, String searchAfter, SortField sortField) {
+        return null;
     }
 }

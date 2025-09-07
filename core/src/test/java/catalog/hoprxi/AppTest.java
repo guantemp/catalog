@@ -120,14 +120,14 @@ public class AppTest {
                         securedPlainText = securedPlainText.split(":")[1];
                         byte[] aesData = Base64.getDecoder().decode(securedPlainText);
                         System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER.get(entry));
-                        byte[] decryptData = AESUtil.decryptSpec(aesData, StoreKeyLoad.SECRET_KEY_PARAMETER.get(entry));
+                        byte[] decryptData = AESUtil.decrypt(aesData, StoreKeyLoad.SECRET_KEY_PARAMETER.get(entry));
                         System.out.println("user:" + new String(decryptData, StandardCharsets.UTF_8));
                     }
                     securedPlainText = database.getString("password");
                     if (ENCRYPTED.matcher(securedPlainText).matches()) {
                         securedPlainText = securedPlainText.split(":")[1];
                         byte[] aesData = Base64.getDecoder().decode(securedPlainText);
-                        byte[] decryptData = AESUtil.decryptSpec(aesData, StoreKeyLoad.SECRET_KEY_PARAMETER.get(entry));
+                        byte[] decryptData = AESUtil.decrypt(aesData, StoreKeyLoad.SECRET_KEY_PARAMETER.get(entry));
                         System.out.println("password:" + new String(decryptData, StandardCharsets.UTF_8));
                     }
                 }

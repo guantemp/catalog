@@ -18,12 +18,13 @@ package catalog.hoprxi.core.rest;
 
 import catalog.hoprxi.core.application.BrandAppService;
 import catalog.hoprxi.core.application.command.*;
-import catalog.hoprxi.core.application.query.BrandJsonQuery;
+import catalog.hoprxi.core.application.query.BrandQuery;
 import catalog.hoprxi.core.application.query.QueryException;
 import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandJsonQuery;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandQuery;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import salt.hoprxi.utils.NumberHelper;
@@ -55,7 +56,7 @@ public class BrandServlet extends HttpServlet {
     private static final int SIZE = 64;
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private static final EnumSet<SortField> SUPPORT_SORT_FIELD = EnumSet.of(SortField._ID, SortField.ID, SortField.NAME, SortField._NAME);
-    private static final BrandJsonQuery QUERY = new ESBrandJsonQuery();
+    private static final BrandQuery QUERY = new ESBrandQuery();
     private final BrandAppService app = new BrandAppService();
 
     @Override
@@ -77,8 +78,8 @@ public class BrandServlet extends HttpServlet {
                 String path = pathInfo.substring(1);
                 try {
                     long id = Long.parseLong(path);
-                    String result = QUERY.query(id);
-                    copyRaw(generator, result);
+                    //String result = QUERY.query(id);
+                    //copyRaw(generator, result);
                 } catch (QueryException e) {
                     resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     generator.writeStartObject();
@@ -112,9 +113,9 @@ public class BrandServlet extends HttpServlet {
                     resp.addHeader("Link", "https://www.hoprxi.com/core/v1/brands?cursor=;rel=prev");
                     resp.addHeader("Link", "https://www.hoprxi.com/core/v1/brands;rel=next;");
                     if (cursor.isEmpty()) {
-                        copyRaw(generator, this.QUERY.query(query, offset, size, sortField));
+                        //copyRaw(generator, this.QUERY.query(query, offset, size, sortField));
                     } else {
-                        copyRaw(generator, this.QUERY.query(query, size, cursor, sortField));
+                        //copyRaw(generator, this.QUERY.query(query, size, cursor, sortField));
                     }
                 }
             }
@@ -243,7 +244,7 @@ public class BrandServlet extends HttpServlet {
                 generator.writeNumberField("code", 2010020);
                 generator.writeStringField("message", "brand update success");
                 generator.writeFieldName("brand");
-                copyRaw(generator, QUERY.query(id));
+                //copyRaw(generator, QUERY.query(id));
                 generator.writeEndObject();
             }
         }

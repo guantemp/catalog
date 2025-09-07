@@ -17,11 +17,11 @@
 package catalog.hoprxi.core.application;
 
 import catalog.hoprxi.core.application.command.*;
-import catalog.hoprxi.core.application.query.BrandJsonQuery;
+import catalog.hoprxi.core.application.query.BrandQuery;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.*;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandJsonQuery;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandQuery;
 import catalog.hoprxi.core.util.DomainRegistry;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -48,8 +48,8 @@ public class BrandAppService {
         }
     }
 
-    public static BrandJsonQuery getQuery() {
-        return new ESBrandJsonQuery();
+    public static BrandQuery getQuery() {
+        return new ESBrandQuery();
     }
 
     public Brand createBrand(BrandCreateCommand command) {

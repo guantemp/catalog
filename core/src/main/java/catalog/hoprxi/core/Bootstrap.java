@@ -16,19 +16,21 @@
 
 package catalog.hoprxi.core;
 
-import catalog.hoprxi.core.rest.*;
-import io.undertow.Handlers;
-import io.undertow.Undertow;
-import io.undertow.server.handlers.PathHandler;
-import io.undertow.servlet.Servlets;
-import io.undertow.servlet.api.DeploymentInfo;
-import io.undertow.servlet.api.DeploymentManager;
-import io.undertow.servlet.api.ServletContainer;
+import catalog.hoprxi.core.rest.BrandService;
+import com.linecorp.armeria.server.Server;
+import com.linecorp.armeria.server.ServerBuilder;
+import com.linecorp.armeria.server.docs.DocService;
+import com.linecorp.armeria.server.encoding.EncodingService;
+import com.linecorp.armeria.server.file.FileService;
+import com.linecorp.armeria.server.file.FileServiceBuilder;
+import com.linecorp.armeria.server.file.HttpFile;
+import com.linecorp.armeria.server.logging.LoggingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import javax.servlet.ServletException;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -41,7 +43,7 @@ import java.util.regex.Pattern;
 public class Bootstrap {
     private static final Logger LOGGER = LoggerFactory.getLogger(Bootstrap.class);
     private static final Pattern EXCLUDE = Pattern.compile("^-{1,}.*");
-    private static final int PORT = 9000;
+    private static final int PORT = 9002;
 
     public static void main(String[] args) throws ServletException {
         String fileName = "keystore.jks", fileProtectedPasswd = "";
@@ -91,6 +93,44 @@ public class Bootstrap {
         StoreKeyLoad.loadSecretKey(fileName, fileProtectedPasswd, entries.toArray(new String[0]));
         //System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER);
 
+        ServerBuilder sb = Server.builder();
+        //http2 配置
+        sb.http2MaxFrameSize(16384) // 16KB帧大小
+                .http2InitialConnectionWindowSize(1024 * 1024) // 1MB连接窗口
+                .http2InitialStreamWindowSize(512 * 1024);// 512KB流窗口
+        //  添加装饰器（中间件）
+        sb.decorator(LoggingService.newDecorator()); // 日志记录
+        sb.decorator(EncodingService.newDecorator()); // 压缩
+/*
+        FileServiceBuilder fsb =
+                FileService.builder(Paths.get(System.getProperty("user.dir"), "/html"));
+        fsb.autoIndex(true);
+        FileService fs = fsb.build();
+        sb.serviceUnder("/html", fs);
+        HttpFile index = HttpFile.of(Paths.get(System.getProperty("user.dir"), "/html/upload.html"));
+        sb.serviceUnder("/", index.asService());//相当于缺省index.html
+ */
+
+        //添加文档服务
+        sb.serviceUnder("/docs", DocService.builder()
+                .exampleRequests("/v1/brands", "query")
+                .build());
+        //ssl
+        //sb.https(8443).tls(new File("certificate.crt"), new File("private.key"), "myPassphrase");
+
+        Server server = sb.http(PORT)
+                .annotatedService("/", new BrandService())
+                .build();
+        server.closeOnJvmShutdown();
+        server.start().join();
+        LOGGER.info("Server has been started. Serving dummy service at http://127.0.0.1:{}", server.activeLocalPort());
+
+        // 添加关闭钩子
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            server.stop().join();
+            LOGGER.info("Server stopped");
+        }));
+/*
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentInfo deploymentInfo = Servlets.deployment()
                 .setClassLoader(Bootstrap.class.getClassLoader())
@@ -131,5 +171,7 @@ public class Bootstrap {
                 .build();
         server.start();
         LOGGER.info("System start....");
+
+ */
     }
 }

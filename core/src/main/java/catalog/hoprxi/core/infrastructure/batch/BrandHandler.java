@@ -23,6 +23,7 @@ import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandQuery;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlBrandQuery;
 import com.lmax.disruptor.EventHandler;
 
@@ -35,7 +36,7 @@ import java.util.regex.Pattern;
  */
 public class BrandHandler implements EventHandler<ItemImportEvent> {
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{12,19}$");
-    private static final BrandQuery BRAND_QUERY = new PsqlBrandQuery();
+    private static final BrandQuery BRAND_QUERY = new ESBrandQuery();
     private static final BrandRepository BRAND_REPO = new PsqlBrandRepository();
 
     @Override
@@ -53,6 +54,7 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
         String query = "^" + ss[0] + "$";
         if (ss.length > 1)
             query = query + "|^" + ss[1] + "$";
+        /*
         Brand[] brands = BRAND_QUERY.queryByName(query);
         if (brands.length != 0) {
             itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(brands[0].id()));
@@ -61,6 +63,8 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
             BRAND_REPO.save(temp);
             itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(temp.id()));
         }
+
+         */
         //System.out.println("brand:" +itemImportEvent.map.get(Corresponding.BRAND));
     }
 }

@@ -37,8 +37,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
 
         <hoprxi.event.version>1.0-SNAPSHOT</hoprxi.event.version>
     </properties>
@@ -94,6 +94,11 @@
             <groupId>com.typesafe</groupId>
             <artifactId>config</artifactId>
             <version>1.4.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.linecorp.armeria</groupId>
+            <artifactId>armeria</artifactId>
+            <version>1.33.1</version>
         </dependency>
         <dependency>
             <groupId>io.undertow</groupId>

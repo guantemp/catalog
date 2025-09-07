@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,37 +16,56 @@
 
 package catalog.hoprxi.core.application.query;
 
-import catalog.hoprxi.core.domain.model.brand.Brand;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2021-10-16
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @since JDK21
+ * @version 0.0.1 builder 2025/9/4
  */
+
+
 public interface BrandQuery {
     /**
-     * @param offset
-     * @param limit
-     * @return
+     * @param id of brand
+     * @return empty if not find
      */
-    Brand[] queryAll(int offset, int limit);
-
-    /**
-     * @param id
-     * @return
-     */
-    default Brand query(String id) {
-        return Brand.UNDEFINED;
+    default InputStream find(long id) {
+        return new ByteArrayInputStream(new byte[0]);
     }
 
     /**
-     * @param name is support regular
+     * @param name
+     * @param offset
+     * @param size
+     * @param sortField
      * @return
      */
-    Brand[] queryByName(String name);
+    InputStream search(String name, int offset, int size, SortField sortField);
+
+    default InputStream search(String name, int offset, int size) {
+        return search(name, offset, size, SortField._ID);
+    }
+
+    default InputStream search(int offset, int size, SortField sortField) {
+        return search("", offset, size, sortField);
+    }
+
+    default InputStream search(int offset, int size) {
+        return search("", offset, size, SortField._ID);
+    }
 
     /**
+     * @param name
+     * @param size
+     * @param searchAfter
+     * @param sortField
      * @return
      */
-    int size();
+    InputStream search(String name, int size, String searchAfter, SortField sortField);
+
+    default InputStream search(int size, String searchAfter, SortField sortField) {
+        return search("", size, searchAfter, sortField);
+    }
 }
