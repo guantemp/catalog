@@ -36,14 +36,15 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.PooledByteBufAllocator;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Year;
 import java.util.EnumSet;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /***
@@ -54,31 +55,34 @@ import java.util.concurrent.CompletableFuture;
 @PathPrefix("/v1")
 public class BrandService {
     private static final int OFFSET = 0;
-    private static final int SIZE = 64;
-    private static final int BUFFER_SIZE = 4096; // 4KB缓冲区
+    private static final int SIZE = 128;
+
+    private static final int SINGLE_BUFFER_SIZE = 512; // 0.5KB缓冲区
+    private static final int BATCH_BUFFER_SIZE = 8192;// 8KB缓冲区
     private static final PooledByteBufAllocator ALLOCATOR = PooledByteBufAllocator.DEFAULT;
-    private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
+
     private static final EnumSet<SortField> SUPPORT_SORT_FIELD = EnumSet.of(SortField._ID, SortField.ID, SortField.NAME, SortField._NAME);
     private static final BrandQuery QUERY = new ESBrandQuery();
     private final BrandAppService app = new BrandAppService();
+    private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
     @Get("/brands/:id")
     @Description("Retrieves the brand information by the given brand ID.")
-    public HttpResponse query(ServiceRequestContext ctx, @Param("id") @Default("-1") long id) {
+    public HttpResponse query(ServiceRequestContext ctx, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
             if (ctx.isCancelled()) return;
-            ByteBuf buffer = ALLOCATOR.buffer(BUFFER_SIZE);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os);) {
-                QUERY.find(id);
-                //OutputStream source = query.query(code);
-                //copyRaw(gen, source);
+            ByteBuf buffer = ALLOCATOR.buffer(SINGLE_BUFFER_SIZE);
+            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
+                InputStream source = QUERY.find(id);
+                if (pretty) gen.useDefaultPrettyPrinter();
+                copyRaw(gen, source);
                 gen.close();
                 stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
                 stream.write(HttpData.wrap(buffer));
             } catch (IOException e) {
-                //handleStreamError(stream, e);
+                handleStreamError(stream, e);
             } finally {
                 stream.close();
             }
@@ -87,21 +91,39 @@ public class BrandService {
     }
 
     @Get("/areas")
-    public HttpResponse query(ServiceRequestContext ctx) {
+    public HttpResponse query(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
         QueryParams params = ctx.queryParams();
+        String search = params.get("s", "");
         int offset = params.getInt("offset", OFFSET);
         int size = params.getInt("size", SIZE);
-        SortField sortField = SortField.of(Optional.ofNullable(params.get("sort")).orElse(""));
+        String cursor = params.get("cursor", "");
+        SortField sortField = SortField.of(params.get("sort", ""));
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         if (!SUPPORT_SORT_FIELD.contains(sortField)) {
 
+        } else {
+            ctx.blockingTaskExecutor().execute(() -> {
+                ByteBuf buffer = ALLOCATOR.buffer(BATCH_BUFFER_SIZE);
+                try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
+                    if (pretty) gen.useDefaultPrettyPrinter();
+                    if (cursor.isEmpty()) {
+                        copyRaw(gen, QUERY.search(search, offset, size, sortField));
+                    } else {
+                        copyRaw(gen, QUERY.search(search, size, cursor, sortField));
+                    }
+                    gen.close();
+                    stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+                    stream.write(HttpData.wrap(buffer));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
         return HttpResponse.of(stream);
     }
 
-    private void copyRaw(JsonGenerator generator, OutputStream source) throws IOException {
-        InputStream is = new ByteArrayInputStream(((ByteArrayOutputStream) source).toByteArray());
-        JsonParser parser = JSON_FACTORY.createParser(is);
+    private void copyRaw(JsonGenerator generator, InputStream source) throws IOException {
+        JsonParser parser = JSON_FACTORY.createParser(source);
         while (parser.nextToken() != null) {
             generator.copyCurrentEvent(parser);
         }
@@ -146,5 +168,21 @@ public class BrandService {
         }
         BrandCreateCommand brandCreateCommand = new BrandCreateCommand(name, alias, homepage, logo, since, story);
         return app.createBrand(brandCreateCommand);
+    }
+
+    private void handleStreamError(StreamWriter<HttpObject> stream, IOException e) {
+        ByteBuf buffer = ALLOCATOR.buffer(SINGLE_BUFFER_SIZE);
+        OutputStream os = new ByteBufOutputStream(buffer);
+        try (JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
+            gen.writeStartObject();
+            gen.writeStringField("status", "fail");
+            gen.writeNumberField("code", 404);
+            gen.writeStringField("message", e.getMessage());
+            gen.writeEndObject();
+            gen.close();
+            stream.write(HttpData.wrap(buffer));
+        } catch (IOException ex) {
+            System.out.printf("Json write error：%s%n", e);
+        }
     }
 }

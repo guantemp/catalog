@@ -18,7 +18,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
-import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.domain.model.barcode.BarcodeValidServices;
 import catalog.hoprxi.core.infrastructure.ESUtil;
@@ -74,7 +74,7 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             }
         } catch (IOException e) {
             LOGGER.warn("No item with ID={} found", id, e);
-            throw new QueryException(String.format("The item (id = %s) not found.", id), e);
+            throw new SearchException(String.format("The item (id = %s) not found.", id), e);
         }
         return EMPTY_ITEM;
     }

@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.CategoryJsonQuery;
-import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.application.query.SearchException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
@@ -35,7 +35,7 @@ public class ESCategoryJsonQueryTest {
 
     private static final CategoryJsonQuery service = new ESCategoryJsonQuery();
 
-    @Test(expectedExceptions = QueryException.class)
+    @Test(expectedExceptions = SearchException.class)
     public void testQuery() {
         System.out.println(service.query(-1));
         Assert.assertNotNull(service.query(-1));

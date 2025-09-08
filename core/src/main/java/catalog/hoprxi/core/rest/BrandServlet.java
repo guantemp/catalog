@@ -19,11 +19,10 @@ package catalog.hoprxi.core.rest;
 import catalog.hoprxi.core.application.BrandAppService;
 import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.query.BrandQuery;
-import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandJsonQuery;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandQuery;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
@@ -80,7 +79,7 @@ public class BrandServlet extends HttpServlet {
                     long id = Long.parseLong(path);
                     //String result = QUERY.query(id);
                     //copyRaw(generator, result);
-                } catch (QueryException e) {
+                } catch (SearchException e) {
                     resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     generator.writeStartObject();
                     generator.writeStringField("status", "miss");

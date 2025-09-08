@@ -31,7 +31,7 @@ public interface BrandQuery {
      * @param id of brand
      * @return empty if not find
      */
-    default InputStream find(long id) {
+    default InputStream find(long id) throws SearchException {
         return new ByteArrayInputStream(new byte[0]);
     }
 
@@ -49,11 +49,11 @@ public interface BrandQuery {
     }
 
     default InputStream search(int offset, int size, SortField sortField) {
-        return search("", offset, size, sortField);
+        return search(null, offset, size, sortField);
     }
 
     default InputStream search(int offset, int size) {
-        return search("", offset, size, SortField._ID);
+        return search(null, offset, size, SortField._ID);
     }
 
     /**
@@ -65,7 +65,11 @@ public interface BrandQuery {
      */
     InputStream search(String name, int size, String searchAfter, SortField sortField);
 
+    default InputStream search(String name,int size, String searchAfter) {
+        return search(null, size, searchAfter, SortField._ID);
+    }
+
     default InputStream search(int size, String searchAfter, SortField sortField) {
-        return search("", size, searchAfter, sortField);
+        return search(null, size, searchAfter, sortField);
     }
 }

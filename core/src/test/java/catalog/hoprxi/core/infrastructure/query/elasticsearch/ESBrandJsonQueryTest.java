@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.BrandQuery;
-import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.application.query.SortField;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
@@ -45,7 +45,7 @@ public class ESBrandJsonQueryTest {
     private static final BrandQuery query = new ESBrandQuery();
 
 
-    @Test(priority = 2, invocationCount = 1, threadPoolSize = 1, expectedExceptions = QueryException.class)
+    @Test(priority = 2, invocationCount = 1, threadPoolSize = 1, expectedExceptions = SearchException.class)
     public void testFind() {
         String w = jsonQuery.query(495651176959596552l);
         System.out.println(w);
@@ -58,7 +58,7 @@ public class ESBrandJsonQueryTest {
         System.out.println(jsonQuery.query(817884324788650l));
     }
 
-    @Test(priority = 1, invocationCount = 1, threadPoolSize = 1, expectedExceptions = QueryException.class)
+    @Test(priority = 1, invocationCount = 1, threadPoolSize = 1, expectedExceptions = SearchException.class)
     public void testFind1() throws IOException {
         InputStream is = query.find(495651176959596552l);
         System.out.println("id查询（过滤）：");
@@ -80,7 +80,7 @@ public class ESBrandJsonQueryTest {
 
     @Test(priority = 2)
     public void testSearchAll1() throws IOException {
-        InputStream is = query.search(100, 5, null);
+        InputStream is = query.search(100, 5);
         String s = inputStreamToString(is);
         System.out.println(s);
         System.out.println(s.length());
@@ -110,20 +110,20 @@ public class ESBrandJsonQueryTest {
 
 
     @Test
-    public void testQueryByName() {
+    public void testFindByName() {
         System.out.println(jsonQuery.query("天", 0, 20, null));
         System.out.println(jsonQuery.query("白萝卜", 10, 5, null));
         System.out.println(jsonQuery.query("天", 0, 20, SortField.NAME));
     }
 
     @Test
-    public void testQueryByName1() throws IOException {
-        InputStream is = query.search("天", 0, 20, null);
+    public void testFindByName1() throws IOException {
+        InputStream is = query.search("天", 0, 20);
         String s = inputStreamToString(is);
         System.out.println(s);
         System.out.println(s.length());
 
-        query.search("白萝卜", 10, 5, null);
+        query.search("白萝卜", 10, 5);
         is = query.search("天", 0, 20, SortField.NAME);
         s = inputStreamToString(is);
         System.out.println(s);

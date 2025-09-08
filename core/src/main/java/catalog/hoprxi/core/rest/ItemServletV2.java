@@ -22,7 +22,7 @@ import catalog.hoprxi.core.application.command.ItemCreateCommand;
 import catalog.hoprxi.core.application.command.ItemDeleteCommand;
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
-import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.application.query.filter.*;
 import catalog.hoprxi.core.domain.model.Grade;
@@ -107,7 +107,7 @@ public class ItemServletV2 extends HttpServlet {
                     try {
                         String result = QUERY.query(Long.parseLong(paths[1]));
                         copy(generator, result);
-                    } catch (QueryException e) {
+                    } catch (SearchException e) {
                         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                         generator.writeStartObject();
                         generator.writeStringField("status", "miss");

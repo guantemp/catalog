@@ -19,7 +19,7 @@ package catalog.hoprxi.core.rest;
 import catalog.hoprxi.core.application.CategoryAppService;
 import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.query.CategoryJsonQuery;
-import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
 import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
@@ -82,7 +82,7 @@ public class CategoryServlet extends HttpServlet {
                     try {
                         String result = QUERY.query(Long.parseLong(paths[1]));
                         copy(generator, result);
-                    } catch (QueryException e) {
+                    } catch (SearchException e) {
                         resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                         generator.writeStartObject();
                         generator.writeStringField("status", "miss");

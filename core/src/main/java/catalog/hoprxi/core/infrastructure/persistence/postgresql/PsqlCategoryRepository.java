@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.persistence.postgresql;
 
-import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
@@ -69,7 +69,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
             return rebuild(rs);
         } catch (SQLException e) {
             LOGGER.error("Database error", e);
-            throw new QueryException("Database error", e);
+            throw new SearchException("Database error", e);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             LOGGER.error("Can't rebuild name", e);
             return null;
@@ -145,7 +145,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
             return categoryList.toArray(new Category[0]);
         } catch (SQLException e) {
             LOGGER.error("Database error", e);
-            throw new QueryException("Database error", e);
+            throw new SearchException("Database error", e);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             LOGGER.error("Can't rebuild name", e);
             return new Category[0];

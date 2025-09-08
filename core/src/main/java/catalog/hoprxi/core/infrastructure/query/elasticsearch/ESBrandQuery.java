@@ -18,7 +18,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 
 import catalog.hoprxi.core.application.query.BrandQuery;
-import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -55,7 +55,7 @@ public class ESBrandQuery implements BrandQuery {
     private static final PooledByteBufAllocator POOL_ALLOCATOR = PooledByteBufAllocator.DEFAULT;
 
     @Override
-    public InputStream find(long id) {
+    public InputStream find(long id) throws SearchException {
         Request request = new Request("GET", "/brand/_doc/" + id);//SEARCH_PREFIX+"/_doc/"
         request.setOptions(ESUtil.requestOptions());
         ByteBuf buffer = POOL_ALLOCATOR.buffer(SINGLE_BUFFER_SIZE);
@@ -71,13 +71,12 @@ public class ESBrandQuery implements BrandQuery {
                     }
                     generator.writeEndObject();
                     generator.close();
-                    buffer.readerIndex(0);
                     return new ByteBufInputStream(buffer, true);
                 }
             }
         } catch (IOException e) {
             LOGGER.error("I/O failed", e);
-            throw new QueryException(String.format("The brand(id=%s) not found", id), e);
+            throw new SearchException(String.format("The brand(id=%s) not found", id), e);
         }
         return new ByteArrayInputStream(new byte[0]);
     }
@@ -99,7 +98,7 @@ public class ESBrandQuery implements BrandQuery {
             return rebuild(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("No search was found for anything resembling name({}) brand", name, e);
-            throw new QueryException(String.format("No search was found for anything resembling name(%s) brand", name), e);
+            throw new SearchException(String.format("No search was found for anything resembling name(%s) brand", name), e);
         }
     }
 
@@ -131,7 +130,7 @@ public class ESBrandQuery implements BrandQuery {
             return rebuild(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("Not brand found from {}:", searchAfter, e);
-            throw new QueryException(String.format("Not brand found from %s", searchAfter), e);
+            throw new SearchException(String.format("Not brand found from %s", searchAfter), e);
         }
     }
 
@@ -207,7 +206,6 @@ public class ESBrandQuery implements BrandQuery {
         }
         generator.writeEndObject();
         generator.close();
-        buffer.readerIndex(0);
         return new ByteBufInputStream(buffer, true);
     }
 

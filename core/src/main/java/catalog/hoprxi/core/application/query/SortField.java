@@ -41,6 +41,11 @@ public enum SortField {
         return field;
     }
 
+    /**
+     *
+     * @param s
+     * @return SortField if name
+     */
     public static SortField of(String s) {
         for (SortField sortField : values()) {
             if (sortField.name().equalsIgnoreCase(s))

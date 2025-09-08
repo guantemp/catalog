@@ -21,7 +21,7 @@ package catalog.hoprxi.core.application.query;
  * @since JDK8.0
  * @version 0.0.1 builder 2025-02-23
  */
-public class QueryException extends RuntimeException {
+public class SearchException extends RuntimeException {
     /**
      * Constructs a new runtime exception with the specified detail message and
      * cause.  <p>Note that the detail message associated with
@@ -36,7 +36,7 @@ public class QueryException extends RuntimeException {
      *                unknown.)
      * @since 1.4
      */
-    public QueryException(String message, Throwable cause) {
+    public SearchException(String message, Throwable cause) {
         super(message, cause, false, false);
     }
 

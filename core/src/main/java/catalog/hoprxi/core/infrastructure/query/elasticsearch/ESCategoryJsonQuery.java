@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.CategoryJsonQuery;
-import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.*;
 import org.apache.http.HttpHost;
@@ -68,7 +68,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             }
         } catch (IOException e) {
             LOGGER.warn("The category (id = {}) not found.", id, e);
-            throw new QueryException(String.format("The category (id = %d) not found.", id), e);
+            throw new SearchException(String.format("The category (id = %d) not found.", id), e);
         }
         return EMPTY_CATEGORY;
     }
@@ -83,7 +83,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             return rebuildCategories(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.warn("No search was found for anything resembling root categories", e);
-            throw new QueryException("No search was found for anything resembling root categories", e);
+            throw new SearchException("No search was found for anything resembling root categories", e);
         }
     }
 
@@ -114,7 +114,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             return rebuildCategories(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.warn("There are no related category(id={}) available ", id, e);
-            throw new QueryException(String.format("There are no related category(id=%d) available", id), e);
+            throw new SearchException(String.format("There are no related category(id=%d) available", id), e);
         }
     }
 
@@ -189,7 +189,7 @@ public class ESCategoryJsonQuery implements CategoryJsonQuery {
             return writeDescendantAsTree(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("There are no related category(id={}) available", id, e);
-            throw new QueryException(String.format("There are no related category(id=%d) available", id), e);
+            throw new SearchException(String.format("There are no related category(id=%d) available", id), e);
         }
     }
 

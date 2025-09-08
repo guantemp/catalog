@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
-import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.*;
@@ -67,7 +67,7 @@ public class ESBrandJsonQuery {
             }
         } catch (IOException e) {
             LOGGER.error("I/O failed", e);
-            throw new QueryException(String.format("The brand(id=%s) not found", id), e);
+            throw new SearchException(String.format("The brand(id=%s) not found", id), e);
         }
         return EMPTY_BRAND;
     }
@@ -120,7 +120,7 @@ public class ESBrandJsonQuery {
             return rebuildBrands(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("No search was found for anything resembling name({}) brand", name, e);
-            throw new QueryException(String.format("No search was found for anything resembling name(%s) brand", name), e);
+            throw new SearchException(String.format("No search was found for anything resembling name(%s) brand", name), e);
         }
     }
 
@@ -198,7 +198,7 @@ public class ESBrandJsonQuery {
             return rebuildBrands(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("Not brand found from {}:", searchAfter, e);
-            throw new QueryException(String.format("Not brand found from %s", searchAfter), e);
+            throw new SearchException(String.format("Not brand found from %s", searchAfter), e);
         }
     }
 

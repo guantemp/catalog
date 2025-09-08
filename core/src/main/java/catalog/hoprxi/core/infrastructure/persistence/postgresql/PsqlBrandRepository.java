@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.persistence.postgresql;
 
-import catalog.hoprxi.core.application.query.QueryException;
+import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
@@ -71,7 +71,7 @@ public class PsqlBrandRepository implements BrandRepository {
             return rebuild(rs);
         } catch (SQLException e) {
             LOGGER.error("Database error", e);
-            throw new QueryException("Database error", e);
+            throw new SearchException("Database error", e);
         } catch (IOException | InvocationTargetException | InstantiationException |
                  IllegalAccessException e) {
             LOGGER.error("Can't rebuild brand with (id = {})", id, e);
