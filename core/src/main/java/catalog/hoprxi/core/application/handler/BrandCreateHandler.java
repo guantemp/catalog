@@ -1,0 +1,59 @@
+/*
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+package catalog.hoprxi.core.application.handler;
+
+
+import catalog.hoprxi.core.application.command.BrandCreateCommand;
+import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.domain.model.brand.AboutBrand;
+import catalog.hoprxi.core.domain.model.brand.Brand;
+import catalog.hoprxi.core.domain.model.brand.BrandCreated;
+import catalog.hoprxi.core.domain.model.brand.BrandRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
+import catalog.hoprxi.core.util.DomainRegistry;
+
+/***
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @since JDK21
+ * @version 0.0.1 builder 2025/9/13
+ */
+
+public class BrandCreateHandler implements Handler<BrandCreateCommand, Brand> {
+    private final BrandRepository repository = new PsqlBrandRepository();
+    private long id = -1L;
+
+    @Override
+    public Brand execute(BrandCreateCommand command) {
+        Name name = new Name(command.getName(), command.getAlias());
+        AboutBrand about = new AboutBrand(command.getLogo(), command.getHomepage(), command.getSince(), command.getStory());
+        Brand brand = new Brand(repository.nextIdentity(), name, about);
+        id = brand.id();
+        repository.save(brand);
+        //领域事件：新建品牌
+        BrandCreated created = new BrandCreated(brand.id(), brand.name().name(), brand.name().mnemonic(), brand.name().alias());
+        if (brand.about() != null)
+            created = new BrandCreated(brand.id(), brand.name().name(), brand.name().mnemonic(), brand.name().alias());
+        DomainRegistry.domainEventPublisher().publish(created);
+        return brand;
+    }
+
+    @Override
+    public boolean undo() {
+        repository.remove(id);
+        return true;
+    }
+}

@@ -32,7 +32,7 @@ import java.util.Objects;
 public class CategoryCreateHandler implements Handler<CategoryCreateCommand, String> {
 
     @Override
-    public String handle(CategoryCreateCommand command) {
+    public String execute(CategoryCreateCommand command) {
         Objects.requireNonNull(command, "command required");
         final CategoryRepository repository = new PsqlCategoryRepository();
         Category category = new Category(command.getParentId(), repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
@@ -41,8 +41,8 @@ public class CategoryCreateHandler implements Handler<CategoryCreateCommand, Str
     }
 
     @Override
-    public String undo() {
+    public boolean undo() {
         //final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
-        return null;
+        return true;
     }
 }

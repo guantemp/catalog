@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,26 @@
 
 package catalog.hoprxi.core.application.command;
 
+
+import java.net.URL;
+import java.time.Year;
+
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 2019-05-28
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @since JDK21
+ * @version 0.0.1 builder 2025/9/11
  */
-public interface Command<T> {
+
+public class BrandUpdateCommand {
+    private long id;
+    private String name;
+    private String alias;
+    private URL logo;
+    private Year since;
+    private String story;
+    private URL homepage;
+
+    public BrandUpdateCommand(long id) {
+        this.id = id;
+    }
 }

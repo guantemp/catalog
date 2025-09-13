@@ -21,29 +21,18 @@ package catalog.hoprxi.core.application.command;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-01-07
  */
-public class BrandDeleteCommand implements Command {
-    private final long id;
-
-    public BrandDeleteCommand(long id) {
-        this.id = id;
-    }
-
-    public long getId() {
-        return id;
-    }
+public record BrandDeleteCommand(long id) implements Command<Long> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BrandDeleteCommand)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        BrandDeleteCommand command = (BrandDeleteCommand) o;
-
-        return id == command.id;
+        BrandDeleteCommand that = (BrandDeleteCommand) o;
+        return id == that.id;
     }
 
     @Override
     public int hashCode() {
-        return (int) (id ^ (id >>> 32));
+        return Long.hashCode(id);
     }
 }

@@ -96,8 +96,8 @@ public class BrandAppService {
     }
 
     public void delete(BrandDeleteCommand deleteCommand) {
-        repository.remove(deleteCommand.getId());
+        repository.remove(deleteCommand.id());
         //发送领域事件
-        DomainRegistry.domainEventPublisher().publish(new BrandDeleted(deleteCommand.getId()));
+        DomainRegistry.domainEventPublisher().publish(new BrandDeleted(deleteCommand.id()));
     }
 }

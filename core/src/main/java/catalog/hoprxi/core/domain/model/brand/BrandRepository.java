@@ -24,8 +24,7 @@ public interface BrandRepository {
 
     /**
      * @param id
-     * @return
-     * @throws NullPointerException if id is null
+     * @return The correct brand
      */
     Brand find(long id);
 
@@ -36,13 +35,11 @@ public interface BrandRepository {
 
     /**
      * @param id brand id
-     * @throws NullPointerException if id is null
      */
     void remove(long id);
 
     /**
      * @param brand a brand object
-     * @throws NullPointerException if brand is null
      */
     void save(Brand brand);
 }

@@ -16,6 +16,8 @@
 
 package catalog.hoprxi.core.application.command;
 
+import catalog.hoprxi.core.domain.model.brand.Brand;
+
 import java.net.URL;
 import java.time.Year;
 
@@ -24,7 +26,7 @@ import java.time.Year;
  * @since JDK8.0
  * @version 0.0.1 2019-05-14
  */
-public class BrandCreateCommand implements Command {
+public class BrandCreateCommand implements Command<Brand> {
     private String name;
     private String alias;
     private URL logo;
@@ -33,7 +35,7 @@ public class BrandCreateCommand implements Command {
     private URL homepage;
 
     public BrandCreateCommand(String name, String alias, URL homepage, URL logo, Year since, String story) {
-        this.name = name;
+        setName(name);
         this.alias = alias;
         this.logo = logo;
         this.since = since;

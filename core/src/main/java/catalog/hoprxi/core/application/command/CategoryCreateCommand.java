@@ -24,7 +24,7 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-06-24
  */
-public class CategoryCreateCommand implements Command {
+public class CategoryCreateCommand implements Command<String> {
     private long parentId;
     private String name;
     private String alias;

@@ -21,16 +21,12 @@ import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.server.docs.DocService;
 import com.linecorp.armeria.server.encoding.EncodingService;
-import com.linecorp.armeria.server.file.FileService;
-import com.linecorp.armeria.server.file.FileServiceBuilder;
-import com.linecorp.armeria.server.file.HttpFile;
 import com.linecorp.armeria.server.logging.LoggingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import javax.servlet.ServletException;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -79,14 +75,14 @@ public class Bootstrap {
                 case "-h":
                 case "--help":
                     System.out.println("Non-option arguments:\n" +
-                            "command              \n" +
-                            "\n" +
-                            "Option                         Description        \n" +
-                            "------                         -----------        \n" +
-                            "-f, --file <filename>          A file that stores the key\n" +
-                            "-e <KeyValuePair>              encrypt a passwd\n" +
-                            "-l, --list                     entries in the keystore\n" +
-                            "-h, --help                     Show help          \n");
+                                       "command              \n" +
+                                       "\n" +
+                                       "Option                         Description        \n" +
+                                       "------                         -----------        \n" +
+                                       "-f, --file <filename>          A file that stores the key\n" +
+                                       "-e <KeyValuePair>              encrypt a passwd\n" +
+                                       "-l, --list                     entries in the keystore\n" +
+                                       "-h, --help                     Show help          \n");
                     break;
             }
         }
@@ -123,6 +119,7 @@ public class Bootstrap {
                 .build();
         server.closeOnJvmShutdown();
         server.start().join();
+        System.out.printf("Server has been started. Serving dummy service at http://127.0.0.1:%d%n", server.activeLocalPort());
         LOGGER.info("Server has been started. Serving dummy service at http://127.0.0.1:{}", server.activeLocalPort());
 
         // 添加关闭钩子
