@@ -14,30 +14,30 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.command;
+package catalog.hoprxi.core.application.handler;
 
 
-import catalog.hoprxi.core.domain.model.brand.Brand;
-
-import java.net.URL;
-import java.time.Year;
+import catalog.hoprxi.core.application.command.BrandDeleteCommand;
+import catalog.hoprxi.core.domain.model.brand.BrandRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2025/9/11
+ * @version 0.0.1 builder 2025/9/17
  */
 
-public class BrandUpdateCommand implements Command<Brand>{
-    private long id;
-    private String name;
-    private String alias;
-    private URL logo;
-    private Year since;
-    private String story;
-    private URL homepage;
+public class BrandDeleteHandler implements Handler<BrandDeleteCommand, Boolean> {
+    private final BrandRepository repository = new PsqlBrandRepository();
 
-    public BrandUpdateCommand(long id) {
-        this.id = id;
+    @Override
+    public Boolean execute(BrandDeleteCommand command) {
+        repository.remove(command.id());
+        return true;
+    }
+
+    @Override
+    public boolean undo() {
+        return false;
     }
 }

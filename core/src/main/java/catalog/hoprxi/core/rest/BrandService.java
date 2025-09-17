@@ -19,6 +19,9 @@ package catalog.hoprxi.core.rest;
 
 import catalog.hoprxi.core.application.BrandAppService;
 import catalog.hoprxi.core.application.command.*;
+import catalog.hoprxi.core.application.handler.BrandCreateHandler;
+import catalog.hoprxi.core.application.handler.BrandDeleteHandler;
+import catalog.hoprxi.core.application.handler.Handler;
 import catalog.hoprxi.core.application.query.BrandQuery;
 import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.domain.model.brand.Brand;
@@ -155,7 +158,9 @@ public class BrandService {
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         ctx.blockingTaskExecutor().execute(() -> {
             try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
+
                 Brand brand = jsonTo(parser);
+
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
                         "{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand)));
             } catch (Exception e) {
@@ -185,7 +190,8 @@ public class BrandService {
             }
         }
         BrandCreateCommand createCommand = new BrandCreateCommand(name, alias, homepage, logo, since, story);
-        return app.createBrand(createCommand);
+        Handler<BrandCreateCommand, Brand> handler = new BrandCreateHandler();
+        return handler.execute(createCommand);
     }
 
     @StatusCode(201)
@@ -236,8 +242,11 @@ public class BrandService {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
-            //if (ctx.isCancelled()) return;
-            app.delete(new BrandDeleteCommand(id));
+
+            BrandDeleteCommand delete = new BrandDeleteCommand(id);
+            Handler<BrandDeleteCommand, Boolean> handler = new BrandDeleteHandler();
+            handler.execute(delete);
+
             ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                 if (pretty) gen.useDefaultPrettyPrinter();
@@ -251,7 +260,7 @@ public class BrandService {
                 stream.write(HttpData.wrap(buffer));
                 stream.close();
             } catch (IOException e) {
-                handleStreamError(stream,e);
+                handleStreamError(stream, e);
             }
         });
         return HttpResponse.of(stream);
