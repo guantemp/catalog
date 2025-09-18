@@ -17,7 +17,6 @@
 package catalog.hoprxi.core.rest;
 
 
-import catalog.hoprxi.core.application.BrandAppService;
 import catalog.hoprxi.core.application.command.BrandCreateCommand;
 import catalog.hoprxi.core.application.command.BrandDeleteCommand;
 import catalog.hoprxi.core.application.command.BrandUpdateCommand;
@@ -73,7 +72,6 @@ public class BrandService {
 
     private static final EnumSet<SortField> SUPPORT_SORT_FIELD = EnumSet.of(SortField._ID, SortField.ID, SortField.NAME, SortField._NAME);
     private static final BrandQuery QUERY = new ESBrandQuery();
-    private final BrandAppService app = new BrandAppService();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
     @Get("/brands/:id")
@@ -159,9 +157,7 @@ public class BrandService {
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         ctx.blockingTaskExecutor().execute(() -> {
             try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
-
                 Brand brand = toBrand(parser);
-
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
                         "{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand)));
             } catch (Exception e) {
@@ -191,6 +187,7 @@ public class BrandService {
             }
         }
         BrandCreateCommand createCommand = new BrandCreateCommand(name, alias, homepage, logo, since, story);
+        //System.out.println(createCommand);
         Handler<BrandCreateCommand, Brand> handler = new BrandCreateHandler();
         return handler.execute(createCommand);
     }

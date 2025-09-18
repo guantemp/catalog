@@ -60,34 +60,37 @@ public class ESBrandJsonQueryTest {
 
     @Test(priority = 1, invocationCount = 1, threadPoolSize = 1, expectedExceptions = SearchException.class)
     public void testFind() throws IOException {
-        InputStream is = query.find(495651176959596552l);
+        InputStream is = query.find(495651176959596552L);
         System.out.println("id查询（过滤）：");
         String s = inputStreamToString(is);
         System.out.println(s);
         System.out.println(s.length());
 
-        is = query.find(495651176959596602l);
+        is = query.find(495651176959596602L);
         System.out.println("id查询（过滤）：");
         System.out.println(is.readAllBytes().length);
-        is = query.find(-1l);
+        is = query.find(-1L);
         System.out.println("id查询（过滤）：");
-        System.out.println(is.readAllBytes().length);
+        s = inputStreamToString(is);
+        System.out.println(s);
+        System.out.println(s.length());
 
-        is = query.find(817884324788650l);
+        is = query.find(817884324788650L);
         System.out.println("id查询（过滤）：");
         System.out.println(is.readAllBytes().length);
     }
 
     @Test(priority = 2)
-    public void testSearchAll1() throws IOException {
+    public void testSearchAll() throws IOException {
         InputStream is = query.search(100, 5);
         String s = inputStreamToString(is);
-        System.out.println(s);
+        System.out.println("offset=100,size=5\n" + s);
         System.out.println(s.length());
         query.search(100, 5, SortField._NAME);
-        is =query.search(0, 256, SortField._ID);
+        is.reset();
+        is = query.search(0, 256, SortField._ID);
         s = inputStreamToString(is);
-        System.out.println(s);
+        System.out.println("offset=0,size=256\n" + s);
         System.out.println(s.length());
         query.search(64, null, SortField.NAME);
         is = query.search(128, "62078470412941622", SortField.ID);
@@ -107,7 +110,7 @@ public class ESBrandJsonQueryTest {
         System.out.println(jsonQuery.query("", 8, "62078807563681609", SortField.ID));
     }
 
-    @Test(priority =3)
+    @Test(priority = 3)
     public void testSearchName() throws IOException {
         InputStream is = query.search("天", 0, 20);
         String s = inputStreamToString(is);

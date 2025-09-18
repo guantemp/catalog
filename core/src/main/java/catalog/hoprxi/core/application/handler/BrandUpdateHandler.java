@@ -32,22 +32,15 @@ import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandReposi
 
 public class BrandUpdateHandler implements Handler<BrandUpdateCommand, Brand> {
     private final BrandRepository repository = new PsqlBrandRepository();
-    private Brand oldBrand;
 
     @Override
     public Brand execute(BrandUpdateCommand command) {
         Brand brand = repository.find(command.id());
-        oldBrand = brand;
         if (command.name() != null || command.alias() != null)
             brand.rename(new Name(command.name(), command.alias()));
         if (command.story() != null || command.homepage() != null || command.logo() != null || command.since() != null)
             brand.changeAbout(new AboutBrand(command.homepage(), command.logo(), command.since(), command.story()));
         repository.save(brand);
         return brand;
-    }
-
-    @Override
-    public void undo(long commandId) {
-        repository.save(oldBrand);
     }
 }

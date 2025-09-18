@@ -16,7 +16,6 @@
 
 package catalog.hoprxi;
 
-import catalog.hoprxi.core.rest.BrandServlet;
 import catalog.hoprxi.core.rest.ItemServlet;
 import catalog.hoprxi.core.rest.UnitServlet;
 import catalog.hoprxi.core.rest.UploadServlet;
@@ -58,8 +57,6 @@ public class App {
                 .addServlets(
                         Servlets.servlet("unitServlet", UnitServlet.class)
                                 .addMapping("/v1/units"),
-                        Servlets.servlet("brandServlet", BrandServlet.class)
-                                .addMapping("/v1/brands/*"),
                         //Servlets.servlet("categoryServlet", CategoryServlet.class)
                         //.addMapping("/v1/categories/*"),
                         Servlets.servlet("itemServlet", ItemServlet.class)
@@ -69,9 +66,7 @@ public class App {
                         Servlets.servlet("uploadServlet", UploadServlet.class)
                                 //.addInitParam("UPLOAD_DIRECTORY", "temp")
                                 //.addInitParam("databaseName", "catalog")
-                                .addMapping("/v1/upload"),
-                        Servlets.servlet("brandServlet2", BrandServlet.class)
-                                .addMapping("/v2/brands/*"));
+                                .addMapping("/v1/upload"));
 
         DeploymentManager manager = container.addDeployment(deploymentInfo);
         manager.deploy();

@@ -51,7 +51,7 @@ public final class DataSourceUtil {
                     props.setProperty("dataSource.serverName", database.getString("host"));
                     props.setProperty("dataSource.portNumber", database.getString("port"));
                     String entry = database.getString("host") + ":" + database.getString("port");
-                    System.out.println(entry);
+                    //System.out.println(entry);
                     props.setProperty("dataSource.user", DecryptUtil.decrypt(entry, database.getString("user")));
                     props.setProperty("dataSource.password", DecryptUtil.decrypt(entry, database.getString("password")));
                     props.setProperty("dataSource.databaseName", database.getString("databaseName"));

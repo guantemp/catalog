@@ -50,6 +50,7 @@ public class ESUtil {
                 props.put("user", DecryptUtil.decrypt(entry, database.getString("user")));
                 props.put("password", DecryptUtil.decrypt(entry, database.getString("password")));
                 props.put("databaseName", config.getString("databaseName"));
+                props.put("customized", config.hasPath("customized") ? config.getString("customized") : "");
             }
         }
 
@@ -68,6 +69,10 @@ public class ESUtil {
 
     public static String database() {
         return props.getProperty("databaseName", DEFAULT_DATABASE_NAME);
+    }
+
+    public static String customized() {
+        return props.getProperty("customized", "");
     }
 
     public static int port() {

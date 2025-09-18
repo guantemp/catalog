@@ -14,28 +14,31 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.handler;
+package catalog.hoprxi.core.application.query;
 
+import java.io.InputStream;
 
-import catalog.hoprxi.core.application.command.Command;
-
-/***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK21
- * @version 0.0.1 2025-09-18
- */
-public interface Handler<T extends Command<R>, R> {
+public interface CategoryQuery1 {
     /**
-     * @param command
+     *
+     * @return category root node
      */
-    R execute(T command);
+    InputStream root();
 
-    //commandId保存在缓存中，仅当次有效，重启将被被清空
-    default void undo() {
-        throw new UnsupportedOperationException("Not unsupported");
-    }
+    /**
+     *
+     * @param id category id
+     * @return category where id is correct
+     */
+    InputStream find(long id) throws SearchException;
 
-    default void redo() {
-        throw new UnsupportedOperationException("Not unsupported");
-    }
+    InputStream searchChildren(long id);
+
+    InputStream searchDescendants(long id);
+
+    InputStream search(String key);
+
+    InputStream searchSiblings(long id);
+
+    InputStream searchPath(long id);
 }

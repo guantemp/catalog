@@ -20,6 +20,7 @@ import catalog.hoprxi.core.domain.model.brand.Brand;
 
 import java.net.URL;
 import java.time.Year;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -89,5 +90,17 @@ public class BrandCreateCommand implements Command<Brand> {
 
     public void setAlias(String alias) {
         this.alias = alias;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", BrandCreateCommand.class.getSimpleName() + "[", "]")
+                .add("name='" + name + "'")
+                .add("alias='" + alias + "'")
+                .add("logo=" + logo)
+                .add("since=" + since)
+                .add("story='" + story + "'")
+                .add("homepage=" + homepage)
+                .toString();
     }
 }
