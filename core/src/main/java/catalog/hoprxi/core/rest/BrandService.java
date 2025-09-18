@@ -18,9 +18,12 @@ package catalog.hoprxi.core.rest;
 
 
 import catalog.hoprxi.core.application.BrandAppService;
-import catalog.hoprxi.core.application.command.*;
+import catalog.hoprxi.core.application.command.BrandCreateCommand;
+import catalog.hoprxi.core.application.command.BrandDeleteCommand;
+import catalog.hoprxi.core.application.command.BrandUpdateCommand;
 import catalog.hoprxi.core.application.handler.BrandCreateHandler;
 import catalog.hoprxi.core.application.handler.BrandDeleteHandler;
+import catalog.hoprxi.core.application.handler.BrandUpdateHandler;
 import catalog.hoprxi.core.application.handler.Handler;
 import catalog.hoprxi.core.application.query.BrandQuery;
 import catalog.hoprxi.core.application.query.SortField;
@@ -48,9 +51,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Year;
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
@@ -159,7 +160,7 @@ public class BrandService {
         ctx.blockingTaskExecutor().execute(() -> {
             try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
 
-                Brand brand = jsonTo(parser);
+                Brand brand = toBrand(parser);
 
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
                         "{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand)));
@@ -171,7 +172,7 @@ public class BrandService {
         return HttpResponse.of(future);
     }
 
-    private Brand jsonTo(JsonParser parser) throws IOException, URISyntaxException {
+    private Brand toBrand(JsonParser parser) throws IOException, URISyntaxException {
         String name = null, alias = null, story = null;
         URL logo = null, homepage = null;
         Year since = null;
@@ -229,12 +230,13 @@ public class BrandService {
             LOGGER.error("The process error", e);
             //System.out.println(e);
         }
-        List<Command> commands = new ArrayList<>();
+        BrandUpdateCommand command = new BrandUpdateCommand(id);
         if (name != null || alias != null)
-            commands.add(new BrandRenameCommand(id, name, alias));
+            command.setName(name, alias);
         if (story != null || homepage != null || logo != null || since != null)
-            commands.add(new BrandChangeAboutCommand(id, logo, homepage, since, story));
-        app.handle(commands);
+            command.setAbout(logo, homepage, since, story);
+        Handler<BrandUpdateCommand, Brand> handler = new BrandUpdateHandler();
+        Brand brand = handler.execute(command);
     }
 
     @Delete("/brands/:id")

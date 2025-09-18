@@ -52,8 +52,16 @@ public class BrandCreateHandler implements Handler<BrandCreateCommand, Brand> {
     }
 
     @Override
-    public boolean undo() {
+    public void undo(long commandId) {
+        /*
+        //使用领域事件重放,原因是不需要保存命令前的状态
+          // 重放事件重建状态
+        Account from = eventStore.rebuild(cmd.accountId);
+        // 添加补偿事件
+        from.apply(new TransferReversedEvent(cmd.originalTransferId));
+        // 保存新事件
+        eventStore.save(from);
+         */
         repository.remove(id);
-        return true;
     }
 }

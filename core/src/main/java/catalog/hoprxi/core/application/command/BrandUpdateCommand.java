@@ -28,7 +28,7 @@ import java.time.Year;
  * @version 0.0.1 builder 2025/9/11
  */
 
-public class BrandUpdateCommand implements Command<Brand>{
+public class BrandUpdateCommand implements Command<Brand> {
     private long id;
     private String name;
     private String alias;
@@ -38,6 +38,58 @@ public class BrandUpdateCommand implements Command<Brand>{
     private URL homepage;
 
     public BrandUpdateCommand(long id) {
+        setId(id);
+    }
+
+    public BrandUpdateCommand(long id, String name, String alias, URL logo, Year since, String story, URL homepage) {
+        setId(id);
+        this.name = name;
+        this.alias = alias;
+        this.logo = logo;
+        this.since = since;
+        this.story = story;
+        this.homepage = homepage;
+    }
+
+    private void setId(long id) {
+        if (id < 0) throw new IllegalArgumentException("id is ");
         this.id = id;
+    }
+
+    public void setName(String name, String alias) {
+        this.name = name;
+    }
+
+
+    public void setAbout(URL logo, URL homepage, Year since, String story) {
+        this.logo = logo;
+    }
+
+    public long id() {
+        return id;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public String alias() {
+        return alias;
+    }
+
+    public URL logo() {
+        return logo;
+    }
+
+    public Year since() {
+        return since;
+    }
+
+    public String story() {
+        return story;
+    }
+
+    public URL homepage() {
+        return homepage;
     }
 }

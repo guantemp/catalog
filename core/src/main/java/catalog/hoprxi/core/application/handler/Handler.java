@@ -19,8 +19,6 @@ package catalog.hoprxi.core.application.handler;
 
 import catalog.hoprxi.core.application.command.Command;
 
-import java.net.MalformedURLException;
-
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
@@ -32,5 +30,11 @@ public interface Handler<T extends Command<R>, R> {
      */
     R execute(T command);
 
-    boolean undo();
+    default void undo(long commandId) {
+        throw new UnsupportedOperationException("Not unsupported");
+    }
+
+    default void redo(long commandId) {
+        throw new UnsupportedOperationException("Not unsupported");
+    }
 }

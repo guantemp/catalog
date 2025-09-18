@@ -35,9 +35,4 @@ public class BrandDeleteHandler implements Handler<BrandDeleteCommand, Boolean> 
         repository.remove(command.id());
         return true;
     }
-
-    @Override
-    public boolean undo() {
-        return false;
-    }
 }

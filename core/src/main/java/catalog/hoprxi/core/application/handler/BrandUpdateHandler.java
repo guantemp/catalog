@@ -16,28 +16,38 @@
 
 package catalog.hoprxi.core.application.handler;
 
-import catalog.hoprxi.core.application.command.BrandCreateCommand;
+
+import catalog.hoprxi.core.application.command.BrandUpdateCommand;
+import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2025-09-12
+ * @version 0.0.1 builder 2025/9/17
  */
-public class BrandHandler implements Handler<BrandCreateCommand, Brand> {
 
+public class BrandUpdateHandler implements Handler<BrandUpdateCommand, Brand> {
     private final BrandRepository repository = new PsqlBrandRepository();
-
+    private Brand oldBrand;
 
     @Override
-    public Brand execute(BrandCreateCommand command) {
-        return null;
+    public Brand execute(BrandUpdateCommand command) {
+        Brand brand = repository.find(command.id());
+        oldBrand = brand;
+        if (command.name() != null || command.alias() != null)
+            brand.rename(new Name(command.name(), command.alias()));
+        if (command.story() != null || command.homepage() != null || command.logo() != null || command.since() != null)
+            brand.changeAbout(new AboutBrand(command.homepage(), command.logo(), command.since(), command.story()));
+        repository.save(brand);
+        return brand;
     }
 
     @Override
-    public boolean undo() {
-        return false;
+    public void undo(long commandId) {
+        repository.save(oldBrand);
     }
 }

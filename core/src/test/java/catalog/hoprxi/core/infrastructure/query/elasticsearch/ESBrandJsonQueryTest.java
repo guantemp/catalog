@@ -46,7 +46,7 @@ public class ESBrandJsonQueryTest {
 
 
     @Test(priority = 2, invocationCount = 1, threadPoolSize = 1, expectedExceptions = SearchException.class)
-    public void testFind() {
+    public void testJsonQuery() {
         String w = jsonQuery.query(495651176959596552l);
         System.out.println(w);
         System.out.println(w.length());
@@ -59,7 +59,7 @@ public class ESBrandJsonQueryTest {
     }
 
     @Test(priority = 1, invocationCount = 1, threadPoolSize = 1, expectedExceptions = SearchException.class)
-    public void testFind1() throws IOException {
+    public void testFind() throws IOException {
         InputStream is = query.find(495651176959596552l);
         System.out.println("id查询（过滤）：");
         String s = inputStreamToString(is);
@@ -98,7 +98,7 @@ public class ESBrandJsonQueryTest {
     }
 
     @Test(priority = 1)
-    public void testSearchAll() {
+    public void testJsonQueryAll() {
         System.out.println(jsonQuery.query(100, 5, null));
         System.out.println(jsonQuery.query(100, 5, SortField._NAME));
         System.out.println(jsonQuery.query(0, 256, SortField._ID));
@@ -107,17 +107,8 @@ public class ESBrandJsonQueryTest {
         System.out.println(jsonQuery.query("", 8, "62078807563681609", SortField.ID));
     }
 
-
-
-    @Test
-    public void testFindByName() {
-        System.out.println(jsonQuery.query("天", 0, 20, null));
-        System.out.println(jsonQuery.query("白萝卜", 10, 5, null));
-        System.out.println(jsonQuery.query("天", 0, 20, SortField.NAME));
-    }
-
-    @Test
-    public void testFindByName1() throws IOException {
+    @Test(priority =3)
+    public void testSearchName() throws IOException {
         InputStream is = query.search("天", 0, 20);
         String s = inputStreamToString(is);
         System.out.println(s);
@@ -141,5 +132,12 @@ public class ESBrandJsonQueryTest {
             }
         }
         return sb.toString();
+    }
+
+    @Test(priority = 3)
+    public void testJsonQueryName() {
+        System.out.println(jsonQuery.query("天", 0, 20, null));
+        System.out.println(jsonQuery.query("白萝卜", 10, 5, null));
+        System.out.println(jsonQuery.query("天", 0, 20, SortField.NAME));
     }
 }

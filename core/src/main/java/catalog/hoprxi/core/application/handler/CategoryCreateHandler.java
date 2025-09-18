@@ -39,10 +39,4 @@ public class CategoryCreateHandler implements Handler<CategoryCreateCommand, Str
         repository.save(category);
         return null;
     }
-
-    @Override
-    public boolean undo() {
-        //final CategoryRepository repository = new ArangoDBCategoryRepository("catalog");
-        return true;
-    }
 }
