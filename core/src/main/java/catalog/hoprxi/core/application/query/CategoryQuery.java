@@ -16,58 +16,29 @@
 
 package catalog.hoprxi.core.application.query;
 
-import catalog.hoprxi.core.application.view.CategoryView;
+import java.io.InputStream;
 
-/***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2022-10-20
- */
 public interface CategoryQuery {
     /**
-     * @return all root
+     *
+     * @return category root node
      */
-    CategoryView[] root();
+    InputStream root();
 
     /**
-     * @param id
-     * @return category key is id
+     *
+     * @param id category id
+     * @return category where id is correct
      */
-    CategoryView query(long id);
+    InputStream find(long id) throws SearchException;
 
-    /**
-     * @param id
-     * @return
-     */
-    CategoryView[] children(long id);
+    InputStream children(long id);
 
-    /**
-     * @param id
-     * @return descendants
-     */
-    CategoryView[] descendants(long id);
+    InputStream descendants(long id);
 
-    /**
-     * @param regularExpression
-     * @return
-     */
-    CategoryView[] queryByName(String regularExpression);
+    InputStream search(String key);
 
-    /**
-     * @param id
-     * @return
-     */
-    CategoryView[] siblings(long id);
+    InputStream searchSiblings(long id);
 
-    /**
-     * @param id
-     * @return
-     */
-    CategoryView[] path(long id);
-
-    /**
-     * @param id
-     * @return
-     */
-    int depth(long id);
+    InputStream path(long id);
 }

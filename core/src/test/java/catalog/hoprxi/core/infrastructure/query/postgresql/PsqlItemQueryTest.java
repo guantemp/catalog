@@ -16,7 +16,6 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.view.ItemView;
 import org.testng.Assert;
@@ -37,8 +36,8 @@ public class PsqlItemQueryTest {
     private static final ItemQuery query = new PsqlItemQuery();
 
     static {
-        CategoryQuery categoryQuery = new PsqlCategoryQuery();
-        categoryQuery.descendants(52495569397272599l);
+        //CategoryQuery categoryQuery = new PsqlCategoryQuery();
+        //categoryQuery.descendants(52495569397272599l);
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1)

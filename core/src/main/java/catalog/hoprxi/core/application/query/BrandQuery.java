@@ -66,7 +66,7 @@ public interface BrandQuery {
     InputStream search(String name, int size, String searchAfter, SortField sortField);
 
     default InputStream search(String name,int size, String searchAfter) {
-        return search(null, size, searchAfter, SortField._ID);
+        return search(name, size, searchAfter, SortField._ID);
     }
 
     default InputStream search(int size, String searchAfter, SortField sortField) {

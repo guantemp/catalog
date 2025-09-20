@@ -17,11 +17,9 @@
 package catalog.hoprxi.core.domain;
 
 
-import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
-import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQuery;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -32,7 +30,7 @@ import com.typesafe.config.ConfigFactory;
  */
 public class CategoryValidatorService {
     private static CategoryRepository repository;
-    private static CategoryQuery query;
+
 
     static {
         Config config = ConfigFactory.load("database");
@@ -42,7 +40,7 @@ public class CategoryValidatorService {
             case "psql":
             case "postgresql":
                 repository = new PsqlCategoryRepository();
-                query = new PsqlCategoryQuery();
+
                 break;
 
         }

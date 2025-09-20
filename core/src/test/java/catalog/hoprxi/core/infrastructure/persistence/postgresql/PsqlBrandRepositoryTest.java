@@ -41,7 +41,7 @@ public class PsqlBrandRepositoryTest {
                 new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "slave.tooo.top:5432:P$Qwe123465Pg"});
     }
 
-    private static BrandRepository repository = new PsqlBrandRepository();
+    private static final BrandRepository repository = new PsqlBrandRepository();
 
     @BeforeClass
     public void beforeClass() throws MalformedURLException {

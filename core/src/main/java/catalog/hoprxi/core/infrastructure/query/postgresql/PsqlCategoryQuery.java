@@ -16,7 +16,6 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.DataSourceUtil;
@@ -41,7 +40,7 @@ import java.util.List;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-10-20
  */
-public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
+public class PsqlCategoryQuery implements  DomainEventSubscriber {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlCategoryQuery.class);
     private static Tree<CategoryView>[] trees;
     private static Constructor<Name> nameConstructor;
@@ -59,7 +58,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
         root();
     }
 
-    @Override
+
     public CategoryView[] root() {
         if (trees != null) {
             CategoryView[] categoryViews = new CategoryView[trees.length];
@@ -87,7 +86,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
         }
     }
 
-    @Override
+
     public CategoryView query(long id) {
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> t : trees) {
@@ -128,7 +127,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
     }
 
 
-    @Override
+
     public CategoryView[] children(long id) {
         CategoryView[] children = new CategoryView[0];
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
@@ -159,7 +158,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
         }
     }
 
-    @Override
+
     public CategoryView[] descendants(long id) {
         CategoryView[] descendants = new CategoryView[0];
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
@@ -196,7 +195,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
         }
     }
 
-    @Override
+
     public CategoryView[] queryByName(String regularExpression) {
         List<CategoryView> categoryViewList = new ArrayList<>();
         try (Connection connection = DataSourceUtil.getConnection()) {
@@ -219,7 +218,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
         return categoryViewList.toArray(new CategoryView[0]);
     }
 
-    @Override
+
     public CategoryView[] siblings(long id) {
         CategoryView[] siblings = new CategoryView[0];
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
@@ -232,7 +231,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
         return siblings;
     }
 
-    @Override
+
     public CategoryView[] path(long id) {
         CategoryView[] path = new CategoryView[0];
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
@@ -244,7 +243,7 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
         return path;
     }
 
-    @Override
+
     public int depth(long id) {
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
         for (Tree<CategoryView> tree : trees) {
@@ -254,12 +253,12 @@ public class PsqlCategoryQuery implements CategoryQuery, DomainEventSubscriber {
         return 0;
     }
 
-    @Override
+
     public void handleEvent(DomainEvent domainEvent) {
 
     }
 
-    @Override
+
     public Class subscribedToEventType() {
         return null;
     }
