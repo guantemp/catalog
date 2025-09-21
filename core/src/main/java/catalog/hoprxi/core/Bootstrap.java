@@ -110,7 +110,7 @@ public class Bootstrap {
 
         //添加文档服务
         sb.serviceUnder("/docs", DocService.builder()
-                .exampleRequests("/v1/brands", "query")
+                //.exampleRequests("/v1/brands", "query")
                 .build());
         //ssl
         //sb.https(8443).tls(new File("certificate.crt"), new File("private.key"), "myPassphrase");

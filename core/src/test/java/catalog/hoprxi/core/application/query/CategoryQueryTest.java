@@ -99,6 +99,9 @@ public class CategoryQueryTest {
         is = query.search("oil");
         s = inputStreamToString(is);
         System.out.println("Search:\n" + s);
+        is = query.search("oil",1,2);
+        s = inputStreamToString(is);
+        System.out.println("Search:\n" + s);
     }
 
     @Test

@@ -49,10 +49,10 @@ public class CategoryAppService {
 
     public Category create(CategoryCreateCommand command) {
         Objects.requireNonNull(command, "command required");
-        long parentId = command.getParentId();
+        long parentId = command.parentId();
         Category category = parentId == 0 ?
-                Category.root(repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo())
-                : new Category(command.getParentId(), repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
+                Category.root(repository.nextIdentity(), new Name(command.name(), command.alias()), command.description(), command.logo())
+                : new Category(command.parentId(), repository.nextIdentity(), new Name(command.name(), command.alias()), command.description(), command.logo());
         repository.save(category);
         return category;
     }

@@ -162,7 +162,7 @@ public class BrandService {
                         "{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand)));
             } catch (Exception e) {
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                        "{\"status\":500,\"code\":500,\"message\":\"Can't create a area,cause by {}\"}", e)));
+                        "{\"status\":500,\"code\":500,\"message\":\"Can't create a brand,cause by {}\"}", e)));
             }
         });
         return HttpResponse.of(future);

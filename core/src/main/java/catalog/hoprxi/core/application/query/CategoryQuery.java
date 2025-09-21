@@ -20,13 +20,11 @@ import java.io.InputStream;
 
 public interface CategoryQuery {
     /**
-     *
      * @return category root node
      */
     InputStream root();
 
     /**
-     *
      * @param id category id
      * @return category where id is correct
      */
@@ -36,7 +34,12 @@ public interface CategoryQuery {
 
     InputStream descendants(long id);
 
-    InputStream search(String key);
+    InputStream search(String key, int offset, int limit);
+
+    default InputStream search(String key) {
+        return this.search(key, 0, 64);
+    }
+
 
     InputStream searchSiblings(long id);
 

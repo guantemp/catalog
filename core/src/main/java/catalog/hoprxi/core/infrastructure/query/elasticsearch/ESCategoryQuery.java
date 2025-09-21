@@ -250,7 +250,6 @@ public class ESCategoryQuery implements CategoryQuery {
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
         }
-        //System.out.println(writer.getBuffer().capacity());
         return writer.toString();
     }
 
@@ -326,25 +325,26 @@ public class ESCategoryQuery implements CategoryQuery {
     }
 
     @Override
-    public InputStream search(String key) {
+    public InputStream search(String key, int offset, int limit) {
         try (RestClient client = BUILDER.build()) {
             Request request = new Request("GET", "/category/_search");
             request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(this.writeKeyJsonEntity(key));
+            request.setJsonEntity(this.writeKeyJsonEntity(key, offset, limit));
             Response response = client.performRequest(request);
             return this.rebuild(response.getEntity().getContent());
         } catch (IOException e) {
-            LOGGER.debug("No search was found for anything resembling name {} category ", key, e);
-            throw new SearchException(String.format("No search was found for anything resembling name %s category", key), e);
+            LOGGER.debug("No search was found for anything resembling key {} category ", key, e);
+            throw new SearchException(String.format("No search was found for anything resembling key %s category", key), e);
         }
     }
 
-    private String writeKeyJsonEntity(String key) {
+    private String writeKeyJsonEntity(String key, int offset, int limit) {
         Objects.requireNonNull(key, "key is required");
         StringWriter writer = new StringWriter(128);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
-            generator.writeNumberField("size", MAX_SIZE);
+            generator.writeNumberField("from", offset);
+            generator.writeNumberField("size", limit);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
             generator.writeObjectFieldStart("filter");

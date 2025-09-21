@@ -28,15 +28,15 @@ import java.util.StringJoiner;
  * @version 0.0.1 2019-05-14
  */
 public class BrandCreateCommand implements Command<Brand> {
-    private String name;
-    private String alias;
-    private URL logo;
-    private Year since;
-    private String story;
-    private URL homepage;
+    private final String name;
+    private final String alias;
+    private final URL logo;
+    private final Year since;
+    private final String story;
+    private final URL homepage;
 
     public BrandCreateCommand(String name, String alias, URL homepage, URL logo, Year since, String story) {
-        setName(name);
+        this.name = name;
         this.alias = alias;
         this.logo = logo;
         this.since = since;
@@ -44,52 +44,28 @@ public class BrandCreateCommand implements Command<Brand> {
         this.homepage = homepage;
     }
 
-    public String getName() {
+    public String name() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public URL getLogo() {
+    public URL logo() {
         return logo;
     }
 
-    public void setLogo(URL logo) {
-        this.logo = logo;
-    }
-
-    public Year getSince() {
+    public Year since() {
         return since;
     }
 
-    public void setSince(Year since) {
-        this.since = since;
-    }
-
-    public String getStory() {
+    public String story() {
         return story;
     }
 
-    public void setStory(String story) {
-        this.story = story;
-    }
-
-    public URL getHomepage() {
+    public URL homepage() {
         return homepage;
     }
 
-    public void setHomepage(URL homepage) {
-        this.homepage = homepage;
-    }
-
-    public String getAlias() {
+    public String alias() {
         return alias;
-    }
-
-    public void setAlias(String alias) {
-        this.alias = alias;
     }
 
     @Override

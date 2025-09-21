@@ -22,21 +22,18 @@ import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
 
-import java.util.Objects;
-
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2022-06-24
  */
-public class CategoryCreateHandler implements Handler<CategoryCreateCommand, String> {
+public class CategoryCreateHandler implements Handler<CategoryCreateCommand, Category> {
+    private final CategoryRepository repository = new PsqlCategoryRepository();
 
     @Override
-    public String execute(CategoryCreateCommand command) {
-        Objects.requireNonNull(command, "command required");
-        final CategoryRepository repository = new PsqlCategoryRepository();
-        Category category = new Category(command.getParentId(), repository.nextIdentity(), new Name(command.getName(), command.getAlias()), command.getDescription(), command.getLogo());
+    public Category execute(CategoryCreateCommand command) {
+        Category category = new Category(command.parentId(), repository.nextIdentity(), new Name(command.name(), command.alias()), command.description(), command.logo());
         repository.save(category);
-        return null;
+        return category;
     }
 }

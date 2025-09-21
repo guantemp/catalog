@@ -16,6 +16,8 @@
 
 package catalog.hoprxi.core.application.command;
 
+import catalog.hoprxi.core.domain.model.category.Category;
+
 import java.net.URI;
 import java.util.Objects;
 
@@ -24,82 +26,42 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-06-24
  */
-public class CategoryCreateCommand implements Command<String> {
+public class CategoryCreateCommand implements Command<Category> {
     private long parentId;
-    private String name;
-    private String alias;
-    private URI logo;
-    private String description;
+    private final String name;
+    private final String alias;
+    private final URI logo;
+    private final String description;
 
     public CategoryCreateCommand(long parentId, String name, String alias, String description, URI logo) {
-        this.parentId = parentId;
+        setParentId(parentId);
         this.name = Objects.requireNonNull(name, "name required").trim();
         this.alias = alias;
         this.logo = logo;
         this.description = description;
     }
 
-    public long getParentId() {
+    public long parentId() {
         return parentId;
     }
 
-    public void setParentId(long parentId) {
+    private void setParentId(long parentId) {
         this.parentId = parentId;
     }
 
-    public String getName() {
+    public String name() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getAlias() {
+    public String alias() {
         return alias;
     }
 
-    public void setAlias(String alias) {
-        this.alias = alias;
-    }
-
-    public URI getLogo() {
+    public URI logo() {
         return logo;
     }
 
-    public void setLogo(URI logo) {
-        this.logo = logo;
-    }
-
-    public String getDescription() {
+    public String description() {
         return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CategoryCreateCommand)) return false;
-
-        CategoryCreateCommand that = (CategoryCreateCommand) o;
-
-        if (parentId != that.parentId) return false;
-        if (!Objects.equals(name, that.name)) return false;
-        if (!Objects.equals(alias, that.alias)) return false;
-        if (!Objects.equals(logo, that.logo)) return false;
-        return Objects.equals(description, that.description);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (int) (parentId ^ (parentId >>> 32));
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (alias != null ? alias.hashCode() : 0);
-        result = 31 * result + (logo != null ? logo.hashCode() : 0);
-        result = 31 * result + (description != null ? description.hashCode() : 0);
-        return result;
     }
 }
