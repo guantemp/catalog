@@ -29,9 +29,9 @@ import com.typesafe.config.ConfigFactory;
  * @version 0.0.3 2022-09-21
  */
 public class CategoryValidatorService {
-    private static CategoryRepository repository;
+    private static final CategoryRepository repository= new PsqlCategoryRepository();
 
-
+/*
     static {
         Config config = ConfigFactory.load("database");
         String provider = config.hasPath("provider") ? config.getString("provider").toLowerCase() : "postgresql";
@@ -45,11 +45,12 @@ public class CategoryValidatorService {
 
         }
     }
+ */
 
     public static boolean isCategoryExist(long categoryId) {
         if (categoryId == Category.UNDEFINED.id()) return true;
         Category category = repository.find(categoryId);
-        return category != null;
+        return category == null;
     }
 
     public static boolean isCurrentCategoryDescendant(long currentId, long descendantId) {

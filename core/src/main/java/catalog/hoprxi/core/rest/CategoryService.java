@@ -43,6 +43,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -59,6 +60,7 @@ public class CategoryService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Category");
 
+    private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
     private static final CategoryQuery QUERY = new ESCategoryQuery();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 

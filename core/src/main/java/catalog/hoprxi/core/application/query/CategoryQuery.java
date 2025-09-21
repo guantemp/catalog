@@ -40,7 +40,6 @@ public interface CategoryQuery {
         return this.search(key, 0, 64);
     }
 
-
     InputStream searchSiblings(long id);
 
     InputStream path(long id);

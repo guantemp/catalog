@@ -292,7 +292,7 @@ public class PsqlCategoryRepositoryTest {
 
         repository.remove(" 1");
 
-            repository.remove(49581450261846059l);
+        repository.remove(49581450261846059l);
         repository.remove(49581450261846058l);
         repository.remove(49581450261846057l);
         repository.remove(49581450261846043l);

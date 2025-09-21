@@ -97,7 +97,7 @@ public class Item {
     }
 
     private void setCategoryId(long categoryId) {
-        if (categoryId != Category.UNDEFINED.id() && !CategoryValidatorService.isCategoryExist(categoryId))
+        if (categoryId != Category.UNDEFINED.id() && CategoryValidatorService.isCategoryExist(categoryId))
             throw new IllegalArgumentException("categoryId isn't effective");
         this.categoryId = categoryId;
     }

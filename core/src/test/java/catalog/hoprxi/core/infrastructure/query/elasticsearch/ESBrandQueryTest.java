@@ -33,7 +33,7 @@ import java.nio.charset.StandardCharsets;
  * @since JDK8.0
  * @version 0.0.1 builder 2024-06-15
  */
-public class ESBrandJsonQueryTest {
+public class ESBrandQueryTest {
     static {
         //String[] entyies = new String[]{"125.68.186.195:9200:P$Qwe123465El", "125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "https://slave.tooo.top:9200"};
         //Bootstrap.loadSecretKey("keystore.jks", "Qwe123465", new HashSet<>(Arrays.asList(entyies)));

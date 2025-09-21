@@ -30,8 +30,8 @@ import java.util.List;
  * @version 0.0.2 builder 2025-03-01
  */
 public class BrandValidatorService {
-    private static BrandRepository repository;
-
+    private static BrandRepository repository= new PsqlBrandRepository();
+/*
     static {
         Config config = ConfigFactory.load("databases");
         List<? extends Config> databases = config.getConfigList("databases");
@@ -45,6 +45,8 @@ public class BrandValidatorService {
             }
         }
     }
+
+ */
 
     public static boolean isBrandExist(long id) {
         if (Brand.UNDEFINED.id() == id)

@@ -14,9 +14,10 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.query;
+package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESCategoryQuery;
+import catalog.hoprxi.core.application.query.CategoryQuery;
+import catalog.hoprxi.core.application.query.SearchException;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
@@ -26,7 +27,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
-public class CategoryQueryTest {
+import static org.testng.Assert.*;
+
+public class ESCategoryQueryTest {
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "129.28.29.105:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
@@ -130,4 +133,5 @@ public class CategoryQueryTest {
         }
         return sb.toString();
     }
+
 }

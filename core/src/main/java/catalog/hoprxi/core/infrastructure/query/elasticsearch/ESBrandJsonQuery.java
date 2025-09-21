@@ -36,6 +36,7 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.2 builder 2025-03-01
  */
+@Deprecated
 public class ESBrandJsonQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Brand");
     private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));

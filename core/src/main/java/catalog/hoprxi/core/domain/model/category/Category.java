@@ -126,7 +126,7 @@ public class Category {
     }
 
     private void setIdAndParentId(long parentId, long id) {
-        if (id != parentId && !CategoryValidatorService.isCategoryExist(parentId))
+        if (id != parentId && CategoryValidatorService.isCategoryExist(parentId))
             throw new InvalidCategoryIdException("parent id not exist");
         this.id = id;
         this.parentId = parentId;
@@ -195,7 +195,7 @@ public class Category {
     public void moveTo(long movedId) {
         if (movedId == UNDEFINED.id)
             throw new IllegalArgumentException("Undefined classes do not allow subcategories");
-        if (!CategoryValidatorService.isCategoryExist(movedId))
+        if (CategoryValidatorService.isCategoryExist(movedId))
             throw new InvalidCategoryIdException("move to id not exist");
         if (CategoryValidatorService.isCurrentCategoryDescendant(id, movedId))
             throw new InvalidCategoryIdException("Can’t move to its descendant node");
