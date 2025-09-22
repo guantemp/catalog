@@ -18,7 +18,7 @@ package catalog.hoprxi.core.application.command;
 
 import catalog.hoprxi.core.domain.model.category.Category;
 
-import java.net.URI;
+import java.net.URL;
 import java.util.Objects;
 
 /***
@@ -30,10 +30,10 @@ public class CategoryCreateCommand implements Command<Category> {
     private long parentId;
     private final String name;
     private final String alias;
-    private final URI logo;
+    private final URL logo;
     private final String description;
 
-    public CategoryCreateCommand(long parentId, String name, String alias, String description, URI logo) {
+    public CategoryCreateCommand(long parentId, String name, String alias, String description, URL logo) {
         setParentId(parentId);
         this.name = Objects.requireNonNull(name, "name required").trim();
         this.alias = alias;
@@ -57,7 +57,7 @@ public class CategoryCreateCommand implements Command<Category> {
         return alias;
     }
 
-    public URI logo() {
+    public URL logo() {
         return logo;
     }
 

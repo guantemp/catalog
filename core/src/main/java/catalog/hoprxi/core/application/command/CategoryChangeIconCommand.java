@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.application.command;
 
-import java.net.URI;
+import java.net.URL;
 import java.util.Objects;
 
 /***
@@ -26,14 +26,14 @@ import java.util.Objects;
  */
 public class CategoryChangeIconCommand implements Command {
     private long id;
-    private URI icon;
+    private URL icon;
 
-    public CategoryChangeIconCommand(long id, URI icon) {
+    public CategoryChangeIconCommand(long id, URL icon) {
         this.id = id;
         this.icon = icon;
     }
 
-    public URI icon() {
+    public URL icon() {
         return icon;
     }
 

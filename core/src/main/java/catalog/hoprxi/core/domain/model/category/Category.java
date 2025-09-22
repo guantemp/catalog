@@ -21,7 +21,7 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.util.DomainRegistry;
 
-import java.net.URI;
+import java.net.URL;
 import java.util.Objects;
 import java.util.StringJoiner;
 
@@ -31,7 +31,7 @@ import java.util.StringJoiner;
  * @version 0.0.3 builder 2022-08-09
  */
 public class Category {
-    public static final Category UNDEFINED = new Category(-1l, -1l, new Name(Label.CATEGORY_UNDEFINED, "undefined"), "undefined category") {
+    public static final Category UNDEFINED = new Category(-1L, -1L, new Name(Label.CATEGORY_UNDEFINED, "undefined"), "undefined category") {
         @Override
         public void rename(String newName, String newAlias) {
             throw new UnsupportedOperationException("");
@@ -43,7 +43,7 @@ public class Category {
         }
 
         @Override
-        public void changeIcon(URI icon) {
+        public void changeIcon(URL icon) {
             throw new UnsupportedOperationException("");
         }
 
@@ -58,7 +58,7 @@ public class Category {
     private long id;
     private Name name;
     private long parentId;
-    private URI icon;
+    private URL icon;
 
     public Category(long parentId, long id, Name name) {
         this(parentId, id, name, null);
@@ -76,7 +76,7 @@ public class Category {
         this(parentId, id, new Name(name), description);
     }
 
-    public Category(long parentId, long id, String name, String description, URI icon) {
+    public Category(long parentId, long id, String name, String description, URL icon) {
         this(parentId, id, Name.valueOf(name), description, icon);
     }
 
@@ -91,7 +91,7 @@ public class Category {
      *                                    if description not null and length range not in [0-512]
      * @throws InvalidCategoryIdException if parentId  not exists
      */
-    public Category(long parentId, long id, Name name, String description, URI icon) {
+    public Category(long parentId, long id, Name name, String description, URL icon) {
         setIdAndParentId(parentId, id);
         setName(name);
         setDescription(description);
@@ -115,7 +115,7 @@ public class Category {
         return new Category(id, id, name, description);
     }
 
-    public static Category root(long id, Name name, String description, URI icon) {
+    public static Category root(long id, Name name, String description, URL icon) {
         return new Category(id, id, name, description, icon);
     }
 
@@ -157,7 +157,7 @@ public class Category {
         return name;
     }
 
-    public URI icon() {
+    public URL icon() {
         return icon;
     }
 
@@ -185,7 +185,7 @@ public class Category {
     /**
      * @param icon
      */
-    public void changeIcon(URI icon) {
+    public void changeIcon(URL icon) {
         if ((icon == null && this.icon != null) || (icon != null && !icon.equals(this.icon))) {
             this.icon = icon;
             DomainRegistry.domainEventPublisher().publish(new CategoryIconChanged(id, icon));

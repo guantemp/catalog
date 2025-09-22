@@ -19,6 +19,7 @@ package catalog.hoprxi.core.application.handler;
 import catalog.hoprxi.core.application.command.CategoryCreateCommand;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.domain.model.category.CategoryCreated;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
 
@@ -32,8 +33,12 @@ public class CategoryCreateHandler implements Handler<CategoryCreateCommand, Cat
 
     @Override
     public Category execute(CategoryCreateCommand command) {
-        Category category = new Category(command.parentId(), repository.nextIdentity(), new Name(command.name(), command.alias()), command.description(), command.logo());
+        Name name = new Name(command.name(), command.alias());
+        Category category = new Category(command.parentId(), repository.nextIdentity(), name, command.description(), command.logo());
         repository.save(category);
+        //领域事件
+        CategoryCreated event = new CategoryCreated(category.parentId(), category.id(), category.name().name(), category.name().alias(),
+                category.icon(), category.description());
         return category;
     }
 }

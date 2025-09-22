@@ -178,16 +178,17 @@
                             <resources>
                                 <resource>
                                     <directory>src/main/resources</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                                <!--
+                                <resource>
+                                    <directory>src/main/java/catalog/hoprxi/core/infrastructure/i18n</directory>
                                     <includes>
-                                        <include>**/*.conf</include>
                                         <include>**/*.properties</include>
-                                        <include>**/*.json</include>
-                                        <include>**/*.xml</include>
-                                        <include>**/*.jks</include>
-                                        <include>**/*.p12</include>
                                     </includes>
                                     <filtering>true</filtering>
                                 </resource>
+                                -->
                             </resources>
                             <encoding>UTF-8</encoding>
                         </configuration>

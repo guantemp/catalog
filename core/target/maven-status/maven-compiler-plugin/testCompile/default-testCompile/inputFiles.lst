@@ -1,10 +1,9 @@
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\domain\model\barcode\BarcodeGenerateServicesTest.java
-E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\elasticsearch\ESCategoryJsonQueryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlItemRepositoryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\PsqlSetupTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\elasticsearch\ESCategoryQueryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlBrandRepositoryTest.java
-E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\elasticsearch\ESBrandJsonQueryTest.java
-E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\postgresql\PsqlBrandQueryTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\elasticsearch\ESBrandQueryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\postgresql\PsqlItemQueryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\AppTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\batch\PsqlItemImportWithDisruptorTest.java

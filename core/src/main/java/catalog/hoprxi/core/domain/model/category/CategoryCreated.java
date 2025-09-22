@@ -16,44 +16,29 @@
 
 package catalog.hoprxi.core.domain.model.category;
 
-import event.hoprxi.domain.model.DomainEvent;
 
 import java.net.URL;
-import java.time.LocalDateTime;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2022-07-04
+ * @since JDK21
+ * @version 0.0.1 builder 2025/9/22
  */
-public class CategoryIconChanged implements DomainEvent {
-    private final URL icon;
-    private final LocalDateTime occurredOn;
+
+public class CategoryCreated {
+    private final long parentId;
     private final long id;
-    private final int version;
+    private final String name;
+    private final String alias;
+    private final URL logo;
+    private final String description;
 
-    public CategoryIconChanged(long id, URL icon) {
+    public CategoryCreated(long parentId, long id, String name, String alias, URL logo, String description) {
+        this.parentId = parentId;
         this.id = id;
-        this.icon = icon;
-        this.version = 1;
-        this.occurredOn = LocalDateTime.now();
-    }
-
-    public URL icon() {
-        return icon;
-    }
-
-    public long id() {
-        return id;
-    }
-
-    @Override
-    public LocalDateTime occurredOn() {
-        return occurredOn;
-    }
-
-    @Override
-    public int version() {
-        return version;
+        this.name = name;
+        this.alias = alias;
+        this.logo = logo;
+        this.description = description;
     }
 }

@@ -17,9 +17,14 @@
 package catalog.hoprxi.core.rest;
 
 
+import catalog.hoprxi.core.application.command.BrandCreateCommand;
 import catalog.hoprxi.core.application.command.CategoryCreateCommand;
+import catalog.hoprxi.core.application.handler.BrandCreateHandler;
+import catalog.hoprxi.core.application.handler.CategoryCreateHandler;
+import catalog.hoprxi.core.application.handler.Handler;
 import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.query.SearchException;
+import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESCategoryQuery;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -231,8 +236,9 @@ public class CategoryService {
                 }
             }
         }
-        CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(icon));
-        return null;
+        CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(icon).toURL());
+        Handler<CategoryCreateCommand, Category> handler = new CategoryCreateHandler();
+        return handler.execute(command);
     }
 
 }

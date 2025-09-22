@@ -21,6 +21,7 @@ import event.hoprxi.domain.model.DomainEvent;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.Year;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -52,19 +53,6 @@ public class BrandCreated implements DomainEvent {
         this.occurredOn = LocalDateTime.now();
     }
 
-    public BrandCreated(long id, String name, String alias, String mnemonic) {
-        this.name = name;
-        this.alias = alias;
-        this.mnemonic = mnemonic;
-        this.id = id;
-        this.logo = null;
-        this.since = null;
-        this.story = null;
-        this.homePage = null;
-        this.version = 1;
-        this.occurredOn = LocalDateTime.now();
-    }
-
 
     @Override
     public LocalDateTime occurredOn() {
@@ -74,5 +62,66 @@ public class BrandCreated implements DomainEvent {
     @Override
     public int version() {
         return DomainEvent.super.version();
+    }
+
+    public URL logo() {
+        return logo;
+    }
+
+    public Year since() {
+        return since;
+    }
+
+    public String story() {
+        return story;
+    }
+
+    public URL homePage() {
+        return homePage;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public String alias() {
+        return alias;
+    }
+
+    public String mnemonic() {
+        return mnemonic;
+    }
+
+    public long id() {
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BrandCreated that = (BrandCreated) o;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", BrandCreated.class.getSimpleName() + "[", "]")
+                .add("logo=" + logo)
+                .add("since=" + since)
+                .add("story='" + story + "'")
+                .add("homePage=" + homePage)
+                .add("name='" + name + "'")
+                .add("alias='" + alias + "'")
+                .add("mnemonic='" + mnemonic + "'")
+                .add("id=" + id)
+                .add("occurredOn=" + occurredOn)
+                .add("version=" + version)
+                .toString();
     }
 }

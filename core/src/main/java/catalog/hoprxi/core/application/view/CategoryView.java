@@ -18,7 +18,7 @@ package catalog.hoprxi.core.application.view;
 
 import catalog.hoprxi.core.domain.model.Name;
 
-import java.net.URI;
+import java.net.URL;
 import java.util.StringJoiner;
 
 /***
@@ -32,10 +32,10 @@ public class CategoryView {
     private final Name name;
     private String description;
     private long parentId;
-    private URI icon;
+    private URL icon;
     private boolean isLeaf;
 
-    public CategoryView(long parentId, long id, Name name, String description, URI icon, boolean isLeaf) {
+    public CategoryView(long parentId, long id, Name name, String description, URL icon, boolean isLeaf) {
         this.id = id;
         this.description = description;
         this.name = name;
@@ -76,11 +76,11 @@ public class CategoryView {
         this.parentId = parentId;
     }
 
-    public URI getIcon() {
+    public URL getIcon() {
         return icon;
     }
 
-    public void setIcon(URI icon) {
+    public void setIcon(URL icon) {
         this.icon = icon;
     }
 

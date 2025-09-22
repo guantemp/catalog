@@ -44,9 +44,8 @@ public class BrandCreateHandler implements Handler<BrandCreateCommand, Brand> {
         id = brand.id();
         repository.save(brand);
         //领域事件：新建品牌
-        BrandCreated created = new BrandCreated(brand.id(), brand.name().name(), brand.name().mnemonic(), brand.name().alias());
-        if (brand.about() != null)
-            created = new BrandCreated(brand.id(), brand.name().name(), brand.name().mnemonic(), brand.name().alias());
+        BrandCreated created = new BrandCreated(brand.id(), brand.name().name(), brand.name().mnemonic(), brand.name().alias(),
+                command.homepage(), command.logo(), command.since(), command.story());
         DomainRegistry.domainEventPublisher().publish(created);
         return brand;
     }

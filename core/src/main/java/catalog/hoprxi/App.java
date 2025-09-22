@@ -17,7 +17,6 @@
 package catalog.hoprxi;
 
 import catalog.hoprxi.core.rest.ItemServlet;
-import catalog.hoprxi.core.rest.UnitServlet;
 import catalog.hoprxi.core.rest.UploadServlet;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
@@ -55,9 +54,7 @@ public class App {
                 .setContextPath("catalog/core")
                 .setDeploymentName("catalog.war")
                 .addServlets(
-                        Servlets.servlet("unitServlet", UnitServlet.class)
-                                .addMapping("/v1/units"),
-                        //Servlets.servlet("categoryServlet", CategoryServlet.class)
+                                               //Servlets.servlet("categoryServlet", CategoryServlet.class)
                         //.addMapping("/v1/categories/*"),
                         Servlets.servlet("itemServlet", ItemServlet.class)
                                 .addInitParam("database", "arangodb")

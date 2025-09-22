@@ -25,6 +25,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 
 /***
@@ -41,7 +42,7 @@ public class PsqlCategoryRepositoryTest {
     private static final CategoryRepository repository = new PsqlCategoryRepository();
 
     @BeforeClass
-    public void beforeClass() {
+    public void beforeClass() throws MalformedURLException {
         repository.save(Category.UNDEFINED);
         Category root = Category.root(1, new Name("商品类别", "root"), "我的测试分类");
         repository.save(root);
@@ -91,7 +92,7 @@ public class PsqlCategoryRepositoryTest {
         //粮油
         Category grain_oil = new Category(1, 14, new Name("粮油", "grain_oil"), "对谷类、豆类等粮食和油料及其加工成品和半成品的统称");
         repository.save(grain_oil);
-        Category oil = new Category(14, 142, new Name("食用油", "oil"), "指在制作食品过程中使用的，动物或者植物油脂。常温下为液态。", URI.create("https://baike.baidu.com/pic/%E9%A3%9F%E7%94%A8%E6%B2%B9/10955297/1/241f95cad1c8a786c9175e1ce75ede3d70cf3bc7fad0?fromModule=lemma_top-image&ct=single#aid=1&pic=241f95cad1c8a786c9175e1ce75ede3d70cf3bc7fad0"));
+        Category oil = new Category(14, 142, new Name("食用油", "oil"), "指在制作食品过程中使用的，动物或者植物油脂。常温下为液态。", URI.create("https://baike.baidu.com/pic/%E9%A3%9F%E7%94%A8%E6%B2%B9/10955297/1/241f95cad1c8a786c9175e1ce75ede3d70cf3bc7fad0?fromModule=lemma_top-image&ct=single#aid=1&pic=241f95cad1c8a786c9175e1ce75ede3d70cf3bc7fad0").toURL());
         repository.save(oil);
         Category rice_flour = new Category(14, 141, new Name("米/面/杂粮", "rice_flour"));
         repository.save(rice_flour);
@@ -126,9 +127,9 @@ public class PsqlCategoryRepositoryTest {
         repository.save(condiment);
         Category sauce = new Category(15, 151, new Name("调味汁", "sauce"));
         repository.save(sauce);
-        Category vinegar = new Category(151, 1512, new Name("醋", " vinegar"), "醋是一种发酵的酸味液态调味品，多由糯米、高粱、大米、玉米、小麦以及糖类和酒类发酵制成。", URI.create("https://baike.baidu.com/pic/%E9%86%8B/319503/0/09fa513d269759ee41fefa71bafb43166c22dfda?fr=lemma&fromModule=lemma_content-image#aid=0&pic=09fa513d269759ee41fefa71bafb43166c22dfda"));
+        Category vinegar = new Category(151, 1512, new Name("醋", " vinegar"), "醋是一种发酵的酸味液态调味品，多由糯米、高粱、大米、玉米、小麦以及糖类和酒类发酵制成。", URI.create("https://baike.baidu.com/pic/%E9%86%8B/319503/0/09fa513d269759ee41fefa71bafb43166c22dfda?fr=lemma&fromModule=lemma_content-image#aid=0&pic=09fa513d269759ee41fefa71bafb43166c22dfda").toURL());
         repository.save(vinegar);
-        Category soy_sauce = new Category(151, 1511, new Name("酱油", "soy_sauce"), "用大豆或脱脂大豆或黑豆、小麦或麸皮，加入水、食盐酿造而成的液体调味品，色泽呈红褐色，有独特酱香，滋味鲜美，有助于促进食欲。", URI.create("https://inews.gtimg.com/newsapp_bt/0/13781122372/1000"));
+        Category soy_sauce = new Category(151, 1511, new Name("酱油", "soy_sauce"), "用大豆或脱脂大豆或黑豆、小麦或麸皮，加入水、食盐酿造而成的液体调味品，色泽呈红褐色，有独特酱香，滋味鲜美，有助于促进食欲。", URI.create("https://inews.gtimg.com/newsapp_bt/0/13781122372/1000").toURL());
         repository.save(soy_sauce);
         Category flavoring = new Category(15, 1514, new Name("调味料", "flavoring"));//ceshi move
         repository.save(flavoring);
@@ -228,7 +229,7 @@ public class PsqlCategoryRepositoryTest {
         repository.save(condiment);
         sauce = new Category(49581450261846035l, 49581450261846040l, new Name("调味汁", "sauce"));
         repository.save(sauce);
-        soy_sauce = new Category(49581450261846040l, 49581450261846041l, new Name("酱油", "soy_sauce"), "用大豆或脱脂大豆或黑豆、小麦或麸皮，加入水、食盐酿造而成的液体调味品，色泽呈红褐色，有独特酱香，滋味鲜美，有助于促进食欲。", URI.create("https://inews.gtimg.com/newsapp_bt/0/13781122372/1000"));
+        soy_sauce = new Category(49581450261846040l, 49581450261846041l, new Name("酱油", "soy_sauce"), "用大豆或脱脂大豆或黑豆、小麦或麸皮，加入水、食盐酿造而成的液体调味品，色泽呈红褐色，有独特酱香，滋味鲜美，有助于促进食欲。", URI.create("https://inews.gtimg.com/newsapp_bt/0/13781122372/1000").toURL());
         repository.save(soy_sauce);
         vinegar = new Category(49581450261846040l, 49581450261846042l, new Name("醋", " vinegar"));
         repository.save(vinegar);
@@ -376,7 +377,7 @@ public class PsqlCategoryRepositoryTest {
     }
 
     @Test(priority = 1, expectedExceptions = InvalidCategoryIdException.class)
-    public void testSave() {
+    public void testSave() throws MalformedURLException {
         Category beer = repository.find(1323);
         System.out.println(beer);
 
@@ -395,7 +396,7 @@ public class PsqlCategoryRepositoryTest {
         Category leisure_food = repository.find(111);
         Assert.assertNotNull(leisure_food);
         leisure_food.changeDescription(null);
-        leisure_food.changeIcon(URI.create("https://gitee.com/static/images/logo-black.svg?t=158106664"));
+        leisure_food.changeIcon(URI.create("https://gitee.com/static/images/logo-black.svg?t=158106664").toURL());
         //System.out.println(leisure_food);
         repository.save(leisure_food);
         leisure_food = repository.find(111);

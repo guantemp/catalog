@@ -18,7 +18,6 @@ package catalog.hoprxi.core.rest;
 
 import catalog.hoprxi.core.application.CategoryAppService;
 import catalog.hoprxi.core.application.command.*;
-import catalog.hoprxi.core.application.query.CategoryJsonQuery;
 import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.InvalidCategoryIdException;
@@ -52,7 +51,7 @@ public class CategoryServlet extends HttpServlet {
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
     private final CategoryAppService app = new CategoryAppService();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-    private static final CategoryJsonQuery QUERY = new ESCategoryJsonQuery();
+    private static final ESCategoryJsonQuery QUERY = new ESCategoryJsonQuery();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -172,7 +171,7 @@ public class CategoryServlet extends HttpServlet {
                 return;
             }
             */
-            CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(icon));
+            CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(icon).toURL());
             resp.setContentType("application/json; charset=UTF-8");
             boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
             if (pretty) generator.useDefaultPrettyPrinter();
@@ -237,7 +236,7 @@ public class CategoryServlet extends HttpServlet {
             if (description != null)
                 commands.add(new CategoryChangeDescriptionCommand(id, description));
             if (icon != null)
-                commands.add(new CategoryChangeIconCommand(id, URI.create(icon)));
+                commands.add(new CategoryChangeIconCommand(id, URI.create(icon).toURL()));
             boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
             if (pretty) generator.useDefaultPrettyPrinter();
             resp.setContentType("application/json; charset=UTF-8");

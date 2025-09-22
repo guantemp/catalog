@@ -86,13 +86,13 @@ public class BrandService {
                 InputStream source = QUERY.find(id);
                 if (pretty) gen.useDefaultPrettyPrinter();
                 this.copyRaw(gen, source);
-                gen.close();
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.wrap(buffer));
-                stream.close();
+
             } catch (IOException e) {
                 handleStreamError(stream, e);
             }
+            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            stream.write(HttpData.wrap(buffer));
+            stream.close();
         });
         return HttpResponse.of(stream);
     }

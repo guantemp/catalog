@@ -27,7 +27,9 @@ import salt.hoprxi.cache.application.Tree;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -75,7 +77,8 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
                 while (rs.next()) {
                     categoryViewList.add(rebuild(rs));
                 }
-            } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
+                     MalformedURLException e) {
                 LOGGER.error("Can't rebuild category", e);
             }
             trees = new Tree[categoryViewList.size()];
@@ -110,18 +113,19 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
                 }
                 return view;
             }
-        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
+                 MalformedURLException e) {
             LOGGER.error("Can't rebuild category with (id = {})", id, e);
         }
         return null;
     }
 
-    private CategoryView rebuild(ResultSet rs) throws SQLException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    private CategoryView rebuild(ResultSet rs) throws SQLException, InvocationTargetException, InstantiationException, IllegalAccessException, MalformedURLException {
         long id = rs.getLong("id");
         long parentId = rs.getLong("parent_id");
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
         String description = rs.getString("description");
-        URI icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri"));
+        URL icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri")).toURL();
         boolean isLeaf = rs.getInt("distance") == 1 ? true : false;
         return new CategoryView(parentId, id, name, description, icon, isLeaf);
     }
@@ -153,7 +157,8 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
                 CategoryView view = rebuild(rs);
                 tree.append(parent, view);
             }
-        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
+                 MalformedURLException e) {
             LOGGER.error("Can't rebuild category view", e);
         }
     }
@@ -190,7 +195,8 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
                 CategoryView view = rebuild(rs);
                 tree.append(CategoryView.identifiableCategoryView(view.getParentId()), view);
             }
-        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
+                 MalformedURLException e) {
             LOGGER.error("Can't rebuild category view", e);
         }
     }
@@ -212,7 +218,8 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
             while (rs.next()) {
                 categoryViewList.add(rebuild(rs));
             }
-        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
+                 MalformedURLException e) {
             LOGGER.error("Can't rebuild category view", e);
         }
         return categoryViewList.toArray(new CategoryView[0]);

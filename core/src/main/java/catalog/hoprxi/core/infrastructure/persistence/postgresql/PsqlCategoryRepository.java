@@ -34,7 +34,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,20 +72,20 @@ public class PsqlCategoryRepository implements CategoryRepository {
         } catch (SQLException e) {
             LOGGER.error("Database error", e);
             throw new SearchException("Database error", e);
-        } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+        } catch (InvocationTargetException | InstantiationException | IllegalAccessException | MalformedURLException e) {
             LOGGER.error("Can't rebuild name", e);
             return null;
         }
     }
 
-    private Category rebuild(ResultSet rs) throws SQLException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    private Category rebuild(ResultSet rs) throws SQLException, InvocationTargetException, InstantiationException, IllegalAccessException, MalformedURLException {
         if (rs.next()) {
             long id = rs.getLong("id");
             if (id == Category.UNDEFINED.id()) return Category.UNDEFINED;
             long parent_id = rs.getLong("parent_id");
             Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
             String description = rs.getString("description");
-            URI icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri"));
+            URL icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri")).toURL();
             return new Category(parent_id, id, name, description, icon);
         }
         return null;
@@ -139,7 +141,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 long parent_id = rs.getLong("parent_id");
                 Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
                 String description = rs.getString("description");
-                URI icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri"));
+                URL icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri")).toURL();
                 categoryList.add(new Category(parent_id, id, name, description, icon));
             }
             return categoryList.toArray(new Category[0]);
@@ -149,6 +151,8 @@ public class PsqlCategoryRepository implements CategoryRepository {
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             LOGGER.error("Can't rebuild name", e);
             return new Category[0];
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -169,7 +173,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                     name.setValue(toJson(category.name()));
                     ps1.setObject(1, name);
                     ps1.setString(2, category.description());
-                    ps1.setString(3, category.icon() == null ? null : category.icon().toASCIIString());
+                    ps1.setString(3, category.icon() == null ? null : category.icon().toExternalForm());
                     ps1.setLong(4, category.id());
                     ps1.executeUpdate();
                 } else {//move to new tree node
@@ -184,7 +188,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                     name.setValue(toJson(category.name()));
                     ps1.setObject(3, name);
                     ps1.setString(4, category.description());
-                    ps1.setString(5, category.icon() == null ? null : category.icon().toASCIIString());
+                    ps1.setString(5, category.icon() == null ? null : category.icon().toExternalForm());
                     ps1.setLong(6, category.id());
                     ps1.executeUpdate();
                 } else {
@@ -220,7 +224,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         StringBuilder updateSql = new StringBuilder("update category set parent_id=").append(category.parentId())
                 .append(",name='").append(toJson(category.name())).append("'")
                 .append(",description='").append(category.description()).append("'")
-                .append(",logo_uri='").append(category.icon() == null ? category.icon() : category.icon().toASCIIString()).append("'")
+                .append(",logo_uri='").append(category.icon() == null ? category.icon() : category.icon().toExternalForm()).append("'")
                 .append(" where id=").append(category.id());
         statement.addBatch(updateSql.toString());
         //原始树中被移动节点（含子节点）后面的节点往前移, 填充空缺位置
@@ -256,7 +260,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
             else insertSql.append((String) null);
             insertSql.append(",");
             if (category.icon() != null)
-                insertSql.append("'").append(category.icon().toASCIIString()).append("'");
+                insertSql.append("'").append(category.icon().toExternalForm()).append("'");
             else insertSql.append((String) null);
             insertSql.append(")");
             //System.out.println(insertSql.toString());

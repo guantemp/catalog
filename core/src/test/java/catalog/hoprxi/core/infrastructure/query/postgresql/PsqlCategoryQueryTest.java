@@ -24,6 +24,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 
 /***
@@ -40,7 +41,7 @@ public class PsqlCategoryQueryTest {
     private static final CategoryRepository repository = new PsqlCategoryRepository();
 
     @BeforeClass
-    public void beforeClass() {
+    public void beforeClass() throws MalformedURLException {
         repository.save(Category.UNDEFINED);
         Category root = Category.root(496796322118291457l, new Name("商品分类", "root"));
         repository.save(root);
@@ -122,7 +123,7 @@ public class PsqlCategoryQueryTest {
         repository.save(condiment);
         Category sauce = new Category(49581450261846035l, 49581450261846040l, new Name("调味汁", "sauce"));
         repository.save(sauce);
-        Category soy_sauce = new Category(49581450261846040l, 49581450261846041l, new Name("酱油", "soy_sauce"), "用大豆或脱脂大豆或黑豆、小麦或麸皮，加入水、食盐酿造而成的液体调味品，色泽呈红褐色，有独特酱香，滋味鲜美，有助于促进食欲。", URI.create("https://inews.gtimg.com/newsapp_bt/0/13781122372/1000"));
+        Category soy_sauce = new Category(49581450261846040l, 49581450261846041l, new Name("酱油", "soy_sauce"), "用大豆或脱脂大豆或黑豆、小麦或麸皮，加入水、食盐酿造而成的液体调味品，色泽呈红褐色，有独特酱香，滋味鲜美，有助于促进食欲。", URI.create("https://inews.gtimg.com/newsapp_bt/0/13781122372/1000").toURL());
         repository.save(soy_sauce);
         Category vinegar = new Category(49581450261846040l, 49581450261846042l, new Name("醋", " vinegar"));
         repository.save(vinegar);
