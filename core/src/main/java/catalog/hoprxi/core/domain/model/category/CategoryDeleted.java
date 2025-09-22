@@ -14,26 +14,41 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.handler;
+package catalog.hoprxi.core.domain.model.category;
 
 
-import catalog.hoprxi.core.application.command.BrandDeleteCommand;
-import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
+import event.hoprxi.domain.model.DomainEvent;
+
+import java.time.LocalDateTime;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2025/9/17
+ * @version 0.0.1 builder 2025/9/23
  */
 
-public class BrandDeleteHandler implements Handler<BrandDeleteCommand, Boolean> {
-    private final BrandRepository repository = new PsqlBrandRepository();
+public class CategoryDeleted implements DomainEvent {
+    private long id;
+    private final LocalDateTime occurredOn;
+    private final int version;
+
+    public CategoryDeleted(long id) {
+        this.id = id;
+        this.version = 1;
+        this.occurredOn = LocalDateTime.now();
+    }
 
     @Override
-    public Boolean execute(BrandDeleteCommand command) {
-        repository.remove(command.id());
+    public LocalDateTime occurredOn() {
+        return occurredOn;
+    }
 
-        return true;
+    @Override
+    public int version() {
+        return version;
+    }
+
+    public long id() {
+        return id;
     }
 }

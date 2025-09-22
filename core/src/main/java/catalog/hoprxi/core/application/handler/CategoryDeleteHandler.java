@@ -17,23 +17,17 @@
 package catalog.hoprxi.core.application.handler;
 
 
-import catalog.hoprxi.core.application.command.BrandDeleteCommand;
-import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
+import catalog.hoprxi.core.application.command.CategoryDeleteCommand;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2025/9/17
+ * @version 0.0.1 builder 2025/9/23
  */
 
-public class BrandDeleteHandler implements Handler<BrandDeleteCommand, Boolean> {
-    private final BrandRepository repository = new PsqlBrandRepository();
-
+public class CategoryDeleteHandler implements Handler<CategoryDeleteCommand, Boolean> {
     @Override
-    public Boolean execute(BrandDeleteCommand command) {
-        repository.remove(command.id());
-
-        return true;
+    public Boolean execute(CategoryDeleteCommand command) {
+        return null;
     }
 }

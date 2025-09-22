@@ -17,14 +17,13 @@
 package catalog.hoprxi.core.rest;
 
 
-import catalog.hoprxi.core.application.command.BrandCreateCommand;
 import catalog.hoprxi.core.application.command.CategoryCreateCommand;
-import catalog.hoprxi.core.application.handler.BrandCreateHandler;
+import catalog.hoprxi.core.application.command.CategoryDeleteCommand;
 import catalog.hoprxi.core.application.handler.CategoryCreateHandler;
+import catalog.hoprxi.core.application.handler.CategoryDeleteHandler;
 import catalog.hoprxi.core.application.handler.Handler;
 import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.query.SearchException;
-import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESCategoryQuery;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -239,6 +238,41 @@ public class CategoryService {
         CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(icon).toURL());
         Handler<CategoryCreateCommand, Category> handler = new CategoryCreateHandler();
         return handler.execute(command);
+    }
+
+    @StatusCode(201)
+    @Put("/categories/{code}")
+    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
+        return null;
+    }
+
+    @Delete("/categories/:id")
+    public HttpResponse delete(ServiceRequestContext ctx, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
+        StreamWriter<HttpObject> stream = StreamMessage.streaming();
+        ctx.whenRequestCancelled().thenAccept(stream::close);
+        ctx.blockingTaskExecutor().execute(() -> {
+
+            CategoryDeleteCommand delete = new CategoryDeleteCommand(id);
+            Handler<CategoryDeleteCommand, Boolean> handler = new CategoryDeleteHandler();
+            handler.execute(delete);
+
+            ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
+            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
+                if (pretty) gen.useDefaultPrettyPrinter();
+                gen.writeStartObject();
+                gen.writeStringField("status", "success");
+                gen.writeNumberField("code", 200);
+                gen.writeStringField("message", "The brand is deleted");
+                gen.writeEndObject();
+                gen.close();
+                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+                stream.write(HttpData.wrap(buffer));
+                stream.close();
+            } catch (IOException e) {
+                handleStreamError(stream, e);
+            }
+        });
+        return HttpResponse.of(stream);
     }
 
 }

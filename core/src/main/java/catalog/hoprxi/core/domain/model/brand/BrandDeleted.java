@@ -40,7 +40,7 @@ public class BrandDeleted implements DomainEvent {
     public BrandDeleted(long id, LocalDateTime occurredOn, int version) {
         this.id = id;
         this.occurredOn = Objects.requireNonNull(occurredOn, "occurredOn is required");
-        this.version = Objects.requireNonNull(version, "version is required");
+        this.version = version;
     }
 
     public long id() {
@@ -49,7 +49,7 @@ public class BrandDeleted implements DomainEvent {
 
     @Override
     public int version() {
-        return version();
+        return version;
     }
 
     @Override
