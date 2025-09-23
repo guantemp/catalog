@@ -105,6 +105,9 @@ public class ESCategoryQueryTest {
         is = query.search("oil",1,2);
         s = inputStreamToString(is);
         System.out.println("Search:\n" + s);
+        is = query.search(null,0,1);
+        s = inputStreamToString(is);
+        System.out.println("Search:\n" + s);
     }
 
     @Test

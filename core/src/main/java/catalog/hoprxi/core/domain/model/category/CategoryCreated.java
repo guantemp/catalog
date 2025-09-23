@@ -30,15 +30,15 @@ public class CategoryCreated {
     private final long id;
     private final String name;
     private final String alias;
-    private final URL logo;
+    private final URL icon;
     private final String description;
 
-    public CategoryCreated(long parentId, long id, String name, String alias, URL logo, String description) {
+    public CategoryCreated(long parentId, long id, String name, String alias, URL icon, String description) {
         this.parentId = parentId;
         this.id = id;
         this.name = name;
         this.alias = alias;
-        this.logo = logo;
+        this.icon = icon;
         this.description = description;
     }
 }

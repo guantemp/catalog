@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URL;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
@@ -54,7 +55,7 @@ import java.util.regex.Pattern;
  * @since JDK21
  * @version 0.0.1 builder 2025/9/20
  */
-
+@PathPrefix("/catalog/core/v1")
 public class CategoryService {
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
@@ -153,6 +154,27 @@ public class CategoryService {
         return HttpResponse.of(stream);
     }
 
+    @Get("/categories/root")
+    public HttpResponse find(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
+        StreamWriter<HttpObject> stream = StreamMessage.streaming();
+        ctx.whenRequestCancelled().thenAccept(stream::close);
+        ctx.blockingTaskExecutor().execute(() -> {
+            if (ctx.isCancelled()) return;
+            ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
+            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
+                InputStream source = QUERY.root();
+                if (pretty) gen.useDefaultPrettyPrinter();
+                this.copyRaw(gen, source);
+            } catch (IOException e) {
+                this.handleStreamError(stream, e);
+            }
+            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            stream.write(HttpData.wrap(buffer));
+            stream.close();
+        });
+        return HttpResponse.of(stream);
+    }
+
     private void copyRaw(JsonGenerator generator, InputStream source) throws IOException {
         JsonParser parser = JSON_FACTORY.createParser(source);
         while (parser.nextToken() != null) {
@@ -210,38 +232,40 @@ public class CategoryService {
             try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
                 Category category = toCategory(parser);
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
-                        "{\"status\":\"success\",\"code\":201,\"message\":\"A category created,it's %s\"}", "brand")));
+                        "{\"status\":\"success\",\"code\":201,\"message\":\"A category created,it's %s\"}", category)));
             } catch (Exception e) {
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                        "{\"status\":500,\"code\":500,\"message\":\"Can't create a category,cause by {}\"}", e)));
+                        "{\"status\":500,\"code\":500,\"message\":\"Can't create a category,cause by %s\"}", e)));
             }
         });
         return HttpResponse.of(future);
     }
 
     private Category toCategory(JsonParser parser) throws IOException {
-        String name = null, alias = null, description = null, icon = "";
+        String name = null, alias = null, description = null;
+        URL icon = null;
         long parentId = 0;
         while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.FIELD_NAME) {
                 String fieldName = parser.currentName();
                 parser.nextToken();
                 switch (fieldName) {
-                    case "parentId" -> parser.getValueAsLong();
+                    case "parent_id" -> parentId = parser.getValueAsLong();
                     case "name" -> name = parser.getValueAsString();
                     case "alias" -> alias = parser.getValueAsString();
                     case "description" -> description = parser.getValueAsString();
-                    case "icon" -> icon = parser.getValueAsString();
+                    case "icon" -> icon = URI.create(parser.getValueAsString()).toURL();
                 }
             }
         }
-        CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, URI.create(icon).toURL());
+        CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, icon);
+        //System.out.println(command);
         Handler<CategoryCreateCommand, Category> handler = new CategoryCreateHandler();
         return handler.execute(command);
     }
 
     @StatusCode(201)
-    @Put("/categories/{code}")
+    @Put("/categories/{id}")
     public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
         return null;
     }

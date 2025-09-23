@@ -61,11 +61,11 @@ public class Category {
     private URL icon;
 
     public Category(long parentId, long id, Name name) {
-        this(parentId, id, name, null);
+        this(parentId, id, name, "");
     }
 
     public Category(long parentId, long id, String name) {
-        this(parentId, id, Name.valueOf(name), null);
+        this(parentId, id, Name.valueOf(name), "");
     }
 
     public Category(long parentId, long id, Name name, String description) {

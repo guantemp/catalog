@@ -339,39 +339,43 @@ public class ESCategoryQuery implements CategoryQuery {
     }
 
     private String writeKeyJsonEntity(String key, int offset, int limit) {
-        Objects.requireNonNull(key, "key is required");
         StringWriter writer = new StringWriter(128);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeNumberField("from", offset);
             generator.writeNumberField("size", limit);
             generator.writeObjectFieldStart("query");
-            generator.writeObjectFieldStart("bool");
-            generator.writeObjectFieldStart("filter");
-            generator.writeObjectFieldStart("bool");
-            generator.writeArrayFieldStart("should");
+            if (key == null || key.isEmpty()) {
+                generator.writeObjectFieldStart("match_all");
+                generator.writeEndObject();//match_all
+            } else {
+                generator.writeObjectFieldStart("bool");
+                generator.writeObjectFieldStart("filter");
+                generator.writeObjectFieldStart("bool");
+                generator.writeArrayFieldStart("should");
 
-            generator.writeStartObject();
-            generator.writeObjectFieldStart("multi_match");
-            generator.writeStringField("query", key);
-            generator.writeArrayFieldStart("fields");
-            generator.writeString("name.name");
-            generator.writeString("name.alias");
-            generator.writeEndArray();
-            generator.writeEndObject();
-            generator.writeEndObject();
+                generator.writeStartObject();
+                generator.writeObjectFieldStart("multi_match");
+                generator.writeStringField("query", key);
+                generator.writeArrayFieldStart("fields");
+                generator.writeString("name.name");
+                generator.writeString("name.alias");
+                generator.writeEndArray();
+                generator.writeEndObject();
+                generator.writeEndObject();
 
-            generator.writeStartObject();
-            generator.writeObjectFieldStart("term");
-            generator.writeStringField("name.mnemonic", key);
-            generator.writeEndObject();
-            generator.writeEndObject();
+                generator.writeStartObject();
+                generator.writeObjectFieldStart("term");
+                generator.writeStringField("name.mnemonic",key);
+                generator.writeEndObject();
+                generator.writeEndObject();
 
-            generator.writeEndArray();
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeEndObject();
+                generator.writeEndArray();//end should
+                generator.writeEndObject();//end bool
+                generator.writeEndObject();
+                generator.writeEndObject();//end bool
+            }
+            generator.writeEndObject();//end query
 
             generator.writeArrayFieldStart("sort");
             generator.writeStartObject();

@@ -18,6 +18,8 @@ package catalog.hoprxi.core.application.handler;
 
 
 import catalog.hoprxi.core.application.command.CategoryDeleteCommand;
+import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -26,8 +28,10 @@ import catalog.hoprxi.core.application.command.CategoryDeleteCommand;
  */
 
 public class CategoryDeleteHandler implements Handler<CategoryDeleteCommand, Boolean> {
+    private final CategoryRepository repository = new PsqlCategoryRepository();
     @Override
     public Boolean execute(CategoryDeleteCommand command) {
+        repository.remove(command.id());
         return null;
     }
 }

@@ -20,6 +20,7 @@ import catalog.hoprxi.core.domain.model.category.Category;
 
 import java.net.URL;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -30,14 +31,14 @@ public class CategoryCreateCommand implements Command<Category> {
     private long parentId;
     private final String name;
     private final String alias;
-    private final URL logo;
+    private final URL icon;
     private final String description;
 
-    public CategoryCreateCommand(long parentId, String name, String alias, String description, URL logo) {
+    public CategoryCreateCommand(long parentId, String name, String alias, String description, URL icon) {
         setParentId(parentId);
         this.name = Objects.requireNonNull(name, "name required").trim();
         this.alias = alias;
-        this.logo = logo;
+        this.icon = icon;
         this.description = description;
     }
 
@@ -58,10 +59,21 @@ public class CategoryCreateCommand implements Command<Category> {
     }
 
     public URL logo() {
-        return logo;
+        return icon;
     }
 
     public String description() {
         return description;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", CategoryCreateCommand.class.getSimpleName() + "[", "]")
+                .add("parentId=" + parentId)
+                .add("name='" + name + "'")
+                .add("alias='" + alias + "'")
+                .add("logo=" + icon)
+                .add("description='" + description + "'")
+                .toString();
     }
 }

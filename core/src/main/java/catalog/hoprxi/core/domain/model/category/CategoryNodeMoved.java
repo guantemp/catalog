@@ -40,12 +40,12 @@ public class CategoryNodeMoved implements DomainEvent {
 
     @Override
     public LocalDateTime occurredOn() {
-        return null;
+        return occurredOn;
     }
 
     @Override
     public int version() {
-        return 0;
+        return version;
     }
 
     public long id() {

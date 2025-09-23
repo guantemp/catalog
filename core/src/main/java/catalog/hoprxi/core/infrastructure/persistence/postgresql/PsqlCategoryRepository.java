@@ -64,7 +64,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     @Override
     public Category find(long id) {
         try (Connection connection = DataSourceUtil.getConnection()) {
-            final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri from category where id=?";
+            final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, id);
             ResultSet rs = preparedStatement.executeQuery();
@@ -72,7 +72,8 @@ public class PsqlCategoryRepository implements CategoryRepository {
         } catch (SQLException e) {
             LOGGER.error("Database error", e);
             throw new SearchException("Database error", e);
-        } catch (InvocationTargetException | InstantiationException | IllegalAccessException | MalformedURLException e) {
+        } catch (InvocationTargetException | InstantiationException | IllegalAccessException |
+                 MalformedURLException e) {
             LOGGER.error("Can't rebuild name", e);
             return null;
         }
@@ -85,7 +86,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
             long parent_id = rs.getLong("parent_id");
             Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
             String description = rs.getString("description");
-            URL icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri")).toURL();
+            URL icon = rs.getString("icon_url") == null ? null : URI.create(rs.getString("icon_url")).toURL();
             return new Category(parent_id, id, name, description, icon);
         }
         return null;
@@ -129,7 +130,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     public Category[] root() {
         try (Connection connection = DataSourceUtil.getConnection()) {
             List<Category> categoryList = new ArrayList<>();
-            final String rootSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,logo_uri from category where id = parent_id";
+            final String rootSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url from category where id = parent_id";
             PreparedStatement preparedStatement = connection.prepareStatement(rootSql);
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()) {
@@ -141,7 +142,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 long parent_id = rs.getLong("parent_id");
                 Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
                 String description = rs.getString("description");
-                URL icon = rs.getString("logo_uri") == null ? null : URI.create(rs.getString("logo_uri")).toURL();
+                URL icon = rs.getString("icon_url") == null ? null : URI.create(rs.getString("icon_url")).toURL();
                 categoryList.add(new Category(parent_id, id, name, description, icon));
             }
             return categoryList.toArray(new Category[0]);
@@ -168,7 +169,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) { //exists->update
                 if (category.parentId() == resultSet.getLong("parent_id")) {  //not move from old tree
-                    final String updateSql = "update category set name=?,description=?,logo_uri=? where id=?";
+                    final String updateSql = "update category set name=?,description=?,icon_url=? where id=?";
                     PreparedStatement ps1 = connection.prepareStatement(updateSql);
                     name.setValue(toJson(category.name()));
                     ps1.setObject(1, name);
@@ -181,7 +182,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 }
             } else {//new
                 if (category.isRoot()) {
-                    final String insertRoot = "insert into category (id,parent_id,name,description,logo_uri,root_id,\"left\",\"right\") values (?,?,?,?,?,?,1,2)";
+                    final String insertRoot = "insert into category (id,parent_id,name,description,icon_url,root_id,\"left\",\"right\") values (?,?,?,?,?,?,1,2)";
                     PreparedStatement ps1 = connection.prepareStatement(insertRoot);
                     ps1.setLong(1, category.id());
                     ps1.setLong(2, category.parentId());
@@ -222,9 +223,9 @@ public class PsqlCategoryRepository implements CategoryRepository {
         //需要移动的节点及其子节点的 left, right 值置为负,归属到新的树形（root_id),移动节点的顶点parent_id设置为新的父节点的id值
         statement.addBatch("update category set \"left\"=0-\"left\",\"right\"=0-\"right\",root_id=" + targetRootId + " where \"left\">=" + left + " and \"right\"<=" + right + " and root_id=" + originalRootId);
         StringBuilder updateSql = new StringBuilder("update category set parent_id=").append(category.parentId())
-                .append(",name='").append(toJson(category.name())).append("'")
-                .append(",description='").append(category.description()).append("'")
-                .append(",logo_uri='").append(category.icon() == null ? category.icon() : category.icon().toExternalForm()).append("'")
+                .append(",name='").append(toJson(category.name()))
+                .append("',description='").append(category.description())
+                .append("',icon_url=").append(category.icon() == null ? null : "'" + category.icon().toExternalForm() + "'")
                 .append(" where id=").append(category.id());
         statement.addBatch(updateSql.toString());
         //原始树中被移动节点（含子节点）后面的节点往前移, 填充空缺位置
@@ -254,7 +255,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
             Statement statement = connection.createStatement();
             statement.addBatch("update category set \"right\"=\"right\"+2 where \"right\">=" + right + " and root_id=" + rootId);
             statement.addBatch("update category set \"left\"= \"left\"+2 where \"left\">" + right + " and root_id=" + rootId);
-            StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,root_id,\"left\",\"right\",description,logo_uri) values(").append(category.id()).append(",").append(category.parentId()).append(",'").append(toJson(category.name())).append("',").append(rootId).append(",").append(right).append(",").append(right + 1).append(",");
+            StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,root_id,\"left\",\"right\",description,icon_url) values(").append(category.id()).append(",").append(category.parentId()).append(",'").append(toJson(category.name())).append("',").append(rootId).append(",").append(right).append(",").append(right + 1).append(",");
             if (category.description() != null)
                 insertSql.append("'").append(category.description()).append("'");
             else insertSql.append((String) null);
@@ -270,7 +271,6 @@ public class PsqlCategoryRepository implements CategoryRepository {
             connection.setAutoCommit(true);
         }
     }
-
 
     private String toJson(Name name) {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
