@@ -233,10 +233,13 @@ public class CategoryServlet extends HttpServlet {
                 commands.add(new CategoryMoveNodeCommand(id, parentId));
             if (name != null || alias != null)
                 commands.add(new CategoryRenameCommand(id, name, alias));
+            /*
             if (description != null)
                 commands.add(new CategoryChangeDescriptionCommand(id, description));
             if (icon != null)
                 commands.add(new CategoryChangeIconCommand(id, URI.create(icon).toURL()));
+
+             */
             boolean pretty = NumberHelper.booleanOf(req.getParameter("pretty"));
             if (pretty) generator.useDefaultPrettyPrinter();
             resp.setContentType("application/json; charset=UTF-8");

@@ -17,13 +17,16 @@
 package catalog.hoprxi.core.rest;
 
 
+import catalog.hoprxi.core.application.command.BrandUpdateCommand;
 import catalog.hoprxi.core.application.command.CategoryCreateCommand;
 import catalog.hoprxi.core.application.command.CategoryDeleteCommand;
+import catalog.hoprxi.core.application.handler.BrandUpdateHandler;
 import catalog.hoprxi.core.application.handler.CategoryCreateHandler;
 import catalog.hoprxi.core.application.handler.CategoryDeleteHandler;
 import catalog.hoprxi.core.application.handler.Handler;
 import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.query.SearchException;
+import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESCategoryQuery;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -45,7 +48,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Year;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
@@ -267,7 +272,43 @@ public class CategoryService {
     @StatusCode(201)
     @Put("/categories/{id}")
     public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
-        return null;
+        RequestHeaders headers = ctx.request().headers();
+        if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
+            return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
+        StreamWriter<HttpObject> stream = StreamMessage.streaming();
+        ctx.whenRequestCancelled().thenAccept(stream::close);
+        ctx.blockingTaskExecutor().execute(() -> {
+            if (ctx.isCancelled()) return;
+            this.update(body, id);
+        });
+        return HttpResponse.of(stream);
+    }
+
+    private void update(HttpData body, long id) {
+        String name = null, alias = null, story = null;
+        URL logo = null, homepage = null;
+        Year since = null;
+        try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
+            while (parser.nextToken() != null) {
+                if (JsonToken.FIELD_NAME == parser.currentToken()) {
+                    String fieldName = parser.currentName();
+                    parser.nextToken();
+                    switch (fieldName) {
+                        case "name" -> name = parser.getValueAsString();
+                        case "alias" -> alias = parser.getValueAsString();
+                        case "story" -> story = parser.getValueAsString();
+                        case "homepage" -> homepage = new URI(parser.getValueAsString()).toURL();
+                        case "logo" -> logo = new URI(parser.getValueAsString()).toURL();
+                        case "since" -> since = Year.of(parser.getIntValue());
+                    }
+                }
+            }
+        } catch (IOException | URISyntaxException e) {
+            LOGGER.error("The process error", e);
+            //System.out.println(e);
+        }
+
     }
 
     @Delete("/categories/:id")
@@ -297,5 +338,4 @@ public class CategoryService {
         });
         return HttpResponse.of(stream);
     }
-
 }

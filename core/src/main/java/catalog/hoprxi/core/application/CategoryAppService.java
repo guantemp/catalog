@@ -73,12 +73,12 @@ public class CategoryAppService {
                     category.rename(rename.name(), rename.alias());
                     break;
                 case "CategoryChangeDescriptionCommand":
-                    CategoryChangeDescriptionCommand changeDescription = (CategoryChangeDescriptionCommand) command;
-                    category.changeDescription(changeDescription.description());
+                    //CategoryChangeDescriptionCommand changeDescription = (CategoryChangeDescriptionCommand) command;
+                   // category.changeDescription(changeDescription.description());
                     break;
                 case "CategoryChangeIconCommand":
-                    CategoryChangeIconCommand changeIcon = (CategoryChangeIconCommand) command;
-                    category.changeIcon(changeIcon.icon());
+                   // CategoryChangeIconCommand changeIcon = (CategoryChangeIconCommand) command;
+                   // category.changeIcon(changeIcon.icon());
                     break;
                 case "CategoryMoveNodeCommand":
                     CategoryMoveNodeCommand moveNode = (CategoryMoveNodeCommand) command;

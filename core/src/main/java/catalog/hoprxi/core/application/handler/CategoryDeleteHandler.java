@@ -19,7 +19,10 @@ package catalog.hoprxi.core.application.handler;
 
 import catalog.hoprxi.core.application.command.CategoryDeleteCommand;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -27,11 +30,18 @@ import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRep
  * @version 0.0.1 builder 2025/9/23
  */
 
-public class CategoryDeleteHandler implements Handler<CategoryDeleteCommand, Void> {
+public class CategoryDeleteHandler implements Handler<CategoryDeleteCommand, Boolean> {
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Category");
     private final CategoryRepository repository = new PsqlCategoryRepository();
+
     @Override
-    public Void execute(CategoryDeleteCommand command) {
-        repository.remove(command.id());
-        return null;
+    public Boolean execute(CategoryDeleteCommand command) {
+        try {
+            repository.remove(command.id());
+            return true;
+        } catch (PersistenceException e) {
+            LOGGER.error("");
+        }
+        return false;
     }
 }

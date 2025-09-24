@@ -195,6 +195,10 @@ public class BrandService {
     @StatusCode(201)
     @Put("/brands/{code}")
     public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
+        RequestHeaders headers = ctx.request().headers();
+        if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
+            return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {

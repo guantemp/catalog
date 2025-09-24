@@ -16,18 +16,29 @@
 
 package catalog.hoprxi.core.application.command;
 
+
+import catalog.hoprxi.core.domain.model.category.Category;
+
+import java.net.URL;
+
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2025-09-24
+ * @version 0.0.1 builder 2025/9/25
  */
-public record CategoryDeleteCommand(long id) implements Command<Boolean> {
+
+public record CategoryUpdateCommand(long id, String description, URL icon) implements Command<Category> {
+
+    public CategoryUpdateCommand {
+        if (description == null && icon == null)
+            throw new IllegalArgumentException("description,icon all not is null ");
+    }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
 
-        CategoryDeleteCommand that = (CategoryDeleteCommand) o;
+        CategoryUpdateCommand that = (CategoryUpdateCommand) o;
         return id == that.id;
     }
 
