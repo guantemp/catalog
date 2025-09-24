@@ -3,6 +3,8 @@ catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlBrandRepositoryTes
 catalog\hoprxi\core\infrastructure\batch\PsqlItemExportTest.class
 catalog\hoprxi\core\domain\model\barcode\BarcodeGenerateServicesTest.class
 catalog\hoprxi\core\infrastructure\i18n\LabelTest.class
+catalog\hoprxi\core\infrastructure\query\elasticsearch\ESCategoryQueryTest.class
+catalog\hoprxi\core\infrastructure\query\elasticsearch\ESBrandQueryTest.class
 catalog\hoprxi\AppTest.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlItemRepositoryTest.class
 catalog\hoprxi\core\infrastructure\SetupTest.class

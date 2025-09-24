@@ -27,10 +27,10 @@ import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRep
  * @version 0.0.1 builder 2025/9/23
  */
 
-public class CategoryDeleteHandler implements Handler<CategoryDeleteCommand, Boolean> {
+public class CategoryDeleteHandler implements Handler<CategoryDeleteCommand, Void> {
     private final CategoryRepository repository = new PsqlCategoryRepository();
     @Override
-    public Boolean execute(CategoryDeleteCommand command) {
+    public Void execute(CategoryDeleteCommand command) {
         repository.remove(command.id());
         return null;
     }

@@ -22,6 +22,7 @@ import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryCreated;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
+import catalog.hoprxi.core.util.DomainRegistry;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -39,6 +40,7 @@ public class CategoryCreateHandler implements Handler<CategoryCreateCommand, Cat
         //领域事件
         CategoryCreated event = new CategoryCreated(category.parentId(), category.id(), category.name().name(), category.name().alias(),
                 category.icon(), category.description());
+        DomainRegistry.domainEventPublisher().publish(event);
         return category;
     }
 }

@@ -37,7 +37,7 @@
     <dependencies>
         <dependency>
             <groupId>catalog.hoprxi</groupId>
-            <artifactId>core</artifactId>
+            <artifactId>catalog-core</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

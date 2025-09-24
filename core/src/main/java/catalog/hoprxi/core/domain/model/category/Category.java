@@ -15,7 +15,6 @@
  */
 package catalog.hoprxi.core.domain.model.category;
 
-import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.CategoryValidatorService;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
@@ -52,7 +51,6 @@ public class Category {
             throw new UnsupportedOperationException("");
         }
     };
-    private static final int ID_MAX_LENGTH = 48;
     private static final int DESCRIPTION_MAX_LENGTH = 512;
     private String description;
     private long id;
@@ -65,7 +63,7 @@ public class Category {
     }
 
     public Category(long parentId, long id, String name) {
-        this(parentId, id, Name.valueOf(name), "");
+        this(parentId, id, new Name(name), "");
     }
 
     public Category(long parentId, long id, Name name, String description) {
@@ -77,7 +75,7 @@ public class Category {
     }
 
     public Category(long parentId, long id, String name, String description, URL icon) {
-        this(parentId, id, Name.valueOf(name), description, icon);
+        this(parentId, id, new Name(name), description, icon);
     }
 
     /**
@@ -97,7 +95,6 @@ public class Category {
         setDescription(description);
         this.icon = icon;
     }
-
 
     public static Category root(long id, Name name) {
         return new Category(id, id, name);
@@ -210,11 +207,6 @@ public class Category {
      */
     protected void setName(Name name) {
         this.name = Objects.requireNonNull(name, "name required.");
-    }
-
-
-    public CategoryView toView() {
-        return new CategoryView(parentId, id, name, description, icon, false);
     }
 
     @Override

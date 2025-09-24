@@ -18,32 +18,21 @@ package catalog.hoprxi.core.application.command;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2022-06-24
+ * @since JDK21
+ * @version 0.0.1 builder 2025-09-24
  */
-public class CategoryDeleteCommand implements Command<Boolean> {
-    private long id;
-
-    public CategoryDeleteCommand(long id) {
-        this.id = id;
-    }
-
-    public long id() {
-        return id;
-    }
+public record CategoryDeleteCommand(long id) implements Command<Void> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CategoryDeleteCommand)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
         CategoryDeleteCommand that = (CategoryDeleteCommand) o;
-
         return id == that.id;
     }
 
     @Override
     public int hashCode() {
-        return (int) (id ^ (id >>> 32));
+        return Long.hashCode(id);
     }
 }

@@ -84,6 +84,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
             long id = rs.getLong("id");
             if (id == Category.UNDEFINED.id()) return Category.UNDEFINED;
             long parent_id = rs.getLong("parent_id");
+            //Constructor
             Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
             String description = rs.getString("description");
             URL icon = rs.getString("icon_url") == null ? null : URI.create(rs.getString("icon_url")).toURL();

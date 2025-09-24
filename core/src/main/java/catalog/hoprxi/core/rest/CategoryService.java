@@ -277,7 +277,7 @@ public class CategoryService {
         ctx.blockingTaskExecutor().execute(() -> {
 
             CategoryDeleteCommand delete = new CategoryDeleteCommand(id);
-            Handler<CategoryDeleteCommand, Boolean> handler = new CategoryDeleteHandler();
+            Handler<CategoryDeleteCommand, Void> handler = new CategoryDeleteHandler();
             handler.execute(delete);
 
             ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
@@ -288,13 +288,12 @@ public class CategoryService {
                 gen.writeNumberField("code", 200);
                 gen.writeStringField("message", "The brand is deleted");
                 gen.writeEndObject();
-                gen.close();
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.wrap(buffer));
-                stream.close();
             } catch (IOException e) {
                 handleStreamError(stream, e);
             }
+            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            stream.write(HttpData.wrap(buffer));
+            stream.close();
         });
         return HttpResponse.of(stream);
     }

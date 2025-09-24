@@ -26,7 +26,9 @@ import catalog.hoprxi.core.application.command.Command;
  */
 public interface Handler<T extends Command<R>, R> {
     /**
+     *
      * @param command
+     * @return
      */
     R execute(T command);
 
