@@ -318,7 +318,7 @@ public class CategoryService {
         ctx.blockingTaskExecutor().execute(() -> {
 
             CategoryDeleteCommand delete = new CategoryDeleteCommand(id);
-            Handler<CategoryDeleteCommand, Void> handler = new CategoryDeleteHandler();
+            Handler<CategoryDeleteCommand, Boolean> handler = new CategoryDeleteHandler();
             handler.execute(delete);
 
             ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
