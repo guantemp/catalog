@@ -33,12 +33,12 @@ public class Domestic implements MadeIn {
 
     private final String city;//乐山市
     private final String code;// 511100;
-    private final Pattern CODE_PATTERBN = Pattern.compile("^\\d{3,}$");
+    private static final Pattern CODE_PATTERN = Pattern.compile("^\\d{3,}$");
 
     public Domestic(String code, String city) {
         this.city = Objects.requireNonNull(city, "city required").trim();
         code = Objects.requireNonNull(code, "code required").trim();
-        if (!CODE_PATTERBN.matcher(code).matches())
+        if (!CODE_PATTERN.matcher(code).matches())
             throw new IllegalArgumentException("code is three digit");
         this.code = code;
     }
@@ -60,9 +60,7 @@ public class Domestic implements MadeIn {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Domestic)) return false;
-
-        Domestic domestic = (Domestic) o;
+        if (!(o instanceof Domestic domestic)) return false;
 
         return Objects.equals(code, domestic.code);
     }

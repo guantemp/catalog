@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -77,7 +79,7 @@ public class PsqlBrandQuery implements BrandQuery {
                 return brand;
             }
         } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
-                 IllegalAccessException e) {
+                 IllegalAccessException | URISyntaxException e) {
             LOGGER.error("Can't rebuild brand with (id = {})", id, e);
         }
         return null;
@@ -94,7 +96,7 @@ public class PsqlBrandQuery implements BrandQuery {
             ResultSet rs = preparedStatement.executeQuery();
             return transform(rs);
         } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
-                 IllegalAccessException e) {
+                 IllegalAccessException | URISyntaxException e) {
             LOGGER.error("Can't rebuild brand", e);
         }
         return new Brand[0];
@@ -114,13 +116,13 @@ public class PsqlBrandQuery implements BrandQuery {
             ResultSet rs = preparedStatement.executeQuery();
             return transform(rs);
         } catch (SQLException | IOException | InvocationTargetException | InstantiationException |
-                 IllegalAccessException e) {
+                 IllegalAccessException | URISyntaxException e) {
             LOGGER.error("Can't rebuild brand with (name = {})", name, e);
         }
         return new Brand[0];
     }
 
-    private Brand[] transform(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    private Brand[] transform(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException, URISyntaxException {
         List<Brand> brandList = new ArrayList<>();
         while (rs.next()) {
             brandList.add(rebuild(rs));
@@ -128,16 +130,16 @@ public class PsqlBrandQuery implements BrandQuery {
         return brandList.toArray(new Brand[0]);
     }
 
-    private Brand rebuild(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    private Brand rebuild(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException, URISyntaxException {
         long id = rs.getLong("id");
         if (Brand.UNDEFINED.id() == id)
             return Brand.UNDEFINED;
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
         AboutBrand about = null;
-        URL homepage = rs.getString("homepage") == null ? null : new URL(rs.getString("homepage"));
+        URL homepage = rs.getString("homepage") == null ? null : URI.create(rs.getString("homepage")).toURL();
         Year since = rs.getString("since") == null ? null : Year.of(rs.getInt("since"));
         String story = rs.getString("story") == null ? null : rs.getString("story");
-        URL logo = rs.getString("logo") == null ? null : new URL(rs.getString("logo"));
+        URL logo = rs.getString("logo") == null ? null : URI.create(rs.getString("logo")).toURL();
         if (homepage != null || since != null || story != null || logo != null)
             about = new AboutBrand(homepage, logo, since, story);
         return new Brand(id, name, about);

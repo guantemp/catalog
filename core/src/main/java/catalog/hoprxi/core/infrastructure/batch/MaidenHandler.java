@@ -97,7 +97,7 @@ public class MaidenHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         String madeIn = itemImportEvent.map.get(ItemMapping.MADE_IN);
-        if (madeIn == null || madeIn.isEmpty()) {
+        if (madeIn == null || madeIn.isBlank()) {
             itemImportEvent.map.put(ItemMapping.MADE_IN, "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'");
             return;
         }
@@ -122,21 +122,29 @@ public class MaidenHandler implements EventHandler<ItemImportEvent> {
             // and ensure it is fully consumed
             //System.out.println(madein + ":" + EntityUtils.toString(entity));
             //EntityUtils.consume(entity);
-            return processMadeInJson(entity.getContent());
+            return processJson(entity.getContent());
         });
         itemImportEvent.map.put(ItemMapping.MADE_IN, result);
         //System.out.println("made_in:" + itemImportEvent.map.get(Corresponding.MADE_IN));
     }
 
-    private String processMadeInJson(InputStream inputStream) throws IOException {
+    private String processJson(InputStream inputStream) throws IOException {
         String name = null, level = "";
-        int code = Integer.MIN_VALUE, parentCode = Integer.MIN_VALUE;
+        int code = Integer.MIN_VALUE, parentCode = Integer.MIN_VALUE, total = 0;
         boolean mark = true;
         JsonParser parser = jasonFactory.createParser(inputStream);
         while (parser.nextToken() != null) {
-            JsonToken jsonToken = parser.currentToken();
-            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+            if (JsonToken.FIELD_NAME.equals(parser.currentToken())) {
                 String fieldName = parser.currentName();
+               /*
+                if ("total".equals(fieldName)) {
+                    parser.nextToken();
+                    total = parser.getValueAsInt();
+                } else if ("areas".equals(fieldName)) {
+
+                }
+
+                */
                 parser.nextToken();
                 switch (fieldName) {
                     case "parentCode" -> parentCode = parser.getIntValue();
@@ -159,5 +167,23 @@ public class MaidenHandler implements EventHandler<ItemImportEvent> {
         if (level.equals("CITY"))
             return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"madeIn\":\"" + name + "\"}'";
         return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'";
+    }
+
+    private MadeIn rebuild(JsonParser parser) throws IOException {
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.START_OBJECT) {
+                if (JsonToken.FIELD_NAME.equals(parser.currentToken())) {
+                    String fieldName = parser.currentName();
+
+                    switch (fieldName) {
+
+                    }
+                }
+            }
+            if (parser.currentToken() == JsonToken.END_ARRAY && "sort".equals(parser.currentName())) {
+                break;
+            }
+        }
+        return null;
     }
 }

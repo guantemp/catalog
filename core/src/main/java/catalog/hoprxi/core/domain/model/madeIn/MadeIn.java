@@ -22,7 +22,7 @@ package catalog.hoprxi.core.domain.model.madeIn;
  * @version 0.0.2 2023-03-01
  */
 public interface MadeIn {
-    public MadeIn UNKNOWN = new MadeIn() {
+    MadeIn UNKNOWN = new MadeIn() {
         @Override
         public String code() {
             return "-1";

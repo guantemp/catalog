@@ -30,11 +30,11 @@ import java.util.StringJoiner;
 public class RetailPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        Unit systemUnit = Unit.of(itemImportEvent.map.get(ItemMapping.UNIT));
+        Unit unit = Unit.of(itemImportEvent.map.get(ItemMapping.UNIT));
         StringJoiner joiner = new StringJoiner(",", "'{", "}'");
         joiner.add("\"number\":" + itemImportEvent.map.get(ItemMapping.RETAIL_PRICE));
         joiner.add("\"currencyCode\":\"CNY\"");
-        joiner.add("\"unit\":\"" + systemUnit.name() + "\"");
+        joiner.add("\"unit\":\"" + unit.name() + "\"");
         itemImportEvent.map.put(ItemMapping.RETAIL_PRICE, joiner.toString());
     }
 }
