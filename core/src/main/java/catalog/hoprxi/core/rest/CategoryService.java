@@ -17,16 +17,15 @@
 package catalog.hoprxi.core.rest;
 
 
-import catalog.hoprxi.core.application.command.BrandUpdateCommand;
 import catalog.hoprxi.core.application.command.CategoryCreateCommand;
 import catalog.hoprxi.core.application.command.CategoryDeleteCommand;
-import catalog.hoprxi.core.application.handler.BrandUpdateHandler;
+import catalog.hoprxi.core.application.command.CategoryMoveNodeCommand;
+import catalog.hoprxi.core.application.command.CategoryRenameCommand;
 import catalog.hoprxi.core.application.handler.CategoryCreateHandler;
 import catalog.hoprxi.core.application.handler.CategoryDeleteHandler;
 import catalog.hoprxi.core.application.handler.Handler;
 import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.query.SearchException;
-import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESCategoryQuery;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -48,9 +47,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.time.Year;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
@@ -160,7 +157,7 @@ public class CategoryService {
     }
 
     @Get("/categories/root")
-    public HttpResponse find(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse root(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
@@ -286,29 +283,72 @@ public class CategoryService {
     }
 
     private void update(HttpData body, long id) {
-        String name = null, alias = null, story = null;
-        URL logo = null, homepage = null;
-        Year since = null;
+        String name = null, alias = null, description = null;
+        URL icon = null;
+        long parentId = -1L;
         try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
             while (parser.nextToken() != null) {
-                if (JsonToken.FIELD_NAME == parser.currentToken()) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME) {
                     String fieldName = parser.currentName();
                     parser.nextToken();
                     switch (fieldName) {
+                        case "parent_id" -> parentId = parser.getValueAsLong();
                         case "name" -> name = parser.getValueAsString();
                         case "alias" -> alias = parser.getValueAsString();
-                        case "story" -> story = parser.getValueAsString();
-                        case "homepage" -> homepage = new URI(parser.getValueAsString()).toURL();
-                        case "logo" -> logo = new URI(parser.getValueAsString()).toURL();
-                        case "since" -> since = Year.of(parser.getIntValue());
+                        case "description" -> description = parser.getValueAsString();
+                        case "icon" -> icon = URI.create(parser.getValueAsString()).toURL();
                     }
                 }
             }
-        } catch (IOException | URISyntaxException e) {
-            LOGGER.error("The process error", e);
-            //System.out.println(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+        if (name != null || alias != null) {
+            CategoryRenameCommand renameComm = new CategoryRenameCommand(id, name, alias);
+        }
+        if (parentId != Long.MIN_VALUE)
+           new CategoryMoveNodeCommand(id, parentId);
+         /*
+            if (description != null)
+                commands.add(new CategoryChangeDescriptionCommand(id, description));
+            if (icon != null)
+                commands.add(new CategoryChangeIconCommand(id, URI.create(icon).toURL()));
 
+             */
+
+    }
+
+    private boolean validate(JsonGenerator generator, boolean root, String parentId, String name, String alias, String description, String uri) throws IOException {
+        boolean result = true;
+        if (!root && (parentId == null || parentId.isEmpty())) {
+            generator.writeStartObject();
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_01");
+            generator.writeStringField("message", "ParenId is required");
+            generator.writeEndObject();
+            result = false;
+        }
+        if (name == null || name.isEmpty()) {
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_02");
+            generator.writeStringField("message", "name is required");
+        }
+        if (alias != null && alias.length() > 256) {
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_03");
+            generator.writeStringField("message", "alias length rang is 1-256");
+        }
+        if (description != null && description.length() > 512) {
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_04");
+            generator.writeStringField("message", "description length rang is 1-512");
+        }
+        if (uri != null && !URI_REGEX.matcher(uri).matches()) {
+            generator.writeStringField("status", "FAIL");
+            generator.writeStringField("code", "10_05_05");
+            generator.writeStringField("message", "description length rang is 1-512");
+        }
+        return result;
     }
 
     @Delete("/categories/:id")

@@ -61,7 +61,7 @@ import java.util.List;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-05-09
  */
-public class MadeinHandler implements EventHandler<ItemImportEvent> {
+public class MaidenHandler implements EventHandler<ItemImportEvent> {
     private static final String AREA_URL;
     private static final CloseableHttpClient httpClient;
 
@@ -69,7 +69,7 @@ public class MadeinHandler implements EventHandler<ItemImportEvent> {
         Config areaUrl = ConfigFactory.load("core");
         AREA_URL = areaUrl.hasPath("made_in_url") ? areaUrl.getString("made_in_url") : "https://www.hoprxi.com/v1/areas";
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
-        SSLContext sslContext = null;
+        SSLContext sslContext;
         try {
             sslContext = SSLContexts.custom().loadTrustMaterial(null, (x509Certificates, s) -> true).build();
         } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
@@ -96,83 +96,68 @@ public class MadeinHandler implements EventHandler<ItemImportEvent> {
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        ClassicHttpRequest httpGet = ClassicRequestBuilder.get(AREA_URL).build();
-        String madein = itemImportEvent.map.get(ItemMapping.MADE_IN);
-        if (madein == null || madein.isEmpty()) {
+        String madeIn = itemImportEvent.map.get(ItemMapping.MADE_IN);
+        if (madeIn == null || madeIn.isEmpty()) {
             itemImportEvent.map.put(ItemMapping.MADE_IN, "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'");
             return;
         }
+        ClassicHttpRequest httpGet = ClassicRequestBuilder.get(AREA_URL).build();
         // 表单参数
-        List<NameValuePair> nvps = new ArrayList<>();
+        List<NameValuePair> madeInList = new ArrayList<>();
         // GET 请求参数
-        nvps.add(new BasicNameValuePair("search", "^" + madein + "$"));
-        nvps.add(new BasicNameValuePair("filters", "city,country,county,province"));
+        madeInList.add(new BasicNameValuePair("q", madeIn));
+        madeInList.add(new BasicNameValuePair("filter", "city,country,county,province"));
         // 增加到请求 URL 中
         try {
             URI uri = new URIBuilder(new URI(AREA_URL))
-                    .addParameters(nvps)
+                    .addParameters(madeInList)
                     .build();
             httpGet.setUri(uri);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
         String result = httpClient.execute(httpGet, response -> {
-            //System.out.println(response.getCode() + " " + response.getReasonPhrase() + " " + response.getVersion());
             final HttpEntity entity = response.getEntity();
             // do something useful with the response body
             // and ensure it is fully consumed
             //System.out.println(madein + ":" + EntityUtils.toString(entity));
             //EntityUtils.consume(entity);
-            return processmMadeinJson(entity.getContent());
+            return processMadeInJson(entity.getContent());
         });
         itemImportEvent.map.put(ItemMapping.MADE_IN, result);
         //System.out.println("made_in:" + itemImportEvent.map.get(Corresponding.MADE_IN));
     }
 
-    private String processmMadeinJson(InputStream inputStream) throws IOException {
-        String code = null, name = null, parentCode = null, parentName = null, level = null;
-        boolean parent = false;
+    private String processMadeInJson(InputStream inputStream) throws IOException {
+        String name = null, level = "";
+        int code = Integer.MIN_VALUE, parentCode = Integer.MIN_VALUE;
+        boolean mark = true;
         JsonParser parser = jasonFactory.createParser(inputStream);
-        while (!parser.isClosed()) {
-            JsonToken jsonToken = parser.nextToken();
+        while (parser.nextToken() != null) {
+            JsonToken jsonToken = parser.currentToken();
             if (JsonToken.FIELD_NAME.equals(jsonToken)) {
-                String fieldName = parser.getCurrentName();
+                String fieldName = parser.currentName();
                 parser.nextToken();
                 switch (fieldName) {
-                    case "code":
-                        if (parent)
-                            parentCode = parser.getValueAsString();
+                    case "parentCode" -> parentCode = parser.getIntValue();
+                    case "code" -> code = parser.getIntValue();
+                    case "name" -> {
+                        if (mark)
+                            name = parser.getValueAsString();
                         else
-                            code = parser.getValueAsString();
-                        break;
-                    case "name":
-                        if (!parser.isExpectedStartObjectToken()) {
-                            if (parent)
-                                parentName = parser.getValueAsString();
-                            else
-                                name = parser.getValueAsString();
-                        }
-                        break;
-                    case "abbreviation":
-                        name = parser.getValueAsString();
-                        break;
-                    case "parent":
-                        parent = true;
-                        break;
-                    case "level":
-                        level = parser.getValueAsString();
-                        break;
-                    default:
-                        break;
+                            level = parser.getValueAsString();
+                    }
+                    case "level" -> mark = false;
                 }
             }
         }
-        if (code == null || code.equals("156"))
-            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'";
-        if (level != null && level.equals("COUNTRY"))
-            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\",\"code\":" + parentCode + ",\"madeIn\":\"" + parentName + "\"}'";
+
+        //if (level != null && level.equals("COUNTRY"))
+        // return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\",\"code\":" + parentCode + ",\"madeIn\":\"" + parentName + "\"}'";
         //if (level != null && level.equals("PROVINCE"))
         //return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"madeIn\":\"" + name + "\"}'";
-        return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"madeIn\":\"" + name + "\"}'";
+        if (level.equals("CITY"))
+            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"madeIn\":\"" + name + "\"}'";
+        return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'";
     }
 }

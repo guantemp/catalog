@@ -41,9 +41,9 @@ public class EsItemJsonQueryTest {
 
     @Test
     public void testQueryId() {
-        System.out.println(service.query(62078192003431444l));
-        Assert.assertNotNull(service.query(62078526044092825l));
-        System.out.println(service.query(3635768734650054656l));
+        System.out.println(service.query(62078192003431444L));
+        Assert.assertNotNull(service.query(62078526044092825L));
+        System.out.println(service.query(3635768734650054656L));
     }
 
     @Test
@@ -52,9 +52,10 @@ public class EsItemJsonQueryTest {
         System.out.println(service.query(0, 20, SortField._BARCODE));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693")}, 0, 10, SortField._BARCODE));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(null)}, 0, 10, SortField.BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(new long[]{62078023226734874l}), new BrandIdFilter(62083691847465266l)}, 12, 10, SortField._BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(new long[]{62078023226734874l}), new RetailPriceFilter(1.1, 2), new LastReceiptPriceFilter(null, 1.2)}, 0, 9, SortField._ID));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryIdFilter(new long[]{62078023226734874l})}, 50, 10, SortField.ID));
+
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(new long[]{62078021456738571L}), new BrandIdFilter(-1L)}, 0, 10, SortField._BARCODE));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(new long[]{62078023226734874L}), new RetailPriceFilter(1.1, 2), new LastReceiptPriceFilter(null, 1.2)}, 0, 9, SortField._ID));
+        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryIdFilter(new long[]{62078023226734874L})}, 50, 10, SortField.ID));
         System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("伊利")}, 10, 1, SortField._RETAIL_PRICE));
     }
 

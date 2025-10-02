@@ -59,7 +59,7 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
         );
 
         disruptor.handleEventsWith(new IdHandler(), new NameHandler(), new BarcodeHandler(), new CategoryHandler(), new BrandHandler(),
-                new GrandHandler(), new MadeinHandler(), new SpecHandler(), new ShelfLifeHandler(), new LastReceiptPriceHandler(), new RetailPriceHandler(),
+                new GrandHandler(), new MaidenHandler(), new SpecHandler(), new ShelfLifeHandler(), new LastReceiptPriceHandler(), new RetailPriceHandler(),
                 new MemeberPriceHandler(), new VipPriceHandler()).then(new AssembleHandler(), new FailedValidationHandler());
         disruptor.start();
 
@@ -126,8 +126,8 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
                 result = cell.getStringCellValue().trim();
                 break;
             case BOOLEAN:   //布尔
-                Boolean booleanValue = cell.getBooleanCellValue();
-                result = booleanValue.toString();
+                boolean booleanValue = cell.getBooleanCellValue();
+                result = Boolean.toString(booleanValue);
                 break;
             case FORMULA:   // 公式
                 result = cell.getCellFormula();

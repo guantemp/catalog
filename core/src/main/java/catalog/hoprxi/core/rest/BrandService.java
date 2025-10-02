@@ -149,7 +149,7 @@ public class BrandService {
     }
 
     @Post("/brands")
-    public HttpResponse create(ServiceRequestContext ctx, HttpData body) {
+    public HttpResponse create(ServiceRequestContext ctx, HttpData body, @Param("pretty") @Default("false") boolean pretty) {
         RequestHeaders headers = ctx.request().headers();
         if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
@@ -187,13 +187,12 @@ public class BrandService {
             }
         }
         BrandCreateCommand createCommand = new BrandCreateCommand(name, alias, homepage, logo, since, story);
-        //System.out.println(createCommand);
         Handler<BrandCreateCommand, Brand> handler = new BrandCreateHandler();
         return handler.execute(createCommand);
     }
 
     @StatusCode(201)
-    @Put("/brands/{code}")
+    @Put("/brands/{id}")
     public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
         RequestHeaders headers = ctx.request().headers();
         if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))

@@ -61,7 +61,6 @@ import java.util.List;
 public class PsqlItemQuery implements ItemQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQuery.class);
     private static final Cache<String, ItemView> CACHE = CacheFactory.build("itemView");
-    private static final Cache<String, String[]> CACHES = CacheFactory.build("itemViews");
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
     private static Constructor<Name> nameConstructor;
 

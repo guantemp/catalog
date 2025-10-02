@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 0.0.1 builder 2023-05-09
  */
 public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
-    private static AtomicInteger number = new AtomicInteger(0);
+    private static final AtomicInteger number = new AtomicInteger(0);
     private final Connection connection;
     private final Statement statement;
     private StringJoiner sql = new StringJoiner(",", "insert into item (id,\"name\",barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price,show) values ", "");
@@ -62,7 +62,7 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
             sql.add(executeSqlEvent.sql);
             int i = number.incrementAndGet();
             if (i % 256 == 0) {
-                //System.out.println(sql);
+                System.out.println(sql);
                 statement.addBatch(sql.toString());
                 sql = new StringJoiner(",", "insert into item (id,\"name\",barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price,show) values ", "");
             }

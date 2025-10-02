@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
  */
 public class KeywordFilter implements ItemQueryFilter {
     private static final Pattern BARCODE = Pattern.compile("^\\d{2,13}$");
-    private String keyword;
+    private final String keyword;
 
     public KeywordFilter(String keyword) {
         this.keyword = Objects.requireNonNull(keyword, "keyword required");
@@ -84,7 +84,7 @@ public class KeywordFilter implements ItemQueryFilter {
 
     @Override
     public int hashCode() {
-        return keyword != null ? keyword.hashCode() : 0;
+        return keyword.hashCode();
     }
 
     @Override

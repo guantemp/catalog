@@ -30,6 +30,11 @@ public interface CategoryQuery {
      */
     InputStream find(long id) throws SearchException;
 
+    /**
+     *
+     * @param id category id
+     * @return children of category id
+     */
     InputStream children(long id);
 
     InputStream descendants(long id);

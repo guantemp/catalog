@@ -26,8 +26,8 @@ import catalog.hoprxi.core.util.DomainRegistry;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2022-06-24
+ * @since JDK21
+ * @version 0.0.1 builder 2025-09-26
  */
 public class CategoryCreateHandler implements Handler<CategoryCreateCommand, Category> {
     private final CategoryRepository repository = new PsqlCategoryRepository();

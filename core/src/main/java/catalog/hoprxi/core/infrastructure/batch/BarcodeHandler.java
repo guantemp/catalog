@@ -39,7 +39,7 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
     private static final ItemQuery ITEM_QUERY = new PsqlItemQuery();
 
     private static final AtomicInteger start = new AtomicInteger(1);
-    private String prefix = "21";
+    private final String prefix = "21";
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
@@ -56,7 +56,7 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
         } catch (InvalidBarcodeException e) {
             try {
                 bar = BarcodeGenerateServices.createBarcodeCompleteChecksum(barcode);
-            } catch (InvalidBarcodeException f) {
+            } catch (IllegalArgumentException f) {
                 itemImportEvent.verify = Verify.BARCODE_CHECK_SUM_ERROR;
                 return;
             }

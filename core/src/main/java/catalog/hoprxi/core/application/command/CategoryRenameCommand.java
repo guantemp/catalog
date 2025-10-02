@@ -16,6 +16,8 @@
 
 package catalog.hoprxi.core.application.command;
 
+import catalog.hoprxi.core.domain.model.category.Category;
+
 import java.util.Objects;
 
 /***
@@ -23,46 +25,18 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-07-04
  */
-public class CategoryRenameCommand implements Command {
-    private long id;
-    private String name;
-    private String alias;
-
-    public CategoryRenameCommand(long id, String name, String alias) {
-        this.id = id;
-        this.name = name;
-        this.alias = alias;
-    }
-
-    public long id() {
-        return id;
-    }
-
-    public String name() {
-        return name;
-    }
-
-    public String alias() {
-        return alias;
-    }
+public record CategoryRenameCommand(long id, String name, String alias) implements Command<Category> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CategoryRenameCommand)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
         CategoryRenameCommand that = (CategoryRenameCommand) o;
-
-        if (id != that.id) return false;
-        if (!Objects.equals(name, that.name)) return false;
-        return Objects.equals(alias, that.alias);
+        return id == that.id;
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (id ^ (id >>> 32));
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (alias != null ? alias.hashCode() : 0);
-        return result;
+        return Long.hashCode(id);
     }
 }

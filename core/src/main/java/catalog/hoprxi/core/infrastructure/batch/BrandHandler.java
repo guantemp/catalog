@@ -17,16 +17,21 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
-import catalog.hoprxi.core.application.query.BrandQuery;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
+import catalog.hoprxi.core.infrastructure.DataSourceUtil;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandQuery;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlBrandQuery;
 import com.lmax.disruptor.EventHandler;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.regex.Pattern;
 
 /***
@@ -36,7 +41,7 @@ import java.util.regex.Pattern;
  */
 public class BrandHandler implements EventHandler<ItemImportEvent> {
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{12,19}$");
-    private static final BrandQuery BRAND_QUERY = new ESBrandQuery();
+    private static final PsqlBrandQuery BRAND_QUERY = new PsqlBrandQuery();
     private static final BrandRepository BRAND_REPO = new PsqlBrandRepository();
 
     @Override
@@ -48,13 +53,14 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
         }
         if (ID_PATTERN.matcher(brand).matches()) {
             //System.out.println("我直接用的id：" + brand);
+            //需要检查id?????????
             return;
         }
         String[] ss = brand.split("/");//name/alias
         String query = "^" + ss[0] + "$";
         if (ss.length > 1)
             query = query + "|^" + ss[1] + "$";
-        /*
+
         Brand[] brands = BRAND_QUERY.queryByName(query);
         if (brands.length != 0) {
             itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(brands[0].id()));
@@ -63,8 +69,24 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
             BRAND_REPO.save(temp);
             itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(temp.id()));
         }
+    }
 
-         */
-        //System.out.println("brand:" +itemImportEvent.map.get(Corresponding.BRAND));
+    private long findByName(String name) {
+        final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
+                             "where name::jsonb->>'name' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
+                             "where name::jsonb->>'mnemonic' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
+                             "where name::jsonb->>'alias' ~ ?";
+        try (Connection connection = DataSourceUtil.getConnection()) {
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, name);
+            preparedStatement.setString(3, name);
+            ResultSet rs = preparedStatement.executeQuery();
+            if (rs.next())
+                return rs.getLong("id");
+        } catch (SQLException  e) {
+            //LOGGER.error("Can't rebuild brand with (name = {})", name, e);
+        }
+        return Brand.UNDEFINED.id();
     }
 }
