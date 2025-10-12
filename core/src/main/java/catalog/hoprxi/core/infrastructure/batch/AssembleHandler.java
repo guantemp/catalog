@@ -37,8 +37,8 @@ import java.util.concurrent.Executors;
 public class AssembleHandler implements EventHandler<ItemImportEvent> {
     private static final EventTranslatorOneArg<ExecuteSqlEvent, String> TRANSLATOR =
             (event, sequence, sql) -> event.sql = sql;
-    private static Disruptor<ExecuteSqlEvent> executeDisruptor;
-    private static RingBuffer<ExecuteSqlEvent> ringBuffer;
+    private static final Disruptor<ExecuteSqlEvent> executeDisruptor;
+    private static final RingBuffer<ExecuteSqlEvent> ringBuffer;
 
 
     static {

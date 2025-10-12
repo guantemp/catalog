@@ -30,6 +30,6 @@ public class SpecHandler implements EventHandler<ItemImportEvent> {
         String spec = itemImportEvent.map.get(ItemMapping.SPEC);
         if (spec == null)
             spec = "";
-        itemImportEvent.map.put(ItemMapping.SPEC, "'" + spec + "'");
+        itemImportEvent.map.put(ItemMapping.SPEC, "'" + spec.replaceAll("[*×]\\d+.", "") + "'");
     }
 }

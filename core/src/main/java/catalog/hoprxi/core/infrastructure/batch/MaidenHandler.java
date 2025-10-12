@@ -55,6 +55,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -106,7 +107,7 @@ public class MaidenHandler implements EventHandler<ItemImportEvent> {
         List<NameValuePair> madeInList = new ArrayList<>();
         // GET 请求参数
         madeInList.add(new BasicNameValuePair("q", madeIn));
-        madeInList.add(new BasicNameValuePair("filter", "city,country,county,province"));
+        madeInList.add(new BasicNameValuePair("filter", "city,country,county"));
         // 增加到请求 URL 中
         try {
             URI uri = new URIBuilder(new URI(AREA_URL))
@@ -118,44 +119,28 @@ public class MaidenHandler implements EventHandler<ItemImportEvent> {
         }
         String result = httpClient.execute(httpGet, response -> {
             final HttpEntity entity = response.getEntity();
-            // do something useful with the response body
-            // and ensure it is fully consumed
-            //System.out.println(madein + ":" + EntityUtils.toString(entity));
-            //EntityUtils.consume(entity);
-            return processJson(entity.getContent());
+            return this.read(entity.getContent());
         });
+        System.out.println("result:" + result);
         itemImportEvent.map.put(ItemMapping.MADE_IN, result);
         //System.out.println("made_in:" + itemImportEvent.map.get(Corresponding.MADE_IN));
     }
 
-    private String processJson(InputStream inputStream) throws IOException {
-        String name = null, level = "";
-        int code = Integer.MIN_VALUE, parentCode = Integer.MIN_VALUE, total = 0;
-        boolean mark = true;
+    private String read(InputStream inputStream) throws IOException {
         JsonParser parser = jasonFactory.createParser(inputStream);
         while (parser.nextToken() != null) {
-            if (JsonToken.FIELD_NAME.equals(parser.currentToken())) {
-                String fieldName = parser.currentName();
-               /*
-                if ("total".equals(fieldName)) {
-                    parser.nextToken();
-                    total = parser.getValueAsInt();
-                } else if ("areas".equals(fieldName)) {
-
-                }
-
-                */
-                parser.nextToken();
-                switch (fieldName) {
-                    case "parentCode" -> parentCode = parser.getIntValue();
-                    case "code" -> code = parser.getIntValue();
-                    case "name" -> {
-                        if (mark)
-                            name = parser.getValueAsString();
-                        else
-                            level = parser.getValueAsString();
+            if (JsonToken.START_ARRAY == parser.currentToken() && "areas".equals(parser.currentName())) {
+                while (parser.nextToken() != null) {
+                    if (JsonToken.START_OBJECT == parser.currentToken() && parser.currentName() == null) {
+                        MdeInView view = this.toMadeInView(parser);
+                        if ("CITY".equals(view.level))
+                            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + view.code + ",\"madeIn\":\"" + view.name + "\"}'";
+                        if ("COUNTRY".equals(view.level) && 156 != view.code)
+                            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\",\"code\":" + view.code + ",\"madeIn\":\"" + (view.name.length() > 4 ? view.abbreviation : view.name) + "\"}'";
+                        //if ("COUNTY".equals(view.level))
+                        System.out.println(view);
                     }
-                    case "level" -> mark = false;
+                    if (JsonToken.END_ARRAY == parser.currentToken() && "areas".equals(parser.currentName())) break;
                 }
             }
         }
@@ -164,26 +149,62 @@ public class MaidenHandler implements EventHandler<ItemImportEvent> {
         // return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\",\"code\":" + parentCode + ",\"madeIn\":\"" + parentName + "\"}'";
         //if (level != null && level.equals("PROVINCE"))
         //return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"madeIn\":\"" + name + "\"}'";
-        if (level.equals("CITY"))
-            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"madeIn\":\"" + name + "\"}'";
+        //if (level.equals("CITY"))
+        //return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"madeIn\":\"" + name + "\"}'";
         return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'";
     }
 
-    private MadeIn rebuild(JsonParser parser) throws IOException {
+    private MdeInView toMadeInView(JsonParser parser) throws IOException {
+        String name = null, abbreviation = null, level = null;
+        int code = Integer.MIN_VALUE, parentCode = Integer.MIN_VALUE, position = 0;
         while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.START_OBJECT) {
-                if (JsonToken.FIELD_NAME.equals(parser.currentToken())) {
-                    String fieldName = parser.currentName();
-
-                    switch (fieldName) {
-
+            //System.out.println(parser.currentToken() + ":" + parser.currentName());
+            if (parser.currentToken() == JsonToken.START_ARRAY && "sort".equals(parser.currentName())) break;
+            String fieldName = parser.currentName();
+            parser.nextToken();
+            switch (fieldName) {
+                case "parent_code" -> parentCode = parser.getIntValue();
+                case "code" -> code = parser.getIntValue();
+                case "name" -> {//end name也会进入一次
+                    position += 1;
+                    if (position == 2) {
+                        name = parser.getValueAsString();
+                    }
+                    if (position == 4) {
+                        level = parser.getValueAsString();
                     }
                 }
+                case "abbreviation" -> abbreviation = parser.getValueAsString();
             }
-            if (parser.currentToken() == JsonToken.END_ARRAY && "sort".equals(parser.currentName())) {
-                break;
-            }
+
         }
-        return null;
+        return new MdeInView(parentCode, code, name, abbreviation, level);
+    }
+
+    private static class MdeInView {
+        int parentCode;
+        String level;
+        String name;
+        String abbreviation;
+        int code;
+
+        public MdeInView(int parentCode, int code, String name, String abbreviation, String level) {
+            this.parentCode = parentCode;
+            this.code = code;
+            this.name = name;
+            this.abbreviation = abbreviation;
+            this.level = level;
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", MdeInView.class.getSimpleName() + "[", "]")
+                    .add("parentCode=" + parentCode)
+                    .add("level='" + level + "'")
+                    .add("name='" + name + "'")
+                    .add("abbreviation='" + abbreviation + "'")
+                    .add("code=" + code)
+                    .toString();
+        }
     }
 }

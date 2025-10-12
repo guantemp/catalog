@@ -26,6 +26,8 @@ import java.util.regex.Pattern;
  * @version 0.0.2 2023-03-01
  */
 public class Domestic implements MadeIn {
+    private static final Pattern CODE_PATTERN = Pattern.compile("^\\d{3,}$");
+
     public static final Domestic BEI_JING = new Domestic("110100", "北京市");
     public static final Domestic TIAN_JIN = new Domestic("120100", "天津市");
     public static final Domestic SHANG_HAI = new Domestic("310100", "上海市");
@@ -33,7 +35,7 @@ public class Domestic implements MadeIn {
 
     private final String city;//乐山市
     private final String code;// 511100;
-    private static final Pattern CODE_PATTERN = Pattern.compile("^\\d{3,}$");
+
 
     public Domestic(String code, String city) {
         this.city = Objects.requireNonNull(city, "city required").trim();
