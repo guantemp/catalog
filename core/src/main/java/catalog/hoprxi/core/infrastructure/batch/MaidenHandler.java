@@ -121,7 +121,7 @@ public class MaidenHandler implements EventHandler<ItemImportEvent> {
             final HttpEntity entity = response.getEntity();
             return this.read(entity.getContent());
         });
-        System.out.println("result:" + result);
+        //System.out.println("result:" + result);
         itemImportEvent.map.put(ItemMapping.MADE_IN, result);
         //System.out.println("made_in:" + itemImportEvent.map.get(Corresponding.MADE_IN));
     }
@@ -137,8 +137,10 @@ public class MaidenHandler implements EventHandler<ItemImportEvent> {
                             return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + view.code + ",\"madeIn\":\"" + view.name + "\"}'";
                         if ("COUNTRY".equals(view.level) && 156 != view.code)
                             return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\",\"code\":" + view.code + ",\"madeIn\":\"" + (view.name.length() > 4 ? view.abbreviation : view.name) + "\"}'";
-                        //if ("COUNTY".equals(view.level))
-                        System.out.println(view);
+                        if ("COUNTY".equals(view.level)) {
+                            this.processPreviousLevel(view);
+                            //System.out.println(view);
+                        }
                     }
                     if (JsonToken.END_ARRAY == parser.currentToken() && "areas".equals(parser.currentName())) break;
                 }
@@ -152,6 +154,14 @@ public class MaidenHandler implements EventHandler<ItemImportEvent> {
         //if (level.equals("CITY"))
         //return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"madeIn\":\"" + name + "\"}'";
         return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'";
+    }
+
+    private void processPreviousLevel(MdeInView view) throws IOException {
+        ClassicHttpRequest httpGet = ClassicRequestBuilder.get(AREA_URL+"/"+view.parentCode).build();
+        httpClient.execute(httpGet, response -> {
+            final HttpEntity entity = response.getEntity();
+            return this.read(entity.getContent());
+        });
     }
 
     private MdeInView toMadeInView(JsonParser parser) throws IOException {

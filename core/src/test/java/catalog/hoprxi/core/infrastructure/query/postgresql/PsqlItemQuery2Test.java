@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.ItemQuery;
+import catalog.hoprxi.core.application.query.ItemQuery2;
 import catalog.hoprxi.core.application.view.ItemView;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -27,13 +27,13 @@ import salt.hoprxi.crypto.util.StoreKeyLoad;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-11-21
  */
-public class PsqlItemQueryTest {
+public class PsqlItemQuery2Test {
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
 
-    private static final ItemQuery query = new PsqlItemQuery();
+    private static final ItemQuery2 query = new PsqlItemQuery2();
 
     static {
         //CategoryQuery categoryQuery = new PsqlCategoryQuery();
@@ -84,7 +84,7 @@ public class PsqlItemQueryTest {
 
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testBelongToCategoryAndDescendants() {
-        PsqlItemQuery itemQueryService = ((PsqlItemQuery) query);
+        PsqlItemQuery2 itemQueryService = ((PsqlItemQuery2) query);
         ItemView[] skuses;
         skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598", 0, 5);
         Assert.assertEquals(skuses.length, 5);

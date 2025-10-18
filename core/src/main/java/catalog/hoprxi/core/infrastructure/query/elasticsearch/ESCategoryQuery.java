@@ -98,10 +98,10 @@ public class ESCategoryQuery implements CategoryQuery {
             Response response = client.performRequest(request);
             JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
             while (parser.nextToken() != null) {
-                if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.getCurrentName())) {
+                if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
                     generator.writeStartObject();
                     while (parser.nextToken() != null) {
-                        if ("_meta".equals(parser.getCurrentName())) break;
+                        if ("_meta".equals(parser.currentName())) break;
                         generator.copyCurrentEvent(parser);
                     }
                     generator.writeEndObject();

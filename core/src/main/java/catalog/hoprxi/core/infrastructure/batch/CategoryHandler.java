@@ -21,11 +21,18 @@ import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import catalog.hoprxi.core.infrastructure.DataSourceUtil;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQuery;
 import com.lmax.disruptor.EventHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.regex.Pattern;
 
 /***
@@ -36,6 +43,7 @@ import java.util.regex.Pattern;
 public class CategoryHandler implements EventHandler<ItemImportEvent> {
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{12,19}$");
     private static long ROOT_ID;
+    private static final Logger LOGGER = LoggerFactory.getLogger(CategoryHandler.class);
     private final PsqlCategoryQuery CATEGORY_QUERY = new PsqlCategoryQuery();
     private final CategoryRepository repository = new PsqlCategoryRepository();
 
@@ -61,11 +69,13 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         String category = itemImportEvent.map.get(ItemMapping.CATEGORY);
-        if (category == null || category.isEmpty() || category.equalsIgnoreCase("undefined") || category.equalsIgnoreCase(Label.CATEGORY_UNDEFINED)) {
+        if (category == null || category.isBlank() || category.equalsIgnoreCase("undefined") || category.equalsIgnoreCase(Label.CATEGORY_UNDEFINED)) {
             itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNDEFINED.id()));
             return;
         }
-        if (ID_PATTERN.matcher(category).matches()) {
+        if (ID_PATTERN.matcher(category).matches()) {//valid category id
+            if (!this.find(Long.parseLong(category)))//没有查到该id
+                itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNDEFINED.id()));
             return;
         }
         String[] ss = category.split("/");
@@ -90,5 +100,20 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
             itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(parentId));
         }
         //System.out.println("category:" +itemImportEvent.map.get(Corresponding.CATEGORY));
+    }
+
+    private boolean find(long id) {
+        final String query = "select id from category where id = ?";
+        try (Connection connection = DataSourceUtil.getConnection()) {
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setLong(1, id);
+            ResultSet rs = preparedStatement.executeQuery();
+            if (rs.next())
+                return true;
+        } catch (SQLException e) {
+            LOGGER.error("e: ", e);
+            //LOGGER.error("Can't rebuild brand with (name = {})", name, e);
+        }
+        return false;
     }
 }

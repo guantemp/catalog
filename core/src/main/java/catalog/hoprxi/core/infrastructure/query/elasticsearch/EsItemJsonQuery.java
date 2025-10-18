@@ -43,6 +43,7 @@ import java.io.StringWriter;
  * @since JDK8.0
  * @version 0.0.1 builder 2025-01-11
  */
+@Deprecated
 public class EsItemJsonQuery implements ItemJsonQuery {
     private static final String EMPTY_ITEM = "";
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.item");
@@ -58,13 +59,13 @@ public class EsItemJsonQuery implements ItemJsonQuery {
             Response response = client.performRequest(request);
             JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
             while (parser.nextToken() != null) {
-                if (parser.currentToken() == JsonToken.FIELD_NAME && "_source".equals(parser.getCurrentName())) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME && "_source".equals(parser.currentName())) {
                     parser.nextToken();
                     StringWriter writer = new StringWriter(1024);
                     JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
                     generator.writeStartObject();
                     while (parser.nextToken() != null) {
-                        if ("_meta".equals(parser.getCurrentName())) break;
+                        if ("_meta".equals(parser.currentName())) break;
                         generator.copyCurrentEvent(parser);
                     }
                     generator.writeEndObject();

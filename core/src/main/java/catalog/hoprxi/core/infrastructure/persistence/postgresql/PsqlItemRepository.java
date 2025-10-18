@@ -159,7 +159,7 @@ public class PsqlItemRepository implements ItemRepository {
     @Override
     public void remove(long id) {
         try (Connection connection = DataSourceUtil.getConnection()) {
-            final String removeSql = "remove from item where id=?";
+            final String removeSql = "delete from item where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();

@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2025-04-04
  */
 public class KeywordFilter implements ItemQueryFilter {
-    private static final Pattern BARCODE = Pattern.compile("^\\d{2,13}$");
+    private static final Pattern BARCODE = Pattern.compile("^\\d{2,14}$");
     private final String keyword;
 
     public KeywordFilter(String keyword) {

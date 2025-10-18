@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.ItemQuery;
+import catalog.hoprxi.core.application.query.ItemQuery2;
 import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
@@ -58,8 +58,8 @@ import java.util.List;
  * @since JDK8.0
  * @version 0.0.2 builder 2023-08-13
  */
-public class PsqlItemQuery implements ItemQuery {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQuery.class);
+public class PsqlItemQuery2 implements ItemQuery2 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQuery2.class);
     private static final Cache<String, ItemView> CACHE = CacheFactory.build("itemView");
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
     private static Constructor<Name> nameConstructor;

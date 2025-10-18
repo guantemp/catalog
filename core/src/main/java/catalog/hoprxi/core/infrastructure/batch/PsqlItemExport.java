@@ -17,10 +17,10 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemExportService;
-import catalog.hoprxi.core.application.query.ItemQuery;
+import catalog.hoprxi.core.application.query.ItemQuery2;
 import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
-import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQuery;
+import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQuery2;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -124,7 +124,7 @@ public class PsqlItemExport implements ItemExportService {
 
     @Override
     public void exportToXls(OutputStream outputStream) throws IOException {
-        ItemQuery query = new PsqlItemQuery();
+        ItemQuery2 query = new PsqlItemQuery2();
         ItemView[] itemViews = query.queryAll(0, 2000);
         SXSSFWorkbook workbook = null;
         BufferedOutputStream bufferedOutPut = null;
