@@ -18,8 +18,8 @@ package catalog.hoprxi;
 
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SortField;
-import catalog.hoprxi.core.application.query.filter.BrandIdFilter;
-import catalog.hoprxi.core.application.query.filter.CategoryIdFilter;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.BrandIdFilter;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.CategoryIdFilter;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.price.Price;

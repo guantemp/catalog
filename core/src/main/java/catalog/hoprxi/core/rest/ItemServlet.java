@@ -34,7 +34,7 @@ import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
-import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQuery2;
+import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQuery;
 import com.fasterxml.jackson.core.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -89,7 +89,7 @@ public class ItemServlet extends HttpServlet {
         switch ((provider)) {
             case "postgresql":
                 //repository = new PsqlItemRepository("catalog");
-                queryService = new PsqlItemQuery2();
+                queryService = new PsqlItemQuery();
                 break;
         }
     }

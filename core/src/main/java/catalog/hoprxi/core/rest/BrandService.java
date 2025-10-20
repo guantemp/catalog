@@ -62,12 +62,10 @@ import java.util.concurrent.CompletableFuture;
 @PathPrefix("/catalog/core/v1")
 public class BrandService {
     private static final int OFFSET = 0;
-    private static final int SIZE = 128;
+    private static final int SIZE = 64;
 
     private static final int SINGLE_BUFFER_SIZE = 512; // 0.5KB缓冲区
-    private static final int BATCH_BUFFER_SIZE = 8192;
-    /// / 8KB缓冲区
-
+    private static final int BATCH_BUFFER_SIZE = 8192;// 8KB缓冲区
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Brand");
 
     private static final EnumSet<SortField> SUPPORT_SORT_FIELD = EnumSet.of(SortField._ID, SortField.ID, SortField.NAME, SortField._NAME);

@@ -14,51 +14,45 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.query.filter;
+package catalog.hoprxi.core.infrastructure.query.elasticsearch.filter;
 
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2025-01-03
+ * @version 0.0.1 builder 2025-01-06
  */
-public class CategoryIdFilter implements ItemQueryFilter {
-    private long[] categoryIds;
+public class BrandIdFilter implements ItemQueryFilter {
+    private long[] brandIds;
 
-    public CategoryIdFilter(long[] categoryIds) {
-        this.categoryIds = categoryIds == null ? new long[0] : categoryIds;
+    public BrandIdFilter(long[] brandIds) {
+        this.brandIds = brandIds == null ? new long[0] : brandIds;
     }
 
-    public CategoryIdFilter(long categoryId) {
-        Objects.requireNonNull(categoryId, "categoryId is required");
-        this.categoryIds = new long[]{categoryId};
+    public BrandIdFilter(long brandIds) {
+        this.brandIds = new long[]{brandIds};
     }
-
 
     @Override
     public void filter(JsonGenerator generator) throws IOException {
-        if (categoryIds.length == 0) {
-            return;
-        }
-        if (categoryIds.length == 1) {
+        if (brandIds.length == 1) {
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");
-            generator.writeNumberField("category.id", categoryIds[0]);
+            generator.writeNumberField("brand.id", brandIds[0]);
             generator.writeEndObject();
             generator.writeEndObject();
         } else {
             generator.writeStartObject();
             generator.writeObjectFieldStart("terms");
-            generator.writeArrayFieldStart("category.id");
-            for (long categoryId : categoryIds)
-                generator.writeNumber(categoryId);
+            generator.writeArrayFieldStart("brand.id");
+            for (long id : brandIds)
+                generator.writeNumber(id);
             generator.writeEndArray();
             generator.writeEndObject();
             generator.writeEndObject();
@@ -67,23 +61,23 @@ public class CategoryIdFilter implements ItemQueryFilter {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", CategoryIdFilter.class.getSimpleName() + "[", "]")
-                .add("categoryIds=" + Arrays.toString(categoryIds))
+        return new StringJoiner(", ", BrandIdFilter.class.getSimpleName() + "[", "]")
+                .add("brandIds=" + Arrays.toString(brandIds))
                 .toString();
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CategoryIdFilter)) return false;
+        if (!(o instanceof BrandIdFilter)) return false;
 
-        CategoryIdFilter that = (CategoryIdFilter) o;
+        BrandIdFilter that = (BrandIdFilter) o;
 
-        return Arrays.equals(categoryIds, that.categoryIds);
+        return Arrays.equals(brandIds, that.brandIds);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(categoryIds);
+        return Arrays.hashCode(brandIds);
     }
 }

@@ -58,8 +58,8 @@ import java.util.List;
  * @since JDK8.0
  * @version 0.0.2 builder 2023-08-13
  */
-public class PsqlItemQuery2 implements ItemQuery2 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQuery2.class);
+public class PsqlItemQuery implements ItemQuery2 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQuery.class);
     private static final Cache<String, ItemView> CACHE = CacheFactory.build("itemView");
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
     private static Constructor<Name> nameConstructor;

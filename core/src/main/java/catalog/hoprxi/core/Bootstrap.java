@@ -18,6 +18,7 @@ package catalog.hoprxi.core;
 
 import catalog.hoprxi.core.rest.BrandService;
 import catalog.hoprxi.core.rest.CategoryService;
+import catalog.hoprxi.core.rest.ItemService;
 import catalog.hoprxi.core.rest.UnitService;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServerBuilder;
@@ -120,6 +121,7 @@ public class Bootstrap {
                 .annotatedService("/", new BrandService())
                 .annotatedService("/", new CategoryService())
                 .annotatedService("/", new UnitService())
+                .annotatedService("/", new ItemService())
                 .build();
         server.closeOnJvmShutdown();
         server.start().join();

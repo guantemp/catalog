@@ -28,14 +28,25 @@ public interface ItemQuery {
 
     InputStream findByBarcode(String barcode);
 
+    /**
+     * @param filters
+     * @param size
+     * @param searchAfter
+     * @param sortField
+     * @return
+     */
     InputStream search(ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField);
+
+    default InputStream search(ItemQueryFilter[] filters, int size) {
+        return search(filters, size,"", SortField._ID);
+    }
 
     default InputStream search(int size, String searchAfter, SortField sortField) {
         return search(new ItemQueryFilter[0], size, searchAfter, sortField);
     }
 
-    default InputStream search(int size, String searchAfter) {
-        return search(new ItemQueryFilter[0], size, searchAfter, SortField._ID);
+    default InputStream search(int size, SortField sortField) {
+        return search(new ItemQueryFilter[0], size, "", sortField);
     }
 
     /**

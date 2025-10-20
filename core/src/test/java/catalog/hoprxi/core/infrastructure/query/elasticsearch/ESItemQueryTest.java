@@ -20,7 +20,7 @@ import catalog.hoprxi.core.application.query.ItemJsonQuery;
 import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SortField;
-import catalog.hoprxi.core.application.query.filter.*;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
@@ -36,14 +36,14 @@ import java.nio.charset.StandardCharsets;
  * @since JDK8.0
  * @version 0.0.1 builder 2024-08-24
  */
-public class EsItemQueryTest {
+public class ESItemQueryTest {
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"slave.tooo.top:9200"});
     }
 
     private static final ItemJsonQuery service = new EsItemJsonQuery();
-    private static final ItemQuery query = new EsItemQuery();
+    private static final ItemQuery query = new ESItemQuery();
 
 
     @Test
@@ -60,79 +60,96 @@ public class EsItemQueryTest {
     }
 
     @Test
-    public void testSearchPage() throws IOException {
-        System.out.println(service.query(100, 30));
-        /*
+    public void testFindByBarcode() throws IOException {
+        InputStream is = query.findByBarcode("6900404523737");
+        String s = inputStreamToString(is);
+        System.out.println(s);
+        is = query.findByBarcode( "6939006488885");
+        s = inputStreamToString(is);
+        System.out.println(s);
+        is = query.findByBarcode("6940188805018");
+        s = inputStreamToString(is);
+        System.out.println(s);
 
+        try {
+            query.findByBarcode("690158611081");
+            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
+        } catch (IllegalArgumentException e) {
+            // 验证异常信息
+            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
+        }
+        try {
+            query.findByBarcode("dsgf");
+            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
+        } catch (IllegalArgumentException e) {
+            // 验证异常信息
+            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
+        }
+        try {
+            query.findByBarcode("");
+            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
+        } catch (IllegalArgumentException e) {
+            // 验证异常信息
+            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
+        }
+        try {
+            query.findByBarcode(null);
+            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
+        } catch (IllegalArgumentException e) {
+            // 验证异常信息
+            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
+        }
+    }
 
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(new long[]{62078021456738571L}), new BrandIdFilter(-1L)}, 0, 10, SortField._BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(new long[]{62078023226734874L}), new RetailPriceFilter(1.1, 2), new LastReceiptPriceFilter(null, 1.2)}, 0, 9, SortField._ID));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryIdFilter(new long[]{62078023226734874L})}, 50, 10, SortField.ID));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("伊利")}, 10, 1, SortField._RETAIL_PRICE));
-         */
+    @Test
+    public void testSearch() throws IOException {
         InputStream is = query.search(100, 30);
         String s = inputStreamToString(is);
         System.out.println(s);
-
-        System.out.println(service.query(0, 50, SortField._BARCODE));
         is = query.search(0, 50, SortField._BARCODE);
         s = inputStreamToString(is);
         System.out.println(s);
-
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693")}, 0, 10, SortField._BARCODE));
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693")}, 0, 10, SortField._BARCODE);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("694")}, 0, 10, SortField._BARCODE);
         s = inputStreamToString(is);
         System.out.println(s);
 
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(null)}, 0, 10, SortField.BARCODE));
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(-1L)}, 0, 10, SortField.BARCODE);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(null)}, 10, 15, SortField.BARCODE);
+        s = inputStreamToString(is);
+        System.out.println(s);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(new long[]{49680933986631205L}), new BrandIdFilter(-1L)}, 0, 10, SortField._BARCODE);
+        s = inputStreamToString(is);
+        System.out.println(s);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("692"), new RetailPriceFilter(1.1, 2), new LastReceiptPriceFilter(null, 1.2)}, 0, 9, SortField._ID);
+        s = inputStreamToString(is);
+        System.out.println(s);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryIdFilter(49680944612900409L)}, 50, 10, SortField.ID);
+        s = inputStreamToString(is);
+        System.out.println(s);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("伊利")}, 10, 256, SortField._RETAIL_PRICE);
         s = inputStreamToString(is);
         System.out.println(s);
     }
 
-    @Test
-    public void testQueryByBarcode() {
-        System.out.println(service.queryByBarcode("6900404523737"));
-        System.out.println(service.queryByBarcode("6901028025102"));
-        System.out.println(service.queryByBarcode("6901586110814"));
-        try {
-            service.queryByBarcode("690158611081");
-            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
-        } catch (IllegalArgumentException e) {
-            // 验证异常信息
-            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
-        }
-        try {
-            service.queryByBarcode("dsgf");
-            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
-        } catch (IllegalArgumentException e) {
-            // 验证异常信息
-            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
-        }
-        try {
-            service.queryByBarcode("");
-            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
-        } catch (IllegalArgumentException e) {
-            // 验证异常信息
-            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
-        }
-        try {
-            service.queryByBarcode(null);
-            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
-        } catch (IllegalArgumentException e) {
-            // 验证异常信息
-            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
-        }
-    }
-
-    @Test
-    public void testQueryPageSearchAfter() {
-        System.out.println(service.query(50, "9588868020855", SortField.BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new CategoryIdFilter(62080074300112015l)}, 50, null, null));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(new long[]{62078023226734874l})}, 1, null, SortField._BARCODE));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryIdFilter(new long[]{62078023226734874l})}, 50, "", SortField.ID));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(new long[]{62078023226734874l}), new RetailPriceFilter(1.1, 2), new LastReceiptPriceFilter(1.1, 1.2)}, 50, null, SortField._ID));
-        System.out.println(service.query(new ItemQueryFilter[]{new KeywordFilter("伊利")}, 10, "258", SortField._RETAIL_PRICE));
+    @Test(invocationCount = 1,threadPoolSize = 1)
+    public void testSearchAfter() throws IOException {
+        InputStream is = query.search(50, "9588868020855", SortField.BARCODE);
+        String s = inputStreamToString(is);
+        System.out.println(s);
+        is = query.search(new ItemQueryFilter[]{new CategoryIdFilter(49681151224315522L)}, 50);
+        s = inputStreamToString(is);
+        System.out.println(s);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(49680933986631205L)}, 1, null, SortField._BARCODE);
+        s = inputStreamToString(is);
+        System.out.println(s);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("6932"), new CategoryIdFilter(49680933986631205L)}, 50);
+        s = inputStreamToString(is);
+        System.out.println(s);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("692"), new CategoryIdFilter(new long[]{49680944612900409L}), new RetailPriceFilter(2.6, 25.5), new LastReceiptPriceFilter(1.1, 3)}, 5, null, SortField._ID);
+        s = inputStreamToString(is);
+        System.out.println(s);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("伊利"),new KeywordFilter("690")}, 10, "258", SortField._RETAIL_PRICE);
+        s = inputStreamToString(is);
+        System.out.println(s);
     }
 
     private static String inputStreamToString(InputStream is) throws IOException {

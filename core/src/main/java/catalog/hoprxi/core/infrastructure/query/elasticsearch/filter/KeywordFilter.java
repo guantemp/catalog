@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.query.filter;
+package catalog.hoprxi.core.infrastructure.query.elasticsearch.filter;
 
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import com.fasterxml.jackson.core.JsonGenerator;

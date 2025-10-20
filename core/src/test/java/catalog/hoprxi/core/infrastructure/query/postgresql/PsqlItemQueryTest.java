@@ -27,13 +27,13 @@ import salt.hoprxi.crypto.util.StoreKeyLoad;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-11-21
  */
-public class PsqlItemQuery2Test {
+public class PsqlItemQueryTest {
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
 
-    private static final ItemQuery2 query = new PsqlItemQuery2();
+    private static final ItemQuery2 query = new PsqlItemQuery();
 
     static {
         //CategoryQuery categoryQuery = new PsqlCategoryQuery();
@@ -84,7 +84,7 @@ public class PsqlItemQuery2Test {
 
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testBelongToCategoryAndDescendants() {
-        PsqlItemQuery2 itemQueryService = ((PsqlItemQuery2) query);
+        PsqlItemQuery itemQueryService = ((PsqlItemQuery) query);
         ItemView[] skuses;
         skuses = itemQueryService.belongToCategoryAndDescendants("52495569397272598", 0, 5);
         Assert.assertEquals(skuses.length, 5);

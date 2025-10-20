@@ -21,6 +21,7 @@ import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.application.query.SortField;
+import catalog.hoprxi.core.domain.model.barcode.BarcodeValidServices;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -46,7 +47,7 @@ import java.io.StringWriter;
  * @version 0.0.1 builder 2025/10/13
  */
 
-public class EsItemQuery implements ItemQuery {
+public class ESItemQuery implements ItemQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Item");
     private static final String SINGLE_PREFIX = "/" + ESUtil.customized() + "_item";
     private static final String SEARCH_ENDPOINT = SINGLE_PREFIX + "/_search";
@@ -56,7 +57,7 @@ public class EsItemQuery implements ItemQuery {
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
     //private static final int MAX_SIZE = 9999;
-    private static final int SINGLE_BUFFER_SIZE = 1024; //1KB缓冲区
+    private static final int SINGLE_BUFFER_SIZE = 1536; //1.5KB缓冲区
     private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
 
     @Override
@@ -89,7 +90,41 @@ public class EsItemQuery implements ItemQuery {
 
     @Override
     public InputStream findByBarcode(String barcode) {
-        return null;
+        if (!BarcodeValidServices.valid(barcode))
+            throw new IllegalArgumentException("Not valid barcode ctr");
+        try (RestClient client = BUILDER.build()) {
+            Request request = new Request("GET", "/item/_search");
+            request.setOptions(ESUtil.requestOptions());
+            request.setJsonEntity(this.writeFindByBarcodeJson(barcode));
+            Response response = client.performRequest(request);
+            return this.reorganization(response.getEntity().getContent());
+        } catch (IOException e) {
+            LOGGER.warn("No search was found for anything resembling barcode {} item ", barcode, e);
+            throw new SearchException(String.format("No search was found for anything resembling barcode %s", barcode), e);
+        }
+    }
+
+    private String writeFindByBarcodeJson(String barcode) {
+        StringWriter writer = new StringWriter();
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("bool");
+            generator.writeObjectFieldStart("filter");
+
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("barcode.raw", barcode);
+            generator.writeEndObject();
+
+            generator.writeEndObject();
+            generator.writeEndObject();//end bool
+            generator.writeEndObject();//end query
+            //generator.writeBooleanField("track_scores", false);
+            generator.writeEndObject();
+        } catch (IOException e) {
+            LOGGER.error("Cannot assemble request JSON", e);
+        }
+        return writer.toString();
     }
 
     @Override
@@ -97,12 +132,11 @@ public class EsItemQuery implements ItemQuery {
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (sortField == null) {
             sortField = SortField._ID;
-            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+            LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         try (RestClient client = BUILDER.build()) {
             Request request = new Request("GET", "/item/_search");
             request.setOptions(ESUtil.requestOptions());
-            //System.out.println(writeQueryJson(key, filters, size, searchAfter, sortField));
             request.setJsonEntity(this.writeSearchJson(filters, size, searchAfter, sortField));
             Response response = client.performRequest(request);
             return this.reorganization(response.getEntity().getContent());
@@ -123,7 +157,6 @@ public class EsItemQuery implements ItemQuery {
             this.writeAggs(generator, AGGS_SIZE);
             generator.writeBooleanField("track_scores", false);
             generator.writeEndObject();
-            generator.flush();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
         }
@@ -154,7 +187,7 @@ public class EsItemQuery implements ItemQuery {
             Response response = client.performRequest(request);
             return this.reorganization(response.getEntity().getContent());
         } catch (IOException e) {
-           LOGGER.error("No search was found for anything items ", e);
+            LOGGER.error("No search was found for anything items ", e);
             throw new SearchException(String.format("No search was found for anything items from %s", 2), e);
         }
     }
@@ -168,7 +201,7 @@ public class EsItemQuery implements ItemQuery {
             this.writeMain(generator, filters);
             this.writeSortField(generator, sortField);
             this.writeAggs(generator, AGGS_SIZE);
-            //generator.writeBooleanField("track_scores", false);
+            generator.writeBooleanField("track_scores", false);
             generator.writeEndObject();//root
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
@@ -185,7 +218,7 @@ public class EsItemQuery implements ItemQuery {
             generator.writeEndObject();//match_all
         } else {
             generator.writeObjectFieldStart("bool");
-            generator.writeArrayFieldStart("must");
+            generator.writeArrayFieldStart("filter");
             for (ItemQueryFilter filter : filters) {
                 filter.filter(generator);
             }
@@ -246,7 +279,6 @@ public class EsItemQuery implements ItemQuery {
             JsonParser parser = JSON_FACTORY.createParser(is);
             while (parser.nextToken() != null) {
                 if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                    //System.out.println(parser.currentToken() + ":" + parser.getCurrentName());
                     String fieldName = parser.currentName();
                     if ("hits".equals(fieldName)) {
                         this.parseHits(parser, generator);
@@ -254,7 +286,7 @@ public class EsItemQuery implements ItemQuery {
                         do {
                             generator.copyCurrentEvent(parser);
                             parser.nextToken();
-                        } while (!(parser.currentToken() == JsonToken.END_OBJECT && "aggregations".equals(parser.getCurrentName())));
+                        } while (!(parser.currentToken() == JsonToken.END_OBJECT && "aggregations".equals(parser.currentName())));
                         generator.writeEndObject();
                     }
                 }
@@ -267,10 +299,9 @@ public class EsItemQuery implements ItemQuery {
 
     private void parseHits(JsonParser parser, JsonGenerator generator) throws IOException {
         while (parser.nextToken() != null) {
-            //System.out.println(parser.currentToken() + ":" + parser.getCurrentName());
             if (parser.currentToken() == JsonToken.END_OBJECT && "hits".equals(parser.currentName())) break;
             if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                String fieldName = parser.getCurrentName();
+                String fieldName = parser.currentName();
                 if ("total".equals(fieldName)) {
                     while (parser.nextToken() != null) {
                         if (parser.currentToken() == JsonToken.FIELD_NAME && "value".equals(parser.currentName())) {
@@ -303,7 +334,6 @@ public class EsItemQuery implements ItemQuery {
             if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
                 while (parser.nextToken() != null) {
                     if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.currentName())) break;
-                    //System.out.println(parser.currentToken()+":"+parser.getCurrentName());
                     generator.copyCurrentEvent(parser);
                 }
             }
