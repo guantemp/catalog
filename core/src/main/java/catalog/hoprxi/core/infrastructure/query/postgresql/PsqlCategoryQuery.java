@@ -18,7 +18,7 @@ package catalog.hoprxi.core.infrastructure.query.postgresql;
 
 import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
-import catalog.hoprxi.core.infrastructure.DataSourceUtil;
+import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import event.hoprxi.domain.model.DomainEvent;
 import event.hoprxi.domain.model.DomainEventSubscriber;
 import org.slf4j.Logger;
@@ -70,7 +70,7 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
             return categoryViews;
         } else {
             List<CategoryView> categoryViewList = new ArrayList<>();
-            try (Connection connection = DataSourceUtil.getConnection()) {
+            try (Connection connection = PsqlUtil.getConnection()) {
                 final String rootSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url,\"right\" - \"left\" as distance from category where id = parent_id";
                 PreparedStatement preparedStatement = connection.prepareStatement(rootSql);
                 ResultSet rs = preparedStatement.executeQuery();
@@ -97,7 +97,7 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
                 return t.value(identifiable);
             }
         }
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url,\"right\" - \"left\" as distance from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, id);
@@ -148,7 +148,7 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
     }
 
     private void queryAndFillChildren(Tree<CategoryView> tree, CategoryView parent, long id) {
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String childrenSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url,\"right\" - \"left\" as distance from category where parent_id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(childrenSql);
             preparedStatement.setLong(1, id);
@@ -180,7 +180,7 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
     }
 
     public void queryAndFillDescendants(Tree<CategoryView> tree, long id) {
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String descendantsSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url,\"right\" - \"left\" as distance from category \n" +
                     "where root_id = (select root_id from category where id = ?)\n" +
                     "  and \"left\" >= (select \"left\" from category where id = ?)\n" +
@@ -204,7 +204,7 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
 
     public CategoryView[] queryByName(String regularExpression) {
         List<CategoryView> categoryViewList = new ArrayList<>();
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String searchSql = "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,icon_url,\"right\" - \"left\" as distance from category where name::jsonb ->> 'name' ~ ?\n" +
                     "union\n" +
                     "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,icon_url,\"right\" - \"left\" as distance from category where name::jsonb ->> 'alias' ~ ?\n" +

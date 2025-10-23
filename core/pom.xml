@@ -41,7 +41,6 @@
         <maven.compiler.target>21</maven.compiler.target>
 
         <hoprxi.event.version>1.0-SNAPSHOT</hoprxi.event.version>
-        <netty.version>4.2.4.Final</netty.version>
     </properties>
 
     <dependencyManagement>
@@ -49,7 +48,7 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-bom</artifactId>
-                <version>${netty.version}</version>
+                <version>4.2.6.Final</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

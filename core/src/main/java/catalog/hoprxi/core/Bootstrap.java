@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import javax.servlet.ServletException;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -109,7 +110,6 @@ public class Bootstrap {
         HttpFile index = HttpFile.of(Paths.get(System.getProperty("user.dir"), "/html/upload.html"));
         sb.serviceUnder("/", index.asService());//相当于缺省index.html
  */
-
         //添加文档服务
         sb.serviceUnder("/docs", DocService.builder()
                 //.exampleRequests("/v1/brands", "query")
@@ -162,7 +162,6 @@ public class Bootstrap {
                                 .addInitParam("query", "es")
                                 .addMapping("/v2/items/*")
                 );
-
         DeploymentManager manager = container.addDeployment(deploymentInfo);
         manager.deploy();
         PathHandler path = Handlers.path(Handlers.redirect("/core"))
@@ -174,7 +173,6 @@ public class Bootstrap {
                 .build();
         server.start();
         LOGGER.info("System start....");
-
  */
     }
 }

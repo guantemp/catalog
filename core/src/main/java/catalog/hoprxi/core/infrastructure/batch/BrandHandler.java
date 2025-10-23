@@ -20,7 +20,7 @@ import catalog.hoprxi.core.application.batch.ItemMapping;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import catalog.hoprxi.core.infrastructure.DataSourceUtil;
+import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
 import com.lmax.disruptor.EventHandler;
@@ -77,7 +77,7 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
         final String query = "select id from brand where name::jsonb->>'name' ~ ? " +
                              "union select id from brand where name::jsonb->>'mnemonic' ~ ? " +
                              "union select id from brand where name::jsonb->>'alias' ~ ?";
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, name);
@@ -94,7 +94,7 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
 
     private boolean find(long id) {
         final String query = "select id from brand where id = ?";
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setLong(1, id);
             ResultSet rs = preparedStatement.executeQuery();

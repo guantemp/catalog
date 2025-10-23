@@ -21,7 +21,7 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
-import catalog.hoprxi.core.infrastructure.DataSourceUtil;
+import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
 import com.fasterxml.jackson.core.*;
 import org.postgresql.util.PGobject;
@@ -63,7 +63,7 @@ public class PsqlBrandRepository implements BrandRepository {
 
     @Override
     public Brand find(long id) {
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String findSql = "select id,name,about from brand where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, id);
@@ -153,7 +153,7 @@ public class PsqlBrandRepository implements BrandRepository {
 
     @Override
     public void remove(long id) {
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String removeSql = "delete from brand where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
             preparedStatement.setLong(1, id);
@@ -170,7 +170,7 @@ public class PsqlBrandRepository implements BrandRepository {
         name.setType("jsonb");
         PGobject about = new PGobject();
         about.setType("jsonb");
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             name.setValue(toJson(brand.name()));
             about.setValue(toJson(brand.about()));
             //insert into brand (id,name,about) values (?,?::jsonb,?::jsonb) 没有用PGobject修饰的sql

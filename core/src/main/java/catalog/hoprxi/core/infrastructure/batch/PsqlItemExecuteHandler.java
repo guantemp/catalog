@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.batch;
 
-import catalog.hoprxi.core.infrastructure.DataSourceUtil;
+import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import com.lmax.disruptor.EventHandler;
 
 import java.sql.Connection;
@@ -37,7 +37,7 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
     private StringJoiner sql = new StringJoiner(",", "insert into item (id,\"name\",barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price,show) values ", "");
 
     public PsqlItemExecuteHandler() throws SQLException {
-        connection = DataSourceUtil.getConnection();
+        connection = PsqlUtil.getConnection();
         System.out.println("connection.getAutoCommit():" + connection.getAutoCommit());
         //if (connection.getAutoCommit())
         connection.setAutoCommit(false);

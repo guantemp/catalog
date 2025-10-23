@@ -46,7 +46,7 @@ public class ESItemQueryTest {
     private static final ItemQuery query = new ESItemQuery();
 
 
-    @Test
+    @Test(invocationCount = 400,threadPoolSize = 90)
     public void testFind() throws IOException {
         InputStream is = query.find(51746812605656589L);
         String s = inputStreamToString(is);

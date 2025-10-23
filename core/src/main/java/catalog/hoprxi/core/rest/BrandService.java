@@ -74,7 +74,7 @@ public class BrandService {
 
     @Get("/brands/:id")
     @Description("Retrieves the brand information by the given brand ID.")
-    public HttpResponse query(ServiceRequestContext ctx, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse query(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
@@ -191,7 +191,7 @@ public class BrandService {
 
     @StatusCode(201)
     @Put("/brands/{id}")
-    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
         RequestHeaders headers = ctx.request().headers();
         if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
@@ -238,7 +238,7 @@ public class BrandService {
     }
 
     @Delete("/brands/:id")
-    public HttpResponse delete(ServiceRequestContext ctx, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse delete(ServiceRequestContext ctx, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {

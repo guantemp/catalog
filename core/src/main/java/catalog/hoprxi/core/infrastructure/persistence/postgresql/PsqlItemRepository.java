@@ -24,7 +24,7 @@ import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
-import catalog.hoprxi.core.infrastructure.DataSourceUtil;
+import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
 import com.fasterxml.jackson.core.*;
 import org.javamoney.moneta.Money;
@@ -72,7 +72,7 @@ public class PsqlItemRepository implements ItemRepository {
 
     @Override
     public Item find(long id) {
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String findSql = "select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,barcode,category_id," +
                     "brand_id,grade,made_in,spec,shelf_life,retail_price::jsonb->>'number' as retail_price_number,retail_price::jsonb->>'currencyCode' as retail_price_currencyCode,retail_price::jsonb->>'unit' as retail_price_unit," +
                     "last_receipt_price::jsonb ->> 'name' last_receipt_price_name,last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit," +
@@ -158,7 +158,7 @@ public class PsqlItemRepository implements ItemRepository {
 
     @Override
     public void remove(long id) {
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String removeSql = "delete from item where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
             preparedStatement.setLong(1, id);
@@ -170,7 +170,7 @@ public class PsqlItemRepository implements ItemRepository {
 
     @Override
     public void save(Item item) {
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String insertOrReplaceSql = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price) " +
                     "values (?,?::jsonb,?,?,?,?::grade,?::jsonb,?,?,?::jsonb,?::jsonb,?::jsonb,?::jsonb) " +
                     "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,spec=?,shelf_life=?,last_receipt_price=?::jsonb,retail_price=?::jsonb,member_price=?::jsonb,vip_price=EXCLUDED.vip_price";

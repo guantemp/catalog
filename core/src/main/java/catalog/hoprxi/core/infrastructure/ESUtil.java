@@ -19,8 +19,13 @@ package catalog.hoprxi.core.infrastructure;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpHost;
+import org.apache.http.client.config.RequestConfig;
+import org.elasticsearch.client.HttpAsyncResponseConsumerFactory;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
@@ -36,9 +41,9 @@ public class ESUtil {
     private static final String DEFAULT_DATABASE_NAME = "catalog";
     private static final Properties props = new Properties();
     private static final RequestOptions COMMON_OPTIONS;
+    private static volatile RestClient restClient;
 
     static {
-        //System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER);
         Config config = ConfigFactory.load("databases");
         List<? extends Config> databases = config.getConfigList("databases");
         for (Config database : databases) {
@@ -46,21 +51,38 @@ public class ESUtil {
                 props.put("host", database.getString("host"));
                 props.put("port", database.getInt("port"));
                 String entry = database.getString("host") + ":" + database.getString("port");
-                //System.out.println(database.getString("user"));
                 props.put("user", DecryptUtil.decrypt(entry, database.getString("user")));
                 props.put("password", DecryptUtil.decrypt(entry, database.getString("password")));
                 props.put("databaseName", config.getString("databaseName"));
                 props.put("customized", config.hasPath("customized") ? config.getString("customized") : "");
+
+                props.put("ConnectTimeout", config.hasPath("ConnectTimeout") ? config.getString("ConnectTimeout") : 5000);
+                props.put("ConnectionRequestTimeout", config.hasPath("ConnectionRequestTimeout") ? config.getString("ConnectionRequestTimeout") : 1000);
+                props.put("SocketTimeout", config.hasPath("SocketTimeout") ? config.getString("ConnectTimeout") : 3000);
             }
         }
 
         RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
         builder.addHeader(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString((props.get("user") + ":" + props.get("password")).getBytes(StandardCharsets.UTF_8)))
                 .addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=utf-8");
-        //builder.setHttpAsyncResponseConsumerFactory(
-        //new HttpAsyncResponseConsumerFactory
-        //.HeapBufferedResponseConsumerFactory(30 * 1024 * 1024 * 1024));
+
+        builder.setHttpAsyncResponseConsumerFactory(
+                new HttpAsyncResponseConsumerFactory
+                        .HeapBufferedResponseConsumerFactory(256 * 1024 * 1024));
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectionRequestTimeout(1000) // 获取连接超时
+                .setConnectTimeout(5000) // 建立连接超时
+                .setSocketTimeout(30000).build(); // 响应超时;
+        builder.setRequestConfig(requestConfig);
         COMMON_OPTIONS = builder.build();
+
+        restClient = RestClient.builder(new HttpHost(props.getProperty("host", DEFAULT_HOST), Integer.parseInt(props.getProperty("port", "9200")), "https"))
+                .setHttpClientConfigCallback(httpClientBuilder -> {
+                    // 设置连接池
+                    httpClientBuilder.setMaxConnTotal(150);   // 整个连接池最大连接数
+                    httpClientBuilder.setMaxConnPerRoute(80);
+                    return httpClientBuilder;
+                }).build();
     }
 
     public static String host() {
@@ -81,5 +103,19 @@ public class ESUtil {
 
     public static RequestOptions requestOptions() {
         return COMMON_OPTIONS;
+    }
+
+    public static RestClient restClient() {
+        return restClient;
+    }
+
+    public static void release(RestClient client) {
+        if (client != null) {
+            try {
+                client.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

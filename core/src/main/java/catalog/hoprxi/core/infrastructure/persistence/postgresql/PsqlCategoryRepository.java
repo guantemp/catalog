@@ -20,7 +20,7 @@ import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
-import catalog.hoprxi.core.infrastructure.DataSourceUtil;
+import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -63,7 +63,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
 
     @Override
     public Category find(long id) {
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, id);
@@ -100,7 +100,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
 
     @Override
     public void remove(long id) throws PersistenceException {
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String removeSql = "select \"left\",\"right\",root_id from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
             preparedStatement.setLong(1, id);
@@ -129,7 +129,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
 
     @Override
     public Category[] root() {
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             List<Category> categoryList = new ArrayList<>();
             final String rootSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url from category where id = parent_id";
             PreparedStatement preparedStatement = connection.prepareStatement(rootSql);
@@ -163,7 +163,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         Objects.requireNonNull(category, "category required");
         PGobject name = new PGobject();
         name.setType("jsonb");
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             final String isExistsSql = "select id,parent_id,\"left\",\"right\",root_id from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(isExistsSql);
             preparedStatement.setLong(1, category.id());

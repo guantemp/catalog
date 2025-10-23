@@ -34,8 +34,8 @@ import java.util.Properties;
  * @since JDK8.0
  * @version 0.0.2 builder 2024-09-25
  */
-public final class DataSourceUtil {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceUtil.class);
+public final class PsqlUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlUtil.class);
     private static HikariDataSource hikariDataSource;
 
     static {

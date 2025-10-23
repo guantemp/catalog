@@ -32,7 +32,10 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.PooledByteBufAllocator;
 import org.apache.http.HttpHost;
-import org.elasticsearch.client.*;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
+import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,11 +56,17 @@ public class ESItemQuery implements ItemQuery {
     private static final String SEARCH_ENDPOINT = SINGLE_PREFIX + "/_search";
     private static final int AGGS_SIZE = 15;
 
-    private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
+    private static final RestClient client = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"))
+            .setHttpClientConfigCallback(httpClientBuilder -> {
+                // 设置连接池
+                httpClientBuilder.setMaxConnTotal(150);   // 整个连接池最大连接数
+                httpClientBuilder.setMaxConnPerRoute(80);
+                return httpClientBuilder;
+            }).build();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
     //private static final int MAX_SIZE = 9999;
-    private static final int SINGLE_BUFFER_SIZE = 1536; //1.5KB缓冲区
+    private static final int SINGLE_BUFFER_SIZE = 153624; //1.5KB缓冲区
     private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
 
     @Override
@@ -65,7 +74,7 @@ public class ESItemQuery implements ItemQuery {
         Request request = new Request("GET", "/item/_doc/" + id);//PREFIX+"/_doc/"
         request.setOptions(ESUtil.requestOptions());
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
-        try (RestClient client = BUILDER.build(); OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
             Response response = client.performRequest(request);
             JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
             while (parser.nextToken() != null) {
@@ -92,7 +101,7 @@ public class ESItemQuery implements ItemQuery {
     public InputStream findByBarcode(String barcode) {
         if (!BarcodeValidServices.valid(barcode))
             throw new IllegalArgumentException("Not valid barcode ctr");
-        try (RestClient client = BUILDER.build()) {
+        try {
             Request request = new Request("GET", "/item/_search");
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeFindByBarcodeJson(barcode));
@@ -134,7 +143,7 @@ public class ESItemQuery implements ItemQuery {
             sortField = SortField._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
-        try (RestClient client = BUILDER.build()) {
+        try {
             Request request = new Request("GET", "/item/_search");
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeSearchJson(filters, size, searchAfter, sortField));
@@ -180,7 +189,7 @@ public class ESItemQuery implements ItemQuery {
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         //System.out.println(this.writeSearchJson(filters, offset, size, sortField));
-        try (RestClient client = BUILDER.build()) {
+        try {
             Request request = new Request("GET", "/item/_search");
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeSearchJson(filters, offset, size, sortField));

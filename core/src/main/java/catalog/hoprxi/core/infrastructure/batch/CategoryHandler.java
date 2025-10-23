@@ -21,7 +21,7 @@ import catalog.hoprxi.core.application.view.CategoryView;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
-import catalog.hoprxi.core.infrastructure.DataSourceUtil;
+import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlCategoryQuery;
@@ -104,7 +104,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
 
     private boolean find(long id) {
         final String query = "select id from category where id = ?";
-        try (Connection connection = DataSourceUtil.getConnection()) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setLong(1, id);
             ResultSet rs = preparedStatement.executeQuery();
