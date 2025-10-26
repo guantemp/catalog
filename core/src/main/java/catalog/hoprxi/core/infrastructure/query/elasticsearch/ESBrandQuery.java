@@ -29,8 +29,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.PooledByteBufAllocator;
-import org.apache.http.HttpHost;
-import org.elasticsearch.client.*;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,10 +50,7 @@ public class ESBrandQuery implements BrandQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Brand");
     private static final String SINGLE_PREFIX = "/" + ESUtil.database() + "_brand";
     private static final String SEARCH_ENDPOINT = SINGLE_PREFIX + "/_search";
-
-    private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-
     private static final int SINGLE_BUFFER_SIZE = 512; // 0.5KB缓冲区
     private static final int BATCH_BUFFER_SIZE = 8192;// 8KB缓冲区
 
@@ -61,8 +59,8 @@ public class ESBrandQuery implements BrandQuery {
         Request request = new Request("GET", "/brand/_doc/" + id);//PREFIX+"/_doc/"
         request.setOptions(ESUtil.requestOptions());
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
-        try (RestClient client = BUILDER.build(); OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-            Response response = client.performRequest(request);
+        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+            Response response = ESUtil.restClient().performRequest(request);
             JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
             while (parser.nextToken() != null) {
                 if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
@@ -95,9 +93,9 @@ public class ESBrandQuery implements BrandQuery {
         }
         Request request = new Request("GET", "/brand/_search");
         request.setOptions(ESUtil.requestOptions());
-        try (RestClient client = BUILDER.build()) {
+        try {
             request.setJsonEntity(this.writeSearchJsonEntity(name, offset, size, sortField));
-            Response response = client.performRequest(request);
+            Response response = ESUtil.restClient().performRequest(request);
             return this.rebuild(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("No search was found for anything resembling name({}) brand", name, e);
@@ -127,9 +125,9 @@ public class ESBrandQuery implements BrandQuery {
         }
         Request request = new Request("GET", "/brand/_search");
         request.setOptions(ESUtil.requestOptions());
-        try (RestClient client = BUILDER.build()) {
+        try {
             request.setJsonEntity(this.writeSearchAfterJsonEntity(name, size, searchAfter, sortField));
-            Response response = client.performRequest(request);
+            Response response = ESUtil.restClient().performRequest(request);
             return rebuild(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("Not brand found from {}:", searchAfter, e);

@@ -31,11 +31,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.PooledByteBufAllocator;
-import org.apache.http.HttpHost;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
-import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +45,7 @@ import java.io.StringWriter;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2025/10/13
+ * @version 0.0.2 builder 2025/10/24
  */
 
 public class ESItemQuery implements ItemQuery {
@@ -55,16 +53,7 @@ public class ESItemQuery implements ItemQuery {
     private static final String SINGLE_PREFIX = "/" + ESUtil.customized() + "_item";
     private static final String SEARCH_ENDPOINT = SINGLE_PREFIX + "/_search";
     private static final int AGGS_SIZE = 15;
-
-    private static final RestClient client = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"))
-            .setHttpClientConfigCallback(httpClientBuilder -> {
-                // 设置连接池
-                httpClientBuilder.setMaxConnTotal(150);   // 整个连接池最大连接数
-                httpClientBuilder.setMaxConnPerRoute(80);
-                return httpClientBuilder;
-            }).build();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-
     //private static final int MAX_SIZE = 9999;
     private static final int SINGLE_BUFFER_SIZE = 153624; //1.5KB缓冲区
     private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
@@ -75,7 +64,7 @@ public class ESItemQuery implements ItemQuery {
         request.setOptions(ESUtil.requestOptions());
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
         try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-            Response response = client.performRequest(request);
+            Response response = ESUtil.restClient().performRequest(request);
             JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
             while (parser.nextToken() != null) {
                 if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
@@ -105,7 +94,7 @@ public class ESItemQuery implements ItemQuery {
             Request request = new Request("GET", "/item/_search");
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeFindByBarcodeJson(barcode));
-            Response response = client.performRequest(request);
+            Response response = ESUtil.restClient().performRequest(request);
             return this.reorganization(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.warn("No search was found for anything resembling barcode {} item ", barcode, e);
@@ -147,7 +136,7 @@ public class ESItemQuery implements ItemQuery {
             Request request = new Request("GET", "/item/_search");
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeSearchJson(filters, size, searchAfter, sortField));
-            Response response = client.performRequest(request);
+            Response response = ESUtil.restClient().performRequest(request);
             return this.reorganization(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("No search was found for anything resembling item ", e);
@@ -193,7 +182,7 @@ public class ESItemQuery implements ItemQuery {
             Request request = new Request("GET", "/item/_search");
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeSearchJson(filters, offset, size, sortField));
-            Response response = client.performRequest(request);
+            Response response = ESUtil.restClient().performRequest(request);
             return this.reorganization(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("No search was found for anything items ", e);

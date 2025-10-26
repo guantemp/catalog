@@ -50,8 +50,6 @@ public class ESCategoryQuery implements CategoryQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Category");
     private static final String SINGLE_PREFIX = "/" + ESUtil.customized() + "_category";
     private static final String SEARCH_ENDPOINT = SINGLE_PREFIX + "/_search";
-
-    private static final RestClientBuilder BUILDER = RestClient.builder(new HttpHost(ESUtil.host(), ESUtil.port(), "https"));
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
     private static final int MAX_SIZE = 9999;
@@ -60,11 +58,11 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public InputStream root() {
-        try (RestClient client = BUILDER.build()) {
+        try {
             Request request = new Request("GET", "/category/_search");
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeRootJsonEntity());
-            Response response = client.performRequest(request);
+            Response response =ESUtil.restClient().performRequest(request);
             return this.rebuild(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.warn("No search was found for anything resembling root categories", e);
@@ -94,8 +92,8 @@ public class ESCategoryQuery implements CategoryQuery {
         Request request = new Request("GET", "/category/_doc/" + id);//PREFIX+"/_doc/"
         request.setOptions(ESUtil.requestOptions());
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
-        try (RestClient client = BUILDER.build(); OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-            Response response = client.performRequest(request);
+        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+            Response response = ESUtil.restClient().performRequest(request);
             JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
             while (parser.nextToken() != null) {
                 if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
@@ -119,11 +117,11 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public InputStream children(long id) {
-        try (RestClient client = BUILDER.build()) {
+        try {
             Request request = new Request("GET", "/category/_search");
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeChildrenJsonEntity(id));
-            Response response = client.performRequest(request);
+            Response response = ESUtil.restClient().performRequest(request);
             return this.rebuild(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.warn("There are no related category(id={}) available ", id, e);
@@ -170,12 +168,12 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public InputStream descendants(long id) {
-        try (RestClient client = BUILDER.build()) {
+        try  {
             long rootId = -1;
             int left = 1, right = 1;
             Request request = new Request("GET", "/category/_doc/" + id);
             request.setOptions(ESUtil.requestOptions());
-            Response response = client.performRequest(request);
+            Response response = ESUtil.restClient().performRequest(request);
             JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
             while (parser.nextToken() != null) {
                 if (parser.currentToken() == JsonToken.FIELD_NAME) {
@@ -197,7 +195,7 @@ public class ESCategoryQuery implements CategoryQuery {
             request = new Request("GET", "/category/_search");
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeDescendantJsonEntity(rootId, left, right));
-            response = client.performRequest(request);
+            response = ESUtil.restClient().performRequest(request);
             return this.rebuildDescendantAsTree(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("There are no related category(id={}) available", id, e);
@@ -326,11 +324,11 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public InputStream search(String key, int offset, int limit) {
-        try (RestClient client = BUILDER.build()) {
+        try {
             Request request = new Request("GET", "/category/_search");
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeKeyJsonEntity(key, offset, limit));
-            Response response = client.performRequest(request);
+            Response response = ESUtil.restClient().performRequest(request);
             return this.rebuild(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.debug("No search was found for anything resembling key {} category ", key, e);
@@ -397,12 +395,12 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public InputStream path(long id) {
-        try (RestClient client = BUILDER.build()) {
+        try {
             long rootId = -1;
             int left = 1, right = 1;
             Request request = new Request("GET", "/category/_doc/" + id);
             request.setOptions(ESUtil.requestOptions());
-            Response response = client.performRequest(request);
+            Response response = ESUtil.restClient().performRequest(request);
             JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
             while (!parser.isClosed()) {
                 JsonToken jsonToken = parser.nextToken();
@@ -425,7 +423,7 @@ public class ESCategoryQuery implements CategoryQuery {
             request = new Request("GET", "/category/_search");
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writePathJsonEntity(rootId, left, right));
-            response = client.performRequest(request);
+            response = ESUtil.restClient().performRequest(request);
             return this.rebuild(response.getEntity().getContent());
         } catch (ResponseException e) {
             LOGGER.warn("The category(id={}) not found", id, e);

@@ -30,8 +30,7 @@ public enum SortField {
     RETAIL_PRICE("retail_price.number"), _RETAIL_PRICE("retail_price.number"),
     MEMBER_PRICE("member_price.price.number"), _MEMBER_PRICE("member_price.price.number"),
     VIP_PRICE("vip_price.price.number"), _VIP_PRICE("vip_price.price.number");
-    private String field;
-
+    private final String field;
 
     SortField(String field) {
         this.field = Objects.requireNonNull(field, "field is required").trim();
@@ -43,7 +42,6 @@ public enum SortField {
 
     /**
      *
-     * @param s
      * @return SortField if name
      */
     public static SortField of(String s) {

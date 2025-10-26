@@ -57,23 +57,20 @@ import java.util.regex.Pattern;
  * @since JDK21
  * @version 0.0.1 builder 2025/9/20
  */
-@PathPrefix("/catalog/core/v1")
 public class CategoryService {
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Category");
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
-
     private static final int SINGLE_BUFFER_SIZE = 512; // 0.5KB缓冲区
     private static final int BATCH_BUFFER_SIZE = 8192;// 8KB缓冲区
-
-    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Category");
-
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
+
     private static final CategoryQuery QUERY = new ESCategoryQuery();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
     @Get("/categories/:id")
     @Description("Retrieves the category information by the given category ID.")
-    public HttpResponse find(ServiceRequestContext ctx, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse find(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
@@ -84,6 +81,7 @@ public class CategoryService {
                 if (pretty) gen.useDefaultPrettyPrinter();
                 this.copyRaw(gen, source);
             } catch (SearchException | IOException e) {
+                buffer.release();
                 handleStreamError(stream, e);
             }
             stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
@@ -94,7 +92,7 @@ public class CategoryService {
     }
 
     @Get("/categories/{id}/children")
-    public HttpResponse children(ServiceRequestContext ctx, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse children(ServiceRequestContext ctx, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
@@ -105,6 +103,7 @@ public class CategoryService {
                 if (pretty) gen.useDefaultPrettyPrinter();
                 this.copyRaw(gen, source);
             } catch (IOException e) {
+                buffer.release();
                 handleStreamError(stream, e);
             }
             stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
@@ -115,17 +114,18 @@ public class CategoryService {
     }
 
     @Get("regex:^/categories/(?<id>.*)/(?:descendants|desc.)$")
-    public HttpResponse descendants(ServiceRequestContext ctx, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse descendants(ServiceRequestContext ctx, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
             if (ctx.isCancelled()) return;
             ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                InputStream source = QUERY.descendants(id);
+                InputStream is = QUERY.descendants(id);
                 if (pretty) gen.useDefaultPrettyPrinter();
-                this.copyRaw(gen, source);
+                this.copyRaw(gen, is);
             } catch (IOException e) {
+                buffer.release();
                 handleStreamError(stream, e);
             }
             stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
@@ -136,7 +136,7 @@ public class CategoryService {
     }
 
     @Get("/categories/{id}/path")
-    public HttpResponse path(ServiceRequestContext ctx, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse path(ServiceRequestContext ctx, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
@@ -147,6 +147,7 @@ public class CategoryService {
                 if (pretty) gen.useDefaultPrettyPrinter();
                 this.copyRaw(gen, source);
             } catch (IOException e) {
+                buffer.release();
                 this.handleStreamError(stream, e);
             }
             stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
@@ -168,6 +169,7 @@ public class CategoryService {
                 if (pretty) gen.useDefaultPrettyPrinter();
                 this.copyRaw(gen, source);
             } catch (IOException e) {
+                buffer.release();
                 this.handleStreamError(stream, e);
             }
             stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
@@ -185,7 +187,7 @@ public class CategoryService {
     }
 
     @Get("/categories")
-    public HttpResponse query(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse search(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
         QueryParams params = ctx.queryParams();
         String search = params.get("s", "");
         int offset = params.getInt("offset", OFFSET);
@@ -197,6 +199,7 @@ public class CategoryService {
                 if (pretty) gen.useDefaultPrettyPrinter();
                 this.copyRaw(gen, QUERY.search(search, offset, size));
             } catch (IOException e) {
+                buffer.release();
                 this.handleStreamError(stream, e);
             }
             stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
@@ -215,6 +218,7 @@ public class CategoryService {
             gen.writeStringField("message", e.getMessage());
             gen.writeEndObject();
         } catch (IOException ex) {
+            buffer.release();
             LOGGER.error("Json write error：{0}", e);
             //System.out.printf("Json write error：%s%n", e);
         }
@@ -268,7 +272,7 @@ public class CategoryService {
 
     @StatusCode(201)
     @Put("/categories/{id}")
-    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
         RequestHeaders headers = ctx.request().headers();
         if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
@@ -315,7 +319,6 @@ public class CategoryService {
                 commands.add(new CategoryChangeIconCommand(id, URI.create(icon).toURL()));
 
              */
-
     }
 
     private boolean validate(JsonGenerator generator, boolean root, String parentId, String name, String alias, String description, String uri) throws IOException {
@@ -352,7 +355,7 @@ public class CategoryService {
     }
 
     @Delete("/categories/:id")
-    public HttpResponse delete(ServiceRequestContext ctx, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse delete(ServiceRequestContext ctx, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
@@ -370,6 +373,7 @@ public class CategoryService {
                 gen.writeStringField("message", "The brand is deleted");
                 gen.writeEndObject();
             } catch (IOException e) {
+                buffer.release();
                 handleStreamError(stream, e);
             }
             stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));

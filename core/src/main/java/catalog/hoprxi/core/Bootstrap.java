@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import javax.servlet.ServletException;
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -116,11 +115,12 @@ public class Bootstrap {
                 .build());
         //ssl
         //sb.https(8443).tls(new File("certificate.crt"), new File("private.key"), "myPassphrase");
+        //sb.contextPath("/catalog/core/v1");测试没作用
 
         Server server = sb.http(PORT)
-                .annotatedService("/", new BrandService())
-                .annotatedService("/", new CategoryService())
-                .annotatedService("/", new UnitService())
+                .annotatedService("/catalog/core/v1", new UnitService())
+                .annotatedService("/catalog/core/v1", new BrandService())
+                .annotatedService("/catalog/core/v1", new CategoryService())
                 .annotatedService("/", new ItemService())
                 .build();
         server.closeOnJvmShutdown();

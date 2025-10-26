@@ -59,7 +59,6 @@ import java.util.concurrent.CompletableFuture;
  * @since JDK21
  * @version 0.0.1 builder 2025/8/27
  */
-@PathPrefix("/catalog/core/v1")
 public class BrandService {
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
@@ -72,9 +71,9 @@ public class BrandService {
     private static final BrandQuery QUERY = new ESBrandQuery();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
-    @Get("/brands/:id")
+    @Get("/brands/{id}")
     @Description("Retrieves the brand information by the given brand ID.")
-    public HttpResponse query(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse find(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
@@ -96,7 +95,7 @@ public class BrandService {
     }
 
     @Get("/brands")
-    public HttpResponse query(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse search(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
         QueryParams params = ctx.queryParams();
         String search = params.get("s", "");
         int offset = params.getInt("offset", OFFSET);
@@ -191,7 +190,7 @@ public class BrandService {
 
     @StatusCode(201)
     @Put("/brands/{id}")
-    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
         RequestHeaders headers = ctx.request().headers();
         if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,

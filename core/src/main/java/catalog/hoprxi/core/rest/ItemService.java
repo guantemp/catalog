@@ -19,6 +19,7 @@ package catalog.hoprxi.core.rest;
 
 import catalog.hoprxi.core.application.command.ItemCreateCommand;
 import catalog.hoprxi.core.application.query.ItemQuery;
+import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Item;
@@ -34,6 +35,7 @@ import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESItemQuery;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -53,6 +55,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
@@ -65,26 +69,26 @@ import java.util.concurrent.CompletableFuture;
 public class ItemService {
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
-
     private static final int SINGLE_BUFFER_SIZE = 1536; // 1.5KB缓冲区
     private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Item");
+    private static final String MINI_SEPARATION = ",";
 
     private static final ItemQuery QUERY = new ESItemQuery();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
     @Get("/items/:id")
     @Description("Retrieves the item information by the given ID.")
-    public HttpResponse query(ServiceRequestContext ctx, @Param("id") @Default("-1") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse query(ServiceRequestContext ctx, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
             if (ctx.isCancelled()) return;
             ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                InputStream source = QUERY.find(id);
                 if (pretty) gen.useDefaultPrettyPrinter();
-                this.copyRaw(gen, source);
+                InputStream is = QUERY.find(id);
+                this.copyRaw(gen, is);
             } catch (IOException e) {
                 handleStreamError(stream, e);
             }
@@ -95,11 +99,12 @@ public class ItemService {
         return HttpResponse.of(stream);
     }
 
-    private void copyRaw(JsonGenerator generator, InputStream source) throws IOException {
-        JsonParser parser = JSON_FACTORY.createParser(source);
+    private void copyRaw(JsonGenerator generator, InputStream is) throws IOException {
+        JsonParser parser = JSON_FACTORY.createParser(is);
         while (parser.nextToken() != null) {
             generator.copyCurrentEvent(parser);
         }
+        is.close();
     }
 
     private void handleStreamError(StreamWriter<HttpObject> stream, IOException e) {
@@ -122,11 +127,113 @@ public class ItemService {
     public HttpResponse query(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
         QueryParams params = ctx.queryParams();
         String search = params.get("s", "");
+        String filter = params.get("filter", "");
         int offset = params.getInt("offset", OFFSET);
         int size = params.getInt("size", SIZE);
         String cursor = params.get("cursor", "");
-        SortField sortField = SortField.of(params.get("sort", ""));
-        return null;
+        SortField sortField = SortField.of(params.get("sort", "_ID"));
+        StreamWriter<HttpObject> stream = StreamMessage.streaming();
+        ctx.blockingTaskExecutor().execute(() -> {
+            if (ctx.isCancelled()) return;
+            ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
+            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
+                if (pretty) gen.useDefaultPrettyPrinter();
+                InputStream is;
+                if (cursor.isEmpty()) {
+                    is = QUERY.search(parseFilter(search, filter), offset, size, sortField);
+                } else {
+                    is = QUERY.search(parseFilter(search, filter), size, cursor, sortField);
+                }
+                this.copyRaw(gen, is);
+            } catch (IOException e) {
+                handleStreamError(stream, e);
+            }
+            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            stream.write(HttpData.wrap(buffer));
+            stream.close();
+        });
+        return HttpResponse.of(stream);
+    }
+
+    private ItemQueryFilter[] parseFilter(String query, String filter) {
+        List<ItemQueryFilter> filterList = new ArrayList<>();
+        if (!query.isEmpty())
+            filterList.add(new KeywordFilter(query));
+        String[] filters = filter.split(";");//Project separation
+        for (String s : filters) {
+            String[] con = s.split(":");//Project name : Project value
+            if (con.length == 2) {
+                switch (con[0]) {
+                    case "cid", "categoryId" -> parseCid(filterList, con[1]);
+                    case "bid", "brandId" -> parseBid(filterList, con[1]);
+                    case "retail_price", "r_price" -> parseRetailPrice(filterList, con[1]);
+                    case "last_receipt_price", "lst_rcpt_price" -> parseLastReceiptPrice(filterList, con[1]);
+                    case "member_price", "m_price" -> parseMemberPrice(filterList, con[1]);
+                    case "vip_price", "v_price" -> parseVipPrice(filterList, con[1]);
+                }
+            }
+        }
+        //for (ItemQueryFilter f : filterList)
+        //System.out.println(f);
+        return filterList.toArray(new ItemQueryFilter[0]);
+    }
+
+    private void parseCid(List<ItemQueryFilter> filterList, String cids) {
+        if (!cids.isEmpty()) {
+            String[] ss = cids.split(MINI_SEPARATION);
+            long[] categoryIds = new long[ss.length];
+            for (int i = 0; i < ss.length; i++) {
+                categoryIds[i] = Long.parseLong(ss[i]);
+            }
+            filterList.add(new CategoryIdFilter(categoryIds));
+        }
+    }
+
+    private void parseBid(List<ItemQueryFilter> filterList, String bids) {
+        if (!bids.isEmpty()) {
+            String[] ss = bids.split(MINI_SEPARATION);
+            long[] brandIds = new long[ss.length];
+            for (int i = 0; i < ss.length; i++) {
+                brandIds[i] = Long.parseLong(ss[i]);
+            }
+            filterList.add(new BrandIdFilter(brandIds));
+        }
+    }
+
+    private void parseRetailPrice(List<ItemQueryFilter> filterList, String retail_price) {
+        if (!retail_price.isEmpty()) {
+            String[] ss = retail_price.split(MINI_SEPARATION);
+            if (ss.length == 2) {
+                filterList.add(new RetailPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
+            }
+        }
+    }
+
+    private void parseMemberPrice(List<ItemQueryFilter> filterList, String member_price) {
+        if (!member_price.isEmpty()) {
+            String[] ss = member_price.split(MINI_SEPARATION);
+            if (ss.length == 2) {
+                filterList.add(new MemberPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
+            }
+        }
+    }
+
+    private void parseVipPrice(List<ItemQueryFilter> filterList, String vip_price) {
+        if (!vip_price.isEmpty()) {
+            String[] ss = vip_price.split(MINI_SEPARATION);
+            if (ss.length == 2) {
+                filterList.add(new VipPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
+            }
+        }
+    }
+
+    private void parseLastReceiptPrice(List<ItemQueryFilter> filterList, String last_receipt_price) {
+        if (!last_receipt_price.isEmpty()) {
+            String[] ss = last_receipt_price.split(MINI_SEPARATION);
+            if (ss.length == 2) {
+                filterList.add(new LastReceiptPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
+            }
+        }
     }
 
     @Post("/items")

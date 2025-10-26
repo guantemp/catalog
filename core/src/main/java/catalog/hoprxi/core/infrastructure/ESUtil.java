@@ -41,7 +41,7 @@ public class ESUtil {
     private static final String DEFAULT_DATABASE_NAME = "catalog";
     private static final Properties props = new Properties();
     private static final RequestOptions COMMON_OPTIONS;
-    private static volatile RestClient restClient;
+    private static final RestClient restClient;
 
     static {
         Config config = ConfigFactory.load("databases");
@@ -65,10 +65,10 @@ public class ESUtil {
         RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
         builder.addHeader(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString((props.get("user") + ":" + props.get("password")).getBytes(StandardCharsets.UTF_8)))
                 .addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=utf-8");
-
         builder.setHttpAsyncResponseConsumerFactory(
                 new HttpAsyncResponseConsumerFactory
-                        .HeapBufferedResponseConsumerFactory(256 * 1024 * 1024));
+                        .HeapBufferedResponseConsumerFactory(64 * 1024 * 1024));//64MB
+
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectionRequestTimeout(1000) // 获取连接超时
                 .setConnectTimeout(5000) // 建立连接超时
