@@ -31,6 +31,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.PooledByteBufAllocator;
+import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
@@ -55,7 +56,7 @@ public class ESItemQuery implements ItemQuery {
     private static final int AGGS_SIZE = 15;
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     //private static final int MAX_SIZE = 9999;
-    private static final int SINGLE_BUFFER_SIZE = 153624; //1.5KB缓冲区
+    private static final int SINGLE_BUFFER_SIZE = 1536; //1.5KB缓冲区
     private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
 
     @Override
@@ -76,6 +77,7 @@ public class ESItemQuery implements ItemQuery {
                     generator.writeEndObject();
                 }
             }
+            //EntityUtils.consumeQuietly(response.getEntity());
         } catch (ResponseException e) {
             LOGGER.error("The item(id={}) not found", id, e);
             throw new SearchException(String.format("The item(id=%s) not found", id), e);

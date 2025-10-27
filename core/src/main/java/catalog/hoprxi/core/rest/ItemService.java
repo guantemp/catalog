@@ -79,22 +79,24 @@ public class ItemService {
 
     @Get("/items/:id")
     @Description("Retrieves the item information by the given ID.")
-    public HttpResponse query(ServiceRequestContext ctx, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse query(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
             if (ctx.isCancelled()) return;
-            ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
+            ByteBuf buffer = ctx.alloc().buffer(SINGLE_BUFFER_SIZE);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                 if (pretty) gen.useDefaultPrettyPrinter();
                 InputStream is = QUERY.find(id);
                 this.copyRaw(gen, is);
+                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+                stream.write(HttpData.wrap(buffer));
+                stream.close();
             } catch (IOException e) {
                 handleStreamError(stream, e);
+            } finally {
+                buffer.release();
             }
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.wrap(buffer));
-            stream.close();
         });
         return HttpResponse.of(stream);
     }
@@ -104,7 +106,7 @@ public class ItemService {
         while (parser.nextToken() != null) {
             generator.copyCurrentEvent(parser);
         }
-        is.close();
+        generator.flush();
     }
 
     private void handleStreamError(StreamWriter<HttpObject> stream, IOException e) {
@@ -117,6 +119,8 @@ public class ItemService {
             gen.writeEndObject();
         } catch (IOException ex) {
             LOGGER.error("Json write error：{0}", e);
+        }finally {
+            buffer.release();
         }
         stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
         stream.write(HttpData.wrap(buffer));
@@ -135,7 +139,7 @@ public class ItemService {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.blockingTaskExecutor().execute(() -> {
             if (ctx.isCancelled()) return;
-            ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
+            ByteBuf buffer = ctx.alloc().buffer(BATCH_BUFFER_SIZE);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                 if (pretty) gen.useDefaultPrettyPrinter();
                 InputStream is;
