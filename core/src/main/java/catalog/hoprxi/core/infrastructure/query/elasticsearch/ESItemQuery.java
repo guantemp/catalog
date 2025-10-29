@@ -31,7 +31,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.PooledByteBufAllocator;
-import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
@@ -77,11 +76,12 @@ public class ESItemQuery implements ItemQuery {
                     generator.writeEndObject();
                 }
             }
-            //EntityUtils.consumeQuietly(response.getEntity());
         } catch (ResponseException e) {
+            buffer.release();
             LOGGER.error("The item(id={}) not found", id, e);
             throw new SearchException(String.format("The item(id=%s) not found", id), e);
         } catch (IOException e) {
+            buffer.release();
             LOGGER.error("I/O failed", e);
             throw new SearchException("Error: Elasticsearch timeout or no connection", e);
         }
@@ -272,9 +272,9 @@ public class ESItemQuery implements ItemQuery {
     }
 
     private InputStream reorganization(InputStream is) throws IOException {
+        boolean success = false;
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        OutputStream os = new ByteBufOutputStream(buffer);
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+        try ( OutputStream os = new ByteBufOutputStream(buffer);JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
             generator.writeStartObject();
             JsonParser parser = JSON_FACTORY.createParser(is);
             while (parser.nextToken() != null) {
@@ -293,8 +293,14 @@ public class ESItemQuery implements ItemQuery {
             }
             generator.writeEndObject();
             generator.flush();
+            InputStream result = new ByteBufInputStream(buffer, true); // 创建输入流并转移所有权
+            success = true; // 标记成功
+            return result;
+        } finally {
+            if (!success && buffer != null && buffer.refCnt() > 0) { // 确保在失败时释放缓冲区
+                buffer.release();
+            }
         }
-        return new ByteBufInputStream(buffer, true);
     }
 
     private void parseHits(JsonParser parser, JsonGenerator generator) throws IOException {

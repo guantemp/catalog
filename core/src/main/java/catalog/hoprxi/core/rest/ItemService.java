@@ -20,6 +20,7 @@ package catalog.hoprxi.core.rest;
 import catalog.hoprxi.core.application.command.ItemCreateCommand;
 import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.application.query.SortField;
 import catalog.hoprxi.core.domain.model.Grade;
 import catalog.hoprxi.core.domain.model.Item;
@@ -47,7 +48,6 @@ import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
-import io.netty.buffer.PooledByteBufAllocator;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +83,7 @@ public class ItemService {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled()) return;
+            if (ctx.isCancelled() || ctx.isTimedOut()) return;
             ByteBuf buffer = ctx.alloc().buffer(SINGLE_BUFFER_SIZE);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                 if (pretty) gen.useDefaultPrettyPrinter();
@@ -91,11 +91,15 @@ public class ItemService {
                 this.copyRaw(gen, is);
                 stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
                 stream.write(HttpData.wrap(buffer));
+                buffer = null;
                 stream.close();
-            } catch (IOException e) {
+            } catch (IOException | ClosedSessionException | SearchException e) {
                 handleStreamError(stream, e);
+                LOGGER.warn("Error,it's {}", e.getMessage());
             } finally {
-                buffer.release();
+                if (buffer != null) {
+                    buffer.release(); // 只释放未被转移的缓冲区
+                }
             }
         });
         return HttpResponse.of(stream);
@@ -109,21 +113,9 @@ public class ItemService {
         generator.flush();
     }
 
-    private void handleStreamError(StreamWriter<HttpObject> stream, IOException e) {
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
-        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-            gen.writeStartObject();
-            gen.writeStringField("status", "fail");
-            gen.writeNumberField("code", 500);
-            gen.writeStringField("message", e.getMessage());
-            gen.writeEndObject();
-        } catch (IOException ex) {
-            LOGGER.error("Json write error：{0}", e);
-        }finally {
-            buffer.release();
-        }
+    private void handleStreamError(StreamWriter<HttpObject> stream, Exception e) {
         stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-        stream.write(HttpData.wrap(buffer));
+        stream.write(HttpData.ofUtf8("{\"status\":\"error\",\"code\":500,\"message\":\"Error,it's %s\"}", e.getMessage()));
         stream.close();
     }
 
@@ -149,12 +141,14 @@ public class ItemService {
                     is = QUERY.search(parseFilter(search, filter), size, cursor, sortField);
                 }
                 this.copyRaw(gen, is);
+                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+                stream.write(HttpData.wrap(buffer));
+                stream.close();
             } catch (IOException e) {
                 handleStreamError(stream, e);
+            } finally {
+                buffer.release();
             }
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.wrap(buffer));
-            stream.close();
         });
         return HttpResponse.of(stream);
     }

@@ -77,19 +77,22 @@ public class BrandService {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled()) return;
+            if (ctx.isCancelled() || ctx.isTimedOut()) return;
             ByteBuf buffer = ctx.alloc().buffer(SINGLE_BUFFER_SIZE);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                InputStream source = QUERY.find(id);
+                InputStream is = QUERY.find(id);
                 if (pretty) gen.useDefaultPrettyPrinter();
-                this.copyRaw(gen, source);
+                this.copyRaw(gen, is);
                 stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
                 stream.write(HttpData.wrap(buffer));
+                buffer = null;
                 stream.close();
             } catch (IOException e) {
                 handleStreamError(stream, e);
-            }finally {
-                buffer.release();
+            } finally {
+                if (buffer != null) {                // 确保buffer释放
+                    buffer.release();
+                }
             }
         });
         return HttpResponse.of(stream);
@@ -125,17 +128,17 @@ public class BrandService {
                 try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                     if (pretty) gen.useDefaultPrettyPrinter();
                     if (cursor.isEmpty()) {
-                        copyRaw(gen, QUERY.search(search, offset, size, sortField));
+                        this.copyRaw(gen, QUERY.search(search, offset, size, sortField));
                     } else {
-                        copyRaw(gen, QUERY.search(search, size, cursor, sortField));
+                        this.copyRaw(gen, QUERY.search(search, size, cursor, sortField));
                     }
+                    stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+                    stream.write(HttpData.wrap(buffer));
+                    stream.close();
                 } catch (IOException e) {
                     buffer.release();
                     handleStreamError(stream, e);
                 }
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.wrap(buffer));
-                stream.close();
             });
         }
         return HttpResponse.of(stream);
@@ -250,41 +253,16 @@ public class BrandService {
             Handler<BrandDeleteCommand, Boolean> handler = new BrandDeleteHandler();
             handler.execute(delete);
 
-            ByteBuf buffer = ctx.alloc().buffer(SINGLE_BUFFER_SIZE);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                if (pretty) gen.useDefaultPrettyPrinter();
-                gen.writeStartObject();
-                gen.writeStringField("status", "success");
-                gen.writeNumberField("code", 200);
-                gen.writeStringField("message", "The brand is deleted");
-                gen.writeEndObject();
-                gen.close();
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.wrap(buffer));
-                stream.close();
-            } catch (IOException e) {
-                buffer.release();
-                handleStreamError(stream, e);
-            }
+            stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":200,\"message\":\"The brand(id=%s) is deleted\"}", id));
+            stream.close();
         });
         return HttpResponse.of(stream);
     }
 
     private void handleStreamError(StreamWriter<HttpObject> stream, IOException e) {
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
-        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-            gen.writeStartObject();
-            gen.writeStringField("status", "fail");
-            gen.writeNumberField("code", 500);
-            gen.writeStringField("message", e.getMessage());
-            gen.writeEndObject();
-        } catch (IOException ex) {
-            buffer.release();
-            LOGGER.error("Json write error：{0}", e);
-            //System.out.printf("Json write error：%s%n", e);
-        }
         stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-        stream.write(HttpData.wrap(buffer));
+        stream.write(HttpData.ofUtf8("{\"status\":\"error\",\"code\":500,\"message\":\"Error,it's %s\"}", e.getMessage()));
         stream.close();
     }
 }
