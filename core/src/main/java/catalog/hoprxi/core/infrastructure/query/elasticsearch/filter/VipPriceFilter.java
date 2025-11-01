@@ -32,7 +32,7 @@ public class VipPriceFilter implements ItemQueryFilter {
 
     public VipPriceFilter(Number mix, Number max) {
         if (mix == null && max == null)
-            throw new IllegalArgumentException("mmin.max cannot all be NULL");
+            throw new IllegalArgumentException("min.max cannot all be NULL");
         this.mix = mix;
         this.max = max;
     }

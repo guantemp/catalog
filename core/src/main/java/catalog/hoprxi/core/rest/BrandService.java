@@ -39,7 +39,6 @@ import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
-import io.netty.buffer.PooledByteBufAllocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,9 +89,7 @@ public class BrandService {
             } catch (IOException e) {
                 handleStreamError(stream, e);
             } finally {
-                if (buffer != null) {                // 确保buffer释放
-                    buffer.release();
-                }
+                if (buffer != null) buffer.release();
             }
         });
         return HttpResponse.of(stream);
@@ -108,23 +105,12 @@ public class BrandService {
         SortField sortField = SortField.of(params.get("sort", ""));
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         if (!SUPPORT_SORT_FIELD.contains(sortField)) {//not support sort
-            ByteBuf buffer = ctx.alloc().buffer(SINGLE_BUFFER_SIZE);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                gen.writeStartObject();
-                gen.writeStringField("status", "fail");
-                gen.writeNumberField("code", 400);
-                gen.writeStringField("message", "Not support sort filed");
-                gen.writeEndObject();
-            } catch (IOException e) {
-                buffer.release();
-                System.out.printf("Json write error：%s%n", e);
-            }
-            stream.write(ResponseHeaders.of(HttpStatus.BAD_REQUEST, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.wrap(buffer));
+            stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            stream.write(HttpData.ofUtf8("{\"status\":\"error\",\"code\":500,\"message\":\"Not support sort filed\"}"));
             stream.close();
         } else {
             ctx.blockingTaskExecutor().execute(() -> {
-                ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
+                ByteBuf buffer = ctx.alloc().buffer(BATCH_BUFFER_SIZE);
                 try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                     if (pretty) gen.useDefaultPrettyPrinter();
                     if (cursor.isEmpty()) {
@@ -134,9 +120,9 @@ public class BrandService {
                     }
                     stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
                     stream.write(HttpData.wrap(buffer));
+                    buffer.release();
                     stream.close();
                 } catch (IOException e) {
-                    buffer.release();
                     handleStreamError(stream, e);
                 }
             });
@@ -166,7 +152,7 @@ public class BrandService {
                         "{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand)));
             } catch (Exception e) {
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                        "{\"status\":500,\"code\":500,\"message\":\"Can't create a brand,cause by {}\"}", e)));
+                        "{\"status\":500,\"code\":500,\"message\":\"Can't create a brand,cause by {}\"}", e.getMessage())));
             }
         });
         return HttpResponse.of(future);
@@ -205,8 +191,11 @@ public class BrandService {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled()) return;
+            if (ctx.isCancelled() || ctx.isTimedOut()) return;
             this.update(body, id);
+            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":201,\"message\":\"A brand has update,it's %s\"}"));
+            stream.close();
         });
         return HttpResponse.of(stream);
     }
@@ -253,7 +242,7 @@ public class BrandService {
             Handler<BrandDeleteCommand, Boolean> handler = new BrandDeleteHandler();
             handler.execute(delete);
 
-            stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
             stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":200,\"message\":\"The brand(id=%s) is deleted\"}", id));
             stream.close();
         });

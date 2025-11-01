@@ -79,7 +79,7 @@ public class ItemService {
 
     @Get("/items/:id")
     @Description("Retrieves the item information by the given ID.")
-    public HttpResponse query(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse find(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
@@ -97,9 +97,7 @@ public class ItemService {
                 handleStreamError(stream, e);
                 LOGGER.warn("Error,it's {}", e.getMessage());
             } finally {
-                if (buffer != null) {
-                    buffer.release(); // 只释放未被转移的缓冲区
-                }
+                if (buffer != null) buffer.release(); // 只释放未被转移的缓冲区
             }
         });
         return HttpResponse.of(stream);
@@ -119,8 +117,8 @@ public class ItemService {
         stream.close();
     }
 
-    @Get("/brands")
-    public HttpResponse query(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
+    @Get("/items")
+    public HttpResponse search(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
         QueryParams params = ctx.queryParams();
         String search = params.get("s", "");
         String filter = params.get("filter", "");
@@ -130,12 +128,12 @@ public class ItemService {
         SortField sortField = SortField.of(params.get("sort", "_ID"));
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled()) return;
+            if (ctx.isCancelled() || ctx.isTimedOut()) return;
             ByteBuf buffer = ctx.alloc().buffer(BATCH_BUFFER_SIZE);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                 if (pretty) gen.useDefaultPrettyPrinter();
                 InputStream is;
-                if (cursor.isEmpty()) {
+                if (cursor.isBlank()) {
                     is = QUERY.search(parseFilter(search, filter), offset, size, sortField);
                 } else {
                     is = QUERY.search(parseFilter(search, filter), size, cursor, sortField);
@@ -143,11 +141,12 @@ public class ItemService {
                 this.copyRaw(gen, is);
                 stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
                 stream.write(HttpData.wrap(buffer));
+                buffer = null;
                 stream.close();
-            } catch (IOException e) {
+            } catch (IOException | ClosedSessionException | SearchException e) {
                 handleStreamError(stream, e);
             } finally {
-                buffer.release();
+                if (buffer != null) buffer.release(); // 只释放未被转移的缓冲区
             }
         });
         return HttpResponse.of(stream);

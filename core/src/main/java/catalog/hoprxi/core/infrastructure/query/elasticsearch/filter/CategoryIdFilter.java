@@ -30,14 +30,13 @@ import java.util.StringJoiner;
  * @version 0.0.1 builder 2025-01-03
  */
 public class CategoryIdFilter implements ItemQueryFilter {
-    private long[] categoryIds;
+    private final long[] categoryIds;
 
     public CategoryIdFilter(long[] categoryIds) {
         this.categoryIds = categoryIds == null ? new long[0] : categoryIds;
     }
 
     public CategoryIdFilter(long categoryId) {
-        Objects.requireNonNull(categoryId, "categoryId is required");
         this.categoryIds = new long[]{categoryId};
     }
 
@@ -47,7 +46,7 @@ public class CategoryIdFilter implements ItemQueryFilter {
         if (categoryIds.length == 0) {
             return;
         }
-        if (categoryIds.length == 1) {
+       else if (categoryIds.length == 1) {
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");
             generator.writeNumberField("category.id", categoryIds[0]);
@@ -75,9 +74,7 @@ public class CategoryIdFilter implements ItemQueryFilter {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CategoryIdFilter)) return false;
-
-        CategoryIdFilter that = (CategoryIdFilter) o;
+        if (!(o instanceof CategoryIdFilter that)) return false;
 
         return Arrays.equals(categoryIds, that.categoryIds);
     }

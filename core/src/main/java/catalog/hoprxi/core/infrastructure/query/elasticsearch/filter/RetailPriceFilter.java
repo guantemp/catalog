@@ -34,7 +34,7 @@ public class RetailPriceFilter implements ItemQueryFilter {
 
     public RetailPriceFilter(Number mix, Number max) {
         if (mix == null && max == null)
-            throw new IllegalArgumentException("mmin.max cannot all be NULL");
+            throw new IllegalArgumentException("min.max cannot all be NULL");
         this.mix = mix;
         this.max = max;
     }
@@ -57,9 +57,7 @@ public class RetailPriceFilter implements ItemQueryFilter {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RetailPriceFilter)) return false;
-
-        RetailPriceFilter that = (RetailPriceFilter) o;
+        if (!(o instanceof RetailPriceFilter that)) return false;
 
         if (!Objects.equals(mix, that.mix)) return false;
         return Objects.equals(max, that.max);

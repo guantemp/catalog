@@ -179,7 +179,6 @@ public class ESItemQuery implements ItemQuery {
             sortField = SortField._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
-        //System.out.println(this.writeSearchJson(filters, offset, size, sortField));
         try {
             Request request = new Request("GET", "/item/_search");
             request.setOptions(ESUtil.requestOptions());
@@ -207,6 +206,7 @@ public class ESItemQuery implements ItemQuery {
             LOGGER.error("Cannot assemble request JSON", e);
             throw new IllegalStateException("Cannot assemble request JSON");
         }
+        System.out.println(writer);
         return writer.toString();
     }
 

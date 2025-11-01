@@ -74,85 +74,93 @@ public class CategoryService {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled()) return;
-            ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
+            if (ctx.isCancelled() || ctx.isTimedOut()) return;
+            ByteBuf buffer = ctx.alloc().buffer(SINGLE_BUFFER_SIZE);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                 InputStream source = QUERY.find(id);
                 if (pretty) gen.useDefaultPrettyPrinter();
                 this.copyRaw(gen, source);
-            } catch (SearchException | IOException e) {
+                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+                stream.write(HttpData.wrap(buffer));
                 buffer.release();
-                handleStreamError(stream, e);
+                stream.close();
+            } catch (SearchException | IOException e) {
+                this.handleStreamError(stream, e);
+            } finally {
+                if (buffer != null) buffer.release();
             }
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.wrap(buffer));
-            stream.close();
         });
         return HttpResponse.of(stream);
     }
 
     @Get("/categories/{id}/children")
-    public HttpResponse children(ServiceRequestContext ctx, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse children(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled()) return;
-            ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
+            if (ctx.isCancelled() || ctx.isTimedOut()) return;
+            ByteBuf buffer = ctx.alloc().buffer(BATCH_BUFFER_SIZE);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                 InputStream source = QUERY.children(id);
                 if (pretty) gen.useDefaultPrettyPrinter();
                 this.copyRaw(gen, source);
+                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+                stream.write(HttpData.wrap(buffer));
+                buffer = null;
+                stream.close();
             } catch (IOException e) {
-                buffer.release();
-                handleStreamError(stream, e);
+                this.handleStreamError(stream, e);
+            } finally {
+                if (buffer != null) buffer.release();        // 确保buffer释放
             }
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.wrap(buffer));
-            stream.close();
         });
         return HttpResponse.of(stream);
     }
 
     @Get("regex:^/categories/(?<id>.*)/(?:descendants|desc.)$")
-    public HttpResponse descendants(ServiceRequestContext ctx, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse descendants(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled()) return;
-            ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
+            if (ctx.isCancelled() || ctx.isTimedOut()) return;
+            ByteBuf buffer = ctx.alloc().buffer(BATCH_BUFFER_SIZE);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                 InputStream is = QUERY.descendants(id);
                 if (pretty) gen.useDefaultPrettyPrinter();
                 this.copyRaw(gen, is);
+                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+                stream.write(HttpData.wrap(buffer));
+                buffer = null;
+                stream.close();
             } catch (IOException e) {
-                buffer.release();
-                handleStreamError(stream, e);
+                this.handleStreamError(stream, e);
+            } finally {
+                if (buffer != null) buffer.release();        // 确保buffer释放
             }
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.wrap(buffer));
-            stream.close();
         });
         return HttpResponse.of(stream);
     }
 
     @Get("/categories/{id}/path")
-    public HttpResponse path(ServiceRequestContext ctx, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse path(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled()) return;
-            ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
+            if (ctx.isCancelled() || ctx.isTimedOut()) return;
+            ByteBuf buffer = ctx.alloc().buffer(SINGLE_BUFFER_SIZE);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                 InputStream source = QUERY.path(id);
                 if (pretty) gen.useDefaultPrettyPrinter();
                 this.copyRaw(gen, source);
+                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+                stream.write(HttpData.wrap(buffer));
+                buffer = null;
+                stream.close();
             } catch (IOException e) {
-                buffer.release();
                 this.handleStreamError(stream, e);
+            } finally {
+                if (buffer != null) buffer.release();        // 确保buffer释放
             }
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.wrap(buffer));
-            stream.close();
         });
         return HttpResponse.of(stream);
     }
@@ -162,19 +170,21 @@ public class CategoryService {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled()) return;
-            ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
+            if (ctx.isCancelled() || ctx.isTimedOut()) return;
+            ByteBuf buffer = ctx.alloc().buffer(BATCH_BUFFER_SIZE);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                 InputStream source = QUERY.root();
                 if (pretty) gen.useDefaultPrettyPrinter();
                 this.copyRaw(gen, source);
+                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+                stream.write(HttpData.wrap(buffer));
+                buffer = null;
+                stream.close();
             } catch (IOException e) {
-                buffer.release();
                 this.handleStreamError(stream, e);
+            } finally {
+                if (buffer != null) buffer.release();        // 确保buffer释放
             }
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.wrap(buffer));
-            stream.close();
         });
         return HttpResponse.of(stream);
     }
@@ -184,6 +194,7 @@ public class CategoryService {
         while (parser.nextToken() != null) {
             generator.copyCurrentEvent(parser);
         }
+        generator.flush();
     }
 
     @Get("/categories")
@@ -198,32 +209,22 @@ public class CategoryService {
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                 if (pretty) gen.useDefaultPrettyPrinter();
                 this.copyRaw(gen, QUERY.search(search, offset, size));
+                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+                stream.write(HttpData.wrap(buffer));
+                buffer=null;
+                stream.close();
             } catch (IOException e) {
-                buffer.release();
                 this.handleStreamError(stream, e);
+            } finally {
+                if (buffer != null) buffer.release();        // 确保buffer释放
             }
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.wrap(buffer));
-            stream.close();
         });
         return HttpResponse.of(stream);
     }
 
     private void handleStreamError(StreamWriter<HttpObject> stream, Exception e) {
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
-        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-            gen.writeStartObject();
-            gen.writeStringField("status", "fail");
-            gen.writeNumberField("code", 500);
-            gen.writeStringField("message", e.getMessage());
-            gen.writeEndObject();
-        } catch (IOException ex) {
-            buffer.release();
-            LOGGER.error("Json write error：{0}", e);
-            //System.out.printf("Json write error：%s%n", e);
-        }
         stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-        stream.write(HttpData.wrap(buffer));
+        stream.write(HttpData.ofUtf8("{\"status\":\"error\",\"code\":500,\"message\":\"Error,it's %s\"}", e.getMessage()));
         stream.close();
     }
 
@@ -272,7 +273,7 @@ public class CategoryService {
 
     @StatusCode(201)
     @Put("/categories/{id}")
-    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
         RequestHeaders headers = ctx.request().headers();
         if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
@@ -282,6 +283,9 @@ public class CategoryService {
         ctx.blockingTaskExecutor().execute(() -> {
             if (ctx.isCancelled()) return;
             this.update(body, id);
+            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":201,\"message\":\"A category has update,it's %s\"}"));
+            stream.close();
         });
         return HttpResponse.of(stream);
     }
@@ -311,7 +315,7 @@ public class CategoryService {
             CategoryRenameCommand renameComm = new CategoryRenameCommand(id, name, alias);
         }
         if (parentId != Long.MIN_VALUE)
-           new CategoryMoveNodeCommand(id, parentId);
+            new CategoryMoveNodeCommand(id, parentId);
          /*
             if (description != null)
                 commands.add(new CategoryChangeDescriptionCommand(id, description));
@@ -355,7 +359,7 @@ public class CategoryService {
     }
 
     @Delete("/categories/:id")
-    public HttpResponse delete(ServiceRequestContext ctx, @Param("id")  long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
@@ -364,20 +368,8 @@ public class CategoryService {
             Handler<CategoryDeleteCommand, Boolean> handler = new CategoryDeleteHandler();
             handler.execute(delete);
 
-            ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                if (pretty) gen.useDefaultPrettyPrinter();
-                gen.writeStartObject();
-                gen.writeStringField("status", "success");
-                gen.writeNumberField("code", 200);
-                gen.writeStringField("message", "The brand is deleted");
-                gen.writeEndObject();
-            } catch (IOException e) {
-                buffer.release();
-                handleStreamError(stream, e);
-            }
             stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.wrap(buffer));
+            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":200,\"message\":\"The category(id=%s) is deleted\"}", id));
             stream.close();
         });
         return HttpResponse.of(stream);

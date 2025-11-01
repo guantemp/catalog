@@ -29,7 +29,7 @@ import java.util.StringJoiner;
  * @version 0.0.1 builder 2025-01-06
  */
 public class BrandIdFilter implements ItemQueryFilter {
-    private long[] brandIds;
+    private final long[] brandIds;
 
     public BrandIdFilter(long[] brandIds) {
         this.brandIds = brandIds == null ? new long[0] : brandIds;
@@ -69,9 +69,7 @@ public class BrandIdFilter implements ItemQueryFilter {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BrandIdFilter)) return false;
-
-        BrandIdFilter that = (BrandIdFilter) o;
+        if (!(o instanceof BrandIdFilter that)) return false;
 
         return Arrays.equals(brandIds, that.brandIds);
     }

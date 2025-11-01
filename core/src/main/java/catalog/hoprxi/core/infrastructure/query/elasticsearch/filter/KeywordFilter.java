@@ -75,9 +75,7 @@ public class KeywordFilter implements ItemQueryFilter {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof KeywordFilter)) return false;
-
-        KeywordFilter that = (KeywordFilter) o;
+        if (!(o instanceof KeywordFilter that)) return false;
 
         return Objects.equals(keyword, that.keyword);
     }
