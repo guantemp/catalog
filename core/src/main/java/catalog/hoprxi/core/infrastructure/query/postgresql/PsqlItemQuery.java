@@ -18,7 +18,7 @@ package catalog.hoprxi.core.infrastructure.query.postgresql;
 
 import catalog.hoprxi.core.application.query.ItemQuery2;
 import catalog.hoprxi.core.application.view.ItemView;
-import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
@@ -381,10 +381,10 @@ public class PsqlItemQuery implements ItemQuery2 {
         String id = rs.getString("id");
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
         Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
-        Grade grade = Grade.valueOf(rs.getString("grade"));
+        GradeEnum grade = GradeEnum.valueOf(rs.getString("grade"));
         MadeIn madeIn = toMadeIn(rs.getString("made_in"));
         Specification spec = new Specification(rs.getString("spec"));
-        ShelfLife shelfLife = ShelfLife.rebuild(rs.getInt("shelf_life"));
+        ShelfLife shelfLife = ShelfLife.create(rs.getInt("shelf_life"));
         ItemView itemView = new ItemView(id, barcode, name, madeIn, spec, grade, shelfLife);
 
         ItemView.CategoryView categoryView = new ItemView.CategoryView(rs.getString("category_id"), rs.getString("category_name"));

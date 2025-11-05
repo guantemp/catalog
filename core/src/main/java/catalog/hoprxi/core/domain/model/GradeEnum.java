@@ -23,7 +23,7 @@ import catalog.hoprxi.core.infrastructure.i18n.Label;
  * @since JDK8.0
  * @version 0.0.1 builder 2019-04-28
  */
-public enum Grade {
+public enum GradeEnum {
     ONE_LEVEL {
         @Override
         public String toString() {
@@ -46,15 +46,11 @@ public enum Grade {
         }
     };
 
-    /**
-     * @param s
-     * @return
-     */
-    public static Grade of(String s) {
-        for (Grade grade : values()) {
+    public static GradeEnum of(String s) {
+        for (GradeEnum grade : values()) {
             if (grade.name().equalsIgnoreCase(s))
                 return grade;
         }
-        return Grade.QUALIFIED;
+        return GradeEnum.QUALIFIED;
     }
 }

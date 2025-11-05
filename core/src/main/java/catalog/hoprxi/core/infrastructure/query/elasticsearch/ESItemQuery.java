@@ -20,7 +20,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SearchException;
-import catalog.hoprxi.core.application.query.SortField;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.domain.model.barcode.BarcodeValidServices;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -128,10 +128,10 @@ public class ESItemQuery implements ItemQuery {
     }
 
     @Override
-    public InputStream search(ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField) {
+    public InputStream search(ItemQueryFilter[] filters, int size, String searchAfter, SortFieldEnum sortField) {
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (sortField == null) {
-            sortField = SortField._ID;
+            sortField = SortFieldEnum._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         try {
@@ -146,7 +146,7 @@ public class ESItemQuery implements ItemQuery {
         }
     }
 
-    private String writeSearchJson(ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField) {
+    private String writeSearchJson(ItemQueryFilter[] filters, int size, String searchAfter, SortFieldEnum sortField) {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -171,12 +171,12 @@ public class ESItemQuery implements ItemQuery {
     }
 
     @Override
-    public InputStream search(ItemQueryFilter[] filters, int offset, int size, SortField sortField) {
+    public InputStream search(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField) {
         if (offset < 0 || offset > 10000) throw new IllegalArgumentException("from must lager 10000");
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
         if (sortField == null) {
-            sortField = SortField._ID;
+            sortField = SortFieldEnum._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         try {
@@ -191,7 +191,7 @@ public class ESItemQuery implements ItemQuery {
         }
     }
 
-    private String writeSearchJson(ItemQueryFilter[] filters, int offset, int size, SortField sortField) {
+    private String writeSearchJson(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField) {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -206,7 +206,7 @@ public class ESItemQuery implements ItemQuery {
             LOGGER.error("Cannot assemble request JSON", e);
             throw new IllegalStateException("Cannot assemble request JSON");
         }
-        System.out.println(writer);
+        //System.out.println(writer);
         return writer.toString();
     }
 
@@ -228,7 +228,7 @@ public class ESItemQuery implements ItemQuery {
         generator.writeEndObject();//end query
     }
 
-    private void writeSortField(JsonGenerator generator, SortField sortField) throws IOException {
+    private void writeSortField(JsonGenerator generator, SortFieldEnum sortField) throws IOException {
         generator.writeArrayFieldStart("sort");
         generator.writeStartObject();
         generator.writeStringField(sortField.field(), sortField.sort());

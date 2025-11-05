@@ -17,7 +17,7 @@ package catalog.hoprxi.scale.domain.model;
 
 import catalog.hoprxi.core.domain.BrandValidatorService;
 import catalog.hoprxi.core.domain.CategoryValidatorService;
-import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
 import catalog.hoprxi.core.domain.model.brand.Brand;
@@ -44,7 +44,7 @@ public class Count {
     private String brandId;
     // @Expose(serialize = false, deserialize = false)
     private String categoryId;
-    private Grade grade;
+    private GradeEnum grade;
     @Expose(serialize = false, deserialize = false)
     private Plu plu;
     private Name name;
@@ -55,7 +55,7 @@ public class Count {
     private VipPrice vipPrice;
     private ShelfLife shelfLife;
 
-    public Count(Plu plu, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife,
+    public Count(Plu plu, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, ShelfLife shelfLife,
                  RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, String categoryId, String brandId) {
         setPlu(plu);
         setName(name);
@@ -134,9 +134,9 @@ public class Count {
         this.brandId = brandId;
     }
 
-    private void setGrade(Grade grade) {
+    private void setGrade(GradeEnum grade) {
         if (null == grade)
-            grade = Grade.QUALIFIED;
+            grade = GradeEnum.QUALIFIED;
         this.grade = grade;
     }
 
@@ -168,7 +168,7 @@ public class Count {
         return categoryId;
     }
 
-    public Grade grade() {
+    public GradeEnum grade() {
         return grade;
     }
 

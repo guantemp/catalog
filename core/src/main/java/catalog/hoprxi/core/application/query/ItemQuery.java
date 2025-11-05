@@ -35,17 +35,17 @@ public interface ItemQuery {
      * @param sortField
      * @return
      */
-    InputStream search(ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField);
+    InputStream search(ItemQueryFilter[] filters, int size, String searchAfter, SortFieldEnum sortField);
 
     default InputStream search(ItemQueryFilter[] filters, int size) {
-        return search(filters, size,"", SortField._ID);
+        return search(filters, size,"", SortFieldEnum._ID);
     }
 
-    default InputStream search(int size, String searchAfter, SortField sortField) {
+    default InputStream search(int size, String searchAfter, SortFieldEnum sortField) {
         return search(new ItemQueryFilter[0], size, searchAfter, sortField);
     }
 
-    default InputStream search(int size, SortField sortField) {
+    default InputStream search(int size, SortFieldEnum sortField) {
         return search(new ItemQueryFilter[0], size, "", sortField);
     }
 
@@ -56,13 +56,13 @@ public interface ItemQuery {
      * @param sortField
      * @return
      */
-    InputStream search(ItemQueryFilter[] filters, int offset, int size, SortField sortField);
+    InputStream search(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField);
 
-    default InputStream search(int offset, int size, SortField sortField) {
+    default InputStream search(int offset, int size, SortFieldEnum sortField) {
         return search(new ItemQueryFilter[0], offset, size, sortField);
     }
 
     default InputStream search(int offset, int size) {
-        return search(new ItemQueryFilter[0], offset, size, SortField._ID);
+        return search(new ItemQueryFilter[0], offset, size, SortFieldEnum._ID);
     }
 }

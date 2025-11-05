@@ -43,7 +43,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -64,21 +63,15 @@ public class PsqlItemRepository implements ItemRepository {
         }
     }
 
-    private final String databaseName;
-
-    public PsqlItemRepository(String databaseName) {
-        this.databaseName = Objects.requireNonNull(databaseName, "The databaseName parameter is required");
-    }
-
     @Override
     public Item find(long id) {
         try (Connection connection = PsqlUtil.getConnection()) {
             final String findSql = "select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,barcode,category_id," +
-                    "brand_id,grade,made_in,spec,shelf_life,retail_price::jsonb->>'number' as retail_price_number,retail_price::jsonb->>'currencyCode' as retail_price_currencyCode,retail_price::jsonb->>'unit' as retail_price_unit," +
-                    "last_receipt_price::jsonb ->> 'name' last_receipt_price_name,last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit," +
-                    "member_price::jsonb ->> 'name' as member_price_name, member_price::jsonb -> 'price' ->> 'number' as member_price_number, member_price::jsonb -> 'price' ->> 'currencyCode' as member_price_currencyCode, member_price::jsonb -> 'price' ->> 'unit' as member_price_unit," +
-                    "vip_price::jsonb ->> 'name' as vip_price_name, vip_price::jsonb -> 'price' ->> 'number' as vip_price_number, vip_price::jsonb -> 'price' ->> 'currencyCode' as vip_price_currencyCode, vip_price::jsonb -> 'price' ->> 'unit' as vip_price_unit " +
-                    "from item where id=? limit 1";
+                                   "brand_id,grade,made_in,spec,shelf_life,retail_price::jsonb->>'number' as retail_price_number,retail_price::jsonb->>'currencyCode' as retail_price_currencyCode,retail_price::jsonb->>'unit' as retail_price_unit," +
+                                   "last_receipt_price::jsonb ->> 'name' last_receipt_price_name,last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit," +
+                                   "member_price::jsonb ->> 'name' as member_price_name, member_price::jsonb -> 'price' ->> 'number' as member_price_number, member_price::jsonb -> 'price' ->> 'currencyCode' as member_price_currencyCode, member_price::jsonb -> 'price' ->> 'unit' as member_price_unit," +
+                                   "vip_price::jsonb ->> 'name' as vip_price_name, vip_price::jsonb -> 'price' ->> 'number' as vip_price_number, vip_price::jsonb -> 'price' ->> 'currencyCode' as vip_price_currencyCode, vip_price::jsonb -> 'price' ->> 'unit' as vip_price_unit " +
+                                   "from item where id=? limit 1";
             PreparedStatement ps = connection.prepareStatement(findSql);
             ps.setLong(1, id);
             ResultSet rs = ps.executeQuery();
@@ -97,10 +90,10 @@ public class PsqlItemRepository implements ItemRepository {
         Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
         long categoryId = rs.getLong("category_id");
         long brandId = rs.getLong("brand_id");
-        Grade grade = Grade.valueOf(rs.getString("grade"));
+        GradeEnum grade = GradeEnum.valueOf(rs.getString("grade"));
         MadeIn madeIn = toMadeIn(rs.getString("made_in"));
         Specification spec = new Specification(rs.getString("spec"));
-        ShelfLife shelfLife = ShelfLife.rebuild(rs.getInt("shelf_life"));
+        ShelfLife shelfLife = ShelfLife.create(rs.getInt("shelf_life"));
 
         MonetaryAmount amount = Money.of(rs.getBigDecimal("last_receipt_price_number"), rs.getString("last_receipt_price_currencyCode"));
         Unit unit = Unit.valueOf(rs.getString("last_receipt_price_unit"));
@@ -131,15 +124,9 @@ public class PsqlItemRepository implements ItemRepository {
                 String fieldName = parser.getCurrentName();
                 parser.nextToken();
                 switch (fieldName) {
-                    case "_class":
-                        _class = parser.getValueAsString();
-                        break;
-                    case "code":
-                        code = parser.getValueAsString();
-                        break;
-                    case "madeIn":
-                        madeIn = parser.getValueAsString();
-                        break;
+                    case "_class" -> _class = parser.getValueAsString();
+                    case "code" -> code = parser.getValueAsString();
+                    case "madeIn" -> madeIn = parser.getValueAsString();
                 }
             }
         }
@@ -172,8 +159,8 @@ public class PsqlItemRepository implements ItemRepository {
     public void save(Item item) {
         try (Connection connection = PsqlUtil.getConnection()) {
             final String insertOrReplaceSql = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price) " +
-                    "values (?,?::jsonb,?,?,?,?::grade,?::jsonb,?,?,?::jsonb,?::jsonb,?::jsonb,?::jsonb) " +
-                    "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,spec=?,shelf_life=?,last_receipt_price=?::jsonb,retail_price=?::jsonb,member_price=?::jsonb,vip_price=EXCLUDED.vip_price";
+                                              "values (?,?::jsonb,?,?,?,?::grade,?::jsonb,?,?,?::jsonb,?::jsonb,?::jsonb,?::jsonb) " +
+                                              "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,spec=?,shelf_life=?,last_receipt_price=?::jsonb,retail_price=?::jsonb,member_price=?::jsonb,vip_price=EXCLUDED.vip_price";
             PreparedStatement ps = connection.prepareStatement(insertOrReplaceSql);
             ps.setLong(1, item.id());
             ps.setString(2, toJson(item.name()));

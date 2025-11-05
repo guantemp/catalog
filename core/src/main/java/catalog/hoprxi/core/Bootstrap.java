@@ -121,7 +121,7 @@ public class Bootstrap {
                 .annotatedService("/catalog/core/v1", new UnitService())
                 .annotatedService("/catalog/core/v1", new BrandService())
                 .annotatedService("/catalog/core/v1", new CategoryService())
-                .annotatedService("/", new ItemService())
+                .annotatedService("/catalog/core/v1", new ItemService())
                 .build();
         server.closeOnJvmShutdown();
         server.start().join();

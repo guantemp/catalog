@@ -17,10 +17,10 @@
 package catalog.hoprxi;
 
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
-import catalog.hoprxi.core.application.query.SortField;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.BrandIdFilter;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.CategoryIdFilter;
-import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
@@ -344,7 +344,7 @@ public class AppTest {
             generator.writeString(unit.toString());
         }
         generator.writeEndArray();
-        generator.writeObjectField("grade", Grade.QUALIFIED.name());
+        generator.writeObjectField("grade", GradeEnum.QUALIFIED.name());
         generator.writeObjectFieldStart("retailPrice");
         generator.writeStringField("value", format.format(retailPrice.price().amount()));
         generator.writeStringField("unit", retailPrice.price().unit().toString());
@@ -407,7 +407,7 @@ public class AppTest {
 
         generator.writeArrayFieldStart("sort");
         generator.writeStartObject();
-        generator.writeStringField(SortField.ID.field(), SortField.ID.sort());
+        generator.writeStringField(SortFieldEnum.ID.field(), SortFieldEnum.ID.sort());
         generator.writeEndObject();
         generator.writeEndArray();
 

@@ -32,7 +32,7 @@ public class ProhibitSellItem {
     private Barcode barcode;
     private long brandId;
     private long categoryId;
-    private Grade grade;
+    private GradeEnum grade;
     private long id;
     private Name name;
     private MadeIn madeIn;
@@ -56,7 +56,7 @@ public class ProhibitSellItem {
      * @param categoryId
      */
     protected ProhibitSellItem(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-                               Grade grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
+                               GradeEnum grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
@@ -71,7 +71,7 @@ public class ProhibitSellItem {
     }
 
     protected ProhibitSellItem(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-                               Grade grade, ShelfLife shelfLife, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
+                               GradeEnum grade, ShelfLife shelfLife, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         setId(id);
         setBarcode(barcode);
         setName(name);
@@ -90,7 +90,7 @@ public class ProhibitSellItem {
         this.barcode = barcode;
     }
 
-    private void setGrade(Grade grade) {
+    private void setGrade(GradeEnum grade) {
         this.grade = grade;
     }
 
@@ -176,7 +176,7 @@ public class ProhibitSellItem {
         return categoryId;
     }
 
-    public Grade grade() {
+    public GradeEnum grade() {
         return grade;
     }
 

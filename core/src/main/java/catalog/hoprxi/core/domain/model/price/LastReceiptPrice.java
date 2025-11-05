@@ -69,9 +69,7 @@ public class LastReceiptPrice {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof LastReceiptPrice)) return false;
-
-        LastReceiptPrice that = (LastReceiptPrice) o;
+        if (!(o instanceof LastReceiptPrice that)) return false;
 
         if (!Objects.equals(price, that.price)) return false;
         return Objects.equals(name, that.name);

@@ -23,7 +23,7 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 builder 2024-11-24
  */
-public enum SortField {
+public enum SortFieldEnum {
     ID("id"), _ID("id"), NAME("name.mnemonic.raw"), _NAME("name.mnemonic.raw"), BARCODE("barcode.raw"), _BARCODE("barcode.raw"), MADE_IN("madeIn.code"), _MADE_IN("madeIn.code"),
     GRADE("grade"), _GRADE("grade"), SPEC("spec"), _SPEC("spec"), CATEGORY("category.name"), _CATEGORY("category.name"), BRAND("brand.name"), _BRAND("brand.name"),
     LAST_RECEIPT_PRICE("last_receipt_price.price.number"), _LAST_RECEIPT_PRICE("last_receipt_price.price.number"),
@@ -32,7 +32,7 @@ public enum SortField {
     VIP_PRICE("vip_price.price.number"), _VIP_PRICE("vip_price.price.number");
     private final String field;
 
-    SortField(String field) {
+    SortFieldEnum(String field) {
         this.field = Objects.requireNonNull(field, "field is required").trim();
     }
 
@@ -44,12 +44,12 @@ public enum SortField {
      *
      * @return SortField if name
      */
-    public static SortField of(String s) {
-        for (SortField sortField : values()) {
+    public static SortFieldEnum of(String s) {
+        for (SortFieldEnum sortField : values()) {
             if (sortField.name().equalsIgnoreCase(s))
                 return sortField;
         }
-        return SortField._ID;
+        return SortFieldEnum._ID;
     }
 
     public String sort() {

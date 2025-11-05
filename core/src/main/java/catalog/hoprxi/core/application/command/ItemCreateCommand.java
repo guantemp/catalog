@@ -16,7 +16,8 @@
 
 package catalog.hoprxi.core.application.command;
 
-import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.GradeEnum;
+import catalog.hoprxi.core.domain.model.Item;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
@@ -27,14 +28,16 @@ import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 
+import java.util.StringJoiner;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2023-07-10
  */
-public class ItemCreateCommand implements Command {
+public class ItemCreateCommand implements Command<Item> {
     private final Barcode barcode;
-    private final Grade grade;
+    private final GradeEnum grade;
     private final Name name;
     private final MadeIn madeIn;
     private final Specification spec;
@@ -47,7 +50,7 @@ public class ItemCreateCommand implements Command {
     private final MemberPrice memberPrice;
     private final VipPrice vipPrice;
 
-    public ItemCreateCommand(Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
+    public ItemCreateCommand(Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         this.barcode = barcode;
         this.grade = grade;
         this.name = name;
@@ -62,51 +65,69 @@ public class ItemCreateCommand implements Command {
         this.vipPrice = vipPrice;
     }
 
-    public Barcode getBarcode() {
+    public Barcode barcode() {
         return barcode;
     }
 
-    public Grade getGrade() {
+    public GradeEnum grade() {
         return grade;
     }
 
-    public Name getName() {
+    public Name name() {
         return name;
     }
 
-    public MadeIn getMadeIn() {
+    public MadeIn madeIn() {
         return madeIn;
     }
 
-    public Specification getSpec() {
+    public Specification spec() {
         return spec;
     }
 
-    public ShelfLife getShelfLife() {
+    public ShelfLife shelfLife() {
         return shelfLife;
     }
 
-    public long getBrandId() {
+    public long brandId() {
         return brandId;
     }
 
-    public long getCategoryId() {
+    public long categoryId() {
         return categoryId;
     }
 
-    public LastReceiptPrice getLastReceiptPrice() {
+    public LastReceiptPrice lastReceiptPrice() {
         return lastReceiptPrice;
     }
 
-    public RetailPrice getRetailPrice() {
+    public RetailPrice retailPrice() {
         return retailPrice;
     }
 
-    public MemberPrice getMemberPrice() {
+    public MemberPrice memberPrice() {
         return memberPrice;
     }
 
-    public VipPrice getVipPrice() {
+    public VipPrice vipPrice() {
         return vipPrice;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", ItemCreateCommand.class.getSimpleName() + "[", "]")
+                .add("barcode=" + barcode)
+                .add("grade=" + grade)
+                .add("name=" + name)
+                .add("madeIn=" + madeIn)
+                .add("spec=" + spec)
+                .add("shelfLife=" + shelfLife)
+                .add("brandId=" + brandId)
+                .add("categoryId=" + categoryId)
+                .add("lastReceiptPrice=" + lastReceiptPrice)
+                .add("retailPrice=" + retailPrice)
+                .add("memberPrice=" + memberPrice)
+                .add("vipPrice=" + vipPrice)
+                .toString();
     }
 }

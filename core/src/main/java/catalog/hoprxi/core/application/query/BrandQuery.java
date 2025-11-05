@@ -42,18 +42,18 @@ public interface BrandQuery {
      * @param sortField
      * @return
      */
-    InputStream search(String name, int offset, int size, SortField sortField);
+    InputStream search(String name, int offset, int size, SortFieldEnum sortField);
 
     default InputStream search(String name, int offset, int size) {
-        return search(name, offset, size, SortField._ID);
+        return search(name, offset, size, SortFieldEnum._ID);
     }
 
-    default InputStream search(int offset, int size, SortField sortField) {
+    default InputStream search(int offset, int size, SortFieldEnum sortField) {
         return search(null, offset, size, sortField);
     }
 
     default InputStream search(int offset, int size) {
-        return search(null, offset, size, SortField._ID);
+        return search(null, offset, size, SortFieldEnum._ID);
     }
 
     /**
@@ -63,13 +63,13 @@ public interface BrandQuery {
      * @param sortField
      * @return
      */
-    InputStream search(String name, int size, String searchAfter, SortField sortField);
+    InputStream search(String name, int size, String searchAfter, SortFieldEnum sortField);
 
     default InputStream search(String name,int size, String searchAfter) {
-        return search(name, size, searchAfter, SortField._ID);
+        return search(name, size, searchAfter, SortFieldEnum._ID);
     }
 
-    default InputStream search(int size, String searchAfter, SortField sortField) {
+    default InputStream search(int size, String searchAfter, SortFieldEnum sortField) {
         return search(null, size, searchAfter, sortField);
     }
 }

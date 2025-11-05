@@ -20,60 +20,12 @@ import catalog.hoprxi.core.domain.model.category.Category;
 
 import java.net.URL;
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2022-06-24
+ * @since JDK21
+ * @version 0.0.2 builder 2025-11-05
  */
-public class CategoryCreateCommand implements Command<Category> {
-    private long parentId;
-    private final String name;
-    private final String alias;
-    private final URL icon;
-    private final String description;
-
-    public CategoryCreateCommand(long parentId, String name, String alias, String description, URL icon) {
-        setParentId(parentId);
-        this.name = Objects.requireNonNull(name, "name required").trim();
-        this.alias = alias;
-        this.icon = icon;
-        this.description = description;
-    }
-
-    public long parentId() {
-        return parentId;
-    }
-
-    private void setParentId(long parentId) {
-        this.parentId = parentId;
-    }
-
-    public String name() {
-        return name;
-    }
-
-    public String alias() {
-        return alias;
-    }
-
-    public URL logo() {
-        return icon;
-    }
-
-    public String description() {
-        return description;
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", CategoryCreateCommand.class.getSimpleName() + "[", "]")
-                .add("parentId=" + parentId)
-                .add("name='" + name + "'")
-                .add("alias='" + alias + "'")
-                .add("logo=" + icon)
-                .add("description='" + description + "'")
-                .toString();
-    }
+public record CategoryCreateCommand(long parentId, String name, String alias, String description,
+                                    URL icon) implements Command<Category> {
 }

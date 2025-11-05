@@ -30,7 +30,4 @@ public class Setup {
     public void setup() {
 
     }
-
-    ;
-
 }

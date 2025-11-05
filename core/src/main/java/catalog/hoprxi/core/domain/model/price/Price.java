@@ -83,9 +83,7 @@ public class Price {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Price)) return false;
-
-        Price price = (Price) o;
+        if (!(o instanceof Price price)) return false;
 
         if (!Objects.equals(amount, price.amount)) return false;
         return unit == price.unit;

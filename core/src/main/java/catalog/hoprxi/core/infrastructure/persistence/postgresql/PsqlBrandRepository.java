@@ -49,7 +49,7 @@ import java.time.Year;
 public class PsqlBrandRepository implements BrandRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Brand");
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-    private static Constructor<Name> nameConstructor;
+    private static final Constructor<Name> nameConstructor;
 
     static {
         try {

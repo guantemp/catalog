@@ -25,7 +25,7 @@ import catalog.hoprxi.core.application.handler.BrandDeleteHandler;
 import catalog.hoprxi.core.application.handler.BrandUpdateHandler;
 import catalog.hoprxi.core.application.handler.Handler;
 import catalog.hoprxi.core.application.query.BrandQuery;
-import catalog.hoprxi.core.application.query.SortField;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandQuery;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -66,7 +66,7 @@ public class BrandService {
     private static final int BATCH_BUFFER_SIZE = 8192;// 8KB缓冲区
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Brand");
 
-    private static final EnumSet<SortField> SUPPORT_SORT_FIELD = EnumSet.of(SortField._ID, SortField.ID, SortField.NAME, SortField._NAME);
+    private static final EnumSet<SortFieldEnum> SUPPORT_SORT_FIELD = EnumSet.of(SortFieldEnum._ID, SortFieldEnum.ID, SortFieldEnum.NAME, SortFieldEnum._NAME);
     private static final BrandQuery QUERY = new ESBrandQuery();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
@@ -102,7 +102,7 @@ public class BrandService {
         int offset = params.getInt("offset", OFFSET);
         int size = params.getInt("size", SIZE);
         String cursor = params.get("cursor", "");
-        SortField sortField = SortField.of(params.get("sort", ""));
+        SortFieldEnum sortField = SortFieldEnum.of(params.get("sort", ""));
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         if (!SUPPORT_SORT_FIELD.contains(sortField)) {//not support sort
             stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
@@ -147,7 +147,7 @@ public class BrandService {
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         ctx.blockingTaskExecutor().execute(() -> {
             try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
-                Brand brand = toBrand(parser);
+                Brand brand = createBrand(parser);
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
                         "{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand)));
             } catch (Exception e) {
@@ -158,7 +158,7 @@ public class BrandService {
         return HttpResponse.of(future);
     }
 
-    private Brand toBrand(JsonParser parser) throws IOException, URISyntaxException {
+    private Brand createBrand(JsonParser parser) throws IOException, URISyntaxException {
         String name = null, alias = null, story = null;
         URL logo = null, homepage = null;
         Year since = null;
@@ -176,9 +176,9 @@ public class BrandService {
                 }
             }
         }
-        BrandCreateCommand createCommand = new BrandCreateCommand(name, alias, homepage, logo, since, story);
+        BrandCreateCommand command = new BrandCreateCommand(name, alias, homepage, logo, since, story);
         Handler<BrandCreateCommand, Brand> handler = new BrandCreateHandler();
-        return handler.execute(createCommand);
+        return handler.execute(command);
     }
 
     @StatusCode(201)

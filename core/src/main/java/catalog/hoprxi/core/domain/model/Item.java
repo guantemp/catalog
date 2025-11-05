@@ -38,7 +38,7 @@ public class Item {
     private Barcode barcode;
     private long brandId;
     private long categoryId;
-    private Grade grade;
+    private GradeEnum grade;
     private final long id;
     private Name name;
     private MadeIn madeIn;
@@ -67,7 +67,7 @@ public class Item {
      *                                  if name is null
      *                                  if madeIn is null
      */
-    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
+    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         this.id = id;
         setBarcode(barcode);
         setName(name);
@@ -83,16 +83,16 @@ public class Item {
         setBrandId(brandId);
     }
 
-    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice,
+    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice,
                 MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         this(id, barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY, lastReceiptPrice, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
-    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
+    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
         this(id, barcode, name, madeIn, spec, grade, lastReceiptPrice, retailPrice, memberPrice, vipPrice, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
     }
 
-    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, RetailPrice retailPrice) {
+    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, RetailPrice retailPrice) {
         this(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.RMB_ZERO, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
     }
 
@@ -148,8 +148,8 @@ public class Item {
         this.barcode = Objects.requireNonNull(barcode, "barcode required");
     }
 
-    private void setGrade(Grade grade) {
-        if (null == grade) grade = Grade.QUALIFIED;
+    private void setGrade(GradeEnum grade) {
+        if (null == grade) grade = GradeEnum.QUALIFIED;
         this.grade = grade;
     }
 
@@ -175,7 +175,7 @@ public class Item {
     /**
      * @param grade
      */
-    public void changeGrade(Grade grade) {
+    public void changeGrade(GradeEnum grade) {
         if (this.grade != grade) {
             setGrade(grade);
             DomainRegistry.domainEventPublisher().publish(new ItemGradeChanged(id, grade));
@@ -296,7 +296,7 @@ public class Item {
         return categoryId;
     }
 
-    public Grade grade() {
+    public GradeEnum grade() {
         return grade;
     }
 

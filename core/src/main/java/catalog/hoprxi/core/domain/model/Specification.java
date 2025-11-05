@@ -27,14 +27,14 @@ import java.util.Objects;
  */
 public class Specification {
     public static final Specification UNDEFINED = new Specification("");
-    private String value;
+    private final String value;
 
     public Specification(String value) {
         this.value = Objects.requireNonNull(value, "value required").trim();
     }
 
     public static Specification valueOf(String value) {
-        if (value.equals(""))
+        if (value.isBlank())
             return UNDEFINED;
         return new Specification(value);
     }
@@ -54,7 +54,7 @@ public class Specification {
 
         Specification that = (Specification) o;
 
-        return value != null ? value.equals(that.value) : that.value == null;
+        return Objects.equals(value, that.value);
     }
 
     @Override

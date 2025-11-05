@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.scale.infrastructure.persistence;
 
-import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
 import catalog.hoprxi.core.domain.model.madeIn.Domestic;
@@ -223,8 +223,8 @@ public class ArangoDBCountRepository implements CountRepository {
             }
         }
         Specification spec = Specification.valueOf(slice.get("spec").get("value").getAsString());
-        Grade grade = Grade.valueOf(slice.get("grade").getAsString());
-        ShelfLife shelfLife = ShelfLife.rebuild(slice.get("shelfLife").get("days").getAsInt());
+        GradeEnum grade = GradeEnum.valueOf(slice.get("grade").getAsString());
+        ShelfLife shelfLife = ShelfLife.create(slice.get("shelfLife").get("days").getAsInt());
 
         VPackSlice priceSlice = slice.get("retailPrice").get("price");
         VPackSlice amountSlice = priceSlice.get("amount");

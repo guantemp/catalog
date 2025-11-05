@@ -52,9 +52,7 @@ public class Imported implements MadeIn {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Imported)) return false;
-
-        Imported imported = (Imported) o;
+        if (!(o instanceof Imported imported)) return false;
 
         return Objects.equals(code, imported.code);
     }

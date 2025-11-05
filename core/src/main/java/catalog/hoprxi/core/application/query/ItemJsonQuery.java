@@ -42,7 +42,7 @@ public interface ItemJsonQuery {
      * @param sortField
      * @return
      */
-    String query(ItemQueryFilter[] filters, int size, String searchAfter, SortField sortField);
+    String query(ItemQueryFilter[] filters, int size, String searchAfter, SortFieldEnum sortField);
 
     /**
      * @param size
@@ -50,7 +50,7 @@ public interface ItemJsonQuery {
      * @param sortField
      * @return
      */
-    default String query(int size, String searchAfter, SortField sortField) {
+    default String query(int size, String searchAfter, SortFieldEnum sortField) {
         return query(new ItemQueryFilter[0], size, searchAfter, sortField);
     }
 
@@ -60,7 +60,7 @@ public interface ItemJsonQuery {
      * @return
      */
     default String query(int size, String searchAfter) {
-        return query(new ItemQueryFilter[0], size, searchAfter, SortField._ID);
+        return query(new ItemQueryFilter[0], size, searchAfter, SortFieldEnum._ID);
     }
 
     /**
@@ -70,13 +70,13 @@ public interface ItemJsonQuery {
      * @param sortField
      * @return
      */
-    String query(ItemQueryFilter[] filters, int from, int size, SortField sortField);
+    String query(ItemQueryFilter[] filters, int from, int size, SortFieldEnum sortField);
 
-    default String query(int from, int size, SortField sortField) {
+    default String query(int from, int size, SortFieldEnum sortField) {
         return query(new ItemQueryFilter[0], from, size, sortField);
     }
 
     default String query(int from, int size) {
-        return query(new ItemQueryFilter[0], from, size, SortField._ID);
+        return query(new ItemQueryFilter[0], from, size, SortFieldEnum._ID);
     }
 }

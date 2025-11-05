@@ -59,7 +59,7 @@ public class RetailPrice {
 
         RetailPrice that = (RetailPrice) o;
 
-        return price != null ? price.equals(that.price) : that.price == null;
+        return Objects.equals(price, that.price);
     }
 
     @Override

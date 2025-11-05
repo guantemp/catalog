@@ -18,7 +18,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.BrandQuery;
 import catalog.hoprxi.core.application.query.SearchException;
-import catalog.hoprxi.core.application.query.SortField;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
@@ -86,28 +86,28 @@ public class ESBrandQueryTest {
         String s = inputStreamToString(is);
         System.out.println("offset=100,size=5\n" + s);
         System.out.println(s.length());
-        query.search(100, 5, SortField._NAME);
+        query.search(100, 5, SortFieldEnum._NAME);
         is.reset();
-        is = query.search(0, 256, SortField._ID);
+        is = query.search(0, 256, SortFieldEnum._ID);
         s = inputStreamToString(is);
         System.out.println("offset=0,size=256\n" + s);
         System.out.println(s.length());
-        query.search(64, null, SortField.NAME);
-        is = query.search(128, "62078470412941622", SortField.ID);
+        query.search(64, null, SortFieldEnum.NAME);
+        is = query.search(128, "62078470412941622", SortFieldEnum.ID);
         s = inputStreamToString(is);
         System.out.println(s);
         System.out.println(s.length());
-        query.search("", 8, "62078807563681609", SortField.ID);
+        query.search("", 8, "62078807563681609", SortFieldEnum.ID);
     }
 
     @Test(priority = 1)
     public void testJsonQueryAll() {
         System.out.println(jsonQuery.query(100, 5, null));
-        System.out.println(jsonQuery.query(100, 5, SortField._NAME));
-        System.out.println(jsonQuery.query(0, 256, SortField._ID));
-        System.out.println(jsonQuery.query(64, "", SortField.NAME));
-        System.out.println(jsonQuery.query(128, "62078470412941622", SortField.ID));
-        System.out.println(jsonQuery.query("", 8, "62078807563681609", SortField.ID));
+        System.out.println(jsonQuery.query(100, 5, SortFieldEnum._NAME));
+        System.out.println(jsonQuery.query(0, 256, SortFieldEnum._ID));
+        System.out.println(jsonQuery.query(64, "", SortFieldEnum.NAME));
+        System.out.println(jsonQuery.query(128, "62078470412941622", SortFieldEnum.ID));
+        System.out.println(jsonQuery.query("", 8, "62078807563681609", SortFieldEnum.ID));
     }
 
     @Test(priority = 3)
@@ -118,7 +118,7 @@ public class ESBrandQueryTest {
         System.out.println(s.length());
 
         query.search("白萝卜", 10, 5);
-        is = query.search("天", 0, 20, SortField.NAME);
+        is = query.search("天", 0, 20, SortFieldEnum.NAME);
         s = inputStreamToString(is);
         System.out.println(s);
         System.out.println(s.length());
@@ -141,6 +141,6 @@ public class ESBrandQueryTest {
     public void testJsonQueryName() {
         System.out.println(jsonQuery.query("天", 0, 20, null));
         System.out.println(jsonQuery.query("白萝卜", 10, 5, null));
-        System.out.println(jsonQuery.query("天", 0, 20, SortField.NAME));
+        System.out.println(jsonQuery.query("天", 0, 20, SortFieldEnum.NAME));
     }
 }

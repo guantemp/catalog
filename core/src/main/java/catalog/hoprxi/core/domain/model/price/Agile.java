@@ -40,11 +40,9 @@ public class Agile {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Agile)) return false;
+        if (!(o instanceof Agile agile)) return false;
 
-        Agile agile = (Agile) o;
-
-        return price != null ? price.equals(agile.price) : agile.price == null;
+        return Objects.equals(price, agile.price);
     }
 
     @Override

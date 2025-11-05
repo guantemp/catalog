@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
-import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.GradeEnum;
 import com.lmax.disruptor.EventHandler;
 
 /***
@@ -28,7 +28,7 @@ import com.lmax.disruptor.EventHandler;
 public class GrandHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        Grade g = Grade.of(itemImportEvent.map.get(ItemMapping.GRADE));
+        GradeEnum g = GradeEnum.of(itemImportEvent.map.get(ItemMapping.GRADE));
         itemImportEvent.map.put(ItemMapping.GRADE, "'" + g.name() + "'");
     }
 }

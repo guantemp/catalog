@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,42 @@
 
 package catalog.hoprxi.core.application.handler;
 
-import catalog.hoprxi.core.application.command.Command;
 import catalog.hoprxi.core.application.command.ItemCreateCommand;
 import catalog.hoprxi.core.domain.model.Item;
+import catalog.hoprxi.core.domain.model.ItemCreated;
 import catalog.hoprxi.core.domain.model.ItemRepository;
+import catalog.hoprxi.core.domain.model.category.CategoryCreated;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlItemRepository;
-import com.lmax.disruptor.EventHandler;
+import catalog.hoprxi.core.util.DomainRegistry;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2023-07-26
+ * @since JDK21
+ * @version 0.0.2 builder 2025-11-05
  */
-public class ItemCreateHandler implements EventHandler<Command> {
-    private static ItemRepository repository = new PsqlItemRepository("catalog");
+public class ItemCreateHandler implements Handler<ItemCreateCommand, Item> {
+    private final ItemRepository repository = new PsqlItemRepository();
+
 
     @Override
-    public void onEvent(Command command, long l, boolean b) throws Exception {
-        if (command instanceof ItemCreateCommand) {
-            ItemCreateCommand icc = (ItemCreateCommand) command;
-            Item item = new Item(repository.nextIdentity(), icc.getBarcode(), icc.getName(), icc.getMadeIn(), icc.getSpec(), icc.getGrade(), icc.getShelfLife(),
-                    icc.getLastReceiptPrice(), icc.getRetailPrice(), icc.getMemberPrice(), icc.getVipPrice(), icc.getCategoryId(), icc.getBrandId());
-            repository.save(item);
-        }
+    public Item execute(ItemCreateCommand command) {
+        System.out.println(command.name());
+        Item item = new Item(repository.nextIdentity(), command.barcode(), command.name(), command.madeIn(), command.spec(), command.grade(), command.shelfLife(),
+                command.lastReceiptPrice(), command.retailPrice(), command.memberPrice(), command.vipPrice(), command.categoryId(), command.brandId());
+        repository.save(item);
+        //领域事件
+        ItemCreated event = new ItemCreated ();
+        DomainRegistry.domainEventPublisher().publish(event);
+        return item;
+    }
+
+    @Override
+    public void undo() {
+        Handler.super.undo();
+    }
+
+    @Override
+    public void redo() {
+        Handler.super.redo();
     }
 }

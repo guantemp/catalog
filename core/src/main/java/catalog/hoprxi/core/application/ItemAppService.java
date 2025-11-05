@@ -47,7 +47,7 @@ public class ItemAppService {
             case "psql":
             case "postgres":
             case "postgresql":
-                itemRepository = new PsqlItemRepository(database);
+                itemRepository = new PsqlItemRepository();
                 categoryRepository = new PsqlCategoryRepository();
                 brandRepository = new PsqlBrandRepository();
                 break;
@@ -56,9 +56,9 @@ public class ItemAppService {
 
     public void createItem(Command itemCreateCommand) {
         ItemCreateCommand createCommand = (ItemCreateCommand) itemCreateCommand;
-        Item item = new Item(itemRepository.nextIdentity(), createCommand.getBarcode(), createCommand.getName(), createCommand.getMadeIn(), createCommand.getSpec(),
-                createCommand.getGrade(), createCommand.getShelfLife(), createCommand.getLastReceiptPrice(), createCommand.getRetailPrice(), createCommand.getMemberPrice(),
-                createCommand.getVipPrice(), createCommand.getCategoryId(), createCommand.getBrandId());
+        Item item = new Item(itemRepository.nextIdentity(), createCommand.barcode(), createCommand.name(), createCommand.madeIn(), createCommand.spec(),
+                createCommand.grade(), createCommand.shelfLife(), createCommand.lastReceiptPrice(), createCommand.retailPrice(), createCommand.memberPrice(),
+                createCommand.vipPrice(), createCommand.categoryId(), createCommand.brandId());
         itemRepository.save(item);
     }
 

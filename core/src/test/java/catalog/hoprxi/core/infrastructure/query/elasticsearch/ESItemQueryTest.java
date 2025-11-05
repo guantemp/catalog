@@ -19,7 +19,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
 import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
-import catalog.hoprxi.core.application.query.SortField;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -107,48 +107,48 @@ public class ESItemQueryTest {
         InputStream is = query.search(100, 30);
         String s = inputStreamToString(is);
         System.out.println(s);
-        is = query.search(0, 50, SortField._BARCODE);
+        is = query.search(0, 50, SortFieldEnum._BARCODE);
         s = inputStreamToString(is);
         System.out.println(s);
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("694")}, 0, 10, SortField._BARCODE);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("694")}, 0, 10, SortFieldEnum._BARCODE);
         s = inputStreamToString(is);
         System.out.println(s);
 
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(null)}, 10, 15, SortField.BARCODE);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(null)}, 10, 15, SortFieldEnum.BARCODE);
         s = inputStreamToString(is);
         System.out.println(s);
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(new long[]{49680933986631205L}), new BrandIdFilter(-1L)}, 0, 10, SortField._BARCODE);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(new long[]{49680933986631205L}), new BrandIdFilter(-1L)}, 0, 10, SortFieldEnum._BARCODE);
         s = inputStreamToString(is);
         System.out.println(s);
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("692"), new RetailPriceFilter(1.1, 2), new LastReceiptPriceFilter(null, 1.2)}, 0, 9, SortField._ID);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("692"), new RetailPriceFilter(1.1, 2), new LastReceiptPriceFilter(null, 1.2)}, 0, 9, SortFieldEnum._ID);
         s = inputStreamToString(is);
         System.out.println(s);
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryIdFilter(49680944612900409L)}, 50, 10, SortField.ID);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryIdFilter(49680944612900409L)}, 50, 10, SortFieldEnum.ID);
         s = inputStreamToString(is);
         System.out.println(s);
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("伊利")}, 10, 256, SortField._RETAIL_PRICE);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("伊利")}, 10, 256, SortFieldEnum._RETAIL_PRICE);
         s = inputStreamToString(is);
         System.out.println(s);
     }
 
     @Test(invocationCount = 1,threadPoolSize = 1)
     public void testSearchAfter() throws IOException {
-        InputStream is = query.search(50, "9588868020855", SortField.BARCODE);
+        InputStream is = query.search(50, "9588868020855", SortFieldEnum.BARCODE);
         String s = inputStreamToString(is);
         System.out.println(s);
         is = query.search(new ItemQueryFilter[]{new CategoryIdFilter(49681151224315522L)}, 50);
         s = inputStreamToString(is);
         System.out.println(s);
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(49680933986631205L)}, 1, null, SortField._BARCODE);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryIdFilter(49680933986631205L)}, 1, null, SortFieldEnum._BARCODE);
         s = inputStreamToString(is);
         System.out.println(s);
         is = query.search(new ItemQueryFilter[]{new KeywordFilter("6932"), new CategoryIdFilter(49680933986631205L)}, 50);
         s = inputStreamToString(is);
         System.out.println(s);
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("692"), new CategoryIdFilter(new long[]{49680944612900409L}), new RetailPriceFilter(2.6, 25.5), new LastReceiptPriceFilter(1.1, 3)}, 5, null, SortField._ID);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("692"), new CategoryIdFilter(new long[]{49680944612900409L}), new RetailPriceFilter(2.6, 25.5), new LastReceiptPriceFilter(1.1, 3)}, 5, null, SortFieldEnum._ID);
         s = inputStreamToString(is);
         System.out.println(s);
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("伊利"),new KeywordFilter("690")}, 10, "258", SortField._RETAIL_PRICE);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("伊利"),new KeywordFilter("690")}, 10, "258", SortFieldEnum._RETAIL_PRICE);
         s = inputStreamToString(is);
         System.out.println(s);
     }

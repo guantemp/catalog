@@ -27,11 +27,11 @@ import java.time.LocalDateTime;
  */
 public class ItemGradeChanged implements DomainEvent {
     private long id;
-    private Grade grade;
+    private GradeEnum grade;
     private LocalDateTime occurredOn;
     private int version;
 
-    public ItemGradeChanged(long id, Grade grade) {
+    public ItemGradeChanged(long id, GradeEnum grade) {
         this.id = id;
         this.grade = grade;
         occurredOn = LocalDateTime.now();
@@ -52,7 +52,7 @@ public class ItemGradeChanged implements DomainEvent {
         return id;
     }
 
-    public Grade grade() {
+    public GradeEnum grade() {
         return grade;
     }
 }

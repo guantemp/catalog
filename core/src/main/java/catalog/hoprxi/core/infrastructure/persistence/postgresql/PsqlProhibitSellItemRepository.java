@@ -56,7 +56,7 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
         try {
             nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class);
             prohibitSellItemConstructor = ProhibitSellItem.class.getDeclaredConstructor(String.class, Barcode.class, Name.class, MadeIn.class, Unit.class, Specification.class,
-                    Grade.class, ShelfLife.class, String.class, String.class);
+                    GradeEnum.class, ShelfLife.class, String.class, String.class);
         } catch (NoSuchMethodException e) {
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug("Not query has such constructor", e);
@@ -78,10 +78,10 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
         Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
         String categoryId = rs.getString("category_id");
         String brandId = rs.getString("brand_id");
-        Grade grade = Grade.valueOf(rs.getString("grade"));
+        GradeEnum grade = GradeEnum.valueOf(rs.getString("grade"));
         MadeIn madeIn = toMadeIn(rs.getString("made_in"));
         Specification spec = new Specification(rs.getString("spec"));
-        ShelfLife shelfLife = ShelfLife.rebuild(rs.getInt("shelf_life"));
+        ShelfLife shelfLife = ShelfLife.create(rs.getInt("shelf_life"));
 
         MonetaryAmount amount = Money.of(rs.getBigDecimal("last_receipt_price_number"), rs.getString("last_receipt_price_currencyCode"));
         Unit unit = Unit.valueOf(rs.getString("last_receipt_price_unit"));

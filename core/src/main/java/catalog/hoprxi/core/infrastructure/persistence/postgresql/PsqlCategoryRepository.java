@@ -50,7 +50,7 @@ import java.util.Objects;
 public class PsqlCategoryRepository implements CategoryRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Category");
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-    private static Constructor<Name> nameConstructor;
+    private static final Constructor<Name> nameConstructor;
 
     static {
         try {
@@ -58,6 +58,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
             nameConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
             LOGGER.error("Name class no such constructor", e);
+            throw new RuntimeException("Name class no such constructor", e);
         }
     }
 

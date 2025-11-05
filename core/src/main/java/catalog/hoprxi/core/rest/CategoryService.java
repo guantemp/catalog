@@ -237,7 +237,7 @@ public class CategoryService {
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         ctx.blockingTaskExecutor().execute(() -> {
             try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
-                Category category = toCategory(parser);
+                Category category = this.createCategory(parser);
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
                         "{\"status\":\"success\",\"code\":201,\"message\":\"A category created,it's %s\"}", category)));
             } catch (Exception e) {
@@ -248,7 +248,7 @@ public class CategoryService {
         return HttpResponse.of(future);
     }
 
-    private Category toCategory(JsonParser parser) throws IOException {
+    private Category createCategory(JsonParser parser) throws IOException {
         String name = null, alias = null, description = null;
         URL icon = null;
         long parentId = 0;
@@ -266,7 +266,6 @@ public class CategoryService {
             }
         }
         CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, icon);
-        //System.out.println(command);
         Handler<CategoryCreateCommand, Category> handler = new CategoryCreateHandler();
         return handler.execute(command);
     }

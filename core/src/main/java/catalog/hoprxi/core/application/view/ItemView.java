@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.application.view;
 
-import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
@@ -40,7 +40,7 @@ import java.util.StringJoiner;
  */
 public class ItemView {
     private final Barcode barcode;
-    private final Grade grade;
+    private final GradeEnum grade;
     private final String id;
     private final Name name;
     private final MadeIn madeIn;
@@ -63,11 +63,11 @@ public class ItemView {
     private URI[] images;
 
 
-    public ItemView(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade) {
+    public ItemView(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade) {
         this(id, barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY);
     }
 
-    public ItemView(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, Grade grade, ShelfLife shelfLife) {
+    public ItemView(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, ShelfLife shelfLife) {
         this.barcode = barcode;
         this.grade = grade;
         this.id = id;
@@ -77,7 +77,7 @@ public class ItemView {
         this.shelfLife = shelfLife;
     }
 
-    public ItemView(Barcode barcode, Grade grade, String id, Name name, MadeIn madeIn, Specification spec, ShelfLife shelfLife, BrandView brandView, CategoryView categoryView, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, URI video, URI[] images) {
+    public ItemView(Barcode barcode, GradeEnum grade, String id, Name name, MadeIn madeIn, Specification spec, ShelfLife shelfLife, BrandView brandView, CategoryView categoryView, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, URI video, URI[] images) {
         this.barcode = barcode;
         this.grade = grade;
         this.id = id;
@@ -119,7 +119,7 @@ public class ItemView {
         this.categoryView = categoryView;
     }
 
-    public Grade grade() {
+    public GradeEnum grade() {
         return grade;
     }
 

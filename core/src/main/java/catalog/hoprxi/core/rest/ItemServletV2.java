@@ -23,8 +23,8 @@ import catalog.hoprxi.core.application.command.ItemDeleteCommand;
 import catalog.hoprxi.core.application.query.ItemJsonQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SearchException;
-import catalog.hoprxi.core.application.query.SortField;
-import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
+import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
@@ -130,7 +130,7 @@ public class ItemServletV2 extends HttpServlet {
                 int offset = NumberHelper.intOf(req.getParameter("offset"), OFFSET);
                 int size = NumberHelper.intOf(req.getParameter("size"), SIZE);
                 String sort = Optional.ofNullable(req.getParameter("sort")).orElse("");
-                SortField sortField = SortField.of(sort);
+                SortFieldEnum sortField = SortFieldEnum.of(sort);
                 if (cursor.isEmpty()) {
                     copy(generator, this.QUERY.query(parseFilter(query, filter), offset, size, sortField));
                 } else {
@@ -260,7 +260,7 @@ public class ItemServletV2 extends HttpServlet {
     private ItemCreateCommand read(JsonParser parser) throws IOException {
         Name name = Name.EMPTY;
         MadeIn madeIn = MadeIn.UNKNOWN;
-        Grade grade = Grade.QUALIFIED;
+        GradeEnum grade = GradeEnum.QUALIFIED;
         Specification spec = Specification.UNDEFINED;
         long brandId = Brand.UNDEFINED.id();
         long categoryId = Category.UNDEFINED.id();
@@ -284,7 +284,7 @@ public class ItemServletV2 extends HttpServlet {
                         spec = Specification.valueOf(parser.getValueAsString());
                         break;
                     case "grade":
-                        grade = Grade.of(parser.getValueAsString());
+                        grade = GradeEnum.of(parser.getValueAsString());
                         break;
                     case "madeIn":
                         madeIn = readMadeIn(parser);

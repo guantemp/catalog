@@ -19,7 +19,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.BrandQuery;
 import catalog.hoprxi.core.application.query.SearchException;
-import catalog.hoprxi.core.application.query.SortField;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -83,12 +83,12 @@ public class ESBrandQuery implements BrandQuery {
     }
 
     @Override
-    public InputStream search(String name, int offset, int size, SortField sortField) {
+    public InputStream search(String name, int offset, int size, SortFieldEnum sortField) {
         if (offset < 0 || offset > 10000) throw new IllegalArgumentException("The offset value range is 0-10000");
         if (size < 0 || size > 10000) throw new IllegalArgumentException("The size value range is 0-10000");
         if (size + offset > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
         if (sortField == null) {
-            sortField = SortField._ID;
+            sortField = SortFieldEnum._ID;
             //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         Request request = new Request("GET", "/brand/_search");
@@ -103,7 +103,7 @@ public class ESBrandQuery implements BrandQuery {
         }
     }
 
-    private String writeSearchJsonEntity(String name, int offset, int limit, SortField sortField) throws IOException {
+    private String writeSearchJsonEntity(String name, int offset, int limit, SortFieldEnum sortField) throws IOException {
         StringWriter writer = new StringWriter(384);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -117,10 +117,10 @@ public class ESBrandQuery implements BrandQuery {
     }
 
     @Override
-    public InputStream search(String name, int size, String searchAfter, SortField sortField) {
+    public InputStream search(String name, int size, String searchAfter, SortFieldEnum sortField) {
         if (size < 0 || size > 10000) throw new IllegalArgumentException("The size value range is 0-10000");
         if (sortField == null) {
-            sortField = SortField._ID;
+            sortField = SortFieldEnum._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         Request request = new Request("GET", "/brand/_search");
@@ -135,7 +135,7 @@ public class ESBrandQuery implements BrandQuery {
         }
     }
 
-    private String writeSearchAfterJsonEntity(String name, int size, String searchAfter, SortField sortField) throws IOException {
+    private String writeSearchAfterJsonEntity(String name, int size, String searchAfter, SortFieldEnum sortField) throws IOException {
         StringWriter writer = new StringWriter(128);
         JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
         generator.writeStartObject();
@@ -151,7 +151,7 @@ public class ESBrandQuery implements BrandQuery {
         return writer.toString();
     }
 
-    private void writeCommonJsonEntity(String name, SortField sortField, JsonGenerator generator) throws IOException {
+    private void writeCommonJsonEntity(String name, SortFieldEnum sortField, JsonGenerator generator) throws IOException {
         generator.writeObjectFieldStart("query");
         if (name == null || name.isEmpty()) {
             generator.writeObjectFieldStart("match_all");

@@ -24,13 +24,13 @@ import org.testng.annotations.Test;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-06-21
  */
-public class GradeTest {
+public class GradeEnumTest {
 
     @Test
     public void testOf() {
-        Assert.assertEquals(Grade.ONE_LEVEL, Grade.of("ONE_LEVEL"));
-        Assert.assertEquals(Grade.PREMIUM, Grade.of("PREMIUM"));//优等品
-        Assert.assertEquals(Grade.QUALIFIED, Grade.of("QUALIFIED"));
-        Assert.assertEquals(Grade.QUALIFIED, Grade.of("qualifIED"));
+        Assert.assertEquals(GradeEnum.ONE_LEVEL, GradeEnum.of("ONE_LEVEL"));
+        Assert.assertEquals(GradeEnum.PREMIUM, GradeEnum.of("PREMIUM"));//优等品
+        Assert.assertEquals(GradeEnum.QUALIFIED, GradeEnum.of("QUALIFIED"));
+        Assert.assertEquals(GradeEnum.QUALIFIED, GradeEnum.of("qualifIED"));
     }
 }

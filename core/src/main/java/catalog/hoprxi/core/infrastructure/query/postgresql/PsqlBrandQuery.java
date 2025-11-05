@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
 import catalog.hoprxi.core.application.query.BrandQuery;
-import catalog.hoprxi.core.application.query.SortField;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
@@ -196,12 +196,12 @@ public class PsqlBrandQuery implements BrandQuery {
     }
 
     @Override
-    public InputStream search(String name, int offset, int size, SortField sortField) {
+    public InputStream search(String name, int offset, int size, SortFieldEnum sortField) {
         return null;
     }
 
     @Override
-    public InputStream search(String name, int size, String searchAfter, SortField sortField) {
+    public InputStream search(String name, int size, String searchAfter, SortFieldEnum sortField) {
         return null;
     }
 }

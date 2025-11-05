@@ -68,7 +68,7 @@ public class ShelfLife {
         setDays(days);
     }
 
-    public static ShelfLife rebuild(int days) {
+    public static ShelfLife create(int days) {
         if (days == 0)
             return SAME_DAY;
         if (days == 3)
@@ -78,11 +78,11 @@ public class ShelfLife {
         return new ShelfLife(days);
     }
 
-    public static ShelfLife createShelfLifeWithMonth(int month) {
+    public static ShelfLife createWithMonth(int month) {
         return new ShelfLife(month * 30);
     }
 
-    public static ShelfLife createShelfLifeWithYear(int year) {
+    public static ShelfLife createWithYear(int year) {
         return new ShelfLife(year * 360);
     }
 
@@ -97,11 +97,11 @@ public class ShelfLife {
     }
 
     public ShelfLife extend(int days) {
-        return rebuild(days);
+        return create(days);
     }
 
     public ShelfLife reduce(int days) {
-        return rebuild(days);
+        return create(days);
     }
 
     @Override
@@ -114,9 +114,7 @@ public class ShelfLife {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ShelfLife)) return false;
-
-        ShelfLife shelfLife = (ShelfLife) o;
+        if (!(o instanceof ShelfLife shelfLife)) return false;
 
         return days == shelfLife.days;
     }

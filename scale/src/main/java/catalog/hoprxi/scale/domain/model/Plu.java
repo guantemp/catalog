@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,16 @@
 
 package catalog.hoprxi.scale.domain.model;
 
-import com.arangodb.entity.DocumentField;
 
+import java.util.Objects;
 import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-11-04
+ * @version 0.0.1 2025-11-04
  */
 public class Plu {
-    @DocumentField(DocumentField.Type.KEY)
     private String plu;
 
     public Plu(int plu) {
@@ -44,7 +43,7 @@ public class Plu {
 
         Plu plu1 = (Plu) o;
 
-        return plu != null ? plu.equals(plu1.plu) : plu1.plu == null;
+        return Objects.equals(plu, plu1.plu);
     }
 
     @Override

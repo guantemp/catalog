@@ -18,11 +18,13 @@ package catalog.hoprxi.core.rest;
 
 
 import catalog.hoprxi.core.application.command.ItemCreateCommand;
+import catalog.hoprxi.core.application.handler.Handler;
+import catalog.hoprxi.core.application.handler.ItemCreateHandler;
 import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SearchException;
-import catalog.hoprxi.core.application.query.SortField;
-import catalog.hoprxi.core.domain.model.Grade;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
+import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Item;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
@@ -31,7 +33,6 @@ import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.Domestic;
-import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
@@ -65,7 +66,6 @@ import java.util.concurrent.CompletableFuture;
  * @since JDK21
  * @version 0.0.1 builder 2025/10/19
  */
-@PathPrefix("/catalog/core/v1")
 public class ItemService {
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
@@ -94,7 +94,7 @@ public class ItemService {
                 buffer = null;
                 stream.close();
             } catch (IOException | ClosedSessionException | SearchException e) {
-                handleStreamError(stream, e);
+                this.handleStreamError(stream, e);
                 LOGGER.warn("Error,it's {}", e.getMessage());
             } finally {
                 if (buffer != null) buffer.release(); // 只释放未被转移的缓冲区
@@ -108,7 +108,7 @@ public class ItemService {
         while (parser.nextToken() != null) {
             generator.copyCurrentEvent(parser);
         }
-        generator.flush();
+        generator.close();
     }
 
     private void handleStreamError(StreamWriter<HttpObject> stream, Exception e) {
@@ -125,7 +125,7 @@ public class ItemService {
         int offset = params.getInt("offset", OFFSET);
         int size = params.getInt("size", SIZE);
         String cursor = params.get("cursor", "");
-        SortField sortField = SortField.of(params.get("sort", "_ID"));
+        SortFieldEnum sortField = SortFieldEnum.of(params.get("sort", "_ID"));
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.blockingTaskExecutor().execute(() -> {
             if (ctx.isCancelled() || ctx.isTimedOut()) return;
@@ -134,9 +134,9 @@ public class ItemService {
                 if (pretty) gen.useDefaultPrettyPrinter();
                 InputStream is;
                 if (cursor.isBlank()) {
-                    is = QUERY.search(parseFilter(search, filter), offset, size, sortField);
+                    is = QUERY.search(this.parseFilter(search, filter), offset, size, sortField);
                 } else {
-                    is = QUERY.search(parseFilter(search, filter), size, cursor, sortField);
+                    is = QUERY.search(this.parseFilter(search, filter), size, cursor, sortField);
                 }
                 this.copyRaw(gen, is);
                 stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
@@ -144,7 +144,7 @@ public class ItemService {
                 buffer = null;
                 stream.close();
             } catch (IOException | ClosedSessionException | SearchException e) {
-                handleStreamError(stream, e);
+                this.handleStreamError(stream, e);
             } finally {
                 if (buffer != null) buffer.release(); // 只释放未被转移的缓冲区
             }
@@ -154,7 +154,7 @@ public class ItemService {
 
     private ItemQueryFilter[] parseFilter(String query, String filter) {
         List<ItemQueryFilter> filterList = new ArrayList<>();
-        if (!query.isEmpty())
+        if (!query.isBlank())
             filterList.add(new KeywordFilter(query));
         String[] filters = filter.split(";");//Project separation
         for (String s : filters) {
@@ -164,7 +164,7 @@ public class ItemService {
                     case "cid", "categoryId" -> parseCid(filterList, con[1]);
                     case "bid", "brandId" -> parseBid(filterList, con[1]);
                     case "retail_price", "r_price" -> parseRetailPrice(filterList, con[1]);
-                    case "last_receipt_price", "lst_rcpt_price" -> parseLastReceiptPrice(filterList, con[1]);
+                    case "last_receipt_price", "l_r_price" -> parseLastReceiptPrice(filterList, con[1]);
                     case "member_price", "m_price" -> parseMemberPrice(filterList, con[1]);
                     case "vip_price", "v_price" -> parseVipPrice(filterList, con[1]);
                 }
@@ -176,7 +176,7 @@ public class ItemService {
     }
 
     private void parseCid(List<ItemQueryFilter> filterList, String cids) {
-        if (!cids.isEmpty()) {
+        if (!cids.isBlank()) {
             String[] ss = cids.split(MINI_SEPARATION);
             long[] categoryIds = new long[ss.length];
             for (int i = 0; i < ss.length; i++) {
@@ -187,7 +187,7 @@ public class ItemService {
     }
 
     private void parseBid(List<ItemQueryFilter> filterList, String bids) {
-        if (!bids.isEmpty()) {
+        if (!bids.isBlank()) {
             String[] ss = bids.split(MINI_SEPARATION);
             long[] brandIds = new long[ss.length];
             for (int i = 0; i < ss.length; i++) {
@@ -198,7 +198,7 @@ public class ItemService {
     }
 
     private void parseRetailPrice(List<ItemQueryFilter> filterList, String retail_price) {
-        if (!retail_price.isEmpty()) {
+        if (!retail_price.isBlank()) {
             String[] ss = retail_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
                 filterList.add(new RetailPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
@@ -207,7 +207,7 @@ public class ItemService {
     }
 
     private void parseMemberPrice(List<ItemQueryFilter> filterList, String member_price) {
-        if (!member_price.isEmpty()) {
+        if (!member_price.isBlank()) {
             String[] ss = member_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
                 filterList.add(new MemberPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
@@ -216,7 +216,7 @@ public class ItemService {
     }
 
     private void parseVipPrice(List<ItemQueryFilter> filterList, String vip_price) {
-        if (!vip_price.isEmpty()) {
+        if (!vip_price.isBlank()) {
             String[] ss = vip_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
                 filterList.add(new VipPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
@@ -225,7 +225,7 @@ public class ItemService {
     }
 
     private void parseLastReceiptPrice(List<ItemQueryFilter> filterList, String last_receipt_price) {
-        if (!last_receipt_price.isEmpty()) {
+        if (!last_receipt_price.isBlank()) {
             String[] ss = last_receipt_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
                 filterList.add(new LastReceiptPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
@@ -236,27 +236,29 @@ public class ItemService {
     @Post("/items")
     public HttpResponse create(ServiceRequestContext ctx, HttpData body, @Param("pretty") @Default("false") boolean pretty) {
         RequestHeaders headers = ctx.request().headers();
-        if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
+        if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) ||
+              MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                     MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         ctx.blockingTaskExecutor().execute(() -> {
             try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
-                Item item = this.toItemJson(parser);
+                Item item = this.createItem(parser);
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
                         "{\"status\":\"success\",\"code\":201,\"message\":\"A item created,it's %s\"}", item)));
             } catch (Exception e) {
+                System.out.println(e);
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                        "{\"status\":500,\"code\":500,\"message\":\"Can't create a item,cause by {}\"}", e)));
+                        "{\"status\":fail,\"code\":500,\"message\":\"Can't create a item,cause by %s\"}", e)));
             }
         });
         return HttpResponse.of(future);
     }
 
-    private Item toItemJson(JsonParser parser) throws IOException {
+    private Item createItem(JsonParser parser) throws IOException {
         Name name = Name.EMPTY;
         MadeIn madeIn = MadeIn.UNKNOWN;
-        Grade grade = Grade.QUALIFIED;
+        GradeEnum grade = GradeEnum.QUALIFIED;
         Specification spec = Specification.UNDEFINED;
         long brandId = Brand.UNDEFINED.id();
         long categoryId = Category.UNDEFINED.id();
@@ -268,12 +270,13 @@ public class ItemService {
         while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.FIELD_NAME) {
                 String fieldName = parser.currentName();
+                System.out.println(fieldName);
                 parser.nextToken();
                 switch (fieldName) {
                     case "barcode" -> barcode = BarcodeGenerateServices.createBarcode(parser.getValueAsString());
                     case "name" -> name = this.readName(parser);
                     case "spec" -> spec = Specification.valueOf(parser.getValueAsString());
-                    case "grade" -> grade = Grade.of(parser.getValueAsString());
+                    case "grade" -> grade = GradeEnum.of(parser.getValueAsString());
                     case "madeIn" -> madeIn = this.readMadeIn(parser);
                     case "latestReceiptPrice" -> lastReceiptPrice = new LastReceiptPrice(this.readPrice(parser));
                     case "retailPrice" -> retailPrice = new RetailPrice(this.readPrice(parser));
@@ -284,8 +287,11 @@ public class ItemService {
                 }
             }
         }
-        new ItemCreateCommand(barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY, lastReceiptPrice, retailPrice, memberPrice, vipPrice, categoryId, brandId);
-        return null;
+
+        ItemCreateCommand command = new ItemCreateCommand(barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY, lastReceiptPrice, retailPrice, memberPrice, vipPrice, categoryId, brandId);
+        System.out.println(command);
+        Handler<ItemCreateCommand, Item> handler = new ItemCreateHandler();
+        return handler.execute(command);
     }
 
     private Name readName(JsonParser parser) throws IOException {
@@ -295,12 +301,8 @@ public class ItemService {
                 String fieldName = parser.getCurrentName();
                 parser.nextToken();
                 switch (fieldName) {
-                    case "name":
-                        name = parser.getValueAsString();
-                        break;
-                    case "alias":
-                        alias = parser.getValueAsString();
-                        break;
+                    case "name" -> name = parser.getValueAsString();
+                    case "alias" -> alias = parser.getValueAsString();
                 }
             }
         }
@@ -309,30 +311,19 @@ public class ItemService {
 
     private MadeIn readMadeIn(JsonParser parser) throws IOException {
         MadeIn result = MadeIn.UNKNOWN;
-        String city = null, country = null, code = "156";
-        while (!parser.isClosed()) {
-            JsonToken jsonToken = parser.nextToken();
-            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+        String madeIn = null, country = null, code = "156";
+        while (parser.nextToken() != JsonToken.END_OBJECT) {
+            if (JsonToken.FIELD_NAME == parser.currentToken()) {
                 String fieldName = parser.getCurrentName();
                 parser.nextToken();
                 switch (fieldName) {
-                    case "code":
-                        code = parser.getValueAsString();
-                        break;
-                    case "city":
-                        city = parser.getValueAsString();
-                        break;
-                    case "country":
-                        country = parser.getValueAsString();
-                        break;
+                    case "code" -> code = parser.getValueAsString();
+                    case "madeIn" -> madeIn = parser.getValueAsString();
+                    case "country" -> country = parser.getValueAsString();
                 }
             }
         }
-        if (city != null) {
-            result = new Imported(code, country);
-        } else if (country != null) {
-            result = new Domestic(code, city);
-        }
+        result = new Domestic(code, madeIn);
         return result;
     }
 
@@ -345,7 +336,7 @@ public class ItemService {
                 String fieldName = parser.getCurrentName();
                 parser.nextToken();
                 switch (fieldName) {
-                    case "currency" -> currency = parser.getValueAsString();
+                    case "currency", "currencyCode" -> currency = parser.getValueAsString();
                     case "unit" -> unit = Unit.of(parser.getValueAsString());
                     case "number" -> number = parser.getNumberValue();
                 }
