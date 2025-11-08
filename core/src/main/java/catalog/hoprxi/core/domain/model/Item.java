@@ -26,13 +26,14 @@ import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.util.DomainRegistry;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
- * @version 0.0.3 builder 2023-07-19
- * @since JDK8.0
+ * @version 0.0.4 builder 2025-11-08
+ * @since JDK21
  */
 public class Item {
     private Barcode barcode;
@@ -113,18 +114,16 @@ public class Item {
         this.spec = spec;
     }
 
-
-    private void setRetailPrice(RetailPrice retailPrice) {
-        this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
-    }
-
-
     private void setLastReceiptPrice(LastReceiptPrice lastReceiptPrice) {
         if (lastReceiptPrice == null)
             lastReceiptPrice = LastReceiptPrice.RMB_ZERO;
         this.lastReceiptPrice = lastReceiptPrice;
     }
 
+    private void setRetailPrice(RetailPrice retailPrice) {
+        if (retailPrice == null) retailPrice = RetailPrice.zero(Locale.getDefault(), Unit.PCS);
+        this.retailPrice = retailPrice;
+    }
 
     private void setVipPrice(VipPrice vipPrice) {
         Objects.requireNonNull(vipPrice, "vipPrice required");
@@ -141,6 +140,8 @@ public class Item {
     }
 
     private void setMadeIn(MadeIn madeIn) {
+        if (madeIn == null)
+            madeIn = MadeIn.UNKNOWN;
         this.madeIn = madeIn;
     }
 

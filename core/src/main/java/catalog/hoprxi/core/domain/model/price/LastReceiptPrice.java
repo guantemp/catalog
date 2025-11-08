@@ -24,8 +24,8 @@ import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2023-07-11
+ * @since JDK21
+ * @version 0.0.2 builder 2025-11-08
  */
 public class LastReceiptPrice {
     public static final LastReceiptPrice RMB_ZERO = new LastReceiptPrice(Price.zero(Locale.CHINA));
@@ -44,6 +44,10 @@ public class LastReceiptPrice {
     }
 
     public static LastReceiptPrice zero(Locale locale, Unit unit) {
+        if (locale == Locale.CHINA || locale == Locale.CHINESE)
+            return RMB_ZERO;
+        if (locale == Locale.US)
+            return USD_ZERO;
         return new LastReceiptPrice(Price.zero(locale, unit));
     }
 

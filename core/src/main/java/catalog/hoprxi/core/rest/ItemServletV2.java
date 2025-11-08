@@ -341,15 +341,9 @@ public class ItemServletV2 extends HttpServlet {
                 String fieldName = parser.getCurrentName();
                 parser.nextToken();
                 switch (fieldName) {
-                    case "code":
-                        code = parser.getValueAsString();
-                        break;
-                    case "city":
-                        city = parser.getValueAsString();
-                        break;
-                    case "country":
-                        country = parser.getValueAsString();
-                        break;
+                    case "code" -> code = parser.getValueAsString();
+                    case "city" -> city = parser.getValueAsString();
+                    case "country" -> country = parser.getValueAsString();
                 }
             }
         }
@@ -363,21 +357,15 @@ public class ItemServletV2 extends HttpServlet {
 
     private Price readPrice(JsonParser parser) throws IOException {
         String currency = null, unit = null;
-        Number number = null;
+        Number number = 0;
         while (parser.nextToken() != JsonToken.END_OBJECT) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
                 String fieldName = parser.getCurrentName();
                 parser.nextToken();
                 switch (fieldName) {
-                    case "currency":
-                        currency = parser.getValueAsString();
-                        break;
-                    case "unit":
-                        unit = parser.getValueAsString();
-                        break;
-                    case "number":
-                        number = parser.getNumberValue();
-                        break;
+                    case "currency" -> currency = parser.getValueAsString();
+                    case "unit" -> unit = parser.getValueAsString();
+                    case "number" -> number = parser.getNumberValue();
                 }
             }
         }

@@ -23,8 +23,8 @@ import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.1 2019-10-15
+ * @since JDK21
+ * @version 0.0.2 builder 2025-11-08
  */
 public class VipPrice {
     public static final VipPrice RMB_ZERO = new VipPrice(Price.zero(Locale.CHINA));
@@ -43,6 +43,10 @@ public class VipPrice {
     }
 
     public static VipPrice zero(Locale locale, Unit unit) {
+        if (locale == Locale.CHINA || locale == Locale.CHINESE)
+            return RMB_ZERO;
+        if (locale == Locale.US)
+            return USD_ZERO;
         return new VipPrice(Price.zero(locale, unit));
     }
 
@@ -68,8 +72,8 @@ public class VipPrice {
     @Override
     public String toString() {
         return "VipPrice{" +
-                "price=" + price +
-                ", name='" + name + '\'' +
-                '}';
+               "price=" + price +
+               ", name='" + name + '\'' +
+               '}';
     }
 }

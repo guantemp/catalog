@@ -51,15 +51,15 @@ import java.sql.SQLException;
  */
 public class PsqlItemRepository implements ItemRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemRepository.class);
-    private static Constructor<Name> nameConstructor;
+    private static final Constructor<Name> nameConstructor;
 
     static {
         try {
             nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
             nameConstructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
-            if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Not query Name class has such constructor", e);
+            LOGGER.error("Name class no such constructor", e);
+            throw new RuntimeException("Name class no such constructor", e);
         }
     }
 
@@ -80,6 +80,7 @@ public class PsqlItemRepository implements ItemRepository {
         } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
                  IOException e) {
             LOGGER.error("Can't rebuild item with (id = {})", id, e);
+            throw new RuntimeException(e);
         }
         return null;
     }

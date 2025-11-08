@@ -28,8 +28,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.PooledByteBufAllocator;
-import org.apache.http.HttpHost;
-import org.elasticsearch.client.*;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
-import java.util.Objects;
 import java.util.Stack;
 
 /***
@@ -62,7 +62,7 @@ public class ESCategoryQuery implements CategoryQuery {
             Request request = new Request("GET", "/category/_search");
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeRootJsonEntity());
-            Response response =ESUtil.restClient().performRequest(request);
+            Response response = ESUtil.restClient().performRequest(request);
             return this.rebuild(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.warn("No search was found for anything resembling root categories", e);
@@ -168,7 +168,7 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public InputStream descendants(long id) {
-        try  {
+        try {
             long rootId = -1;
             int left = 1, right = 1;
             Request request = new Request("GET", "/category/_doc/" + id);
@@ -286,12 +286,8 @@ public class ESCategoryQuery implements CategoryQuery {
                                     parser.nextToken();
                                     generator.copyCurrentEvent(parser);
                                     switch (fileName) {
-                                        case "left":
-                                            currentLeft = parser.getValueAsInt();
-                                            break;
-                                        case "right":
-                                            currentRight = parser.getValueAsInt();
-                                            break;
+                                        case "left" -> currentLeft = parser.getValueAsInt();
+                                        case "right" -> currentRight = parser.getValueAsInt();
                                     }
                                 }
                             }
@@ -364,7 +360,7 @@ public class ESCategoryQuery implements CategoryQuery {
 
                 generator.writeStartObject();
                 generator.writeObjectFieldStart("term");
-                generator.writeStringField("name.mnemonic",key);
+                generator.writeStringField("name.mnemonic", key);
                 generator.writeEndObject();
                 generator.writeEndObject();
 
@@ -408,15 +404,9 @@ public class ESCategoryQuery implements CategoryQuery {
                     String fieldName = parser.getCurrentName();
                     parser.nextToken();
                     switch (fieldName) {
-                        case "root_id":
-                            rootId = parser.getValueAsInt();
-                            break;
-                        case "left":
-                            left = parser.getValueAsInt();
-                            break;
-                        case "right":
-                            right = parser.getValueAsInt();
-                            break;
+                        case "root_id" -> rootId = parser.getValueAsInt();
+                        case "left" -> left = parser.getValueAsInt();
+                        case "right" -> right = parser.getValueAsInt();
                     }
                 }
             }

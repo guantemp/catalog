@@ -20,8 +20,8 @@ import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.2 builder 2021-09-19
+ * @since JDK21
+ * @version 0.0.3 builder 2025-11-08
  */
 public enum Unit {
     BEI {
@@ -228,12 +228,12 @@ public enum Unit {
     };
 
     /**
-     * @param s
-     * @return
+     * @param s of value
+     * @return a Unit
      */
     public static Unit of(String s) {
         for (Unit unit : values()) {
-            if (unit.toString().equals(s))
+            if (unit.name().equals(s) || unit.toString().equals(s))
                 return unit;
         }
         return Unit.PCS;

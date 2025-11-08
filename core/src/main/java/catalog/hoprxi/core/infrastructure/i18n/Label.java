@@ -24,7 +24,7 @@ import salt.hoprxi.utils.NLS;
  * @version 0.0.2 builder 2021-06-02
  */
 public class Label extends NLS {
-    private static final String BUNDLE_NAME = "catalog.hoprxi.core.infrastructure.i18n.label"; //$NON-NLS-1$
+    private static final String BUNDLE_NAME = "label"; //$NON-NLS-1$
     public static String BRAND_UNDEFINED;
     public static String CATEGORY_UNDEFINED;
     public static String SPEC_NAME;

@@ -10,9 +10,7 @@ catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlItemRepositoryTest
 catalog\hoprxi\core\infrastructure\SetupTest.class
 catalog\hoprxi\core\domain\model\UnitTest.class
 catalog\hoprxi\core\infrastructure\batch\PsqlItemImportWithDisruptorTest.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\EsItemJsonQueryTest.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlCategoryRepositoryTest.class
 catalog\hoprxi\core\infrastructure\PsqlSetupTest.class
-catalog\hoprxi\core\domain\model\GradeTest.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlItemQueryTest.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlCategoryQueryTest.class

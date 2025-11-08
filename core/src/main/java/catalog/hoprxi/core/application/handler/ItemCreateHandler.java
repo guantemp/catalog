@@ -35,7 +35,6 @@ public class ItemCreateHandler implements Handler<ItemCreateCommand, Item> {
 
     @Override
     public Item execute(ItemCreateCommand command) {
-        System.out.println(command.name());
         Item item = new Item(repository.nextIdentity(), command.barcode(), command.name(), command.madeIn(), command.spec(), command.grade(), command.shelfLife(),
                 command.lastReceiptPrice(), command.retailPrice(), command.memberPrice(), command.vipPrice(), command.categoryId(), command.brandId());
         repository.save(item);

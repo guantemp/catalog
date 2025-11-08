@@ -53,11 +53,14 @@ import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
@@ -270,7 +273,6 @@ public class ItemService {
         while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.FIELD_NAME) {
                 String fieldName = parser.currentName();
-                System.out.println(fieldName);
                 parser.nextToken();
                 switch (fieldName) {
                     case "barcode" -> barcode = BarcodeGenerateServices.createBarcode(parser.getValueAsString());
@@ -278,18 +280,21 @@ public class ItemService {
                     case "spec" -> spec = Specification.valueOf(parser.getValueAsString());
                     case "grade" -> grade = GradeEnum.of(parser.getValueAsString());
                     case "madeIn" -> madeIn = this.readMadeIn(parser);
-                    case "latestReceiptPrice" -> lastReceiptPrice = new LastReceiptPrice(this.readPrice(parser));
-                    case "retailPrice" -> retailPrice = new RetailPrice(this.readPrice(parser));
-                    case "memberPrice" -> memberPrice = new MemberPrice(readPrice(parser));
-                    case "vipPrice" -> vipPrice = new VipPrice(readPrice(parser));
+                    case "latestReceiptPrice", "last_receipt_price" ->
+                            lastReceiptPrice = this.readLastReceiptPrice(parser);
+                    case "retailPrice", "retail_price" -> retailPrice = new RetailPrice(this.readPrice(parser));
+                    case "memberPrice", "member_price" -> memberPrice = this.readMemberPrice(parser);
+                    case "vipPrice", "vip_price" -> vipPrice = this.readVipPrice(parser);
                     case "category" -> categoryId = readId(parser);
                     case "brand" -> brandId = readId(parser);
+                    case "categoryId" -> categoryId = parser.getValueAsLong();
+                    case "brandId" -> brandId = parser.getValueAsLong();
                 }
             }
         }
 
         ItemCreateCommand command = new ItemCreateCommand(barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY, lastReceiptPrice, retailPrice, memberPrice, vipPrice, categoryId, brandId);
-        System.out.println(command);
+        //System.out.println(command);
         Handler<ItemCreateCommand, Item> handler = new ItemCreateHandler();
         return handler.execute(command);
     }
@@ -310,11 +315,10 @@ public class ItemService {
     }
 
     private MadeIn readMadeIn(JsonParser parser) throws IOException {
-        MadeIn result = MadeIn.UNKNOWN;
         String madeIn = null, country = null, code = "156";
         while (parser.nextToken() != JsonToken.END_OBJECT) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                String fieldName = parser.getCurrentName();
+                String fieldName = parser.currentName();
                 parser.nextToken();
                 switch (fieldName) {
                     case "code" -> code = parser.getValueAsString();
@@ -323,26 +327,75 @@ public class ItemService {
                 }
             }
         }
-        result = new Domestic(code, madeIn);
-        return result;
+        //System.out.println(new Domestic(code, madeIn));
+        return new Domestic(code, madeIn);
+    }
+
+    private LastReceiptPrice readLastReceiptPrice(JsonParser parser) throws IOException {
+        String name = "";
+        Price price = Price.RMB_ZERO;
+        while (parser.nextToken() != JsonToken.END_OBJECT ||
+               (parser.currentToken() == JsonToken.END_OBJECT && "price".equals(parser.currentName()))) {
+            if (JsonToken.FIELD_NAME == parser.currentToken()) {
+                String fieldName = parser.currentName();
+                parser.nextToken();
+                if ("price".equals(fieldName)) price = readPrice(parser);
+                else if ("name".equals(fieldName)) name = parser.getValueAsString();
+            }
+        }
+        return name.isBlank() ? new LastReceiptPrice(price) : new LastReceiptPrice(name, price);
+    }
+
+    private MemberPrice readMemberPrice(JsonParser parser) throws IOException {
+        String name = "";
+        Price price = Price.RMB_ZERO;
+        while (parser.nextToken() != JsonToken.END_OBJECT ||
+               (parser.currentToken() == JsonToken.END_OBJECT && "price".equals(parser.currentName()))) {
+            if (JsonToken.FIELD_NAME == parser.currentToken()) {
+                String fieldName = parser.currentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "price" -> price = readPrice(parser);
+                    case "name" -> name = parser.getValueAsString();
+                }
+            }
+        }
+        return name.isBlank() ? new MemberPrice(price) : new MemberPrice(name, price);
+    }
+
+    private VipPrice readVipPrice(JsonParser parser) throws IOException {
+        String name = "";
+        Price price = Price.RMB_ZERO;
+        while (parser.nextToken() != JsonToken.END_OBJECT ||
+               (parser.currentToken() == JsonToken.END_OBJECT && "price".equals(parser.currentName()))) {
+            if (JsonToken.FIELD_NAME == parser.currentToken()) {
+                String fieldName = parser.currentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "price" -> price = readPrice(parser);
+                    case "name" -> name = parser.getValueAsString();
+                }
+            }
+        }
+        return name.isBlank() ? new VipPrice(price) : new VipPrice(name, price);
     }
 
     private Price readPrice(JsonParser parser) throws IOException {
-        String currency = null;
+        CurrencyUnit currencyUnit = Monetary.getCurrency(Locale.getDefault());
         Unit unit = Unit.PCS;
-        Number number = Integer.MIN_VALUE;
+        Number number = 0.0;
         while (parser.nextToken() != JsonToken.END_OBJECT) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                String fieldName = parser.getCurrentName();
+                String fieldName = parser.currentName();
                 parser.nextToken();
                 switch (fieldName) {
-                    case "currency", "currencyCode" -> currency = parser.getValueAsString();
+                    case "currency", "currencyCode" -> currencyUnit = Monetary.getCurrency(parser.getValueAsString());
                     case "unit" -> unit = Unit.of(parser.getValueAsString());
                     case "number" -> number = parser.getNumberValue();
                 }
             }
         }
-        return new Price(Money.of(number, currency), unit);
+        return new Price(Money.of(number, currencyUnit), unit);
     }
 
     //read category or brand id
@@ -359,4 +412,11 @@ public class ItemService {
         }
         return id;
     }
+
+    @StatusCode(201)
+    @Put("/items/{id}")
+    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
+        return  null;
+    }
+
 }

@@ -24,8 +24,8 @@ import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.1 2019-10-15
+ * @since JDK21
+ * @version 0.0.2 builder 2025-11-08
  */
 public class MemberPrice {
     public static final MemberPrice RMB_ZERO = new MemberPrice(Price.zero(Locale.CHINA));
@@ -44,6 +44,10 @@ public class MemberPrice {
     }
 
     public static MemberPrice zero(Locale locale, Unit unit) {
+        if (locale == Locale.CHINA || locale == Locale.CHINESE)
+            return RMB_ZERO;
+        if (locale == Locale.US)
+            return USD_ZERO;
         return new MemberPrice(Price.zero(locale, unit));
     }
 

@@ -16,6 +16,7 @@
 
 package catalog.hoprxi;
 
+import catalog.hoprxi.core.domain.model.price.Unit;
 import catalog.hoprxi.core.rest.UploadServlet;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
@@ -26,7 +27,10 @@ import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
 import javax.servlet.ServletException;
+import java.util.Locale;
 
 /**
  * Hello world!
@@ -43,7 +47,9 @@ public class App {
                 System.out.println(args[i + 1]);
             }
         }
+        //CurrencyUnit unit= Monetary.getCurrency(Locale.getDefault());
 
+        //System.out.println(Unit.valueOf("HE"));
     }
 
     private static void runServlet() throws ServletException {
