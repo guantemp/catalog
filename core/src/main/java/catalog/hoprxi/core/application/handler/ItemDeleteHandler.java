@@ -16,30 +16,30 @@
 
 package catalog.hoprxi.core.application.handler;
 
-import catalog.hoprxi.core.application.command.ItemCreateCommand;
-import catalog.hoprxi.core.domain.model.Item;
-import catalog.hoprxi.core.domain.model.ItemCreated;
+
+import catalog.hoprxi.core.application.command.ItemDeleteCommand;
 import catalog.hoprxi.core.domain.model.ItemRepository;
+import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlItemRepository;
-import catalog.hoprxi.core.util.DomainRegistry;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.2 builder 2025-11-05
+ * @version 0.0.1 builder 2025/11/8
  */
-public class ItemCreateHandler implements Handler<ItemCreateCommand, Item> {
+
+public class ItemDeleteHandler implements Handler<ItemDeleteCommand, Boolean> {
     private final ItemRepository repository = new PsqlItemRepository();
 
     @Override
-    public Item execute(ItemCreateCommand command) {
-        Item item = new Item(repository.nextIdentity(), command.barcode(), command.name(), command.madeIn(), command.spec(), command.grade(), command.shelfLife(),
-                command.lastReceiptPrice(), command.retailPrice(), command.memberPrice(), command.vipPrice(), command.categoryId(), command.brandId());
-        repository.save(item);
-        //领域事件
-        ItemCreated event = new ItemCreated ();
-        DomainRegistry.domainEventPublisher().publish(event);
-        return item;
+    public Boolean execute(ItemDeleteCommand command) {
+        try {
+            repository.delete(command.id());
+            return true;
+        } catch (PersistenceException e) {
+            //LOGGER.error("");
+        }
+        return false;
     }
 
     @Override

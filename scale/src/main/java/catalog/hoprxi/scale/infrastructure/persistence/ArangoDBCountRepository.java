@@ -229,21 +229,21 @@ public class ArangoDBCountRepository implements CountRepository {
         VPackSlice priceSlice = slice.get("retailPrice").get("price");
         VPackSlice amountSlice = priceSlice.get("amount");
         MonetaryAmount amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
-        Unit unit = Unit.valueOf(priceSlice.get("unit").getAsString());
+        UnitEnum unit = UnitEnum.valueOf(priceSlice.get("unit").getAsString());
         RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
 
         VPackSlice memberPriceSlice = slice.get("memberPrice");
         String priceName = memberPriceSlice.get("name").getAsString();
         amountSlice = memberPriceSlice.get("price").get("amount");
         amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
-        unit = Unit.valueOf(memberPriceSlice.get("price").get("unit").getAsString());
+        unit = UnitEnum.valueOf(memberPriceSlice.get("price").get("unit").getAsString());
         MemberPrice memberPrice = new MemberPrice(priceName, new Price(amount, unit));
 
         VPackSlice vipPriceSlice = slice.get("vipPrice");
         priceName = vipPriceSlice.get("name").getAsString();
         amountSlice = vipPriceSlice.get("price").get("amount");
         amount = Money.of(amountSlice.get("number").getAsBigDecimal(), amountSlice.get("currency").get("baseCurrency").get("currencyCode").getAsString());
-        unit = Unit.valueOf(vipPriceSlice.get("price").get("unit").getAsString());
+        unit = UnitEnum.valueOf(vipPriceSlice.get("price").get("unit").getAsString());
         VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
 
         String categoryId = slice.get("categoryId").getAsString();

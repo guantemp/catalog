@@ -16,11 +16,15 @@
 
 package catalog.hoprxi.core.application.command;
 
-/***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK21
- * @version 0.0.1 builder 2025-09-24
- */
-public record CategoryDeleteCommand(long id) implements Command<Boolean> {
 
+import catalog.hoprxi.core.domain.model.Item;
+import catalog.hoprxi.core.domain.model.category.Category;
+
+/***
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @since JDK21
+ * @version 0.0.1 builder 2025/11/8
+ */
+
+public class ItemUpdateCommand implements Command<Item>{
 }

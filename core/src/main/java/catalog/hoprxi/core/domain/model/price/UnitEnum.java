@@ -23,7 +23,7 @@ import catalog.hoprxi.core.infrastructure.i18n.Label;
  * @since JDK21
  * @version 0.0.3 builder 2025-11-08
  */
-public enum Unit {
+public enum UnitEnum {
     BEI {
         @Override
         public String toString() {
@@ -231,11 +231,11 @@ public enum Unit {
      * @param s of value
      * @return a Unit
      */
-    public static Unit of(String s) {
-        for (Unit unit : values()) {
+    public static UnitEnum of(String s) {
+        for (UnitEnum unit : values()) {
             if (unit.name().equals(s) || unit.toString().equals(s))
                 return unit;
         }
-        return Unit.PCS;
+        return UnitEnum.PCS;
     }
 }

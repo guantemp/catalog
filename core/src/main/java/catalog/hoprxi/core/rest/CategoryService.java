@@ -280,7 +280,7 @@ public class CategoryService {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled()) return;
+            if (ctx.isCancelled() || ctx.isTimedOut()) return;
             this.update(body, id);
             stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
             stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":201,\"message\":\"A category has update,it's %s\"}"));
@@ -320,7 +320,6 @@ public class CategoryService {
                 commands.add(new CategoryChangeDescriptionCommand(id, description));
             if (icon != null)
                 commands.add(new CategoryChangeIconCommand(id, URI.create(icon).toURL()));
-
              */
     }
 

@@ -16,7 +16,6 @@
 
 package catalog.hoprxi;
 
-import catalog.hoprxi.core.domain.model.price.Unit;
 import catalog.hoprxi.core.rest.UploadServlet;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
@@ -27,10 +26,7 @@ import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletContainer;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
-import javax.money.CurrencyUnit;
-import javax.money.Monetary;
 import javax.servlet.ServletException;
-import java.util.Locale;
 
 /**
  * Hello world!

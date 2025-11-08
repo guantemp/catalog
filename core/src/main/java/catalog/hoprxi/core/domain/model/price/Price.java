@@ -34,16 +34,16 @@ import java.util.StringJoiner;
  * @version 0.0.1 2019-10-15
  */
 public class Price {
-    public static final Price RMB_ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.CHINA)), Unit.PCS);
-    public static final Price USD_ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.US)), Unit.PCS);
+    public static final Price RMB_ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.CHINA)), UnitEnum.PCS);
+    public static final Price USD_ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.US)), UnitEnum.PCS);
 
     private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
             .build());
     private MonetaryAmount amount;
-    private Unit unit;
+    private UnitEnum unit;
 
-    public Price(MonetaryAmount amount, Unit unit) {
+    public Price(MonetaryAmount amount, UnitEnum unit) {
         setAmount(amount);
         setUnit(unit);
     }
@@ -53,14 +53,14 @@ public class Price {
             return RMB_ZERO;
         if (locale == Locale.US)
             return USD_ZERO;
-        return new Price(Money.zero(Monetary.getCurrency(locale)), Unit.PCS);
+        return new Price(Money.zero(Monetary.getCurrency(locale)), UnitEnum.PCS);
     }
 
-    public static Price zero(Locale locale, Unit unit) {
+    public static Price zero(Locale locale, UnitEnum unit) {
         return new Price(Money.zero(Monetary.getCurrency(locale)), unit);
     }
 
-    private void setUnit(Unit unit) {
+    private void setUnit(UnitEnum unit) {
         Objects.requireNonNull(unit, "unit required");
         this.unit = unit;
     }
@@ -76,7 +76,7 @@ public class Price {
         return amount;
     }
 
-    public Unit unit() {
+    public UnitEnum unit() {
         return unit;
     }
 

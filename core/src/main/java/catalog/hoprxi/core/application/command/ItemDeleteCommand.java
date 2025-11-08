@@ -24,36 +24,6 @@ import java.util.StringJoiner;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-08-04
  */
-public class ItemDeleteCommand implements Command {
-    private final String id;
+public record ItemDeleteCommand(long id) implements Command<Boolean> {
 
-    public ItemDeleteCommand(String id) {
-        this.id = Objects.requireNonNull(id, "id required");
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ItemDeleteCommand)) return false;
-
-        ItemDeleteCommand that = (ItemDeleteCommand) o;
-
-        return Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", ItemDeleteCommand.class.getSimpleName() + "[", "]")
-                .add("id='" + id + "'")
-                .toString();
-    }
 }

@@ -36,7 +36,7 @@ public class RetailPrice {
         setPrice(price);
     }
 
-    public static RetailPrice zero(Locale locale, Unit unit) {
+    public static RetailPrice zero(Locale locale, UnitEnum unit) {
         if (locale == Locale.CHINA || locale == Locale.CHINESE)
             return RMB_ZERO;
         if (locale == Locale.US)

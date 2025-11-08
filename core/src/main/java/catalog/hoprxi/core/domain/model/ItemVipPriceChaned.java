@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.domain.model;
 
-import catalog.hoprxi.core.domain.model.price.Unit;
+import catalog.hoprxi.core.domain.model.price.UnitEnum;
 import event.hoprxi.domain.model.DomainEvent;
 
 import javax.money.MonetaryAmount;
@@ -31,11 +31,11 @@ public class ItemVipPriceChaned implements DomainEvent {
     private long id;
     private String name;
     private MonetaryAmount amount;
-    private Unit unit;
+    private UnitEnum unit;
     private LocalDateTime occurredOn;
     private int version;
 
-    public ItemVipPriceChaned(long id, String name, MonetaryAmount amount, Unit unit) {
+    public ItemVipPriceChaned(long id, String name, MonetaryAmount amount, UnitEnum unit) {
         this.id = id;
         this.name = name;
         this.amount = amount;
@@ -52,7 +52,7 @@ public class ItemVipPriceChaned implements DomainEvent {
         return amount;
     }
 
-    public Unit unit() {
+    public UnitEnum unit() {
         return unit;
     }
 

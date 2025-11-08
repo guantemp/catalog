@@ -121,20 +121,20 @@ public class Item {
     }
 
     private void setRetailPrice(RetailPrice retailPrice) {
-        if (retailPrice == null) retailPrice = RetailPrice.zero(Locale.getDefault(), Unit.PCS);
+        if (retailPrice == null) retailPrice = RetailPrice.zero(Locale.getDefault(), UnitEnum.PCS);
         this.retailPrice = retailPrice;
     }
 
     private void setVipPrice(VipPrice vipPrice) {
         Objects.requireNonNull(vipPrice, "vipPrice required");
-        if (vipPrice.price().unit() != Unit.PCS && vipPrice.price().unit() != retailPrice.price().unit())
+        if (vipPrice.price().unit() != UnitEnum.PCS && vipPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("vipPrice unit must be consistent with retailPrice unit");
         this.vipPrice = vipPrice;
     }
 
     private void setMemberPrice(MemberPrice memberPrice) {
         Objects.requireNonNull(memberPrice, "memberPrice required");
-        if (memberPrice.price().unit() != Unit.PCS && memberPrice.price().unit() != retailPrice.price().unit())
+        if (memberPrice.price().unit() != UnitEnum.PCS && memberPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("memberPrice unit must be consistent with retailPrice unit");
         this.memberPrice = memberPrice;
     }

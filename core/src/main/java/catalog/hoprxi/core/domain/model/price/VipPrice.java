@@ -42,7 +42,7 @@ public class VipPrice {
         this(Label.PRICE_VIP, price);
     }
 
-    public static VipPrice zero(Locale locale, Unit unit) {
+    public static VipPrice zero(Locale locale, UnitEnum unit) {
         if (locale == Locale.CHINA || locale == Locale.CHINESE)
             return RMB_ZERO;
         if (locale == Locale.US)

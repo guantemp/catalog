@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.domain.model;
 
-import catalog.hoprxi.core.domain.model.price.Unit;
+import catalog.hoprxi.core.domain.model.price.UnitEnum;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -26,11 +26,11 @@ import org.testng.annotations.Test;
  * @since JDK8.0
  * @version 0.0.1 2019-05-14
  */
-public class UnitTest {
+public class UnitEnumTest {
     @Test
     public void name() {
-        for (Unit unit : Unit.values())
+        for (UnitEnum unit : UnitEnum.values())
             System.out.println(unit.name() + ": " + unit);
-        Assert.assertEquals(Unit.BEN, Unit.of("本"));
+        Assert.assertEquals(UnitEnum.BEN, UnitEnum.of("本"));
     }
 }

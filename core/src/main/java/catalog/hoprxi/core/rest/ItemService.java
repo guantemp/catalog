@@ -18,8 +18,10 @@ package catalog.hoprxi.core.rest;
 
 
 import catalog.hoprxi.core.application.command.ItemCreateCommand;
+import catalog.hoprxi.core.application.command.ItemDeleteCommand;
 import catalog.hoprxi.core.application.handler.Handler;
 import catalog.hoprxi.core.application.handler.ItemCreateHandler;
+import catalog.hoprxi.core.application.handler.ItemDeleteHandler;
 import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SearchException;
@@ -382,7 +384,7 @@ public class ItemService {
 
     private Price readPrice(JsonParser parser) throws IOException {
         CurrencyUnit currencyUnit = Monetary.getCurrency(Locale.getDefault());
-        Unit unit = Unit.PCS;
+        UnitEnum unit = UnitEnum.PCS;
         Number number = 0.0;
         while (parser.nextToken() != JsonToken.END_OBJECT) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
@@ -390,7 +392,7 @@ public class ItemService {
                 parser.nextToken();
                 switch (fieldName) {
                     case "currency", "currencyCode" -> currencyUnit = Monetary.getCurrency(parser.getValueAsString());
-                    case "unit" -> unit = Unit.of(parser.getValueAsString());
+                    case "unit" -> unit = UnitEnum.of(parser.getValueAsString());
                     case "number" -> number = parser.getNumberValue();
                 }
             }
@@ -416,7 +418,39 @@ public class ItemService {
     @StatusCode(201)
     @Put("/items/{id}")
     public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
-        return  null;
+        RequestHeaders headers = ctx.request().headers();
+        if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
+            return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
+        StreamWriter<HttpObject> stream = StreamMessage.streaming();
+        ctx.whenRequestCancelled().thenAccept(stream::close);
+        ctx.blockingTaskExecutor().execute(() -> {
+            if (ctx.isCancelled() || ctx.isTimedOut()) return;
+            this.update(body, id);
+            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":201,\"message\":\"A category has update,it's %s\"}"));
+            stream.close();
+        });
+        return HttpResponse.of(stream);
+    }
+
+    private void update(HttpData body, long id) {
+    }
+
+    @Delete("/items/:id")
+    public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
+        StreamWriter<HttpObject> stream = StreamMessage.streaming();
+        ctx.whenRequestCancelled().thenAccept(stream::close);
+        ctx.blockingTaskExecutor().execute(() -> {
+
+            ItemDeleteCommand delete = new ItemDeleteCommand(id);
+            Handler<ItemDeleteCommand, Boolean> handler = new ItemDeleteHandler();
+            handler.execute(delete);
+            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":200,\"message\":\"The item(id=%s) is deleted\"}", id));
+            stream.close();
+        });
+        return HttpResponse.of(stream);
     }
 
 }

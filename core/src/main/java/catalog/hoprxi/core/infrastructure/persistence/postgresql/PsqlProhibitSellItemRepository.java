@@ -55,7 +55,7 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
     static {
         try {
             nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class);
-            prohibitSellItemConstructor = ProhibitSellItem.class.getDeclaredConstructor(String.class, Barcode.class, Name.class, MadeIn.class, Unit.class, Specification.class,
+            prohibitSellItemConstructor = ProhibitSellItem.class.getDeclaredConstructor(String.class, Barcode.class, Name.class, MadeIn.class, UnitEnum.class, Specification.class,
                     GradeEnum.class, ShelfLife.class, String.class, String.class);
         } catch (NoSuchMethodException e) {
             if (LOGGER.isDebugEnabled())
@@ -84,19 +84,19 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
         ShelfLife shelfLife = ShelfLife.create(rs.getInt("shelf_life"));
 
         MonetaryAmount amount = Money.of(rs.getBigDecimal("last_receipt_price_number"), rs.getString("last_receipt_price_currencyCode"));
-        Unit unit = Unit.valueOf(rs.getString("last_receipt_price_unit"));
+        UnitEnum unit = UnitEnum.valueOf(rs.getString("last_receipt_price_unit"));
         String priceName = rs.getString("last_receipt_price_name");
         LastReceiptPrice lastReceiptPrice = new LastReceiptPrice(priceName, new Price(amount, unit));
         amount = Money.of(rs.getBigDecimal("retail_price_number"), rs.getString("retail_price_currencyCode"));
-        unit = Unit.valueOf(rs.getString("retail_price_unit"));
+        unit = UnitEnum.valueOf(rs.getString("retail_price_unit"));
         RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
         priceName = rs.getString("member_price_name");
         amount = Money.of(rs.getBigDecimal("member_price_number"), rs.getString("member_price_currencyCode"));
-        unit = Unit.valueOf(rs.getString("member_price_unit"));
+        unit = UnitEnum.valueOf(rs.getString("member_price_unit"));
         MemberPrice memberPrice = new MemberPrice(priceName, new Price(amount, unit));
         priceName = rs.getString("vip_price_name");
         amount = Money.of(rs.getBigDecimal("vip_price_number"), rs.getString("vip_price_currencyCode"));
-        unit = Unit.valueOf(rs.getString("vip_price_unit"));
+        unit = UnitEnum.valueOf(rs.getString("vip_price_unit"));
         VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
         return prohibitSellItemConstructor.newInstance(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
     }

@@ -36,7 +36,7 @@ public interface ItemRepository {
     /**
      * @param id
      */
-    void remove(long id);
+    void delete(long id);
 
     /**
      * @param item

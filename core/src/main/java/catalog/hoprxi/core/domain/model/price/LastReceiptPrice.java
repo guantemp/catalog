@@ -43,7 +43,7 @@ public class LastReceiptPrice {
         setPrice(price);
     }
 
-    public static LastReceiptPrice zero(Locale locale, Unit unit) {
+    public static LastReceiptPrice zero(Locale locale, UnitEnum unit) {
         if (locale == Locale.CHINA || locale == Locale.CHINESE)
             return RMB_ZERO;
         if (locale == Locale.US)

@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
-import catalog.hoprxi.core.domain.model.price.Unit;
+import catalog.hoprxi.core.domain.model.price.UnitEnum;
 import com.lmax.disruptor.EventHandler;
 
 import java.util.StringJoiner;
@@ -30,7 +30,7 @@ import java.util.StringJoiner;
 public class VipPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        Unit systemUnit = Unit.of(itemImportEvent.map.get(ItemMapping.UNIT));
+        UnitEnum systemUnit = UnitEnum.of(itemImportEvent.map.get(ItemMapping.UNIT));
         StringJoiner joiner = new StringJoiner(",", "'{\"name\":\"VIP\",\"price\": ", "}'");
         StringJoiner subJoiner = new StringJoiner(",", "{", "}");
         subJoiner.add("\"number\":" + (itemImportEvent.map.get(ItemMapping.VIP_PRICE) == null ? "0" : itemImportEvent.map.get(ItemMapping.VIP_PRICE)));

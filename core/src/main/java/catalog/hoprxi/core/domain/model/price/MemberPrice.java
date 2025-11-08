@@ -43,7 +43,7 @@ public class MemberPrice {
         this(Label.PRICE_MEMBER, price);
     }
 
-    public static MemberPrice zero(Locale locale, Unit unit) {
+    public static MemberPrice zero(Locale locale, UnitEnum unit) {
         if (locale == Locale.CHINA || locale == Locale.CHINESE)
             return RMB_ZERO;
         if (locale == Locale.US)

@@ -394,21 +394,21 @@ public class PsqlItemQuery implements ItemQuery2 {
 
         String priceName = rs.getString("last_receipt_price_name");
         MonetaryAmount amount = Money.of(rs.getBigDecimal("last_receipt_price_number"), rs.getString("last_receipt_price_currencyCode"));
-        Unit unit = Unit.valueOf(rs.getString("last_receipt_price_unit"));
+        UnitEnum unit = UnitEnum.valueOf(rs.getString("last_receipt_price_unit"));
         LastReceiptPrice lastReceiptPrice = new LastReceiptPrice(priceName, new Price(amount, unit));
         itemView.setLastReceiptPrice(lastReceiptPrice);
         amount = Money.of(rs.getBigDecimal("retail_price_number"), rs.getString("retail_price_currencyCode"));
-        unit = Unit.valueOf(rs.getString("retail_price_unit"));
+        unit = UnitEnum.valueOf(rs.getString("retail_price_unit"));
         RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
         itemView.setRetailPrice(retailPrice);
         priceName = rs.getString("member_price_name");
         amount = Money.of(rs.getBigDecimal("member_price_number"), rs.getString("member_price_currencyCode"));
-        unit = Unit.valueOf(rs.getString("member_price_unit"));
+        unit = UnitEnum.valueOf(rs.getString("member_price_unit"));
         MemberPrice memberPrice = new MemberPrice(priceName, new Price(amount, unit));
         itemView.setMemberPrice(memberPrice);
         priceName = rs.getString("vip_price_name");
         amount = Money.of(rs.getBigDecimal("vip_price_number"), rs.getString("vip_price_currencyCode"));
-        unit = Unit.valueOf(rs.getString("vip_price_unit"));
+        unit = UnitEnum.valueOf(rs.getString("vip_price_unit"));
         VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
         itemView.setVipPrice(vipPrice);
         itemView.setImages(toImages(rs.getBinaryStream("show")));

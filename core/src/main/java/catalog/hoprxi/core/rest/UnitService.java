@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.rest;
 
 
-import catalog.hoprxi.core.domain.model.price.Unit;
+import catalog.hoprxi.core.domain.model.price.UnitEnum;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.linecorp.armeria.common.*;
@@ -49,9 +49,9 @@ public class UnitService {
         try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
             if (pretty) gen.useDefaultPrettyPrinter();
             gen.writeStartObject();
-            gen.writeNumberField("total", Unit.values().length);
+            gen.writeNumberField("total", UnitEnum.values().length);
             gen.writeArrayFieldStart("units");
-            for (Unit unit : Unit.values()) {
+            for (UnitEnum unit : UnitEnum.values()) {
                 gen.writeString(unit.toString());
             }
             gen.writeEndArray();

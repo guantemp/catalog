@@ -369,7 +369,7 @@ public class ItemServletV2 extends HttpServlet {
                 }
             }
         }
-        return new Price(Money.of(number, currency), Unit.of(unit));
+        return new Price(Money.of(number, currency), UnitEnum.of(unit));
     }
 
     //read category or brand id
@@ -405,7 +405,7 @@ public class ItemServletV2 extends HttpServlet {
         String pathInfo = req.getPathInfo();
         if (pathInfo != null) {
             String id = pathInfo.substring(1);
-            Command itemDeleteCommand = new ItemDeleteCommand(id);
+            Command itemDeleteCommand = new ItemDeleteCommand(1L);
             app.deleteItem(itemDeleteCommand);
         }
     }

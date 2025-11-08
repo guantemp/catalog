@@ -25,7 +25,7 @@ import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.MemberPrice;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
-import catalog.hoprxi.core.domain.model.price.Unit;
+import catalog.hoprxi.core.domain.model.price.UnitEnum;
 import catalog.hoprxi.core.domain.model.price.VipPrice;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import com.arangodb.velocypack.annotations.Expose;
@@ -73,14 +73,14 @@ public class Count {
 
     private void setVipPrice(VipPrice vipPrice) {
         Objects.requireNonNull(vipPrice, "vipPrice required");
-        if (vipPrice.price().unit() != Unit.PCS && vipPrice.price().unit() != retailPrice.price().unit())
+        if (vipPrice.price().unit() != UnitEnum.PCS && vipPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("vipPrice unit must be consistent with retailPrice unit");
         this.vipPrice = vipPrice;
     }
 
     private void setMemberPrice(MemberPrice memberPrice) {
         Objects.requireNonNull(memberPrice, "memberPrice required");
-        if (memberPrice.price().unit() != Unit.PCS && memberPrice.price().unit() != retailPrice.price().unit())
+        if (memberPrice.price().unit() != UnitEnum.PCS && memberPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("memberPrice unit must be consistent with retailPrice unit");
         this.memberPrice = memberPrice;
     }

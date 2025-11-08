@@ -24,7 +24,7 @@ import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
-import catalog.hoprxi.core.domain.model.price.Unit;
+import catalog.hoprxi.core.domain.model.price.UnitEnum;
 import catalog.hoprxi.core.infrastructure.DecryptUtil;
 import catalog.hoprxi.core.rest.UploadServlet;
 import com.fasterxml.jackson.core.*;
@@ -332,15 +332,15 @@ public class AppTest {
         MonetaryAmountFormat format = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
                 .set(CurrencyStyle.SYMBOL).set("pattern", "¤#,##0.0000")//"#,##0.00### ¤"
                 .build());
-        RetailPrice retailPrice = new RetailPrice(new Price(Money.of(10.00, currency), Unit.DAI));
+        RetailPrice retailPrice = new RetailPrice(new Price(Money.of(10.00, currency), UnitEnum.DAI));
 
         JsonGenerator generator = jsonFactory.createGenerator(System.out, JsonEncoding.UTF8).useDefaultPrettyPrinter();
         generator.writeStartObject();
         generator.writeNumberField("offset", 0);
         generator.writeNumberField("limit", 15);
-        generator.writeNumberField("total", Unit.values().length);
+        generator.writeNumberField("total", UnitEnum.values().length);
         generator.writeArrayFieldStart("units");
-        for (Unit unit : Unit.values()) {
+        for (UnitEnum unit : UnitEnum.values()) {
             generator.writeString(unit.toString());
         }
         generator.writeEndArray();
@@ -508,7 +508,7 @@ public class AppTest {
                 }
             }
         }
-        return new Price(Money.of(number, currency), Unit.of(unit));
+        return new Price(Money.of(number, currency), UnitEnum.of(unit));
     }
 
     private void readArray(JsonParser parser) throws IOException {

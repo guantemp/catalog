@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
-import catalog.hoprxi.core.domain.model.price.Unit;
+import catalog.hoprxi.core.domain.model.price.UnitEnum;
 import com.lmax.disruptor.EventHandler;
 
 import java.util.StringJoiner;
@@ -30,7 +30,7 @@ import java.util.StringJoiner;
 public class RetailPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        Unit unit = Unit.of(itemImportEvent.map.get(ItemMapping.UNIT));
+        UnitEnum unit = UnitEnum.of(itemImportEvent.map.get(ItemMapping.UNIT));
         StringJoiner joiner = new StringJoiner(",", "'{", "}'");
         joiner.add("\"number\":" + itemImportEvent.map.get(ItemMapping.RETAIL_PRICE));
         joiner.add("\"currencyCode\":\"CNY\"");

@@ -20,8 +20,8 @@ import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2019-04-28
+ * @since JDK21
+ * @version 0.0.2 builder 2025-11-08
  */
 public enum GradeEnum {
     ONE_LEVEL {
@@ -48,7 +48,7 @@ public enum GradeEnum {
 
     public static GradeEnum of(String s) {
         for (GradeEnum grade : values()) {
-            if (grade.name().equalsIgnoreCase(s))
+            if (grade.name().equals(s) || grade.toString().equals(s))
                 return grade;
         }
         return GradeEnum.QUALIFIED;
