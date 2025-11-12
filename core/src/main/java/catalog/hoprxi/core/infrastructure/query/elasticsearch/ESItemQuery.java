@@ -76,26 +76,26 @@ public class ESItemQuery implements ItemQuery {
                     generator.writeEndObject();
                 }
             }
+            generator.flush();
+            return new ByteBufInputStream(buffer, true);
         } catch (ResponseException e) {
-            buffer.release();
+            if (buffer.refCnt() > 0) buffer.release();
             LOGGER.error("The item(id={}) not found", id, e);
             throw new SearchException(String.format("The item(id=%s) not found", id), e);
         } catch (IOException e) {
-            buffer.release();
+            if (buffer.refCnt() > 0) buffer.release();
             LOGGER.error("I/O failed", e);
             throw new SearchException("Error: Elasticsearch timeout or no connection", e);
         }
-        return new ByteBufInputStream(buffer, true);
     }
 
     @Override
     public InputStream findByBarcode(String barcode) {
-        if (!BarcodeValidServices.valid(barcode))
-            throw new IllegalArgumentException("Not valid barcode ctr");
+        if (!BarcodeValidServices.valid(barcode)) throw new IllegalArgumentException("Not valid barcode ctr");
+        Request request = new Request("GET", "/item/_search");
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(this.writeFindByBarcodeJson(barcode));
         try {
-            Request request = new Request("GET", "/item/_search");
-            request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(this.writeFindByBarcodeJson(barcode));
             Response response = ESUtil.restClient().performRequest(request);
             return this.reorganization(response.getEntity().getContent());
         } catch (IOException e) {
@@ -134,10 +134,10 @@ public class ESItemQuery implements ItemQuery {
             sortField = SortFieldEnum._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
+        Request request = new Request("GET", "/item/_search");
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(this.writeSearchJson(filters, size, searchAfter, sortField));
         try {
-            Request request = new Request("GET", "/item/_search");
-            request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(this.writeSearchJson(filters, size, searchAfter, sortField));
             Response response = ESUtil.restClient().performRequest(request);
             return this.reorganization(response.getEntity().getContent());
         } catch (IOException e) {
@@ -179,10 +179,10 @@ public class ESItemQuery implements ItemQuery {
             sortField = SortFieldEnum._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
+        Request request = new Request("GET", "/item/_search");
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(this.writeSearchJson(filters, offset, size, sortField));
         try {
-            Request request = new Request("GET", "/item/_search");
-            request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(this.writeSearchJson(filters, offset, size, sortField));
             Response response = ESUtil.restClient().performRequest(request);
             return this.reorganization(response.getEntity().getContent());
         } catch (IOException e) {
@@ -272,11 +272,10 @@ public class ESItemQuery implements ItemQuery {
     }
 
     private InputStream reorganization(InputStream is) throws IOException {
-        boolean success = false;
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        try ( OutputStream os = new ByteBufOutputStream(buffer);JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+        boolean transferMark = false;
+        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os); JsonParser parser = JSON_FACTORY.createParser(is);) {
             generator.writeStartObject();
-            JsonParser parser = JSON_FACTORY.createParser(is);
             while (parser.nextToken() != null) {
                 if (parser.currentToken() == JsonToken.FIELD_NAME) {
                     String fieldName = parser.currentName();
@@ -293,12 +292,12 @@ public class ESItemQuery implements ItemQuery {
             }
             generator.writeEndObject();
             generator.flush();
-            InputStream result = new ByteBufInputStream(buffer, true); // 创建输入流并转移所有权
-            success = true; // 标记成功
+            ByteBufInputStream result = new ByteBufInputStream(buffer, true);// 创建输入流并转移所有权
+            transferMark = true;
             return result;
         } finally {
-            if (!success && buffer != null && buffer.refCnt() > 0) { // 确保在失败时释放缓冲区
-                buffer.release();
+            if (!transferMark && buffer != null && buffer.refCnt() > 0) {
+                buffer.release(); // 只有在失败时才需要手动释放
             }
         }
     }

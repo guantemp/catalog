@@ -63,7 +63,7 @@ public class ESCategoryQuery implements CategoryQuery {
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeRootJsonEntity());
             Response response = ESUtil.restClient().performRequest(request);
-            return this.rebuild(response.getEntity().getContent());
+            return this.reorganization(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.warn("No search was found for anything resembling root categories", e);
             throw new SearchException("No search was found for anything resembling root categories", e);
@@ -105,14 +105,17 @@ public class ESCategoryQuery implements CategoryQuery {
                     generator.writeEndObject();
                 }
             }
+            generator.flush();
+            return new ByteBufInputStream(buffer, true);
         } catch (ResponseException e) {
+            if (buffer.refCnt() > 0) buffer.release();
             LOGGER.error("The category(id={}) not found", id, e);
             throw new SearchException(String.format("The category(id=%s) not found", id), e);
         } catch (IOException e) {
+            if (buffer.refCnt() > 0) buffer.release();
             LOGGER.error("I/O failed", e);
             throw new SearchException("Error: Elasticsearch timeout or no connection", e);
         }
-        return new ByteBufInputStream(buffer, true);
     }
 
     @Override
@@ -122,7 +125,7 @@ public class ESCategoryQuery implements CategoryQuery {
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeChildrenJsonEntity(id));
             Response response = ESUtil.restClient().performRequest(request);
-            return this.rebuild(response.getEntity().getContent());
+            return this.reorganization(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.warn("There are no related category(id={}) available ", id, e);
             throw new SearchException(String.format("There are no related category(id=%d) available", id), e);
@@ -168,11 +171,11 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public InputStream descendants(long id) {
+        long rootId = -1;
+        int left = 1, right = 1;
+        Request request = new Request("GET", "/category/_doc/" + id);
+        request.setOptions(ESUtil.requestOptions());
         try {
-            long rootId = -1;
-            int left = 1, right = 1;
-            Request request = new Request("GET", "/category/_doc/" + id);
-            request.setOptions(ESUtil.requestOptions());
             Response response = ESUtil.restClient().performRequest(request);
             JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
             while (parser.nextToken() != null) {
@@ -180,15 +183,9 @@ public class ESCategoryQuery implements CategoryQuery {
                     String fieldName = parser.getCurrentName();
                     parser.nextToken();
                     switch (fieldName) {
-                        case "root_id":
-                            rootId = parser.getValueAsLong();
-                            break;
-                        case "left":
-                            left = parser.getValueAsInt();
-                            break;
-                        case "right":
-                            right = parser.getValueAsInt();
-                            break;
+                        case "root_id" -> rootId = parser.getValueAsLong();
+                        case "left" -> left = parser.getValueAsInt();
+                        case "right" -> right = parser.getValueAsInt();
                     }
                 }
             }
@@ -196,7 +193,7 @@ public class ESCategoryQuery implements CategoryQuery {
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeDescendantJsonEntity(rootId, left, right));
             response = ESUtil.restClient().performRequest(request);
-            return this.rebuildDescendantAsTree(response.getEntity().getContent());
+            return this.descendantToTree(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("There are no related category(id={}) available", id, e);
             throw new SearchException(String.format("There are no related category(id=%d) available", id), e);
@@ -251,11 +248,11 @@ public class ESCategoryQuery implements CategoryQuery {
         return writer.toString();
     }
 
-    private InputStream rebuildDescendantAsTree(InputStream is) throws IOException {
+    private InputStream descendantToTree(InputStream is) throws IOException {
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        OutputStream os = new ByteBufOutputStream(buffer);
+        boolean transferMark = false;
         Stack<Integer> stack = new Stack<>();
-        try (JsonParser parser = JSON_FACTORY.createParser(is); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+        try (OutputStream os = new ByteBufOutputStream(buffer); JsonParser parser = JSON_FACTORY.createParser(is); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
             generator.writeStartObject();//start
             while (parser.nextToken() != null) {
                 if (parser.currentToken() == JsonToken.FIELD_NAME && "total".equals(parser.currentName())) {//all number
@@ -314,8 +311,16 @@ public class ESCategoryQuery implements CategoryQuery {
                 }
             }
             generator.writeEndObject();//end
+            generator.flush();
+            ByteBufInputStream result = new ByteBufInputStream(buffer, true);// 创建输入流并转移所有权
+            transferMark = true;
+            return result;
+        } finally {
+            if (!transferMark && buffer != null && buffer.refCnt() > 0) {
+                buffer.release(); // 只有在失败时才需要手动释放
+            }
         }
-        return new ByteBufInputStream(buffer, true);
+
     }
 
     @Override
@@ -325,7 +330,7 @@ public class ESCategoryQuery implements CategoryQuery {
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writeKeyJsonEntity(key, offset, limit));
             Response response = ESUtil.restClient().performRequest(request);
-            return this.rebuild(response.getEntity().getContent());
+            return this.reorganization(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.debug("No search was found for anything resembling key {} category ", key, e);
             throw new SearchException(String.format("No search was found for anything resembling key %s category", key), e);
@@ -414,7 +419,7 @@ public class ESCategoryQuery implements CategoryQuery {
             request.setOptions(ESUtil.requestOptions());
             request.setJsonEntity(this.writePathJsonEntity(rootId, left, right));
             response = ESUtil.restClient().performRequest(request);
-            return this.rebuild(response.getEntity().getContent());
+            return this.reorganization(response.getEntity().getContent());
         } catch (ResponseException e) {
             LOGGER.warn("The category(id={}) not found", id, e);
             throw new RuntimeException(e);
@@ -472,21 +477,27 @@ public class ESCategoryQuery implements CategoryQuery {
         return writer.toString();
     }
 
-    private InputStream rebuild(InputStream is) throws IOException {
+    private InputStream reorganization(InputStream is) throws IOException {
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        OutputStream os = new ByteBufOutputStream(buffer);
-        JsonGenerator generator = JSON_FACTORY.createGenerator(os);
-        generator.writeStartObject();
-        JsonParser parser = JSON_FACTORY.createParser(is);
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.FIELD_NAME && "hits".equals(parser.currentName())) {
-                this.parseHits(parser, generator);
-                break;
+        boolean transferMark = false;
+        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os); JsonParser parser = JSON_FACTORY.createParser(is);) {
+            generator.writeStartObject();
+            while (parser.nextToken() != null) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME && "hits".equals(parser.currentName())) {
+                    this.parseHits(parser, generator);
+                    break;
+                }
+            }
+            generator.writeEndObject();
+            generator.flush();
+            ByteBufInputStream result = new ByteBufInputStream(buffer, true);// 创建输入流并转移所有权
+            transferMark = true;
+            return result;
+        } finally {
+            if (!transferMark && buffer != null && buffer.refCnt() > 0) {
+                buffer.release(); // 只有在失败时才需要手动释放
             }
         }
-        generator.writeEndObject();
-        generator.close();
-        return new ByteBufInputStream(buffer, true);
     }
 
     private void parseHits(JsonParser parser, JsonGenerator generator) throws IOException {

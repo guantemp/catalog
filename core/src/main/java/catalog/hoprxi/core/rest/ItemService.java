@@ -442,12 +442,12 @@ public class ItemService {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
-
+            if (ctx.isCancelled() || ctx.isTimedOut()) return;
             ItemDeleteCommand delete = new ItemDeleteCommand(id);
             Handler<ItemDeleteCommand, Boolean> handler = new ItemDeleteHandler();
             handler.execute(delete);
             stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":200,\"message\":\"The item(id=%s) is deleted\"}", id));
+            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":200,\"message\":\"The item(id=%s) is move to the recycle bin, you can retrieve it later in the recycle bin!\"}", id));
             stream.close();
         });
         return HttpResponse.of(stream);

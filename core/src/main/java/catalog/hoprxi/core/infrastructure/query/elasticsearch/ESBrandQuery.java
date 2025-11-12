@@ -72,14 +72,18 @@ public class ESBrandQuery implements BrandQuery {
                     generator.writeEndObject();
                 }
             }
+            generator.flush();
+            return new ByteBufInputStream(buffer, true);
         } catch (ResponseException e) {
+            if (buffer.refCnt() > 0) buffer.release();
             LOGGER.error("The brand(id={}) not found", id, e);
             throw new SearchException(String.format("The brand(id=%s) not found", id), e);
         } catch (IOException e) {
+            if (buffer.refCnt() > 0) buffer.release();
             LOGGER.error("I/O failed", e);
             throw new SearchException("Error: Elasticsearch timeout or no connection", e);
         }
-        return new ByteBufInputStream(buffer, true);
+
     }
 
     @Override
@@ -96,7 +100,7 @@ public class ESBrandQuery implements BrandQuery {
         try {
             request.setJsonEntity(this.writeSearchJsonEntity(name, offset, size, sortField));
             Response response = ESUtil.restClient().performRequest(request);
-            return this.rebuild(response.getEntity().getContent());
+            return this.reorganization(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("No search was found for anything resembling name({}) brand", name, e);
             throw new SearchException(String.format("No search was found for anything resembling name(%s) brand", name), e);
@@ -125,29 +129,32 @@ public class ESBrandQuery implements BrandQuery {
         }
         Request request = new Request("GET", "/brand/_search");
         request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(this.writeSearchAfterJsonEntity(name, size, searchAfter, sortField));
         try {
-            request.setJsonEntity(this.writeSearchAfterJsonEntity(name, size, searchAfter, sortField));
+
             Response response = ESUtil.restClient().performRequest(request);
-            return rebuild(response.getEntity().getContent());
+            return reorganization(response.getEntity().getContent());
         } catch (IOException e) {
             LOGGER.error("Not brand found from {}:", searchAfter, e);
             throw new SearchException(String.format("Not brand found from %s", searchAfter), e);
         }
     }
 
-    private String writeSearchAfterJsonEntity(String name, int size, String searchAfter, SortFieldEnum sortField) throws IOException {
+    private String writeSearchAfterJsonEntity(String name, int size, String searchAfter, SortFieldEnum sortField) {
         StringWriter writer = new StringWriter(128);
-        JsonGenerator generator = JSON_FACTORY.createGenerator(writer);
-        generator.writeStartObject();
-        generator.writeNumberField("size", size);
-        this.writeCommonJsonEntity(name, sortField, generator);
-        if (searchAfter != null && !searchAfter.isEmpty()) {
-            generator.writeArrayFieldStart("search_after");
-            generator.writeString(searchAfter);
-            generator.writeEndArray();
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+            generator.writeStartObject();
+            generator.writeNumberField("size", size);
+            this.writeCommonJsonEntity(name, sortField, generator);
+            if (searchAfter != null && !searchAfter.isEmpty()) {
+                generator.writeArrayFieldStart("search_after");
+                generator.writeString(searchAfter);
+                generator.writeEndArray();
+            }
+            generator.writeEndObject();
+        } catch (IOException e) {
+            LOGGER.error("Cannot assemble request JSON", e);
         }
-        generator.writeEndObject();
-        generator.close();
         return writer.toString();
     }
 
@@ -192,21 +199,27 @@ public class ESBrandQuery implements BrandQuery {
         generator.writeEndArray();
     }
 
-    private InputStream rebuild(InputStream is) throws IOException {
+    private InputStream reorganization(InputStream is) throws IOException {
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        OutputStream os = new ByteBufOutputStream(buffer);
-        JsonGenerator generator = JSON_FACTORY.createGenerator(os);
-        generator.writeStartObject();
-        JsonParser parser = JSON_FACTORY.createParser(is);
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.FIELD_NAME && "hits".equals(parser.currentName())) {
-                this.parseHits(parser, generator);
-                break;
+        boolean transferMark = false;
+        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os); JsonParser parser = JSON_FACTORY.createParser(is);) {
+            generator.writeStartObject();
+            while (parser.nextToken() != null) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME && "hits".equals(parser.currentName())) {
+                    this.parseHits(parser, generator);
+                    break;
+                }
+            }
+            generator.writeEndObject();
+            generator.flush();
+            ByteBufInputStream result = new ByteBufInputStream(buffer, true);// 创建输入流并转移所有权
+            transferMark = true;
+            return result;
+        } finally {
+            if (!transferMark && buffer != null && buffer.refCnt() > 0) {
+                buffer.release(); // 只有在失败时才需要手动释放
             }
         }
-        generator.writeEndObject();
-        generator.close();
-        return new ByteBufInputStream(buffer, true);
     }
 
     private void parseHits(JsonParser parser, JsonGenerator generator) throws IOException {

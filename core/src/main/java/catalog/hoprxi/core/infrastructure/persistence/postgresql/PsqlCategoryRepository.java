@@ -180,7 +180,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                     ps1.setLong(4, category.id());
                     ps1.executeUpdate();
                 } else {//move to new tree node
-                    moveCategory(connection, category, resultSet.getInt("left"), resultSet.getInt("right"), resultSet.getLong("root_id"));
+                    this.moveCategory(connection, category, resultSet.getInt("left"), resultSet.getInt("right"), resultSet.getLong("root_id"));
                 }
             } else {//new
                 if (category.isRoot()) {
@@ -195,7 +195,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                     ps1.setLong(6, category.id());
                     ps1.executeUpdate();
                 } else {
-                    insertNewCategory(category, connection);
+                    this.insertNewCategory(category, connection);
                 }
             }
         } catch (SQLException e) {

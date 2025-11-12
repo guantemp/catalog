@@ -79,8 +79,8 @@ public class PsqlItemRepository implements ItemRepository {
             ResultSet rs = ps.executeQuery();
             if (rs.next())
                 return rebuild(rs);
-        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
-                 IOException e) {
+        } catch (InvocationTargetException | InstantiationException | IllegalAccessException | IOException |
+                 SQLException e) {
             LOGGER.error("The item(id={}) not found", id, e);
             throw new SearchException(String.format("The item(id=%s) not found", id), e);
         }
@@ -119,15 +119,16 @@ public class PsqlItemRepository implements ItemRepository {
 
     private MadeIn toMadeIn(String json) throws IOException {
         String _class = null, madeIn = null, code = "156";
-        JsonParser parser = JSON_FACTORY.createParser(json.getBytes(StandardCharsets.UTF_8));
-        while (parser.nextToken() != null) {
-            if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                String fieldName = parser.getCurrentName();
-                parser.nextToken();
-                switch (fieldName) {
-                    case "_class" -> _class = parser.getValueAsString();
-                    case "code" -> code = parser.getValueAsString();
-                    case "madeIn" -> madeIn = parser.getValueAsString();
+        try (JsonParser parser = JSON_FACTORY.createParser(json.getBytes(StandardCharsets.UTF_8))) {
+            while (parser.nextToken() != null) {
+                if (JsonToken.FIELD_NAME == parser.currentToken()) {
+                    String fieldName = parser.currentName();
+                    parser.nextToken();
+                    switch (fieldName) {
+                        case "_class" -> _class = parser.getValueAsString();
+                        case "code" -> code = parser.getValueAsString();
+                        case "madeIn" -> madeIn = parser.getValueAsString();
+                    }
                 }
             }
         }
@@ -153,6 +154,7 @@ public class PsqlItemRepository implements ItemRepository {
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error("Can't remove from item(id={})", id, e);
+            throw new PersistenceException(String.format("Can't remove from item(id=%s)", id), e);
         }
     }
 
@@ -196,7 +198,7 @@ public class PsqlItemRepository implements ItemRepository {
 
     private String toJson(MadeIn madeIn) {
         String _class = madeIn.getClass().getName();
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ByteArrayOutputStream output = new ByteArrayOutputStream(128);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
             generator.writeStartObject();
             generator.writeStringField("_class", _class);
@@ -206,11 +208,12 @@ public class PsqlItemRepository implements ItemRepository {
         } catch (IOException e) {
             LOGGER.error("Not write madeIn {} as json", madeIn, e);
         }
+        //System.out.println(output.size());
         return output.toString();
     }
 
     private String toJson(Name name) {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ByteArrayOutputStream output = new ByteArrayOutputStream(128);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
             generator.writeStartObject();
             generator.writeStringField("name", name.name());
@@ -220,23 +223,24 @@ public class PsqlItemRepository implements ItemRepository {
         } catch (IOException e) {
             LOGGER.error("Not write name as json", e);
         }
+        //System.out.println(output.size());
         return output.toString();
     }
 
     private String toJson(LastReceiptPrice lastReceiptPrice) {
-        return toJsonWithName(lastReceiptPrice.name(), lastReceiptPrice.price());
+        return priceToJsonWithName(lastReceiptPrice.name(), lastReceiptPrice.price());
     }
 
     private String toJson(VipPrice vipPrice) {
-        return toJsonWithName(vipPrice.name(), vipPrice.price());
+        return priceToJsonWithName(vipPrice.name(), vipPrice.price());
     }
 
     private String toJson(MemberPrice memberPrice) {
-        return toJsonWithName(memberPrice.name(), memberPrice.price());
+        return priceToJsonWithName(memberPrice.name(), memberPrice.price());
     }
 
-    private String toJsonWithName(String name, Price price) {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
+    private String priceToJsonWithName(String name, Price price) {
+        ByteArrayOutputStream output = new ByteArrayOutputStream(96);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
             generator.writeStartObject();
             generator.writeStringField("name", name);
@@ -255,7 +259,7 @@ public class PsqlItemRepository implements ItemRepository {
     }
 
     private String toJson(RetailPrice retailPrice) {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ByteArrayOutputStream output = new ByteArrayOutputStream(64);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
             generator.writeStartObject();
             generator.writeNumberField("number", retailPrice.price().amount().getNumber().numberValue(BigDecimal.class));

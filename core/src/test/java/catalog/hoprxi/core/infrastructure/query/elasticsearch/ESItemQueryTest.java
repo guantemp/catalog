@@ -46,7 +46,7 @@ public class ESItemQueryTest {
     private static final ItemQuery query = new ESItemQuery();
 
 
-    @Test(invocationCount = 400,threadPoolSize = 100,priority = 2)
+    @Test(invocationCount = 400, threadPoolSize = 100, priority = 2)
     public void testFind() throws IOException {
         InputStream is = query.find(51746812605656589L);
         String s = inputStreamToString(is);
@@ -62,39 +62,21 @@ public class ESItemQueryTest {
 
     @Test
     public void testFindByBarcode() throws IOException {
-        InputStream is = query.findByBarcode("6900404523737");
-        String s = inputStreamToString(is);
-        System.out.println(s);
-        is = query.findByBarcode( "6939006488885");
-        s = inputStreamToString(is);
-        System.out.println(s);
-        is = query.findByBarcode("6940188805018");
-        s = inputStreamToString(is);
-        System.out.println(s);
+        try (InputStream is = query.findByBarcode("6900404523737");) {
+            String s = inputStreamToString(is);
+            System.out.println(s);
+        }
+        try (InputStream is = query.findByBarcode("6939006488885");) {
+            String s = inputStreamToString(is);
+            System.out.println(s);
+        }
+        try (InputStream is = query.findByBarcode("6940188805018");) {
+            String s = inputStreamToString(is);
+            System.out.println(s);
+        }
 
-        try {
-            query.findByBarcode("690158611081");
-            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
-        } catch (IllegalArgumentException e) {
-            // 验证异常信息
-            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
-        }
-        try {
-            query.findByBarcode("dsgf");
-            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
-        } catch (IllegalArgumentException e) {
-            // 验证异常信息
-            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
-        }
-        try {
-            query.findByBarcode("");
-            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
-        } catch (IllegalArgumentException e) {
-            // 验证异常信息
-            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
-        }
-        try {
-            query.findByBarcode(null);
+        try (InputStream is = query.findByBarcode("690158611081"); InputStream is1 = query.findByBarcode("dsgf");
+             InputStream is2 = query.findByBarcode(""); InputStream is3 = query.findByBarcode(null);) {
             Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
         } catch (IllegalArgumentException e) {
             // 验证异常信息
@@ -131,7 +113,7 @@ public class ESItemQueryTest {
         System.out.println(s);
     }
 
-    @Test(invocationCount = 1,threadPoolSize = 1)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testSearchAfter() throws IOException {
         InputStream is = query.search(50, "9588868020855", SortFieldEnum.BARCODE);
         String s = inputStreamToString(is);
@@ -148,7 +130,7 @@ public class ESItemQueryTest {
         is = query.search(new ItemQueryFilter[]{new KeywordFilter("692"), new CategoryIdFilter(new long[]{49680944612900409L}), new RetailPriceFilter(2.6, 25.5), new LastReceiptPriceFilter(1.1, 3)}, 5, null, SortFieldEnum._ID);
         s = inputStreamToString(is);
         System.out.println(s);
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("伊利"),new KeywordFilter("690")}, 10, "258", SortFieldEnum._RETAIL_PRICE);
+        is = query.search(new ItemQueryFilter[]{new KeywordFilter("伊利"), new KeywordFilter("690")}, 10, "258", SortFieldEnum._RETAIL_PRICE);
         s = inputStreamToString(is);
         System.out.println(s);
     }

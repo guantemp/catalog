@@ -26,12 +26,9 @@ import com.linecorp.armeria.common.stream.StreamWriter;
 import com.linecorp.armeria.server.annotation.Default;
 import com.linecorp.armeria.server.annotation.Get;
 import com.linecorp.armeria.server.annotation.Param;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufOutputStream;
-import io.netty.buffer.PooledByteBufAllocator;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -45,8 +42,7 @@ public class UnitService {
     @Get("/units")
     public HttpResponse query(@Param("pretty") @Default("false") boolean pretty) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(256);
-        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream(); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
             if (pretty) gen.useDefaultPrettyPrinter();
             gen.writeStartObject();
             gen.writeNumberField("total", UnitEnum.values().length);
@@ -55,12 +51,15 @@ public class UnitService {
                 gen.writeString(unit.toString());
             }
             gen.writeEndArray();
+            gen.flush();
+            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            stream.write(HttpData.wrap(os.toByteArray()));
+            stream.close();
         } catch (IOException e) {
-            //handleStreamError(stream, e);
+            stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            stream.write(HttpData.ofUtf8("{\"status\":\"error\",\"code\":500,\"message\":\"Error,it's %s\"}", e.getMessage()));
+            stream.close();
         }
-        stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-        stream.write(HttpData.wrap(buffer));
-        stream.close();
         return HttpResponse.of(stream);
     }
 }

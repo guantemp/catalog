@@ -34,6 +34,7 @@ import org.javamoney.moneta.Money;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
+import org.testng.annotations.IAnnotation;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
@@ -158,7 +159,6 @@ public class PsqlItemRepositoryTest {
         retailPrice = new RetailPrice(new Price(Money.of(32.00, currency), UnitEnum.HE));
         Item thirteen = new Item(52496321492179007L, new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("764", "泰国"), new Specification("10片装"), GradeEnum.QUALIFIED, new ShelfLife(360 * 3), lastReceiptPrice, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(thirteen);
-
     }
 
     @AfterTest
@@ -194,7 +194,7 @@ public class PsqlItemRepositoryTest {
     }
 
 
-    @Test
+    @Test(invocationCount = 20,threadPoolSize = 2,priority = 2)
     public void testSave() {
         Item ten = itemRepository.find(52496321492179005L);
         System.out.println(ten);

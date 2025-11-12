@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.application.query;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /***
@@ -26,7 +27,7 @@ import java.io.InputStream;
 public interface ItemQuery {
     InputStream find(long id);
 
-    InputStream findByBarcode(String barcode);
+    InputStream findByBarcode(String barcode) throws IOException;
 
     /**
      * @param filters
