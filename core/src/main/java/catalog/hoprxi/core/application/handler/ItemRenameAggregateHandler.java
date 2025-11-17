@@ -16,12 +16,21 @@
 
 package catalog.hoprxi.core.application.handler;
 
-import catalog.hoprxi.core.application.command.Command;
+
+import catalog.hoprxi.core.application.command.ItemRenameCommand;
+import catalog.hoprxi.core.domain.model.Item;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2025/11/11
+ * @version 0.0.1 builder 2025/11/16
  */
-public interface AggregateHandler<T extends Command<R>, R> {
-     R execute(R r, T command);
+
+public class ItemRenameAggregateHandler implements  AggregateHandler<ItemRenameCommand<Long>,Item> {
+
+
+    @Override
+    public Item execute(Item item, ItemRenameCommand<Number> command) {
+        return null;
+    }
 }
