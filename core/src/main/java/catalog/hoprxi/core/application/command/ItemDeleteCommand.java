@@ -24,6 +24,6 @@ import java.util.StringJoiner;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-08-04
  */
-public record ItemDeleteCommand(long id) implements Command<Boolean> {
+public record ItemDeleteCommand(long id) implements Command {
 
 }

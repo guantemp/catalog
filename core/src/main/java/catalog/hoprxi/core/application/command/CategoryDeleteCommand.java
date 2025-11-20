@@ -21,6 +21,6 @@ package catalog.hoprxi.core.application.command;
  * @since JDK21
  * @version 0.0.1 builder 2025-09-24
  */
-public record CategoryDeleteCommand(long id) implements Command<Boolean> {
+public record CategoryDeleteCommand(long id) implements Command{
 
 }

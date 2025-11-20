@@ -25,7 +25,7 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-07-04
  */
-public record CategoryRenameCommand(long id, String name, String alias) implements Command<Category> {
+public record CategoryRenameCommand(long id, String name, String alias) implements Command {
 
     @Override
     public boolean equals(Object o) {

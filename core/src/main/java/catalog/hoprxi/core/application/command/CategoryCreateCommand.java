@@ -27,5 +27,5 @@ import java.util.Objects;
  * @version 0.0.2 builder 2025-11-05
  */
 public record CategoryCreateCommand(long parentId, String name, String alias, String description,
-                                    URL icon) implements Command<Category> {
+                                    URL icon) implements Command{
 }

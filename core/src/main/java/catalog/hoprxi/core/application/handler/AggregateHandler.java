@@ -22,6 +22,6 @@ import catalog.hoprxi.core.application.command.Command;
  * @since JDK21
  * @version 0.0.1 builder 2025/11/11
  */
-public interface AggregateHandler<T extends Command<R>, R> {
+public interface AggregateHandler<T extends Command, R> {
      R execute(R r, T command);
 }

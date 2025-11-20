@@ -16,15 +16,26 @@
 
 package catalog.hoprxi.core.application.command;
 
-
-import catalog.hoprxi.core.domain.model.Item;
-import catalog.hoprxi.core.domain.model.category.Category;
-
-/***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK21
- * @version 0.0.1 builder 2025/11/8
+/**
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
+ * @version 0.1 2025/11/20
+ * @since JDK 21
  */
 
-public class ItemUpdateCommand implements Command<Item>{
+public class ItemBarcodeChangeCommand implements Command{
+    private final long id;
+    private final String barcode;
+
+    public ItemBarcodeChangeCommand(long id, String barcode) {
+        this.id = id;
+        this.barcode = barcode;
+    }
+
+    public String getBarcode() {
+        return barcode;
+    }
+
+    public long getId() {
+        return id;
+    }
 }

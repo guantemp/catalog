@@ -28,7 +28,7 @@ import java.time.Year;
  * @version 0.0.1 builder 2025/9/11
  */
 
-public class BrandUpdateCommand implements Command<Brand> {
+public class BrandUpdateCommand implements Command {
     private long id;
     private String name;
     private String alias;

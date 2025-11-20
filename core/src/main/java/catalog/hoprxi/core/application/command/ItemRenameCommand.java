@@ -21,7 +21,7 @@ package catalog.hoprxi.core.application.command;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-07-26
  */
-public class ItemRenameCommand implements Command<Long> {
+public class ItemRenameCommand implements Command {
     private final long id;
     private String name;
     private String alias;

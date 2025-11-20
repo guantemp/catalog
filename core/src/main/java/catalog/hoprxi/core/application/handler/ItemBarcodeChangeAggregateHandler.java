@@ -16,28 +16,27 @@
 
 package catalog.hoprxi.core.application.handler;
 
+import catalog.hoprxi.core.application.command.ItemBarcodeChangeCommand;
+import catalog.hoprxi.core.domain.model.Item;
+import catalog.hoprxi.core.domain.model.barcode.Barcode;
+import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
 
-import catalog.hoprxi.core.application.command.Command;
-
-/***
+/**
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK21
- * @version 0.0.1 2025-09-18
+ * @version 0.1 2025/11/20
+ * @since JDK 21
  */
-public interface Handler<T extends Command, V> {
+
+public class ItemBarcodeChangeAggregateHandler implements AggregateHandler<ItemBarcodeChangeCommand, Item> {
     /**
-     *
+     * @param item
      * @param command
      * @return
      */
-    V execute(T command);
-
-    //commandId保存在缓存中，仅当次有效，重启将被被清空
-    default void undo() {
-        throw new UnsupportedOperationException("Not unsupported");
-    }
-
-    default void redo() {
-        throw new UnsupportedOperationException("Not unsupported");
+    @Override
+    public Item execute(Item item, ItemBarcodeChangeCommand command) {
+        Barcode barcode = BarcodeGenerateServices.createBarcode(command.getBarcode());
+        item.changeBarcode(barcode);
+        return item;
     }
 }

@@ -1,5 +1,7 @@
 catalog\hoprxi\core\infrastructure\batch\UploadHandlerTest.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlBrandRepositoryTest.class
+catalog\hoprxi\core\infrastructure\query\elasticsearch\ESItemQueryTest.class
+catalog\hoprxi\core\domain\model\GradeEnumTest.class
 catalog\hoprxi\core\infrastructure\batch\PsqlItemExportTest.class
 catalog\hoprxi\core\domain\model\barcode\BarcodeGenerateServicesTest.class
 catalog\hoprxi\core\infrastructure\i18n\LabelTest.class
@@ -8,9 +10,9 @@ catalog\hoprxi\core\infrastructure\query\elasticsearch\ESBrandQueryTest.class
 catalog\hoprxi\AppTest.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlItemRepositoryTest.class
 catalog\hoprxi\core\infrastructure\SetupTest.class
-catalog\hoprxi\core\domain\model\UnitTest.class
 catalog\hoprxi\core\infrastructure\batch\PsqlItemImportWithDisruptorTest.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlCategoryRepositoryTest.class
 catalog\hoprxi\core\infrastructure\PsqlSetupTest.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlItemQueryTest.class
+catalog\hoprxi\core\domain\model\UnitEnumTest.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlCategoryQueryTest.class

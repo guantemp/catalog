@@ -46,9 +46,7 @@ public abstract class Barcode {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Barcode)) return false;
-
-        Barcode barcode1 = (Barcode) o;
+        if (!(o instanceof Barcode barcode1)) return false;
 
         return Objects.equals(barcode, barcode1.barcode);
     }

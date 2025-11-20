@@ -27,7 +27,7 @@ import java.net.URL;
  * @version 0.0.1 builder 2025/9/25
  */
 
-public record CategoryUpdateCommand(long id, String description, URL icon) implements Command<Category> {
+public record CategoryUpdateCommand(long id, String description, URL icon) implements Command {
 
     public CategoryUpdateCommand {
         if (description == null && icon == null)

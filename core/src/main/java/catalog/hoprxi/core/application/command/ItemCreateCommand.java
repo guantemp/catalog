@@ -35,7 +35,7 @@ import java.util.StringJoiner;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-07-10
  */
-public class ItemCreateCommand implements Command<Item> {
+public class ItemCreateCommand implements Command {
     private final Barcode barcode;
     private final GradeEnum grade;
     private final Name name;

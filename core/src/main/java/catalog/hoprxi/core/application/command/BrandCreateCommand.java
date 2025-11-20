@@ -27,5 +27,5 @@ import java.time.Year;
  * @version 0.0.1 2019-05-14
  */
 public record BrandCreateCommand(String name, String alias, URL homepage, URL logo, Year since,
-                                 String story) implements Command<Brand> {
+                                 String story) implements Command {
 }

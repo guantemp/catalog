@@ -19,6 +19,7 @@ package catalog.hoprxi.core.application.handler;
 
 import catalog.hoprxi.core.application.command.ItemRenameCommand;
 import catalog.hoprxi.core.domain.model.Item;
+import catalog.hoprxi.core.domain.model.Name;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -26,11 +27,17 @@ import catalog.hoprxi.core.domain.model.Item;
  * @version 0.0.1 builder 2025/11/16
  */
 
-public class ItemRenameAggregateHandler implements  AggregateHandler<ItemRenameCommand<Long>,Item> {
+public class ItemRenameAggregateHandler implements  AggregateHandler<ItemRenameCommand,Item> {
 
-
+    /**
+     * @param item
+     * @param command
+     * @return
+     */
     @Override
-    public Item execute(Item item, ItemRenameCommand<Number> command) {
-        return null;
+    public Item execute(Item item, ItemRenameCommand command) {
+        Name name=new Name(command.name(), command.alias());
+        item.rename(name);
+        return item;
     }
 }

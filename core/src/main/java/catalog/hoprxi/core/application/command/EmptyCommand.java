@@ -23,6 +23,6 @@ package catalog.hoprxi.core.application.command;
  * @version 0.0.1 builder 2025/9/12
  */
 
-public class EmptyCommand implements Command<Void>{
+public class EmptyCommand implements Command{
 
 }

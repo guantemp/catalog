@@ -21,7 +21,7 @@ package catalog.hoprxi.core.application.command;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-01-07
  */
-public record BrandDeleteCommand(long id) implements Command<Boolean> {
+public record BrandDeleteCommand(long id) implements Command {
 
     @Override
     public boolean equals(Object o) {
