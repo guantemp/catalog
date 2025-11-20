@@ -14,30 +14,14 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.application.handler;
+package catalog.hoprxi.core.application.command;
 
-
-import catalog.hoprxi.core.application.command.ItemRenameCommand;
-import catalog.hoprxi.core.domain.model.Item;
-import catalog.hoprxi.core.domain.model.Name;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2025/11/16
+ * @version 0.0.1 builder 2025/11/20
  */
 
-public class ItemRenameAggregateHandler implements  AggregateHandler<ItemRenameCommand,Item> {
-
-    /**
-     * @param item
-     * @param command
-     * @return
-     */
-    @Override
-    public Item execute(Item item, ItemRenameCommand command) {
-        Name name=new Name(command.name(), command.alias());
-        item.rename(name);
-        return item;
-    }
+public class ItemRetailPriceAdjustCommand implements Command{
 }

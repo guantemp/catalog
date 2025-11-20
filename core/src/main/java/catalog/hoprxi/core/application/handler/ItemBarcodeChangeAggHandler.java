@@ -27,7 +27,7 @@ import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
  * @since JDK 21
  */
 
-public class ItemBarcodeChangeAggregateHandler implements AggregateHandler<ItemBarcodeChangeCommand, Item> {
+public class ItemBarcodeChangeAggHandler implements AggregateHandler<ItemBarcodeChangeCommand, Item> {
     /**
      * @param item
      * @param command

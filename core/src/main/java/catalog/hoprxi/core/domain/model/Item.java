@@ -202,7 +202,7 @@ public class Item {
         Objects.requireNonNull(retailPrice, "retailPrice required");
         if (!this.retailPrice.equals(retailPrice)) {
             this.retailPrice = retailPrice;
-            DomainRegistry.domainEventPublisher().publish(new ItemRetailPriceChanged(id, retailPrice.price().amount(), retailPrice.price().unit()));
+            DomainRegistry.domainEventPublisher().publish(new ItemRetailPriceAdjusted(id, retailPrice.price().amount(), retailPrice.price().unit()));
         }
     }
 
@@ -210,7 +210,7 @@ public class Item {
         Objects.requireNonNull(memberPrice, "memberPrice required");
         if (!this.memberPrice.equals(memberPrice)) {
             setMemberPrice(memberPrice);
-            DomainRegistry.domainEventPublisher().publish(new ItemMemberPriceChaned(id, memberPrice.name(), memberPrice.price().amount(), memberPrice.price().unit()));
+            DomainRegistry.domainEventPublisher().publish(new ItemMemberPriceAdjusted(id, memberPrice.name(), memberPrice.price().amount(), memberPrice.price().unit()));
         }
     }
 
@@ -218,7 +218,7 @@ public class Item {
         Objects.requireNonNull(vipPrice, "vipPrice required");
         if (!this.vipPrice.equals(vipPrice)) {
             setVipPrice(vipPrice);
-            DomainRegistry.domainEventPublisher().publish(new ItemVipPriceChaned(id, vipPrice.name(), vipPrice.price().amount(), vipPrice.price().unit()));
+            DomainRegistry.domainEventPublisher().publish(new ItemVipPriceAdjusted(id, vipPrice.name(), vipPrice.price().amount(), vipPrice.price().unit()));
         }
     }
 
