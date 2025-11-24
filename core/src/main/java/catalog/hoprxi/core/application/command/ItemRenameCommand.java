@@ -18,8 +18,8 @@ package catalog.hoprxi.core.application.command;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2023-07-26
+ * @since JDK21
+ * @version 0.0.1 builder 2025-07-26
  */
 public class ItemRenameCommand implements Command {
     private final long id;

@@ -17,37 +17,11 @@
 package catalog.hoprxi.core.application.command;
 
 
-import catalog.hoprxi.core.domain.model.price.UnitEnum;
-import org.javamoney.moneta.Money;
-
-import javax.money.MonetaryAmount;
-
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2025/11/20
+ * @version 0.0.1 builder 2025/11/24
  */
 
-public class ItemRetailPriceAdjustCommand implements Command{
-    private final long id;
-    private final MonetaryAmount amount;
-    private final String unit;
-
-    public ItemRetailPriceAdjustCommand(long id, MonetaryAmount amount, String unit) {
-        this.id = id;
-        this.amount = amount;
-        this.unit = unit;
-    }
-
-    public long id() {
-        return id;
-    }
-
-    public MonetaryAmount amount() {
-        return amount;
-    }
-
-    public String unit() {
-        return unit;
-    }
+public class ItemMadeInCommand {
 }
