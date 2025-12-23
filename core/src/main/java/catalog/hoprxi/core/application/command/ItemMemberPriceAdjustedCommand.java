@@ -14,45 +14,38 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model;
+package catalog.hoprxi.core.application.command;
 
-import catalog.hoprxi.core.domain.model.price.UnitEnum;
-import event.hoprxi.domain.model.DomainEvent;
+
+import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 import javax.money.MonetaryAmount;
-import java.time.LocalDateTime;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 2019-11-11
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @since JDK21
+ * @version 0.0.1 builder 2025/12/8
  */
-public class ItemMemberPriceAdjusted implements DomainEvent {
+
+public class ItemMemberPriceAdjustedCommand implements Command{
     private final long id;
     private final MonetaryAmount amount;
-    private final UnitEnum unit;
+    private final String unit;
     private final String name;
-    private LocalDateTime occurredOn;
-    private int version;
 
-    public ItemMemberPriceAdjusted(long id, String name, MonetaryAmount amount, UnitEnum unit) {
+    public ItemMemberPriceAdjustedCommand(long id,  String name,MonetaryAmount amount, String unit) {
         this.id = id;
         this.amount = amount;
         this.unit = unit;
         this.name = name;
-        occurredOn = LocalDateTime.now();
-        version = 1;
+    }
+    public ItemMemberPriceAdjustedCommand(long id,  MonetaryAmount amount, String unit) {
+        this.id = id;
+        this.amount = amount;
+        this.unit = unit;
+        this.name = Label.PRICE_MEMBER;
     }
 
-    @Override
-    public int version() {
-        return version;
-    }
-
-    @Override
-    public LocalDateTime occurredOn() {
-        return occurredOn;
-    }
 
     public long id() {
         return id;
@@ -62,7 +55,7 @@ public class ItemMemberPriceAdjusted implements DomainEvent {
         return amount;
     }
 
-    public UnitEnum unit() {
+    public String unit() {
         return unit;
     }
 

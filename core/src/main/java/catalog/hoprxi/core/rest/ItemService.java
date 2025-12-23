@@ -74,7 +74,7 @@ import java.util.concurrent.CompletableFuture;
 public class ItemService {
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
-    private static final int SINGLE_BUFFER_SIZE = 1536; // 1.5KB缓冲区
+    private static final int SINGLE_BUFFER_SIZE = 8192; // 1.5KB缓冲区
     private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Item");
     private static final String MINI_SEPARATION = ",";
@@ -89,20 +89,19 @@ public class ItemService {
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
             if (ctx.isCancelled() || ctx.isTimedOut()) return;
-            ByteBuf buffer = ctx.alloc().buffer(SINGLE_BUFFER_SIZE);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                if (pretty) gen.useDefaultPrettyPrinter();
-                InputStream is = QUERY.find(id);
-                this.copyRaw(gen, is);
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.wrap(buffer));
-                buffer = null;
+            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+            try (InputStream is = QUERY.find(id)) {
+                byte[] buf = new byte[SINGLE_BUFFER_SIZE];
+                int n;
+                while ((n = is.read(buf)) != -1) {
+                    ByteBuf chunk = ctx.alloc().buffer(n);
+                    chunk.writeBytes(buf, 0, n);
+                    stream.write(HttpData.wrap(chunk));
+                }
                 stream.close();
-            } catch (IOException | ClosedSessionException | SearchException e) {
+            } catch (IOException e) {
                 this.handleStreamError(stream, e);
                 LOGGER.warn("Error,it's {}", e.getMessage());
-            } finally {
-                if (buffer != null) buffer.release(); // 只释放未被转移的缓冲区
             }
         });
         return HttpResponse.of(stream);
@@ -296,7 +295,6 @@ public class ItemService {
         }
 
         ItemCreateCommand command = new ItemCreateCommand(barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY, lastReceiptPrice, retailPrice, memberPrice, vipPrice, categoryId, brandId);
-        //System.out.println(command);
         Handler<ItemCreateCommand, Item> handler = new ItemCreateHandler();
         return handler.execute(command);
     }
@@ -317,7 +315,9 @@ public class ItemService {
     }
 
     private MadeIn readMadeIn(JsonParser parser) throws IOException {
-        String madeIn = null, country = null, code = "156";
+        String madeIn = null;
+        String country = null;
+        String code = "156";
         while (parser.nextToken() != JsonToken.END_OBJECT) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
                 String fieldName = parser.currentName();
@@ -424,17 +424,25 @@ public class ItemService {
                     MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
+        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         ctx.blockingTaskExecutor().execute(() -> {
             if (ctx.isCancelled() || ctx.isTimedOut()) return;
-            this.update(body, id);
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":201,\"message\":\"A category has update,it's %s\"}"));
-            stream.close();
+            try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
+                Item item = this.update(parser, id);
+                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
+                        "{\"status\":\"success\",\"code\":201,\"message\":\"A item created,it's %s\"}", item)));
+            } catch (Exception e) {
+                System.out.println(e);
+                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                        "{\"status\":fail,\"code\":500,\"message\":\"Can't create a item,cause by %s\"}", e)));
+            }
         });
-        return HttpResponse.of(stream);
+        return HttpResponse.of(future);
     }
 
-    private void update(HttpData body, long id) {
+    private Item update(JsonParser parser, long id) throws IOException {
+        return null;
+
     }
 
     @Delete("/items/:id")

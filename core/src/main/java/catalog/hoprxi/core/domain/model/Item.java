@@ -198,7 +198,7 @@ public class Item {
     /**
      * @param retailPrice
      */
-    public void changeRetailPrice(RetailPrice retailPrice) {
+    public void adjustRetailPrice(RetailPrice retailPrice) {
         Objects.requireNonNull(retailPrice, "retailPrice required");
         if (!this.retailPrice.equals(retailPrice)) {
             this.retailPrice = retailPrice;
@@ -206,7 +206,7 @@ public class Item {
         }
     }
 
-    public void changeMemberPrice(MemberPrice memberPrice) {
+    public void adjustMemberPrice(MemberPrice memberPrice) {
         Objects.requireNonNull(memberPrice, "memberPrice required");
         if (!this.memberPrice.equals(memberPrice)) {
             setMemberPrice(memberPrice);
@@ -214,7 +214,7 @@ public class Item {
         }
     }
 
-    public void changeVipPrice(VipPrice vipPrice) {
+    public void adjustVipPrice(VipPrice vipPrice) {
         Objects.requireNonNull(vipPrice, "vipPrice required");
         if (!this.vipPrice.equals(vipPrice)) {
             setVipPrice(vipPrice);
@@ -333,7 +333,7 @@ public class Item {
 
     @Override
     public int hashCode() {
-        return (int) (id ^ (id >>> 32));
+        return Long.hashCode(id);
     }
 
     public ProhibitSellItem toProhibitSell() {

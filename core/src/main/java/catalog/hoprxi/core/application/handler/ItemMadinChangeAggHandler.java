@@ -17,23 +17,29 @@
 package catalog.hoprxi.core.application.handler;
 
 
-import catalog.hoprxi.core.application.command.ItemMemberPriceAdjustedCommand;
+import catalog.hoprxi.core.application.command.ItemMadeInChangCommand;
 import catalog.hoprxi.core.domain.model.Item;
-import catalog.hoprxi.core.domain.model.price.MemberPrice;
-import catalog.hoprxi.core.domain.model.price.Price;
-import catalog.hoprxi.core.domain.model.price.UnitEnum;
+import catalog.hoprxi.core.domain.model.madeIn.Domestic;
+import catalog.hoprxi.core.domain.model.madeIn.Imported;
+import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2025/11/24
+ * @version 0.0.1 builder 2025/12/9
  */
 
-public class ItemMemberPriceAdjustedAggHandler implements AggregateHandler<ItemMemberPriceAdjustedCommand, Item>{
+public class ItemMadinChangeAggHandler implements AggregateHandler<ItemMadeInChangCommand, Item> {
     @Override
-    public Item execute(Item item, ItemMemberPriceAdjustedCommand command) {
-        MemberPrice price=new MemberPrice(command.name(),new Price(command.amount(), UnitEnum.valueOf(command.unit())));
-        item.adjustMemberPrice(price);
+    public Item execute(Item item, ItemMadeInChangCommand command) {
+        String code = command.code();
+        MadeIn madeIn;
+        if (code.length() == 3 && !"156".equals(code))
+            madeIn = new Imported(code, command.madeIn());
+        else {
+            madeIn = new Domestic(code, command.madeIn());
+        }
+        item.changeMadeIn(madeIn);
         return item;
     }
 }

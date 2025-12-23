@@ -17,11 +17,23 @@
 package catalog.hoprxi.core.application.handler;
 
 
+import catalog.hoprxi.core.application.command.ItemRetailPriceAdjustCommand;
+import catalog.hoprxi.core.domain.model.Item;
+import catalog.hoprxi.core.domain.model.price.Price;
+import catalog.hoprxi.core.domain.model.price.RetailPrice;
+import catalog.hoprxi.core.domain.model.price.UnitEnum;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
  * @version 0.0.1 builder 2025/11/24
  */
 
-public class ItemRetailPriceAdjustAggHandler {
+public class ItemRetailPriceAdjustAggHandler implements AggregateHandler<ItemRetailPriceAdjustCommand, Item> {
+    @Override
+    public Item execute(Item item, ItemRetailPriceAdjustCommand command) {
+        RetailPrice price = new RetailPrice(new Price(command.amount(), UnitEnum.valueOf(command.unit())));
+        item.adjustRetailPrice(price);
+        return item;
+    }
 }

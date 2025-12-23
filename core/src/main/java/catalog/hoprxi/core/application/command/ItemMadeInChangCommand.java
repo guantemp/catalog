@@ -23,5 +23,5 @@ package catalog.hoprxi.core.application.command;
  * @version 0.0.1 builder 2025/11/24
  */
 
-public class ItemMadeInCommand {
+public record ItemMadeInChangCommand(long id, String code, String madeIn) implements Command {
 }

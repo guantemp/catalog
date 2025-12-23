@@ -118,7 +118,9 @@ public class PsqlItemRepository implements ItemRepository {
     }
 
     private MadeIn toMadeIn(String json) throws IOException {
-        String _class = null, madeIn = null, code = "156";
+        String _class = null;
+        String madeIn = null;
+        String code = "156";
         try (JsonParser parser = JSON_FACTORY.createParser(json.getBytes(StandardCharsets.UTF_8))) {
             while (parser.nextToken() != null) {
                 if (JsonToken.FIELD_NAME == parser.currentToken()) {

@@ -34,7 +34,6 @@ import org.javamoney.moneta.Money;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.IAnnotation;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
@@ -207,7 +206,7 @@ public class PsqlItemRepositoryTest {
         Item six = itemRepository.find(52496321492179000L);
         Assert.assertNotNull(six);
         six.changeBarcode(new EAN_13("6923555240728"));
-        six.changeRetailPrice(new RetailPrice(new Price(Money.of(39.9, currency), UnitEnum.TI)));
+        six.adjustRetailPrice(new RetailPrice(new Price(Money.of(39.9, currency), UnitEnum.TI)));
         six.changeGrade(GradeEnum.PREMIUM);
         six.moveToNewCategory(52495569397272598L);
         itemRepository.save(six);

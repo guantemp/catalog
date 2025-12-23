@@ -79,8 +79,8 @@ public class ESUtil {
         restClient = RestClient.builder(new HttpHost(props.getProperty("host", DEFAULT_HOST), Integer.parseInt(props.getProperty("port", "9200")), "https"))
                 .setHttpClientConfigCallback(httpClientBuilder -> {
                     // 设置连接池
-                    httpClientBuilder.setMaxConnTotal(150);   // 整个连接池最大连接数
-                    httpClientBuilder.setMaxConnPerRoute(80);
+                    //httpClientBuilder.setMaxConnTotal(150);   // 整个连接池最大连接数
+                    //httpClientBuilder.setMaxConnPerRoute(80);//每个 host 最多 80 连接
                     return httpClientBuilder;
                 }).build();
     }

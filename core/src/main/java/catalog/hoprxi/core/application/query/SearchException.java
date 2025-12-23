@@ -40,4 +40,7 @@ public class SearchException extends RuntimeException {
         super(message, cause, false, false);
     }
 
+    public SearchException(String message) {
+        super(message, null, false, false);
+    }
 }

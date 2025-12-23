@@ -102,7 +102,10 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
     }
 
     private MadeIn toMadeIn(String json) throws IOException {
-        String _class = null, city = null, country = null, code = "156";
+        String _class = null;
+        String city = null;
+        String country = null;
+        String code = "156";
         JsonFactory jasonFactory = new JsonFactory();
         JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
         while (!parser.isClosed()) {

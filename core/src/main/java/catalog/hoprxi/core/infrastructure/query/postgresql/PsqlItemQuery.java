@@ -418,7 +418,9 @@ public class PsqlItemQuery implements ItemQuery2 {
     }
 
     private MadeIn toMadeIn(String json) throws IOException {
-        String _class = null, madeIn = null, code = MadeIn.UNKNOWN.code();
+        String _class = null;
+        String madeIn = null;
+        String code = MadeIn.UNKNOWN.code();
         JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();

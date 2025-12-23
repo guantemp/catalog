@@ -16,20 +16,18 @@
 
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
-import catalog.hoprxi.core.application.query.ItemJsonQuery;
-import catalog.hoprxi.core.application.query.ItemQuery;
-import catalog.hoprxi.core.application.query.ItemQueryFilter;
-import catalog.hoprxi.core.application.query.SortFieldEnum;
+import catalog.hoprxi.core.application.query.*;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -42,12 +40,28 @@ public class ESItemQueryTest {
                 new String[]{"slave.tooo.top:9200"});
     }
 
-    private static final ItemJsonQuery service = new EsItemJsonQuery();
     private static final ItemQuery query = new ESItemQuery();
 
+    @Test(invocationCount = 512, threadPoolSize = 2, priority = 2)
+    public void testFindAsync() throws ExecutionException, InterruptedException, IOException, TimeoutException {
+        System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
 
-    @Test(invocationCount = 400, threadPoolSize = 100, priority = 2)
+        long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L};
+        ESItemQuery es = new ESItemQuery();
+        CompletableFuture<InputStream> f1 = es.findAsync(ids[0]);
+        CompletableFuture<InputStream> f2 = es.findAsync(ids[1]);
+        CompletableFuture<InputStream> f3 = es.findAsync(ids[1]);
+        // 并发等待所有完成
+        CompletableFuture.allOf(f1, f2, f3).get(30, TimeUnit.SECONDS);;
+
+        System.out.println(inputStreamToString(f1.get()));
+        System.out.println(inputStreamToString(f2.get()));
+        System.out.println(inputStreamToString(f3.get()));
+    }
+
+    @Test(invocationCount = 512, threadPoolSize = 8, priority = 2)
     public void testFind() throws IOException {
+        System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
         InputStream is = query.find(51746812605656589L);
         String s = inputStreamToString(is);
         System.out.println(s);
@@ -136,15 +150,14 @@ public class ESItemQueryTest {
     }
 
     private static String inputStreamToString(InputStream is) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(is, StandardCharsets.UTF_8))) {
-            char[] buffer = new char[8192]; // 8KB 缓冲区
-            int charsRead;
-            while ((charsRead = reader.read(buffer)) != -1) {
-                sb.append(buffer, 0, charsRead);
-            }
+
+
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] data = new byte[8192];
+        int n;
+        while ((n = is.read(data)) != -1) {
+            buffer.write(data, 0, n);
         }
-        return sb.toString();
+        return new String(buffer.toByteArray(), StandardCharsets.UTF_8);
     }
 }

@@ -334,7 +334,9 @@ public class ItemServletV2 extends HttpServlet {
 
     private MadeIn readMadeIn(JsonParser parser) throws IOException {
         MadeIn result = MadeIn.UNKNOWN;
-        String city = null, country = null, code = "156";
+        String city = null;
+        String country = null;
+        String code = "156";
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();
             if (JsonToken.FIELD_NAME.equals(jsonToken)) {
