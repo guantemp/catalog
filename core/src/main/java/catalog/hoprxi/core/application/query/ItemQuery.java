@@ -16,8 +16,8 @@
 
 package catalog.hoprxi.core.application.query;
 
-import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.CompletableFuture;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -27,7 +27,11 @@ import java.io.InputStream;
 public interface ItemQuery {
     InputStream find(long id);
 
-    InputStream findByBarcode(String barcode) throws IOException;
+    CompletableFuture<InputStream> findAsync(long id);
+
+    InputStream findByBarcode(String barcode);
+
+    CompletableFuture<InputStream> findByBarcodeAsync(String barcode);
 
     /**
      * @param filters

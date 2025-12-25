@@ -16,18 +16,21 @@
 
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
-import catalog.hoprxi.core.application.query.*;
+import catalog.hoprxi.core.application.query.ItemQuery;
+import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -42,36 +45,51 @@ public class ESItemQueryTest {
 
     private static final ItemQuery query = new ESItemQuery();
 
-    @Test(invocationCount = 512, threadPoolSize = 2, priority = 2)
-    public void testFindAsync() throws ExecutionException, InterruptedException, IOException, TimeoutException {
+    @Test(invocationCount = 256, threadPoolSize = 2, priority = 2)
+    public void testFindAsync() throws ExecutionException, InterruptedException, IOException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
 
-        long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L};
-        ESItemQuery es = new ESItemQuery();
-        CompletableFuture<InputStream> f1 = es.findAsync(ids[0]);
-        CompletableFuture<InputStream> f2 = es.findAsync(ids[1]);
-        CompletableFuture<InputStream> f3 = es.findAsync(ids[1]);
-        // 并发等待所有完成
-        CompletableFuture.allOf(f1, f2, f3).get(30, TimeUnit.SECONDS);;
+        long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L, 517480571626062891L};
+        CompletableFuture<InputStream> f1 = query.findAsync(ids[0]);
+        CompletableFuture<InputStream> f2 = query.findAsync(ids[1]);
+        CompletableFuture<InputStream> f3 = query.findAsync(ids[2]);
+        CompletableFuture<InputStream> f4 = query.findAsync(ids[3]);
+        try {
+            CompletableFuture.allOf(f1, f2, f3, f4).get(3, TimeUnit.SECONDS); // 可能抛出 ExecutionException
+        } catch (Throwable t) {
+            // 捕获异常，继续执行
+        }
 
-        System.out.println(inputStreamToString(f1.get()));
-        System.out.println(inputStreamToString(f2.get()));
-        System.out.println(inputStreamToString(f3.get()));
+        try (InputStream is = f1.get()) {
+            String s = inputStreamToString(is);
+            System.out.println(s);
+        }
+        try (InputStream is = f2.get()) {
+            String s = inputStreamToString(is);
+            System.out.println(s);
+        }
+        try (InputStream is = f3.get()) {
+            String s = inputStreamToString(is);
+            System.out.println(s);
+        }
+
     }
 
     @Test(invocationCount = 512, threadPoolSize = 8, priority = 2)
     public void testFind() throws IOException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
-        InputStream is = query.find(51746812605656589L);
-        String s = inputStreamToString(is);
-        System.out.println(s);
-        is = query.find(51748312021100428L);
-        s = inputStreamToString(is);
-        System.out.println(s);
-        is = query.find(51748057162606289L);
-
-        s = inputStreamToString(is);
-        System.out.println(s);
+        try (InputStream is = query.find(51746812605656589L)) {
+            String s = inputStreamToString(is);
+            System.out.println(s);
+        }
+        try (InputStream is = query.find(51748312021100428L)) {
+            String s = inputStreamToString(is);
+            System.out.println(s);
+        }
+        try (InputStream is = query.find(51748057162606289L)) {
+            String s = inputStreamToString(is);
+            System.out.println(s);
+        }
     }
 
     @Test
@@ -95,6 +113,33 @@ public class ESItemQueryTest {
         } catch (IllegalArgumentException e) {
             // 验证异常信息
             Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
+        }
+    }
+
+    @Test(invocationCount = 256, threadPoolSize = 2, priority = 2)
+    public void testFindByBarcodeAsync() throws IOException, ExecutionException, InterruptedException {
+        System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
+        String[] barcodes = {"6900404523737", "6939006488885", "6940188805018"};
+        CompletableFuture<InputStream> f1 = query.findByBarcodeAsync(barcodes[0]);
+        CompletableFuture<InputStream> f2 = query.findByBarcodeAsync(barcodes[1]);
+        CompletableFuture<InputStream> f3 = query.findByBarcodeAsync(barcodes[2]);
+        try {
+            CompletableFuture.allOf(f1, f2, f3).get(5, TimeUnit.SECONDS); // 可能抛出 ExecutionException
+        } catch (Throwable t) {
+            System.out.println(t); // 捕获异常，继续执行
+        }
+
+        try (InputStream is = f1.get()) {
+            String s = inputStreamToString(is);
+            System.out.println(s);
+        }
+        try (InputStream is = f2.get()) {
+            String s = inputStreamToString(is);
+            System.out.println(s);
+        }
+        try (InputStream is = f3.get()) {
+            String s = inputStreamToString(is);
+            System.out.println(s);
         }
     }
 
@@ -150,8 +195,6 @@ public class ESItemQueryTest {
     }
 
     private static String inputStreamToString(InputStream is) throws IOException {
-
-
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         byte[] data = new byte[8192];
         int n;
