@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
-import javax.servlet.ServletException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -44,7 +43,7 @@ public class Bootstrap {
     private static final Pattern EXCLUDE = Pattern.compile("^-{1,}.*");
     private static final int PORT = 9002;
 
-    public static void main(String[] args) throws ServletException {
+    public static void main(String[] args)  {
         String fileName = "keystore.jks", fileProtectedPasswd = "";
         Set<String> entries = new HashSet<>();
         for (int i = 0, j = args.length; i < j; i++) {

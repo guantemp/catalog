@@ -16,17 +16,8 @@
 
 package catalog.hoprxi;
 
-import catalog.hoprxi.core.rest.UploadServlet;
-import io.undertow.Handlers;
-import io.undertow.Undertow;
-import io.undertow.server.handlers.PathHandler;
-import io.undertow.servlet.Servlets;
-import io.undertow.servlet.api.DeploymentInfo;
-import io.undertow.servlet.api.DeploymentManager;
-import io.undertow.servlet.api.ServletContainer;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
-import javax.servlet.ServletException;
 
 /**
  * Hello world!
@@ -37,7 +28,7 @@ public class App {
                 new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
 
-    public static void main(String[] args) throws ServletException {
+    public static void main(String[] args)  {
         for (int i = 0, j = args.length; i < j; i++) {
             if ("-iv".equals(args[i])) {
                 System.out.println(args[i + 1]);
@@ -47,7 +38,7 @@ public class App {
 
         //System.out.println(Unit.valueOf("HE"));
     }
-
+/*
     private static void runServlet() throws ServletException {
         ServletContainer container = ServletContainer.Factory.newInstance();
         DeploymentInfo deploymentInfo = Servlets.deployment()
@@ -62,7 +53,7 @@ public class App {
                                 .addInitParam("databaseName", "catalog")
                                 .addMapping("/v1/items/*"),
 
-                                                */
+
                         Servlets.servlet("uploadServlet", UploadServlet.class)
                                 //.addInitParam("UPLOAD_DIRECTORY", "temp")
                                 //.addInitParam("databaseName", "catalog")
@@ -79,4 +70,5 @@ public class App {
                 .build();
         server.start();
     }
+    */
 }

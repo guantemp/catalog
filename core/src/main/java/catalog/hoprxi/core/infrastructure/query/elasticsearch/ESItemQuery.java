@@ -34,11 +34,14 @@ import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.ResponseListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
 import java.io.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Queue;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -54,12 +57,11 @@ public class ESItemQuery implements ItemQuery {
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     //private static final int MAX_SIZE = 9999;
     private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
+
     private static final int BUFFER_SIZE = 8192;//8KB缓冲区
-    private static final ExecutorService TRANSFORM_POOL = Executors.newCachedThreadPool(r -> {
-        Thread t = new Thread(r, "es-item-transform-pool-thread");
-        t.setDaemon(true); //  所有线程都是守护线程
-        return t;
-    });
+    private static final int BACKPRESSURE_BUFFER_SIZE = 32;// 背压缓冲区大小
+    private static final ExecutorService TRANSFORM_POOL =Executors.newVirtualThreadPerTaskExecutor();
+
 
     @Override
     public InputStream find(long id) {
@@ -68,9 +70,7 @@ public class ESItemQuery implements ItemQuery {
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BUFFER_SIZE);
         try {
             Response response = ESUtil.restClient().performRequest(request);
-            try (OutputStream os = new ByteBufOutputStream(buffer);
-                 JsonGenerator generator = JSON_FACTORY.createGenerator(os);
-                 JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent())) {
+            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os); JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent())) {
                 while (parser.nextToken() != null) {
                     if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
                         generator.writeStartObject();
@@ -114,8 +114,7 @@ public class ESItemQuery implements ItemQuery {
             @Override
             public void onSuccess(Response response) {
                 TRANSFORM_POOL.execute(() -> {
-                    try (JsonGenerator generator = JSON_FACTORY.createGenerator(pipedOut);
-                         JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent())) {
+                    try (JsonGenerator generator = JSON_FACTORY.createGenerator(pipedOut); JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent())) {
                         while (parser.nextToken() != null) {
                             if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
                                 generator.writeStartObject();
@@ -175,6 +174,90 @@ public class ESItemQuery implements ItemQuery {
             }
         }
     }
+
+
+    public Flux<ByteBuf> findAsynca(long id) {
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        // 使用单播接收器（更高效）
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();
+
+        Request request = new Request("GET", "/item/_doc/" + id);//PREFIX+"/_doc/"
+        request.setOptions(ESUtil.requestOptions());
+        try {
+            ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+                @Override
+                public void onSuccess(Response response) {
+                    CompletableFuture.runAsync(() -> {
+                        try (JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
+                             JsonGenerator generator = JSON_FACTORY.createGenerator(new JsonByteBufOutputStream(sink, isCancelled, BUFFER_SIZE))) {
+                            // 检查是否已被取消
+                            if (isCancelled.get()) {
+                                sink.tryEmitError(new IOException("Processing cancelled"));
+                                return;
+                            }
+                            while (parser.nextToken() != null) {
+                                if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
+                                    generator.writeStartObject();
+                                    while (parser.nextToken() != null) {
+                                        if ("_meta".equals(parser.currentName())) break;
+                                        generator.copyCurrentEvent(parser);
+                                    }
+                                    generator.writeEndObject();
+                                    break;
+                                }
+                            }
+                            generator.flush();
+                        } catch (RejectedExecutionException e) {
+                            LOGGER.error("Transform task rejected for id={}. Pool may be exhausted.", id, e);
+                            sink.tryEmitError(e);
+                        } catch (Exception e) {
+                            if (!isCancelled.get()) {
+                                sink.tryEmitError(e);
+                            }
+                        }
+                    }, TRANSFORM_POOL).whenComplete((v, err) -> {
+                        if (err != null && !isCancelled.get()) {
+                            sink.tryEmitError(new SearchException("Transform failed", err));
+                        }
+                    });
+                }
+
+                @Override
+                public void onFailure(Exception exception) {
+                    sink.tryEmitError(mapException(exception, id));
+                }
+            });
+        } catch (Exception e) {
+            sink.tryEmitError(mapException(e, id));
+        }
+
+        return sink.asFlux()
+                .doOnCancel(() -> {
+                    isCancelled.set(true);
+                })
+                .doOnTerminate(() -> {
+                    LOGGER.debug("Request terminated for id: {}", id);
+                })
+                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+    }
+
+    private Throwable mapException(Exception e, long id) {
+        if (e instanceof ResponseException) {
+            int status = ((ResponseException) e).getResponse().getStatusLine().getStatusCode();
+            if (status == 404) {
+                return new NotFoundException("Item not found: " + id);
+            } else if (status >= 400 && status < 500) {
+                return new SearchException("Client error: " + status);
+            } else {
+                return new SearchException("Server error: " + status);
+            }
+        } else if (e instanceof IOException) {
+            LOGGER.error("I/O error for id={}", id, e);
+            return new SearchException("Network error", e);
+        }
+        return new SearchException("Unexpected error", e);
+    }
+
 
     @Override
     public InputStream findByBarcode(String barcode) {
@@ -239,8 +322,7 @@ public class ESItemQuery implements ItemQuery {
 
     private void transformationAsync(Response response, CompletableFuture<InputStream> future, PipedOutputStream pipedOut, PipedInputStream pipedIn) {
         TRANSFORM_POOL.execute(() -> {
-            try (JsonGenerator generator = JSON_FACTORY.createGenerator(pipedOut);
-                 JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent())) {
+            try (JsonGenerator generator = JSON_FACTORY.createGenerator(pipedOut); JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent())) {
                 generator.writeStartObject();
                 while (parser.nextToken() != null) {
                     if (parser.currentToken() == JsonToken.FIELD_NAME) {
@@ -256,13 +338,6 @@ public class ESItemQuery implements ItemQuery {
                                 if (token == JsonToken.START_OBJECT) depth++;
                                 else if (token == JsonToken.END_OBJECT) depth--;
                             } while (depth > 0);
-                        /*
-                            do {
-                                generator.copyCurrentEvent(parser);
-                                parser.nextToken();
-                            } while (!(parser.currentToken() == JsonToken.END_OBJECT && "aggregations".equals(parser.currentName())));
-                            generator.writeEndObject();
-                            */
                         }
                     }
                 }
@@ -448,8 +523,7 @@ public class ESItemQuery implements ItemQuery {
     private InputStream reorganization(InputStream is) throws IOException {
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
         boolean transferMark = false;
-        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os);
-             JsonParser parser = JSON_FACTORY.createParser(is);) {
+        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os); JsonParser parser = JSON_FACTORY.createParser(is);) {
             generator.writeStartObject();
             while (parser.nextToken() != null) {
                 if (parser.currentToken() == JsonToken.FIELD_NAME) {
@@ -524,8 +598,7 @@ public class ESItemQuery implements ItemQuery {
         while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
                 while (parser.nextToken() != null) {
-                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.currentName()))
-                        break;
+                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.currentName())) break;
                     generator.copyCurrentEvent(parser);
                 }
             }

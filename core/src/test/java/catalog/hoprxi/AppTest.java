@@ -26,7 +26,6 @@ import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.UnitEnum;
 import catalog.hoprxi.core.infrastructure.DecryptUtil;
-import catalog.hoprxi.core.rest.UploadServlet;
 import com.fasterxml.jackson.core.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -138,7 +137,7 @@ public class AppTest {
     @Test
     public void testConfig() {
         System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER);
-        String filePath = Objects.requireNonNull(UploadServlet.class.getResource("/")).toExternalForm();
+        String filePath =null;//Objects.requireNonNull(UploadServlet.class.getResource("/")).toExternalForm();
         String[] sss = filePath.split("/");
         StringJoiner joiner = new StringJoiner("/", "", "/");
         for (int i = 0, j = sss.length - 1; i < j; i++) {

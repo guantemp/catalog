@@ -20,14 +20,20 @@ import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import reactor.core.publisher.Flux;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +51,7 @@ public class ESItemQueryTest {
 
     private static final ItemQuery query = new ESItemQuery();
 
-    @Test(invocationCount = 256, threadPoolSize = 2, priority = 2)
+    @Test(invocationCount = 512, threadPoolSize = 2, priority = 2)
     public void testFindAsync() throws ExecutionException, InterruptedException, IOException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
 
@@ -72,7 +78,17 @@ public class ESItemQueryTest {
             String s = inputStreamToString(is);
             System.out.println(s);
         }
+    }
 
+    @Test(invocationCount = 2, threadPoolSize = 2, priority = 2)
+    public void testFindAsynca() throws InterruptedException {
+        System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
+        ESItemQuery es = new ESItemQuery();
+
+        long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L};
+
+
+       // System.out.println("\n✅ All done!");
     }
 
     @Test(invocationCount = 512, threadPoolSize = 8, priority = 2)

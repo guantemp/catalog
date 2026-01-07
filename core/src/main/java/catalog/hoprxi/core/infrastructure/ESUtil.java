@@ -21,10 +21,12 @@ import com.typesafe.config.ConfigFactory;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
-import org.elasticsearch.client.HttpAsyncResponseConsumerFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -65,14 +67,16 @@ public class ESUtil {
         RequestOptions.Builder builder = RequestOptions.DEFAULT.toBuilder();
         builder.addHeader(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString((props.get("user") + ":" + props.get("password")).getBytes(StandardCharsets.UTF_8)))
                 .addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=utf-8");
+       /*
         builder.setHttpAsyncResponseConsumerFactory(
                 new HttpAsyncResponseConsumerFactory
                         .HeapBufferedResponseConsumerFactory(64 * 1024 * 1024));//64MB
+        */
 
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectionRequestTimeout(1000) // 获取连接超时
-                .setConnectTimeout(5000) // 建立连接超时
-                .setSocketTimeout(30000).build(); // 响应超时;
+                .setConnectionRequestTimeout(3000)// 从连接池获取连接超时（3秒）
+                .setConnectTimeout(5000) // 建立 TCP 连接超时（5秒）
+                .setSocketTimeout(30000).build(); // 读取响应超时（30秒）
         builder.setRequestConfig(requestConfig);
         COMMON_OPTIONS = builder.build();
 
@@ -81,6 +85,15 @@ public class ESUtil {
                     // 设置连接池
                     httpClientBuilder.setMaxConnTotal(150);   // 整个连接池最大连接数
                     httpClientBuilder.setMaxConnPerRoute(80);//每个 host 最多 80 连接
+
+                    // 如果需要跳过证书验证（仅测试环境！）不推荐生产使用
+                    /*
+                    SSLContext sslContext = SSLContextBuilder.create()
+                            .loadTrustMaterial(null, (chain, authType) -> true)
+                            .build();
+                    httpClientBuilder.setSSLContext(sslContext);
+                    httpClientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
+*/
                     return httpClientBuilder;
                 }).build();
     }
