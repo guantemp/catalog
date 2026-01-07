@@ -59,7 +59,6 @@ public class ESItemQuery implements ItemQuery {
     private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
 
     private static final int BUFFER_SIZE = 8192;//8KB缓冲区
-    private static final int BACKPRESSURE_BUFFER_SIZE = 32;// 背压缓冲区大小
     private static final ExecutorService TRANSFORM_POOL =Executors.newVirtualThreadPerTaskExecutor();
 
 

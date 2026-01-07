@@ -20,6 +20,7 @@ import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
@@ -34,9 +35,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -80,15 +80,91 @@ public class ESItemQueryTest {
         }
     }
 
-    @Test(invocationCount = 2, threadPoolSize = 2, priority = 2)
-    public void testFindAsynca() throws InterruptedException {
+    @Test(invocationCount = 512, threadPoolSize = 2, priority = 2)
+    public void testFindAsynca() throws InterruptedException, ExecutionException, TimeoutException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
         ESItemQuery es = new ESItemQuery();
 
+
         long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L};
 
+        // 使用固定线程池或虚拟线程（Java 21+）
+        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor(); // Java 21+
+        // 或：Executors.newFixedThreadPool(ids.length);
 
-       // System.out.println("\n✅ All done!");
+        CompletableFuture<Void>[] futures = new CompletableFuture[ids.length];
+
+        for (int i = 0; i < ids.length; i++) {
+            final long id = ids[i];
+            futures[i] = CompletableFuture.runAsync(() -> {
+                System.out.println("Starting request for ID: " + id);
+
+                StringBuilder result = new StringBuilder();
+                Throwable[] errorHolder = new Throwable[1];
+                boolean[] completed = {false};
+
+                // 使用 CountDownLatch 等待单个 Flux 完成
+                var latch = new java.util.concurrent.CountDownLatch(1);
+
+                Flux<ByteBuf> flux = es.findAsynca(id); // 或 service.findAsynca(id)
+
+                flux.subscribe(
+                        byteBuf -> {
+                            try {
+                                String chunk = byteBuf.toString(StandardCharsets.UTF_8);
+                                synchronized (result) {
+                                    result.append(chunk);
+                                }
+                                System.out.println("[ID=" + id + "] Chunk: " + chunk);
+                            } catch (Exception e) {
+                                errorHolder[0] = e;
+                                latch.countDown();
+                            }
+                        },
+                        error -> {
+                            errorHolder[0] = error;
+                            System.err.println("[ID=" + id + "] Error: " + error.getMessage());
+                            latch.countDown();
+                        },
+                        () -> {
+                            completed[0] = true;
+                            System.out.println("[ID=" + id + "] Completed.");
+                            latch.countDown();
+                        }
+                );
+
+                try {
+                    boolean finished = latch.await(10, TimeUnit.SECONDS);
+                    if (!finished) {
+                        throw new RuntimeException("Timeout for ID " + id);
+                    }
+
+                    if (errorHolder[0] != null) {
+                        throw new RuntimeException("Request failed for ID " + id, errorHolder[0]);
+                    }
+
+                    String fullOutput = result.toString();
+                    System.out.println("\n[ID=" + id + "] === FULL OUTPUT ===");
+                    System.out.println(fullOutput);
+                    System.out.println("[ID=" + id + "] ===================\n");
+
+                    // 基本验证
+                    Assert.assertTrue(fullOutput.contains("_source") || fullOutput.startsWith("{"),
+                            "Response should be valid JSON for ID " + id);
+                    Assert.assertFalse(fullOutput.contains("_meta"),
+                            "Response must NOT contain '_meta' for ID " + id);
+
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Interrupted while waiting for ID " + id, e);
+                }
+            }, executor);
+        }
+
+        // 等待所有任务完成
+        CompletableFuture.allOf(futures).get(25, TimeUnit.SECONDS);
+
+        executor.shutdownNow();
     }
 
     @Test(invocationCount = 512, threadPoolSize = 8, priority = 2)
