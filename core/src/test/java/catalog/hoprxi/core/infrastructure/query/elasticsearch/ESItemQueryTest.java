@@ -86,7 +86,7 @@ public class ESItemQueryTest {
         ESItemQuery es = new ESItemQuery();
 
 
-        long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L};
+        long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L,517480571626062891L};
 
         // 使用固定线程池或虚拟线程（Java 21+）
         ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor(); // Java 21+
