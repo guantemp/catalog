@@ -28,15 +28,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2026/1/6
+ * @version 0.0.2 builder 2026/1/31
  */
 
 public class JsonByteBufOutputStream extends OutputStream {
-    private static final int BUFFER_SIZE = 8192;
+    private static final int DEFAULT_BUFFER_SIZE = 8192;
     private final Sinks.Many<ByteBuf> sink;
     private final AtomicBoolean isCancelled;
     private final ByteBuf byteBuf;
-    private int position = 0;
 
     public JsonByteBufOutputStream(Sinks.Many<ByteBuf> sink, AtomicBoolean isCancelled, int bufferSize) {
         this.sink = sink;
@@ -45,56 +44,71 @@ public class JsonByteBufOutputStream extends OutputStream {
     }
 
     public JsonByteBufOutputStream(Sinks.Many<ByteBuf> sink, AtomicBoolean isCancelled) {
-      this(sink,isCancelled, BUFFER_SIZE);
+        this(sink, isCancelled, DEFAULT_BUFFER_SIZE);
     }
 
     @Override
     public void write(int b) throws IOException {
-        checkCancelled();
-        if (position >= BUFFER_SIZE) {
-            flushBuffer();
-        }
+        ensureWritable(1);
         byteBuf.writeByte(b);
-        position++;
     }
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        checkCancelled();
-        while (len > 0) {
-            int spaceLeft = BUFFER_SIZE - position;
-            int toWrite = Math.min(len, spaceLeft);
+        if (len <= 0) return;
+        checkCancelled(); // 提前检查取消
 
-            byteBuf.writeBytes(b, off, toWrite);
-            position += toWrite;
-            off += toWrite;
-            len -= toWrite;
-
-            if (position >= BUFFER_SIZE) {
-                flushBuffer();
+        int remaining = len;
+        int offset = off;
+        while (remaining > 0) {
+            // 确保至少有 1 字节空间（防止 buffer 满了卡住）
+            if (byteBuf.writableBytes() == 0) {
+                flush();
             }
+            int toWrite = Math.min(byteBuf.writableBytes(), remaining);
+            byteBuf.writeBytes(b, offset, toWrite);
+            offset += toWrite;
+            remaining -= toWrite;
         }
     }
-
 
     @Override
     public void flush() throws IOException {
         checkCancelled();
-        flushBuffer(); // 真正 flush 到 sink
+        if (byteBuf.readableBytes() > 0) {
+            ByteBuf slice = byteBuf.readRetainedSlice(byteBuf.readableBytes());
+            Sinks.EmitResult result = sink.tryEmitNext(slice);
+            if (result.isFailure()) {
+                slice.release();
+                cancelAndEmitError(new IOException("Backpressure overflow, stream cancelled"));
+            }
+        }
     }
 
     @Override
     public void close() throws IOException {
+        IOException flushError = null;
         try {
-            flushBuffer(); // 发送最后一块
-            if (!isCancelled.get()) {
-                sink.tryEmitComplete();
-            }
+            flush();
+        } catch (IOException e) {
+            flushError = e;
         } finally {
             if (byteBuf.refCnt() > 0) {
-                byteBuf.release(); // 释放内部 buffer
+                byteBuf.release();
             }
-            super.close();
+            if (flushError == null && !isCancelled.get()) {
+                sink.tryEmitComplete();
+            }
+        }
+        if (flushError != null) {
+            throw flushError;
+        }
+    }
+
+    private void ensureWritable(int required) throws IOException {
+        checkCancelled();
+        if (byteBuf.writableBytes() < required) {
+            flush();
         }
     }
 
@@ -104,18 +118,8 @@ public class JsonByteBufOutputStream extends OutputStream {
         }
     }
 
-    private void flushBuffer() {
-        if (position > 0 && !isCancelled.get()) {
-            ByteBuf slice = byteBuf.slice(0, position).retain();
-            Sinks.EmitResult result = sink.tryEmitNext(slice);
-            if (result.isFailure()) {
-                slice.release();
-                isCancelled.set(true);
-                sink.tryEmitError(new IOException("Backpressure overflow, stream cancelled"));// 发射失败时释放资源
-            }
-
-            byteBuf.clear();
-            position = 0;
-        }
+    private void cancelAndEmitError(IOException error) {
+        isCancelled.set(true);
+        sink.tryEmitError(error);
     }
 }

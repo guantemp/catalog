@@ -16,8 +16,10 @@
 
 package catalog.hoprxi.core.application.query;
 
+import io.netty.buffer.ByteBuf;
+import reactor.core.publisher.Flux;
+
 import java.io.InputStream;
-import java.util.concurrent.CompletableFuture;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -25,13 +27,29 @@ import java.util.concurrent.CompletableFuture;
  * @version 0.0.1 builder 2025/10/13
  */
 public interface ItemQuery {
+    /**
+     * @param id
+     * @return
+     */
     InputStream find(long id);
 
-    CompletableFuture<InputStream> findAsync(long id);
+    /**
+     * @param id
+     * @return
+     */
+    Flux<ByteBuf> findAsync(long id);
 
+    /**
+     * @param barcode
+     * @return
+     */
     InputStream findByBarcode(String barcode);
 
-    CompletableFuture<InputStream> findByBarcodeAsync(String barcode);
+    /**
+     * @param barcode
+     * @return
+     */
+    Flux<ByteBuf> findByBarcodeAsync(String barcode);
 
     /**
      * @param filters
@@ -43,7 +61,7 @@ public interface ItemQuery {
     InputStream search(ItemQueryFilter[] filters, int size, String searchAfter, SortFieldEnum sortField);
 
     default InputStream search(ItemQueryFilter[] filters, int size) {
-        return search(filters, size,"", SortFieldEnum._ID);
+        return search(filters, size, "", SortFieldEnum._ID);
     }
 
     default InputStream search(int size, String searchAfter, SortFieldEnum sortField) {

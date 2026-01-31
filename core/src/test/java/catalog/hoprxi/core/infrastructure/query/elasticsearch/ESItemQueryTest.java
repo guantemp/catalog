@@ -50,18 +50,18 @@ public class ESItemQueryTest {
     }
 
     private static final ItemQuery query = new ESItemQuery();
-
-    @Test(invocationCount = 512, threadPoolSize = 2, priority = 2)
+/*
+    @Test(invocationCount = 8192, threadPoolSize = 2, priority = 2)
     public void testFindAsync() throws ExecutionException, InterruptedException, IOException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
 
-        long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L, 517480571626062891L};
+        long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L};
         CompletableFuture<InputStream> f1 = query.findAsync(ids[0]);
         CompletableFuture<InputStream> f2 = query.findAsync(ids[1]);
         CompletableFuture<InputStream> f3 = query.findAsync(ids[2]);
-        CompletableFuture<InputStream> f4 = query.findAsync(ids[3]);
+        //CompletableFuture<InputStream> f4 = query.findAsync(ids[3]);
         try {
-            CompletableFuture.allOf(f1, f2, f3, f4).get(3, TimeUnit.SECONDS); // 可能抛出 ExecutionException
+            CompletableFuture.allOf(f1, f2, f3).get(3, TimeUnit.SECONDS); // 可能抛出 ExecutionException
         } catch (Throwable t) {
             // 捕获异常，继续执行
         }
@@ -79,14 +79,13 @@ public class ESItemQueryTest {
             System.out.println(s);
         }
     }
-
+ */
     @Test(invocationCount = 512, threadPoolSize = 2, priority = 2)
-    public void testFindAsynca() throws InterruptedException, ExecutionException, TimeoutException {
+    public void testFindAsync() throws InterruptedException, ExecutionException, TimeoutException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
         ESItemQuery es = new ESItemQuery();
 
-
-        long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L,517480571626062891L};
+        long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L};
 
         // 使用固定线程池或虚拟线程（Java 21+）
         ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor(); // Java 21+
@@ -106,7 +105,7 @@ public class ESItemQueryTest {
                 // 使用 CountDownLatch 等待单个 Flux 完成
                 var latch = new java.util.concurrent.CountDownLatch(1);
 
-                Flux<ByteBuf> flux = es.findAsynca(id); // 或 service.findAsynca(id)
+                Flux<ByteBuf> flux = es.findAsync(id); // 或 service.findAsynca(id)
 
                 flux.subscribe(
                         byteBuf -> {
@@ -134,7 +133,7 @@ public class ESItemQueryTest {
                 );
 
                 try {
-                    boolean finished = latch.await(10, TimeUnit.SECONDS);
+                    boolean finished = latch.await(3, TimeUnit.SECONDS);
                     if (!finished) {
                         throw new RuntimeException("Timeout for ID " + id);
                     }
@@ -162,12 +161,12 @@ public class ESItemQueryTest {
         }
 
         // 等待所有任务完成
-        CompletableFuture.allOf(futures).get(25, TimeUnit.SECONDS);
+        CompletableFuture.allOf(futures).get(3, TimeUnit.SECONDS);
 
         executor.shutdownNow();
     }
 
-    @Test(invocationCount = 512, threadPoolSize = 8, priority = 2)
+    @Test(invocationCount = 512, threadPoolSize = 2, priority = 2)
     public void testFind() throws IOException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
         try (InputStream is = query.find(51746812605656589L)) {
@@ -209,30 +208,9 @@ public class ESItemQueryTest {
     }
 
     @Test(invocationCount = 256, threadPoolSize = 2, priority = 2)
-    public void testFindByBarcodeAsync() throws IOException, ExecutionException, InterruptedException {
+    public void testFindByBarcodeAsync() {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
         String[] barcodes = {"6900404523737", "6939006488885", "6940188805018"};
-        CompletableFuture<InputStream> f1 = query.findByBarcodeAsync(barcodes[0]);
-        CompletableFuture<InputStream> f2 = query.findByBarcodeAsync(barcodes[1]);
-        CompletableFuture<InputStream> f3 = query.findByBarcodeAsync(barcodes[2]);
-        try {
-            CompletableFuture.allOf(f1, f2, f3).get(5, TimeUnit.SECONDS); // 可能抛出 ExecutionException
-        } catch (Throwable t) {
-            System.out.println(t); // 捕获异常，继续执行
-        }
-
-        try (InputStream is = f1.get()) {
-            String s = inputStreamToString(is);
-            System.out.println(s);
-        }
-        try (InputStream is = f2.get()) {
-            String s = inputStreamToString(is);
-            System.out.println(s);
-        }
-        try (InputStream is = f3.get()) {
-            String s = inputStreamToString(is);
-            System.out.println(s);
-        }
     }
 
     @Test

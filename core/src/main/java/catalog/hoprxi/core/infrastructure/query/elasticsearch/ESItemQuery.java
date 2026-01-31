@@ -34,13 +34,13 @@ import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.ResponseListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
 import java.io.*;
-import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /***
@@ -57,9 +57,9 @@ public class ESItemQuery implements ItemQuery {
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     //private static final int MAX_SIZE = 9999;
     private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
+    private static final int BUFFER_SIZE = 2048;//2KB缓冲区
 
-    private static final int BUFFER_SIZE = 8192;//8KB缓冲区
-    private static final ExecutorService TRANSFORM_POOL =Executors.newVirtualThreadPerTaskExecutor();
+    private static final ExecutorService TRANSFORM_POOL = Executors.newVirtualThreadPerTaskExecutor();
 
 
     @Override
@@ -69,18 +69,10 @@ public class ESItemQuery implements ItemQuery {
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BUFFER_SIZE);
         try {
             Response response = ESUtil.restClient().performRequest(request);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os); JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent())) {
-                while (parser.nextToken() != null) {
-                    if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
-                        generator.writeStartObject();
-                        while (parser.nextToken() != null) {
-                            if ("_meta".equals(parser.currentName())) break;
-                            generator.copyCurrentEvent(parser);
-                        }
-                        generator.writeEndObject();
-                        break;
-                    }
-                }
+            try (OutputStream os = new ByteBufOutputStream(buffer);
+                 JsonGenerator generator = JSON_FACTORY.createGenerator(os);
+                 JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent())) {
+                ESItemQuery.copySourceWithoutMeta(parser, generator);
                 generator.flush();
                 return new ByteBufInputStream(buffer, true);
             }
@@ -95,71 +87,63 @@ public class ESItemQuery implements ItemQuery {
         }
     }
 
-    @Override
-    public CompletableFuture<InputStream> findAsync(long id) {
-        Request request = new Request("GET", "/item/_doc/" + id);//PREFIX+"/_doc/"
-        request.setOptions(ESUtil.requestOptions());
-        // 创建管道
-        PipedInputStream pipedIn = new PipedInputStream(BUFFER_SIZE);//接受端
-        final PipedOutputStream pipedOut;//输入端
-        try {
-            pipedOut = new PipedOutputStream(pipedIn);
-        } catch (IOException e) {
-            return CompletableFuture.failedFuture(e);
-        }
+    /*
+        @Override
+        public CompletableFuture<InputStream> findAsync(long id) {
+            Request request = new Request("GET", "/item/_doc/" + id);//PREFIX+"/_doc/"
+            request.setOptions(ESUtil.requestOptions());
+            // 创建管道
+            PipedInputStream pipedIn = new PipedInputStream(ASYNC_BUFFER_SIZE);//接受端
+            final PipedOutputStream pipedOut;//输入端
+            try {
+                pipedOut = new PipedOutputStream(pipedIn);
+            } catch (IOException e) {
+                return CompletableFuture.failedFuture(e);
+            }
 
-        CompletableFuture<InputStream> future = new CompletableFuture<>();
-        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                TRANSFORM_POOL.execute(() -> {
-                    try (JsonGenerator generator = JSON_FACTORY.createGenerator(pipedOut); JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent())) {
-                        while (parser.nextToken() != null) {
-                            if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
-                                generator.writeStartObject();
-                                while (parser.nextToken() != null) {
-                                    if ("_meta".equals(parser.currentName())) break;
-                                    generator.copyCurrentEvent(parser);
-                                }
-                                generator.writeEndObject();
-                                break;
-                            }
+            CompletableFuture<InputStream> future = new CompletableFuture<>();
+            ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+                @Override
+                public void onSuccess(Response response) {
+                    TRANSFORM_POOL.execute(() -> {
+                        try (JsonGenerator generator = JSON_FACTORY.createGenerator(pipedOut);
+                             JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent())) {
+                            ESItemQuery.copySource(parser, generator);
+                            generator.flush();
+                            pipedOut.close();
+                            future.complete(pipedIn);
+                        } catch (Exception e) {
+                            ESItemQuery.closeQuietly(pipedOut, pipedIn);
+                            future.completeExceptionally(new SearchException("Error: Elasticsearch timeout or no connection", e));
                         }
-                        generator.flush();
-                        pipedOut.close();
-                        future.complete(pipedIn);
-                    } catch (Exception e) {
-                        closeQuietly(pipedOut, pipedIn);
-                        future.completeExceptionally(new SearchException("Error: Elasticsearch timeout or no connection", e));
-                    }
-                });
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                closeQuietly(pipedOut, pipedIn);
-                if (e instanceof ResponseException re) {
-                    int status = re.getResponse().getStatusLine().getStatusCode();
-                    if (status == 404) {
-                        future.completeExceptionally(new NotFoundException(String.format("The item(id=%s) not found", id), e));
-                        return;
-                    }
-                    if (status >= 400 && status < 500) {
-                        future.completeExceptionally(new SearchException("Client error: " + status));
-                        return;
-                    }
-                    // 5xx 或其他
-                    future.completeExceptionally(new SearchException("Server error: " + status));
-                } else {
-                    LOGGER.error("Elasticsearch request failed for id={}", id, e);
-                    future.completeExceptionally(new SearchException("Network or connection failed", e));
+                    });
                 }
-            }
-        });
-        return future;
-    }
 
-    private void closeQuietly(PipedOutputStream out, PipedInputStream in) {
+                @Override
+                public void onFailure(Exception e) {
+                    ESItemQuery.closeQuietly(pipedOut, pipedIn);
+                    if (e instanceof ResponseException re) {
+                        int status = re.getResponse().getStatusLine().getStatusCode();
+                        if (status == 404) {
+                            future.completeExceptionally(new NotFoundException(String.format("The item(id=%s) not found", id), e));
+                            return;
+                        }
+                        if (status >= 400 && status < 500) {
+                            future.completeExceptionally(new SearchException("Client error: " + status));
+                            return;
+                        }
+                        // 5xx 或其他
+                        future.completeExceptionally(new SearchException("Server error: " + status));
+                    } else {
+                        LOGGER.error("Elasticsearch request failed for id={}", id, e);
+                        future.completeExceptionally(new SearchException("Network or connection failed", e));
+                    }
+                }
+            });
+            return future;
+        }
+     */
+    private static void closeQuietly(PipedOutputStream out, PipedInputStream in) {
         if (out != null) {
             try {
                 out.close();
@@ -174,73 +158,56 @@ public class ESItemQuery implements ItemQuery {
         }
     }
 
-
-    public Flux<ByteBuf> findAsynca(long id) {
+    @Override
+    public Flux<ByteBuf> findAsync(long id) {
         AtomicBoolean isCancelled = new AtomicBoolean(false);
-        // 使用单播接收器（更高效）
-        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();
-
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
         Request request = new Request("GET", "/item/_doc/" + id);//PREFIX+"/_doc/"
         request.setOptions(ESUtil.requestOptions());
-        try {
-            ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
-                @Override
-                public void onSuccess(Response response) {
-                    CompletableFuture.runAsync(() -> {
-                        try (JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
-                             JsonGenerator generator = JSON_FACTORY.createGenerator(new JsonByteBufOutputStream(sink, isCancelled, BUFFER_SIZE))) {
-                            // 检查是否已被取消
-                            if (isCancelled.get()) {
-                                sink.tryEmitError(new IOException("Processing cancelled"));
-                                return;
-                            }
-                            while (parser.nextToken() != null) {
-                                if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
-                                    generator.writeStartObject();
-                                    while (parser.nextToken() != null) {
-                                        if ("_meta".equals(parser.currentName())) break;
-                                        generator.copyCurrentEvent(parser);
-                                    }
-                                    generator.writeEndObject();
-                                    break;
-                                }
-                            }
-                            generator.flush();
-                        } catch (RejectedExecutionException e) {
-                            LOGGER.error("Transform task rejected for id={}. Pool may be exhausted.", id, e);
+
+        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+            @Override
+            public void onSuccess(Response response) {
+                if (isCancelled.get()) {
+                    sink.tryEmitError(new IOException("Processing cancelled"));
+                    return;
+                }
+                CompletableFuture.runAsync(() -> {
+                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
+                         JsonGenerator generator = JSON_FACTORY.createGenerator(new JsonByteBufOutputStream(sink, isCancelled))) {
+                        if (isCancelled.get()) {
+                            return; // silent cancel; sink 已由外部处理或无需响应
+                        }
+                        ESItemQuery.copySourceWithoutMeta(parser, generator);
+                        generator.flush();
+                    } catch (IOException | RuntimeException e) {
+                        if (!isCancelled.get()) {
                             sink.tryEmitError(e);
-                        } catch (Exception e) {
-                            if (!isCancelled.get()) {
-                                sink.tryEmitError(e);
-                            }
                         }
-                    }, TRANSFORM_POOL).whenComplete((v, err) -> {
-                        if (err != null && !isCancelled.get()) {
-                            sink.tryEmitError(new SearchException("Transform failed", err));
-                        }
-                    });
-                }
+                    }
+                }, TRANSFORM_POOL).whenComplete((v, err) -> {
+                    if (err != null && !isCancelled.get()) {
+                        sink.tryEmitError(new SearchException("Transform failed", err));
+                    } else if (!isCancelled.get()) {
+                        sink.tryEmitComplete();
+                    }
+                });
+            }
 
-                @Override
-                public void onFailure(Exception exception) {
-                    sink.tryEmitError(mapException(exception, id));
+            @Override
+            public void onFailure(Exception exception) {
+                if (!isCancelled.get()) {
+                    sink.tryEmitError(ESItemQuery.mapException(exception, id));
                 }
-            });
-        } catch (Exception e) {
-            sink.tryEmitError(mapException(e, id));
-        }
-
+            }
+        });
         return sink.asFlux()
-                .doOnCancel(() -> {
-                    isCancelled.set(true);
-                })
-                .doOnTerminate(() -> {
-                    LOGGER.debug("Request terminated for id: {}", id);
-                })
+                .doOnCancel(() -> isCancelled.set(true))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", id))
                 .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
     }
 
-    private Throwable mapException(Exception e, long id) {
+    private static Throwable mapException(Exception e, long id) {
         if (e instanceof ResponseException) {
             int status = ((ResponseException) e).getResponse().getStatusLine().getStatusCode();
             if (status == 404) {
@@ -257,6 +224,28 @@ public class ESItemQuery implements ItemQuery {
         return new SearchException("Unexpected error", e);
     }
 
+    private static void copySourceWithoutMeta(JsonParser parser, JsonGenerator generator) throws IOException {
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME && "_source".equals(parser.getCurrentName())) {
+                parser.nextToken(); // move to value (START_OBJECT)
+                if (parser.currentToken() != JsonToken.START_OBJECT) {
+                    throw new IllegalStateException("_source is not an object");
+                }
+                generator.writeStartObject();
+                while (parser.nextToken() != JsonToken.END_OBJECT) {
+                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.currentName())) {
+                        parser.nextToken();
+                        parser.skipChildren(); // skip value of _meta
+                    } else {
+                        generator.copyCurrentEvent(parser); // copy field name
+                        parser.nextToken();
+                        generator.copyCurrentStructure(parser); // copy entire value (handles nested)
+                    }
+                }
+                generator.writeEndObject();
+            }
+        }
+    }
 
     @Override
     public InputStream findByBarcode(String barcode) {
@@ -274,49 +263,76 @@ public class ESItemQuery implements ItemQuery {
     }
 
     @Override
-    public CompletableFuture<InputStream> findByBarcodeAsync(String barcode) {
-        if (!BarcodeValidServices.valid(barcode)) throw new IllegalArgumentException("Not valid barcode ctr");
+    public Flux<ByteBuf> findByBarcodeAsync(String barcode) {
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        if (!BarcodeValidServices.valid(barcode)) throw new IllegalArgumentException("Not valid barcode");
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(this.writeFindByBarcodeJson(barcode));
-        // 创建管道
-        PipedInputStream pipedIn = new PipedInputStream(BUFFER_SIZE);//接受端
-        final PipedOutputStream pipedOut;//输入端
-        try {
-            pipedOut = new PipedOutputStream(pipedIn);
-        } catch (IOException e) {
-            return CompletableFuture.failedFuture(e);
-        }
-        CompletableFuture<InputStream> future = new CompletableFuture<>();
-        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
 
+        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
             @Override
             public void onSuccess(Response response) {
-                ESItemQuery.this.transformationAsync(response, future, pipedOut, pipedIn);
+                if (isCancelled.get()) {
+                    sink.tryEmitError(new IOException("Processing cancelled"));
+                    return;
+                }
+
             }
 
             @Override
             public void onFailure(Exception e) {
-                closeQuietly(pipedOut, pipedIn);
-                if (e instanceof ResponseException re) {
-                    int status = re.getResponse().getStatusLine().getStatusCode();
-                    if (status == 404) {
-                        future.completeExceptionally(new NotFoundException(String.format("The item(id=%s) not found", barcode), e));
-                        return;
-                    }
-                    if (status >= 400 && status < 500) {
-                        future.completeExceptionally(new SearchException("Client error: " + status));
-                        return;
-                    }
-                    // 5xx 或其他
-                    future.completeExceptionally(new SearchException("Server error: " + status));
-                } else {
-                    LOGGER.error("Elasticsearch request failed for id={}", barcode, e);
-                    future.completeExceptionally(new SearchException("Network or connection failed", e));
+                if (!isCancelled.get()) {
+                    sink.tryEmitError(ESItemQuery.mapException(e, barcode));
                 }
             }
         });
-        return future;
+
+        return sink.asFlux()
+                .doOnCancel(() -> isCancelled.set(true))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for barcode: {}", barcode))
+                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+    }
+
+    private String writeFindByBarcodeJson(String barcode) {
+        StringWriter writer = new StringWriter();
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("bool");
+            generator.writeObjectFieldStart("filter");
+
+            generator.writeObjectFieldStart("term");
+            generator.writeStringField("barcode.raw", barcode);
+            generator.writeEndObject();
+
+            generator.writeEndObject();
+            generator.writeEndObject();//end bool
+            generator.writeEndObject();//end query
+            //generator.writeBooleanField("track_scores", false);
+            generator.writeEndObject();
+        } catch (IOException e) {
+            LOGGER.error("Cannot assemble request JSON", e);
+        }
+        return writer.toString();
+    }
+
+    private static Throwable mapException(Exception e, String barcode) {
+        if (e instanceof ResponseException) {
+            int status = ((ResponseException) e).getResponse().getStatusLine().getStatusCode();
+            if (status == 404) {
+                return new NotFoundException("Item not found: " + barcode);
+            } else if (status >= 400 && status < 500) {
+                return new SearchException("Client error: " + status);
+            } else {
+                return new SearchException("Server error: " + status);
+            }
+        } else if (e instanceof IOException) {
+            LOGGER.error("I/O error for id={}", barcode, e);
+            return new SearchException("Network error", e);
+        }
+        return new SearchException("Unexpected error", e);
     }
 
     private void transformationAsync(Response response, CompletableFuture<InputStream> future, PipedOutputStream pipedOut, PipedInputStream pipedIn) {
@@ -350,29 +366,6 @@ public class ESItemQuery implements ItemQuery {
                 future.completeExceptionally(new SearchException("Failed to transform ES response", e));
             }
         });
-    }
-
-    private String writeFindByBarcodeJson(String barcode) {
-        StringWriter writer = new StringWriter();
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
-            generator.writeStartObject();
-            generator.writeObjectFieldStart("query");
-            generator.writeObjectFieldStart("bool");
-            generator.writeObjectFieldStart("filter");
-
-            generator.writeObjectFieldStart("term");
-            generator.writeStringField("barcode.raw", barcode);
-            generator.writeEndObject();
-
-            generator.writeEndObject();
-            generator.writeEndObject();//end bool
-            generator.writeEndObject();//end query
-            //generator.writeBooleanField("track_scores", false);
-            generator.writeEndObject();
-        } catch (IOException e) {
-            LOGGER.error("Cannot assemble request JSON", e);
-        }
-        return writer.toString();
     }
 
     @Override

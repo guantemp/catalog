@@ -132,46 +132,5 @@ public class Bootstrap {
             server.stop().join();
             LOGGER.info("Server stopped");
         }));
-/*
-        ServletContainer container = ServletContainer.Factory.newInstance();
-        DeploymentInfo deploymentInfo = Servlets.deployment()
-                .setClassLoader(Bootstrap.class.getClassLoader())
-                .setContextPath("catalog/core")
-                .setDeploymentName("catalog.war")
-                .addServlets(
-                        Servlets.servlet("unitServlet", UnitServlet.class)
-                                .addMapping("/v1/units"),
-                        Servlets.servlet("brandServlet", BrandServlet.class)
-                                .addMapping("/v1/brands/*"),
-                        //Servlets.servlet("categoryServlet", CategoryServlet.class)
-                        //.addMapping("/v1/categories/*"),
-                        Servlets.servlet("itemServlet", ItemServlet.class)
-                                .addInitParam("databaseName", "catalog")
-                                .addMapping("/v1/items/*"),
-                        Servlets.servlet("uploadServlet", UploadServlet.class)
-                                .addInitParam("UPLOAD_DIRECTORY", "temp")
-                                .addMapping("/v1/upload"),
-                        Servlets.servlet("brandServlet2", BrandServlet.class)
-                                .addInitParam("query", "es")
-                                .addMapping("/v2/brands/*"),
-                        Servlets.servlet("categoryServlet2", CategoryServlet.class)
-                                .addInitParam("query", "es")
-                                .addMapping("/v2/categories/*"),
-                        Servlets.servlet("itemServlet2", ItemServletV2.class)
-                                .addInitParam("query", "es")
-                                .addMapping("/v2/items/*")
-                );
-        DeploymentManager manager = container.addDeployment(deploymentInfo);
-        manager.deploy();
-        PathHandler path = Handlers.path(Handlers.redirect("/core"))
-                .addPrefixPath(deploymentInfo.getContextPath(), manager.start());
-
-        Undertow server = Undertow.builder()
-                .addHttpListener(PORT, "0.0.0.0")
-                .setHandler(path)
-                .build();
-        server.start();
-        LOGGER.info("System start....");
- */
     }
 }
