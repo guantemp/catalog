@@ -83,7 +83,6 @@ public class ESBrandQuery implements BrandQuery {
             LOGGER.error("I/O failed", e);
             throw new SearchException("Error: Elasticsearch timeout or no connection", e);
         }
-
     }
 
     @Override

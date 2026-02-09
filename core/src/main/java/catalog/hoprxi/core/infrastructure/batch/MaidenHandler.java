@@ -93,13 +93,13 @@ public class MaidenHandler implements EventHandler<ItemImportEvent> {
         httpClient = httpClientBuilder.build();
     }
 
-    private final JsonFactory jasonFactory = JsonFactory.builder().build();
+    private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         String madeIn = itemImportEvent.map.get(ItemMapping.MADE_IN);
         if (madeIn == null || madeIn.isBlank()) {
-            itemImportEvent.map.put(ItemMapping.MADE_IN, "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'");
+            itemImportEvent.map.put(ItemMapping.MADE_IN, "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}");
             return;
         }
         ClassicHttpRequest httpGet = ClassicRequestBuilder.get(AREA_URL).build();
@@ -127,41 +127,45 @@ public class MaidenHandler implements EventHandler<ItemImportEvent> {
     }
 
     private String read(InputStream inputStream) throws IOException {
-        JsonParser parser = jasonFactory.createParser(inputStream);
-        while (parser.nextToken() != null) {
-            if (JsonToken.START_ARRAY == parser.currentToken() && "areas".equals(parser.currentName())) {
-                while (parser.nextToken() != null) {
-                    if (JsonToken.START_OBJECT == parser.currentToken() && parser.currentName() == null) {
-                        MdeInView view = this.toMadeInView(parser);
-                        if ("CITY".equals(view.level))
-                            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + view.code + ",\"madeIn\":\"" + view.name + "\"}'";
-                        if ("COUNTRY".equals(view.level) && 156 != view.code)
-                            return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\",\"code\":" + view.code + ",\"madeIn\":\"" + (view.name.length() > 4 ? view.abbreviation : view.name) + "\"}'";
-                        if ("COUNTY".equals(view.level)) {
-                            this.processPreviousLevel(view);
-                            //System.out.println(view);
+        try (JsonParser parser = jsonFactory.createParser(inputStream)) {
+            while (parser.nextToken() != null) {
+                if (JsonToken.START_ARRAY == parser.currentToken() && "areas".equals(parser.currentName())) {
+                    while (parser.nextToken() != null) {
+                        if (parser.currentToken() == JsonToken.END_ARRAY) break; // 退出 areas 数组
+                        if (JsonToken.START_OBJECT == parser.currentToken() && parser.currentName() == null) {
+                            MdeInView view = this.toMadeInView(parser);
+                            if ("CITY".equals(view.level))
+                                return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + view.code + ",\"madeIn\":\"" + escapeJson(view.name) + "\"}";
+                            if ("COUNTRY".equals(view.level) && 156 != view.code)
+                                return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\",\"code\":" + view.code + ",\"madeIn\":\"" + (view.name.length() > 4 ? escapeJson(view.abbreviation) : escapeJson(view.name)) + "\"}";
+                            if ("COUNTY".equals(view.level)) {
+                                return this.processPreviousLevel(view);
+                                //System.out.println(view);
+                            }
                         }
                     }
-                    if (JsonToken.END_ARRAY == parser.currentToken() && "areas".equals(parser.currentName())) break;
                 }
             }
         }
-
-        //if (level != null && level.equals("COUNTRY"))
-        // return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Imported\",\"code\":" + parentCode + ",\"madeIn\":\"" + parentName + "\"}'";
-        //if (level != null && level.equals("PROVINCE"))
-        //return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"madeIn\":\"" + name + "\"}'";
-        //if (level.equals("CITY"))
-        //return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.Domestic\",\"code\":" + code + ",\"madeIn\":\"" + name + "\"}'";
-        return "'{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}'";
+        return "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}";
     }
 
-    private void processPreviousLevel(MdeInView view) throws IOException {
-        ClassicHttpRequest httpGet = ClassicRequestBuilder.get(AREA_URL+"/"+view.parentCode).build();
-        httpClient.execute(httpGet, response -> {
+    private String processPreviousLevel(MdeInView view) throws IOException {
+        ClassicHttpRequest httpGet = ClassicRequestBuilder.get(AREA_URL + "/" + view.parentCode).build();
+        String result =httpClient.execute(httpGet, response -> {
             final HttpEntity entity = response.getEntity();
             return this.read(entity.getContent());
         });
+        return result;
+    }
+
+    private static String escapeJson(String input) {
+        if (input == null) return "";
+        return input.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 
     private MdeInView toMadeInView(JsonParser parser) throws IOException {

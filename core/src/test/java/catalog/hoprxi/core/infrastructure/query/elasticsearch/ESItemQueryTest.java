@@ -21,9 +21,6 @@ import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
-import io.netty.util.CharsetUtil;
-import io.netty.util.ReferenceCountUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import reactor.core.publisher.Flux;
@@ -33,10 +30,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -50,40 +44,40 @@ public class ESItemQueryTest {
     }
 
     private static final ItemQuery query = new ESItemQuery();
-/*
-    @Test(invocationCount = 8192, threadPoolSize = 2, priority = 2)
-    public void testFindAsync() throws ExecutionException, InterruptedException, IOException {
-        System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
 
-        long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L};
-        CompletableFuture<InputStream> f1 = query.findAsync(ids[0]);
-        CompletableFuture<InputStream> f2 = query.findAsync(ids[1]);
-        CompletableFuture<InputStream> f3 = query.findAsync(ids[2]);
-        //CompletableFuture<InputStream> f4 = query.findAsync(ids[3]);
-        try {
-            CompletableFuture.allOf(f1, f2, f3).get(3, TimeUnit.SECONDS); // 可能抛出 ExecutionException
-        } catch (Throwable t) {
-            // 捕获异常，继续执行
-        }
+    /*
+        @Test(invocationCount = 8192, threadPoolSize = 2, priority = 2)
+        public void testFindAsync() throws ExecutionException, InterruptedException, IOException {
+            System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
 
-        try (InputStream is = f1.get()) {
-            String s = inputStreamToString(is);
-            System.out.println(s);
+            long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L};
+            CompletableFuture<InputStream> f1 = query.findAsync(ids[0]);
+            CompletableFuture<InputStream> f2 = query.findAsync(ids[1]);
+            CompletableFuture<InputStream> f3 = query.findAsync(ids[2]);
+            //CompletableFuture<InputStream> f4 = query.findAsync(ids[3]);
+            try {
+                CompletableFuture.allOf(f1, f2, f3).get(3, TimeUnit.SECONDS); // 可能抛出 ExecutionException
+            } catch (Throwable t) {
+                // 捕获异常，继续执行
+            }
+
+            try (InputStream is = f1.get()) {
+                String s = inputStreamToString(is);
+                System.out.println(s);
+            }
+            try (InputStream is = f2.get()) {
+                String s = inputStreamToString(is);
+                System.out.println(s);
+            }
+            try (InputStream is = f3.get()) {
+                String s = inputStreamToString(is);
+                System.out.println(s);
+            }
         }
-        try (InputStream is = f2.get()) {
-            String s = inputStreamToString(is);
-            System.out.println(s);
-        }
-        try (InputStream is = f3.get()) {
-            String s = inputStreamToString(is);
-            System.out.println(s);
-        }
-    }
- */
+     */
     @Test(invocationCount = 512, threadPoolSize = 2, priority = 2)
     public void testFindAsync() throws InterruptedException, ExecutionException, TimeoutException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
-        ESItemQuery es = new ESItemQuery();
 
         long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L};
 
@@ -105,7 +99,7 @@ public class ESItemQueryTest {
                 // 使用 CountDownLatch 等待单个 Flux 完成
                 var latch = new java.util.concurrent.CountDownLatch(1);
 
-                Flux<ByteBuf> flux = es.findAsync(id); // 或 service.findAsynca(id)
+                Flux<ByteBuf> flux = query.findAsync(id); // 或 service.findAsynca(id)
 
                 flux.subscribe(
                         byteBuf -> {
@@ -207,10 +201,32 @@ public class ESItemQueryTest {
         }
     }
 
-    @Test(invocationCount = 256, threadPoolSize = 2, priority = 2)
-    public void testFindByBarcodeAsync() {
+    @Test(invocationCount =2, threadPoolSize = 2, priority = 2)
+    public void testFindByBarcodeAsync() throws InterruptedException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
-        String[] barcodes = {"6900404523737", "6939006488885", "6940188805018"};
+        StringBuilder result = new StringBuilder();
+        String[] barcodes = {"6900404523737", "6939006488885", "69401888050182"};
+        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor(); // Java 21+
+        CompletableFuture<Void>[] futures = new CompletableFuture[barcodes.length];
+        var latch = new java.util.concurrent.CountDownLatch(1);
+        for (int i = 0; i < barcodes.length; i++) {
+            final String barcode = barcodes[i];
+            futures[i] = CompletableFuture.runAsync(() -> {
+                Flux<ByteBuf> flux = query.findByBarcodeAsync(barcode);
+                flux.doOnComplete(latch::countDown).subscribe(
+                        byteBuf -> {
+                            result.append(byteBuf.toString(StandardCharsets.UTF_8));
+                        }, error -> {
+                            System.err.println("[ barcode=" + barcode + "] Error: " + error.getMessage());
+
+                        }, () -> {
+                            System.out.println("[barCODE=" + barcode + "] Completed.");
+                            System.out.println(result);
+                        });
+            });
+        }
+        latch.await();
+
     }
 
     @Test
