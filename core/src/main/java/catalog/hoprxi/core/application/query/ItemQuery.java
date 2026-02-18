@@ -74,6 +74,27 @@ public interface ItemQuery {
 
     /**
      * @param filters
+     * @param size
+     * @param searchAfter
+     * @param sortField
+     * @return
+     */
+    Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int size, String searchAfter, SortFieldEnum sortField);
+
+    default Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int size) {
+        return searchAsync(filters, size, "", SortFieldEnum._ID);
+    }
+
+    default Flux<ByteBuf> searchAsync(int size, String searchAfter, SortFieldEnum sortField) {
+        return searchAsync(new ItemQueryFilter[0], size, searchAfter, sortField);
+    }
+
+    default Flux<ByteBuf> searchAsync(int size, SortFieldEnum sortField) {
+        return searchAsync(new ItemQueryFilter[0], size, "", sortField);
+    }
+
+    /**
+     * @param filters
      * @param offset
      * @param size
      * @param sortField
@@ -88,4 +109,12 @@ public interface ItemQuery {
     default InputStream search(int offset, int size) {
         return search(new ItemQueryFilter[0], offset, size, SortFieldEnum._ID);
     }
+    /**
+     * @param filters
+     * @param offset
+     * @param size
+     * @param sortField
+     * @return
+     */
+    Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField);
 }

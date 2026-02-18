@@ -72,12 +72,9 @@ public class ESItemQuery implements ItemQuery {
         boolean success = false;
         try {
             Response response = ESUtil.restClient().performRequest(request);
-            try (OutputStream os = new ByteBufOutputStream(buffer);
-                 JsonGenerator generator = JSON_FACTORY.createGenerator(os);
-                 InputStream is=response.getEntity().getContent();
-                 JsonParser parser = JSON_FACTORY.createParser(is)) {
+            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os);
+                 InputStream is = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(is)) {
                 ESItemQuery.extractSourceSkipMeta(parser, generator);
-                generator.flush();
                 success = true;
                 return new ByteBufInputStream(buffer, true);
             }
@@ -139,10 +136,7 @@ public class ESItemQuery implements ItemQuery {
                         if (isCancelled.get()) {
                             return; // silent cancel; sink 已由外部处理或无需响应
                         }
-                        generator.writeStartObject();
                         ESItemQuery.extractSourceSkipMeta(parser, generator);
-                        generator.writeEndObject();
-                        generator.flush();
                     } catch (IOException | RuntimeException e) {
                         if (!isCancelled.get()) {
                             sink.tryEmitError(e);
@@ -164,7 +158,6 @@ public class ESItemQuery implements ItemQuery {
                 }
             }
         });
-
         return sink.asFlux()
                 .doOnCancel(() -> isCancelled.set(true))
                 .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", id))
@@ -188,11 +181,6 @@ public class ESItemQuery implements ItemQuery {
         return new SearchException("Unexpected error", e);
     }
 
-    /**
-     * @param parser
-     * @param generator
-     * @throws IOException
-     */
     private static void extractSourceSkipMeta(JsonParser parser, JsonGenerator generator) throws IOException {
         while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.FIELD_NAME && "_source".equals(parser.currentName())) {
@@ -200,6 +188,7 @@ public class ESItemQuery implements ItemQuery {
                 if (parser.currentToken() != JsonToken.START_OBJECT) {
                     throw new IllegalStateException("_source is not an object");
                 }
+                generator.writeStartObject();
                 while (parser.nextToken() != JsonToken.END_OBJECT) {
                     if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.currentName())) {
                         parser.nextToken();
@@ -210,8 +199,10 @@ public class ESItemQuery implements ItemQuery {
                         generator.copyCurrentStructure(parser); // copy entire value (handles nested)
                     }
                 }
+                generator.writeEndObject();
             }
         }
+        generator.flush();
     }
 
     @Override
@@ -219,13 +210,31 @@ public class ESItemQuery implements ItemQuery {
         if (!BarcodeValidServices.valid(barcode)) throw new IllegalArgumentException("Not valid barcode ctr");
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(this.writeFindByBarcodeJson(barcode));
+        request.setJsonEntity(ESItemQuery.buildBarcodeFindRequest(barcode));
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BUFFER_SIZE);
+        boolean success = false;
         try {
             Response response = ESUtil.restClient().performRequest(request);
-            return this.reorganization(response.getEntity().getContent());
+            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os);
+                 InputStream is = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(is)) {
+                Extract.extract(parser, generator, "items");
+                success = true;
+                return new ByteBufInputStream(buffer, true);
+            }
+        } catch (ResponseException e) {
+            if (e.getResponse().getStatusLine().getStatusCode() == 404) {
+                LOGGER.warn("Item not found in Elasticsearch: id={}", barcode);
+                throw new SearchException(String.format("The item(id=%s) not found", barcode));
+            }
+            LOGGER.error("Elasticsearch error for id={}", barcode, e);
+            throw new SearchException("Elasticsearch internal error", e);
         } catch (IOException e) {
-            LOGGER.warn("No search was found for anything resembling barcode {} item ", barcode, e);
-            throw new SearchException(String.format("No search was found for anything resembling barcode %s", barcode), e);
+            LOGGER.error("I/O failed", e);
+            throw new SearchException("Error: Elasticsearch timeout or no connection", e);
+        } finally {
+            if (!success && buffer.refCnt() > 0) {
+                buffer.release(); // 仅在未成功返回时释放
+            }
         }
     }
 
@@ -236,7 +245,7 @@ public class ESItemQuery implements ItemQuery {
         if (!BarcodeValidServices.valid(barcode)) throw new IllegalArgumentException("Not valid barcode");
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(this.writeFindByBarcodeJson(barcode));
+        request.setJsonEntity(ESItemQuery.buildBarcodeFindRequest(barcode));
 
         ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
             @Override
@@ -251,10 +260,7 @@ public class ESItemQuery implements ItemQuery {
                         if (isCancelled.get()) {
                             return; // silent cancel; sink 已由外部处理或无需响应
                         }
-                        generator.writeStartObject();
                         ESItemQuery.extractSourceSkipMeta(parser, generator);
-                        generator.writeEndObject();
-                        generator.flush();
                     } catch (IOException | RuntimeException e) {
                         if (!isCancelled.get()) {
                             sink.tryEmitError(e);
@@ -283,63 +289,31 @@ public class ESItemQuery implements ItemQuery {
                 .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
     }
 
-    private String writeFindByBarcodeJson(String barcode) {
+    private static String buildBarcodeFindRequest(String barcode) {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
-            generator.writeObjectFieldStart("filter");
 
+            generator.writeArrayFieldStart("filter");
+            // 开始一个数组元素（一个对象）
+            generator.writeStartObject();
             generator.writeObjectFieldStart("term");
             generator.writeStringField("barcode.raw", barcode);
             generator.writeEndObject();
+            generator.writeEndObject(); // 结束数组元素对象
+            generator.writeEndArray(); // 结束filter数组
 
-            generator.writeEndObject();
             generator.writeEndObject();//end bool
             generator.writeEndObject();//end query
             generator.writeBooleanField("track_scores", false);
             generator.writeEndObject();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
+            throw new IllegalStateException("Failed to build ES query", e);
         }
         return writer.toString();
-    }
-
-    private static void extract(JsonParser parser, JsonGenerator generator) throws IOException {
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.FIELD_NAME && "hits".equals(parser.currentName())) {
-                parser.nextToken(); // move to value (START_OBJECT)
-                if (parser.currentToken() != JsonToken.START_OBJECT) {
-                    throw new IllegalStateException("_source is not an object");
-                }
-                extractTotal(parser, generator);
-                extractSource(parser, generator);
-            }
-        }
-    }
-
-
-    private static void extractTotal(JsonParser parser, JsonGenerator generator) throws IOException {
-        while (parser.nextToken() != JsonToken.END_OBJECT) {
-            if (parser.currentToken() == JsonToken.FIELD_NAME && "value".equals(parser.currentName())) {
-                parser.nextToken();
-                generator.writeNumberField("total", parser.getValueAsInt());
-            }
-        }
-    }
-
-    private static void extractSource(JsonParser parser, JsonGenerator generator) throws IOException {
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.FIELD_NAME && "_source".equals(parser.currentName())) {
-                parser.nextToken();
-                while (parser.nextToken() != JsonToken.END_OBJECT) {
-                    generator.copyCurrentEvent(parser); // copy field name
-                    parser.nextToken();
-                    generator.copyCurrentStructure(parser); // copy entire value (handles nested)
-                }
-            }// move to value (START_OBJECT)
-        }
     }
 
     private static Throwable mapException(Exception e, String barcode) {
@@ -368,7 +342,7 @@ public class ESItemQuery implements ItemQuery {
         }
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(this.writeSearchJson(filters, size, searchAfter, sortField));
+        request.setJsonEntity(ESItemQuery.buildSearchRequest(filters, size, searchAfter, sortField));
         try {
             Response response = ESUtil.restClient().performRequest(request);
             return this.reorganization(response.getEntity().getContent());
@@ -378,15 +352,69 @@ public class ESItemQuery implements ItemQuery {
         }
     }
 
-    private String writeSearchJson(ItemQueryFilter[] filters, int size, String searchAfter, SortFieldEnum sortField) {
+    @Override
+    public Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int size, String searchAfter, SortFieldEnum sortField) {
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
+        if (sortField == null) {
+            sortField = SortFieldEnum._ID;
+            LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        Request request = new Request("GET", "/item/_search");
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESItemQuery.buildSearchRequest(filters, size, searchAfter, sortField));
+
+        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+            @Override
+            public void onSuccess(Response response) {
+                if (isCancelled.get()) {
+                    sink.tryEmitError(new IOException("Processing cancelled"));
+                    return;
+                }
+                CompletableFuture.runAsync(() -> {
+                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
+                         JsonByteBufOutputStream jbbos = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(jbbos)) {
+                        if (isCancelled.get()) {
+                            return; // silent cancel; sink 已由外部处理或无需响应
+                        }
+                        Extract.extract(parser, generator, "items");
+                    } catch (IOException | RuntimeException e) {
+                        if (!isCancelled.get()) {
+                            sink.tryEmitError(e);
+                        }
+                    }
+                }).whenComplete((v, err) -> {
+                    if (err != null && !isCancelled.get()) {
+                        sink.tryEmitError(new SearchException("Transform failed", err));
+                    } else if (!isCancelled.get()) {
+                        sink.tryEmitComplete();
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                if (!isCancelled.get()) {
+                    sink.tryEmitError(ESItemQuery.mapException(e, "fixed"));
+                }
+            }
+        });
+        return sink.asFlux()
+                .doOnCancel(() -> isCancelled.set(true))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for flier: {}", (Object[]) filters))
+                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+    }
+
+    private static String buildSearchRequest(ItemQueryFilter[] filters, int size, String searchAfter, SortFieldEnum sortField) {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeNumberField("size", size);
-            this.writeMain(generator, filters);
-            this.writeSortField(generator, sortField);
-            this.writeSearchAfter(generator, searchAfter);
-            this.writeAggs(generator, AGGS_SIZE);
+            ESItemQuery.buildMainRequest(generator, filters);
+            ESItemQuery.buildSortRequest(generator, sortField);
+            ESItemQuery.buildSearchAfterRequest(generator, searchAfter);
+            ESItemQuery.buildAggsRequest(generator);
             generator.writeBooleanField("track_scores", false);
             generator.writeEndObject();
         } catch (IOException e) {
@@ -395,11 +423,17 @@ public class ESItemQuery implements ItemQuery {
         return writer.toString();
     }
 
-    private void writeSearchAfter(JsonGenerator generator, String searchAfter) throws IOException {
+    private static void buildSearchAfterRequest(JsonGenerator generator, String searchAfter) throws IOException {
         if (searchAfter == null || searchAfter.isBlank()) return;
         generator.writeArrayFieldStart("search_after");
         generator.writeString(searchAfter);
         generator.writeEndArray();
+    }
+
+
+    @Override
+    public Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField) {
+        return null;
     }
 
     @Override
@@ -413,7 +447,7 @@ public class ESItemQuery implements ItemQuery {
         }
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(this.writeSearchJson(filters, offset, size, sortField));
+        request.setJsonEntity(ESItemQuery.buildSearchRequest(filters, offset, size, sortField));
         try {
             Response response = ESUtil.restClient().performRequest(request);
             return this.reorganization(response.getEntity().getContent());
@@ -423,15 +457,15 @@ public class ESItemQuery implements ItemQuery {
         }
     }
 
-    private String writeSearchJson(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField) {
+    private static String buildSearchRequest(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField) {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeNumberField("from", offset);
             generator.writeNumberField("size", size);
-            this.writeMain(generator, filters);
-            this.writeSortField(generator, sortField);
-            this.writeAggs(generator, AGGS_SIZE);
+            ESItemQuery.buildMainRequest(generator, filters);
+            ESItemQuery.buildSortRequest(generator, sortField);
+            ESItemQuery.buildAggsRequest(generator);
             generator.writeBooleanField("track_scores", false);
             generator.writeEndObject();//root
         } catch (IOException e) {
@@ -443,7 +477,7 @@ public class ESItemQuery implements ItemQuery {
     }
 
 
-    private void writeMain(JsonGenerator generator, ItemQueryFilter[] filters) throws IOException {
+    private static void buildMainRequest(JsonGenerator generator, ItemQueryFilter[] filters) throws IOException {
         generator.writeObjectFieldStart("query");
         if (filters == null || filters.length == 0) {
             generator.writeObjectFieldStart("match_all");
@@ -460,7 +494,7 @@ public class ESItemQuery implements ItemQuery {
         generator.writeEndObject();//end query
     }
 
-    private void writeSortField(JsonGenerator generator, SortFieldEnum sortField) throws IOException {
+    private static void buildSortRequest(JsonGenerator generator, SortFieldEnum sortField) throws IOException {
         generator.writeArrayFieldStart("sort");
         generator.writeStartObject();
         generator.writeStringField(sortField.field(), sortField.sort());
@@ -468,13 +502,12 @@ public class ESItemQuery implements ItemQuery {
         generator.writeEndArray();
     }
 
-
-    private void writeAggs(JsonGenerator generator, int aggsSize) throws IOException {
+    private static void buildAggsRequest(JsonGenerator generator) throws IOException {
         generator.writeObjectFieldStart("aggs");
 
         generator.writeObjectFieldStart("brand_aggs");
         generator.writeObjectFieldStart("multi_terms");
-        generator.writeNumberField("size", aggsSize);
+        generator.writeNumberField("size", ESItemQuery.AGGS_SIZE);
         generator.writeArrayFieldStart("terms");
         generator.writeStartObject();
         generator.writeStringField("field", "brand.id");
@@ -488,7 +521,7 @@ public class ESItemQuery implements ItemQuery {
 
         generator.writeObjectFieldStart("category_aggs");
         generator.writeObjectFieldStart("multi_terms");
-        generator.writeNumberField("size", aggsSize);
+        generator.writeNumberField("size", ESItemQuery.AGGS_SIZE);
         generator.writeArrayFieldStart("terms");
         generator.writeStartObject();
         generator.writeStringField("field", "category.id");

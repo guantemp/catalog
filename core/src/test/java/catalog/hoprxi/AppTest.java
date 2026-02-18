@@ -18,8 +18,8 @@ package catalog.hoprxi;
 
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.BrandIdFilter;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.CategoryIdFilter;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.BrandFilter;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.CategoryFilter;
 import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.price.Price;
@@ -364,7 +364,7 @@ public class AppTest {
         generator.writeStartObject();
         generator.writeNumberField("size", 200);
         generator.writeObjectFieldStart("query");
-        ItemQueryFilter[] filters = new ItemQueryFilter[]{new BrandIdFilter(-1), new CategoryIdFilter(new long[]{-1, 62078023226734874l})};
+        ItemQueryFilter[] filters = new ItemQueryFilter[]{new BrandFilter(-1), new CategoryFilter(new long[]{-1, 62078023226734874l})};
         if (filters.length > 0) {
             generator.writeObjectFieldStart("bool");
             generator.writeArrayFieldStart("must");

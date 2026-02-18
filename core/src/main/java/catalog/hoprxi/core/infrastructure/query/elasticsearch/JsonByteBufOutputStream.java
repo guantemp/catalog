@@ -77,27 +77,27 @@ public class JsonByteBufOutputStream extends OutputStream {
         checkCancelled();
         if (byteBuf.readableBytes() > 0) {
             ByteBuf slice = byteBuf.readRetainedSlice(byteBuf.readableBytes());
+            System.out.println("[" + System.currentTimeMillis() + "] >>> Flushing ByteBuf of size: " + slice.readableBytes());
             Sinks.EmitResult result = sink.tryEmitNext(slice);
             if (result.isFailure()) {
                 slice.release();
                 cancelAndEmitError(new IOException("Backpressure overflow, stream cancelled"));
             }
         }
+        byteBuf.clear();//非常重要，没有这个在这里卡了1天
     }
 
     @Override
     public void close() throws IOException {
         IOException flushError = null;
         try {
+            //System.out.println(">>> Closing JsonByteBufOutputStream");
             flush();
         } catch (IOException e) {
             flushError = e;
         } finally {
             if (byteBuf.refCnt() > 0) {
                 byteBuf.release();
-            }
-            if (flushError == null && !isCancelled.get()) {
-                sink.tryEmitComplete();
             }
         }
         if (flushError != null) {

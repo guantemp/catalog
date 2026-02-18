@@ -186,7 +186,7 @@ public class ItemService {
             for (int i = 0; i < ss.length; i++) {
                 categoryIds[i] = Long.parseLong(ss[i]);
             }
-            filterList.add(new CategoryIdFilter(categoryIds));
+            filterList.add(new CategoryFilter(categoryIds));
         }
     }
 
@@ -197,7 +197,7 @@ public class ItemService {
             for (int i = 0; i < ss.length; i++) {
                 brandIds[i] = Long.parseLong(ss[i]);
             }
-            filterList.add(new BrandIdFilter(brandIds));
+            filterList.add(new BrandFilter(brandIds));
         }
     }
 
