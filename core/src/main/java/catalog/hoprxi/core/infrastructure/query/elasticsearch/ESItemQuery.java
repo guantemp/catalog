@@ -343,12 +343,30 @@ public class ESItemQuery implements ItemQuery {
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESItemQuery.buildSearchRequest(filters, size, searchAfter, sortField));
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BUFFER_SIZE);
+        boolean success = false;
         try {
             Response response = ESUtil.restClient().performRequest(request);
-            return this.reorganization(response.getEntity().getContent());
+            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os);
+                 InputStream is = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(is)) {
+                Extract.extract(parser, generator, "items");
+                success = true;
+                return new ByteBufInputStream(buffer, true);
+            }
+        } catch (ResponseException e) {
+            if (e.getResponse().getStatusLine().getStatusCode() == 404) {
+                LOGGER.warn("Item not found in Elasticsearch: id={}");
+                throw new SearchException(String.format("The item(id=%s) not found"));
+            }
+            LOGGER.error("Elasticsearch error for id={}", e);
+            throw new SearchException("Elasticsearch internal error", e);
         } catch (IOException e) {
-            LOGGER.error("No search was found for anything resembling item ", e);
-            throw new SearchException(String.format("No search was found for anything items from %s", 2), e);
+            LOGGER.error("I/O failed", e);
+            throw new SearchException("Error: Elasticsearch timeout or no connection", e);
+        } finally {
+            if (!success && buffer.refCnt() > 0) {
+                buffer.release(); // 仅在未成功返回时释放
+            }
         }
     }
 
@@ -448,12 +466,30 @@ public class ESItemQuery implements ItemQuery {
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESItemQuery.buildSearchRequest(filters, offset, size, sortField));
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BUFFER_SIZE);
+        boolean success = false;
         try {
             Response response = ESUtil.restClient().performRequest(request);
-            return this.reorganization(response.getEntity().getContent());
+            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os);
+                 InputStream is = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(is)) {
+                Extract.extract(parser, generator, "items");
+                success = true;
+                return new ByteBufInputStream(buffer, true);
+            }
+        } catch (ResponseException e) {
+            if (e.getResponse().getStatusLine().getStatusCode() == 404) {
+                LOGGER.warn("Item not found in Elasticsearch: id={}");
+                throw new SearchException(String.format("The item(id=%s) not found"));
+            }
+            LOGGER.error("Elasticsearch error for id={}", e);
+            throw new SearchException("Elasticsearch internal error", e);
         } catch (IOException e) {
-            LOGGER.error("No search was found for anything items ", e);
-            throw new SearchException(String.format("No search was found for anything items from %s", 2), e);
+            LOGGER.error("I/O failed", e);
+            throw new SearchException("Error: Elasticsearch timeout or no connection", e);
+        } finally {
+            if (!success && buffer.refCnt() > 0) {
+                buffer.release(); // 仅在未成功返回时释放
+            }
         }
     }
 
@@ -534,102 +570,6 @@ public class ESItemQuery implements ItemQuery {
         generator.writeEndObject();//end category_aggs
 
         generator.writeEndObject();//end eggs
-    }
-
-    private InputStream reorganization(InputStream is) throws IOException {
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        boolean transferMark = false;
-        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os); JsonParser parser = JSON_FACTORY.createParser(is);) {
-            generator.writeStartObject();
-            while (parser.nextToken() != null) {
-                if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                    String fieldName = parser.currentName();
-                    if ("hits".equals(fieldName)) {
-                        this.parseHits(parser, generator);
-                    } else if ("aggregations".equals(fieldName)) {
-                        generator.writeFieldName("aggregations");
-                        int depth = 0;
-                        do {
-                            JsonToken token = parser.nextToken();
-                            generator.copyCurrentEvent(parser);
-                            if (token == JsonToken.START_OBJECT) depth++;
-                            else if (token == JsonToken.END_OBJECT) depth--;
-                        } while (depth > 0);
-                        /*
-                        do {
-                            generator.copyCurrentEvent(parser);
-                            parser.nextToken();
-                        } while (!(parser.currentToken() == JsonToken.END_OBJECT && "aggregations".equals(parser.currentName())));
-                        generator.writeEndObject();
-                         */
-                    }
-                }
-            }
-
-            generator.writeEndObject();
-            generator.flush();
-            ByteBufInputStream result = new ByteBufInputStream(buffer, true);// 创建输入流并转移所有权
-            transferMark = true;
-            return result;
-        } finally {
-            if (!transferMark && buffer != null && buffer.refCnt() > 0) {
-                buffer.release(); // 只有在失败时才需要手动释放
-            }
-        }
-    }
-
-    private void parseHits(JsonParser parser, JsonGenerator generator) throws IOException {
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.END_OBJECT && "hits".equals(parser.currentName())) break;
-            if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                String fieldName = parser.currentName();
-                if ("total".equals(fieldName)) {
-                    while (parser.nextToken() != null) {
-                        if (parser.currentToken() == JsonToken.FIELD_NAME && "value".equals(parser.currentName())) {
-                            parser.nextToken();
-                            generator.writeNumberField("total", parser.getValueAsInt());
-                            break;
-                        }
-                    }
-                } else if ("hits".equals(fieldName)) {
-                    generator.writeArrayFieldStart("items");
-                    while (parser.nextToken() != null) {
-                        if (parser.currentToken() == JsonToken.START_OBJECT) {
-                            generator.writeStartObject();
-                            this.parserSource(parser, generator);
-                            this.parserSort(parser, generator);
-                            generator.writeEndObject();
-                        }
-                        if (parser.currentToken() == JsonToken.END_ARRAY && "hits".equals(parser.currentName())) {
-                            break;
-                        }
-                    }
-                    generator.writeEndArray();
-                }
-            }
-        }
-    }
-
-    private void parserSource(JsonParser parser, JsonGenerator generator) throws IOException {
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
-                while (parser.nextToken() != null) {
-                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.currentName())) break;
-                    generator.copyCurrentEvent(parser);
-                }
-            }
-            if (parser.currentToken() == JsonToken.END_OBJECT && "_source".equals(parser.currentName())) break;
-        }
-    }
-
-    private void parserSort(JsonParser parser, JsonGenerator generator) throws IOException {
-        if (parser.nextToken() == JsonToken.FIELD_NAME && "sort".equals(parser.currentName())) {
-            generator.copyCurrentEvent(parser);
-            while (parser.nextToken() != null) {
-                generator.copyCurrentEvent(parser);
-                if (parser.currentToken() == JsonToken.END_ARRAY && "sort".equals(parser.currentName())) break;
-            }
-        }
     }
 
 
