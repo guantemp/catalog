@@ -77,7 +77,7 @@ public class JsonByteBufOutputStream extends OutputStream {
         checkCancelled();
         if (byteBuf.readableBytes() > 0) {
             ByteBuf slice = byteBuf.readRetainedSlice(byteBuf.readableBytes());
-            System.out.println("[" + System.currentTimeMillis() + "] >>> Flushing ByteBuf of size: " + slice.readableBytes());
+            //System.out.println("[" + System.currentTimeMillis() + "] >>> Flushing ByteBuf of size: " + slice.readableBytes());
             Sinks.EmitResult result = sink.tryEmitNext(slice);
             if (result.isFailure()) {
                 slice.release();

@@ -18,10 +18,12 @@ package catalog.hoprxi.core.infrastructure;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
@@ -83,8 +85,8 @@ public class ESUtil {
         restClient = RestClient.builder(new HttpHost(props.getProperty("host", DEFAULT_HOST), Integer.parseInt(props.getProperty("port", "9200")), "https"))
                 .setHttpClientConfigCallback(httpClientBuilder -> {
                     // 设置连接池
-                    httpClientBuilder.setMaxConnTotal(150);   // 整个连接池最大连接数
-                    httpClientBuilder.setMaxConnPerRoute(80);//每个 host 最多 80 连接
+                    httpClientBuilder.setMaxConnTotal(100);   // 整个连接池最大连接数
+                    httpClientBuilder.setMaxConnPerRoute(40);//每个 host 最多 80 连接
 
                     // 如果需要跳过证书验证（仅测试环境！）不推荐生产使用
                     /*

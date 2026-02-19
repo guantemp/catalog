@@ -56,11 +56,11 @@ public class ESItemQuery implements ItemQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Item");
     private static final String SEARCH_PREFIX_POINT = "/" + ESUtil.customized() + "_item";
     private static final String SEARCH_ENDPOINT = SEARCH_PREFIX_POINT + "/_search";
-    private static final int AGGS_SIZE = 15;
+    private static final int AGGS_SIZE = 15 ;
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     //private static final int MAX_SIZE = 9999;
-    private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
-    private static final int BUFFER_SIZE = 2048;//2KB缓冲区
+    private static final int BATCH_BUFFER_SIZE = 32 * 1024;// 32KB缓冲区
+    private static final int SINGLE_BUFFER_SIZE = 2048;//2KB缓冲区
 
     private static final ExecutorService TRANSFORM_POOL = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -68,7 +68,7 @@ public class ESItemQuery implements ItemQuery {
     public InputStream find(long id) {
         Request request = new Request("GET", "/item/_doc/" + id);//PREFIX+"/_doc/"
         request.setOptions(ESUtil.requestOptions());
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BUFFER_SIZE);
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
         boolean success = false;
         try {
             Response response = ESUtil.restClient().performRequest(request);
@@ -132,7 +132,7 @@ public class ESItemQuery implements ItemQuery {
                 }
                 CompletableFuture.runAsync(() -> {
                     try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                         JsonGenerator generator = JSON_FACTORY.createGenerator(new JsonByteBufOutputStream(sink, isCancelled))) {
+                         OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
                         if (isCancelled.get()) {
                             return; // silent cancel; sink 已由外部处理或无需响应
                         }
@@ -211,7 +211,7 @@ public class ESItemQuery implements ItemQuery {
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESItemQuery.buildBarcodeFindRequest(barcode));
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BUFFER_SIZE);
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
         boolean success = false;
         try {
             Response response = ESUtil.restClient().performRequest(request);
@@ -343,7 +343,7 @@ public class ESItemQuery implements ItemQuery {
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESItemQuery.buildSearchRequest(filters, size, searchAfter, sortField));
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BUFFER_SIZE);
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
         boolean success = false;
         try {
             Response response = ESUtil.restClient().performRequest(request);
@@ -392,7 +392,7 @@ public class ESItemQuery implements ItemQuery {
                 }
                 CompletableFuture.runAsync(() -> {
                     try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                         JsonByteBufOutputStream jbbos = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(jbbos)) {
+                         JsonByteBufOutputStream jbbos = new JsonByteBufOutputStream(sink, isCancelled,BATCH_BUFFER_SIZE); JsonGenerator generator = JSON_FACTORY.createGenerator(jbbos)) {
                         if (isCancelled.get()) {
                             return; // silent cancel; sink 已由外部处理或无需响应
                         }
@@ -451,7 +451,58 @@ public class ESItemQuery implements ItemQuery {
 
     @Override
     public Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField) {
-        return null;
+        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("from must lager 10000");
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
+        if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
+        if (sortField == null) {
+            sortField = SortFieldEnum._ID;
+            LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        Request request = new Request("GET", "/item/_search");
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESItemQuery.buildSearchRequest(filters, offset, size, sortField));
+
+        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+            @Override
+            public void onSuccess(Response response) {
+                if (isCancelled.get()) {
+                    sink.tryEmitError(new IOException("Processing cancelled"));
+                    return;
+                }
+                CompletableFuture.runAsync(() -> {
+                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
+                         JsonByteBufOutputStream jbbos = new JsonByteBufOutputStream(sink, isCancelled, 32 * 1024); JsonGenerator generator = JSON_FACTORY.createGenerator(jbbos)) {
+                        if (isCancelled.get()) {
+                            return; // silent cancel; sink 已由外部处理或无需响应
+                        }
+                        Extract.extract(parser, generator, "items");
+                    } catch (IOException | RuntimeException e) {
+                        if (!isCancelled.get()) {
+                            sink.tryEmitError(e);
+                        }
+                    }
+                }).whenComplete((v, err) -> {
+                    if (err != null && !isCancelled.get()) {
+                        sink.tryEmitError(new SearchException("Transform failed", err));
+                    } else if (!isCancelled.get()) {
+                        sink.tryEmitComplete();
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                if (!isCancelled.get()) {
+                    sink.tryEmitError(ESItemQuery.mapException(e, "fixed"));
+                }
+            }
+        });
+        return sink.asFlux()
+                .doOnCancel(() -> isCancelled.set(true))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for flier: {}", (Object[]) filters))
+                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
     }
 
     @Override
@@ -466,7 +517,7 @@ public class ESItemQuery implements ItemQuery {
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESItemQuery.buildSearchRequest(filters, offset, size, sortField));
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BUFFER_SIZE);
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
         boolean success = false;
         try {
             Response response = ESUtil.restClient().performRequest(request);

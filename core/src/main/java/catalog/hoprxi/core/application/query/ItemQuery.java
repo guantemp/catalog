@@ -109,6 +109,7 @@ public interface ItemQuery {
     default InputStream search(int offset, int size) {
         return search(new ItemQueryFilter[0], offset, size, SortFieldEnum._ID);
     }
+
     /**
      * @param filters
      * @param offset
@@ -117,4 +118,12 @@ public interface ItemQuery {
      * @return
      */
     Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField);
+
+    default Flux<ByteBuf> searchAsync(int offset, int size, SortFieldEnum sortField) {
+        return searchAsync(new ItemQueryFilter[0], offset, size, sortField);
+    }
+
+    default Flux<ByteBuf> searchAsync(int offset, int size) {
+        return searchAsync(new ItemQueryFilter[0], offset, size, SortFieldEnum._ID);
+    }
 }
