@@ -31,7 +31,7 @@ import java.util.StringJoiner;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 2019-10-15
+ * @version 0.0.2 builder 2026-02-22
  */
 public class Price {
     public static final Price RMB_ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.CHINA)), UnitEnum.PCS);
@@ -49,9 +49,10 @@ public class Price {
     }
 
     public static Price zero(Locale locale) {
-        if (locale == Locale.CHINA || locale == Locale.CHINESE || locale == Locale.SIMPLIFIED_CHINESE || locale == Locale.PRC)
+        Objects.requireNonNull(locale, "locale required");
+        if ("CN".equals(locale.getCountry()))
             return RMB_ZERO;
-        if (locale == Locale.US)
+        if ("US".equals(locale.getCountry()))
             return USD_ZERO;
         return new Price(Money.zero(Monetary.getCurrency(locale)), UnitEnum.PCS);
     }
@@ -81,18 +82,16 @@ public class Price {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
+    public final boolean equals(Object o) {
         if (!(o instanceof Price price)) return false;
 
-        if (!Objects.equals(amount, price.amount)) return false;
-        return unit == price.unit;
+        return Objects.equals(amount, price.amount) && unit == price.unit;
     }
 
     @Override
     public int hashCode() {
-        int result = amount != null ? amount.hashCode() : 0;
-        result = 31 * result + (unit != null ? unit.hashCode() : 0);
+        int result = Objects.hashCode(amount);
+        result = 31 * result + Objects.hashCode(unit);
         return result;
     }
 

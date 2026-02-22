@@ -94,7 +94,7 @@ public class Item {
     }
 
     public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, RetailPrice retailPrice) {
-        this(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.RMB_ZERO, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+        this(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.RMB_PCS_ZERO, retailPrice, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
     }
 
     private void setCategoryId(long categoryId) {
@@ -116,7 +116,7 @@ public class Item {
 
     private void setLastReceiptPrice(LastReceiptPrice lastReceiptPrice) {
         if (lastReceiptPrice == null)
-            lastReceiptPrice = LastReceiptPrice.RMB_ZERO;
+            lastReceiptPrice = LastReceiptPrice.RMB_PCS_ZERO;
         this.lastReceiptPrice = lastReceiptPrice;
     }
 

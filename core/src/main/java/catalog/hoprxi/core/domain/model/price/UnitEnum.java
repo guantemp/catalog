@@ -18,12 +18,17 @@ package catalog.hoprxi.core.domain.model.price;
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.3 builder 2025-11-08
+ * @version 0.0.4 builder 2026-02-22
  */
 public enum UnitEnum {
+    PCS,
     BEI {
         @Override
         public String toString() {
@@ -65,7 +70,7 @@ public enum UnitEnum {
         public String toString() {
             return Label.UNIT_JIAN;
         }
-    }, PCS, PING {
+    }, PING {
         @Override
         public String toString() {
             return Label.UNIT_PING;
@@ -227,15 +232,25 @@ public enum UnitEnum {
         }
     };
 
+    private static final Map<String, UnitEnum> LOOKUP = new HashMap<>();
+
+    static {
+        for (UnitEnum u : values()) {
+            LOOKUP.put(u.name(), u);           // "PCS"
+            LOOKUP.put(u.name().toLowerCase(), u); // "pcs"
+            LOOKUP.put(u.toString(), u);       // "件"（如果重写了 toString）
+        }
+    }
+
     /**
      * @param s of value
      * @return a Unit
      */
     public static UnitEnum of(String s) {
-        for (UnitEnum unit : values()) {
-            if (unit.name().equals(s) || unit.toString().equals(s))
-                return unit;
-        }
-        return UnitEnum.PCS;
+        if (s == null) throw new IllegalArgumentException("Unit string cannot be null or empty");
+        UnitEnum result = LOOKUP.get(s.trim());
+        if (result == null)
+            throw new IllegalArgumentException("Unrecognized unit: '" + s + "'. Supported: " + Arrays.toString(values()));
+        return result;
     }
 }

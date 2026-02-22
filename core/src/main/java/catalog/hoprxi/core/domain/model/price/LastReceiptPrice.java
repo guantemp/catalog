@@ -25,41 +25,32 @@ import java.util.StringJoiner;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.2 builder 2025-11-08
+ * @version 0.0.3 builder 2026-02-22
  */
 public class LastReceiptPrice {
-    public static final LastReceiptPrice RMB_ZERO = new LastReceiptPrice(Price.zero(Locale.CHINA));
-    public static final LastReceiptPrice USD_ZERO = new LastReceiptPrice(Price.zero(Locale.US));
+    public static final LastReceiptPrice RMB_PCS_ZERO = new LastReceiptPrice(Price.zero(Locale.CHINA));
+    public static final LastReceiptPrice USD_PCS_ZERO = new LastReceiptPrice(Price.zero(Locale.US));
     private static final int NAME_MAX_LENGTH = 64;
-    private Price price;
-    private String name;
+    private final Price price;
+    private final String name;
 
     public LastReceiptPrice(Price price) {
         this(Label.PRICE_LAST_RECEIPT, price);
     }
 
     public LastReceiptPrice(String name, Price price) {
-        setName(name);
-        setPrice(price);
-    }
-
-    public static LastReceiptPrice zero(Locale locale, UnitEnum unit) {
-        if (locale == Locale.CHINA || locale == Locale.CHINESE)
-            return RMB_ZERO;
-        if (locale == Locale.US)
-            return USD_ZERO;
-        return new LastReceiptPrice(Price.zero(locale, unit));
-    }
-
-    private void setPrice(Price price) {
+        this.name = (name == null || name.isBlank() || name.length() > NAME_MAX_LENGTH) ? Label.PRICE_LAST_RECEIPT : name.trim();
         this.price = Objects.requireNonNull(price, "price required");
     }
 
-    private void setName(String name) {
-        name = Objects.requireNonNull(name, "name required").trim();
-        if (name.isEmpty() || name.length() > NAME_MAX_LENGTH)
-            throw new IllegalArgumentException("name length rang is 1-" + NAME_MAX_LENGTH);
-        this.name = name;
+    public static LastReceiptPrice zero(Locale locale, UnitEnum unit) {
+        Objects.requireNonNull(locale, "locale required");
+        Objects.requireNonNull(unit, "unit required");
+        if ("CN".equals(locale.getCountry()) && unit == UnitEnum.PCS)
+            return RMB_PCS_ZERO;
+        if ("US".equals(locale.getCountry()) && unit == UnitEnum.PCS)
+            return USD_PCS_ZERO;
+        return new LastReceiptPrice(Price.zero(locale, unit));
     }
 
     public Price price() {
@@ -72,7 +63,6 @@ public class LastReceiptPrice {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
         if (!(o instanceof LastReceiptPrice that)) return false;
 
         if (!Objects.equals(price, that.price)) return false;

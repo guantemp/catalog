@@ -209,7 +209,7 @@ public class ProhibitSellItem {
     }
 
     public Item permitSell() {
-        return new Item(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.RMB_ZERO, retailPrice, memberPrice, vipPrice, categoryId, brandId);
+        return new Item(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.RMB_PCS_ZERO, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
     @Override

@@ -27,29 +27,22 @@ import java.util.StringJoiner;
  * @since JDK21
  * @version 0.0.2 builder 2025-11-08
  */
-public class RetailPrice {
-    public static final RetailPrice RMB_ZERO = new RetailPrice(Price.zero(Locale.CHINA));
-    public static final RetailPrice USD_ZERO = new RetailPrice(Price.zero(Locale.US));
-    private Price price;
+public record RetailPrice(Price price) {
+    public static final RetailPrice RMB_PCS_ZERO = new RetailPrice(Price.zero(Locale.CHINA));
+    public static final RetailPrice USD_PCS_ZERO = new RetailPrice(Price.zero(Locale.US));
 
     public RetailPrice(Price price) {
-        setPrice(price);
-    }
-
-    public static RetailPrice zero(Locale locale, UnitEnum unit) {
-        if (locale == Locale.CHINA || locale == Locale.CHINESE)
-            return RMB_ZERO;
-        if (locale == Locale.US)
-            return USD_ZERO;
-        return new RetailPrice(Price.zero(locale, unit));
-    }
-
-    private void setPrice(Price price) {
         this.price = Objects.requireNonNull(price, "price required");
     }
 
-    public Price price() {
-        return price;
+    public static RetailPrice zero(Locale locale, UnitEnum unit) {
+        Objects.requireNonNull(locale, "locale required");
+        Objects.requireNonNull(unit, "unit required");
+        if ("CN".equals(locale.getCountry()) && unit == UnitEnum.PCS)
+            return RMB_PCS_ZERO;
+        if ("US".equals(locale.getCountry()) && unit == UnitEnum.PCS)
+            return USD_PCS_ZERO;
+        return new RetailPrice(Price.zero(locale, unit));
     }
 
     public String name() {
@@ -57,18 +50,10 @@ public class RetailPrice {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public final boolean equals(Object o) {
+        if (!(o instanceof RetailPrice that)) return false;
 
-        RetailPrice that = (RetailPrice) o;
-
-        return Objects.equals(price, that.price);
-    }
-
-    @Override
-    public int hashCode() {
-        return price != null ? price.hashCode() : 0;
+        return price.equals(that.price);
     }
 
     @Override

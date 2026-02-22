@@ -34,6 +34,7 @@ import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.Domestic;
+import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
@@ -63,6 +64,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiFunction;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -72,13 +74,12 @@ import java.util.concurrent.CompletableFuture;
 public class ItemService {
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
-    private static final int SINGLE_BUFFER_SIZE = 8192; // 1.5KB缓冲区
-    private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Item");
     private static final String MINI_SEPARATION = ",";
 
     private static final ItemQuery QUERY = new ESItemQuery();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
+    private final Handler<ItemDeleteCommand, Boolean> deleteHandler = new ItemDeleteHandler();
 
     @Get("/items/:id")
     @Description("Retrieves the item information by the given ID.")
@@ -142,7 +143,7 @@ public class ItemService {
     }
 
     @Get("/items")
-    public HttpResponse search(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse search(ServiceRequestContext ctx) {
         QueryParams params = ctx.queryParams();
         String search = params.get("s", "");
         String filter = params.get("filter", "");
@@ -164,10 +165,9 @@ public class ItemService {
                     if (signal.hasError()) {// 信号->错误
                         return Flux.just(
                                 ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                                HttpData.ofUtf8("{\"error\":\"Item not found\",\"id\":" +  "}")
+                                HttpData.ofUtf8("{\"error\":\"Item not found\",\"id\":" + "}")
                         );
-                    } else if (signal.isOnComplete()) {
-                        // 空流？返回 404 或 204
+                    } else if (signal.isOnComplete()) {   // 空流？返回 404 或 204
                         return Flux.just(
                                 ResponseHeaders.of(HttpStatus.NOT_FOUND),
                                 HttpData.ofUtf8("{\"error\":\"Item not found\",\"id\":" + "}")
@@ -185,33 +185,6 @@ public class ItemService {
                 ));
 
         return HttpResponse.of(responseStream);
-
-/*
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled() || ctx.isTimedOut()) return;
-            ByteBuf buffer = ctx.alloc().buffer(BATCH_BUFFER_SIZE);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                if (pretty) gen.useDefaultPrettyPrinter();
-                InputStream is;
-                if (cursor.isBlank()) {
-                    is = QUERY.search(this.parseFilter(search, filter), offset, size, sortField);
-                } else {
-                    is = QUERY.search(this.parseFilter(search, filter), size, cursor, sortField);
-                }
-                this.copyRaw(gen, is);
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.wrap(buffer));
-                buffer = null;
-                stream.close();
-            } catch (IOException | ClosedSessionException | SearchException e) {
-                this.handleStreamError(stream, e);
-            } finally {
-                if (buffer != null) buffer.release(); // 只释放未被转移的缓冲区
-            }
-        });
-        return HttpResponse.of(stream);
- */
     }
 
     private ItemQueryFilter[] parseFilter(String query, String filter) {
@@ -296,7 +269,7 @@ public class ItemService {
     }
 
     @Post("/items")
-    public HttpResponse create(ServiceRequestContext ctx, HttpData body, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse create(ServiceRequestContext ctx, HttpData body) {
         RequestHeaders headers = ctx.request().headers();
         if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) ||
                 MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
@@ -309,7 +282,8 @@ public class ItemService {
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
                         "{\"status\":\"success\",\"code\":201,\"message\":\"A item created,it's %s\"}", item)));
             } catch (Exception e) {
-                System.out.println(e);
+                LOGGER.warn(e.getMessage(), e);
+                //System.out.println(e);
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
                         "{\"status\":fail,\"code\":500,\"message\":\"Can't create a item,cause by %s\"}", e)));
             }
@@ -325,10 +299,10 @@ public class ItemService {
         long brandId = Brand.UNDEFINED.id();
         long categoryId = Category.UNDEFINED.id();
         Barcode barcode = null;
-        LastReceiptPrice lastReceiptPrice = LastReceiptPrice.RMB_ZERO;
-        RetailPrice retailPrice = RetailPrice.RMB_ZERO;
-        MemberPrice memberPrice = MemberPrice.RMB_ZERO;
-        VipPrice vipPrice = VipPrice.RMB_ZERO;
+        LastReceiptPrice lastReceiptPrice = LastReceiptPrice.RMB_PCS_ZERO;
+        RetailPrice retailPrice = RetailPrice.RMB_PCS_ZERO;
+        MemberPrice memberPrice = MemberPrice.RMB_PCS_ZERO;
+        VipPrice vipPrice = VipPrice.RMB_PCS_ZERO;
         while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.FIELD_NAME) {
                 String fieldName = parser.currentName();
@@ -344,20 +318,20 @@ public class ItemService {
                     case "retailPrice", "retail_price" -> retailPrice = new RetailPrice(this.readPrice(parser));
                     case "memberPrice", "member_price" -> memberPrice = this.readMemberPrice(parser);
                     case "vipPrice", "vip_price" -> vipPrice = this.readVipPrice(parser);
-                    case "category" -> categoryId = readId(parser);
-                    case "brand" -> brandId = readId(parser);
-                    case "categoryId" -> categoryId = parser.getValueAsLong();
-                    case "brandId" -> brandId = parser.getValueAsLong();
+                    case "category", "categoryId" -> categoryId = readId(parser);
+                    case "brand", "brandId" -> brandId = readId(parser);
                 }
             }
         }
-
         ItemCreateCommand command = new ItemCreateCommand(barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY, lastReceiptPrice, retailPrice, memberPrice, vipPrice, categoryId, brandId);
         Handler<ItemCreateCommand, Item> handler = new ItemCreateHandler();
         return handler.execute(command);
     }
 
     private Name readName(JsonParser parser) throws IOException {
+        if (parser.currentToken() != JsonToken.START_OBJECT) {
+            throw new IllegalArgumentException("Expected JSON object for 'name'");
+        }
         String name = null, alias = null;
         while (parser.nextToken() != JsonToken.END_OBJECT) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
@@ -373,6 +347,9 @@ public class ItemService {
     }
 
     private MadeIn readMadeIn(JsonParser parser) throws IOException {
+        if (parser.currentToken() != JsonToken.START_OBJECT) {
+            throw new IllegalArgumentException("Expected JSON object for 'madeIn'");
+        }
         String madeIn = null;
         String country = null;
         String code = "156";
@@ -387,60 +364,45 @@ public class ItemService {
                 }
             }
         }
+        if (country != null && !country.isEmpty())
+            return new Imported(code, country);
         //System.out.println(new Domestic(code, madeIn));
         return new Domestic(code, madeIn);
     }
 
     private LastReceiptPrice readLastReceiptPrice(JsonParser parser) throws IOException {
-        String name = "";
-        Price price = Price.RMB_ZERO;
-        while (parser.nextToken() != JsonToken.END_OBJECT ||
-                (parser.currentToken() == JsonToken.END_OBJECT && "price".equals(parser.currentName()))) {
-            if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                String fieldName = parser.currentName();
-                parser.nextToken();
-                if ("price".equals(fieldName)) price = readPrice(parser);
-                else if ("name".equals(fieldName)) name = parser.getValueAsString();
-            }
-        }
-        return name.isBlank() ? new LastReceiptPrice(price) : new LastReceiptPrice(name, price);
+        return readNamedPrice(parser, LastReceiptPrice::new);
     }
 
     private MemberPrice readMemberPrice(JsonParser parser) throws IOException {
-        String name = "";
-        Price price = Price.RMB_ZERO;
-        while (parser.nextToken() != JsonToken.END_OBJECT ||
-                (parser.currentToken() == JsonToken.END_OBJECT && "price".equals(parser.currentName()))) {
-            if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                String fieldName = parser.currentName();
-                parser.nextToken();
-                switch (fieldName) {
-                    case "price" -> price = readPrice(parser);
-                    case "name" -> name = parser.getValueAsString();
-                }
-            }
-        }
-        return name.isBlank() ? new MemberPrice(price) : new MemberPrice(name, price);
+        return readNamedPrice(parser, MemberPrice::new);
     }
 
     private VipPrice readVipPrice(JsonParser parser) throws IOException {
+        return readNamedPrice(parser, VipPrice::new);
+    }
+
+    private <T> T readNamedPrice(JsonParser parser, BiFunction<String, Price, T> constructor) throws IOException {
+        if (parser.getCurrentToken() != JsonToken.START_OBJECT) {
+            throw new IllegalArgumentException("Expected JSON object for named price field");
+        }
         String name = "";
-        Price price = Price.RMB_ZERO;
-        while (parser.nextToken() != JsonToken.END_OBJECT ||
-                (parser.currentToken() == JsonToken.END_OBJECT && "price".equals(parser.currentName()))) {
-            if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                String fieldName = parser.currentName();
-                parser.nextToken();
-                switch (fieldName) {
-                    case "price" -> price = readPrice(parser);
-                    case "name" -> name = parser.getValueAsString();
-                }
+        Price price = Price.zero(Locale.getDefault());
+        while (parser.nextToken() != JsonToken.END_OBJECT) {
+            String fieldName = parser.getCurrentName();
+            parser.nextToken();
+            switch (fieldName) {
+                case "price" -> price = readPrice(parser);
+                case "name" -> name = parser.getValueAsString();
             }
         }
-        return name.isBlank() ? new VipPrice(price) : new VipPrice(name, price);
+        return constructor.apply(name, price);
     }
 
     private Price readPrice(JsonParser parser) throws IOException {
+        if (parser.getCurrentToken() != JsonToken.START_OBJECT) {
+            throw new IllegalArgumentException("Expected JSON object for 'price'");
+        }
         CurrencyUnit currencyUnit = Monetary.getCurrency(Locale.getDefault());
         UnitEnum unit = UnitEnum.PCS;
         Number number = 0.0;
@@ -460,39 +422,43 @@ public class ItemService {
 
     //read category or brand id
     private long readId(JsonParser parser) throws IOException {
-        long id = 0L;
-        while (parser.nextToken() != JsonToken.END_OBJECT) {
-            if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                String fieldName = parser.currentName();
-                parser.nextToken();
-                if ("id".equals(fieldName)) {
+        JsonToken token = parser.currentToken();
+        if (token == JsonToken.VALUE_NUMBER_INT) {
+            return parser.getValueAsLong();
+        } else if (token == JsonToken.START_OBJECT) {
+            long id = -1L;
+            while (parser.nextToken() != JsonToken.END_OBJECT) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME && "id".equals(parser.currentName())) {
+                    parser.nextToken();
                     id = parser.getValueAsLong();
                 }
             }
+            return id;
+        } else if (token == JsonToken.VALUE_NULL) {
+            return -1L;
+        } else {
+            throw new IllegalArgumentException("Expected number or object with 'id' field");
         }
-        return id;
     }
 
-    @StatusCode(201)
+    @StatusCode(200)
     @Put("/items/{id}")
-    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id) {
         RequestHeaders headers = ctx.request().headers();
         if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                     MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.whenRequestCancelled().thenAccept(stream::close);
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         ctx.blockingTaskExecutor().execute(() -> {
             if (ctx.isCancelled() || ctx.isTimedOut()) return;
             try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
                 Item item = this.update(parser, id);
-                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
-                        "{\"status\":\"success\",\"code\":201,\"message\":\"A item created,it's %s\"}", item)));
+                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
+                        "{\"status\":\"success\",\"code\":200,\"message\":\"Item update\"}")));
             } catch (Exception e) {
-                System.out.println(e);
+                //System.out.println(e);
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                        "{\"status\":fail,\"code\":500,\"message\":\"Can't create a item,cause by %s\"}", e)));
+                        "{\"status\":\"fail\",\"code\":500,\"message\":\"Can't update a item\"}")));
             }
         });
         return HttpResponse.of(future);
@@ -503,18 +469,26 @@ public class ItemService {
 
     }
 
+    @StatusCode(200)
     @Delete("/items/:id")
-    public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id) {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
+
         ctx.blockingTaskExecutor().execute(() -> {
             if (ctx.isCancelled() || ctx.isTimedOut()) return;
             ItemDeleteCommand delete = new ItemDeleteCommand(id);
-            Handler<ItemDeleteCommand, Boolean> handler = new ItemDeleteHandler();
-            handler.execute(delete);
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":200,\"message\":\"The item(id=%s) is move to the recycle bin, you can retrieve it later in the recycle bin!\"}", id));
-            stream.close();
+            try {
+                deleteHandler.execute(delete);
+                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
+                stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":200,\"message\":\"The item(id=%d) is moved to the recycle bin, you can retrieve it later in the recycle bin!\"}", id));
+            } catch (Exception e) {
+                LOGGER.warn("Failed to delete item {}", id, e);
+                stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR));
+                stream.write(HttpData.ofUtf8("{\"error\":\"Server error\"}"));
+            } finally {
+                stream.close();
+            }
         });
         return HttpResponse.of(stream);
     }

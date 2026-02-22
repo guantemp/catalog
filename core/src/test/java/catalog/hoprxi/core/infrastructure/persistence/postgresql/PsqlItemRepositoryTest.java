@@ -87,18 +87,18 @@ public class PsqlItemRepositoryTest {
         MadeIn madeIn = new Domestic("510100", "成都");
         LastReceiptPrice lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(12.11, currency), UnitEnum.HE));
         RetailPrice retailPrice = new RetailPrice(new Price(Money.of(19.59, currency), UnitEnum.HE));
-        Item one = new Item(52496163982907400L, barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "150ml彩虹电热灭蚊香液"), madeIn, new Specification("150ml"), GradeEnum.QUALIFIED, new ShelfLife(180), lastReceiptPrice, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
+        Item one = new Item(52496163982907400L, barcode, new Name("150ml彩虹柠檬香电热灭蚊香液", "150ml彩虹电热灭蚊香液"), madeIn, new Specification("150ml"), GradeEnum.QUALIFIED, new ShelfLife(180), lastReceiptPrice, retailPrice, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, skin.id(), caihong.id());
         itemRepository.save(one);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(21.98, currency), UnitEnum.HE));
         retailPrice = new RetailPrice(new Price(Money.of(35.50, currency), UnitEnum.HE));
-        Item two = new Item(52496163982907401L, new EAN_13("6907861181388"), new Name("彩虹电热灭蚊香液橙子香型2瓶装", "彩虹电热灭蚊香液2瓶装"), madeIn, new Specification("2*150ml"), GradeEnum.QUALIFIED, new ShelfLife(180), lastReceiptPrice, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
+        Item two = new Item(52496163982907401L, new EAN_13("6907861181388"), new Name("彩虹电热灭蚊香液橙子香型2瓶装", "彩虹电热灭蚊香液2瓶装"), madeIn, new Specification("2*150ml"), GradeEnum.QUALIFIED, new ShelfLife(180), lastReceiptPrice, retailPrice, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, skin.id(), caihong.id());
         itemRepository.save(two);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(32, currency), UnitEnum.HE));
         retailPrice = new RetailPrice(new Price(Money.of(56.80, currency), UnitEnum.HE));
         barcode = BarcodeGenerateServices.createBarcode("6907861181395");
-        Item three = new Item(52496163982907402L, barcode, new Name("彩虹电热灭蚊香液4瓶装（橙子+芒果香型）", "彩虹电热灭蚊香液4瓶装"), madeIn, new Specification("4*120ml"), GradeEnum.QUALIFIED, new ShelfLife(180), lastReceiptPrice, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, skin.id(), caihong.id());
+        Item three = new Item(52496163982907402L, barcode, new Name("彩虹电热灭蚊香液4瓶装（橙子+芒果香型）", "彩虹电热灭蚊香液4瓶装"), madeIn, new Specification("4*120ml"), GradeEnum.QUALIFIED, new ShelfLife(180), lastReceiptPrice, retailPrice, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, skin.id(), caihong.id());
         itemRepository.save(three);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(2.9, currency), UnitEnum.HE));
@@ -119,44 +119,44 @@ public class PsqlItemRepositoryTest {
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(12.1, currency), UnitEnum.ZHU));
         retailPrice = new RetailPrice(new Price(Money.of(17.90, currency), UnitEnum.ZHU));
         vipPrice = new VipPrice("PLUS", new Price(Money.of(15.50, currency), UnitEnum.ZHU));
-        Item six = new Item(52496163982907405L, new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), Domestic.CHONG_QING, new Specification("6*250ml"), GradeEnum.QUALIFIED, new ShelfLife(90), lastReceiptPrice, retailPrice, MemberPrice.RMB_ZERO, vipPrice, food.id(), tianyou.id());
+        Item six = new Item(52496163982907405L, new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), Domestic.CHONG_QING, new Specification("6*250ml"), GradeEnum.QUALIFIED, new ShelfLife(90), lastReceiptPrice, retailPrice, MemberPrice.RMB_PCS_ZERO, vipPrice, food.id(), tianyou.id());
         itemRepository.save(six);
 
         barcode = BarcodeGenerateServices.createBarcode("6923555240865");
-        Item six_1 = new Item(52496321492179000L, barcode, new Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶"), Domestic.CHONG_QING, new Specification("250ml"), GradeEnum.QUALIFIED, new ShelfLife(90), LastReceiptPrice.RMB_ZERO, RetailPrice.RMB_ZERO, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, dairy.id(), tianyou.id());
+        Item six_1 = new Item(52496321492179000L, barcode, new Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶"), Domestic.CHONG_QING, new Specification("250ml"), GradeEnum.QUALIFIED, new ShelfLife(90), LastReceiptPrice.RMB_PCS_ZERO, RetailPrice.RMB_PCS__ZERO, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, dairy.id(), tianyou.id());
         itemRepository.save(six_1);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(25.82, currency), UnitEnum.DAI));
         retailPrice = new RetailPrice(new Price(Money.of(27.5, currency), UnitEnum.DAI));
         barcode = BarcodeGenerateServices.createBarcode("6923555240889");
-        Item six_2 = new Item(52496321492179001L, barcode, new Name("250ml天友纯牛奶", "250ml天友纯牛奶"), Domestic.CHONG_QING, new Specification("250ml"), GradeEnum.QUALIFIED, new ShelfLife(90), lastReceiptPrice, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, dairy.id(), tianyou.id());
+        Item six_2 = new Item(52496321492179001L, barcode, new Name("250ml天友纯牛奶", "250ml天友纯牛奶"), Domestic.CHONG_QING, new Specification("250ml"), GradeEnum.QUALIFIED, new ShelfLife(90), lastReceiptPrice, retailPrice, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, dairy.id(), tianyou.id());
         itemRepository.save(six_2);
 
         retailPrice = new RetailPrice(new Price(Money.of(2.5, currency), UnitEnum.DAI));
-        Item seven = new Item(52496321492179002L, new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), Domestic.TIAN_JIN, new Specification("25g"), GradeEnum.QUALIFIED, new ShelfLife(180), LastReceiptPrice.RMB_ZERO, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, food.id(), Brand.UNDEFINED.id());
+        Item seven = new Item(52496321492179002L, new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), Domestic.TIAN_JIN, new Specification("25g"), GradeEnum.QUALIFIED, new ShelfLife(180), LastReceiptPrice.RMB_PCS_ZERO, retailPrice, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, food.id(), Brand.UNDEFINED.id());
         itemRepository.save(seven);
 
         retailPrice = new RetailPrice(new Price(Money.of(4.80, currency), UnitEnum.DAI));
-        Item eight = new Item(52496321492179003L, new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), Domestic.TIAN_JIN, new Specification("50g"), GradeEnum.QUALIFIED, new ShelfLife(180), LastReceiptPrice.RMB_ZERO, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, vegetable_products.id(), Brand.UNDEFINED.id());
+        Item eight = new Item(52496321492179003L, new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), Domestic.TIAN_JIN, new Specification("50g"), GradeEnum.QUALIFIED, new ShelfLife(180), LastReceiptPrice.RMB_PCS_ZERO, retailPrice, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, vegetable_products.id(), Brand.UNDEFINED.id());
         itemRepository.save(eight);
 
         retailPrice = new RetailPrice(new Price(Money.of(6.90, currency), UnitEnum.DAI));
-        Item nine = new Item(52496321492179004L, new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), Domestic.TIAN_JIN, new Specification("75g"), GradeEnum.QUALIFIED, new ShelfLife(180), LastReceiptPrice.RMB_ZERO, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, vegetable_products.id(), Brand.UNDEFINED.id());
+        Item nine = new Item(52496321492179004L, new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), Domestic.TIAN_JIN, new Specification("75g"), GradeEnum.QUALIFIED, new ShelfLife(180), LastReceiptPrice.RMB_PCS_ZERO, retailPrice, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, vegetable_products.id(), Brand.UNDEFINED.id());
         itemRepository.save(nine);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(3.5, currency), UnitEnum.DUI));
         retailPrice = new RetailPrice(new Price(Money.of(5.00, currency), UnitEnum.DUI));
-        Item ten = new Item(52496321492179005L, new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic("510700", "绵阳市"), new Specification("10粒缩卡装"), GradeEnum.QUALIFIED, new ShelfLife(360 * 3), lastReceiptPrice, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), changhong.id());
+        Item ten = new Item(52496321492179005L, new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic("510700", "绵阳市"), new Specification("10粒缩卡装"), GradeEnum.QUALIFIED, new ShelfLife(360 * 3), lastReceiptPrice, retailPrice, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, Category.UNDEFINED.id(), changhong.id());
         itemRepository.save(ten);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(2.5, currency), UnitEnum.BEN));
         retailPrice = new RetailPrice(new Price(Money.of(5, currency), UnitEnum.BEN));
-        Item twelve = new Item(52496321492179006L, new EAN_13("6925834037159"), new Name("车线本"), new Domestic("330500", "湖州市"), Specification.UNDEFINED, GradeEnum.QUALIFIED, lastReceiptPrice, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+        Item twelve = new Item(52496321492179006L, new EAN_13("6925834037159"), new Name("车线本"), new Domestic("330500", "湖州市"), Specification.UNDEFINED, GradeEnum.QUALIFIED, lastReceiptPrice, retailPrice, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(twelve);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(8.9, currency), UnitEnum.HE));
         retailPrice = new RetailPrice(new Price(Money.of(32.00, currency), UnitEnum.HE));
-        Item thirteen = new Item(52496321492179007L, new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("764", "泰国"), new Specification("10片装"), GradeEnum.QUALIFIED, new ShelfLife(360 * 3), lastReceiptPrice, retailPrice, MemberPrice.RMB_ZERO, VipPrice.RMB_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+        Item thirteen = new Item(52496321492179007L, new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("764", "泰国"), new Specification("10片装"), GradeEnum.QUALIFIED, new ShelfLife(360 * 3), lastReceiptPrice, retailPrice, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
         itemRepository.save(thirteen);
     }
 

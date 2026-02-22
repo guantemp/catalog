@@ -25,18 +25,18 @@ import java.util.StringJoiner;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.2 builder 2025-11-08
+ * @version 0.0.3 builder 2026-02-22
  */
 public class MemberPrice {
-    public static final MemberPrice RMB_ZERO = new MemberPrice(Price.zero(Locale.CHINA));
-    public static final MemberPrice USD_ZERO = new MemberPrice(Price.zero(Locale.US));
+    public static final MemberPrice RMB_PCS_ZERO = new MemberPrice(Price.zero(Locale.CHINA));
+    public static final MemberPrice USD_PCS_ZERO = new MemberPrice(Price.zero(Locale.US));
     private static final int NAME_MAX_LENGTH = 64;
-    private Price price;
-    private String name;
+    private final Price price;
+    private final String name;
 
     public MemberPrice(String name, Price price) {
-        setName(name);
-        setPrice(price);
+        this.name = (name == null || name.isBlank() || name.length() > NAME_MAX_LENGTH) ? Label.PRICE_MEMBER : name.trim();
+        this.price = Objects.requireNonNull(price, "price required");
     }
 
     public MemberPrice(Price price) {
@@ -44,22 +44,13 @@ public class MemberPrice {
     }
 
     public static MemberPrice zero(Locale locale, UnitEnum unit) {
-        if (locale == Locale.CHINA || locale == Locale.CHINESE)
-            return RMB_ZERO;
-        if (locale == Locale.US)
-            return USD_ZERO;
+        Objects.requireNonNull(locale, "locale required");
+        Objects.requireNonNull(unit, "unit required");
+        if ("CN".equals(locale.getCountry()) && unit == UnitEnum.PCS)
+            return RMB_PCS_ZERO;
+        if ("US".equals(locale.getCountry()) && unit == UnitEnum.PCS)
+            return USD_PCS_ZERO;
         return new MemberPrice(Price.zero(locale, unit));
-    }
-
-    private void setPrice(Price price) {
-        this.price = Objects.requireNonNull(price, "price required");
-    }
-
-    private void setName(String name) {
-        name = Objects.requireNonNull(name, "name required").trim();
-        if (name.isEmpty() || name.length() > NAME_MAX_LENGTH)
-            throw new IllegalArgumentException("name length rang is 1-" + NAME_MAX_LENGTH);
-        this.name = name;
     }
 
     public Price price() {
@@ -75,5 +66,19 @@ public class MemberPrice {
         return new StringJoiner(", ", MemberPrice.class.getSimpleName() + "[", "]")
                 .add("name='" + name + "'").add("price=" + price)
                 .toString();
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (!(o instanceof MemberPrice that)) return false;
+
+        return Objects.equals(price, that.price) && Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(price);
+        result = 31 * result + Objects.hashCode(name);
+        return result;
     }
 }
