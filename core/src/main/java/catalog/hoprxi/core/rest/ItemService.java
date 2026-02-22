@@ -24,7 +24,6 @@ import catalog.hoprxi.core.application.handler.ItemCreateHandler;
 import catalog.hoprxi.core.application.handler.ItemDeleteHandler;
 import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.query.ItemQueryFilter;
-import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Item;
@@ -41,7 +40,6 @@ import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESItemQuery;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.linecorp.armeria.common.*;
@@ -50,16 +48,16 @@ import com.linecorp.armeria.common.stream.StreamWriter;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufOutputStream;
 import org.javamoney.moneta.Money;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -84,7 +82,32 @@ public class ItemService {
 
     @Get("/items/:id")
     @Description("Retrieves the item information by the given ID.")
-    public HttpResponse find(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse find(ServiceRequestContext ctx, @Param("id") long id) {
+        Flux<ByteBuf> dataFlux = QUERY.findAsync(id); // 假设返回 Flux<ByteBuf>
+        Flux<HttpObject> bodyStream = dataFlux.map(HttpData::wrap);// 先不发 headers！等第一个数据到来再发
+        // 使用 switchMap：一旦有第一个元素，就前置 headers
+        Flux<HttpObject> responseStream = bodyStream
+                .switchOnFirst((signal, flux) -> {
+                    if (signal.hasError()) { // 第一个信号就是错误
+                        return handleErrorResponse(ctx, id, signal.getThrowable());
+                    } else if (signal.isOnComplete()) {
+                        // 空流？返回 404 或 204
+                        return Flux.just(
+                                ResponseHeaders.of(HttpStatus.NOT_FOUND),
+                                HttpData.ofUtf8("{\"error\":\"Item not found\",\"id\":" + id + "}")
+                        );
+                    } else {
+                        return Flux.concat(// 有数据：前置 200 headers
+                                Flux.just(ResponseHeaders.of(HttpStatus.OK)),
+                                flux // 原始流（包含第一个元素）
+                        );
+                    }
+                })
+                .onErrorResume(e -> handleErrorResponse(ctx, id, e));
+
+        return HttpResponse.of(responseStream);
+ 
+        /*
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
@@ -105,20 +128,17 @@ public class ItemService {
             }
         });
         return HttpResponse.of(stream);
+         */
     }
 
-    private void copyRaw(JsonGenerator generator, InputStream is) throws IOException {
-        JsonParser parser = JSON_FACTORY.createParser(is);
-        while (parser.nextToken() != null) {
-            generator.copyCurrentEvent(parser);
-        }
-        generator.close();
-    }
-
-    private void handleStreamError(StreamWriter<HttpObject> stream, Exception e) {
-        stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-        stream.write(HttpData.ofUtf8("{\"status\":\"error\",\"code\":500,\"message\":\"Error,it's %s\"}", e.getMessage()));
-        stream.close();
+    private Publisher<? extends HttpObject> handleErrorResponse(ServiceRequestContext ctx, long id, Throwable cause) {
+        LOGGER.warn("Error for id={}", id, cause);
+        ByteBuf buf = ctx.alloc().buffer();
+        buf.writeCharSequence("{\"error\":\"Item not found\",\"id\":" + id + "}", StandardCharsets.UTF_8);
+        return Flux.just(
+                ResponseHeaders.of(HttpStatus.NOT_FOUND),
+                HttpData.wrap(buf)
+        );
     }
 
     @Get("/items")
@@ -130,6 +150,43 @@ public class ItemService {
         int size = params.getInt("size", SIZE);
         String cursor = params.get("cursor", "");
         SortFieldEnum sortField = SortFieldEnum.of(params.get("sort", "_ID"));
+
+        Flux<ByteBuf> dataFlux;
+        if (cursor.isBlank()) {
+            dataFlux = QUERY.searchAsync(this.parseFilter(search, filter), offset, size, sortField);
+        } else {
+            dataFlux = QUERY.searchAsync(this.parseFilter(search, filter), size, cursor, sortField);
+        }
+        Flux<HttpObject> bodyStream = dataFlux.map(HttpData::wrap);// 先不发 headers！等第一个数据到来再发
+        // 使用 switchMap：一旦有第一个元素，就前置 headers
+        Flux<HttpObject> responseStream = bodyStream
+                .switchOnFirst((signal, flux) -> {
+                    if (signal.hasError()) {// 信号->错误
+                        return Flux.just(
+                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                HttpData.ofUtf8("{\"error\":\"Item not found\",\"id\":" +  "}")
+                        );
+                    } else if (signal.isOnComplete()) {
+                        // 空流？返回 404 或 204
+                        return Flux.just(
+                                ResponseHeaders.of(HttpStatus.NOT_FOUND),
+                                HttpData.ofUtf8("{\"error\":\"Item not found\",\"id\":" + "}")
+                        );
+                    } else {
+                        return Flux.concat(// 有数据：前置 200 headers
+                                Flux.just(ResponseHeaders.of(HttpStatus.OK)),
+                                flux // 原始流（包含第一个元素）
+                        );
+                    }
+                })
+                .onErrorResume(e -> Flux.just(
+                        ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                        HttpData.ofUtf8("{\"error\":\"Item not found\",\"id\":" + e + "}")
+                ));
+
+        return HttpResponse.of(responseStream);
+
+/*
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.blockingTaskExecutor().execute(() -> {
             if (ctx.isCancelled() || ctx.isTimedOut()) return;
@@ -154,6 +211,7 @@ public class ItemService {
             }
         });
         return HttpResponse.of(stream);
+ */
     }
 
     private ItemQueryFilter[] parseFilter(String query, String filter) {
@@ -241,7 +299,7 @@ public class ItemService {
     public HttpResponse create(ServiceRequestContext ctx, HttpData body, @Param("pretty") @Default("false") boolean pretty) {
         RequestHeaders headers = ctx.request().headers();
         if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) ||
-              MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
+                MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                     MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
@@ -337,7 +395,7 @@ public class ItemService {
         String name = "";
         Price price = Price.RMB_ZERO;
         while (parser.nextToken() != JsonToken.END_OBJECT ||
-               (parser.currentToken() == JsonToken.END_OBJECT && "price".equals(parser.currentName()))) {
+                (parser.currentToken() == JsonToken.END_OBJECT && "price".equals(parser.currentName()))) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
                 String fieldName = parser.currentName();
                 parser.nextToken();
@@ -352,7 +410,7 @@ public class ItemService {
         String name = "";
         Price price = Price.RMB_ZERO;
         while (parser.nextToken() != JsonToken.END_OBJECT ||
-               (parser.currentToken() == JsonToken.END_OBJECT && "price".equals(parser.currentName()))) {
+                (parser.currentToken() == JsonToken.END_OBJECT && "price".equals(parser.currentName()))) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
                 String fieldName = parser.currentName();
                 parser.nextToken();
@@ -369,7 +427,7 @@ public class ItemService {
         String name = "";
         Price price = Price.RMB_ZERO;
         while (parser.nextToken() != JsonToken.END_OBJECT ||
-               (parser.currentToken() == JsonToken.END_OBJECT && "price".equals(parser.currentName()))) {
+                (parser.currentToken() == JsonToken.END_OBJECT && "price".equals(parser.currentName()))) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
                 String fieldName = parser.currentName();
                 parser.nextToken();

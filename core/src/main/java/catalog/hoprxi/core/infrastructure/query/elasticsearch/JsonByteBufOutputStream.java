@@ -36,6 +36,7 @@ public class JsonByteBufOutputStream extends OutputStream {
     private final Sinks.Many<ByteBuf> sink;
     private final AtomicBoolean isCancelled;
     private final ByteBuf byteBuf;
+    private volatile boolean closed = false;
 
     public JsonByteBufOutputStream(Sinks.Many<ByteBuf> sink, AtomicBoolean isCancelled, int bufferSize) {
         this.sink = sink;
@@ -89,10 +90,14 @@ public class JsonByteBufOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
+        if (closed) {
+            return; // ✅ 幂等：只 close 一次
+        }
+        closed = true;
         IOException flushError = null;
         try {
             //System.out.println(">>> Closing JsonByteBufOutputStream");
-            flush();
+            this.flush();
         } catch (IOException e) {
             flushError = e;
         } finally {
@@ -103,6 +108,7 @@ public class JsonByteBufOutputStream extends OutputStream {
         if (flushError != null) {
             throw flushError;
         }
+        //System.out.println("Close: releasing work buffer, refCnt=" + byteBuf.refCnt());
     }
 
     private void ensureWritable(int required) throws IOException {

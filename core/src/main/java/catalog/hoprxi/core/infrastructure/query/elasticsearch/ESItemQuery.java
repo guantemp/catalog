@@ -56,10 +56,10 @@ public class ESItemQuery implements ItemQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Item");
     private static final String SEARCH_PREFIX_POINT = "/" + ESUtil.customized() + "_item";
     private static final String SEARCH_ENDPOINT = SEARCH_PREFIX_POINT + "/_search";
-    private static final int AGGS_SIZE = 15 ;
+    private static final int AGGS_SIZE = 12 ;
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     //private static final int MAX_SIZE = 9999;
-    private static final int BATCH_BUFFER_SIZE = 32 * 1024;// 32KB缓冲区
+    private static final int BATCH_BUFFER_SIZE = 64 * 1024;// 64KB缓冲区
     private static final int SINGLE_BUFFER_SIZE = 2048;//2KB缓冲区
 
     private static final ExecutorService TRANSFORM_POOL = Executors.newVirtualThreadPerTaskExecutor();
@@ -94,28 +94,6 @@ public class ESItemQuery implements ItemQuery {
             }
         }
     }
-
-    /*
-     Request request = new Request("GET", "/item/_doc/" + id);//PREFIX+"/_doc/"
-        request.setOptions(ESUtil.requestOptions());
-        try {
-            Response response = ESUtil.restClient().performRequest(request);
-            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                 ByteArrayOutputStream baos = new ByteArrayOutputStream(BUFFER_SIZE); JsonGenerator generator = JSON_FACTORY.createGenerator(baos)) {
-                ESItemQuery.extractSource(parser, generator);
-                generator.flush();
-                return new ByteArrayInputStream(baos.toByteArray());
-            }
-        } catch (ResponseException e) {
-            if (e.getResponse().getStatusLine().getStatusCode() == 404) {
-                throw new SearchException(String.format("The item(id=%s) not found", id), e);
-            }
-            throw new SearchException("Elasticsearch error", e);
-        } catch (IOException e) {
-            LOGGER.error("I/O failed", e);
-            throw new SearchException("Error: Elasticsearch timeout or no connection", e);
-        }
-     */
 
     @Override
     public Flux<ByteBuf> findAsync(long id) {
@@ -160,8 +138,8 @@ public class ESItemQuery implements ItemQuery {
         });
         return sink.asFlux()
                 .doOnCancel(() -> isCancelled.set(true))
-                .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", id))
-                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", id));
+                //.doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
     }
 
     private static Throwable mapException(Exception e, long id) {
@@ -355,10 +333,10 @@ public class ESItemQuery implements ItemQuery {
             }
         } catch (ResponseException e) {
             if (e.getResponse().getStatusLine().getStatusCode() == 404) {
-                LOGGER.warn("Item not found in Elasticsearch: id={}");
-                throw new SearchException(String.format("The item(id=%s) not found"));
+                LOGGER.warn("Item not found in Elasticsearch");
+                throw new SearchException("The item(id=%s) not found");
             }
-            LOGGER.error("Elasticsearch error for id={}", e);
+            LOGGER.error("Elasticsearch error", e);
             throw new SearchException("Elasticsearch internal error", e);
         } catch (IOException e) {
             LOGGER.error("I/O failed", e);
@@ -501,7 +479,7 @@ public class ESItemQuery implements ItemQuery {
         });
         return sink.asFlux()
                 .doOnCancel(() -> isCancelled.set(true))
-                .doOnTerminate(() -> LOGGER.debug("Request terminated for flier: {}", (Object[]) filters))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for filter: {}", filters))
                 .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
     }
 
@@ -529,10 +507,10 @@ public class ESItemQuery implements ItemQuery {
             }
         } catch (ResponseException e) {
             if (e.getResponse().getStatusLine().getStatusCode() == 404) {
-                LOGGER.warn("Item not found in Elasticsearch: id={}");
-                throw new SearchException(String.format("The item(id=%s) not found"));
+                LOGGER.error("Item not found in Elasticsearch");
+                throw new SearchException("The item(id=%s) not found");
             }
-            LOGGER.error("Elasticsearch error for id={}", e);
+            LOGGER.error("Elasticsearch error", e);
             throw new SearchException("Elasticsearch internal error", e);
         } catch (IOException e) {
             LOGGER.error("I/O failed", e);
@@ -562,7 +540,6 @@ public class ESItemQuery implements ItemQuery {
         //System.out.println(writer);
         return writer.toString();
     }
-
 
     private static void buildMainRequest(JsonGenerator generator, ItemQueryFilter[] filters) throws IOException {
         generator.writeObjectFieldStart("query");

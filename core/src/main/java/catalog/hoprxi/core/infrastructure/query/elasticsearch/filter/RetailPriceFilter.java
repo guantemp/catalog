@@ -29,13 +29,15 @@ import java.util.StringJoiner;
  * @version 0.0.1 builder 2025-04-29
  */
 public class RetailPriceFilter implements ItemQueryFilter {
-    private final Number mix;
+    private final Number min;
     private final Number max;
 
-    public RetailPriceFilter(Number mix, Number max) {
-        if (mix == null && max == null)
+    public RetailPriceFilter(Number min, Number max) {
+        if (min == null && max == null)
             throw new IllegalArgumentException("min.max cannot all be NULL");
-        this.mix = mix;
+        if (min != null && Double.compare(min.doubleValue(), max.doubleValue()) >= 0)
+            throw new IllegalArgumentException("min must less than max");
+        this.min = min;
         this.max = max;
     }
 
@@ -45,8 +47,8 @@ public class RetailPriceFilter implements ItemQueryFilter {
         generator.writeStartObject();
         generator.writeObjectFieldStart("range");
         generator.writeObjectFieldStart("retail_price.number");
-        if (mix != null)
-            generator.writeNumberField("gte", mix.doubleValue());
+        if (min != null)
+            generator.writeNumberField("gte", min.doubleValue());
         if (max != null)
             generator.writeNumberField("lte", max.doubleValue());
         generator.writeEndObject();//end retail_price.number
@@ -59,13 +61,13 @@ public class RetailPriceFilter implements ItemQueryFilter {
         if (this == o) return true;
         if (!(o instanceof RetailPriceFilter that)) return false;
 
-        if (!Objects.equals(mix, that.mix)) return false;
+        if (!Objects.equals(min, that.min)) return false;
         return Objects.equals(max, that.max);
     }
 
     @Override
     public int hashCode() {
-        int result = mix != null ? mix.hashCode() : 0;
+        int result = min != null ? min.hashCode() : 0;
         result = 31 * result + (max != null ? max.hashCode() : 0);
         return result;
     }
@@ -73,7 +75,7 @@ public class RetailPriceFilter implements ItemQueryFilter {
     @Override
     public String toString() {
         return new StringJoiner(", ", RetailPriceFilter.class.getSimpleName() + "[", "]")
-                .add("mix=" + mix)
+                .add("mix=" + min)
                 .add("max=" + max)
                 .toString();
     }
