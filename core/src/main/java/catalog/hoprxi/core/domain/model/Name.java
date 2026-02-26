@@ -28,7 +28,7 @@ import java.util.Objects;
 public class Name {
     private static final int MAX_LENGTH = 128;
     private String name;
-    private String mnemonic;
+    private final String mnemonic;
     private String alias;
 
     public static final Name EMPTY = new Name() {

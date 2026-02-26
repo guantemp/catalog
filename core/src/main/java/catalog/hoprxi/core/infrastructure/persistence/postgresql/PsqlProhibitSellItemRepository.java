@@ -24,21 +24,24 @@ import catalog.hoprxi.core.domain.model.madeIn.Imported;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import catalog.hoprxi.core.infrastructure.PsqlUtil;
+import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
+import com.fasterxml.jackson.core.*;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.money.MonetaryAmount;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -47,37 +50,32 @@ import java.util.Objects;
  */
 public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlProhibitSellItemRepository.class);
-
-    private final String databaseName;
+    private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private static Constructor<Name> nameConstructor;
     private static Constructor<ProhibitSellItem> prohibitSellItemConstructor;
 
     static {
         try {
             nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class);
-            prohibitSellItemConstructor = ProhibitSellItem.class.getDeclaredConstructor(String.class, Barcode.class, Name.class, MadeIn.class, UnitEnum.class, Specification.class,
-                    GradeEnum.class, ShelfLife.class, String.class, String.class);
+            prohibitSellItemConstructor = ProhibitSellItem.class.getDeclaredConstructor(Long.class, Barcode.class, Name.class, MadeIn.class, UnitEnum.class, Specification.class,
+                    GradeEnum.class, ShelfLife.class, LastReceiptPrice.class, RetailPrice.class, MemberPrice.class, VipPrice.class, Long.class, Long.class);
         } catch (NoSuchMethodException e) {
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug("Not query has such constructor", e);
         }
     }
 
-    public PsqlProhibitSellItemRepository(String databaseName) {
-        this.databaseName = Objects.requireNonNull(databaseName, "The databaseName parameter is required");
-    }
-
     @Override
-    public ProhibitSellItem find(String id) {
+    public ProhibitSellItem find(long id) {
         return null;
     }
 
     private ProhibitSellItem rebuild(ResultSet rs) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
-        String id = rs.getString("id");
+        long id = rs.getLong("id");
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
         Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
-        String categoryId = rs.getString("category_id");
-        String brandId = rs.getString("brand_id");
+        long categoryId = rs.getLong("category_id");
+        long brandId = rs.getLong("brand_id");
         GradeEnum grade = GradeEnum.valueOf(rs.getString("grade"));
         MadeIn madeIn = toMadeIn(rs.getString("made_in"));
         Specification spec = new Specification(rs.getString("spec"));
@@ -98,7 +96,8 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
         amount = Money.of(rs.getBigDecimal("vip_price_number"), rs.getString("vip_price_currencyCode"));
         unit = UnitEnum.valueOf(rs.getString("vip_price_unit"));
         VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
-        return prohibitSellItemConstructor.newInstance(id, barcode, name, madeIn, unit, spec, grade, shelfLife, brandId, categoryId);
+        return prohibitSellItemConstructor.newInstance(id, barcode, name, madeIn, unit, spec, grade, shelfLife,
+                lastReceiptPrice, retailPrice, memberPrice, vipPrice, brandId, categoryId);
     }
 
     private MadeIn toMadeIn(String json) throws IOException {
@@ -140,12 +139,131 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
     }
 
     @Override
-    public void remove(String id) {
-
+    public void delete(long id) {
+        final String removeSql = "delete from item where id=?";
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(removeSql)) {
+            preparedStatement.setLong(1, id);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Can't remove from item(id={})", id, e);
+            throw new PersistenceException(String.format("Can't remove from item(id=%s)", id), e);
+        }
     }
 
     @Override
     public void save(ProhibitSellItem item) {
+        final String insertOrReplaceSql = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price) " +
+                "values (?,?::jsonb,?,?,?,?::grade,?::jsonb,?,?,?::jsonb,?::jsonb,?::jsonb,?::jsonb) " +
+                "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,spec=?,shelf_life=?,last_receipt_price=?::jsonb,retail_price=?::jsonb,member_price=?::jsonb,vip_price=EXCLUDED.vip_price";
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement ps = connection.prepareStatement(insertOrReplaceSql)) {
+            ps.setLong(1, item.id());
+            ps.setString(2, toJson(item.name()));
+            ps.setString(3, String.valueOf(item.barcode().barcode()));
+            ps.setLong(4, item.categoryId());
+            ps.setLong(5, item.brandId());
+            ps.setString(6, item.grade().name());
+            ps.setString(7, toJson(item.madeIn()));
+            ps.setString(8, item.spec().value());
+            ps.setInt(9, item.shelfLife().days());
+            ps.setString(10, toJson(item.lastReceiptPrice()));
+            ps.setString(11, toJson(item.retailPrice()));
+            ps.setString(12, toJson(item.memberPrice()));
+            ps.setString(13, toJson(item.vipPrice()));
+            ps.setString(14, toJson(item.name()));
+            ps.setString(15, String.valueOf(item.barcode().barcode()));
+            ps.setLong(16, item.categoryId());
+            ps.setLong(17, item.brandId());
+            ps.setString(18, item.grade().name());
+            ps.setString(19, toJson(item.madeIn()));
+            ps.setString(20, item.spec().value());
+            ps.setInt(21, item.shelfLife().days());
+            ps.setString(22, toJson(item.lastReceiptPrice()));
+            ps.setString(23, toJson(item.retailPrice()));
+            ps.setString(24, toJson(item.memberPrice()));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Can't save item {}", item, e);
+            throw new PersistenceException(String.format("Can't save Item(%s)", item), e);
+        }
+    }
 
+    private String toJson(MadeIn madeIn) {
+        String _class = madeIn.getClass().getName();
+        ByteArrayOutputStream output = new ByteArrayOutputStream(128);
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+            generator.writeStartObject();
+            generator.writeStringField("_class", _class);
+            generator.writeStringField("code", madeIn.code());
+            generator.writeStringField("madeIn", madeIn.madeIn());
+            generator.writeEndObject();
+        } catch (IOException e) {
+            LOGGER.error("Not write madeIn {} as json", madeIn, e);
+        }
+        //System.out.println(output.size());
+        return output.toString();
+    }
+
+    private String toJson(Name name) {
+        ByteArrayOutputStream output = new ByteArrayOutputStream(128);
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+            generator.writeStartObject();
+            generator.writeStringField("name", name.name());
+            generator.writeStringField("mnemonic", name.mnemonic());
+            generator.writeStringField("alias", name.alias());
+            generator.writeEndObject();
+        } catch (IOException e) {
+            LOGGER.error("Not write name as json", e);
+        }
+        //System.out.println(output.size());
+        return output.toString();
+    }
+
+    private String toJson(LastReceiptPrice lastReceiptPrice) {
+        return priceToJsonWithName(lastReceiptPrice.name(), lastReceiptPrice.price());
+    }
+
+    private String toJson(VipPrice vipPrice) {
+        return priceToJsonWithName(vipPrice.name(), vipPrice.price());
+    }
+
+    private String toJson(MemberPrice memberPrice) {
+        return priceToJsonWithName(memberPrice.name(), memberPrice.price());
+    }
+
+    private String priceToJsonWithName(String name, Price price) {
+        ByteArrayOutputStream output = new ByteArrayOutputStream(96);
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+            generator.writeStartObject();
+            generator.writeStringField("name", name);
+            generator.writeObjectFieldStart("price");
+            generator.writeNumberField("number", price.amount().getNumber().numberValue(BigDecimal.class));
+            generator.writeStringField("currencyCode", price.amount().getCurrency().getCurrencyCode());
+            //generator.writeNumberField("precision", price.amount().getNumber().getPrecision());
+            //generator.writeStringField("roundingMode", price.amount().getContext().get("java.math.RoundingMode", RoundingMode.class).name());
+            generator.writeStringField("unit", price.unit().name());
+            generator.writeEndObject();
+            generator.writeEndObject();
+        } catch (IOException e) {
+            LOGGER.error("Not write Price as json", e);
+        }
+        return output.toString();
+    }
+
+    private String toJson(RetailPrice retailPrice) {
+        ByteArrayOutputStream output = new ByteArrayOutputStream(64);
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+            generator.writeStartObject();
+            generator.writeNumberField("number", retailPrice.price().amount().getNumber().numberValue(BigDecimal.class));
+            generator.writeStringField("currencyCode", retailPrice.price().amount().getCurrency().getCurrencyCode());
+            //generator.writeNumberField("precision", retailPrice.price().amount().getNumber().getPrecision());
+            //generator.writeStringField("roundingMode", retailPrice.price().amount().getContext().get("java.math.RoundingMode", RoundingMode.class).name());
+            generator.writeStringField("unit", retailPrice.price().unit().name());
+            generator.writeEndObject();
+        } catch (IOException e) {
+            LOGGER.error("Not write RetailPrice as json", e);
+        }
+        return output.toString();
     }
 }

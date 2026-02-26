@@ -40,10 +40,9 @@ public class UnitService {
     private final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
     @Get("/units")
-    public HttpResponse query(@Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse query() {
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         try (ByteArrayOutputStream os = new ByteArrayOutputStream(); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-            if (pretty) gen.useDefaultPrettyPrinter();
             gen.writeStartObject();
             gen.writeNumberField("total", UnitEnum.values().length);
             gen.writeArrayFieldStart("units");

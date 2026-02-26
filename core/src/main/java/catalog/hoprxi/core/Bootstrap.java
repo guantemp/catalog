@@ -20,6 +20,9 @@ import catalog.hoprxi.core.rest.BrandService;
 import catalog.hoprxi.core.rest.CategoryService;
 import catalog.hoprxi.core.rest.ItemService;
 import catalog.hoprxi.core.rest.UnitService;
+import com.linecorp.armeria.common.HttpResponse;
+import com.linecorp.armeria.common.HttpStatus;
+import com.linecorp.armeria.common.MediaType;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.server.docs.DocService;
@@ -43,7 +46,7 @@ public class Bootstrap {
     private static final Pattern EXCLUDE = Pattern.compile("^-{1,}.*");
     private static final int PORT = 9002;
 
-    public static void main(String[] args)  {
+    public static void main(String[] args) {
         String fileName = "keystore.jks", fileProtectedPasswd = "";
         Set<String> entries = new HashSet<>();
         for (int i = 0, j = args.length; i < j; i++) {
@@ -77,14 +80,14 @@ public class Bootstrap {
                 case "-h":
                 case "--help":
                     System.out.println("Non-option arguments:\n" +
-                                       "command              \n" +
-                                       "\n" +
-                                       "Option                         Description        \n" +
-                                       "------                         -----------        \n" +
-                                       "-f, --file <filename>          A file that stores the key\n" +
-                                       "-e <KeyValuePair>              encrypt a passwd\n" +
-                                       "-l, --list                     entries in the keystore\n" +
-                                       "-h, --help                     Show help          \n");
+                            "command              \n" +
+                            "\n" +
+                            "Option                         Description        \n" +
+                            "------                         -----------        \n" +
+                            "-f, --file <filename>          A file that stores the key\n" +
+                            "-e <KeyValuePair>              encrypt a passwd\n" +
+                            "-l, --list                     entries in the keystore\n" +
+                            "-h, --help                     Show help          \n");
                     break;
             }
         }
@@ -108,6 +111,11 @@ public class Bootstrap {
         HttpFile index = HttpFile.of(Paths.get(System.getProperty("user.dir"), "/html/upload.html"));
         sb.serviceUnder("/", index.asService());//相当于缺省index.html
  */
+        // 设置默认首页：访问 / 返回 HTML
+        sb.service("/", (ctx, req) ->
+                HttpResponse.of(HttpStatus.OK, MediaType.HTML_UTF_8,
+                        "<html><body><h1>Welcome to My Catalog Service!</h1><h1><a href=\"../docs\">View the document</a></h1></body></html>")
+        );
         //添加文档服务
         sb.serviceUnder("/docs", DocService.builder()
                 //.exampleRequests("/v1/brands", "query")

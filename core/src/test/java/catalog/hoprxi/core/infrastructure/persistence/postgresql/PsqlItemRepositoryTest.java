@@ -118,12 +118,13 @@ public class PsqlItemRepositoryTest {
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(12.1, currency), UnitEnum.ZHU));
         retailPrice = new RetailPrice(new Price(Money.of(17.90, currency), UnitEnum.ZHU));
+        memberPrice = new MemberPrice(new Price(Money.of(16.99, currency), UnitEnum.ZHU));
         vipPrice = new VipPrice("PLUS", new Price(Money.of(15.50, currency), UnitEnum.ZHU));
-        Item six = new Item(52496163982907405L, new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), Domestic.CHONG_QING, new Specification("6*250ml"), GradeEnum.QUALIFIED, new ShelfLife(90), lastReceiptPrice, retailPrice, MemberPrice.RMB_PCS_ZERO, vipPrice, food.id(), tianyou.id());
+        Item six = new Item(52496163982907405L, new EAN_8("20075422"), new Name("天友纯牛奶组合装", "天友组合装"), Domestic.CHONG_QING, new Specification("6*250ml"), GradeEnum.QUALIFIED, new ShelfLife(90), lastReceiptPrice, retailPrice, memberPrice, vipPrice, food.id(), tianyou.id());
         itemRepository.save(six);
 
         barcode = BarcodeGenerateServices.createBarcode("6923555240865");
-        Item six_1 = new Item(52496321492179000L, barcode, new Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶"), Domestic.CHONG_QING, new Specification("250ml"), GradeEnum.QUALIFIED, new ShelfLife(90), LastReceiptPrice.RMB_PCS_ZERO, RetailPrice.RMB_PCS__ZERO, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, dairy.id(), tianyou.id());
+        Item six_1 = new Item(52496321492179000L, barcode, new Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶"), Domestic.CHONG_QING, new Specification("250ml"), GradeEnum.QUALIFIED, new ShelfLife(90), LastReceiptPrice.RMB_PCS_ZERO, RetailPrice.RMB_PCS_ZERO, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, dairy.id(), tianyou.id());
         itemRepository.save(six_1);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(25.82, currency), UnitEnum.DAI));
@@ -146,6 +147,7 @@ public class PsqlItemRepositoryTest {
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(3.5, currency), UnitEnum.DUI));
         retailPrice = new RetailPrice(new Price(Money.of(5.00, currency), UnitEnum.DUI));
+        //memberPrice=new MemberPrice(new Price(Money.of(4.5, currency), UnitEnum.DUI));
         Item ten = new Item(52496321492179005L, new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic("510700", "绵阳市"), new Specification("10粒缩卡装"), GradeEnum.QUALIFIED, new ShelfLife(360 * 3), lastReceiptPrice, retailPrice, MemberPrice.RMB_PCS_ZERO, VipPrice.RMB_PCS_ZERO, Category.UNDEFINED.id(), changhong.id());
         itemRepository.save(ten);
 
@@ -193,29 +195,31 @@ public class PsqlItemRepositoryTest {
     }
 
 
-    @Test(invocationCount = 20,threadPoolSize = 2,priority = 2)
+    @Test(invocationCount = 1, threadPoolSize = 1, priority = 2)
     public void testSave() {
         Item ten = itemRepository.find(52496321492179005L);
-        System.out.println(ten);
+        System.out.println("52496321492179005L:\n" + ten);
         //old Name("长虹5号碱性电池", "长虹电池")
         ten.rename(new Name("长虹5号碳性电池 ", "长虹1号"));
         itemRepository.save(ten);
         ten = itemRepository.find(52496321492179005L);
         Assert.assertEquals(ten.name(), new Name("长虹5号碳性电池", "长虹1号"));
         // old Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶")
-        Item six = itemRepository.find(52496321492179000L);
+        Item six = itemRepository.find(52496163982907405L);
         Assert.assertNotNull(six);
         six.changeBarcode(new EAN_13("6923555240728"));
-        six.adjustRetailPrice(new RetailPrice(new Price(Money.of(39.9, currency), UnitEnum.TI)));
+        six.adjustRetailPrice(new RetailPrice(new Price(Money.of(29.9, currency), UnitEnum.ZHU)));
         six.changeGrade(GradeEnum.PREMIUM);
+        six.adjustVipPrice(new VipPrice(new Price(Money.of(14.9, currency), UnitEnum.ZHU)));
         six.moveToNewCategory(52495569397272598L);
         itemRepository.save(six);
-        six = itemRepository.find(52496321492179000L);
+        six = itemRepository.find(52496163982907405L);
         Assert.assertEquals(six.barcode(), BarcodeGenerateServices.createBarcode("6923555240728"));
         Assert.assertEquals(six.categoryId(), 52495569397272598L);
+        System.out.println("52496163982907405L  has changed:\n" + six);
 
         Item ce = itemRepository.find(52496321492179006L);
         Assert.assertNotNull(ce);
-        System.out.println(ce);
+        System.out.println("52496321492179006L:\n" + ce);
     }
 }

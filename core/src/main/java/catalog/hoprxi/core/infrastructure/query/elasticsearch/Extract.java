@@ -32,6 +32,14 @@ import java.util.Objects;
 public final class Extract {
 
     public static void extract(JsonParser parser, JsonGenerator gen, String objectName) throws IOException {
+        Extract.extractInternal(parser, gen, objectName, true);
+    }
+
+    public static void extractWithoutAggs(JsonParser parser, JsonGenerator gen, String objectName) throws IOException {
+        Extract.extractInternal(parser, gen, objectName, false);
+    }
+
+    private static void extractInternal(JsonParser parser, JsonGenerator gen, String objectName, boolean includeAggregations) throws IOException {
         Objects.requireNonNull(objectName, "objectName is required");
         boolean hitsFound = false;
         gen.writeStartObject();
@@ -119,9 +127,14 @@ public final class Extract {
                         gen.writeEndArray();
                     }
                 } else if ("aggregations".equals(name)) {
-                    parser.nextToken();
-                    gen.writeFieldName("aggregations");
-                    gen.copyCurrentStructure(parser);
+                    if (includeAggregations) {
+                        parser.nextToken();
+                        gen.writeFieldName("aggregations");
+                        gen.copyCurrentStructure(parser);
+                    } else {
+                        parser.nextToken();
+                        parser.skipChildren(); // 跳过 aggregations
+                    }
                 } else {
                     parser.nextToken();
                     parser.skipChildren(); // skip took, timed_out, _shards, etc.

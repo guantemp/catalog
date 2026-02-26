@@ -26,12 +26,12 @@ public interface ProhibitSellItemRepository {
      * @param id
      * @return
      */
-    ProhibitSellItem find(String id);
+    ProhibitSellItem find(long id);
 
     /**
      * @param id
      */
-    void remove(String id);
+    void delete(long id);
 
     /**
      * @param item

@@ -41,22 +41,7 @@ public class ESBrandQueryTest {
                 new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "129.28.29.105:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
 
-    private static final ESBrandJsonQuery jsonQuery = new ESBrandJsonQuery();
     private static final BrandQuery query = new ESBrandQuery();
-
-
-    @Test(priority = 2, invocationCount = 1, threadPoolSize = 1, expectedExceptions = SearchException.class)
-    public void testJsonQuery() {
-        String w = jsonQuery.query(495651176959596552l);
-        System.out.println(w);
-        System.out.println(w.length());
-        w = jsonQuery.query(495651176959596602l);
-        System.out.println(w);
-        System.out.println(w.length());
-        System.out.println(jsonQuery.query(62078079843547680l));
-        System.out.println(jsonQuery.query(-1l));
-        System.out.println(jsonQuery.query(817884324788650l));
-    }
 
     @Test(priority = 1, invocationCount = 1, threadPoolSize = 1, expectedExceptions = SearchException.class)
     public void testFind() throws IOException {
@@ -100,16 +85,6 @@ public class ESBrandQueryTest {
         query.search("", 8, "62078807563681609", SortFieldEnum.ID);
     }
 
-    @Test(priority = 1)
-    public void testJsonQueryAll() {
-        System.out.println(jsonQuery.query(100, 5, null));
-        System.out.println(jsonQuery.query(100, 5, SortFieldEnum._NAME));
-        System.out.println(jsonQuery.query(0, 256, SortFieldEnum._ID));
-        System.out.println(jsonQuery.query(64, "", SortFieldEnum.NAME));
-        System.out.println(jsonQuery.query(128, "62078470412941622", SortFieldEnum.ID));
-        System.out.println(jsonQuery.query("", 8, "62078807563681609", SortFieldEnum.ID));
-    }
-
     @Test(priority = 3)
     public void testSearchName() throws IOException {
         InputStream is = query.search("天", 0, 20);
@@ -135,12 +110,5 @@ public class ESBrandQueryTest {
             }
         }
         return sb.toString();
-    }
-
-    @Test(priority = 3)
-    public void testJsonQueryName() {
-        System.out.println(jsonQuery.query("天", 0, 20, null));
-        System.out.println(jsonQuery.query("白萝卜", 10, 5, null));
-        System.out.println(jsonQuery.query("天", 0, 20, SortFieldEnum.NAME));
     }
 }

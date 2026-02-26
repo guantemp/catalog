@@ -21,7 +21,6 @@ import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
@@ -29,84 +28,34 @@ import java.util.StringJoiner;
  * @version 0.0.1 builder 2019-06-19
  */
 public class ProhibitSellItem {
-    private Barcode barcode;
-    private long brandId;
+    private final Barcode barcode;
+    private final long brandId;
     private long categoryId;
-    private GradeEnum grade;
-    private long id;
+    private final GradeEnum grade;
+    private final long id;
     private Name name;
-    private MadeIn madeIn;
-    private RetailPrice retailPrice;
+    private final MadeIn madeIn;
+    private LastReceiptPrice lastReceiptPrice;
+    private final RetailPrice retailPrice;
     private MemberPrice memberPrice;
     private VipPrice vipPrice;
-    private Specification spec;
+    private final Specification spec;
     private ShelfLife shelfLife;
 
-    /**
-     * @param id
-     * @param barcode
-     * @param name
-     * @param madeIn
-     * @param spec
-     * @param grade
-     * @param retailPrice
-     * @param memberPrice
-     * @param vipPrice
-     * @param brandId
-     * @param categoryId
-     */
     protected ProhibitSellItem(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-                               GradeEnum grade, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
-        setId(id);
-        setBarcode(barcode);
-        setName(name);
-        setMadeIn(madeIn);
-        setSpecification(spec);
-        setGrade(grade);
-        setRetailPrice(retailPrice);
-        setMemberPrice(memberPrice);
-        setVipPrice(vipPrice);
-        setCategoryId(categoryId);
-        setBrandId(brandId);
-    }
-
-    protected ProhibitSellItem(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-                               GradeEnum grade, ShelfLife shelfLife, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
-        setId(id);
-        setBarcode(barcode);
-        setName(name);
-        setMadeIn(madeIn);
-        setSpecification(spec);
-        setGrade(grade);
-        setShelfLife(shelfLife);
-        setRetailPrice(retailPrice);
-        setMemberPrice(memberPrice);
-        setVipPrice(vipPrice);
-        setCategoryId(categoryId);
-        setBrandId(brandId);
-    }
-
-    private void setBarcode(Barcode barcode) {
+                               GradeEnum grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice,RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
+        this.id = id;
         this.barcode = barcode;
-    }
-
-    private void setGrade(GradeEnum grade) {
-        this.grade = grade;
-    }
-
-    private void setName(Name name) {
         this.name = Objects.requireNonNull(name, "name required");
-    }
-
-    private void setMadeIn(MadeIn madeIn) {
         this.madeIn = Objects.requireNonNull(madeIn, "madeIn required");
-    }
-
-    private void setCategoryId(long categoryId) {
+        this.spec = spec;
+        this.grade = grade;
+        setShelfLife(shelfLife);
+        this.lastReceiptPrice=lastReceiptPrice;
+        this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
+        setMemberPrice(memberPrice);
+        setVipPrice(vipPrice);
         this.categoryId = categoryId;
-    }
-
-    private void setBrandId(long brandId) {
         this.brandId = brandId;
     }
 
@@ -124,17 +73,6 @@ public class ProhibitSellItem {
         this.memberPrice = memberPrice;
     }
 
-    private void setRetailPrice(RetailPrice retailPrice) {
-        this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
-    }
-
-    private void setSpecification(Specification spec) {
-        this.spec = spec;
-    }
-
-    private void setId(long id) {
-        this.id = id;
-    }
 
     private void setShelfLife(ShelfLife shelfLife) {
         if (shelfLife == null)
@@ -146,11 +84,15 @@ public class ProhibitSellItem {
         return shelfLife;
     }
 
+    public LastReceiptPrice lastReceiptPrice() {
+        return lastReceiptPrice;
+    }
+
     /**
      * @param name
      */
     public void rename(Name name) {
-        name = Objects.requireNonNull(name, "name required");
+        Objects.requireNonNull(name, "name required");
         if (!this.name.equals(name)) {
             this.name = name;
         }
@@ -161,7 +103,7 @@ public class ProhibitSellItem {
      */
     public void moveToCategory(long categoryId) {
         if (this.categoryId != categoryId)
-            setCategoryId(categoryId);
+            this.categoryId = categoryId;
     }
 
     public Barcode barcode() {
@@ -209,39 +151,37 @@ public class ProhibitSellItem {
     }
 
     public Item permitSell() {
-        return new Item(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.RMB_PCS_ZERO, retailPrice, memberPrice, vipPrice, categoryId, brandId);
+        return new Item(id, barcode, name, madeIn, spec, grade, shelfLife, LastReceiptPrice.RMB_PCS_ZERO, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ProhibitSellItem)) return false;
-
-        ProhibitSellItem that = (ProhibitSellItem) o;
+    public final boolean equals(Object o) {
+        if (!(o instanceof ProhibitSellItem that)) return false;
 
         return id == that.id;
     }
 
     @Override
     public int hashCode() {
-        return (int) (id ^ (id >>> 32));
+        return Long.hashCode(id);
     }
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", ProhibitSellItem.class.getSimpleName() + "[", "]")
-                .add("id='" + id + "'")
-                .add("barcode=" + barcode)
-                .add("brandId='" + brandId + "'")
-                .add("categoryId='" + categoryId + "'")
-                .add("grade=" + grade)
-                .add("name=" + name)
-                .add("madeIn=" + madeIn)
-                .add("retailPrice=" + retailPrice)
-                .add("memberPrice=" + memberPrice)
-                .add("vipPrice=" + vipPrice)
-                .add("spec=" + spec)
-                .add("shelfLife=" + shelfLife)
-                .toString();
+        return "ProhibitSellItem{" +
+                "barcode=" + barcode +
+                ", brandId=" + brandId +
+                ", categoryId=" + categoryId +
+                ", grade=" + grade +
+                ", id=" + id +
+                ", name=" + name +
+                ", madeIn=" + madeIn +
+                ", lastReceiptPrice=" + lastReceiptPrice +
+                ", retailPrice=" + retailPrice +
+                ", memberPrice=" + memberPrice +
+                ", vipPrice=" + vipPrice +
+                ", spec=" + spec +
+                ", shelfLife=" + shelfLife +
+                '}';
     }
 }

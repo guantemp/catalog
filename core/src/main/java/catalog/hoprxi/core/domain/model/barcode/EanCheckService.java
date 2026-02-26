@@ -29,7 +29,7 @@ public class EanCheckService {
 
     /**
      * @param barcode
-     * @return
+     * @return true if valid
      */
     public static boolean isChecksum(CharSequence barcode) {
         try {

@@ -201,7 +201,7 @@ public class Item {
     public void adjustRetailPrice(RetailPrice retailPrice) {
         Objects.requireNonNull(retailPrice, "retailPrice required");
         if (!this.retailPrice.equals(retailPrice)) {
-            this.retailPrice = retailPrice;
+            this.setRetailPrice(retailPrice);
             DomainRegistry.domainEventPublisher().publish(new ItemRetailPriceAdjusted(id, retailPrice.price().amount(), retailPrice.price().unit()));
         }
     }
@@ -209,7 +209,7 @@ public class Item {
     public void adjustMemberPrice(MemberPrice memberPrice) {
         Objects.requireNonNull(memberPrice, "memberPrice required");
         if (!this.memberPrice.equals(memberPrice)) {
-            setMemberPrice(memberPrice);
+            this.setMemberPrice(memberPrice);
             DomainRegistry.domainEventPublisher().publish(new ItemMemberPriceAdjusted(id, memberPrice.name(), memberPrice.price().amount(), memberPrice.price().unit()));
         }
     }
@@ -217,7 +217,7 @@ public class Item {
     public void adjustVipPrice(VipPrice vipPrice) {
         Objects.requireNonNull(vipPrice, "vipPrice required");
         if (!this.vipPrice.equals(vipPrice)) {
-            setVipPrice(vipPrice);
+            this.setVipPrice(vipPrice);
             DomainRegistry.domainEventPublisher().publish(new ItemVipPriceAdjusted(id, vipPrice.name(), vipPrice.price().amount(), vipPrice.price().unit()));
         }
     }
@@ -337,7 +337,7 @@ public class Item {
     }
 
     public ProhibitSellItem toProhibitSell() {
-        return new ProhibitSellItem(id, barcode, name, madeIn, spec, grade, shelfLife, retailPrice, memberPrice, vipPrice, categoryId, brandId);
+        return new ProhibitSellItem(id, barcode, name, madeIn, spec, grade, shelfLife, lastReceiptPrice,retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
     @Override

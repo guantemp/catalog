@@ -34,8 +34,8 @@ import java.util.StringJoiner;
  * @version 0.0.2 builder 2026-02-22
  */
 public class Price {
-    public static final Price RMB_ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.CHINA)), UnitEnum.PCS);
-    public static final Price USD_ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.US)), UnitEnum.PCS);
+    public static final Price RMB_PCS_ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.CHINA)), UnitEnum.PCS);
+    public static final Price USD_PCS_ZERO = new Price(Money.zero(Monetary.getCurrency(Locale.US)), UnitEnum.PCS);
 
     private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
@@ -51,9 +51,9 @@ public class Price {
     public static Price zero(Locale locale) {
         Objects.requireNonNull(locale, "locale required");
         if ("CN".equals(locale.getCountry()))
-            return RMB_ZERO;
+            return RMB_PCS_ZERO;
         if ("US".equals(locale.getCountry()))
-            return USD_ZERO;
+            return USD_PCS_ZERO;
         return new Price(Money.zero(Monetary.getCurrency(locale)), UnitEnum.PCS);
     }
 

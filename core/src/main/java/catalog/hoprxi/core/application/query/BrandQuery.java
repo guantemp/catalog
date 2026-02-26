@@ -25,7 +25,6 @@ import java.io.InputStream;
  * @version 0.0.1 builder 2025/9/4
  */
 
-
 public interface BrandQuery {
     /**
      * @param id of brand

@@ -47,6 +47,7 @@ public enum GradeEnum {
     };
 
     public static GradeEnum of(String s) {
+        if (s == null) return GradeEnum.QUALIFIED;
         for (GradeEnum grade : values()) {
             if (grade.name().equals(s) || grade.toString().equals(s))
                 return grade;

@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import salt.hoprxi.utils.DigitPreferenceFilter;
 
 import java.text.DecimalFormat;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +42,7 @@ public class BarcodeGenerateServices {
      * @return
      */
     public static Barcode createBarcode(CharSequence barcode) {
+        Objects.requireNonNull(barcode, "barcode must not be null");
         if (barcode.length() == 8)
             return new EAN_8(barcode);
         if (barcode.length() == 12)
@@ -55,6 +57,7 @@ public class BarcodeGenerateServices {
      * @return
      */
     public static Barcode createBarcodeCompleteChecksum(CharSequence barcode) {
+        Objects.requireNonNull(barcode, "barcode must not be null");
         int checksum = EanCheckService.computeChecksum(barcode);
         String temp = barcode.toString() + checksum;
         return createBarcode(temp);
@@ -73,6 +76,7 @@ public class BarcodeGenerateServices {
             throw new IllegalArgumentException("Amount required larger zero");
         if (start + amount > 99999)
             throw new IllegalArgumentException("Sum(start,amount) must less than or equal to 99999");
+        Objects.requireNonNull(prefix, "prefix must not be null");
         Matcher matcher = IN_STORE_PREFIX.matcher(prefix);
         if (!matcher.matches())
             throw new IllegalArgumentException("prefix required 20-24");

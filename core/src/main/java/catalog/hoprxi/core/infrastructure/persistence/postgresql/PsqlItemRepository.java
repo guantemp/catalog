@@ -16,7 +16,6 @@
 
 package catalog.hoprxi.core.infrastructure.persistence.postgresql;
 
-import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.domain.model.*;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
@@ -27,23 +26,24 @@ import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
-import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import salt.hoprxi.id.LongId;
 
-import javax.money.MonetaryAmount;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Locale;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -67,62 +67,87 @@ public class PsqlItemRepository implements ItemRepository {
 
     @Override
     public Item find(long id) {
-        try (Connection connection = PsqlUtil.getConnection()) {
-            final String findSql = "select id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,barcode,category_id," +
-                                   "brand_id,grade,made_in,spec,shelf_life,retail_price::jsonb->>'number' as retail_price_number,retail_price::jsonb->>'currencyCode' as retail_price_currencyCode,retail_price::jsonb->>'unit' as retail_price_unit," +
-                                   "last_receipt_price::jsonb ->> 'name' last_receipt_price_name,last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit," +
-                                   "member_price::jsonb ->> 'name' as member_price_name, member_price::jsonb -> 'price' ->> 'number' as member_price_number, member_price::jsonb -> 'price' ->> 'currencyCode' as member_price_currencyCode, member_price::jsonb -> 'price' ->> 'unit' as member_price_unit," +
-                                   "vip_price::jsonb ->> 'name' as vip_price_name, vip_price::jsonb -> 'price' ->> 'number' as vip_price_number, vip_price::jsonb -> 'price' ->> 'currencyCode' as vip_price_currencyCode, vip_price::jsonb -> 'price' ->> 'unit' as vip_price_unit " +
-                                   "from item where id=? limit 1";
-            PreparedStatement ps = connection.prepareStatement(findSql);
+        final String findSql = """
+                SELECT id, name, barcode, category_id, brand_id, grade, made_in, spec, shelf_life, 
+                       retail_price, last_receipt_price, member_price, vip_price
+                FROM item 
+                WHERE id = ? 
+                LIMIT 1
+                """;
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement ps = connection.prepareStatement(findSql)) {
             ps.setLong(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next())
-                return rebuild(rs);
-        } catch (InvocationTargetException | InstantiationException | IllegalAccessException | IOException |
-                 SQLException e) {
-            LOGGER.error("The item(id={}) not found", id, e);
-            throw new SearchException(String.format("The item(id=%s) not found", id), e);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return re(rs);
+                }
+            }
+            // 如果没有返回数据，正常返回 null，不要抛异常
+            return null;
+
+        } catch (SQLException e) {
+            // 【关键修复 2】区分数据库异常和业务异常
+            LOGGER.error("Database error while fetching item id={}", id, e);
+            throw new PersistenceException("Failed to query item from database: " + id, e);
+        } catch (IOException e) {
+            // 重建对象时的错误属于系统内部错误，不是“未找到”
+            LOGGER.error("Failed to rebuild item object from result set (id={})", id, e);
+            throw new PersistenceException("Failed to reconstruct item object: " + id, e);
         }
-        return null;
     }
 
-    private Item rebuild(ResultSet rs) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
+    private static Item re(ResultSet rs) throws SQLException, IOException {
         long id = rs.getLong("id");
-        Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
+        Name name = PsqlItemRepository.buildName(rs.getString("name"));
         Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
         long categoryId = rs.getLong("category_id");
         long brandId = rs.getLong("brand_id");
         GradeEnum grade = GradeEnum.valueOf(rs.getString("grade"));
-        MadeIn madeIn = toMadeIn(rs.getString("made_in"));
+        MadeIn madeIn = PsqlItemRepository.buildMadeIn(rs.getString("made_in"));
         Specification spec = new Specification(rs.getString("spec"));
         ShelfLife shelfLife = ShelfLife.create(rs.getInt("shelf_life"));
 
-        MonetaryAmount amount = Money.of(rs.getBigDecimal("last_receipt_price_number"), rs.getString("last_receipt_price_currencyCode"));
-        UnitEnum unit = UnitEnum.valueOf(rs.getString("last_receipt_price_unit"));
-        String priceName = rs.getString("last_receipt_price_name");
-        LastReceiptPrice lastReceiptPrice = new LastReceiptPrice(priceName, new Price(amount, unit));
-        amount = Money.of(rs.getBigDecimal("retail_price_number"), rs.getString("retail_price_currencyCode"));
-        unit = UnitEnum.valueOf(rs.getString("retail_price_unit"));
-        RetailPrice retailPrice = new RetailPrice(new Price(amount, unit));
-        priceName = rs.getString("member_price_name");
-        amount = Money.of(rs.getBigDecimal("member_price_number"), rs.getString("member_price_currencyCode"));
-        unit = UnitEnum.valueOf(rs.getString("member_price_unit"));
-        MemberPrice memberPrice = new MemberPrice(priceName, new Price(amount, unit));
-        priceName = rs.getString("vip_price_name");
-        amount = Money.of(rs.getBigDecimal("vip_price_number"), rs.getString("vip_price_currencyCode"));
-        unit = UnitEnum.valueOf(rs.getString("vip_price_unit"));
-        VipPrice vipPrice = new VipPrice(priceName, new Price(amount, unit));
-
-        return new Item(id, barcode, name, madeIn, spec, grade, shelfLife, lastReceiptPrice, retailPrice, memberPrice, vipPrice, categoryId, brandId);
+        LastReceiptPrice lastReceiptPrice = PsqlItemRepository.buildLastReceiptPricePrice(rs.getString("last_receipt_price"));
+        RetailPrice retailPrice = PsqlItemRepository.buildRetailPrice(rs.getString("retail_price"));
+        //System.out.println("rebuild"+retailPrice);
+        MemberPrice memberPrice = PsqlItemRepository.buildMemberPricePrice(rs.getString("member_price"));
+        VipPrice vipPrice = PsqlItemRepository.buildVipPrice(rs.getString("vip_price"));
+        return new Item(id, barcode, name, madeIn, spec, grade, shelfLife,
+                lastReceiptPrice, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
-    private MadeIn toMadeIn(String json) throws IOException {
+    private static Name buildName(String json) throws IOException {
+        if (json == null)
+            return Name.EMPTY;
+        String name = "", alias = "";
+        try (JsonParser parser = JSON_FACTORY.createParser(json)) {
+            if (parser.nextToken() != JsonToken.START_OBJECT) return Name.EMPTY;
+            while (parser.nextToken() != JsonToken.END_OBJECT) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                    String field = parser.currentName();
+                    String val = parser.nextTextValue();
+                    if (val != null) {
+                        switch (field) {
+                            case "name" -> name = val;
+                            case "alias" -> alias = val;
+                        }
+                    }
+                }
+            }
+        }
+        return new Name(name, alias);
+    }
+
+    private static MadeIn buildMadeIn(String json) throws IOException {
+        if (json == null || json.isEmpty()) {
+            return MadeIn.UNKNOWN;
+        }
         String _class = null;
         String madeIn = null;
         String code = "156";
-        try (JsonParser parser = JSON_FACTORY.createParser(json.getBytes(StandardCharsets.UTF_8))) {
-            while (parser.nextToken() != null) {
+        try (JsonParser parser = JSON_FACTORY.createParser(json)) {
+            if (parser.nextToken() != JsonToken.START_OBJECT) return MadeIn.UNKNOWN;
+            while (parser.nextToken() != JsonToken.END_OBJECT) {
                 if (JsonToken.FIELD_NAME == parser.currentToken()) {
                     String fieldName = parser.currentName();
                     parser.nextToken();
@@ -134,12 +159,98 @@ public class PsqlItemRepository implements ItemRepository {
                 }
             }
         }
-        if (Domestic.class.getName().equals(_class)) {
+        if (_class != null && _class.endsWith("Domestic")) {
             return new Domestic(code, madeIn);
-        } else if (Imported.class.getName().equals(_class)) {
+        } else if (_class != null && _class.endsWith("Imported")) {
             return new Imported(code, madeIn);
         }
         return MadeIn.UNKNOWN;
+    }
+
+    private static LastReceiptPrice buildLastReceiptPricePrice(String json) throws IOException {
+        if (json == null || json.trim().isEmpty()) {
+            return LastReceiptPrice.RMB_PCS_ZERO; // 调用方需处理 null，或返回对应的 EMPTY 对象
+        }
+        String name = "";
+        Price price = Price.zero(Locale.getDefault());
+        try (JsonParser parser = JSON_FACTORY.createParser(json)) {
+            if (parser.nextToken() != JsonToken.START_OBJECT) return LastReceiptPrice.RMB_PCS_ZERO;
+            while (parser.nextToken() != JsonToken.END_OBJECT) {
+                if (JsonToken.FIELD_NAME == parser.currentToken() && "name".equals(parser.currentName())) {
+                    name = parser.nextTextValue();
+                } else if (JsonToken.FIELD_NAME == parser.currentToken() && "price".equals(parser.currentName())) {
+                    price = buildPrice(parser);
+                }
+            }
+        }
+        return new LastReceiptPrice(name, price);
+    }
+
+    private static RetailPrice buildRetailPrice(String json) throws IOException {
+        if (json == null || json.trim().isEmpty()) {
+            return RetailPrice.RMB_PCS_ZERO; // 调用方需处理 null，或返回对应的 EMPTY 对象
+        }
+        try (JsonParser parser = JSON_FACTORY.createParser(json)) {
+            Price price = buildPrice(parser);
+            return new RetailPrice(price);
+        }
+    }
+
+    private static MemberPrice buildMemberPricePrice(String json) throws IOException {
+        if (json == null || json.trim().isEmpty()) {
+            return MemberPrice.RMB_PCS_ZERO; // 调用方需处理 null，或返回对应的 EMPTY 对象
+        }
+        String name = "";
+        Price price = Price.zero(Locale.getDefault());
+        try (JsonParser parser = JSON_FACTORY.createParser(json)) {
+            if (parser.nextToken() != JsonToken.START_OBJECT) return MemberPrice.RMB_PCS_ZERO;
+            while (parser.nextToken() != JsonToken.END_OBJECT) {
+                if (JsonToken.FIELD_NAME == parser.currentToken() && "name".equals(parser.currentName())) {
+                    name = parser.nextTextValue();
+                } else if (JsonToken.FIELD_NAME == parser.currentToken() && "price".equals(parser.currentName())) {
+                    price = buildPrice(parser);
+                }
+            }
+        }
+        return new MemberPrice(name, price);
+    }
+
+    private static VipPrice buildVipPrice(String json) throws IOException {
+        if (json == null || json.trim().isEmpty()) {
+            return VipPrice.RMB_PCS_ZERO; // 调用方需处理 null，或返回对应的 EMPTY 对象
+        }
+        String name = "";
+        Price price = Price.zero(Locale.getDefault());
+        try (JsonParser parser = JSON_FACTORY.createParser(json)) {
+            if (parser.nextToken() != JsonToken.START_OBJECT) return VipPrice.RMB_PCS_ZERO;
+            while (parser.nextToken() != JsonToken.END_OBJECT) {
+                if (JsonToken.FIELD_NAME == parser.currentToken() && "name".equals(parser.currentName())) {
+                    name = parser.nextTextValue();
+                } else if (JsonToken.FIELD_NAME == parser.currentToken() && "price".equals(parser.currentName())) {
+                    price = buildPrice(parser);
+                }
+            }
+        }
+        return new VipPrice(name, price);
+    }
+
+    private static Price buildPrice(JsonParser parser) throws IOException {
+        if (parser.nextToken() != JsonToken.START_OBJECT) return Price.RMB_PCS_ZERO;
+        BigDecimal number = BigDecimal.ZERO;
+        String currency = "CNY";
+        UnitEnum unit = UnitEnum.PCS;
+        while (parser.nextToken() != JsonToken.END_OBJECT) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                String filedName = parser.currentName();
+                parser.nextToken();
+                switch (filedName) {
+                    case "number" -> number = parser.getDecimalValue();
+                    case "currencyCode" -> currency = parser.getValueAsString();
+                    case "unit" -> unit = UnitEnum.valueOf(parser.getValueAsString());
+                }
+            }
+        }
+        return new Price(Money.of(number, currency), unit);
     }
 
     @Override
@@ -149,9 +260,9 @@ public class PsqlItemRepository implements ItemRepository {
 
     @Override
     public void delete(long id) {
-        try (Connection connection = PsqlUtil.getConnection()) {
-            final String removeSql = "delete from item where id=?";
-            PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
+        final String removeSql = "delete from item where id=?";
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(removeSql)) {
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
@@ -162,35 +273,44 @@ public class PsqlItemRepository implements ItemRepository {
 
     @Override
     public void save(Item item) {
-        try (Connection connection = PsqlUtil.getConnection()) {
-            final String insertOrReplaceSql = "insert into item (id,name,barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price) " +
-                                              "values (?,?::jsonb,?,?,?,?::grade,?::jsonb,?,?,?::jsonb,?::jsonb,?::jsonb,?::jsonb) " +
-                                              "on conflict(id) do update set name=?::jsonb,barcode=?,category_id=?,brand_id=?,grade=?::grade,made_in=?::jsonb,spec=?,shelf_life=?,last_receipt_price=?::jsonb,retail_price=?::jsonb,member_price=?::jsonb,vip_price=EXCLUDED.vip_price";
-            PreparedStatement ps = connection.prepareStatement(insertOrReplaceSql);
-            ps.setLong(1, item.id());
-            ps.setString(2, toJson(item.name()));
-            ps.setString(3, String.valueOf(item.barcode().barcode()));
-            ps.setLong(4, item.categoryId());
-            ps.setLong(5, item.brandId());
-            ps.setString(6, item.grade().name());
-            ps.setString(7, toJson(item.madeIn()));
-            ps.setString(8, item.spec().value());
-            ps.setInt(9, item.shelfLife().days());
-            ps.setString(10, toJson(item.lastReceiptPrice()));
-            ps.setString(11, toJson(item.retailPrice()));
-            ps.setString(12, toJson(item.memberPrice()));
-            ps.setString(13, toJson(item.vipPrice()));
-            ps.setString(14, toJson(item.name()));
-            ps.setString(15, String.valueOf(item.barcode().barcode()));
-            ps.setLong(16, item.categoryId());
-            ps.setLong(17, item.brandId());
-            ps.setString(18, item.grade().name());
-            ps.setString(19, toJson(item.madeIn()));
-            ps.setString(20, item.spec().value());
-            ps.setInt(21, item.shelfLife().days());
-            ps.setString(22, toJson(item.lastReceiptPrice()));
-            ps.setString(23, toJson(item.retailPrice()));
-            ps.setString(24, toJson(item.memberPrice()));
+        final String insertOrReplaceSql = """
+                INSERT INTO item (
+                    id, name, barcode, category_id, brand_id, grade, made_in, spec, shelf_life, 
+                    last_receipt_price, retail_price, member_price, vip_price
+                ) VALUES (
+                    ?, ?::jsonb, ?, ?, ?, ?::grade, ?::jsonb, ?, ?, 
+                    ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb
+                )
+                ON CONFLICT (id) DO UPDATE SET 
+                    name = EXCLUDED.name,
+                    barcode = EXCLUDED.barcode,
+                    category_id = EXCLUDED.category_id,
+                    brand_id = EXCLUDED.brand_id,
+                    grade = EXCLUDED.grade,
+                    made_in = EXCLUDED.made_in,
+                    spec = EXCLUDED.spec,
+                    shelf_life = EXCLUDED.shelf_life,
+                    last_receipt_price = EXCLUDED.last_receipt_price,
+                    retail_price = EXCLUDED.retail_price,
+                    member_price = EXCLUDED.member_price,
+                    vip_price = EXCLUDED.vip_price; 
+                """;
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement ps = connection.prepareStatement(insertOrReplaceSql)) {
+            int idx = 1;
+            ps.setLong(idx++, item.id());
+            ps.setString(idx++, toJson(item.name()));
+            ps.setString(idx++, String.valueOf(item.barcode().barcode()));
+            ps.setLong(idx++, item.categoryId());
+            ps.setLong(idx++, item.brandId());
+            ps.setString(idx++, item.grade().name()); // 确保 enum 名称匹配 DB
+            ps.setString(idx++, toJson(item.madeIn()));
+            ps.setString(idx++, item.spec().value());
+            ps.setInt(idx++, item.shelfLife().days());
+            ps.setString(idx++, toJson(item.lastReceiptPrice()));
+            ps.setString(idx++, toJson(item.retailPrice()));
+            ps.setString(idx++, toJson(item.memberPrice()));
+            ps.setString(idx++, toJson(item.vipPrice()));
             ps.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error("Can't save item {}", item, e);
@@ -198,25 +318,25 @@ public class PsqlItemRepository implements ItemRepository {
         }
     }
 
-    private String toJson(MadeIn madeIn) {
-        String _class = madeIn.getClass().getName();
-        ByteArrayOutputStream output = new ByteArrayOutputStream(128);
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+    private static String toJson(MadeIn madeIn) {
+        StringWriter writer = new StringWriter(128);
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
-            generator.writeStringField("_class", _class);
+            generator.writeStringField("_class", madeIn.getClass().getName());
             generator.writeStringField("code", madeIn.code());
             generator.writeStringField("madeIn", madeIn.madeIn());
             generator.writeEndObject();
         } catch (IOException e) {
             LOGGER.error("Not write madeIn {} as json", madeIn, e);
+            throw new RuntimeException("Failed to serialize MadeIn: " + madeIn, e);
         }
         //System.out.println(output.size());
-        return output.toString();
+        return writer.toString();
     }
 
-    private String toJson(Name name) {
-        ByteArrayOutputStream output = new ByteArrayOutputStream(128);
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+    private static String toJson(Name name) {
+        StringWriter writer = new StringWriter(128);
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeStringField("name", name.name());
             generator.writeStringField("mnemonic", name.mnemonic());
@@ -224,26 +344,26 @@ public class PsqlItemRepository implements ItemRepository {
             generator.writeEndObject();
         } catch (IOException e) {
             LOGGER.error("Not write name as json", e);
+            throw new RuntimeException("Failed to serialize Name: " + name, e);
         }
-        //System.out.println(output.size());
-        return output.toString();
+        return writer.toString();
     }
 
-    private String toJson(LastReceiptPrice lastReceiptPrice) {
-        return priceToJsonWithName(lastReceiptPrice.name(), lastReceiptPrice.price());
+    private static String toJson(LastReceiptPrice lastReceiptPrice) {
+        return PsqlItemRepository.priceToJsonWithName(lastReceiptPrice.name(), lastReceiptPrice.price());
     }
 
-    private String toJson(VipPrice vipPrice) {
-        return priceToJsonWithName(vipPrice.name(), vipPrice.price());
+    private static String toJson(VipPrice vipPrice) {
+        return PsqlItemRepository.priceToJsonWithName(vipPrice.name(), vipPrice.price());
     }
 
-    private String toJson(MemberPrice memberPrice) {
-        return priceToJsonWithName(memberPrice.name(), memberPrice.price());
+    private static String toJson(MemberPrice memberPrice) {
+        return PsqlItemRepository.priceToJsonWithName(memberPrice.name(), memberPrice.price());
     }
 
-    private String priceToJsonWithName(String name, Price price) {
-        ByteArrayOutputStream output = new ByteArrayOutputStream(96);
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+    private static String priceToJsonWithName(String name, Price price) {
+        StringWriter writer = new StringWriter(96);
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeStringField("name", name);
             generator.writeObjectFieldStart("price");
@@ -256,14 +376,16 @@ public class PsqlItemRepository implements ItemRepository {
             generator.writeEndObject();
         } catch (IOException e) {
             LOGGER.error("Not write Price as json", e);
+            throw new RuntimeException("Failed to serialize Price (with name)", e);
         }
-        return output.toString();
+        return writer.toString();
     }
 
-    private String toJson(RetailPrice retailPrice) {
-        ByteArrayOutputStream output = new ByteArrayOutputStream(64);
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+    private static String toJson(RetailPrice retailPrice) {
+        StringWriter writer = new StringWriter(96);
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
+            //System.out.println("retailPrice: " + retailPrice.price().amount().getNumber().numberValue(BigDecimal.class));
             generator.writeNumberField("number", retailPrice.price().amount().getNumber().numberValue(BigDecimal.class));
             generator.writeStringField("currencyCode", retailPrice.price().amount().getCurrency().getCurrencyCode());
             //generator.writeNumberField("precision", retailPrice.price().amount().getNumber().getPrecision());
@@ -273,6 +395,6 @@ public class PsqlItemRepository implements ItemRepository {
         } catch (IOException e) {
             LOGGER.error("Not write RetailPrice as json", e);
         }
-        return output.toString();
+        return writer.toString();
     }
 }
