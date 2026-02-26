@@ -53,22 +53,11 @@ import java.util.Locale;
 public class PsqlItemRepository implements ItemRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemRepository.class);
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-    private static final Constructor<Name> nameConstructor;
-
-    static {
-        try {
-            nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
-            nameConstructor.setAccessible(true);
-        } catch (NoSuchMethodException e) {
-            LOGGER.error("Name class no such constructor", e);
-            throw new RuntimeException("Name class no such constructor", e);
-        }
-    }
 
     @Override
     public Item find(long id) {
         final String findSql = """
-                SELECT id, name, barcode, category_id, brand_id, grade, made_in, spec, shelf_life, 
+                SELECT id, name, barcode, category_id, brand_id, grade, made_in, spec, shelf_life,
                        retail_price, last_receipt_price, member_price, vip_price
                 FROM item 
                 WHERE id = ? 
@@ -79,7 +68,7 @@ public class PsqlItemRepository implements ItemRepository {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return re(rs);
+                    return PsqlItemRepository.rebuild(rs);
                 }
             }
             // 如果没有返回数据，正常返回 null，不要抛异常
@@ -96,7 +85,7 @@ public class PsqlItemRepository implements ItemRepository {
         }
     }
 
-    private static Item re(ResultSet rs) throws SQLException, IOException {
+    private static Item rebuild(ResultSet rs) throws SQLException, IOException {
         long id = rs.getLong("id");
         Name name = PsqlItemRepository.buildName(rs.getString("name"));
         Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
@@ -275,13 +264,13 @@ public class PsqlItemRepository implements ItemRepository {
     public void save(Item item) {
         final String insertOrReplaceSql = """
                 INSERT INTO item (
-                    id, name, barcode, category_id, brand_id, grade, made_in, spec, shelf_life, 
+                    id, name, barcode, category_id, brand_id, grade, made_in, spec, shelf_life,
                     last_receipt_price, retail_price, member_price, vip_price
                 ) VALUES (
-                    ?, ?::jsonb, ?, ?, ?, ?::grade, ?::jsonb, ?, ?, 
+                    ?, ?::jsonb, ?, ?, ?, ?::grade, ?::jsonb, ?, ?,
                     ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb
                 )
-                ON CONFLICT (id) DO UPDATE SET 
+                ON CONFLICT (id) DO UPDATE SET
                     name = EXCLUDED.name,
                     barcode = EXCLUDED.barcode,
                     category_id = EXCLUDED.category_id,
@@ -293,7 +282,7 @@ public class PsqlItemRepository implements ItemRepository {
                     last_receipt_price = EXCLUDED.last_receipt_price,
                     retail_price = EXCLUDED.retail_price,
                     member_price = EXCLUDED.member_price,
-                    vip_price = EXCLUDED.vip_price; 
+                    vip_price = EXCLUDED.vip_price;
                 """;
         try (Connection connection = PsqlUtil.getConnection();
              PreparedStatement ps = connection.prepareStatement(insertOrReplaceSql)) {

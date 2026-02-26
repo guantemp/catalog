@@ -133,7 +133,7 @@ public class PsqlItemQuery implements ItemQuery2 {
                     "i.vip_price::jsonb ->> 'name'  vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number'  vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode'  vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit'  vip_price_unit,i.show\n" +
                     "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where c.id = ? offset ? limit ?";
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setLong(1, NumberHelper.longOf(categoryId, 0l));
+            ps.setLong(1, NumberHelper.longOf(categoryId, 0L));
             ps.setLong(2, offset);
             ps.setInt(3, limit);
             ResultSet rs = ps.executeQuery();
@@ -233,7 +233,7 @@ public class PsqlItemQuery implements ItemQuery2 {
         } catch (SQLException e) {
             LOGGER.error("Can't count itemView size", e);
         }
-        return 0l;
+        return 0L;
     }
 
     @Override
@@ -458,10 +458,8 @@ public class PsqlItemQuery implements ItemQuery2 {
             if (JsonToken.FIELD_NAME == parser.nextToken()) {
                 String fieldName = parser.getCurrentName();
                 parser.nextToken();
-                switch (fieldName) {
-                    case "images":
-                        result = readImages(parser);
-                        break;
+                if (fieldName.equals("images")) {
+                    result = readImages(parser);
                 }
             }
         }

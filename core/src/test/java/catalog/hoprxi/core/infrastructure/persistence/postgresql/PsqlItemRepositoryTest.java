@@ -195,7 +195,7 @@ public class PsqlItemRepositoryTest {
     }
 
 
-    @Test(invocationCount = 1, threadPoolSize = 1, priority = 2)
+    @Test(invocationCount = 2, threadPoolSize = 1, priority = 2)
     public void testSave() {
         Item ten = itemRepository.find(52496321492179005L);
         System.out.println("52496321492179005L:\n" + ten);

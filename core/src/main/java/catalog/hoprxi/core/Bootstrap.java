@@ -79,15 +79,17 @@ public class Bootstrap {
                     break;
                 case "-h":
                 case "--help":
-                    System.out.println("Non-option arguments:\n" +
-                            "command              \n" +
-                            "\n" +
-                            "Option                         Description        \n" +
-                            "------                         -----------        \n" +
-                            "-f, --file <filename>          A file that stores the key\n" +
-                            "-e <KeyValuePair>              encrypt a passwd\n" +
-                            "-l, --list                     entries in the keystore\n" +
-                            "-h, --help                     Show help          \n");
+                    System.out.println("""
+                            Non-option arguments:
+                            command             \s
+                            
+                            Option                         Description       \s
+                            ------                         -----------       \s
+                            -f, --file <filename>          A file that stores the key
+                            -e <KeyValuePair>              encrypt a passwd
+                            -l, --list                     entries in the keystore
+                            -h, --help                     Show help         \s
+                            """);
                     break;
             }
         }
