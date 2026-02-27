@@ -38,8 +38,7 @@ import java.util.concurrent.*;
  */
 public class ESItemQueryTest {
     static {
-        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
-                new String[]{"slave.tooo.top:9200"});
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465", "slave.tooo.top:9200");
     }
 
     private static final ItemQuery query = new ESItemQuery();

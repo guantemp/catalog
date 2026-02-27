@@ -27,7 +27,7 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 builder 2019-06-19
  */
-public class ProhibitSellItem {
+public final class ProhibitSellItem {
     private final Barcode barcode;
     private final long brandId;
     private long categoryId;
@@ -35,7 +35,7 @@ public class ProhibitSellItem {
     private final long id;
     private Name name;
     private final MadeIn madeIn;
-    private LastReceiptPrice lastReceiptPrice;
+    private final LastReceiptPrice lastReceiptPrice;
     private final RetailPrice retailPrice;
     private MemberPrice memberPrice;
     private VipPrice vipPrice;
@@ -43,7 +43,7 @@ public class ProhibitSellItem {
     private ShelfLife shelfLife;
 
     protected ProhibitSellItem(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
-                               GradeEnum grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice,RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
+                               GradeEnum grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         this.id = id;
         this.barcode = barcode;
         this.name = Objects.requireNonNull(name, "name required");
@@ -51,7 +51,7 @@ public class ProhibitSellItem {
         this.spec = spec;
         this.grade = grade;
         setShelfLife(shelfLife);
-        this.lastReceiptPrice=lastReceiptPrice;
+        this.lastReceiptPrice = lastReceiptPrice;
         this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
         setMemberPrice(memberPrice);
         setVipPrice(vipPrice);
@@ -152,6 +152,9 @@ public class ProhibitSellItem {
 
     public Item permitSell() {
         return new Item(id, barcode, name, madeIn, spec, grade, shelfLife, LastReceiptPrice.RMB_PCS_ZERO, retailPrice, memberPrice, vipPrice, categoryId, brandId);
+    }
+    public ProhibitTradingItem prohibitedStorageItem(){
+        return null;
     }
 
     @Override

@@ -16,11 +16,18 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.ItemQuery2;
+import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.application.view.ItemView;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
+import io.netty.buffer.ByteBuf;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import reactor.core.publisher.Flux;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
+
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -33,7 +40,7 @@ public class PsqlItemQueryTest {
                 new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
 
-    private static final ItemQuery2 query = new PsqlItemQuery();
+    private static final PsqlItemQuery query = new PsqlItemQuery();
 
     static {
         //CategoryQuery categoryQuery = new PsqlCategoryQuery();
@@ -41,17 +48,53 @@ public class PsqlItemQueryTest {
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testQuery() {
-        ItemView itemView = query.query("52496163982907400");
+    public void testQuery() throws InterruptedException {
+        ItemView itemView = query.query("55307366414673724");
         Assert.assertNotNull(itemView);
-        itemView = query.query("52496321492179007");
+        itemView = query.query("55307366425159504");
         Assert.assertNotNull(itemView);
-        itemView = query.query("52496163982907400");
+        itemView = query.query("55307366506948522");
         Assert.assertNotNull(itemView);
         itemView = query.query("52496163982907408");
         Assert.assertNull(itemView);
-        itemView = query.query("52496321492179007");
+        itemView = query.query("55307366561474567");
         Assert.assertNotNull(itemView);
+
+        Flux<ByteBuf>[] fluxes = new Flux[]{
+                query.findAsync(55307366561474567L),
+                query.findAsync(55307366425159504L),
+                query.findAsync(55307366506948522L),
+                query.findAsync(55307407636294041L)
+        };
+        CountDownLatch latch = new CountDownLatch(fluxes.length);
+        // 为每个查询在独立线程中启动订阅
+        for (int i = 0; i < fluxes.length; i++) {
+            StringBuilder sb = new StringBuilder();
+            final int queryIndex = i;
+            new Thread(() -> {
+                System.out.println("[Thread-" + Thread.currentThread().threadId() + "] Starting query #" + queryIndex);
+                fluxes[queryIndex].subscribe(
+                        byteBuf -> {
+                            try {
+                                sb.append(byteBuf.toString(StandardCharsets.UTF_8));
+                            } finally {
+                                byteBuf.release(); // 安全释放
+                            }
+                        },
+                        error -> {
+                            System.err.println("[Thread-" + Thread.currentThread().threadId() + "] Error: " + error.getMessage());
+                            error.printStackTrace();
+                        },
+                        () -> {
+                            System.out.println("[Thread-" + Thread.currentThread().threadId() + "] Query #" + queryIndex + " completed");
+                            System.out.println(sb);
+                            latch.countDown();
+                        }
+                );
+            }).start();
+        }
+        // 等待所有查询完成（30秒超时）
+        latch.await();
     }
 
     @Test

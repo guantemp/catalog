@@ -17,7 +17,6 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemExportService;
-import catalog.hoprxi.core.application.query.ItemQuery2;
 import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQuery;
@@ -124,7 +123,7 @@ public class PsqlItemExport implements ItemExportService {
 
     @Override
     public void exportToXls(OutputStream outputStream) throws IOException {
-        ItemQuery2 query = new PsqlItemQuery();
+        PsqlItemQuery query = new PsqlItemQuery();
         ItemView[] itemViews = query.queryAll(0, 2000);
         SXSSFWorkbook workbook = null;
         BufferedOutputStream bufferedOutPut = null;

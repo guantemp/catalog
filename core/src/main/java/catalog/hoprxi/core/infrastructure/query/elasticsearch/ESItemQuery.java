@@ -20,6 +20,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 import catalog.hoprxi.core.application.query.*;
 import catalog.hoprxi.core.domain.model.barcode.BarcodeValidServices;
 import catalog.hoprxi.core.infrastructure.ESUtil;
+import catalog.hoprxi.core.infrastructure.query.JsonByteBufOutputStream;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -38,10 +39,7 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -106,7 +104,7 @@ public class ESItemQuery implements ItemQuery {
             @Override
             public void onSuccess(Response response) {
                 if (isCancelled.get()) {
-                    sink.tryEmitError(new IOException("Processing cancelled"));
+                    sink.tryEmitError(new RuntimeException("Processing cancelled"));
                     return;
                 }
                 CompletableFuture.runAsync(() -> {
@@ -116,14 +114,22 @@ public class ESItemQuery implements ItemQuery {
                             return; // silent cancel; sink 已由外部处理或无需响应
                         }
                         ESItemQuery.extractSourceSkipMeta(parser, generator);
-                    } catch (IOException | RuntimeException e) {
-                        if (!isCancelled.get()) {
-                            sink.tryEmitError(e);
-                        }
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
                     }
                 }, TRANSFORM_POOL).whenComplete((v, err) -> {
                     if (err != null && !isCancelled.get()) {
-                        sink.tryEmitError(new SearchException("Transform failed", err));
+                        Throwable cause = err;
+                        if (err instanceof UncheckedIOException) {
+                            cause = err.getCause(); // 解包 IO 异常
+                        }
+                        if (cause instanceof IOException) { // 如果是普通 RuntimeException，cause 就是 err 本身，保持不动
+                            LOGGER.warn("Transform failed due to IO error for item id={}", id, cause);
+                            sink.tryEmitError(new SearchException("Transform failed: IO error", cause));
+                        } else {//【修复空指针】：确保 cause 不为 null 再调用 getMessage()
+                            LOGGER.error("Unexpected system error (Bug) while fetching item id={}", id, cause);
+                            sink.tryEmitError(new SearchException("Unexpected error: " + cause.getMessage(), cause));
+                        }
                     } else if (!isCancelled.get()) {
                         sink.tryEmitComplete();
                     }

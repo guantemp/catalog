@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.query.elasticsearch;
+package catalog.hoprxi.core.infrastructure.query;
 
 
 import io.netty.buffer.ByteBuf;

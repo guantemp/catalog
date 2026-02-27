@@ -51,24 +51,26 @@ public class Item {
     private ShelfLife shelfLife;
 
     /**
-     * @param id
-     * @param barcode
-     * @param name
-     * @param madeIn
-     * @param spec
-     * @param grade
-     * @param shelfLife
-     * @param lastReceiptPrice
-     * @param retailPrice
-     * @param memberPrice
-     * @param vipPrice
+     * @param id mark
+     * @param barcode of EAN8,EAN13,UPC_A,UPC_E,ITF14,ISBN,ISSN
+     * @param name Including the main name and aliases
+     * @param madeIn of
+     * @param spec of
+     * @param grade of
+     * @param shelfLife 保质期
+     * @param lastReceiptPrice of
+     * @param retailPrice of retail price
+     * @param memberPrice of member price
+     * @param vipPrice of vip price
      * @param categoryId       id valueOf category
      * @param brandId          id valueOf brand
      * @throws IllegalArgumentException if id is null or id length range not in [1-36]
      *                                  if name is null
      *                                  if madeIn is null
      */
-    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
+    public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade,
+                ShelfLife shelfLife, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice,
+                MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         this.id = id;
         setBarcode(barcode);
         setName(name);
@@ -188,16 +190,13 @@ public class Item {
      * @throws IllegalArgumentException if newMadeIn is <CODE>NULL</CODE>
      */
     public void changeMadeIn(MadeIn madeIn) {
-        Objects.requireNonNull(madeIn, "newMadeIn required");
+        Objects.requireNonNull(madeIn, "madeIn required");
         if (!this.madeIn.equals(madeIn)) {
             this.madeIn = madeIn;
             DomainRegistry.domainEventPublisher().publish(new ItemMadeInChanged(id, madeIn.code(), madeIn.madeIn()));
         }
     }
 
-    /**
-     * @param retailPrice
-     */
     public void adjustRetailPrice(RetailPrice retailPrice) {
         Objects.requireNonNull(retailPrice, "retailPrice required");
         if (!this.retailPrice.equals(retailPrice)) {

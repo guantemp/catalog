@@ -37,7 +37,6 @@ import salt.hoprxi.id.LongId;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -59,8 +58,8 @@ public class PsqlItemRepository implements ItemRepository {
         final String findSql = """
                 SELECT id, name, barcode, category_id, brand_id, grade, made_in, spec, shelf_life,
                        retail_price, last_receipt_price, member_price, vip_price
-                FROM item 
-                WHERE id = ? 
+                FROM item
+                WHERE id = ?
                 LIMIT 1
                 """;
         try (Connection connection = PsqlUtil.getConnection();
@@ -71,15 +70,11 @@ public class PsqlItemRepository implements ItemRepository {
                     return PsqlItemRepository.rebuild(rs);
                 }
             }
-            // 如果没有返回数据，正常返回 null，不要抛异常
-            return null;
-
-        } catch (SQLException e) {
-            // 【关键修复 2】区分数据库异常和业务异常
-            LOGGER.error("Database error while fetching item id={}", id, e);
+            return null;// 如果没有返回数据，正常返回 null，不要抛异常
+        } catch (SQLException e) {// 【关键修复 2】区分数据库异常和业务异常
+            LOGGER.warn("Database error while fetching item id={}", id, e);
             throw new PersistenceException("Failed to query item from database: " + id, e);
-        } catch (IOException e) {
-            // 重建对象时的错误属于系统内部错误，不是“未找到”
+        } catch (IOException e) {// 重建对象时的错误属于系统内部错误，不是“未找到”
             LOGGER.error("Failed to rebuild item object from result set (id={})", id, e);
             throw new PersistenceException("Failed to reconstruct item object: " + id, e);
         }
@@ -98,7 +93,6 @@ public class PsqlItemRepository implements ItemRepository {
 
         LastReceiptPrice lastReceiptPrice = PsqlItemRepository.buildLastReceiptPricePrice(rs.getString("last_receipt_price"));
         RetailPrice retailPrice = PsqlItemRepository.buildRetailPrice(rs.getString("retail_price"));
-        //System.out.println("rebuild"+retailPrice);
         MemberPrice memberPrice = PsqlItemRepository.buildMemberPricePrice(rs.getString("member_price"));
         VipPrice vipPrice = PsqlItemRepository.buildVipPrice(rs.getString("vip_price"));
         return new Item(id, barcode, name, madeIn, spec, grade, shelfLife,
@@ -128,9 +122,7 @@ public class PsqlItemRepository implements ItemRepository {
     }
 
     private static MadeIn buildMadeIn(String json) throws IOException {
-        if (json == null || json.isEmpty()) {
-            return MadeIn.UNKNOWN;
-        }
+        if (json == null || json.isEmpty()) return MadeIn.UNKNOWN;
         String _class = null;
         String madeIn = null;
         String code = "156";
@@ -158,7 +150,7 @@ public class PsqlItemRepository implements ItemRepository {
 
     private static LastReceiptPrice buildLastReceiptPricePrice(String json) throws IOException {
         if (json == null || json.trim().isEmpty()) {
-            return LastReceiptPrice.RMB_PCS_ZERO; // 调用方需处理 null，或返回对应的 EMPTY 对象
+            return LastReceiptPrice.RMB_PCS_ZERO;
         }
         String name = "";
         Price price = Price.zero(Locale.getDefault());
@@ -177,7 +169,7 @@ public class PsqlItemRepository implements ItemRepository {
 
     private static RetailPrice buildRetailPrice(String json) throws IOException {
         if (json == null || json.trim().isEmpty()) {
-            return RetailPrice.RMB_PCS_ZERO; // 调用方需处理 null，或返回对应的 EMPTY 对象
+            return RetailPrice.RMB_PCS_ZERO;
         }
         try (JsonParser parser = JSON_FACTORY.createParser(json)) {
             Price price = buildPrice(parser);
@@ -187,7 +179,7 @@ public class PsqlItemRepository implements ItemRepository {
 
     private static MemberPrice buildMemberPricePrice(String json) throws IOException {
         if (json == null || json.trim().isEmpty()) {
-            return MemberPrice.RMB_PCS_ZERO; // 调用方需处理 null，或返回对应的 EMPTY 对象
+            return MemberPrice.RMB_PCS_ZERO;
         }
         String name = "";
         Price price = Price.zero(Locale.getDefault());
@@ -206,7 +198,7 @@ public class PsqlItemRepository implements ItemRepository {
 
     private static VipPrice buildVipPrice(String json) throws IOException {
         if (json == null || json.trim().isEmpty()) {
-            return VipPrice.RMB_PCS_ZERO; // 调用方需处理 null，或返回对应的 EMPTY 对象
+            return VipPrice.RMB_PCS_ZERO;
         }
         String name = "";
         Price price = Price.zero(Locale.getDefault());
@@ -311,7 +303,7 @@ public class PsqlItemRepository implements ItemRepository {
         StringWriter writer = new StringWriter(128);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
-            generator.writeStringField("_class", madeIn.getClass().getName());
+            generator.writeStringField("_class", madeIn.getClass().getSimpleName());
             generator.writeStringField("code", madeIn.code());
             generator.writeStringField("madeIn", madeIn.madeIn());
             generator.writeEndObject();

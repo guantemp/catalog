@@ -17,7 +17,6 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
-import catalog.hoprxi.core.application.query.ItemQuery2;
 import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
@@ -36,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class BarcodeHandler implements EventHandler<ItemImportEvent> {
     private static final Map<String, Barcode> BARCODE_MAP = new HashMap<>(2480);
-    private static final ItemQuery2 ITEM_QUERY = new PsqlItemQuery();
+    private static final PsqlItemQuery ITEM_QUERY = new PsqlItemQuery();
 
     private static final AtomicInteger start = new AtomicInteger(1);
     private static final String PREFIX = "21";

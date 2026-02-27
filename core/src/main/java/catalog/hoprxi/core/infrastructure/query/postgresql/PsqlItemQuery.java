@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.ItemQuery2;
+import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
@@ -29,12 +29,18 @@ import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
+import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
+import catalog.hoprxi.core.infrastructure.query.JsonByteBufOutputStream;
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import io.netty.buffer.ByteBuf;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 import salt.hoprxi.cache.Cache;
 import salt.hoprxi.cache.CacheFactory;
 import salt.hoprxi.utils.NumberHelper;
@@ -42,6 +48,7 @@ import salt.hoprxi.utils.NumberHelper;
 import javax.money.MonetaryAmount;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -52,17 +59,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.2 builder 2023-08-13
  */
-@Deprecated
-public class PsqlItemQuery implements ItemQuery2 {
+
+public class PsqlItemQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQuery.class);
     private static final Cache<String, ItemView> CACHE = CacheFactory.build("itemView");
-    private final JsonFactory jasonFactory = JsonFactory.builder().build();
+    private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private static Constructor<Name> nameConstructor;
 
     static {
@@ -74,8 +83,6 @@ public class PsqlItemQuery implements ItemQuery2 {
         }
     }
 
-
-    @Override
     public ItemView query(String id) {
         ItemView itemView = CACHE.get(id);
         if (itemView != null) return itemView;
@@ -101,7 +108,81 @@ public class PsqlItemQuery implements ItemQuery2 {
         return null;
     }
 
-    @Override
+    public Flux<ByteBuf> findAsync(long id) {
+        final String findSql = """
+                SELECT i.id, i.name, i.barcode, i.grade, i.made_in, i.spec, i.shelf_life,
+                       i.retail_price, i.last_receipt_price, i.member_price, i.vip_price,
+                        json_build_object('id', c.id, 'name', c.name::jsonb ->> 'name') AS category,
+                        json_build_object('id', b.id, 'name', b.name::jsonb ->> 'name') AS brand
+                        FROM item i
+                        LEFT JOIN category c ON i.category_id = c.id
+                        LEFT JOIN brand b ON i.brand_id = b.id
+                        WHERE i.id = ?
+                        LIMIT 1
+                """;
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        CompletableFuture.runAsync(() -> {
+            try (Connection connection = PsqlUtil.getConnection();
+                 PreparedStatement ps = connection.prepareStatement(findSql)) {
+                ps.setLong(1, id);
+                try (ResultSet rs = ps.executeQuery();
+                     OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
+                    if (rs.next()) {
+                        gen.writeStartObject();
+                        gen.writeNumberField("id", rs.getLong("id"));
+                        gen.writeFieldName("name");
+                        gen.writeRawValue(rs.getString("name"));
+                        gen.writeStringField("barcode", rs.getString("barcode"));
+                        gen.writeStringField("spec", rs.getString("spec"));
+                        gen.writeStringField("grade", rs.getString("grade"));
+                        gen.writeFieldName("madeIn");
+                        gen.writeRawValue(rs.getString("made_in"));
+                        gen.writeNumberField("shelf_life", rs.getLong("shelf_life"));
+                        gen.writeFieldName("last_receipt_price");
+                        gen.writeRawValue(rs.getString("last_receipt_price"));
+                        gen.writeFieldName("retail_price");
+                        gen.writeRawValue(rs.getString("retail_price"));
+                        gen.writeFieldName("member_price");
+                        gen.writeRawValue(rs.getString("member_price"));
+                        gen.writeFieldName("vip_price");
+                        gen.writeRawValue(rs.getString("vip_price"));
+                        gen.writeFieldName("category");
+                        gen.writeRawValue(rs.getString("category"));
+                        gen.writeFieldName("brand");
+                        gen.writeRawValue(rs.getString("brand"));
+                        gen.writeEndObject();
+                    }
+                }
+            } catch (SQLException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).whenComplete((v, err) -> {
+            if (err != null && !isCancelled.get()) {
+                Throwable cause = err;
+                if (err instanceof RuntimeException) cause = err.getCause();// 取出里面的原始 Exception,区分数据库异常和业务异常
+                if (cause instanceof SQLException) {
+                    LOGGER.warn("Database error while fetching item id={}", id, cause);
+                    sink.tryEmitError(new PersistenceException("Database error while fetching item id= " + id, cause));
+                } else if (cause instanceof IOException) {
+                    LOGGER.warn("Transform failed", cause);
+                    sink.tryEmitError(new PersistenceException("Transform failed", cause));
+                } else {  //未知错误 (兜底，防止请求挂起),比如代码逻辑错误导致的 NullPointerException 等
+                    LOGGER.error("Unexpected system error while fetching item id={}", id, cause);
+                    sink.tryEmitError(new SearchException("Unexpected error: " + err.getMessage(), cause));
+                }
+            } else if (!isCancelled.get()) {
+                sink.tryEmitComplete();
+            }
+        });
+
+        return sink.asFlux()
+                .doOnCancel(() -> isCancelled.set(true))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", id))
+                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+    }
+
+
     public ItemView[] belongToBrand(String brandId, long offset, int limit) {
         try (Connection connection = PsqlUtil.getConnection()) {
             final String sql = "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
@@ -123,7 +204,7 @@ public class PsqlItemQuery implements ItemQuery2 {
         return new ItemView[0];
     }
 
-    @Override
+
     public ItemView[] belongToCategory(String categoryId, long offset, int limit) {
         try (Connection connection = PsqlUtil.getConnection()) {
             final String sql = "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
@@ -145,7 +226,7 @@ public class PsqlItemQuery implements ItemQuery2 {
         return new ItemView[0];
     }
 
-    @Override
+
     public ItemView[] belongToCategoryAndDescendants(String categoryId, long offset, int limit) {
         categoryId = categoryId.trim();
         try (Connection connection = PsqlUtil.getConnection()) {
@@ -199,7 +280,7 @@ public class PsqlItemQuery implements ItemQuery2 {
     }
  */
 
-    @Override
+
     public ItemView[] queryAll(long offset, int limit) {
         try (Connection connection = PsqlUtil.getConnection()) {
             final String findSql = "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic' mnemonic,i.name::jsonb ->> 'alias' alias,i.barcode,\n" +
@@ -221,7 +302,7 @@ public class PsqlItemQuery implements ItemQuery2 {
         return new ItemView[0];
     }
 
-    @Override
+
     public long size() {
         try (Connection connection = PsqlUtil.getConnection()) {
             final String sql = "select count(*) from item";
@@ -236,7 +317,7 @@ public class PsqlItemQuery implements ItemQuery2 {
         return 0L;
     }
 
-    @Override
+
     public ItemView[] queryByBarcode(String barcode) {
         barcode = barcode.trim();
         try (Connection connection = PsqlUtil.getConnection()) {
@@ -258,7 +339,7 @@ public class PsqlItemQuery implements ItemQuery2 {
         return new ItemView[0];
     }
 
-    @Override
+
     public ItemView[] accurateQueryByBarcode(String barcode) {
         barcode = barcode.trim();
         try (Connection connection = PsqlUtil.getConnection()) {
@@ -280,7 +361,7 @@ public class PsqlItemQuery implements ItemQuery2 {
         return new ItemView[0];
     }
 
-    @Override
+
     public ItemView[] queryByRegular(String regularExpression) {
         try (Connection connection = PsqlUtil.getConnection()) {
             final String findSql = "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
@@ -324,7 +405,7 @@ public class PsqlItemQuery implements ItemQuery2 {
         return new ItemView[0];
     }
 
-    @Override
+
     public ItemView[] queryByName(String expression, long offset, int limit) {
         final String sql = "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
                 "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
@@ -378,7 +459,7 @@ public class PsqlItemQuery implements ItemQuery2 {
         return itemViews.toArray(new ItemView[0]);
     }
 
-    private ItemView rebuild(ResultSet rs) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
+    private static ItemView rebuild(ResultSet rs) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
         String id = rs.getString("id");
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
         Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
@@ -418,11 +499,11 @@ public class PsqlItemQuery implements ItemQuery2 {
         return itemView;
     }
 
-    private MadeIn toMadeIn(String json) throws IOException {
+    private static MadeIn toMadeIn(String json) throws IOException {
         String _class = null;
         String madeIn = null;
         String code = MadeIn.UNKNOWN.code();
-        JsonParser parser = jasonFactory.createParser(json.getBytes(StandardCharsets.UTF_8));
+        JsonParser parser = JSON_FACTORY.createParser(json.getBytes(StandardCharsets.UTF_8));
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();
             if (JsonToken.FIELD_NAME.equals(jsonToken)) {
@@ -451,9 +532,9 @@ public class PsqlItemQuery implements ItemQuery2 {
         return MadeIn.UNKNOWN;
     }
 
-    private URI[] toImages(InputStream is) throws IOException {
+    private static URI[] toImages(InputStream is) throws IOException {
         URI[] result = new URI[0];
-        JsonParser parser = jasonFactory.createParser(is);
+        JsonParser parser = JSON_FACTORY.createParser(is);
         while (!parser.isClosed()) {
             if (JsonToken.FIELD_NAME == parser.nextToken()) {
                 String fieldName = parser.getCurrentName();
@@ -466,7 +547,7 @@ public class PsqlItemQuery implements ItemQuery2 {
         return result;
     }
 
-    private URI[] readImages(JsonParser parser) throws IOException {
+    private static URI[] readImages(JsonParser parser) throws IOException {
         List<URI> uriList = new ArrayList<>();
         while (parser.nextToken() != JsonToken.END_ARRAY) {
             uriList.add(URI.create(parser.getValueAsString()));

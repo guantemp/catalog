@@ -46,7 +46,7 @@ import java.io.StringWriter;
  * @version 0.0.1 builder 2025/8/29
  */
 
-public class ESBrandQuery implements BrandQuery {
+public final class ESBrandQuery implements BrandQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Brand");
     private static final String SINGLE_PREFIX = "/" + ESUtil.database() + "_brand";
     private static final String SEARCH_ENDPOINT = SINGLE_PREFIX + "/_search";
