@@ -104,7 +104,7 @@
          -->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- 文件名 -->
-            <fileNamePattern>${FILE_PATH}/%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${FILE_PATH}/%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <!--日志文件保留天数-->
             <maxHistory>45</maxHistory>
             <!--日志文件最大的大小-->
@@ -144,18 +144,16 @@
         </encoder>
     </appender>
 
-
     <!--不同业务产生的日志打印到不同文件中-->
     <appender name="API_HIS_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <File>${FILE_PATH}/api_his_info.log</File>
         <append>true</append>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+        <!-- 含义：接受 INFO 及更高级别 (INFO, WARN, ERROR)，拒绝 DEBUG -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${FILE_PATH}/api_his_info.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <fileNamePattern>${FILE_PATH}/%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>15</maxHistory>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
@@ -183,14 +181,14 @@
         </encoder>
     </appender>
     <!-- level属性：指定根logger的分配级别 -->
-    <root level="warn">
+    <root level="info">
         <appender-ref ref="STDOUT"></appender-ref>
     </root>
 
-    <!-- name:指定logger名称；level：指定logger的分配级别；additivity(非必须，默认为true)：设置appender叠加性 -->
-    <logger name="catalog.hoprxi.core.es" level="debug" additivity="true">
-        <appender-ref ref="size_time_file"></appender-ref>
-        <appender-ref ref="API_IRON_INFO"></appender-ref>
+    <!-- name:指定logger名称；level：指定logger的分配级别；additivity(非必须，默认为true 冒泡到root)：设置appender叠加性 -->
+    <logger name="catalog.hoprxi.core" level="debug" additivity="true">
+       <!-- <appender-ref ref="size_time_file"></appender-ref> -->
+        <appender-ref ref="API_HIS_INFO"></appender-ref>
     </logger>
 
 </configuration>

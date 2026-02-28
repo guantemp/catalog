@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
+import catalog.hoprxi.core.application.query.ItemQueryFilter;
 import catalog.hoprxi.core.application.query.SearchException;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
@@ -36,6 +38,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.util.ReferenceCountUtil;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +55,6 @@ import javax.money.MonetaryAmount;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -61,51 +66,81 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.2 builder 2023-08-13
+ * @since JDK21
+ * @version 0.0.3 builder 2026-02-28
  */
 
 public class PsqlItemQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQuery.class);
     private static final Cache<String, ItemView> CACHE = CacheFactory.build("itemView");
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-    private static Constructor<Name> nameConstructor;
+    private static final int SINGLE_BUFFER_SIZE = 1024;//2KB缓冲区
 
-    static {
-        try {
-            nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
-            nameConstructor.setAccessible(true);
-        } catch (NoSuchMethodException e) {
-            if (LOGGER.isDebugEnabled()) LOGGER.debug("Not query Name class has such constructor", e);
-        }
-    }
-
-    public ItemView query(String id) {
-        ItemView itemView = CACHE.get(id);
-        if (itemView != null) return itemView;
-        try (Connection connection = PsqlUtil.getConnection()) {
-            final String sql = "select i.id, i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
-                    "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
-                    "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
-                    "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
-                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
-                    "from item  i,category  c,brand  b where i.id= ? and i.category_id = c.id and i.brand_id = b.id limit 1";
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setLong(1, Long.parseLong(id));
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                itemView = rebuild(rs);
-                CACHE.put(id, itemView);
-                return itemView;
+    public InputStream find(long id) {
+        final String findSql1 = """
+                SELECT i.id, i.name, i.barcode, i.grade, i.made_in, i.spec, i.shelf_life,
+                       i.retail_price, i.last_receipt_price, i.member_price, i.vip_price,
+                        json_build_object('id', c.id, 'name', c.name::jsonb ->> 'name') AS category,
+                        json_build_object('id', b.id, 'name', b.name::jsonb ->> 'name') AS brand
+                        FROM item i
+                        LEFT JOIN category c ON i.category_id = c.id
+                        LEFT JOIN brand b ON i.brand_id = b.id
+                        WHERE i.id = ?
+                        LIMIT 1
+                """;
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
+        boolean success = false;
+        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement ps = connection.prepareStatement(findSql1)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery();
+                 OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
+                if (!rs.next()) {
+                    // 没找到数据，释放 buffer 并返回 null
+                    ReferenceCountUtil.safeRelease(buffer);
+                    return null;
+                }
+                gen.writeStartObject();
+                gen.writeNumberField("id", rs.getLong("id"));
+                gen.writeFieldName("name");
+                gen.writeRawValue(rs.getString("name"));
+                gen.writeStringField("barcode", rs.getString("barcode"));
+                gen.writeStringField("spec", rs.getString("spec"));
+                gen.writeStringField("grade", rs.getString("grade"));
+                gen.writeFieldName("madeIn");
+                gen.writeRawValue(rs.getString("made_in"));
+                gen.writeNumberField("shelf_life", rs.getLong("shelf_life"));
+                gen.writeFieldName("last_receipt_price");
+                gen.writeRawValue(rs.getString("last_receipt_price"));
+                gen.writeFieldName("retail_price");
+                gen.writeRawValue(rs.getString("retail_price"));
+                gen.writeFieldName("member_price");
+                gen.writeRawValue(rs.getString("member_price"));
+                gen.writeFieldName("vip_price");
+                gen.writeRawValue(rs.getString("vip_price"));
+                gen.writeFieldName("category");
+                gen.writeRawValue(rs.getString("category"));
+                gen.writeFieldName("brand");
+                gen.writeRawValue(rs.getString("brand"));
+                gen.writeEndObject();
+                gen.flush();
+                success = true;
+                return new ByteBufInputStream(buffer, true);
             }
-        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
-                 IOException e) {
-            LOGGER.error("Can't rebuild itemView with (id = {})", id, e);
+        } catch (SQLException e) {
+            LOGGER.warn("Database error while fetching item id={}", id, e);
+            throw new PersistenceException("Database error while fetching item id= " + id, e);
+        } catch (IOException e) {
+            LOGGER.error("I/O failed", e);
+            throw new SearchException("Failed to serialize item data::", e);
+        } finally {
+            if (!success && buffer.refCnt() > 0) {
+                ReferenceCountUtil.safeRelease(buffer);
+            }
         }
-        return null;
     }
 
     public Flux<ByteBuf> findAsync(long id) {
@@ -120,12 +155,49 @@ public class PsqlItemQuery {
                         WHERE i.id = ?
                         LIMIT 1
                 """;
+        return PsqlItemQuery.findAsync(findSql, ps -> {
+            try {
+                ps.setLong(1, id);
+            } catch (SQLException e) {
+                throw new RuntimeException("Parameter setting failed for id=" + id, e);
+            }
+        }, "id=" + id);
+    }
+
+    public Flux<ByteBuf> findByBarcodeAsync(String barcode) {
+        final String findSql = """
+                SELECT i.id, i.name, i.barcode, i.grade, i.made_in, i.spec, i.shelf_life,
+                       i.retail_price, i.last_receipt_price, i.member_price, i.vip_price,
+                        json_build_object('id', c.id, 'name', c.name::jsonb ->> 'name') AS category,
+                        json_build_object('id', b.id, 'name', b.name::jsonb ->> 'name') AS brand
+                        FROM item i
+                        LEFT JOIN category c ON i.category_id = c.id
+                        LEFT JOIN brand b ON i.brand_id = b.id
+                        WHERE i.barcode = ?
+                        LIMIT 1
+                """;
+        return PsqlItemQuery.findAsync(findSql, ps -> {
+            try {
+                ps.setString(1, barcode);
+            } catch (SQLException e) {
+                throw new RuntimeException("Parameter setting failed for barcode=" + barcode, e);
+            }
+        }, "barcode=" + barcode);
+    }
+
+    /*
+     * 通用异步查询执行器
+     *
+     * @param sql         SQL 查询语句
+     * @param paramSetter 参数设置回调
+     * @param logId       用于日志记录的标识符 (例如: "id=123" 或 "barcode=ABC")
+     */
+    private static Flux<ByteBuf> findAsync(String sql, Consumer<PreparedStatement> paramSetter, String info) {
         AtomicBoolean isCancelled = new AtomicBoolean(false);
         Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
         CompletableFuture.runAsync(() -> {
-            try (Connection connection = PsqlUtil.getConnection();
-                 PreparedStatement ps = connection.prepareStatement(findSql)) {
-                ps.setLong(1, id);
+            try (Connection connection = PsqlUtil.getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
+                paramSetter.accept(ps);
                 try (ResultSet rs = ps.executeQuery();
                      OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                     if (rs.next()) {
@@ -153,6 +225,7 @@ public class PsqlItemQuery {
                         gen.writeRawValue(rs.getString("brand"));
                         gen.writeEndObject();
                     }
+                    gen.flush();
                 }
             } catch (SQLException | IOException e) {
                 throw new RuntimeException(e);
@@ -162,13 +235,13 @@ public class PsqlItemQuery {
                 Throwable cause = err;
                 if (err instanceof RuntimeException) cause = err.getCause();// 取出里面的原始 Exception,区分数据库异常和业务异常
                 if (cause instanceof SQLException) {
-                    LOGGER.warn("Database error while fetching item id={}", id, cause);
-                    sink.tryEmitError(new PersistenceException("Database error while fetching item id= " + id, cause));
+                    LOGGER.warn("Database error while fetching item {}", info, cause);
+                    sink.tryEmitError(new PersistenceException("Database error while fetching item " + info, cause));
                 } else if (cause instanceof IOException) {
-                    LOGGER.warn("Transform failed", cause);
-                    sink.tryEmitError(new PersistenceException("Transform failed", cause));
+                    LOGGER.warn("Failed to serialize for item {}", info, cause);
+                    sink.tryEmitError(new PersistenceException("Failed to serialize cause by", cause));
                 } else {  //未知错误 (兜底，防止请求挂起),比如代码逻辑错误导致的 NullPointerException 等
-                    LOGGER.error("Unexpected system error while fetching item id={}", id, cause);
+                    LOGGER.error("Unexpected system error while fetching item {}", info, cause);
                     sink.tryEmitError(new SearchException("Unexpected error: " + err.getMessage(), cause));
                 }
             } else if (!isCancelled.get()) {
@@ -178,7 +251,7 @@ public class PsqlItemQuery {
 
         return sink.asFlux()
                 .doOnCancel(() -> isCancelled.set(true))
-                .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", id))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", info))
                 .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
     }
 
@@ -254,31 +327,10 @@ public class PsqlItemQuery {
         }
         return new ItemView[0];
     }
-/*
-    public ItemView[] belongToCategoryTest(String categoryId) {
-        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
-            final String sql = "select i.id,i.name::jsonb ->> 'name' name, i.name::jsonb ->> 'mnemonic'  mnemonic,i.name::jsonb ->> 'alias'  alias,i.barcode,\n" +
-                    "i.category_id,c.name::jsonb ->> 'name'  category_name,i.brand_id,b.name::jsonb ->> 'name'  brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
-                    "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
-                    "i.retail_price::jsonb ->> 'number'  retail_price_number,i.retail_price::jsonb ->> 'currencyCode'  retail_price_currencyCode,i.retail_price::jsonb ->> 'unit'  retail_price_unit,\n" +
-                    "i.member_price::jsonb ->> 'name'  member_price_name,i.member_price::jsonb -> 'price' ->> 'number'  member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode'  member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit'  member_price_unit,\n" +
-                    "i.vip_price::jsonb ->> 'name'  vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number'  vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode'  vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit'  vip_price_unit,i.show\n" +
-                    "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id\n" +
-                    "where c.id in (select id from category where root_id = (select root_id from category where id = 14986369380716560) and \"left\" >= (select \"left\" from category where id = 14986369380716560)\n" +
-                    "and \"right\" <= (select \"right\" from category where id = 14986369380716560))";
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setLong(1, Long.parseLong(categoryId));
-            ps.setLong(2, Long.parseLong(categoryId));
-            ps.setLong(3, Long.parseLong(categoryId));
-            ResultSet rs = ps.executeQuery();
-            return transform(rs);
-        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
-                 IOException e) {
-            LOGGER.error("Can't rebuild item", e);
-        }
-        return new ItemView[0];
+
+    public Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField){
+        return null;
     }
- */
 
 
     public ItemView[] queryAll(long offset, int limit) {
@@ -302,7 +354,6 @@ public class PsqlItemQuery {
         return new ItemView[0];
     }
 
-
     public long size() {
         try (Connection connection = PsqlUtil.getConnection()) {
             final String sql = "select count(*) from item";
@@ -317,7 +368,6 @@ public class PsqlItemQuery {
         return 0L;
     }
 
-
     public ItemView[] queryByBarcode(String barcode) {
         barcode = barcode.trim();
         try (Connection connection = PsqlUtil.getConnection()) {
@@ -328,28 +378,6 @@ public class PsqlItemQuery {
                     "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
                     "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
                     "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.barcode ~ ?";
-            PreparedStatement ps = connection.prepareStatement(findSql);
-            ps.setString(1, barcode);
-            ResultSet rs = ps.executeQuery();
-            return transform(rs);
-        } catch (SQLException | InvocationTargetException | InstantiationException | IllegalAccessException |
-                 IOException e) {
-            LOGGER.error("Can't rebuild itemView", e);
-        }
-        return new ItemView[0];
-    }
-
-
-    public ItemView[] accurateQueryByBarcode(String barcode) {
-        barcode = barcode.trim();
-        try (Connection connection = PsqlUtil.getConnection()) {
-            final String findSql = "select i.id,i.\"name\"::jsonb ->> 'name' name,i.\"name\"::jsonb ->> 'mnemonic' mnemonic,i.\"name\"::jsonb ->> 'alias' alias,\n" +
-                    "i.barcode,i.category_id,c.name::jsonb ->> 'name' category_name,i.brand_id,b.name::jsonb ->> 'name' brand_name,i.grade, i.made_in,i.spec,i.shelf_life,\n" +
-                    "i.last_receipt_price::jsonb ->> 'name' last_receipt_price_name,i.last_receipt_price::jsonb -> 'price' ->> 'number' last_receipt_price_number,i.last_receipt_price::jsonb -> 'price' ->> 'currencyCode' last_receipt_price_currencyCode,i.last_receipt_price::jsonb -> 'price' ->> 'unit' last_receipt_price_unit,\n" +
-                    "i.retail_price::jsonb ->> 'number' retail_price_number,i.retail_price::jsonb ->> 'currencyCode' retail_price_currencyCode,i.retail_price::jsonb ->> 'unit' retail_price_unit,\n" +
-                    "i.member_price::jsonb ->> 'name' member_price_name,i.member_price::jsonb -> 'price' ->> 'number' member_price_number,i.member_price::jsonb -> 'price' ->> 'currencyCode' member_price_currencyCode,i.member_price::jsonb -> 'price' ->> 'unit' member_price_unit,\n" +
-                    "i.vip_price::jsonb ->> 'name' vip_price_name,i.vip_price::jsonb -> 'price' ->> 'number' vip_price_number,i.vip_price::jsonb -> 'price' ->> 'currencyCode' vip_price_currencyCode,i.vip_price::jsonb -> 'price' ->> 'unit' vip_price_unit,i.show\n" +
-                    "from item i left join category c on i.category_id = c.id left join brand b on b.id = i.brand_id where i.barcode = ?";
             PreparedStatement ps = connection.prepareStatement(findSql);
             ps.setString(1, barcode);
             ResultSet rs = ps.executeQuery();
@@ -461,7 +489,7 @@ public class PsqlItemQuery {
 
     private static ItemView rebuild(ResultSet rs) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
         String id = rs.getString("id");
-        Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
+        Name name = new Name(rs.getString("name"), rs.getString("alias"));
         Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
         GradeEnum grade = GradeEnum.valueOf(rs.getString("grade"));
         MadeIn madeIn = toMadeIn(rs.getString("made_in"));

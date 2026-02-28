@@ -16,16 +16,15 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.ItemQueryFilter;
-import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.application.view.ItemView;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
 import io.netty.buffer.ByteBuf;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import reactor.core.publisher.Flux;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 
@@ -48,23 +47,34 @@ public class PsqlItemQueryTest {
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testQuery() throws InterruptedException {
-        ItemView itemView = query.query("55307366414673724");
+    public void testFind() throws InterruptedException, IOException {
+        try (InputStream is = query.find(55307366414673724L)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        /*
+        ItemView itemView = query.find("55307366414673724");
         Assert.assertNotNull(itemView);
-        itemView = query.query("55307366425159504");
+        itemView = query.find("55307366425159504");
         Assert.assertNotNull(itemView);
-        itemView = query.query("55307366506948522");
+        itemView = query.find("55307366506948522");
         Assert.assertNotNull(itemView);
-        itemView = query.query("52496163982907408");
+        itemView = query.find("52496163982907408");
         Assert.assertNull(itemView);
-        itemView = query.query("55307366561474567");
+        itemView = query.find("55307366561474567");
         Assert.assertNotNull(itemView);
+
+         */
 
         Flux<ByteBuf>[] fluxes = new Flux[]{
                 query.findAsync(55307366561474567L),
                 query.findAsync(55307366425159504L),
                 query.findAsync(55307366506948522L),
-                query.findAsync(55307407636294041L)
+                query.findAsync(55307407636294041L),
+                query.findByBarcodeAsync("6901028339537"),
+                query.findByBarcodeAsync("6903244120128"),
+                query.findByBarcodeAsync("6905418003640"),
+                query.findByBarcodeAsync("6934665085949"),
+                query.findByBarcodeAsync("6934665085948"),
         };
         CountDownLatch latch = new CountDownLatch(fluxes.length);
         // 为每个查询在独立线程中启动订阅
@@ -86,7 +96,7 @@ public class PsqlItemQueryTest {
                             error.printStackTrace();
                         },
                         () -> {
-                            System.out.println("[Thread-" + Thread.currentThread().threadId() + "] Query #" + queryIndex + " completed");
+                            //System.out.println("[Thread-" + Thread.currentThread().threadId() + "] Query #" + queryIndex + " completed");
                             System.out.println(sb);
                             latch.countDown();
                         }
@@ -165,7 +175,7 @@ public class PsqlItemQueryTest {
     */
 
     @Test
-    public void testQueryAll() {
+    public void testFindAll() {
         ItemView[] skuses = query.queryAll(0, 25);
         Assert.assertEquals(skuses.length, 14);
         skuses = query.queryAll(12, 25);
@@ -207,7 +217,7 @@ public class PsqlItemQueryTest {
     }
 
     @Test
-    public void testQueryByBarcode() {
+    public void testFindByBarcode() {
         ItemView[] items = query.queryByBarcode("69235552");
         //Assert.assertEquals(items.length, 3);
         items = query.queryByBarcode("690");
@@ -220,15 +230,6 @@ public class PsqlItemQueryTest {
         Assert.assertEquals(items.length, 1);
         for (ItemView item : items)
             System.out.println(item);
-    }
-
-    @Test
-    public void testAccurateQueryByBarcode() {
-        ItemView[] items = query.accurateQueryByBarcode("69235552");
-        Assert.assertEquals(items.length, 0);
-        items = query.accurateQueryByBarcode(" 6923555210066");
-        Assert.assertEquals(items.length, 1);
-
     }
 
     @Test
