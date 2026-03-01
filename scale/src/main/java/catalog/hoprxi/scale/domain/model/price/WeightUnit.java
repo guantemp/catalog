@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.scale.domain.model.weight_price;
+package catalog.hoprxi.scale.domain.model.price;
 
 
 import catalog.hoprxi.scale.infrastructure.i18n.Label;
@@ -24,19 +24,19 @@ import java.math.BigDecimal;
 /**
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @version 0.0.3 builder 2019-10-30
- * @since JDK8.0
+ * @since JDK21
  */
 public enum WeightUnit {
     TON {
         @Override
-        public Number convert(WeightUnit unit) {
+        public BigDecimal convert(WeightUnit unit) {
             switch (unit) {
                 case FIVE_HUNDRED_GRAM:
-                    return 2000;
+                    return BigDecimal.valueOf(2000);
                 case KILOGRAM:
-                    return 1000;
+                    return BigDecimal.valueOf(1000);
                 default:
-                    return 1;
+                    return BigDecimal.valueOf(1);
             }
         }
 
@@ -46,14 +46,14 @@ public enum WeightUnit {
         }
     }, KILOGRAM {
         @Override
-        public Number convert(WeightUnit unit) {
+        public BigDecimal convert(WeightUnit unit) {
             switch (unit) {
                 case FIVE_HUNDRED_GRAM:
-                    return 2;
+                    return BigDecimal.valueOf(2);
                 case GRAM:
-                    return 1000;
+                    return BigDecimal.valueOf(1000);
                 default:
-                    return 1;
+                    return BigDecimal.valueOf(1);
             }
         }
 
@@ -63,14 +63,14 @@ public enum WeightUnit {
         }
     }, GRAM {
         @Override
-        public Number convert(WeightUnit unit) {
+        public BigDecimal convert(WeightUnit unit) {
             switch (unit) {
                 case FIVE_HUNDRED_GRAM:
-                    return 0.05;
+                    return new BigDecimal("0.05");
                 case KILOGRAM:
-                    return 0.001;
+                    return new BigDecimal("0.001");
                 default:
-                    return 1;
+                    return BigDecimal.valueOf(1);
             }
         }
 
@@ -80,14 +80,14 @@ public enum WeightUnit {
         }
     }, FIVE_HUNDRED_GRAM {
         @Override
-        public Number convert(WeightUnit unit) {
+        public BigDecimal convert(WeightUnit unit) {
             switch (unit) {
                 case GRAM:
-                    return 500;
+                    return BigDecimal.valueOf(500);
                 case KILOGRAM:
-                    return 0.5;
+                    return new BigDecimal("0.5");
                 default:
-                    return 1;
+                    return BigDecimal.valueOf(1);
             }
         }
 
@@ -97,14 +97,14 @@ public enum WeightUnit {
         }
     }, MILLIGRAM {
         @Override
-        public Number convert(WeightUnit unit) {
+        public BigDecimal convert(WeightUnit unit) {
             switch (unit) {
                 case GRAM:
-                    return 0.001;
+                    return new BigDecimal("0.001");
                 case KILOGRAM:
-                    return 0.000001;
+                    return new BigDecimal("0.000001");
                 default:
-                    return 1;
+                    return BigDecimal.valueOf(1);
             }
         }
 
@@ -114,14 +114,14 @@ public enum WeightUnit {
         }
     }, OUNCE {
         @Override
-        public Number convert(WeightUnit unit) {
+        public BigDecimal convert(WeightUnit unit) {
             switch (unit) {
                 case GRAM:
                     return new BigDecimal("28.5");
                 case KILOGRAM:
                     return new BigDecimal("0.0285");
                 default:
-                    return 1;
+                    return BigDecimal.valueOf(1);
             }
         }
 
@@ -132,14 +132,14 @@ public enum WeightUnit {
 
     }, POUND {
         @Override
-        public Number convert(WeightUnit unit) {
+        public BigDecimal convert(WeightUnit unit) {
             switch (unit) {
                 case GRAM:
                     return new BigDecimal("453.59237");
                 case KILOGRAM:
                     return new BigDecimal("0.45359237");
                 default:
-                    return 1;
+                    return BigDecimal.valueOf(1);
             }
         }
 
@@ -149,12 +149,12 @@ public enum WeightUnit {
         }
     }, CARAT {
         @Override
-        public Number convert(WeightUnit unit) {
+        public BigDecimal convert(WeightUnit unit) {
             switch (unit) {
                 case GRAM:
                     return new BigDecimal("0.2");
                 default:
-                    return 1;
+                    return BigDecimal.valueOf(1);
 
             }
         }
@@ -166,15 +166,17 @@ public enum WeightUnit {
     };
 
 
-    public abstract Number convert(WeightUnit unit);
-/*
-    public static WeightUnit valueOf(String s) {
+    public abstract BigDecimal convert(WeightUnit unit);
+
+    public static WeightUnit of(String s) {
+        if (s == null)
+            return WeightUnit.KILOGRAM;
         for (WeightUnit unit : values()) {
-            if (unit.toString().equals(s))
+            if (s.equalsIgnoreCase(unit.name()) || unit.toString().equals(s))
                 return unit;
         }
         return WeightUnit.KILOGRAM;
     }
- */
+
 }
 

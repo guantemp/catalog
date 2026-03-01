@@ -14,40 +14,34 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.scale.domain.model.weight_price;
+package catalog.hoprxi.scale.domain.model.price;
+
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 import java.util.Locale;
+import java.util.Objects;
 
 /***
  * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 2019/10/29
  */
-public class WeightVipPrice {
-    private String name;
+public class WeightRetailPrice {
     private WeightPrice weightPrice;
 
-    public WeightVipPrice(String name, WeightPrice weightPrice) {
-        setName(name);
+    public static final WeightRetailPrice ZERO_KILOGRAM_RMB = new WeightRetailPrice(WeightPrice.ZERO_KILOGRAM_RMB);
+
+    public WeightRetailPrice(WeightPrice weightPrice) {
         setWeightPrice(weightPrice);
     }
 
-    public WeightVipPrice(WeightPrice weightPrice) {
-        this(Label.PRICE_VIP, weightPrice);
-    }
-
-    public static final WeightVipPrice zero(String name, Locale locale) {
-        return new WeightVipPrice(name, WeightPrice.zero(locale));
+    public static WeightRetailPrice zero(Locale locale) {
+        return new WeightRetailPrice(WeightPrice.zero(locale));
     }
 
     public String name() {
-        return name;
-    }
-
-    private void setName(String name) {
-        this.name = name;
+        return Label.PRICE_RETAIL;
     }
 
     public WeightPrice weightPrice() {
@@ -55,6 +49,7 @@ public class WeightVipPrice {
     }
 
     private void setWeightPrice(WeightPrice weightPrice) {
+        Objects.requireNonNull(weightPrice, "weightPrice required");
         this.weightPrice = weightPrice;
     }
 
@@ -63,24 +58,20 @@ public class WeightVipPrice {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        WeightVipPrice that = (WeightVipPrice) o;
+        WeightRetailPrice that = (WeightRetailPrice) o;
 
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
         return weightPrice != null ? weightPrice.equals(that.weightPrice) : that.weightPrice == null;
     }
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (weightPrice != null ? weightPrice.hashCode() : 0);
-        return result;
+        return weightPrice != null ? weightPrice.hashCode() : 0;
     }
 
     @Override
     public String toString() {
-        return "WeightVipPrice{" +
-                "name='" + name + '\'' +
-                ", weightPrice=" + weightPrice +
+        return "WeightRetailPrice{" +
+                "weightPrice=" + weightPrice +
                 '}';
     }
 }

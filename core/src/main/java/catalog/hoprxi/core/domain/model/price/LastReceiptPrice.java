@@ -28,8 +28,8 @@ import java.util.StringJoiner;
  * @version 0.0.3 builder 2026-02-22
  */
 public class LastReceiptPrice {
-    public static final LastReceiptPrice RMB_PCS_ZERO = new LastReceiptPrice(Price.zero(Locale.CHINA));
-    public static final LastReceiptPrice USD_PCS_ZERO = new LastReceiptPrice(Price.zero(Locale.US));
+    public static final LastReceiptPrice ZERO_RMB_PCS = new LastReceiptPrice(Price.zero(Locale.CHINA));
+    public static final LastReceiptPrice ZERO_USD_PCS = new LastReceiptPrice(Price.zero(Locale.US));
     private static final int NAME_MAX_LENGTH = 64;
     private final Price price;
     private final String name;
@@ -47,9 +47,9 @@ public class LastReceiptPrice {
         Objects.requireNonNull(locale, "locale required");
         Objects.requireNonNull(unit, "unit required");
         if ("CN".equals(locale.getCountry()) && unit == UnitEnum.PCS)
-            return RMB_PCS_ZERO;
+            return ZERO_RMB_PCS;
         if ("US".equals(locale.getCountry()) && unit == UnitEnum.PCS)
-            return USD_PCS_ZERO;
+            return ZERO_USD_PCS;
         return new LastReceiptPrice(Price.zero(locale, unit));
     }
 

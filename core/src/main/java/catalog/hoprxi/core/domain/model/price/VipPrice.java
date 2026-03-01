@@ -27,8 +27,8 @@ import java.util.Objects;
  * @version 0.0.3 builder 2026-02-22
  */
 public class VipPrice {
-    public static final VipPrice RMB_PCS_ZERO = new VipPrice(Price.zero(Locale.CHINA));
-    public static final VipPrice USD_PCS_ZERO = new VipPrice(Price.zero(Locale.US));
+    public static final VipPrice ZERO_RMB_PCS = new VipPrice(Price.zero(Locale.CHINA));
+    public static final VipPrice ZERO_USD_PCS = new VipPrice(Price.zero(Locale.US));
     private static final int NAME_MAX_LENGTH = 64;
     private final Price price;
     private final String name;
@@ -46,9 +46,9 @@ public class VipPrice {
         Objects.requireNonNull(locale, "locale required");
         Objects.requireNonNull(unit, "unit required");
         if ("CN".equals(locale.getCountry()) && unit == UnitEnum.PCS)
-            return RMB_PCS_ZERO;
+            return ZERO_RMB_PCS;
         if ("US".equals(locale.getCountry()) && unit == UnitEnum.PCS)
-            return USD_PCS_ZERO;
+            return ZERO_USD_PCS;
         return new VipPrice(Price.zero(locale, unit));
     }
 

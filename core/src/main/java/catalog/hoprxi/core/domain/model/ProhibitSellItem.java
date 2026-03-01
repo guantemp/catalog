@@ -151,7 +151,7 @@ public final class ProhibitSellItem {
     }
 
     public Item permitSell() {
-        return new Item(id, barcode, name, madeIn, spec, grade, shelfLife, LastReceiptPrice.RMB_PCS_ZERO, retailPrice, memberPrice, vipPrice, categoryId, brandId);
+        return new Item(id, barcode, name, madeIn, spec, grade, shelfLife, LastReceiptPrice.ZERO_RMB_PCS, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
     public ProhibitTradingItem prohibitedStorageItem(){
         return null;

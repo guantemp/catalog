@@ -36,9 +36,7 @@ public class LabelTest {
             if (field.getType().equals(String.class) && Modifier.isStatic(modifier) && !Modifier.isFinal(modifier)) {
                 try {
                     System.out.println(field.getName() + ":" + field.get(label));
-                } catch (IllegalArgumentException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
+                } catch (IllegalArgumentException | IllegalAccessException e) {
                     e.printStackTrace();
                 }
             }

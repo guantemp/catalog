@@ -150,12 +150,12 @@ public class PsqlItemRepository implements ItemRepository {
 
     private static LastReceiptPrice buildLastReceiptPricePrice(String json) throws IOException {
         if (json == null || json.trim().isEmpty()) {
-            return LastReceiptPrice.RMB_PCS_ZERO;
+            return LastReceiptPrice.ZERO_RMB_PCS;
         }
         String name = "";
         Price price = Price.zero(Locale.getDefault());
         try (JsonParser parser = JSON_FACTORY.createParser(json)) {
-            if (parser.nextToken() != JsonToken.START_OBJECT) return LastReceiptPrice.RMB_PCS_ZERO;
+            if (parser.nextToken() != JsonToken.START_OBJECT) return LastReceiptPrice.ZERO_RMB_PCS;
             while (parser.nextToken() != JsonToken.END_OBJECT) {
                 if (JsonToken.FIELD_NAME == parser.currentToken() && "name".equals(parser.currentName())) {
                     name = parser.nextTextValue();
@@ -169,7 +169,7 @@ public class PsqlItemRepository implements ItemRepository {
 
     private static RetailPrice buildRetailPrice(String json) throws IOException {
         if (json == null || json.trim().isEmpty()) {
-            return RetailPrice.RMB_PCS_ZERO;
+            return RetailPrice.ZERO_RMB_PCS;
         }
         try (JsonParser parser = JSON_FACTORY.createParser(json)) {
             Price price = buildPrice(parser);
@@ -179,12 +179,12 @@ public class PsqlItemRepository implements ItemRepository {
 
     private static MemberPrice buildMemberPricePrice(String json) throws IOException {
         if (json == null || json.trim().isEmpty()) {
-            return MemberPrice.RMB_PCS_ZERO;
+            return MemberPrice.ZERO_RMB_PCS;
         }
         String name = "";
         Price price = Price.zero(Locale.getDefault());
         try (JsonParser parser = JSON_FACTORY.createParser(json)) {
-            if (parser.nextToken() != JsonToken.START_OBJECT) return MemberPrice.RMB_PCS_ZERO;
+            if (parser.nextToken() != JsonToken.START_OBJECT) return MemberPrice.ZERO_RMB_PCS;
             while (parser.nextToken() != JsonToken.END_OBJECT) {
                 if (JsonToken.FIELD_NAME == parser.currentToken() && "name".equals(parser.currentName())) {
                     name = parser.nextTextValue();
@@ -198,12 +198,12 @@ public class PsqlItemRepository implements ItemRepository {
 
     private static VipPrice buildVipPrice(String json) throws IOException {
         if (json == null || json.trim().isEmpty()) {
-            return VipPrice.RMB_PCS_ZERO;
+            return VipPrice.ZERO_RMB_PCS;
         }
         String name = "";
         Price price = Price.zero(Locale.getDefault());
         try (JsonParser parser = JSON_FACTORY.createParser(json)) {
-            if (parser.nextToken() != JsonToken.START_OBJECT) return VipPrice.RMB_PCS_ZERO;
+            if (parser.nextToken() != JsonToken.START_OBJECT) return VipPrice.ZERO_RMB_PCS;
             while (parser.nextToken() != JsonToken.END_OBJECT) {
                 if (JsonToken.FIELD_NAME == parser.currentToken() && "name".equals(parser.currentName())) {
                     name = parser.nextTextValue();
@@ -216,7 +216,7 @@ public class PsqlItemRepository implements ItemRepository {
     }
 
     private static Price buildPrice(JsonParser parser) throws IOException {
-        if (parser.nextToken() != JsonToken.START_OBJECT) return Price.RMB_PCS_ZERO;
+        if (parser.nextToken() != JsonToken.START_OBJECT) return Price.ZERO_RMB_PCS;
         BigDecimal number = BigDecimal.ZERO;
         String currency = "CNY";
         UnitEnum unit = UnitEnum.PCS;

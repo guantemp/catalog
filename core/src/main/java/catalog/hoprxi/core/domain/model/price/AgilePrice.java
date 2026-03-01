@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,45 +19,38 @@ package catalog.hoprxi.core.domain.model.price;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.1 2020-03-15
+ * @since JDK21
+ * @version 0.0.2 2026-03-01
  */
-public class Agile {
-    private Price price;
+public class AgilePrice {
+    private final Price price;
 
-    public Agile(Price price) {
-        setPrice(price);
+    public AgilePrice(Price price) {
+        this.price = Objects.requireNonNull(price, "price required");
     }
 
     public String name() {
-        return Label.PRICE_RETAIL;
+        return Label.PRICE_AGILE;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Agile agile)) return false;
-
-        return Objects.equals(price, agile.price);
+        if (!(o instanceof AgilePrice that)) return false;
+        return Objects.equals(price, that.price);
     }
 
     @Override
     public int hashCode() {
-        return price != null ? price.hashCode() : 0;
+        return Objects.hashCode(price);
     }
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", Agile.class.getSimpleName() + "[", "]")
-                .add("price=" + price)
-                .toString();
-    }
-
-    private void setPrice(Price price) {
-        this.price = Objects.requireNonNull(price, "price required");
+        return "AgilePrice{" +
+                "price=" + price +
+                '}';
     }
 }

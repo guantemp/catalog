@@ -14,12 +14,13 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.scale.domain.model.weight_price;
+package catalog.hoprxi.scale.domain.model.price;
 
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 import java.util.Locale;
+import java.util.Objects;
 
 /***
  * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
@@ -27,11 +28,13 @@ import java.util.Locale;
  * @version 0.0.1 2019/10/29
  */
 public class WeightMemberPrice {
-    private String name;
+    private final String name;
     private WeightPrice weightPrice;
 
+    public static final WeightMemberPrice ZERO_KILOGRAM_RMB = new WeightMemberPrice(WeightPrice.ZERO_KILOGRAM_RMB);
+
     public WeightMemberPrice(String name, WeightPrice weightPrice) {
-        setName(name);
+        this.name = Objects.requireNonNull(name, "name is null");
         setWeightPrice(weightPrice);
     }
 
@@ -39,7 +42,7 @@ public class WeightMemberPrice {
         this(Label.PRICE_MEMBER, weightPrice);
     }
 
-    public static final WeightMemberPrice zero(String name, Locale locale) {
+    public static WeightMemberPrice zero(String name, Locale locale) {
         return new WeightMemberPrice(name, WeightPrice.zero(locale));
     }
 
@@ -47,11 +50,10 @@ public class WeightMemberPrice {
         return name;
     }
 
-    private void setName(String name) {
-        this.name = name;
-    }
 
     private void setWeightPrice(WeightPrice weightPrice) {
+        if (weightPrice == null)
+            weightPrice = WeightPrice.zero(Locale.getDefault());
         this.weightPrice = weightPrice;
     }
 
@@ -61,20 +63,14 @@ public class WeightMemberPrice {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof WeightMemberPrice)) return false;
         WeightMemberPrice that = (WeightMemberPrice) o;
-
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        return weightPrice != null ? weightPrice.equals(that.weightPrice) : that.weightPrice == null;
+        return Objects.equals(name, that.name) && Objects.equals(weightPrice, that.weightPrice);
     }
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (weightPrice != null ? weightPrice.hashCode() : 0);
-        return result;
+        return Objects.hash(name, weightPrice);
     }
 
     @Override

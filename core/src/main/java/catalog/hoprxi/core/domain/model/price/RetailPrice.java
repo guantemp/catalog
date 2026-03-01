@@ -28,8 +28,8 @@ import java.util.StringJoiner;
  * @version 0.0.2 builder 2025-11-08
  */
 public record RetailPrice(Price price) {
-    public static final RetailPrice RMB_PCS_ZERO = new RetailPrice(Price.zero(Locale.CHINA));
-    public static final RetailPrice USD_PCS_ZERO = new RetailPrice(Price.zero(Locale.US));
+    public static final RetailPrice ZERO_RMB_PCS = new RetailPrice(Price.zero(Locale.CHINA));
+    public static final RetailPrice ZERO_USD_PCS = new RetailPrice(Price.zero(Locale.US));
 
     public RetailPrice(Price price) {
         this.price = Objects.requireNonNull(price, "price required");
@@ -39,9 +39,9 @@ public record RetailPrice(Price price) {
         Objects.requireNonNull(locale, "locale required");
         Objects.requireNonNull(unit, "unit required");
         if ("CN".equals(locale.getCountry()) && unit == UnitEnum.PCS)
-            return RMB_PCS_ZERO;
+            return ZERO_RMB_PCS;
         if ("US".equals(locale.getCountry()) && unit == UnitEnum.PCS)
-            return USD_PCS_ZERO;
+            return ZERO_USD_PCS;
         return new RetailPrice(Price.zero(locale, unit));
     }
 

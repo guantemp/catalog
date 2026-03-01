@@ -144,7 +144,6 @@
         </encoder>
     </appender>
 
-
     <!--不同业务产生的日志打印到不同文件中-->
     <appender name="API_HIS_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <File>${FILE_PATH}/api_his_info.log</File>
@@ -154,7 +153,7 @@
             <level>INFO</level>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${FILE_PATH}/api_his_info.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <fileNamePattern>${FILE_PATH}/%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>15</maxHistory>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
@@ -186,9 +185,9 @@
         <appender-ref ref="STDOUT"></appender-ref>
     </root>
 
-    <!-- name:指定logger名称；level：指定logger的分配级别；additivity(非必须，默认为true)：设置appender叠加性 -->
+    <!-- name:指定logger名称；level：指定logger的分配级别；additivity(非必须，默认为true 冒泡到root)：设置appender叠加性 -->
     <logger name="catalog.hoprxi.core" level="debug" additivity="true">
-        <appender-ref ref="size_time_file"></appender-ref>
+       <!-- <appender-ref ref="size_time_file"></appender-ref> -->
         <appender-ref ref="API_HIS_INFO"></appender-ref>
     </logger>
 

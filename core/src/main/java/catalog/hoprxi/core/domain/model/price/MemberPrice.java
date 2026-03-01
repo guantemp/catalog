@@ -28,8 +28,8 @@ import java.util.StringJoiner;
  * @version 0.0.3 builder 2026-02-22
  */
 public class MemberPrice {
-    public static final MemberPrice RMB_PCS_ZERO = new MemberPrice(Price.zero(Locale.CHINA));
-    public static final MemberPrice USD_PCS_ZERO = new MemberPrice(Price.zero(Locale.US));
+    public static final MemberPrice ZERO_RMB_PCS = new MemberPrice(Price.zero(Locale.CHINA));
+    public static final MemberPrice ZERO_USD_PCS = new MemberPrice(Price.zero(Locale.US));
     private static final int NAME_MAX_LENGTH = 64;
     private final Price price;
     private final String name;
@@ -47,9 +47,9 @@ public class MemberPrice {
         Objects.requireNonNull(locale, "locale required");
         Objects.requireNonNull(unit, "unit required");
         if ("CN".equals(locale.getCountry()) && unit == UnitEnum.PCS)
-            return RMB_PCS_ZERO;
+            return ZERO_RMB_PCS;
         if ("US".equals(locale.getCountry()) && unit == UnitEnum.PCS)
-            return USD_PCS_ZERO;
+            return ZERO_USD_PCS;
         return new MemberPrice(Price.zero(locale, unit));
     }
 

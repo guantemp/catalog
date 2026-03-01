@@ -27,7 +27,7 @@ import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.scale.domain.model.Plu;
 import catalog.hoprxi.scale.domain.model.Weight;
 import catalog.hoprxi.scale.domain.model.WeightRepository;
-import catalog.hoprxi.scale.domain.model.weight_price.*;
+import catalog.hoprxi.scale.domain.model.price.*;
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDatabase;
 import com.arangodb.ArangoGraph;
@@ -202,23 +202,23 @@ public class ArangoDBWeightRepository implements WeightRepository {
     }
 
     @Override
-    public void remove(Plu plu) {
-        boolean exists = catalog.collection("plu").documentExists(String.valueOf(plu.plu()));
+    public void delete(Plu plu) {
+        boolean exists = catalog.collection("plu").documentExists(String.valueOf(plu.id()));
         if (exists) {
             final String remove = "WITH plu,weight\n" +
                     "FOR v,e IN 1..1 OUTBOUND @startVertex scale REMOVE v IN weight REMOVE e IN scale";
-            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "plu/" + plu.plu()).get();
+            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "plu/" + plu.id()).get();
             catalog.query(remove, bindVars, null, VPackSlice.class);
-            catalog.graph("scale").vertexCollection("plu").deleteVertex(String.valueOf(plu.plu()));
+            catalog.graph("scale").vertexCollection("plu").deleteVertex(String.valueOf(plu.id()));
         }
     }
 
     @Override
     public void save(Weight weight) {
-        boolean exists = catalog.collection("plu").documentExists(String.valueOf(weight.plu().plu()));
+        boolean exists = catalog.collection("plu").documentExists(String.valueOf(weight.plu().id()));
         if (exists) {
             ArangoGraph graph = catalog.graph("scale");
-            VertexEntity vertex = graph.vertexCollection("plu").getVertex(String.valueOf(weight.plu().plu()), VertexEntity.class);
+            VertexEntity vertex = graph.vertexCollection("plu").getVertex(String.valueOf(weight.plu().id()), VertexEntity.class);
             if (isCategoryIdChanged(catalog, vertex, weight.categoryId()))
                 insertBelongEdgeOfCategory(graph, vertex, weight.categoryId());
             if (isBrandIdChanged(catalog, vertex, weight.brandId()))

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.scale.domain.model.weight_price;
+package catalog.hoprxi.scale.domain.model.price;
 
 import org.junit.Test;
 

@@ -22,36 +22,15 @@ package catalog.hoprxi.scale.domain.model;
  */
 
 public interface WeightRepository {
-
-    /**
-     * @param brandId
-     * @param offset
-     * @param limit
-     * @return
-     */
-    Weight[] belongingToBrand(String brandId, int offset, int limit);
-
-    /**
-     * @param categoryId
-     * @param offset
-     * @param limit
-     * @return
-     */
-    Weight[] belongingToCategory(String categoryId, int offset, int limit);
-
-
     /**
      * @param plu
      * @return
      */
-    Weight find(int plu);
+    Weight find(Plu plu);
 
-    /**
-     * @param offset
-     * @param limit
-     * @return
-     */
-    Weight[] findAll(int offset, int limit);
+    default Weight find(int plu) {
+        return find(new Plu(plu));
+    }
 
     /**
      * @return
@@ -61,7 +40,7 @@ public interface WeightRepository {
     /**
      * @param plu
      */
-    void remove(Plu plu);
+    void delete(Plu plu);
 
     /**
      * @param weight
@@ -72,16 +51,6 @@ public interface WeightRepository {
      * @param plu
      * @return
      */
-    boolean isPluExists(int plu);
+    boolean isPluExists(Plu plu);
 
-    /**
-     * @return
-     */
-    int size();
-
-    /**
-     * @param name
-     * @return
-     */
-    Weight[] fromName(String name);
 }

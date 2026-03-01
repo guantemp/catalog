@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,11 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.scale.application;
+package catalog.hoprxi.scale.application.query;
 
-import catalog.hoprxi.scale.domain.model.Plu;
+import io.netty.buffer.ByteBuf;
+import reactor.core.publisher.Flux;
 
-/***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.1 2020-05-05
- */
-public class PluSegmentationService {
-    public int nextPlu(String categoryId) {
-        return 1;
-    }
-    public static boolean isComplyWithSpec(Plu plu){
-        return true;
-    }
+public interface WeightQuery {
+    Flux<ByteBuf> find(int plu);
 }

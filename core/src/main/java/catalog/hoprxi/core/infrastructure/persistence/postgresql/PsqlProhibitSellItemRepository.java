@@ -162,12 +162,12 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
 
     private static LastReceiptPrice buildLastReceiptPricePrice(String json) throws IOException {
         if (json == null || json.trim().isEmpty()) {
-            return LastReceiptPrice.RMB_PCS_ZERO;
+            return LastReceiptPrice.ZERO_RMB_PCS;
         }
         String name = "";
         Price price = Price.zero(Locale.getDefault());
         try (JsonParser parser = JSON_FACTORY.createParser(json)) {
-            if (parser.nextToken() != JsonToken.START_OBJECT) return LastReceiptPrice.RMB_PCS_ZERO;
+            if (parser.nextToken() != JsonToken.START_OBJECT) return LastReceiptPrice.ZERO_RMB_PCS;
             while (parser.nextToken() != JsonToken.END_OBJECT) {
                 if (JsonToken.FIELD_NAME == parser.currentToken() && "name".equals(parser.currentName())) {
                     name = parser.nextTextValue();
@@ -181,7 +181,7 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
 
     private static RetailPrice buildRetailPrice(String json) throws IOException {
         if (json == null || json.trim().isEmpty()) {
-            return RetailPrice.RMB_PCS_ZERO; // 调用方需处理 null，或返回对应的 EMPTY 对象
+            return RetailPrice.ZERO_RMB_PCS; // 调用方需处理 null，或返回对应的 EMPTY 对象
         }
         try (JsonParser parser = JSON_FACTORY.createParser(json)) {
             Price price = buildPrice(parser);
@@ -191,12 +191,12 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
 
     private static MemberPrice buildMemberPricePrice(String json) throws IOException {
         if (json == null || json.trim().isEmpty()) {
-            return MemberPrice.RMB_PCS_ZERO; // 调用方需处理 null，或返回对应的 EMPTY 对象
+            return MemberPrice.ZERO_RMB_PCS; // 调用方需处理 null，或返回对应的 EMPTY 对象
         }
         String name = "";
         Price price = Price.zero(Locale.getDefault());
         try (JsonParser parser = JSON_FACTORY.createParser(json)) {
-            if (parser.nextToken() != JsonToken.START_OBJECT) return MemberPrice.RMB_PCS_ZERO;
+            if (parser.nextToken() != JsonToken.START_OBJECT) return MemberPrice.ZERO_RMB_PCS;
             while (parser.nextToken() != JsonToken.END_OBJECT) {
                 if (JsonToken.FIELD_NAME == parser.currentToken() && "name".equals(parser.currentName())) {
                     name = parser.nextTextValue();
@@ -210,12 +210,12 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
 
     private static VipPrice buildVipPrice(String json) throws IOException {
         if (json == null || json.trim().isEmpty()) {
-            return VipPrice.RMB_PCS_ZERO; // 调用方需处理 null，或返回对应的 EMPTY 对象
+            return VipPrice.ZERO_RMB_PCS; // 调用方需处理 null，或返回对应的 EMPTY 对象
         }
         String name = "";
         Price price = Price.zero(Locale.getDefault());
         try (JsonParser parser = JSON_FACTORY.createParser(json)) {
-            if (parser.nextToken() != JsonToken.START_OBJECT) return VipPrice.RMB_PCS_ZERO;
+            if (parser.nextToken() != JsonToken.START_OBJECT) return VipPrice.ZERO_RMB_PCS;
             while (parser.nextToken() != JsonToken.END_OBJECT) {
                 if (JsonToken.FIELD_NAME == parser.currentToken() && "name".equals(parser.currentName())) {
                     name = parser.nextTextValue();
@@ -228,7 +228,7 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
     }
 
     private static Price buildPrice(JsonParser parser) throws IOException {
-        if (parser.nextToken() != JsonToken.START_OBJECT) return Price.RMB_PCS_ZERO;
+        if (parser.nextToken() != JsonToken.START_OBJECT) return Price.ZERO_RMB_PCS;
         BigDecimal number = BigDecimal.ZERO;
         String currency = "CNY";
         UnitEnum unit = UnitEnum.PCS;

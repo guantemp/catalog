@@ -299,10 +299,10 @@ public class ItemService {
         long brandId = Brand.UNDEFINED.id();
         long categoryId = Category.UNDEFINED.id();
         Barcode barcode = null;
-        LastReceiptPrice lastReceiptPrice = LastReceiptPrice.RMB_PCS_ZERO;
-        RetailPrice retailPrice = RetailPrice.RMB_PCS_ZERO;
-        MemberPrice memberPrice = MemberPrice.RMB_PCS_ZERO;
-        VipPrice vipPrice = VipPrice.RMB_PCS_ZERO;
+        LastReceiptPrice lastReceiptPrice = LastReceiptPrice.ZERO_RMB_PCS;
+        RetailPrice retailPrice = RetailPrice.ZERO_RMB_PCS;
+        MemberPrice memberPrice = MemberPrice.ZERO_RMB_PCS;
+        VipPrice vipPrice = VipPrice.ZERO_RMB_PCS;
         while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.FIELD_NAME) {
                 String fieldName = parser.currentName();

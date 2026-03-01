@@ -234,4 +234,3 @@ catalog\hoprxi\core\domain\model\price\UnitEnum$4.class
 catalog\hoprxi\core\infrastructure\query\elasticsearch\Extract.class
 catalog\hoprxi\core\application\view\CategoryView.class
 catalog\hoprxi\core\domain\model\madeIn\MadeIn.class
-catalog\hoprxi\core\domain\model\price\Agile.class

@@ -14,8 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.scale.domain.model.weight_price;
-
+package catalog.hoprxi.scale.domain.model.price;
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
@@ -27,19 +26,27 @@ import java.util.Objects;
  * @since JDK8.0
  * @version 0.0.1 2019/10/29
  */
-public class WeightRetailPrice {
+public class WeightVipPrice {
+    private String name;
     private WeightPrice weightPrice;
 
-    public WeightRetailPrice(WeightPrice weightPrice) {
+    public static final WeightVipPrice ZERO_KILOGRAM_RMB = new WeightVipPrice(WeightPrice.ZERO_KILOGRAM_RMB);
+
+    public WeightVipPrice(String name, WeightPrice weightPrice) {
+        this.name = Objects.requireNonNull(name, "name is null");
         setWeightPrice(weightPrice);
     }
 
-    public static final WeightRetailPrice zero(Locale locale) {
-        return new WeightRetailPrice(WeightPrice.zero(locale));
+    public WeightVipPrice(WeightPrice weightPrice) {
+        this(Label.PRICE_VIP, weightPrice);
+    }
+
+    public static WeightVipPrice zero(String name, Locale locale) {
+        return new WeightVipPrice(name, WeightPrice.zero(locale));
     }
 
     public String name() {
-        return Label.PRICE_RETAIL;
+        return name;
     }
 
     public WeightPrice weightPrice() {
@@ -47,29 +54,28 @@ public class WeightRetailPrice {
     }
 
     private void setWeightPrice(WeightPrice weightPrice) {
-        Objects.requireNonNull(weightPrice, "weightPrice required");
+        if (weightPrice == null)
+            weightPrice = WeightPrice.zero(Locale.getDefault());
         this.weightPrice = weightPrice;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        WeightRetailPrice that = (WeightRetailPrice) o;
-
-        return weightPrice != null ? weightPrice.equals(that.weightPrice) : that.weightPrice == null;
+        if (!(o instanceof WeightVipPrice)) return false;
+        WeightVipPrice that = (WeightVipPrice) o;
+        return Objects.equals(name, that.name) && Objects.equals(weightPrice, that.weightPrice);
     }
 
     @Override
     public int hashCode() {
-        return weightPrice != null ? weightPrice.hashCode() : 0;
+        return Objects.hash(name, weightPrice);
     }
 
     @Override
     public String toString() {
-        return "WeightRetailPrice{" +
-                "weightPrice=" + weightPrice +
+        return "WeightVipPrice{" +
+                "name='" + name + '\'' +
+                ", weightPrice=" + weightPrice +
                 '}';
     }
 }

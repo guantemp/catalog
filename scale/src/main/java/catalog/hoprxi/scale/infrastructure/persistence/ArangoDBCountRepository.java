@@ -27,14 +27,6 @@ import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.scale.domain.model.Count;
 import catalog.hoprxi.scale.domain.model.CountRepository;
 import catalog.hoprxi.scale.domain.model.Plu;
-import com.arangodb.ArangoCursor;
-import com.arangodb.ArangoDatabase;
-import com.arangodb.ArangoGraph;
-import com.arangodb.entity.DocumentField;
-import com.arangodb.entity.VertexEntity;
-import com.arangodb.model.VertexUpdateOptions;
-import com.arangodb.util.MapBuilder;
-import com.arangodb.velocypack.VPackSlice;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,8 +42,10 @@ import java.util.Map;
  * @author <a href="wwc.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 2019-05-11
- */
-public class ArangoDBCountRepository implements CountRepository {
+
+*/
+public class ArangoDBCountRepository {
+/*
     private static final Logger LOGGER = LoggerFactory.getLogger(ArangoDBWeightRepository.class);
     private static final VertexUpdateOptions UPDATE_OPTIONS = new VertexUpdateOptions().keepNull(false);
     private static Constructor<Name> nameConstructor;
@@ -146,22 +140,22 @@ public class ArangoDBCountRepository implements CountRepository {
 
     @Override
     public void remove(Plu plu) {
-        boolean exists = catalog.collection("plu").documentExists(String.valueOf(plu.plu()));
+        boolean exists = catalog.collection("plu").documentExists(String.valueOf(plu.id()));
         if (exists) {
             final String remove = "WITH plu,count\n" +
                     "FOR v,e IN 1..1 OUTBOUND @startVertex scale REMOVE v IN count REMOVE e IN scale";
-            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "plu/" + plu.plu()).get();
+            final Map<String, Object> bindVars = new MapBuilder().put("startVertex", "plu/" + plu.id()).get();
             catalog.query(remove, bindVars, null, VPackSlice.class);
-            catalog.graph("scale").vertexCollection("plu").deleteVertex(String.valueOf(plu.plu()));
+            catalog.graph("scale").vertexCollection("plu").deleteVertex(String.valueOf(plu.id()));
         }
     }
 
     @Override
     public void save(Count count) {
-        boolean exists = catalog.collection("plu").documentExists(String.valueOf(count.plu().plu()));
+        boolean exists = catalog.collection("plu").documentExists(String.valueOf(count.plu().id()));
         if (exists) {
             ArangoGraph graph = catalog.graph("scale");
-            VertexEntity vertex = graph.vertexCollection("plu").getVertex(String.valueOf(count.plu().plu()), VertexEntity.class);
+            VertexEntity vertex = graph.vertexCollection("plu").getVertex(String.valueOf(count.plu().id()), VertexEntity.class);
             if (isCategoryIdChanged(catalog, vertex, count.categoryId()))
                 insertBelongEdgeOfCategory(graph, vertex, count.categoryId());
             if (isBrandIdChanged(catalog, vertex, count.brandId()))
@@ -309,4 +303,5 @@ public class ArangoDBCountRepository implements CountRepository {
             this.to = to;
         }
     }
+ */
 }

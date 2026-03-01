@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,25 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.scale.domain.model.weight_price;
+package catalog.hoprxi.scale.domain.model.price;
 
 import org.javamoney.moneta.Money;
 
 import javax.money.Monetary;
 import javax.money.MonetaryAmount;
+import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.1 2019/10/25
- */
+ * @since JDK21
+ * @version 0.0.2 2026-303-01
+ * */
 public class WeightPrice {
-    public static final WeightPrice RMB_ZERO = new WeightPrice(Money.zero(Monetary.getCurrency(Locale.CHINA)), WeightUnit.KILOGRAM);
-    public static final WeightPrice USD_ZERO = new WeightPrice(Money.zero(Monetary.getCurrency(Locale.US)), WeightUnit.KILOGRAM);
-    public static final WeightPrice EUR_ZERO = new WeightPrice(Money.of(0, "EUR"), WeightUnit.KILOGRAM);
+    public static final WeightPrice ZERO_KILOGRAM_RMB = new WeightPrice(Money.zero(Monetary.getCurrency(Locale.CHINA)), WeightUnit.KILOGRAM);
+    public static final WeightPrice ZERO_USD_KILOGRAM = new WeightPrice(Money.zero(Monetary.getCurrency(Locale.US)), WeightUnit.KILOGRAM);
+    public static final WeightPrice ZERO_EUR_KILOGRAM = new WeightPrice(Money.of(0, "EUR"), WeightUnit.KILOGRAM);
     private MonetaryAmount amount;
     private WeightUnit weightUnit;
 
@@ -41,15 +42,17 @@ public class WeightPrice {
     }
 
     public static WeightPrice zero(Locale locale) {
-        if (locale == Locale.CHINA || locale == Locale.CHINESE || locale == Locale.SIMPLIFIED_CHINESE || locale == Locale.PRC)
-            return RMB_ZERO;
-        if (locale == Locale.US)
-            return USD_ZERO;
+        Objects.requireNonNull(locale, "locale required");
+        if ("CN".equals(locale.getCountry()))
+            return ZERO_KILOGRAM_RMB;
+        if ("US".equals(locale.getCountry()))
+            return ZERO_USD_KILOGRAM;
         return new WeightPrice(Money.zero(Monetary.getCurrency(locale)), WeightUnit.KILOGRAM);
     }
 
     private void setWeightUnit(WeightUnit weightUnit) {
-        Objects.requireNonNull(weightUnit, "unit required");
+        if (weightUnit == null)
+            weightUnit = WeightUnit.KILOGRAM;
         this.weightUnit = weightUnit;
     }
 
@@ -75,7 +78,7 @@ public class WeightPrice {
 
         WeightPrice that = (WeightPrice) o;
 
-        if (amount != null ? !amount.equals(that.amount) : that.amount != null) return false;
+        if (!Objects.equals(amount, that.amount)) return false;
         return weightUnit == that.weightUnit;
     }
 
@@ -89,8 +92,8 @@ public class WeightPrice {
     public WeightPrice convert(WeightUnit weightUnit) {
         if (this.weightUnit == weightUnit)
             return this;
-        Number number = this.weightUnit.convert(weightUnit);
-        return new WeightPrice(amount.divide(number), weightUnit);
+        BigDecimal magnification = this.weightUnit.convert(weightUnit);
+        return new WeightPrice(amount.divide(magnification), weightUnit);
     }
 
     @Override

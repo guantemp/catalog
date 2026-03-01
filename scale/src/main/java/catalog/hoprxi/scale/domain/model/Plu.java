@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,39 +22,40 @@ import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.1 2025-11-04
+ * @since JDK21
+ * @version 0.0.2 2026-03-01
  */
-public class Plu {
-    private String plu;
+public final class Plu {
+    private int plu;
+
+    public static Plu valueOf(int i) {
+        return new Plu(i);
+    }
 
     public Plu(int plu) {
         setPlu(plu);
     }
 
-    public int plu() {
-        return Integer.parseInt(plu);
+    public int id() {
+        return plu;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof Plu)) return false;
         Plu plu1 = (Plu) o;
-
-        return Objects.equals(plu, plu1.plu);
+        return plu == plu1.plu;
     }
 
     @Override
     public int hashCode() {
-        return plu != null ? plu.hashCode() : 0;
+        return Objects.hashCode(plu);
     }
 
     private void setPlu(int plu) {
         if (plu <= 0 || plu > 99999)
             throw new IllegalArgumentException("plu rang is [1-99999]");
-        this.plu = String.valueOf(plu);
+        this.plu = plu;
     }
 
     @Override
