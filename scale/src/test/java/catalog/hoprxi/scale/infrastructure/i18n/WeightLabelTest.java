@@ -1,0 +1,45 @@
+/*
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+package catalog.hoprxi.scale.infrastructure.i18n;
+
+import catalog.hoprxi.core.infrastructure.i18n.Label;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
+import static org.testng.Assert.*;
+
+public class WeightLabelTest {
+
+    @Test
+    public void test() {
+        WeightLabel label = new WeightLabel();
+        Field[] allFields = Label.class.getFields();
+        for (Field field : allFields) {
+            int modifier = field.getModifiers();
+            if (field.getType().equals(String.class) && Modifier.isStatic(modifier) && !Modifier.isFinal(modifier)) {
+                try {
+                    System.out.println(field.getName() + ":" + field.get(label));
+                } catch (IllegalArgumentException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}

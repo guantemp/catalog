@@ -28,7 +28,7 @@ import com.typesafe.config.ConfigFactory;
  * @since JDK8.0
  * @version 0.0.3 2022-09-21
  */
-public class CategoryValidatorService {
+public final class CategoryValidatorService {
     private static final CategoryRepository repository= new PsqlCategoryRepository();
 
 /*
@@ -51,7 +51,7 @@ public class CategoryValidatorService {
         if (categoryId == Category.UNDEFINED.id()) return true;
         Category category = repository.find(categoryId);
         //System.out.println(category);
-        return category == null;
+        return category != null;
     }
 
     public static boolean isCurrentCategoryDescendant(long currentId, long descendantId) {

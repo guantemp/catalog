@@ -123,7 +123,7 @@ public class Category {
     }
 
     private void setIdAndParentId(long parentId, long id) {
-        if (id != parentId && CategoryValidatorService.isCategoryExist(parentId))
+        if (id != parentId && !CategoryValidatorService.isCategoryExist(parentId))
             throw new InvalidCategoryIdException("parent id not exist");
         this.id = id;
         this.parentId = parentId;

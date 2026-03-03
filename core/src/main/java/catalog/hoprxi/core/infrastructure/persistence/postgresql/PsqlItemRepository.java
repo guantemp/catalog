@@ -299,6 +299,21 @@ public class PsqlItemRepository implements ItemRepository {
         }
     }
 
+    private static String toJson(Name name) {
+        StringWriter writer = new StringWriter(128);
+        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+            generator.writeStartObject();
+            generator.writeStringField("name", name.name());
+            generator.writeStringField("mnemonic", name.mnemonic());
+            generator.writeStringField("alias", name.alias());
+            generator.writeEndObject();
+        } catch (IOException e) {
+            LOGGER.error("Not write name as json", e);
+            throw new RuntimeException("Failed to serialize Name: " + name, e);
+        }
+        return writer.toString();
+    }
+
     private static String toJson(MadeIn madeIn) {
         StringWriter writer = new StringWriter(128);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
@@ -312,21 +327,6 @@ public class PsqlItemRepository implements ItemRepository {
             throw new RuntimeException("Failed to serialize MadeIn: " + madeIn, e);
         }
         //System.out.println(output.size());
-        return writer.toString();
-    }
-
-    private static String toJson(Name name) {
-        StringWriter writer = new StringWriter(128);
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
-            generator.writeStartObject();
-            generator.writeStringField("name", name.name());
-            generator.writeStringField("mnemonic", name.mnemonic());
-            generator.writeStringField("alias", name.alias());
-            generator.writeEndObject();
-        } catch (IOException e) {
-            LOGGER.error("Not write name as json", e);
-            throw new RuntimeException("Failed to serialize Name: " + name, e);
-        }
         return writer.toString();
     }
 

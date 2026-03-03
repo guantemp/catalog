@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.domain.model;
 
-import org.junit.Assert;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /***

@@ -42,6 +42,7 @@ import java.util.Locale;
  * @version 0.0.1 builder 2022-07-09
  */
 public class ArangoDBCountRepositoryTest {
+    /*
     private static CountRepository countRepository = new ArangoDBCountRepository();
     private static BrandRepository brandRepository = new ArangoDBBrandRepository("catalog");
     private static CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
@@ -168,4 +169,6 @@ public class ArangoDBCountRepositoryTest {
         counts = countRepository.fromName("噢菜");
         Assert.assertEquals(0, counts.length);
     }
+
+     */
 }

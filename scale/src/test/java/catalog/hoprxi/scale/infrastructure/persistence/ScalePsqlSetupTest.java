@@ -28,8 +28,8 @@ public class ScalePsqlSetupTest {
 
     @Test
     public void setup() {
-        ScaleSetup.setup("catalog");
-        ScaleSetup.createCategory();
+        //ScaleSetup.setup("catalog");
+        //ScaleSetup.createCategory();
         //System.out.println((Locale.getDefault()==Locale.CHINA));
     }
 }

@@ -27,7 +27,7 @@ import java.util.Objects;
  * @version 0.0.1 2019/10/29
  */
 public class WeightVipPrice {
-    private String name;
+    private final String name;
     private WeightPrice weightPrice;
 
     public static final WeightVipPrice ZERO_KILOGRAM_RMB = new WeightVipPrice(WeightPrice.ZERO_KILOGRAM_RMB);
@@ -49,7 +49,7 @@ public class WeightVipPrice {
         return name;
     }
 
-    public WeightPrice weightPrice() {
+    public WeightPrice price() {
         return weightPrice;
     }
 

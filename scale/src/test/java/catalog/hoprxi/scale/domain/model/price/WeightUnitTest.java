@@ -16,7 +16,8 @@
 
 package catalog.hoprxi.scale.domain.model.price;
 
-import org.junit.Test;
+
+import org.testng.annotations.Test;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>

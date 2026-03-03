@@ -44,7 +44,7 @@ public class WeightRetailPrice {
         return Label.PRICE_RETAIL;
     }
 
-    public WeightPrice weightPrice() {
+    public WeightPrice price() {
         return weightPrice;
     }
 

@@ -26,7 +26,10 @@ import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
-import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +57,7 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
 
     static {
         try {
-            prohibitSellItemConstructor = ProhibitSellItem.class.getDeclaredConstructor(long.class, Barcode.class, Name.class, MadeIn.class,  Specification.class,
+            prohibitSellItemConstructor = ProhibitSellItem.class.getDeclaredConstructor(long.class, Barcode.class, Name.class, MadeIn.class, Specification.class,
                     GradeEnum.class, ShelfLife.class, LastReceiptPrice.class, RetailPrice.class, MemberPrice.class, VipPrice.class, long.class, long.class);
         } catch (NoSuchMethodException e) {
             if (LOGGER.isDebugEnabled())

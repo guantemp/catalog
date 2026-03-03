@@ -18,7 +18,7 @@ package catalog.hoprxi.show.infrastructure.persistence.postgresql;
 
 
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
-import salt.hoprxi.crypto.application.PasswordService;
+//import salt.hoprxi.crypto.application.PasswordService;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -58,9 +58,9 @@ public class PsqlSetup {
     private static final String ddl = "create user hoprxi createdb password '';create database catalog";
 
     public static void setup(String databaseName) throws SQLException {
-        String password = PasswordService.generateVeryStrongPassword();
+        String password = "PasswordService.generateVeryStrongPassword()";
         String user = "create user catalog with password '" + password + "'";
-        try (Connection connection = PsqlUtil.getConnection(databaseName)) {
+        try (Connection connection = PsqlUtil.getConnection()) {
             connection.setAutoCommit(false);
             Statement statement = connection.createStatement();
             statement.addBatch(CREATE_BRAND_SQL);

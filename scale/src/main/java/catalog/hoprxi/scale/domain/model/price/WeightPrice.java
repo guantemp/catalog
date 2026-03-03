@@ -67,7 +67,7 @@ public class WeightPrice {
         return amount;
     }
 
-    public WeightUnit weightUnit() {
+    public WeightUnit unit() {
         return weightUnit;
     }
 

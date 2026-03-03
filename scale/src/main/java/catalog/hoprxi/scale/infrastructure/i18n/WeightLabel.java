@@ -23,8 +23,8 @@ import salt.hoprxi.utils.NLS;
  * @since JDK8.0
  * @version 0.0.1 builder 2019-10-25
  */
-public class Label extends NLS {
-    private static final String BUNDLE_NAME = "catalog.hoprxi.scale.infrastructure.i18n.label"; //$NON-NLS-1$
+public class WeightLabel extends NLS {
+    private static final String BUNDLE_NAME = "weightlabel"; //$NON-NLS-1$
 
     public static String WEIGHT_UNIT_GRAM;
     public static String WEIGHT_UNIT_FIVE_HUNDRED_GRAM;
@@ -36,6 +36,6 @@ public class Label extends NLS {
     public static String WEIGHT_UNIT_CARAT;
 
     static {
-        NLS.initializeMessages(BUNDLE_NAME, Label.class);
+        NLS.initializeMessages(BUNDLE_NAME, WeightLabel.class);
     }
 }

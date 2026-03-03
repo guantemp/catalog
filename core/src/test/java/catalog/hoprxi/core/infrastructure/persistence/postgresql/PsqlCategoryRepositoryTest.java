@@ -16,6 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.persistence.postgresql;
 
+import catalog.hoprxi.core.domain.CategoryValidatorService;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
@@ -354,6 +355,9 @@ public class PsqlCategoryRepositoryTest {
         Assert.assertNotNull(repository.find(121));//白酒
         Assert.assertNull(repository.find(1211));
         System.out.println(repository.find(1511));
+        Category category=repository.find( 55308263825858876L);
+        System.out.println(category);
+        System.out.println(CategoryValidatorService.isCategoryExist(55308263825858876L));
     }
 
     @Test

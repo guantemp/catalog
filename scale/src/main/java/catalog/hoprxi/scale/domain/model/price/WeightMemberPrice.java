@@ -57,7 +57,7 @@ public class WeightMemberPrice {
         this.weightPrice = weightPrice;
     }
 
-    public WeightPrice weightPrice() {
+    public WeightPrice price() {
         return weightPrice;
     }
 

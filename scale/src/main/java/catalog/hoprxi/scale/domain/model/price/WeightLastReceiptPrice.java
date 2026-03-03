@@ -17,6 +17,7 @@
 package catalog.hoprxi.scale.domain.model.price;
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
+import catalog.hoprxi.scale.infrastructure.i18n.WeightLabel;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -34,15 +35,19 @@ public class WeightLastReceiptPrice {
     public static final WeightLastReceiptPrice ZERO_KILOGRAM_RMB = new WeightLastReceiptPrice(Label.PRICE_LAST_RECEIPT, WeightPrice.ZERO_KILOGRAM_RMB);
 
     public WeightLastReceiptPrice(String name, WeightPrice weightPrice) {
-        this.name = Objects.requireNonNull(name, "name is null");
+        this.name = Objects.requireNonNull(name, "name is null").trim();
         setWeightPrice(weightPrice);
+    }
+
+    public WeightLastReceiptPrice(WeightPrice weightPrice) {
+        this(Label.PRICE_LAST_RECEIPT, weightPrice);
     }
 
     public String name() {
         return name;
     }
 
-    public WeightPrice weightPrice() {
+    public WeightPrice price() {
         return weightPrice;
     }
 

@@ -45,14 +45,14 @@ public class Weight {
     private Plu plu;
     private Name name;
     private Specification spec;
-    private ShelfLife shelfLife;
+    public ShelfLife shelfLife;
     private WeightLastReceiptPrice lastReceiptPrice;
     private WeightRetailPrice retailPrice;
     private WeightMemberPrice memberPrice;
     private WeightVipPrice vipPrice;
     private MadeIn madeIn;
 
-    public Weight(Plu plu, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, ShelfLife shelfLife,WeightLastReceiptPrice lastReceiptPrice,
+    public Weight(Plu plu, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, ShelfLife shelfLife, WeightLastReceiptPrice lastReceiptPrice,
                   WeightRetailPrice retailPrice, WeightMemberPrice memberPrice, WeightVipPrice vipPrice, long categoryId, long brandId) {
         setPlu(plu);
         setName(name);
@@ -60,6 +60,7 @@ public class Weight {
         setSpecification(spec);
         setGrade(grade);
         setShelfLife(shelfLife);
+        this.lastReceiptPrice = Objects.requireNonNull(lastReceiptPrice,"lastReceiptPrice is null");
         setRetailPrice(retailPrice);
         setMemberPrice(memberPrice);
         setVipPrice(vipPrice);
@@ -148,10 +149,6 @@ public class Weight {
 
     public WeightVipPrice vipPrice() {
         return vipPrice;
-    }
-
-    public ShelfLife shelLife() {
-        return shelfLife;
     }
 
     public long brandId() {
@@ -262,5 +259,9 @@ public class Weight {
 
     public WeightLastReceiptPrice lastReceiptPrice() {
         return lastReceiptPrice;
+    }
+
+    public ShelfLife shelfLife() {
+        return shelfLife;
     }
 }
