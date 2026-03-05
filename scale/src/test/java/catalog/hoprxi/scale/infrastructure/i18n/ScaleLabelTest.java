@@ -17,20 +17,17 @@
 package catalog.hoprxi.scale.infrastructure.i18n;
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
-import static org.testng.Assert.*;
-
-public class WeightLabelTest {
+public class ScaleLabelTest {
 
     @Test
     public void test() {
-        WeightLabel label = new WeightLabel();
-        Field[] allFields = Label.class.getFields();
+        ScaleLabel label = new ScaleLabel();
+        Field[] allFields = ScaleLabel.class.getFields();
         for (Field field : allFields) {
             int modifier = field.getModifiers();
             if (field.getType().equals(String.class) && Modifier.isStatic(modifier) && !Modifier.isFinal(modifier)) {

@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="show" />
         <module name="time-count" />
+        <module name="ai" />
         <module name="catalog-core" />
         <module name="catalog-scale" />
       </profile>

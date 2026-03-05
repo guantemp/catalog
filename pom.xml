@@ -33,6 +33,7 @@
         <module>scale</module>
         <module>show</module>
         <module>time-count</module>
+        <module>ai</module>
     </modules>
     <name>catalog</name>
     <url>https://www.hoprxi.com</url>

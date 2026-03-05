@@ -17,7 +17,6 @@
 package catalog.hoprxi.scale.domain.model.price;
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
-import catalog.hoprxi.scale.infrastructure.i18n.WeightLabel;
 
 import java.util.Locale;
 import java.util.Objects;

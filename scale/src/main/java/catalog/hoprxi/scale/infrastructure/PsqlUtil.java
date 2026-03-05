@@ -21,7 +21,6 @@ import com.typesafe.config.ConfigFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import salt.hoprxi.crypto.application.DatabaseSpecDecrypt;
-import salt.hoprxi.utils.Selector;
 
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -34,9 +33,8 @@ import java.util.Properties;
  * @since JDK21
  * @version 0.0.2 builder 2026-03-02
  */
-public class PsqlUtil {
+public final class PsqlUtil {
     private static final Config config;
-    private static final Selector readsSelector = new Selector();
     private static final HikariDataSource hikariDataSource;
 
     static {
@@ -77,16 +75,11 @@ public class PsqlUtil {
             HikariConfig hikariConfig = new HikariConfig(props);
             HikariDataSource dataSource = new HikariDataSource(hikariConfig);
             readsSelector.add(new Selector.Divisor(read.hasPath("weight") ? read.getInt("weight") : 1, dataSource));
-
          */
     }
 
     public static Connection getConnection() throws SQLException {
         return hikariDataSource.getConnection();
-    }
-
-    public static Connection getReadConnection() throws SQLException {
-        return readsSelector.<HikariDataSource>select().getConnection();
     }
 
     public static void release(Connection connection) {

@@ -35,8 +35,8 @@ import java.util.Objects;
 
 /**
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
- * @version 0.0.2 builder 2019-10-29
- * @since JDK8.0
+ * @version 0.2 2026/3/4
+ * @since JDK 21
  */
 public class Weight {
     private long brandId;
@@ -46,7 +46,7 @@ public class Weight {
     private Name name;
     private Specification spec;
     public ShelfLife shelfLife;
-    private WeightLastReceiptPrice lastReceiptPrice;
+    private final WeightLastReceiptPrice lastReceiptPrice;
     private WeightRetailPrice retailPrice;
     private WeightMemberPrice memberPrice;
     private WeightVipPrice vipPrice;
@@ -60,7 +60,7 @@ public class Weight {
         setSpecification(spec);
         setGrade(grade);
         setShelfLife(shelfLife);
-        this.lastReceiptPrice = Objects.requireNonNull(lastReceiptPrice,"lastReceiptPrice is null");
+        this.lastReceiptPrice = Objects.requireNonNull(lastReceiptPrice, "lastReceiptPrice is null");
         setRetailPrice(retailPrice);
         setMemberPrice(memberPrice);
         setVipPrice(vipPrice);
@@ -99,7 +99,6 @@ public class Weight {
             name = Name.EMPTY;
         }
         this.name = name;
-
     }
 
     private void setShelfLife(ShelfLife shelfLife) {

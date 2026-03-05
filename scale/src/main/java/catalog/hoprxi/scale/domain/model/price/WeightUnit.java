@@ -17,7 +17,7 @@
 package catalog.hoprxi.scale.domain.model.price;
 
 
-import catalog.hoprxi.scale.infrastructure.i18n.WeightLabel;
+import catalog.hoprxi.scale.infrastructure.i18n.ScaleLabel;
 
 import java.math.BigDecimal;
 
@@ -42,7 +42,7 @@ public enum WeightUnit {
 
         @Override
         public String toString() {
-            return WeightLabel.WEIGHT_UNIT_TON;
+            return ScaleLabel.WEIGHT_UNIT_TON;
         }
     }, KILOGRAM {
         @Override
@@ -59,7 +59,7 @@ public enum WeightUnit {
 
         @Override
         public String toString() {
-            return WeightLabel.WEIGHT_UNIT_KILOGRAM;
+            return ScaleLabel.WEIGHT_UNIT_KILOGRAM;
         }
     }, GRAM {
         @Override
@@ -76,7 +76,7 @@ public enum WeightUnit {
 
         @Override
         public String toString() {
-            return WeightLabel.WEIGHT_UNIT_GRAM;
+            return ScaleLabel.WEIGHT_UNIT_GRAM;
         }
     }, FIVE_HUNDRED_GRAM {
         @Override
@@ -93,7 +93,7 @@ public enum WeightUnit {
 
         @Override
         public String toString() {
-            return WeightLabel.WEIGHT_UNIT_FIVE_HUNDRED_GRAM;
+            return ScaleLabel.WEIGHT_UNIT_FIVE_HUNDRED_GRAM;
         }
     }, MILLIGRAM {
         @Override
@@ -110,7 +110,7 @@ public enum WeightUnit {
 
         @Override
         public String toString() {
-            return WeightLabel.WEIGHT_UNIT_MILLIGRAM;
+            return ScaleLabel.WEIGHT_UNIT_MILLIGRAM;
         }
     }, OUNCE {
         @Override
@@ -127,7 +127,7 @@ public enum WeightUnit {
 
         @Override
         public String toString() {
-            return WeightLabel.WEIGHT_UNIT_OUNCE;
+            return ScaleLabel.WEIGHT_UNIT_OUNCE;
         }
 
     }, POUND {
@@ -145,7 +145,7 @@ public enum WeightUnit {
 
         @Override
         public String toString() {
-            return WeightLabel.WEIGHT_UNIT_POUND;
+            return ScaleLabel.WEIGHT_UNIT_POUND;
         }
     }, CARAT {
         @Override
@@ -161,7 +161,7 @@ public enum WeightUnit {
 
         @Override
         public String toString() {
-            return WeightLabel.WEIGHT_UNIT_CARAT;
+            return ScaleLabel.WEIGHT_UNIT_CARAT;
         }
     };
 

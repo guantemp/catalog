@@ -51,6 +51,6 @@ public interface WeightRepository {
      * @param plu
      * @return
      */
-    boolean isPluExists(Plu plu);
+    boolean isPluExists(Plu... plu);
 
 }

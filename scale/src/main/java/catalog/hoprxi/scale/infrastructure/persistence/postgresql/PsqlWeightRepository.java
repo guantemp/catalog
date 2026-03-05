@@ -259,8 +259,8 @@ public class PsqlWeightRepository implements WeightRepository {
             preparedStatement.setLong(1, plu.id());
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            LOGGER.error("Can't remove from Weight(id={})", plu.id(), e);
-            throw new PersistenceException(String.format("Can't remove from Weight(id=%s)", plu.id()), e);
+            LOGGER.error("Can't remove from Weight(plu={})", plu.id(), e);
+            throw new PersistenceException(String.format("Can't remove from Weight(plu=%s)", plu.id()), e);
         }
     }
 
@@ -292,12 +292,14 @@ public class PsqlWeightRepository implements WeightRepository {
                 """;
         try (Connection conn = PsqlUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(insertOrReplaceSql)) {
-            /*
+/*
             System.out.println("=== DB Connection Info ===");
             System.out.println("URL: " + conn.getMetaData().getURL());
-            System.out.println("Catalog (DB Name): " + conn.getCatalog());
+            System.out.println("DB Name: " + conn.getCatalog());
             System.out.println("Current Schema: " + conn.getSchema());
-             */
+
+
+ */
             int idx = 1;
             ps.setLong(idx++, weight.plu().id());
             ps.setString(idx++, toJson(weight.name()));
@@ -399,7 +401,7 @@ public class PsqlWeightRepository implements WeightRepository {
      * @return
      */
     @Override
-    public boolean isPluExists(Plu plu) {
+    public boolean isPluExists(Plu... plu) {
         return false;
     }
 }
