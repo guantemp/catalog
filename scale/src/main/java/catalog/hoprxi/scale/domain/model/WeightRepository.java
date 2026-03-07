@@ -17,8 +17,8 @@ package catalog.hoprxi.scale.domain.model;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.g builder 2019-10-30
+ * @since JDK21
+ * @version 0.0.2 builder 2026-03-06
  */
 
 public interface WeightRepository {

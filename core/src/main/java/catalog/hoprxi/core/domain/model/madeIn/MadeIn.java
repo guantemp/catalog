@@ -16,6 +16,8 @@
 
 package catalog.hoprxi.core.domain.model.madeIn;
 
+import java.util.StringJoiner;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
@@ -32,6 +34,14 @@ public interface MadeIn {
         public String madeIn() {
             return "UNKNOWN";
         }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", "MadeIn[", "]")
+                    .add("madeIn='UNKNOWN'")
+                    .add("code='-1'")
+                    .toString();
+        }
     };
 
     String madeIn();
@@ -39,4 +49,5 @@ public interface MadeIn {
     default String code() {
         return "156";
     }
+
 }

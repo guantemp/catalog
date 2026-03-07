@@ -15,16 +15,11 @@
  */
 package catalog.hoprxi.scale.domain.model;
 
-import catalog.hoprxi.core.domain.BrandValidatorService;
-import catalog.hoprxi.core.domain.CategoryValidatorService;
 import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
-import catalog.hoprxi.core.domain.model.brand.Brand;
-import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
-import catalog.hoprxi.scale.application.PluSegmentationService;
 import catalog.hoprxi.scale.domain.model.price.WeightLastReceiptPrice;
 import catalog.hoprxi.scale.domain.model.price.WeightMemberPrice;
 import catalog.hoprxi.scale.domain.model.price.WeightRetailPrice;
@@ -38,97 +33,39 @@ import java.util.Objects;
  * @version 0.2 2026/3/4
  * @since JDK 21
  */
-public class Weight {
-    private long brandId;
-    private long categoryId;
-    private GradeEnum grade;
-    private Plu plu;
-    private Name name;
-    private Specification spec;
-    public ShelfLife shelfLife;
+public class Weight extends Scale {
     private final WeightLastReceiptPrice lastReceiptPrice;
     private WeightRetailPrice retailPrice;
     private WeightMemberPrice memberPrice;
     private WeightVipPrice vipPrice;
-    private MadeIn madeIn;
 
     public Weight(Plu plu, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, ShelfLife shelfLife, WeightLastReceiptPrice lastReceiptPrice,
                   WeightRetailPrice retailPrice, WeightMemberPrice memberPrice, WeightVipPrice vipPrice, long categoryId, long brandId) {
-        setPlu(plu);
-        setName(name);
-        setMadeIn(madeIn);
-        setSpecification(spec);
-        setGrade(grade);
-        setShelfLife(shelfLife);
+        super(plu, name, spec, grade, madeIn, shelfLife, categoryId, brandId);
         this.lastReceiptPrice = Objects.requireNonNull(lastReceiptPrice, "lastReceiptPrice is null");
         setRetailPrice(retailPrice);
         setMemberPrice(memberPrice);
         setVipPrice(vipPrice);
-        setBrandId(brandId);
-        setCategoryId(categoryId);
-    }
-
-    private void setVipPrice(WeightVipPrice vipPrice) {
-        this.vipPrice = vipPrice;
-    }
-
-    private void setMemberPrice(WeightMemberPrice memberPrice) {
-        this.memberPrice = memberPrice;
     }
 
     private void setRetailPrice(WeightRetailPrice retailPrice) {
         this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
     }
 
-    private void setMadeIn(MadeIn madeIn) {
-        if (madeIn == null) {
-            madeIn = MadeIn.UNKNOWN;
-        }
-        this.madeIn = madeIn;
+    private void setVipPrice(WeightVipPrice vipPrice) {
+        this.vipPrice = Objects.requireNonNull(vipPrice, "vipPrice is null");
     }
 
-    private void setPlu(Plu plu) {
-        Objects.requireNonNull(plu, "plu required");
-        if (!PluSegmentationService.isComplyWithSpec(plu))
-            throw new IllegalArgumentException("plu is not comply with spec");
-        this.plu = plu;
+    private void setMemberPrice(WeightMemberPrice memberPrice) {
+        this.memberPrice = Objects.requireNonNull(memberPrice, "memberPrice is null");
     }
 
-    private void setName(Name name) {
-        if (name == null) {
-            name = Name.EMPTY;
-        }
-        this.name = name;
+    public WeightMemberPrice memberPrice() {
+        return memberPrice;
     }
 
-    private void setShelfLife(ShelfLife shelfLife) {
-        if (shelfLife == null)
-            shelfLife = ShelfLife.SAME_DAY;
-        this.shelfLife = shelfLife;
-    }
-
-    private void setSpecification(Specification spec) {
-        if (spec == null)
-            spec = Specification.UNDEFINED;
-        this.spec = spec;
-    }
-
-    private void setCategoryId(long categoryId) {
-        if (Category.UNDEFINED.id() != categoryId && !CategoryValidatorService.isCategoryExist(categoryId))
-            throw new IllegalArgumentException("categoryId isn't effective");
-        this.categoryId = categoryId;
-    }
-
-    private void setBrandId(long brandId) {
-        if (Brand.UNDEFINED.id() != brandId && !BrandValidatorService.isBrandExist(brandId))
-            throw new IllegalArgumentException("brandId isn't effective");
-        this.brandId = brandId;
-    }
-
-    private void setGrade(GradeEnum grade) {
-        if (null == grade)
-            grade = GradeEnum.QUALIFIED;
-        this.grade = grade;
+    public WeightVipPrice vipPrice() {
+        return vipPrice;
     }
 
     public WeightRetailPrice retailPrice() {
@@ -142,125 +79,25 @@ public class Weight {
             this.retailPrice = retailPrice;
     }
 
-    public WeightMemberPrice memberPrice() {
-        return memberPrice;
-    }
-
-    public WeightVipPrice vipPrice() {
-        return vipPrice;
-    }
-
-    public long brandId() {
-        return brandId;
-    }
-
-    public GradeEnum grade() {
-        return grade;
-    }
-
-    public Name name() {
-        return name;
-    }
-
-    public Specification spec() {
-        return spec;
-    }
-
-    public Plu plu() {
-        return plu;
-    }
-
-    public long categoryId() {
-        return categoryId;
-    }
-
-    public MadeIn madeIn() {
-        return madeIn;
-    }
-
-    public void changeShelLife(ShelfLife shelfLife) {
-        Objects.requireNonNull(shelfLife, "shelLife required");
-        if (!this.shelfLife.equals(shelfLife)) {
-            this.shelfLife = shelfLife;
-        }
-    }
-
-    public void changGrade(GradeEnum grade) {
-
-    }
-
-    public void changeSpec(Specification spec) {
-        Objects.requireNonNull(spec, "spec required");
-        if (!this.spec.equals(spec)) {
-            this.spec = spec;
-            //DomainRegistry1.domainEventPublisher().publish(new WeightSpecificationChanged(id, spec));
-        }
-    }
-
-    /**
-     * @param categoryId
-     * @throws IllegalArgumentException if categoryId is <code>NULL</code>
-     *                                  categoryId is not valid
-     */
-    public void moveToNewCategory(long categoryId) {
-        if (categoryId != this.categoryId && CategoryValidatorService.isCategoryExist(categoryId)) {
-            setCategoryId(categoryId);
-            //catalog.hoprxi.core.util.DomainRegistry.domainEventPublisher().publish(new SkuCategoryReallocated(id, categoryId));
-        }
-    }
-
-    /**
-     * @param brandId
-     * @throws IllegalArgumentException if brandId is <code>NULL</code>
-     *                                  brandId is not valid
-     */
-    public void moveToNewBrand(long brandId) {
-        if (this.brandId != brandId && BrandValidatorService.isBrandExist(brandId)) {
-            setBrandId(brandId);
-            //DomainRegistry.domainEventPublisher().publish(new SkuBrandReallocated(id, brandId));
-        }
-    }
-
-    public void rename(Name name) {
-        Objects.requireNonNull(name, "name required");
-        if (!name.equals(this.name))
-            this.name = name;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof Weight)) return false;
-        Weight weight = (Weight) o;
-        return Objects.equals(plu, weight.plu);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(plu);
+    public WeightLastReceiptPrice lastReceiptPrice() {
+        return lastReceiptPrice;
     }
 
     @Override
     public String toString() {
         return "Weight{" +
-                "brandId='" + brandId + '\'' +
-                ", categoryId='" + categoryId + '\'' +
+                "lastReceiptPrice=" + lastReceiptPrice +
+                ", retailPrice=" + retailPrice +
+                ", memberPrice=" + memberPrice +
+                ", vipPrice=" + vipPrice +
+                ", brandId=" + brandId +
+                ", categoryId=" + categoryId +
                 ", grade=" + grade +
                 ", plu=" + plu +
                 ", name=" + name +
                 ", spec=" + spec +
                 ", shelfLife=" + shelfLife +
-                ", retailPrice=" + retailPrice +
-                ", memberPrice=" + memberPrice +
-                ", vipPrice=" + vipPrice +
                 ", madeIn=" + madeIn +
                 '}';
-    }
-
-    public WeightLastReceiptPrice lastReceiptPrice() {
-        return lastReceiptPrice;
-    }
-
-    public ShelfLife shelfLife() {
-        return shelfLife;
     }
 }

@@ -45,6 +45,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -146,6 +147,8 @@ public class PsqlWeightRepository implements WeightRepository {
                 }
             }
         }
+        if (Objects.equals(MadeIn.UNKNOWN.code(), code))
+            return MadeIn.UNKNOWN;
         if (_class != null && _class.endsWith("Domestic")) {
             return new Domestic(code, madeIn);
         } else if (_class != null && _class.endsWith("Imported")) {

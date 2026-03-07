@@ -17,36 +17,21 @@
 package catalog.hoprxi.scale.domain.model;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.1 2019-10-26
+ * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
+ * @since JDK21
+ * @version 0.0.2 builder 2026-03-06
  */
 public interface CountRepository {
 
-    /**
-     * @param brandId
-     * @return
-     */
-    Count[] belongingToBrand(String brandId);
-
-
-    /**
-     * @param categoryId
-     * @return
-     */
-    Count[] belongingToCategory(String categoryId);
-
-
+    default Count find(Plu plu){
+        return find(plu.id());
+    };
     /**
      * @param plu
      * @return
      */
     Count find(int plu);
 
-    /**
-     * @return
-     */
-    Count[] findAll();
 
     /**
      * @return
@@ -56,7 +41,7 @@ public interface CountRepository {
     /**
      * @param plu
      */
-    void remove(Plu plu);
+    void delete(Plu plu);
 
     /**
      * @param count
@@ -69,14 +54,4 @@ public interface CountRepository {
      */
     boolean isPluExists(int plu);
 
-    /**
-     * @return
-     */
-    int size();
-
-    /**
-     * @param name
-     * @return
-     */
-    Count[] fromName(String name);
 }
