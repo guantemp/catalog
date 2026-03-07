@@ -75,4 +75,22 @@ public class Count extends Scale {
     public VipPrice vipPrice() {
         return vipPrice;
     }
+
+    @Override
+    public String toString() {
+        return "Count{" +
+                "plu=" + plu +
+                ", name=" + name +
+                ", grade=" + grade +
+                ", spec=" + spec +
+                ", madeIn=" + madeIn +
+                ", shelfLife=" + shelfLife +
+                ", lastReceiptPrice=" + lastReceiptPrice +
+                ", retailPrice=" + retailPrice +
+                ", memberPrice=" + memberPrice +
+                ", vipPrice=" + vipPrice +
+                ", categoryId=" + categoryId +
+                ", brandId=" + brandId +
+                '}';
+    }
 }

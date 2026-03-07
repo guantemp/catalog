@@ -19,7 +19,6 @@ package catalog.hoprxi.core.domain.model;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
@@ -27,13 +26,9 @@ import java.util.StringJoiner;
  * @version 0.0.1 builder 2019-04-29
  */
 public record Specification(String value) {
-    public static final Specification UNDEFINED = new Specification("");
+    public static final Specification UNDEFINED = new Specification(Label.SPEC_UNDEFINED);
 
-    public Specification(String value) {
-        this.value = Objects.requireNonNull(value, "value required").trim();
-    }
-
-    public static Specification valueOf(String value) {
+    public static Specification of(String value) {
         if (value.isBlank())
             return UNDEFINED;
         return new Specification(value);

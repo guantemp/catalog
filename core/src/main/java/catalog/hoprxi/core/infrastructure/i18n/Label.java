@@ -81,6 +81,7 @@ public class Label extends NLS {
     public static String PRICE_AGILE;
 
     public static String MADIN_SEPARATORS;
+    public static String SPEC_UNDEFINED;
 
     static {
         NLS.initializeMessages(BUNDLE_NAME, Label.class);

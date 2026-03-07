@@ -19,6 +19,7 @@ package catalog.hoprxi.core.domain.model.price;
 import org.javamoney.moneta.Money;
 import org.javamoney.moneta.format.CurrencyStyle;
 
+import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import javax.money.MonetaryAmount;
 import javax.money.format.AmountFormatQueryBuilder;
@@ -26,80 +27,86 @@ import javax.money.format.MonetaryAmountFormat;
 import javax.money.format.MonetaryFormats;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.2 builder 2026-02-22
  */
-public class Price {
-    public static final Price ZERO_RMB_PCS = new Price(Money.zero(Monetary.getCurrency(Locale.CHINA)), UnitEnum.PCS);
-    public static final Price ZERO_USD_PCS = new Price(Money.zero(Monetary.getCurrency(Locale.US)), UnitEnum.PCS);
+public record Price(MonetaryAmount amount, UnitEnum unit) {
+    private static final CurrencyUnit CNY = Monetary.getCurrency("CNY");
+    private static final CurrencyUnit USD = Monetary.getCurrency("USD");
+    public static final Price ZERO_RMB_PCS = new Price(Money.zero(CNY), UnitEnum.PCS);
+    public static final Price ZERO_USD_PCS = new Price(Money.zero(USD), UnitEnum.PCS);
 
     private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
             .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
             .build());
-    private MonetaryAmount amount;
-    private UnitEnum unit;
 
-    public Price(MonetaryAmount amount, UnitEnum unit) {
-        setAmount(amount);
-        setUnit(unit);
-    }
 
-    public static Price zero(Locale locale) {
-        Objects.requireNonNull(locale, "locale required");
-        if ("CN".equals(locale.getCountry()))
-            return ZERO_RMB_PCS;
-        if ("US".equals(locale.getCountry()))
-            return ZERO_USD_PCS;
-        return new Price(Money.zero(Monetary.getCurrency(locale)), UnitEnum.PCS);
-    }
-
-    public static Price zero(Locale locale, UnitEnum unit) {
-        return new Price(Money.zero(Monetary.getCurrency(locale)), unit);
-    }
-
-    private void setUnit(UnitEnum unit) {
-        Objects.requireNonNull(unit, "unit required");
-        this.unit = unit;
-    }
-
-    private void setAmount(MonetaryAmount amount) {
+    public Price {
         Objects.requireNonNull(amount, "amount required");
-        if (amount.isNegative())
-            throw new IllegalArgumentException("amount isn't negative");
-        this.amount = amount;
+        if (amount.isNegative()) {
+            throw new IllegalArgumentException("Amount cannot be negative");
+        }
+        Objects.requireNonNull(unit, "unit required");
     }
 
-    public MonetaryAmount amount() {
-        return amount;
+    /**
+     * Creates a zero-value Price instance using system default locale and {@link UnitEnum#PCS} unit.
+     *
+     * <p>Default locale is obtained via {@link Locale#getDefault()}, and default currency is determined by this locale.
+     * For {@link UnitEnum#PCS} unit, pre-defined zero-price constants (CNY/USD) are returned if applicable;
+     * otherwise, a new zero-value Price instance is created with the locale's currency.
+     *
+     * @return a zero-value Price instance (locale: system default, unit: PCS)
+     */
+    public static Price zero() {
+        return Price.zero(Locale.getDefault(), UnitEnum.PCS);
     }
 
-    public UnitEnum unit() {
-        return unit;
+    /**
+     * Creates a zero-value Price instance using the specified locale and {@link UnitEnum#PCS} unit.
+     *
+     * <p>Currency is determined by the given locale. For {@link UnitEnum#PCS} unit, pre-defined zero-price constants
+     * (CNY/USD) are returned if the locale's currency matches; otherwise, a new zero-value Price instance is created.
+     *
+     * @param locale the locale to determine the currency (must not be null)
+     * @return a zero-value Price instance (locale: specified, unit: PCS)
+     * @throws NullPointerException if the given locale is null
+     */
+    public static Price zero(Locale locale) {
+        return Price.zero(locale, UnitEnum.PCS);
     }
 
-    @Override
-    public final boolean equals(Object o) {
-        if (!(o instanceof Price price)) return false;
-
-        return Objects.equals(amount, price.amount) && unit == price.unit;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = Objects.hashCode(amount);
-        result = 31 * result + Objects.hashCode(unit);
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", Price.class.getSimpleName() + "[", "]")
-                .add("amount=" + amount)
-                .add("unit=" + unit)
-                .toString();
+    /**
+     * Creates a zero-value Price instance with the specified locale and unit.
+     *
+     * <p>Key logic:
+     * <ul>
+     *   <li>Validates that locale and unit are not null</li>
+     *   <li>Determines the target currency based on the locale</li>
+     *   <li>For {@link UnitEnum#PCS} unit: returns pre-defined CNY/USD zero-price constants if currency matches</li>
+     *   <li>For other units/currencies: creates a new zero-value Price instance with the target currency and unit</li>
+     * </ul>
+     *
+     * @param locale the locale to determine the currency (must not be null)
+     * @param unit   the price unit (must not be null)
+     * @return a zero-value Price instance with the specified locale and unit
+     * @throws NullPointerException if locale or unit is null
+     */
+    public static Price zero(Locale locale, UnitEnum unit) {
+        Objects.requireNonNull(locale, "locale required");
+        Objects.requireNonNull(unit, "unit required");
+        CurrencyUnit targetCurrency = Monetary.getCurrency(locale);
+        if (unit == UnitEnum.PCS) {
+            if (CNY == targetCurrency) {
+                return ZERO_RMB_PCS;
+            }
+            if (USD == targetCurrency) {
+                return ZERO_USD_PCS;
+            }
+        }
+        return new Price(Money.zero(targetCurrency), unit);
     }
 }

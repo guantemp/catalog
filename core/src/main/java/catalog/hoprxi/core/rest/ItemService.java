@@ -310,7 +310,7 @@ public class ItemService {
                 switch (fieldName) {
                     case "barcode" -> barcode = BarcodeGenerateServices.createBarcode(parser.getValueAsString());
                     case "name" -> name = this.readName(parser);
-                    case "spec" -> spec = Specification.valueOf(parser.getValueAsString());
+                    case "spec" -> spec = Specification.of(parser.getValueAsString());
                     case "grade" -> grade = GradeEnum.of(parser.getValueAsString());
                     case "madeIn" -> madeIn = this.readMadeIn(parser);
                     case "latestReceiptPrice", "last_receipt_price" ->

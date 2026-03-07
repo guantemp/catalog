@@ -58,7 +58,7 @@ public final class PsqlUtil {
         props.put("maximumPoolSize", write.hasPath("hikari.maximumPoolSize") ? write.getInt("hikari.maximumPoolSize") : 5);
         props.put("dataSource.logWriter", new PrintWriter(System.out));
         HikariConfig hikariConfig = new HikariConfig(props);
-        System.out.println(props);
+        //System.out.println(props);
         hikariDataSource = new HikariDataSource(hikariConfig);
         /*
         List<? extends Config> reads = config.getConfigList("reads");

@@ -16,9 +16,14 @@
 
 package catalog.hoprxi.scale.application.query;
 
+import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
+import catalog.hoprxi.scale.domain.model.Plu;
 import io.netty.buffer.ByteBuf;
 import reactor.core.publisher.Flux;
 
-public interface WeightQuery {
-    Flux<ByteBuf> find(int plu);
+public interface ScaleQuery {
+    Flux<ByteBuf> findAsync(Plu plu);
+
+    Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField);
 }

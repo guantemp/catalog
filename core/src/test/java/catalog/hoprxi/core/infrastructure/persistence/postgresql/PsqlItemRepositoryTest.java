@@ -124,7 +124,8 @@ public class PsqlItemRepositoryTest {
         itemRepository.save(six);
 
         barcode = BarcodeGenerateServices.createBarcode("6923555240865");
-        Item six_1 = new Item(52496321492179000L, barcode, new Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶"), Domestic.CHONG_QING, new Specification("250ml"), GradeEnum.QUALIFIED, new ShelfLife(90), LastReceiptPrice.ZERO_RMB_PCS, RetailPrice.ZERO_RMB_PCS, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, dairy.id(), tianyou.id());
+        memberPrice = new MemberPrice("测试", new Price(Money.of(16.99, currency), UnitEnum.ZHU));
+        Item six_1 = new Item(52496321492179000L, barcode, new Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶"), Domestic.CHONG_QING, new Specification("250ml"), GradeEnum.QUALIFIED, new ShelfLife(90), LastReceiptPrice.ZERO_RMB_PCS, RetailPrice.ZERO_RMB_PCS, memberPrice, VipPrice.ZERO_RMB_PCS, dairy.id(), tianyou.id());
         itemRepository.save(six_1);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(25.82, currency), UnitEnum.DAI));
@@ -217,6 +218,7 @@ public class PsqlItemRepositoryTest {
         Assert.assertEquals(six.barcode(), BarcodeGenerateServices.createBarcode("6923555240728"));
         Assert.assertEquals(six.categoryId(), 52495569397272598L);
         System.out.println("52496163982907405L  has changed:\n" + six);
+        System.out.println(six.memberPrice());
 
         Item ce = itemRepository.find(52496321492179006L);
         Assert.assertNotNull(ce);

@@ -20,27 +20,28 @@ import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 import java.util.Locale;
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
  * @version 0.0.3 builder 2026-02-22
  */
-public class LastReceiptPrice {
+public record LastReceiptPrice(String name, Price price) {
     public static final LastReceiptPrice ZERO_RMB_PCS = new LastReceiptPrice(Price.zero(Locale.CHINA));
     public static final LastReceiptPrice ZERO_USD_PCS = new LastReceiptPrice(Price.zero(Locale.US));
     private static final int NAME_MAX_LENGTH = 64;
-    private final Price price;
-    private final String name;
+
+    public LastReceiptPrice {
+        // 名称规范化：空值/空白/超长则使用默认名称，否则trim去空格
+        name = (name == null || name.isBlank() || name.length() > NAME_MAX_LENGTH)
+                ? Label.PRICE_LAST_RECEIPT
+                : name.trim();
+        // 价格非空校验（保留原异常提示）
+        Objects.requireNonNull(price, "price required");
+    }
 
     public LastReceiptPrice(Price price) {
         this(Label.PRICE_LAST_RECEIPT, price);
-    }
-
-    public LastReceiptPrice(String name, Price price) {
-        this.name = (name == null || name.isBlank() || name.length() > NAME_MAX_LENGTH) ? Label.PRICE_LAST_RECEIPT : name.trim();
-        this.price = Objects.requireNonNull(price, "price required");
     }
 
     public static LastReceiptPrice zero(Locale locale, UnitEnum unit) {
@@ -53,34 +54,11 @@ public class LastReceiptPrice {
         return new LastReceiptPrice(Price.zero(locale, unit));
     }
 
-    public Price price() {
-        return price;
+    public static LastReceiptPrice zero(Locale locale) {
+        return LastReceiptPrice.zero(locale, UnitEnum.PCS);
     }
 
-    public String name() {
-        return name;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof LastReceiptPrice that)) return false;
-
-        if (!Objects.equals(price, that.price)) return false;
-        return Objects.equals(name, that.name);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = price != null ? price.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", LastReceiptPrice.class.getSimpleName() + "[", "]")
-                .add("name='" + name + "'")
-                .add("price=" + price)
-                .toString();
+    public static LastReceiptPrice zero() {
+        return LastReceiptPrice.zero(Locale.getDefault(), UnitEnum.PCS);
     }
 }

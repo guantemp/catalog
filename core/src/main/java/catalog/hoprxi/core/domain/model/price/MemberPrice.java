@@ -20,23 +20,20 @@ import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 import java.util.Locale;
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
  * @version 0.0.3 builder 2026-02-22
  */
-public class MemberPrice {
+public record MemberPrice(String name, Price price) {
     public static final MemberPrice ZERO_RMB_PCS = new MemberPrice(Price.zero(Locale.CHINA));
     public static final MemberPrice ZERO_USD_PCS = new MemberPrice(Price.zero(Locale.US));
     private static final int NAME_MAX_LENGTH = 64;
-    private final Price price;
-    private final String name;
 
-    public MemberPrice(String name, Price price) {
-        this.name = (name == null || name.isBlank() || name.length() > NAME_MAX_LENGTH) ? Label.PRICE_MEMBER : name.trim();
-        this.price = Objects.requireNonNull(price, "price required");
+    public MemberPrice {
+        name = (name == null || name.isBlank() || name.length() > NAME_MAX_LENGTH) ? Label.PRICE_MEMBER : name.trim();
+        Objects.requireNonNull(price, "price required");
     }
 
     public MemberPrice(Price price) {
@@ -53,32 +50,11 @@ public class MemberPrice {
         return new MemberPrice(Price.zero(locale, unit));
     }
 
-    public Price price() {
-        return price;
+    public static MemberPrice zero(Locale locale) {
+        return MemberPrice.zero(locale, UnitEnum.PCS);
     }
 
-    public String name() {
-        return name;
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", MemberPrice.class.getSimpleName() + "[", "]")
-                .add("name='" + name + "'").add("price=" + price)
-                .toString();
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (!(o instanceof MemberPrice that)) return false;
-
-        return Objects.equals(price, that.price) && Objects.equals(name, that.name);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = Objects.hashCode(price);
-        result = 31 * result + Objects.hashCode(name);
-        return result;
+    public static MemberPrice zero() {
+        return MemberPrice.zero(Locale.getDefault(), UnitEnum.PCS);
     }
 }

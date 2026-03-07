@@ -23,15 +23,7 @@ package catalog.hoprxi.scale.domain.model;
  */
 public interface CountRepository {
 
-    default Count find(Plu plu){
-        return find(plu.id());
-    };
-    /**
-     * @param plu
-     * @return
-     */
-    Count find(int plu);
-
+    Count find(Plu plu);
 
     /**
      * @return

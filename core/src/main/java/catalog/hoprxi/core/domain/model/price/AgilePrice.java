@@ -18,6 +18,7 @@ package catalog.hoprxi.core.domain.model.price;
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /***
@@ -25,32 +26,35 @@ import java.util.Objects;
  * @since JDK21
  * @version 0.0.2 2026-03-01
  */
-public class AgilePrice {
-    private final Price price;
+public record AgilePrice(Price price) {
 
-    public AgilePrice(Price price) {
-        this.price = Objects.requireNonNull(price, "price required");
+    public AgilePrice {
+        Objects.requireNonNull(price, "price required");
+    }
+
+    /**
+     * Creates an AgilePrice instance with zero price value.
+     *
+     * @param locale the locale (affects price formatting)
+     * @param unit   the price unit
+     * @return an AgilePrice instance with zero price value
+     */
+    public static AgilePrice zero(Locale locale, UnitEnum unit) {
+        return new AgilePrice(Price.zero(locale, unit));
+    }
+
+    /**
+     * Creates an AgilePrice instance with zero price value using default locale and unit.
+     *
+     * <p>Default locale is obtained via {@link Locale#getDefault()}, and default unit is {@link UnitEnum#PCS}.
+     *
+     * @return an AgilePrice instance with zero price value (default locale: system default, default unit: PCS)
+     */
+    public static AgilePrice zero() {
+        return zero(Locale.getDefault(), UnitEnum.PCS);
     }
 
     public String name() {
         return Label.PRICE_AGILE;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof AgilePrice that)) return false;
-        return Objects.equals(price, that.price);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(price);
-    }
-
-    @Override
-    public String toString() {
-        return "AgilePrice{" +
-                "price=" + price +
-                '}';
     }
 }

@@ -20,7 +20,6 @@ import catalog.hoprxi.core.infrastructure.i18n.Label;
 
 import java.util.Locale;
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -45,21 +44,15 @@ public record RetailPrice(Price price) {
         return new RetailPrice(Price.zero(locale, unit));
     }
 
+    public static RetailPrice zero(Locale locale) {
+        return RetailPrice.zero(locale, UnitEnum.PCS);
+    }
+
+    public static RetailPrice zero() {
+        return RetailPrice.zero(Locale.getDefault(), UnitEnum.PCS);
+    }
+
     public String name() {
         return Label.PRICE_RETAIL;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (!(o instanceof RetailPrice that)) return false;
-
-        return price.equals(that.price);
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", RetailPrice.class.getSimpleName() + "[", "]")
-                .add("name=" + Label.PRICE_RETAIL).add("price=" + price)
-                .toString();
     }
 }

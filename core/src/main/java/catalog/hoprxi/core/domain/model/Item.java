@@ -26,6 +26,7 @@ import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.util.DomainRegistry;
 
+import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -51,17 +52,17 @@ public class Item {
     private ShelfLife shelfLife;
 
     /**
-     * @param id mark
-     * @param barcode of EAN8,EAN13,UPC_A,UPC_E,ITF14,ISBN,ISSN
-     * @param name Including the main name and aliases
-     * @param madeIn of
-     * @param spec of
-     * @param grade of
-     * @param shelfLife 保质期
+     * @param id               mark
+     * @param barcode          of EAN8,EAN13,UPC_A,UPC_E,ITF14,ISBN,ISSN
+     * @param name             Including the main name and aliases
+     * @param madeIn           of
+     * @param spec             of
+     * @param grade            of
+     * @param shelfLife        保质期
      * @param lastReceiptPrice of
-     * @param retailPrice of retail price
-     * @param memberPrice of member price
-     * @param vipPrice of vip price
+     * @param retailPrice      of retail price
+     * @param memberPrice      of member price
+     * @param vipPrice         of vip price
      * @param categoryId       id valueOf category
      * @param brandId          id valueOf brand
      * @throws IllegalArgumentException if id is null or id length range not in [1-36]
@@ -100,7 +101,7 @@ public class Item {
     }
 
     private void setCategoryId(long categoryId) {
-        if (categoryId != Category.UNDEFINED.id() && CategoryValidatorService.isCategoryExist(categoryId))
+        if (categoryId != Category.UNDEFINED.id() && !CategoryValidatorService.isCategoryExist(categoryId))
             throw new IllegalArgumentException("categoryId isn't effective");
         this.categoryId = categoryId;
     }
@@ -129,14 +130,20 @@ public class Item {
 
     private void setVipPrice(VipPrice vipPrice) {
         Objects.requireNonNull(vipPrice, "vipPrice required");
-        if (vipPrice.price().unit() != UnitEnum.PCS && vipPrice.price().unit() != retailPrice.price().unit())
+        boolean skipCheck = (retailPrice.price().unit() == UnitEnum.PCS)
+                || (vipPrice.price().unit() == UnitEnum.PCS
+                && vipPrice.price().amount().getNumber().numberValue(BigDecimal.class).compareTo(BigDecimal.ZERO) == 0);
+        if (!skipCheck && memberPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("vipPrice unit must be consistent with retailPrice unit");
         this.vipPrice = vipPrice;
     }
 
     private void setMemberPrice(MemberPrice memberPrice) {
         Objects.requireNonNull(memberPrice, "memberPrice required");
-        if (memberPrice.price().unit() != UnitEnum.PCS && memberPrice.price().unit() != retailPrice.price().unit())
+        boolean skipCheck = (retailPrice.price().unit() == UnitEnum.PCS)
+                || (memberPrice.price().unit() == UnitEnum.PCS
+                && memberPrice.price().amount().getNumber().numberValue(BigDecimal.class).compareTo(BigDecimal.ZERO) == 0);
+        if (!skipCheck && memberPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("memberPrice unit must be consistent with retailPrice unit");
         this.memberPrice = memberPrice;
     }
@@ -336,7 +343,7 @@ public class Item {
     }
 
     public ProhibitSellItem toProhibitSell() {
-        return new ProhibitSellItem(id, barcode, name, madeIn, spec, grade, shelfLife, lastReceiptPrice,retailPrice, memberPrice, vipPrice, categoryId, brandId);
+        return new ProhibitSellItem(id, barcode, name, madeIn, spec, grade, shelfLife, lastReceiptPrice, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
 
     @Override
