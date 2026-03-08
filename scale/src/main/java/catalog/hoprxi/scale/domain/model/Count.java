@@ -34,7 +34,7 @@ import java.util.Objects;
  */
 
 public class Count extends Scale {
-    private final LastReceiptPrice lastReceiptPrice;
+    private LastReceiptPrice lastReceiptPrice;
     private RetailPrice retailPrice;
     private MemberPrice memberPrice;
     private VipPrice vipPrice;
@@ -43,29 +43,29 @@ public class Count extends Scale {
                  RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice, long categoryId, long brandId) {
         super(plu, name, spec, grade, madeIn, shelfLife, categoryId, brandId);
         this.lastReceiptPrice = Objects.requireNonNull(lastReceiptPrice, "lastReceiptPrice is null");
-        setRetailPrice(retailPrice);
-        setMemberPrice(memberPrice);
-        setVipPrice(vipPrice);
-    }
-
-    private void setVipPrice(VipPrice vipPrice) {
-        this.vipPrice = vipPrice;
-    }
-
-    private void setMemberPrice(MemberPrice memberPrice) {
-        this.memberPrice = memberPrice;
-    }
-
-    private void setRetailPrice(RetailPrice retailPrice) {
         this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
+        this.memberPrice = Objects.requireNonNull(memberPrice, "memberPrice required");
+        this.vipPrice = Objects.requireNonNull(vipPrice, "vipPrice is null");
     }
 
     public LastReceiptPrice lastReceiptPrice() {
         return lastReceiptPrice;
     }
 
+    public void adjustLastReceiptPrice(LastReceiptPrice lastReceiptPrice) {
+        Objects.requireNonNull(lastReceiptPrice, "lastReceiptPrice required");
+        if (!this.lastReceiptPrice.equals(lastReceiptPrice))
+            this.lastReceiptPrice = lastReceiptPrice;
+    }
+
     public RetailPrice retailPrice() {
         return retailPrice;
+    }
+
+    public void adjustRetailPrice(RetailPrice retailPrice) {
+        Objects.requireNonNull(retailPrice, "retailPrice required");
+        if (!this.retailPrice.equals(retailPrice))
+            this.retailPrice = retailPrice;
     }
 
     public MemberPrice memberPrice() {

@@ -25,7 +25,6 @@ import catalog.hoprxi.scale.domain.model.price.WeightMemberPrice;
 import catalog.hoprxi.scale.domain.model.price.WeightRetailPrice;
 import catalog.hoprxi.scale.domain.model.price.WeightVipPrice;
 
-import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -34,7 +33,7 @@ import java.util.Objects;
  * @since JDK 21
  */
 public class Weight extends Scale {
-    private final WeightLastReceiptPrice lastReceiptPrice;
+    private WeightLastReceiptPrice lastReceiptPrice;
     private WeightRetailPrice retailPrice;
     private WeightMemberPrice memberPrice;
     private WeightVipPrice vipPrice;
@@ -43,21 +42,9 @@ public class Weight extends Scale {
                   WeightRetailPrice retailPrice, WeightMemberPrice memberPrice, WeightVipPrice vipPrice, long categoryId, long brandId) {
         super(plu, name, spec, grade, madeIn, shelfLife, categoryId, brandId);
         this.lastReceiptPrice = Objects.requireNonNull(lastReceiptPrice, "lastReceiptPrice is null");
-        setRetailPrice(retailPrice);
-        setMemberPrice(memberPrice);
-        setVipPrice(vipPrice);
-    }
-
-    private void setRetailPrice(WeightRetailPrice retailPrice) {
         this.retailPrice = Objects.requireNonNull(retailPrice, "retailPrice required");
-    }
-
-    private void setVipPrice(WeightVipPrice vipPrice) {
-        this.vipPrice = Objects.requireNonNull(vipPrice, "vipPrice is null");
-    }
-
-    private void setMemberPrice(WeightMemberPrice memberPrice) {
         this.memberPrice = Objects.requireNonNull(memberPrice, "memberPrice is null");
+        this.vipPrice = Objects.requireNonNull(vipPrice, "vipPrice is null");
     }
 
     public WeightMemberPrice memberPrice() {
@@ -73,10 +60,15 @@ public class Weight extends Scale {
     }
 
     public void adjustRetailPrice(WeightRetailPrice retailPrice) {
-        if (retailPrice == null)
-            retailPrice = WeightRetailPrice.zero(Locale.getDefault());
+        Objects.requireNonNull(retailPrice, "retailPrice required");
         if (!this.retailPrice.equals(retailPrice))
             this.retailPrice = retailPrice;
+    }
+
+    public void adjustLastReceiptPrice(WeightLastReceiptPrice lastReceiptPrice) {
+        Objects.requireNonNull(lastReceiptPrice, "lastReceiptPrice required");
+        if (!this.lastReceiptPrice.equals(lastReceiptPrice))
+            this.lastReceiptPrice = lastReceiptPrice;
     }
 
     public WeightLastReceiptPrice lastReceiptPrice() {

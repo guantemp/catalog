@@ -28,7 +28,6 @@ import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
 import catalog.hoprxi.scale.domain.model.Count;
 import catalog.hoprxi.scale.domain.model.CountRepository;
 import catalog.hoprxi.scale.domain.model.Plu;
-import catalog.hoprxi.scale.domain.model.price.*;
 import catalog.hoprxi.scale.infrastructure.PsqlUtil;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -57,6 +56,7 @@ import java.util.Objects;
 public class PsqlCountRepository implements CountRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlCountRepository.class);
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
+
     /**
      * @param plu
      * @return
@@ -256,7 +256,15 @@ public class PsqlCountRepository implements CountRepository {
      */
     @Override
     public void delete(Plu plu) {
-
+        final String removeSql = "delete from scale where plu=?";
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(removeSql)) {
+            preparedStatement.setLong(1, plu.id());
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Can't remove from Weight(plu={})", plu.id(), e);
+            throw new PersistenceException(String.format("Can't remove from Weight(plu=%s)", plu.id()), e);
+        }
     }
 
     /**

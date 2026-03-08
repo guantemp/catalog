@@ -201,7 +201,8 @@ public final class ESBrandQuery implements BrandQuery {
     private InputStream reorganization(InputStream is) throws IOException {
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
         boolean transferMark = false;
-        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os); JsonParser parser = JSON_FACTORY.createParser(is);) {
+        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os);
+             JsonParser parser = JSON_FACTORY.createParser(is);) {
             generator.writeStartObject();
             while (parser.nextToken() != null) {
                 if (parser.currentToken() == JsonToken.FIELD_NAME && "hits".equals(parser.currentName())) {

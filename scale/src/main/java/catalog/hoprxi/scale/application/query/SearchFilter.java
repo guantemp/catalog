@@ -15,19 +15,10 @@
  */
 
 package catalog.hoprxi.scale.application.query;
-
-import catalog.hoprxi.core.application.query.ItemQueryFilter;
-import catalog.hoprxi.core.application.query.SortFieldEnum;
-import catalog.hoprxi.scale.domain.model.Plu;
-import io.netty.buffer.ByteBuf;
-import reactor.core.publisher.Flux;
 /**
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuang</a>
  * @version 0.1 2026/3/6
  * @since JDK 21
  */
-public interface ScaleQuery {
-    Flux<ByteBuf> findAsync(Plu plu);
-
-    Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField);
+public interface SearchFilter {
 }

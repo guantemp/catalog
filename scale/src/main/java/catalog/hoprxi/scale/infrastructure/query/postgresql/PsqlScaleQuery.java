@@ -80,6 +80,13 @@ public class PsqlScaleQuery implements ScaleQuery {
      */
     @Override
     public Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField) {
+        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("from must lager 10000");
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
+        if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
+        if (sortField == null) {
+            sortField = SortFieldEnum._ID;
+            LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
         return null;
     }
 }

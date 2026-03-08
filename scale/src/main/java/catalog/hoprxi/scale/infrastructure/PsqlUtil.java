@@ -40,6 +40,9 @@ public final class PsqlUtil {
     static {
         config = ConfigFactory.load("scale").resolve();
         List<? extends Config> writes = config.getConfigList("datasources.write.shards");
+        if (writes.isEmpty()) {
+            throw new IllegalStateException("No write shards configured in datasources.write.shards");
+        }
         Config write = writes.getFirst();
         Properties props = new Properties();
         props.setProperty("dataSourceClassName", write.getString("hikari.dataSourceClassName"));
@@ -56,9 +59,8 @@ public final class PsqlUtil {
         props.setProperty("dataSource.databaseName", write.getString("db.databaseName"));
 
         props.put("maximumPoolSize", write.hasPath("hikari.maximumPoolSize") ? write.getInt("hikari.maximumPoolSize") : 5);
-        props.put("dataSource.logWriter", new PrintWriter(System.out));
+        //props.put("dataSource.logWriter", new PrintWriter(System.out));
         HikariConfig hikariConfig = new HikariConfig(props);
-        //System.out.println(props);
         hikariDataSource = new HikariDataSource(hikariConfig);
         /*
         List<? extends Config> reads = config.getConfigList("reads");

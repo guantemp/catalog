@@ -43,7 +43,6 @@ public class CategoryFilter implements ItemQueryFilter {
     @Override
     public void filter(JsonGenerator generator) throws IOException {
         if (categoryIds.length == 0) {
-            return;
         }
        else if (categoryIds.length == 1) {
             generator.writeStartObject();
