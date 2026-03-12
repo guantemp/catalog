@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query.elasticsearch.filter;
 
-import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
@@ -29,16 +29,16 @@ import java.util.regex.Pattern;
  * @since JDK8.0
  * @version 0.0.1 builder 2025-04-04
  */
-public class KeywordFilter implements ItemQueryFilter {
+public class KeywordSpec implements ItemQuerySpec {
     private static final Pattern BARCODE = Pattern.compile("^\\d{2,14}$");
     private final String keyword;
 
-    public KeywordFilter(String keyword) {
+    public KeywordSpec(String keyword) {
         this.keyword = Objects.requireNonNull(keyword, "keyword required");
     }
 
     @Override
-    public void filter(JsonGenerator generator) throws IOException {
+    public void queryClause(JsonGenerator generator) throws IOException {
         if (BARCODE.matcher(keyword).matches()) {//only barcode query
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");
@@ -75,7 +75,7 @@ public class KeywordFilter implements ItemQueryFilter {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof KeywordFilter that)) return false;
+        if (!(o instanceof KeywordSpec that)) return false;
 
         return Objects.equals(keyword, that.keyword);
     }
@@ -87,7 +87,7 @@ public class KeywordFilter implements ItemQueryFilter {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", KeywordFilter.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", KeywordSpec.class.getSimpleName() + "[", "]")
                 .add("keyword='" + keyword + "'")
                 .toString();
     }

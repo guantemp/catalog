@@ -16,10 +16,10 @@
 
 package catalog.hoprxi;
 
-import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.BrandFilter;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.CategoryFilter;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.BrandSpec;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.CategorySpec;
 import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.price.Price;
@@ -364,7 +364,7 @@ public class AppTest {
         generator.writeStartObject();
         generator.writeNumberField("size", 200);
         generator.writeObjectFieldStart("query");
-        ItemQueryFilter[] filters = new ItemQueryFilter[]{new BrandFilter(-1), new CategoryFilter(new long[]{-1, 62078023226734874l})};
+        ItemQuerySpec[] filters = new ItemQuerySpec[]{new BrandSpec(-1), new CategorySpec(new long[]{-1, 62078023226734874l})};
         if (filters.length > 0) {
             generator.writeObjectFieldStart("bool");
             generator.writeArrayFieldStart("must");
@@ -397,8 +397,8 @@ public class AppTest {
             generator.writeEndObject();
             generator.writeEndObject();
         }
-        for (ItemQueryFilter filter : filters) {
-            filter.filter(generator);
+        for (ItemQuerySpec filter : filters) {
+            filter.queryClause(generator);
         }
         generator.writeEndArray();
         generator.writeEndObject();

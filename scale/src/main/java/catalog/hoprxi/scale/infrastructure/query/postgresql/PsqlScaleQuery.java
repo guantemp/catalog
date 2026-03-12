@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.scale.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
 import catalog.hoprxi.scale.application.query.ScaleQuery;
@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -44,15 +43,18 @@ public class PsqlScaleQuery implements ScaleQuery {
 
     @Override
     public Flux<ByteBuf> findAsync(Plu plu) {
-        final String findSql = """
-                SELECT plu, name, category_id, brand_id, grade, made_in, spec, shelf_life,
-                       retail_price, last_receipt_price, member_price, vip_price
-                FROM scale
-                WHERE plu = ?
-                LIMIT 1
-                """;
+        final StringBuilder sb = new StringBuilder("""
+            SELECT
+                i.id, i.name, i.grade, i.made_in, i.spec, i.shelf_life,
+                i.last_receipt_price, i.retail_price, i.member_price, i.vip_price,
+                json_build_object('id', c.id, 'name', c.name::jsonb ->> 'name') AS category,
+                json_build_object('id', b.id, 'name', b.name::jsonb ->> 'name') AS brand
+            FROM item i
+            LEFT JOIN category c ON i.category_id = c.id
+            LEFT JOIN brand b ON b.id = i.brand_id
+            """);
         try (Connection connection = PsqlUtil.getConnection();
-             PreparedStatement ps = connection.prepareStatement(findSql)) {
+             PreparedStatement ps = connection.prepareStatement(sb.toString())) {
             ps.setInt(1,plu.id());
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -79,7 +81,7 @@ public class PsqlScaleQuery implements ScaleQuery {
      * @return
      */
     @Override
-    public Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField) {
+    public Flux<ByteBuf> searchAsync(ItemQuerySpec[] filters, int offset, int size, SortFieldEnum sortField) {
         if (offset < 0 || offset > 10000) throw new IllegalArgumentException("from must lager 10000");
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
@@ -87,6 +89,14 @@ public class PsqlScaleQuery implements ScaleQuery {
             sortField = SortFieldEnum._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
+        StringBuilder sqlBuilder = new StringBuilder("""
+            SELECT 
+                i.id, i.name, i.grade, i.made_in, i.spec, i.shelf_life,
+                i.last_receipt_price, i.retail_price, i.member_price, i.vip_price,
+            FROM item i
+            LEFT JOIN category c ON i.category_id = c.id
+            LEFT JOIN brand b ON b.id = i.brand_id
+            """);
         return null;
     }
 }

@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query.elasticsearch.filter;
 
-import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
@@ -28,11 +28,11 @@ import java.util.StringJoiner;
  * @since JDK8.0
  * @version 0.0.1 builder 2025-04-29
  */
-public class RetailPriceFilter implements ItemQueryFilter {
+public class RetailPriceSpec implements ItemQuerySpec {
     private final Number min;
     private final Number max;
 
-    public RetailPriceFilter(Number min, Number max) {
+    public RetailPriceSpec(Number min, Number max) {
         if (min == null && max == null)
             throw new IllegalArgumentException("min.max cannot all be NULL");
         if (min != null && Double.compare(min.doubleValue(), max.doubleValue()) >= 0)
@@ -43,7 +43,7 @@ public class RetailPriceFilter implements ItemQueryFilter {
 
 
     @Override
-    public void filter(JsonGenerator generator) throws IOException {
+    public void queryClause(JsonGenerator generator) throws IOException {
         generator.writeStartObject();
         generator.writeObjectFieldStart("range");
         generator.writeObjectFieldStart("retail_price.number");
@@ -59,7 +59,7 @@ public class RetailPriceFilter implements ItemQueryFilter {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RetailPriceFilter that)) return false;
+        if (!(o instanceof RetailPriceSpec that)) return false;
 
         if (!Objects.equals(min, that.min)) return false;
         return Objects.equals(max, that.max);
@@ -74,7 +74,7 @@ public class RetailPriceFilter implements ItemQueryFilter {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", RetailPriceFilter.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", RetailPriceSpec.class.getSimpleName() + "[", "]")
                 .add("mix=" + min)
                 .add("max=" + max)
                 .toString();

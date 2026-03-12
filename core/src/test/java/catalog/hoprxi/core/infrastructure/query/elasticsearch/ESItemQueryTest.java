@@ -17,7 +17,7 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.ItemQuery;
-import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
 import io.netty.buffer.ByteBuf;
@@ -181,18 +181,18 @@ public class ESItemQueryTest {
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         is = query.search(0, 50, SortFieldEnum._BARCODE);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("694")}, 0, 10, SortFieldEnum._BARCODE);
+        is = query.search(new ItemQuerySpec[]{new KeywordSpec("694")}, 0, 10, SortFieldEnum._BARCODE);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
 
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilter(null)}, 10, 15, SortFieldEnum.BARCODE);
+        is = query.search(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(null)}, 10, 15, SortFieldEnum.BARCODE);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilter(new long[]{49680933986631205L}), new BrandFilter(-1L)}, 0, 10, SortFieldEnum._BARCODE);
+        is = query.search(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(new long[]{49680933986631205L}), new BrandSpec(-1L)}, 0, 10, SortFieldEnum._BARCODE);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("692"), new RetailPriceFilter(1.1, 2), new LastReceiptPriceFilter(null, 1.2)}, 0, 9, SortFieldEnum._ID);
+        is = query.search(new ItemQuerySpec[]{new KeywordSpec("692"), new RetailPriceSpec(1.1, 2), new LastReceiptPriceSpec(null, 1.2)}, 0, 9, SortFieldEnum._ID);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilter(49680944612900409L)}, 50, 10, SortFieldEnum.ID);
+        is = query.search(new ItemQuerySpec[]{new KeywordSpec("6931"), new CategorySpec(49680944612900409L)}, 50, 10, SortFieldEnum.ID);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("伊利")}, 10, 256, SortFieldEnum._RETAIL_PRICE);
+        is = query.search(new ItemQuerySpec[]{new KeywordSpec("伊利")}, 10, 256, SortFieldEnum._RETAIL_PRICE);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
     }
 
@@ -204,12 +204,12 @@ public class ESItemQueryTest {
         Flux<ByteBuf>[] fluxes = new Flux[]{
                 query.searchAsync(100, 30),
                 query.searchAsync(0, 50, SortFieldEnum._BARCODE),
-                query.searchAsync(new ItemQueryFilter[]{new KeywordFilter("694")}, 0, 10, SortFieldEnum._BARCODE),
-                query.searchAsync(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilter(null)}, 10, 15, SortFieldEnum.BARCODE),
-                query.searchAsync(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilter(new long[]{49680933986631205L}), new BrandFilter(-1L)}, 0, 10, SortFieldEnum._BARCODE),
-                query.searchAsync(new ItemQueryFilter[]{new KeywordFilter("692"), new RetailPriceFilter(1.1, 2), new LastReceiptPriceFilter(null, 1.2)}, 0, 9, SortFieldEnum._ID),
-                query.searchAsync(new ItemQueryFilter[]{new KeywordFilter("6931"), new CategoryFilter(49680944612900409L)}, 50, 10, SortFieldEnum.ID),
-                query.searchAsync(new ItemQueryFilter[]{new KeywordFilter("伊利")}, 10, 256, SortFieldEnum._RETAIL_PRICE)
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("694")}, 0, 10, SortFieldEnum._BARCODE),
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(null)}, 10, 15, SortFieldEnum.BARCODE),
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(new long[]{49680933986631205L}), new BrandSpec(-1L)}, 0, 10, SortFieldEnum._BARCODE),
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("692"), new RetailPriceSpec(1.1, 2), new LastReceiptPriceSpec(null, 1.2)}, 0, 9, SortFieldEnum._ID),
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("6931"), new CategorySpec(49680944612900409L)}, 50, 10, SortFieldEnum.ID),
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("伊利")}, 10, 256, SortFieldEnum._RETAIL_PRICE)
         };
 
         CountDownLatch latch = new CountDownLatch(fluxes.length);
@@ -247,15 +247,15 @@ public class ESItemQueryTest {
     public void testSearchAfter() throws IOException {
         InputStream is = query.search(50, "471019908050", SortFieldEnum.BARCODE);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQueryFilter[]{new CategoryFilter(49681151224315522L)}, 50);
+        is = query.search(new ItemQuerySpec[]{new CategorySpec(49681151224315522L)}, 50);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilter(49680933986631205L)}, 1, null, SortFieldEnum._BARCODE);
+        is = query.search(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(49680933986631205L)}, 1, null, SortFieldEnum._BARCODE);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("6932"), new CategoryFilter(49680933986631205L)}, 50);
+        is = query.search(new ItemQuerySpec[]{new KeywordSpec("6932"), new CategorySpec(49680933986631205L)}, 50);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("692"), new CategoryFilter(new long[]{49680944612900409L}), new RetailPriceFilter(2.6, 25.5), new LastReceiptPriceFilter(1.1, 3)}, 5, null, SortFieldEnum._ID);
+        is = query.search(new ItemQuerySpec[]{new KeywordSpec("692"), new CategorySpec(new long[]{49680944612900409L}), new RetailPriceSpec(2.6, 25.5), new LastReceiptPriceSpec(1.1, 3)}, 5, null, SortFieldEnum._ID);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQueryFilter[]{new KeywordFilter("伊利"), new KeywordFilter("690")}, 10, "258", SortFieldEnum._RETAIL_PRICE);
+        is = query.search(new ItemQuerySpec[]{new KeywordSpec("伊利"), new KeywordSpec("690")}, 10, "258", SortFieldEnum._RETAIL_PRICE);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
     }
 
@@ -267,11 +267,11 @@ public class ESItemQueryTest {
         Flux<ByteBuf>[] fluxes = new Flux[]{
                 query.searchAsync(50, "471019908050", SortFieldEnum.BARCODE),
                 query.searchAsync(100, SortFieldEnum.BARCODE),
-                query.searchAsync(new ItemQueryFilter[]{new CategoryFilter(49681151224315522L)}, 50),
-                query.searchAsync(new ItemQueryFilter[]{new KeywordFilter("693"), new CategoryFilter(49680933986631205L)}, 20, null, SortFieldEnum._BARCODE),
-                query.searchAsync(new ItemQueryFilter[]{new KeywordFilter("6932"), new CategoryFilter(49680933986631205L)}, 50),
-                query.searchAsync(new ItemQueryFilter[]{new KeywordFilter("692"), new CategoryFilter(new long[]{49680944612900409L}), new RetailPriceFilter(2.6, 25.5), new LastReceiptPriceFilter(1.1, 3)}, 5, null, SortFieldEnum._ID),
-                query.searchAsync(new ItemQueryFilter[]{new KeywordFilter("伊利"), new KeywordFilter("690")}, 10, "258", SortFieldEnum._RETAIL_PRICE)
+                query.searchAsync(new ItemQuerySpec[]{new CategorySpec(49681151224315522L)}, 50),
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(49680933986631205L)}, 20, null, SortFieldEnum._BARCODE),
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("6932"), new CategorySpec(49680933986631205L)}, 50),
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("692"), new CategorySpec(new long[]{49680944612900409L}), new RetailPriceSpec(2.6, 25.5), new LastReceiptPriceSpec(1.1, 3)}, 5, null, SortFieldEnum._ID),
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("伊利"), new KeywordSpec("690")}, 10, "258", SortFieldEnum._RETAIL_PRICE)
         };
 
         CountDownLatch latch = new CountDownLatch(fluxes.length);

@@ -23,7 +23,7 @@ import catalog.hoprxi.core.application.handler.Handler;
 import catalog.hoprxi.core.application.handler.ItemCreateHandler;
 import catalog.hoprxi.core.application.handler.ItemDeleteHandler;
 import catalog.hoprxi.core.application.query.ItemQuery;
-import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Item;
@@ -187,10 +187,10 @@ public class ItemService {
         return HttpResponse.of(responseStream);
     }
 
-    private ItemQueryFilter[] parseFilter(String query, String filter) {
-        List<ItemQueryFilter> filterList = new ArrayList<>();
+    private ItemQuerySpec[] parseFilter(String query, String filter) {
+        List<ItemQuerySpec> filterList = new ArrayList<>();
         if (!query.isBlank())
-            filterList.add(new KeywordFilter(query));
+            filterList.add(new KeywordSpec(query));
         String[] filters = filter.split(";");//Project separation
         for (String s : filters) {
             String[] con = s.split(":");//Project name : Project value
@@ -207,63 +207,63 @@ public class ItemService {
         }
         //for (ItemQueryFilter f : filterList)
         //System.out.println(f);
-        return filterList.toArray(new ItemQueryFilter[0]);
+        return filterList.toArray(new ItemQuerySpec[0]);
     }
 
-    private void parseCid(List<ItemQueryFilter> filterList, String cids) {
+    private void parseCid(List<ItemQuerySpec> filterList, String cids) {
         if (!cids.isBlank()) {
             String[] ss = cids.split(MINI_SEPARATION);
             long[] categoryIds = new long[ss.length];
             for (int i = 0; i < ss.length; i++) {
                 categoryIds[i] = Long.parseLong(ss[i]);
             }
-            filterList.add(new CategoryFilter(categoryIds));
+            filterList.add(new CategorySpec(categoryIds));
         }
     }
 
-    private void parseBid(List<ItemQueryFilter> filterList, String bids) {
+    private void parseBid(List<ItemQuerySpec> filterList, String bids) {
         if (!bids.isBlank()) {
             String[] ss = bids.split(MINI_SEPARATION);
             long[] brandIds = new long[ss.length];
             for (int i = 0; i < ss.length; i++) {
                 brandIds[i] = Long.parseLong(ss[i]);
             }
-            filterList.add(new BrandFilter(brandIds));
+            filterList.add(new BrandSpec(brandIds));
         }
     }
 
-    private void parseRetailPrice(List<ItemQueryFilter> filterList, String retail_price) {
+    private void parseRetailPrice(List<ItemQuerySpec> filterList, String retail_price) {
         if (!retail_price.isBlank()) {
             String[] ss = retail_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
-                filterList.add(new RetailPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
+                filterList.add(new RetailPriceSpec(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
             }
         }
     }
 
-    private void parseMemberPrice(List<ItemQueryFilter> filterList, String member_price) {
+    private void parseMemberPrice(List<ItemQuerySpec> filterList, String member_price) {
         if (!member_price.isBlank()) {
             String[] ss = member_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
-                filterList.add(new MemberPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
+                filterList.add(new MemberPriceSpec(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
             }
         }
     }
 
-    private void parseVipPrice(List<ItemQueryFilter> filterList, String vip_price) {
+    private void parseVipPrice(List<ItemQuerySpec> filterList, String vip_price) {
         if (!vip_price.isBlank()) {
             String[] ss = vip_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
-                filterList.add(new VipPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
+                filterList.add(new VipPriceSpec(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
             }
         }
     }
 
-    private void parseLastReceiptPrice(List<ItemQueryFilter> filterList, String last_receipt_price) {
+    private void parseLastReceiptPrice(List<ItemQuerySpec> filterList, String last_receipt_price) {
         if (!last_receipt_price.isBlank()) {
             String[] ss = last_receipt_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
-                filterList.add(new LastReceiptPriceFilter(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
+                filterList.add(new LastReceiptPriceSpec(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
             }
         }
     }

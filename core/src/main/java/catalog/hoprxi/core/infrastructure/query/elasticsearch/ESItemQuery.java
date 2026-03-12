@@ -302,7 +302,7 @@ public class ESItemQuery implements ItemQuery {
     }
 
     @Override
-    public InputStream search(ItemQueryFilter[] filters, int size, String searchAfter, SortFieldEnum sortField) {
+    public InputStream search(ItemQuerySpec[] specs, int size, String searchAfter, SortFieldEnum sortField) {
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (sortField == null) {
             sortField = SortFieldEnum._ID;
@@ -310,7 +310,7 @@ public class ESItemQuery implements ItemQuery {
         }
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESItemQuery.buildSearchRequest(filters, size, searchAfter, sortField));
+        request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, size, searchAfter, sortField));
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
         boolean success = false;
         try {
@@ -339,7 +339,7 @@ public class ESItemQuery implements ItemQuery {
     }
 
     @Override
-    public Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int size, String searchAfter, SortFieldEnum sortField) {
+    public Flux<ByteBuf> searchAsync(ItemQuerySpec[] specs, int size, String searchAfter, SortFieldEnum sortField) {
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (sortField == null) {
             sortField = SortFieldEnum._ID;
@@ -349,7 +349,7 @@ public class ESItemQuery implements ItemQuery {
         Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESItemQuery.buildSearchRequest(filters, size, searchAfter, sortField));
+        request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, size, searchAfter, sortField));
 
         ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
             @Override
@@ -382,17 +382,17 @@ public class ESItemQuery implements ItemQuery {
             @Override
             public void onFailure(Exception e) {
                 if (!isCancelled.get()) {
-                    sink.tryEmitError(ESItemQuery.mapException(e, ESItemQuery.extractIdentifier(filters)));
+                    sink.tryEmitError(ESItemQuery.mapException(e, ESItemQuery.extractIdentifier(specs)));
                 }
             }
         });
         return sink.asFlux()
                 .doOnCancel(() -> isCancelled.set(true))
-                .doOnTerminate(() -> LOGGER.debug("Request terminated for flier: {}", (Object[]) filters))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for flier: {}", (Object[]) specs))
                 .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
     }
 
-    private static String buildSearchRequest(ItemQueryFilter[] filters, int size, String searchAfter, SortFieldEnum sortField) {
+    private static String buildSearchRequest(ItemQuerySpec[] filters, int size, String searchAfter, SortFieldEnum sortField) {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -416,16 +416,16 @@ public class ESItemQuery implements ItemQuery {
         generator.writeEndArray();
     }
 
-    private static Object extractIdentifier(ItemQueryFilter[] filters) {
+    private static Object extractIdentifier(ItemQuerySpec[] filters) {
         if (filters == null || filters.length == 0) {
             return "empty-filters";
         }
-        for (ItemQueryFilter f : filters) {// 优先找 id
+        for (ItemQuerySpec f : filters) {// 优先找 id
             if ("KeywordFilter".equals(f.getClass().getSimpleName())) {
                 return "Keyword filter"; // 假设 getValue() 返回 String 或 Number
             }
         }
-        for (ItemQueryFilter f : filters) { // 次选条码
+        for (ItemQuerySpec f : filters) { // 次选条码
             if ("CategoryFilter".equals(f.getClass().getSimpleName())) {
                 return "Category filter";
             }
@@ -436,7 +436,7 @@ public class ESItemQuery implements ItemQuery {
 
 
     @Override
-    public Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField) {
+    public Flux<ByteBuf> searchAsync(ItemQuerySpec[] specs, int offset, int size, SortFieldEnum sortField) {
         if (offset < 0 || offset > 10000) throw new IllegalArgumentException("from must lager 10000");
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
@@ -448,8 +448,8 @@ public class ESItemQuery implements ItemQuery {
         Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
-        System.out.println(ESItemQuery.buildSearchRequest(filters, offset, size, sortField));
-        request.setJsonEntity(ESItemQuery.buildSearchRequest(filters, offset, size, sortField));
+        System.out.println(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
+        request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
 
         ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
             @Override
@@ -482,20 +482,20 @@ public class ESItemQuery implements ItemQuery {
             @Override
             public void onFailure(Exception e) {
                 if (!isCancelled.get()) {
-                    sink.tryEmitError(ESItemQuery.mapException(e, filters));
+                    sink.tryEmitError(ESItemQuery.mapException(e, specs));
                 }
             }
         });
         return sink.asFlux()
                 .doOnCancel(() -> isCancelled.set(true))
-                .doOnTerminate(() -> LOGGER.debug("Request terminated for filter: {}", Arrays.stream(filters)
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for filter: {}", Arrays.stream(specs)
                         .filter(Objects::nonNull)
                         .map(Object::toString)))
                 .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
     }
 
     @Override
-    public InputStream search(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField) {
+    public InputStream search(ItemQuerySpec[] specs, int offset, int size, SortFieldEnum sortField) {
         if (offset < 0 || offset > 10000) throw new IllegalArgumentException("from must lager 10000");
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
@@ -505,7 +505,7 @@ public class ESItemQuery implements ItemQuery {
         }
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESItemQuery.buildSearchRequest(filters, offset, size, sortField));
+        request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
         boolean success = false;
         try {
@@ -533,7 +533,7 @@ public class ESItemQuery implements ItemQuery {
         }
     }
 
-    private static String buildSearchRequest(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField) {
+    private static String buildSearchRequest(ItemQuerySpec[] filters, int offset, int size, SortFieldEnum sortField) {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -552,7 +552,7 @@ public class ESItemQuery implements ItemQuery {
         return writer.toString();
     }
 
-    private static void buildMainRequest(JsonGenerator generator, ItemQueryFilter[] filters) throws IOException {
+    private static void buildMainRequest(JsonGenerator generator, ItemQuerySpec[] filters) throws IOException {
         generator.writeObjectFieldStart("query");
         if (filters == null || filters.length == 0) {
             generator.writeObjectFieldStart("match_all");
@@ -560,8 +560,8 @@ public class ESItemQuery implements ItemQuery {
         } else {
             generator.writeObjectFieldStart("bool");
             generator.writeArrayFieldStart("filter");
-            for (ItemQueryFilter filter : filters) {
-                filter.filter(generator);
+            for (ItemQuerySpec filter : filters) {
+                filter.queryClause(generator);
             }
             generator.writeEndArray();//end must
             generator.writeEndObject();//end bool

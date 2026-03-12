@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query.elasticsearch.filter;
 
-import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
@@ -26,11 +26,11 @@ import java.io.IOException;
  * @since JDK8.0
  * @version 0.0.1 builder 2025-04-29
  */
-public class LastReceiptPriceFilter implements ItemQueryFilter {
+public class LastReceiptPriceSpec implements ItemQuerySpec {
     private final Number mix;
     private final Number max;
 
-    public LastReceiptPriceFilter(Number mix, Number max) {
+    public LastReceiptPriceSpec(Number mix, Number max) {
         if (mix == null && max == null)
             throw new IllegalArgumentException("min.max cannot all be NULL");
         this.mix = mix;
@@ -38,7 +38,7 @@ public class LastReceiptPriceFilter implements ItemQueryFilter {
     }
 
     @Override
-    public void filter(JsonGenerator generator) throws IOException {
+    public void queryClause(JsonGenerator generator) throws IOException {
         generator.writeStartObject();
         generator.writeObjectFieldStart("range");
         generator.writeObjectFieldStart("last_receipt_price.price.number");

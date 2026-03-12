@@ -16,7 +16,7 @@
 
 package catalog.hoprxi.core.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.ItemQueryFilter;
+import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.application.view.ItemView;
@@ -185,13 +185,6 @@ public class PsqlItemQuery {
         }, "barcode=" + barcode);
     }
 
-    /*
-     * 通用异步查询执行器
-     *
-     * @param sql         SQL 查询语句
-     * @param paramSetter 参数设置回调
-     * @param logId       用于日志记录的标识符 (例如: "id=123" 或 "barcode=ABC")
-     */
     private static Flux<ByteBuf> findAsync(String sql, Consumer<PreparedStatement> paramSetter, String info) {
         AtomicBoolean isCancelled = new AtomicBoolean(false);
         Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
@@ -328,7 +321,7 @@ public class PsqlItemQuery {
         return new ItemView[0];
     }
 
-    public Flux<ByteBuf> searchAsync(ItemQueryFilter[] filters, int offset, int size, SortFieldEnum sortField){
+    public Flux<ByteBuf> searchAsync(ItemQuerySpec[] specs, int offset, int size, SortFieldEnum sortField){
         return null;
     }
 
@@ -487,7 +480,7 @@ public class PsqlItemQuery {
         return itemViews.toArray(new ItemView[0]);
     }
 
-    private static ItemView rebuild(ResultSet rs) throws InvocationTargetException, InstantiationException, IllegalAccessException, SQLException, IOException {
+    private static ItemView rebuild(ResultSet rs) throws SQLException, IOException {
         String id = rs.getString("id");
         Name name = new Name(rs.getString("name"), rs.getString("alias"));
         Barcode barcode = BarcodeGenerateServices.createBarcode(rs.getString("barcode"));
