@@ -301,8 +301,6 @@ public class PsqlWeightRepository implements WeightRepository {
             System.out.println("URL: " + conn.getMetaData().getURL());
             System.out.println("DB Name: " + conn.getCatalog());
             System.out.println("Current Schema: " + conn.getSchema());
-
-
  */
             int idx = 1;
             ps.setLong(idx++, weight.plu().id());
