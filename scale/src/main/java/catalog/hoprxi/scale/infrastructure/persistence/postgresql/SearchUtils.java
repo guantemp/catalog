@@ -23,10 +23,7 @@ import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import com.huaban.analysis.jieba.JiebaSegmenter;
 import com.huaban.analysis.jieba.SegToken;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /***
@@ -55,6 +52,13 @@ public final class SearchUtils {
             // ... 可以引入现成的中文停用词表
     ));
 
+    // 3. 不可拆分的双字词 (连绵词、音译词等，拆了就没意义了)
+    private static final Set<String> UNBREAKABLE_DOUBLE_CHARS = new HashSet<>(Arrays.asList(
+            "葡萄", "琵琶", "咖啡", "沙发", "巧克力", "奥林匹克",
+            "中国", "美国", "日本", "北京", "上海"
+            // ... 补充专有名词
+    ));
+
     /**
      * 将多个字段组合并分词，生成 search_vector 内容
      */
@@ -74,14 +78,24 @@ public final class SearchUtils {
         // 3. 过滤掉单字（可选，视需求而定，通常单字噪音大）并去重
         return tokens.stream()
                 .map(t -> t.word)
-                .filter(w -> {
-                    if (w.length() > 1) {
-                        return true; // 多字词全部保留
-                    } else {
-                        // 单字词：如果在白名单里，保留；如果在停用词里，丢弃
-                        return MEANINGFUL_SINGLE_CHARS.contains(w) && !STOP_WORDS.contains(w);
+                .flatMap(w -> {
+                    List<String> result = new ArrayList<>();
+                    // 1. 原词永远加入
+                    result.add(w);
+
+                    // 2. 如果是双字 且 不在“不可拆分列表”中，尝试拆分
+                    if (w.length() == 2 && !UNBREAKABLE_DOUBLE_CHARS.contains(w)) {
+                        String s1 = String.valueOf(w.charAt(0));
+                        String s2 = String.valueOf(w.charAt(1));
+
+                        // 只有当单字在白名单中才加入，避免加入 "的", "了" 等
+                        if (MEANINGFUL_SINGLE_CHARS.contains(s1)) result.add(s1);
+                        if (MEANINGFUL_SINGLE_CHARS.contains(s2)) result.add(s2);
                     }
-                }) // 过滤掉单字，提高准确率，如需搜单字可去掉此行
+                    return result.stream();
+                })
+                // 3. 全局过滤停用词
+                .filter(w -> !STOP_WORDS.contains(w))// 过滤掉单字，提高准确率，如需搜单字可去掉此行
                 .distinct()
                 .collect(Collectors.joining(" "));
     }
