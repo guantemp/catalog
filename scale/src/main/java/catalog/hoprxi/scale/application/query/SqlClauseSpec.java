@@ -31,17 +31,17 @@ package catalog.hoprxi.scale.application.query;
  * </ul>
  *
  * <p><strong>使用场景：</strong></p>
- * <p>在构建动态查询时，可以组合多个 {@code SearchSqlClauseSpec} 实例。
+ * <p>在构建动态查询时，可以组合多个 {@code SqlClauseSpec} 实例。
  * 只有当 {@code isSatisfied()} 返回 {@code true} 时，才将其生成的 {@link SqlClause}
  * 添加到最终的查询构建器中，从而避免生成空的或无效的 SQL 条件（例如 "AND 1=1" 或多余的逗号）。</p>
  *
  * <pre>{@code
  * // 示例用法
- * List<SearchSqlClauseSpec> specs = Arrays.asList(statusSpec, nameSpec, dateSpec);
+ * List<SqlClauseSpec> specs = Arrays.asList(statusSpec, nameSpec, dateSpec);
  * StringBuilder sql = new StringBuilder("SELECT * FROM items WHERE 1=1");
  * List<Object> params = new ArrayList<>();
  *
- * for (SearchSqlClauseSpec spec : specs) {
+ * for (SqlClauseSpec spec : specs) {
  *     if (spec.isSatisfied()) {
  *         SqlClause clause = spec.toClause();
  *         sql.append(" AND ").append(clause.getSql());
@@ -55,7 +55,7 @@ package catalog.hoprxi.scale.application.query;
  * @see SqlClause
  * @since JDK 21
  */
-public interface SearchSqlClauseSpec {
+public interface SqlClauseSpec {
     /**
      * 将当前的查询规格转换为具体的 SQL 子句对象。
      * <p>

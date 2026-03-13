@@ -137,7 +137,7 @@ public class AppTest {
     @Test
     public void testConfig() {
         System.out.println(StoreKeyLoad.SECRET_KEY_PARAMETER);
-        String filePath =null;//Objects.requireNonNull(UploadServlet.class.getResource("/")).toExternalForm();
+        String filePath = Objects.requireNonNull(AppTest.class.getResource("/")).toExternalForm();
         String[] sss = filePath.split("/");
         StringJoiner joiner = new StringJoiner("/", "", "/");
         for (int i = 0, j = sss.length - 1; i < j; i++) {
@@ -348,7 +348,7 @@ public class AppTest {
         generator.writeStringField("value", format.format(retailPrice.price().amount()));
         generator.writeStringField("unit", retailPrice.price().unit().toString());
         generator.writeEndObject();
-        generator.writeStringField("retailPrice", format.format(retailPrice.price().amount()) + "/" + retailPrice.price().unit().toString());
+        generator.writeStringField("retailPrice", format.format(retailPrice.price().amount()) + "/" + retailPrice.price().unit());
         //generator.write
         generator.writeRaw("\n\"name\" : " + "\"guantemp\"," + '\n' + "\"age\" : " + 21);
         generator.flush();

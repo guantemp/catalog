@@ -27,7 +27,7 @@ import java.sql.*;
  */
 public final class Setup {
     public static void setup() throws SQLException {
-        String pass=PasswordService.nextStrongPasswd();
+        String pass = PasswordService.nextStrongPasswd();
         String url = "jdbc:postgresql://slave.tooo.top:6543/postgres";
         try (Connection conn = DriverManager.getConnection(url, "postgres", "Qwe123465")) {
             Statement stmt = conn.createStatement();
@@ -92,7 +92,12 @@ public final class Setup {
                     	retail_price jsonb DEFAULT '{"unit": "PCS", "number": 0, "currencyCode": "CNY"}'::jsonb NULL,
                     	member_price jsonb DEFAULT '{"name": "会员价", "price": {"unit": "PCS", "number": 0, "currencyCode": "CNY"}}'::jsonb NULL,
                     	vip_price jsonb DEFAULT '{"name": "VIP价", "price": {"unit": "PCS", "number": 0, "currencyCode": "CNY"}}'::jsonb NULL,
-                    	CONSTRAINT scale_pkey PRIMARY KEY (plu))
+                    	search_vector text,
+                    	CONSTRAINT scale_pkey PRIMARY KEY (plu));
+                    """);
+            scaleStmt.executeUpdate("""
+                    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_scale_search_vector ON public.scale
+                    USING gin (to_tsvector('simple', COALESCE(search_vector, '')));
                     """);
             System.out.println("scale表创建成功");
 

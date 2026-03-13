@@ -262,8 +262,8 @@ public class PsqlCountRepository implements CountRepository {
             preparedStatement.setLong(1, plu.id());
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            LOGGER.error("Can't remove from Weight(plu={})", plu.id(), e);
-            throw new PersistenceException(String.format("Can't remove from Weight(plu=%s)", plu.id()), e);
+            LOGGER.error("Can't remove from Count(plu={})", plu.id(), e);
+            throw new PersistenceException(String.format("Can't remove from Count(plu=%s)", plu.id()), e);
         }
     }
 
@@ -275,10 +275,10 @@ public class PsqlCountRepository implements CountRepository {
         final String insertOrReplaceSql = """
                 INSERT INTO scale (
                     plu, name,  category_id, brand_id, grade, made_in, spec, shelf_life,
-                    last_receipt_price, retail_price, member_price, vip_price
+                    last_receipt_price, retail_price, member_price, vip_price,search_vector
                 ) VALUES (
                     ?, ?::jsonb,  ?, ?, ?::grade, ?::jsonb, ?, ?,
-                    ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb
+                    ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb,?
                 )
                 ON CONFLICT (plu) DO UPDATE SET
                     name = EXCLUDED.name,
@@ -291,7 +291,8 @@ public class PsqlCountRepository implements CountRepository {
                     last_receipt_price = EXCLUDED.last_receipt_price,
                     retail_price = EXCLUDED.retail_price,
                     member_price = EXCLUDED.member_price,
-                    vip_price = EXCLUDED.vip_price;
+                    vip_price = EXCLUDED.vip_price,
+                    search_vector = EXCLUDED.search_vector;
                 """;
         try (Connection conn = PsqlUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(insertOrReplaceSql)) {
@@ -308,10 +309,11 @@ public class PsqlCountRepository implements CountRepository {
             ps.setString(idx++, toJson(count.retailPrice()));
             ps.setString(idx++, toJson(count.memberPrice()));
             ps.setString(idx++, toJson(count.vipPrice()));
+            ps.setString(idx++, SearchUtils.buildSearchVector(count.name(), count.spec(), count.madeIn()));
             ps.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error("Can't save count {}", count, e);
-            throw new PersistenceException(String.format("Can't save Weight(%s)", count), e);
+            throw new PersistenceException(String.format("Can't save Count(%s)", count), e);
         }
     }
 

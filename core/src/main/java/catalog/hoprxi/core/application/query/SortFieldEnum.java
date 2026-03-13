@@ -86,17 +86,17 @@ public enum SortFieldEnum {
     RETAIL_PRICE("retail_price.number"), _RETAIL_PRICE("retail_price.number"),
     MEMBER_PRICE("member_price.price.number"), _MEMBER_PRICE("member_price.price.number"),
     VIP_PRICE("vip_price.price.number"), _VIP_PRICE("vip_price.price.number");
-    private final String field;
+    private final String esField;
 
-    SortFieldEnum(String field) {
-        this.field = Objects.requireNonNull(field, "field is required").trim();
+    SortFieldEnum(String esField) {
+        this.esField = Objects.requireNonNull(esField, "field is required").trim();
     }
 
     /**
      * 底层存储对应的实际字段名称
      */
     public String field() {
-        return field;
+        return esField;
     }
 
     private static final Map<String, SortFieldEnum> CACHE = new HashMap<>();

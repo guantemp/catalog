@@ -17,31 +17,33 @@
 package catalog.hoprxi.scale.infrastructure.query.postgresql.spec;
 
 
-import catalog.hoprxi.scale.application.query.SqlClauseSpec;
 import catalog.hoprxi.scale.application.query.SqlClause;
-import salt.hoprxi.to.PinYin;
+import catalog.hoprxi.scale.application.query.SqlClauseSpec;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Objects;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2026/3/8
+ * @version 0.0.1 builder 2026/3/12
  */
 
-public class KeywordSqlClauseSpec implements SqlClauseSpec {
+public class CategorySqlClauseSpec implements SqlClauseSpec {
+    private final long[] categoryIds;
 
-    private final String keyword;
 
-    public KeywordSqlClauseSpec(String keyword) {
-        this.keyword = Objects.requireNonNull(keyword,"keyword is null").trim();
+    public CategorySqlClauseSpec(long[] categoryIds) {
+        this.categoryIds = categoryIds;
     }
 
     @Override
     public boolean isSatisfied() {
-        return  !keyword.isEmpty();
+        return categoryIds != null && categoryIds.length != 0;
     }
 
     @Override
@@ -49,11 +51,13 @@ public class KeywordSqlClauseSpec implements SqlClauseSpec {
         if (!isSatisfied()) {
             return new SqlClause("", Collections.emptyList());
         }
-
-        String mnemonicKw = PinYin.toShortPinYing(keyword); // 如需拼音转换，请替换
-        String sql = """
-            (to_tsvector('simple', COALESCE(search_vector, '')) @@ to_tsquery('simple', ?))
-            """;
-        return new SqlClause(sql, Arrays.asList(keyword, keyword, mnemonicKw));
+        String placeholders = Stream.of(categoryIds)
+                .map(id -> "?")
+                .collect(Collectors.joining(", "));
+        String sql = "c.id IN (" + placeholders + ")";
+        List<Object> longList = Arrays.stream(categoryIds) // 生成 LongStream
+                .boxed()           // 将 long 转换为 Long (装箱)
+                .collect(Collectors.toCollection(ArrayList::new)); // 收集到 ArrayList
+        return new SqlClause(sql, longList);
     }
 }

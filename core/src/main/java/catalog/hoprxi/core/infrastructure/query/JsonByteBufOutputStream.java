@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 
 public class JsonByteBufOutputStream extends OutputStream {
-    private static final int DEFAULT_BUFFER_SIZE = 8192;
+    private static final int DEFAULT_BUFFER_SIZE = 16 * 1024;//8kb
     private final Sinks.Many<ByteBuf> sink;
     private final AtomicBoolean isCancelled;
     private final ByteBuf byteBuf;

@@ -16,21 +16,19 @@
 
 package catalog.hoprxi.scale.infrastructure.query.postgresql;
 
-import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
-import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
 import catalog.hoprxi.scale.application.query.ScaleQuery;
+import catalog.hoprxi.scale.application.query.SqlClause;
+import catalog.hoprxi.scale.application.query.SqlClauseSpec;
 import catalog.hoprxi.scale.domain.model.Plu;
-import catalog.hoprxi.scale.infrastructure.PsqlUtil;
 import io.netty.buffer.ByteBuf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -43,16 +41,8 @@ public class PsqlScaleQuery implements ScaleQuery {
 
     @Override
     public Flux<ByteBuf> findAsync(Plu plu) {
-        final StringBuilder sb = new StringBuilder("""
-            SELECT
-                i.id, i.name, i.grade, i.made_in, i.spec, i.shelf_life,
-                i.last_receipt_price, i.retail_price, i.member_price, i.vip_price,
-                json_build_object('id', c.id, 'name', c.name::jsonb ->> 'name') AS category,
-                json_build_object('id', b.id, 'name', b.name::jsonb ->> 'name') AS brand
-            FROM item i
-            LEFT JOIN category c ON i.category_id = c.id
-            LEFT JOIN brand b ON b.id = i.brand_id
-            """);
+
+/*
         try (Connection connection = PsqlUtil.getConnection();
              PreparedStatement ps = connection.prepareStatement(sb.toString())) {
             ps.setInt(1,plu.id());
@@ -71,17 +61,12 @@ public class PsqlScaleQuery implements ScaleQuery {
         }
         */
 
+        return null;
     }
 
-    /**
-     * @param filters
-     * @param offset
-     * @param size
-     * @param sortField
-     * @return
-     */
+
     @Override
-    public Flux<ByteBuf> searchAsync(ItemQuerySpec[] filters, int offset, int size, SortFieldEnum sortField) {
+    public Flux<ByteBuf> searchAsync(SqlClauseSpec[] filters, int offset, int size, SortFieldEnum sortField) {
         if (offset < 0 || offset > 10000) throw new IllegalArgumentException("from must lager 10000");
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
@@ -89,14 +74,81 @@ public class PsqlScaleQuery implements ScaleQuery {
             sortField = SortFieldEnum._ID;
             LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
-        StringBuilder sqlBuilder = new StringBuilder("""
-            SELECT 
-                i.id, i.name, i.grade, i.made_in, i.spec, i.shelf_life,
-                i.last_receipt_price, i.retail_price, i.member_price, i.vip_price,
-            FROM item i
-            LEFT JOIN category c ON i.category_id = c.id
-            LEFT JOIN brand b ON b.id = i.brand_id
-            """);
+
+        List<SqlClauseSpec> specs = Arrays.asList(filters);
+        // 6. 过滤出满足条件的规格，然后生成 SQL 片段
+        List<SqlClause> clauses = specs.stream()
+                .filter(SqlClauseSpec::isSatisfied) // 只保留满足的规格
+                .map(SqlClauseSpec::toClause)      // 转换为 SQL 片段
+                .toList();
+
+        StringBuilder whereClause = new StringBuilder();
+
+        List<Object> allParams = new ArrayList<>();
+        for (SqlClause clause : clauses) {
+            if (!clause.sql().isEmpty()) {
+                if (!whereClause.isEmpty()) {
+                    whereClause.append(" AND ");
+                }
+                whereClause.append(clause.sql().trim());
+                allParams.addAll(clause.params());
+            }
+        }
+
+        final StringBuilder sb = new StringBuilder("""
+                SELECT
+                    s.id, s.name, s.grade, s.made_in, s.spec, s.shelf_life,
+                    s.last_receipt_price, s.retail_price, s.member_price, s.vip_price,
+                    json_build_object('id', c.id, 'name', c.name::jsonb ->> 'name') AS category,
+                    json_build_object('id', b.id, 'name', b.name::jsonb ->> 'name') AS brand
+                FROM scale s
+                LEFT JOIN category c ON i.category_id = c.id
+                LEFT JOIN brand b ON b.id = i.brand_id
+                """);
+
+        if (!whereClause.isEmpty()) {
+            sb.append(" WHERE ").append(whereClause);
+        }
+        String orderClause = buildOrderClause(sortField);
+        sb.append(orderClause);
+
+        sb.append(" LIMIT ? OFFSET ?");
+        allParams.add(size);
+        allParams.add(offset);
+        System.out.println(sb);
         return null;
+    }
+
+    private String buildOrderClause(SortFieldEnum sortBy) {
+        if (sortBy == null) {
+            sortBy = SortFieldEnum._ID;
+        }
+        String dbField = sortBy.field();
+        String direction = sortBy.sort();
+        String mappedDbField = mapEsFieldToDbField(dbField);
+        return " ORDER BY " + mappedDbField + " " + direction.toUpperCase();
+    }
+
+    private String mapEsFieldToDbField(String esField) {
+        return switch (esField) {
+            case "id" -> "i.id";
+            case "name.mnemonic.raw" -> "i.name ->> 'mnemonic'";
+            case "barcode.raw" -> "i.barcode";
+            case "madeIn.code" -> "i.made_in";
+            case "grade" -> "i.grade";
+            case "spec" -> "i.spec";
+            case "category.name" -> "c.name";
+            case "brand.name" -> "b.name";
+            case "last_receipt_price.price.number" -> "i.last_receipt_price";
+            case "retail_price.number" -> "i.retail_price";
+            case "member_price.price.number" -> "i.member_price";
+            case "vip_price.price.number" -> "i.vip_price";
+            case "stock" -> // 新增库存字段映射
+                    "i.stock";
+            default -> {
+                System.err.println("Warning: No mapping found for ES field: " + esField + ". Using 'i.id'.");
+                yield "i.id";
+            }
+        };
     }
 }

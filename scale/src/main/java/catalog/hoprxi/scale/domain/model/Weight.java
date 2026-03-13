@@ -35,8 +35,8 @@ import java.util.Objects;
 public class Weight extends Scale {
     private WeightLastReceiptPrice lastReceiptPrice;
     private WeightRetailPrice retailPrice;
-    private WeightMemberPrice memberPrice;
-    private WeightVipPrice vipPrice;
+    private final WeightMemberPrice memberPrice;
+    private final WeightVipPrice vipPrice;
 
     public Weight(Plu plu, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, ShelfLife shelfLife, WeightLastReceiptPrice lastReceiptPrice,
                   WeightRetailPrice retailPrice, WeightMemberPrice memberPrice, WeightVipPrice vipPrice, long categoryId, long brandId) {

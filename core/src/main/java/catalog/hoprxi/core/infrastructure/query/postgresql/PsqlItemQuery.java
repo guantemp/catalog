@@ -76,7 +76,6 @@ import java.util.function.Consumer;
 
 public class PsqlItemQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemQuery.class);
-    private static final Cache<String, ItemView> CACHE = CacheFactory.build("itemView");
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private static final int SINGLE_BUFFER_SIZE = 1024;//2KB缓冲区
 

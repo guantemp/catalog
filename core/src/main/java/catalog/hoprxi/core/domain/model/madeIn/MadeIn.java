@@ -16,6 +16,8 @@
 
 package catalog.hoprxi.core.domain.model.madeIn;
 
+import catalog.hoprxi.core.infrastructure.i18n.Label;
+
 import java.util.StringJoiner;
 
 /***
@@ -32,7 +34,7 @@ public interface MadeIn {
 
         @Override
         public String madeIn() {
-            return "UNKNOWN";
+            return Label.MADIN_UNDEFINED;
         }
 
         @Override
@@ -49,5 +51,4 @@ public interface MadeIn {
     default String code() {
         return "156";
     }
-
 }

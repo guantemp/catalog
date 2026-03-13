@@ -275,10 +275,10 @@ public class PsqlWeightRepository implements WeightRepository {
         final String insertOrReplaceSql = """
                 INSERT INTO scale (
                     plu, name,  category_id, brand_id, grade, made_in, spec, shelf_life,
-                    last_receipt_price, retail_price, member_price, vip_price
+                    last_receipt_price, retail_price, member_price, vip_price,search_vector
                 ) VALUES (
                     ?, ?::jsonb,  ?, ?, ?::grade, ?::jsonb, ?, ?,
-                    ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb
+                    ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb,?
                 )
                 ON CONFLICT (plu) DO UPDATE SET
                     name = EXCLUDED.name,
@@ -291,7 +291,8 @@ public class PsqlWeightRepository implements WeightRepository {
                     last_receipt_price = EXCLUDED.last_receipt_price,
                     retail_price = EXCLUDED.retail_price,
                     member_price = EXCLUDED.member_price,
-                    vip_price = EXCLUDED.vip_price;
+                    vip_price = EXCLUDED.vip_price,
+                    search_vector = EXCLUDED.search_vector;
                 """;
         try (Connection conn = PsqlUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(insertOrReplaceSql)) {
@@ -316,6 +317,7 @@ public class PsqlWeightRepository implements WeightRepository {
             ps.setString(idx++, toJson(weight.retailPrice()));
             ps.setString(idx++, toJson(weight.memberPrice()));
             ps.setString(idx++, toJson(weight.vipPrice()));
+            ps.setString(idx++, SearchUtils.buildSearchVector(weight.name(), weight.spec(), weight.madeIn()));
             ps.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error("Can't save weight {}", weight, e);
