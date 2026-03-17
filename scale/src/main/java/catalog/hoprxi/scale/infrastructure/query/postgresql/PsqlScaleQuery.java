@@ -41,7 +41,17 @@ public class PsqlScaleQuery implements ScaleQuery {
 
     @Override
     public Flux<ByteBuf> findAsync(Plu plu) {
-
+        final String sql = """
+                SELECT
+                    s.plu, s.name, s.grade, s.made_in, s.spec, s.shelf_life,
+                    s.last_receipt_price, s.retail_price, s.member_price, s.vip_price,
+                    json_build_object('id', c.id, 'name', c.name::jsonb ->> 'name') AS category,
+                    json_build_object('id', b.id, 'name', b.name::jsonb ->> 'name') AS brand
+                FROM scale s
+                LEFT JOIN category c ON i.category_id = c.id
+                LEFT JOIN brand b ON b.id = i.brand_id
+                WHERE plu = ?
+                """;
 /*
         try (Connection connection = PsqlUtil.getConnection();
              PreparedStatement ps = connection.prepareStatement(sb.toString())) {
@@ -116,6 +126,7 @@ public class PsqlScaleQuery implements ScaleQuery {
         allParams.add(size);
         allParams.add(offset);
         System.out.println(sb);
+        System.out.println(Arrays.toString(allParams.toArray()));
         return null;
     }
 
@@ -123,30 +134,28 @@ public class PsqlScaleQuery implements ScaleQuery {
         if (sortBy == null) {
             sortBy = SortFieldEnum._ID;
         }
-        String dbField = sortBy.field();
+
         String direction = sortBy.sort();
-        String mappedDbField = mapEsFieldToDbField(dbField);
-        return " ORDER BY " + mappedDbField + " " + direction.toUpperCase();
+        return " ORDER BY " + mapEsFieldToDbField(sortBy) + " " + direction.toUpperCase();
     }
 
-    private String mapEsFieldToDbField(String esField) {
-        return switch (esField) {
-            case "id" -> "i.id";
-            case "name.mnemonic.raw" -> "i.name ->> 'mnemonic'";
-            case "barcode.raw" -> "i.barcode";
-            case "madeIn.code" -> "i.made_in";
-            case "grade" -> "i.grade";
-            case "spec" -> "i.spec";
-            case "category.name" -> "c.name";
-            case "brand.name" -> "b.name";
-            case "last_receipt_price.price.number" -> "i.last_receipt_price";
-            case "retail_price.number" -> "i.retail_price";
-            case "member_price.price.number" -> "i.member_price";
-            case "vip_price.price.number" -> "i.vip_price";
-            case "stock" -> // 新增库存字段映射
-                    "i.stock";
+    private String mapEsFieldToDbField(SortFieldEnum sortField) {
+        return switch (sortField) {
+            case ID -> "i.id";
+            //case NAME_MNEMONIC -> "i.name ->> 'mnemonic'";
+            case BARCODE -> "i.barcode";
+            case MADE_IN -> "i.made_in";
+            case GRADE -> "i.grade";
+            case SPEC -> "i.spec";
+            // case CATEGORY_NAME -> "c.name";
+            //case BRAND_NAME -> "b.name";
+            case LAST_RECEIPT_PRICE -> "i.last_receipt_price";
+            case RETAIL_PRICE -> "i.retail_price";
+            case MEMBER_PRICE -> "i.member_price";
+            case VIP_PRICE -> "i.vip_price";
+            //case STOCK -> "i.stock";
             default -> {
-                System.err.println("Warning: No mapping found for ES field: " + esField + ". Using 'i.id'.");
+                System.err.println("Warning: Unknown sort field: " + sortField);
                 yield "i.id";
             }
         };

@@ -57,10 +57,7 @@ public class PsqlWeightRepository implements WeightRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlWeightRepository.class);
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
-    /**
-     * @param plu
-     * @return
-     */
+
     @Override
     public Weight find(Plu plu) {
         final String findSql = """
@@ -243,17 +240,12 @@ public class PsqlWeightRepository implements WeightRepository {
         return new WeightPrice(Money.of(number, currency), unit);
     }
 
-    /**
-     * @return
-     */
+
     @Override
     public Plu nextPlu() {
         return null;
     }
 
-    /**
-     * @param plu
-     */
     @Override
     public void delete(Plu plu) {
         final String removeSql = "delete from scale where plu=?";
@@ -267,9 +259,6 @@ public class PsqlWeightRepository implements WeightRepository {
         }
     }
 
-    /**
-     * @param weight
-     */
     @Override
     public void save(Weight weight) {
         final String insertOrReplaceSql = """
@@ -399,10 +388,6 @@ public class PsqlWeightRepository implements WeightRepository {
         return writer.toString();
     }
 
-    /**
-     * @param plu
-     * @return
-     */
     @Override
     public boolean isPluExists(Plu... plu) {
         return false;

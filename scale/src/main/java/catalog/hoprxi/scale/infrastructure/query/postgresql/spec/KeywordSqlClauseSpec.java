@@ -49,11 +49,9 @@ public class KeywordSqlClauseSpec implements SqlClauseSpec {
         if (!isSatisfied()) {
             return new SqlClause("", Collections.emptyList());
         }
-
-        String mnemonicKw = PinYin.toShortPinYing(keyword); // 如需拼音转换，请替换
         String sql = """
-            (to_tsvector('simple', COALESCE(search_vector, '')) @@ to_tsquery('simple', ?))
+            to_tsvector('simple', COALESCE(search_vector, '')) @@ to_tsquery('simple', ?)
             """;
-        return new SqlClause(sql, Arrays.asList(keyword, keyword, mnemonicKw));
+        return new SqlClause(sql, Arrays.asList(keyword));
     }
 }

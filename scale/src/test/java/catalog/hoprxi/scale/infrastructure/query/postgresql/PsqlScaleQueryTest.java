@@ -32,6 +32,7 @@ public class PsqlScaleQueryTest {
 
     @Test
     public void testSearchAsync() {
-        query.searchAsync(new SqlClauseSpec[]{new KeywordSqlClauseSpec("苹果"), new CategorySqlClauseSpec(new long[]{21l, 234l})}, 20, 50, SortFieldEnum._ID);
+        query.searchAsync(new SqlClauseSpec[]{new KeywordSqlClauseSpec("苹果"), new CategorySqlClauseSpec(new long[]{21l, 234l})},
+                20, 50, SortFieldEnum._LAST_RECEIPT_PRICE);
     }
 }
