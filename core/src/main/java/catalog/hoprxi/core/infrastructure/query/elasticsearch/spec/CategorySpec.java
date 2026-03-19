@@ -14,71 +14,45 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.query.elasticsearch.filter;
+package catalog.hoprxi.core.infrastructure.query.elasticsearch.spec;
 
 import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2025-01-03
  */
-public class CategorySpec implements ItemQuerySpec {
-    private final long[] categoryIds;
-
-    public CategorySpec(long[] categoryIds) {
-        this.categoryIds = categoryIds == null ? new long[0] : categoryIds;
+public record CategorySpec(long[] ids) implements ItemQuerySpec {
+    public CategorySpec {
+        if (ids == null)
+            ids = new long[0];
     }
 
-    public CategorySpec(long categoryId) {
-        this.categoryIds = new long[]{categoryId};
+    public CategorySpec(long id) {
+        this(new long[]{id});
     }
-
 
     @Override
     public void queryClause(JsonGenerator generator) throws IOException {
-        if (categoryIds.length == 0) {
-        }
-       else if (categoryIds.length == 1) {
+        if (ids.length == 1) {
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");
-            generator.writeNumberField("category.id", categoryIds[0]);
+            generator.writeNumberField("category.id", ids[0]);
             generator.writeEndObject();
             generator.writeEndObject();
-        } else {
+        } else if (ids.length > 1) {
             generator.writeStartObject();
             generator.writeObjectFieldStart("terms");
             generator.writeArrayFieldStart("category.id");
-            for (long categoryId : categoryIds)
+            for (long categoryId : ids)
                 generator.writeNumber(categoryId);
             generator.writeEndArray();
             generator.writeEndObject();
             generator.writeEndObject();
         }
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", CategorySpec.class.getSimpleName() + "[", "]")
-                .add("categoryIds=" + Arrays.toString(categoryIds))
-                .toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CategorySpec that)) return false;
-
-        return Arrays.equals(categoryIds, that.categoryIds);
-    }
-
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(categoryIds);
     }
 }

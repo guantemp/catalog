@@ -18,8 +18,8 @@ package catalog.hoprxi;
 
 import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.BrandSpec;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.CategorySpec;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.BrandSpec;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.CategorySpec;
 import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.price.Price;

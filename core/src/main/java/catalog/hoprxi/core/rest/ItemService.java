@@ -39,7 +39,7 @@ import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.price.*;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESItemQuery;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.*;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;

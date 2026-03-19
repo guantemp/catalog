@@ -19,8 +19,11 @@ package catalog.hoprxi.scale.infrastructure.query.postgresql;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.scale.application.query.ScaleQuery;
 import catalog.hoprxi.scale.application.query.SqlClauseSpec;
+import catalog.hoprxi.scale.infrastructure.query.postgresql.spec.BrandSqlClauseSpec;
 import catalog.hoprxi.scale.infrastructure.query.postgresql.spec.CategorySqlClauseSpec;
 import catalog.hoprxi.scale.infrastructure.query.postgresql.spec.KeywordSqlClauseSpec;
+import catalog.hoprxi.scale.infrastructure.query.postgresql.spec.RetailPriceSqlClauseSpec;
+import org.javamoney.moneta.Money;
 import org.testng.annotations.Test;
 
 public class PsqlScaleQueryTest {
@@ -32,7 +35,8 @@ public class PsqlScaleQueryTest {
 
     @Test
     public void testSearchAsync() {
-        query.searchAsync(new SqlClauseSpec[]{new KeywordSqlClauseSpec("苹果"), new CategorySqlClauseSpec(new long[]{21l, 234l})},
+        query.searchAsync(new SqlClauseSpec[]{new KeywordSqlClauseSpec("苹果"), new CategorySqlClauseSpec(new long[]{21, 234L}), new BrandSqlClauseSpec(new long[]{214234L}),
+                        new RetailPriceSqlClauseSpec(Money.of(99, "CNY"), Money.of(199, "CNY"))},
                 20, 50, SortFieldEnum._LAST_RECEIPT_PRICE);
     }
 }

@@ -50,7 +50,7 @@ public class KeywordSqlClauseSpec implements SqlClauseSpec {
             return new SqlClause("", Collections.emptyList());
         }
         String sql = """
-            to_tsvector('simple', COALESCE(search_vector, '')) @@ to_tsquery('simple', ?)
+            s.search_vector @@ to_tsquery('simple', ?)
             """;
         return new SqlClause(sql, Arrays.asList(keyword));
     }

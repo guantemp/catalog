@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.query.elasticsearch.filter;
+package catalog.hoprxi.core.infrastructure.query.elasticsearch.spec;
 
 import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -28,54 +28,34 @@ import java.util.StringJoiner;
  * @since JDK8.0
  * @version 0.0.1 builder 2025-01-06
  */
-public class BrandSpec implements ItemQuerySpec {
-    private final long[] brandIds;
+public record BrandSpec(long[] ids) implements ItemQuerySpec {
 
-    public BrandSpec(long[] brandIds) {
-        this.brandIds = brandIds == null ? new long[0] : brandIds;
+    public BrandSpec {
+        if (ids == null)
+            ids = new long[0];
     }
 
-    public BrandSpec(long brandIds) {
-        this.brandIds = new long[]{brandIds};
+    public BrandSpec(long id) {
+        this(new long[]{id});
     }
 
     @Override
     public void queryClause(JsonGenerator generator) throws IOException {
-        if (brandIds.length == 1) {
+        if (ids.length == 1) {
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");
-            generator.writeNumberField("brand.id", brandIds[0]);
+            generator.writeNumberField("brand.id",ids[0]);
             generator.writeEndObject();
             generator.writeEndObject();
         } else {
             generator.writeStartObject();
             generator.writeObjectFieldStart("terms");
             generator.writeArrayFieldStart("brand.id");
-            for (long id : brandIds)
+            for (long id : ids)
                 generator.writeNumber(id);
             generator.writeEndArray();
             generator.writeEndObject();
             generator.writeEndObject();
         }
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", BrandSpec.class.getSimpleName() + "[", "]")
-                .add("brandIds=" + Arrays.toString(brandIds))
-                .toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BrandSpec that)) return false;
-
-        return Arrays.equals(brandIds, that.brandIds);
-    }
-
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(brandIds);
     }
 }

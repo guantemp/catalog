@@ -19,7 +19,7 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.filter.*;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.*;
 import io.netty.buffer.ByteBuf;
 import org.testng.Assert;
 import org.testng.annotations.Test;

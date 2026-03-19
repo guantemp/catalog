@@ -14,14 +14,13 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.query.elasticsearch.filter;
+package catalog.hoprxi.core.infrastructure.query.elasticsearch.spec;
 
 import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
 import java.util.Objects;
-import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
 /***
@@ -29,12 +28,11 @@ import java.util.regex.Pattern;
  * @since JDK8.0
  * @version 0.0.1 builder 2025-04-04
  */
-public class KeywordSpec implements ItemQuerySpec {
+public record KeywordSpec(String keyword) implements ItemQuerySpec {
     private static final Pattern BARCODE = Pattern.compile("^\\d{2,14}$");
-    private final String keyword;
 
-    public KeywordSpec(String keyword) {
-        this.keyword = Objects.requireNonNull(keyword, "keyword required");
+    public KeywordSpec {
+        Objects.requireNonNull(keyword, "keyword required");
     }
 
     @Override
@@ -70,25 +68,5 @@ public class KeywordSpec implements ItemQuerySpec {
             generator.writeEndObject();//end bool
             generator.writeEndObject();//end
         }
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof KeywordSpec that)) return false;
-
-        return Objects.equals(keyword, that.keyword);
-    }
-
-    @Override
-    public int hashCode() {
-        return keyword.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", KeywordSpec.class.getSimpleName() + "[", "]")
-                .add("keyword='" + keyword + "'")
-                .toString();
     }
 }

@@ -112,12 +112,12 @@ public class PsqlScaleQuery implements ScaleQuery {
                     json_build_object('id', c.id, 'name', c.name::jsonb ->> 'name') AS category,
                     json_build_object('id', b.id, 'name', b.name::jsonb ->> 'name') AS brand
                 FROM scale s
-                LEFT JOIN category c ON i.category_id = c.id
-                LEFT JOIN brand b ON b.id = i.brand_id
+                LEFT JOIN category c ON s.category_id = c.id
+                LEFT JOIN brand b ON s.brand_id = b.id
                 """);
 
         if (!whereClause.isEmpty()) {
-            sb.append(" WHERE ").append(whereClause);
+            sb.append("WHERE ").append(whereClause);
         }
         String orderClause = buildOrderClause(sortField);
         sb.append(orderClause);
@@ -141,22 +141,22 @@ public class PsqlScaleQuery implements ScaleQuery {
 
     private String mapEsFieldToDbField(SortFieldEnum sortField) {
         return switch (sortField) {
-            case ID -> "i.id";
+            case ID -> "s.id";
             //case NAME_MNEMONIC -> "i.name ->> 'mnemonic'";
-            case BARCODE -> "i.barcode";
-            case MADE_IN -> "i.made_in";
-            case GRADE -> "i.grade";
-            case SPEC -> "i.spec";
+            case BARCODE -> "s.barcode";
+            case MADE_IN -> "s.made_in";
+            case GRADE -> "s.grade";
+            case SPEC -> "s.spec";
             // case CATEGORY_NAME -> "c.name";
             //case BRAND_NAME -> "b.name";
-            case LAST_RECEIPT_PRICE -> "i.last_receipt_price";
-            case RETAIL_PRICE -> "i.retail_price";
-            case MEMBER_PRICE -> "i.member_price";
-            case VIP_PRICE -> "i.vip_price";
+            case LAST_RECEIPT_PRICE -> "s.last_receipt_price";
+            case RETAIL_PRICE -> "s.retail_price";
+            case MEMBER_PRICE -> "s.member_price";
+            case VIP_PRICE -> "s.vip_price";
             //case STOCK -> "i.stock";
             default -> {
                 System.err.println("Warning: Unknown sort field: " + sortField);
-                yield "i.id";
+                yield "s.id";
             }
         };
     }

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.query.elasticsearch.filter;
+package catalog.hoprxi.core.infrastructure.query.elasticsearch.spec;
 
 import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -26,11 +26,11 @@ import java.io.IOException;
  * @since JDK8.0
  * @version 0.0.1 builder 2025-04-29
  */
-public class LastReceiptPriceSpec implements ItemQuerySpec {
+public class VipPriceSpec implements ItemQuerySpec {
     private final Number mix;
     private final Number max;
 
-    public LastReceiptPriceSpec(Number mix, Number max) {
+    public VipPriceSpec(Number mix, Number max) {
         if (mix == null && max == null)
             throw new IllegalArgumentException("min.max cannot all be NULL");
         this.mix = mix;
@@ -41,7 +41,7 @@ public class LastReceiptPriceSpec implements ItemQuerySpec {
     public void queryClause(JsonGenerator generator) throws IOException {
         generator.writeStartObject();
         generator.writeObjectFieldStart("range");
-        generator.writeObjectFieldStart("last_receipt_price.price.number");
+        generator.writeObjectFieldStart("vip_price.price.number");
         if (mix != null)
             generator.writeNumberField("gte", mix.doubleValue());
         if (max != null)

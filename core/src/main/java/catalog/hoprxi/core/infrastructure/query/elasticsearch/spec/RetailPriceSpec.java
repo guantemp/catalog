@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.infrastructure.query.elasticsearch.filter;
+package catalog.hoprxi.core.infrastructure.query.elasticsearch.spec;
 
 import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -26,24 +26,22 @@ import java.io.IOException;
  * @since JDK8.0
  * @version 0.0.1 builder 2025-04-29
  */
-public class MemberPriceSpec implements ItemQuerySpec {
-    private final Number mix;
-    private final Number max;
+public record RetailPriceSpec(Number min, Number max) implements ItemQuerySpec {
 
-    public MemberPriceSpec(Number mix, Number max) {
-        if (mix == null && max == null)
+    public RetailPriceSpec {
+        if (min == null && max == null)
             throw new IllegalArgumentException("min.max cannot all be NULL");
-        this.mix = mix;
-        this.max = max;
+        if (min != null && Double.compare(min.doubleValue(), max.doubleValue()) >= 0)
+            throw new IllegalArgumentException("min must less than max");
     }
 
     @Override
     public void queryClause(JsonGenerator generator) throws IOException {
         generator.writeStartObject();
         generator.writeObjectFieldStart("range");
-        generator.writeObjectFieldStart("member_price.price.number");
-        if (mix != null)
-            generator.writeNumberField("gte", mix.doubleValue());
+        generator.writeObjectFieldStart("retail_price.number");
+        if (min != null)
+            generator.writeNumberField("gte", min.doubleValue());
         if (max != null)
             generator.writeNumberField("lte", max.doubleValue());
         generator.writeEndObject();//end retail_price.number

@@ -67,7 +67,7 @@ public final class SearchUtils {
             // ... 可以引入现成的中文停用词表
     ));
 
-    // 3. 不可拆分的双字词 (连绵词、音译词等，拆了就没意义了)
+    // 不可拆分的双字词 (连绵词、音译词等，拆了就没意义了)
     private static final Set<String> UNBREAKABLE_DOUBLE_CHARS = new HashSet<>(Arrays.asList(
             "葡萄", "琵琶", "咖啡", "沙发", "巧克力", "奥林匹克",
             "中国", "美国", "日本", "北京", "上海"

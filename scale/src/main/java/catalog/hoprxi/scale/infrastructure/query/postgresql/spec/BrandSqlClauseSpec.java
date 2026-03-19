@@ -30,18 +30,13 @@ import java.util.stream.Stream;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2026/3/12
+ * @version 0.0.1 builder 2026/3/18
  */
 
-public record CategorySqlClauseSpec(long[] ids) implements SqlClauseSpec {
+public record BrandSqlClauseSpec(long[] ids) implements SqlClauseSpec {
 
-    public CategorySqlClauseSpec(long id) {
+    public BrandSqlClauseSpec(long id) {
         this(new long[]{id});
-    }
-
-    @Override
-    public boolean isSatisfied() {
-        return ids != null && ids.length != 0;
     }
 
     @Override
@@ -52,10 +47,15 @@ public record CategorySqlClauseSpec(long[] ids) implements SqlClauseSpec {
         String placeholders = Stream.of(ids)
                 .map(id -> "?")
                 .collect(Collectors.joining(", "));
-        String sql = "c.id IN (" + placeholders + ")";
+        String sql = "b.id IN (" + placeholders + ")";
         List<Object> longList = Arrays.stream(ids) // 生成 LongStream
                 .boxed()           // 将 long 转换为 Long (装箱)
                 .collect(Collectors.toCollection(ArrayList::new)); // 收集到 ArrayList
         return new SqlClause(sql, longList);
+    }
+
+    @Override
+    public boolean isSatisfied() {
+        return ids != null && ids.length != 0;
     }
 }

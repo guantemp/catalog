@@ -92,12 +92,14 @@ public final class Setup {
                     	retail_price jsonb DEFAULT '{"unit": "PCS", "number": 0, "currencyCode": "CNY"}'::jsonb NULL,
                     	member_price jsonb DEFAULT '{"name": "会员价", "price": {"unit": "PCS", "number": 0, "currencyCode": "CNY"}}'::jsonb NULL,
                     	vip_price jsonb DEFAULT '{"name": "VIP价", "price": {"unit": "PCS", "number": 0, "currencyCode": "CNY"}}'::jsonb NULL,
-                    	search_vector text,
+                    	search_vector TSVECTOR,
                     	CONSTRAINT scale_pkey PRIMARY KEY (plu));
                     """);
             scaleStmt.executeUpdate("""
-                    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_scale_search_vector ON public.scale
-                    USING gin (to_tsvector('simple', COALESCE(search_vector, '')));
+                    CREATE INDEX IF NOT EXISTS idx_scale_search_vector ON public.scale USING GIN (search_vector);
+                    CREATE INDEX IF NOT exists idx_scale_retail_price_numeric ON scale USING BTREE (( (retail_price->>'number')::numeric ));
+                    CREATE INDEX IF NOT EXISTS idx_scale_category_id ON scale(category_id);
+                    CREATE INDEX IF NOT EXISTS idx_scale_brand_id ON scale(brand_id);
                     """);
             System.out.println("scale表创建成功");
 
