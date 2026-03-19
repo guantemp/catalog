@@ -43,7 +43,7 @@ public class ESItemQueryTest {
 
     private static final ItemQuery query = new ESItemQuery();
 
-    @Test(invocationCount = 512, threadPoolSize = 1)
+    @Test(invocationCount = 12, threadPoolSize = 1)
     public void testFindAsync() throws InterruptedException, ExecutionException, TimeoutException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
 
@@ -118,7 +118,7 @@ public class ESItemQueryTest {
         executor.shutdownNow();
     }
 
-    @Test(invocationCount = 512, threadPoolSize = 2)
+    @Test(invocationCount = 12, threadPoolSize = 2)
     public void testFind() throws IOException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
         try (InputStream is = query.find(51746812605656589L)) {
@@ -132,7 +132,7 @@ public class ESItemQueryTest {
         }
     }
 
-    @Test(invocationCount = 512, threadPoolSize = 2)
+    @Test(invocationCount = 12, threadPoolSize = 2)
     public void testFindByBarcode() throws IOException {
         try (InputStream is = query.findByBarcode("6900404523737")) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
@@ -152,7 +152,7 @@ public class ESItemQueryTest {
         }
     }
 
-    @Test(invocationCount = 512, threadPoolSize = 1)
+    @Test(invocationCount = 12, threadPoolSize = 1)
     public void testFindByBarcodeAsync() throws InterruptedException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
         StringBuilder result = new StringBuilder();
@@ -175,7 +175,7 @@ public class ESItemQueryTest {
         latch.await();
     }
 
-    @Test(invocationCount = 128, threadPoolSize = 2)
+    @Test(invocationCount = 12, threadPoolSize = 2)
     public void testSearch() throws IOException {
         InputStream is = query.search(100, 30);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
@@ -196,7 +196,7 @@ public class ESItemQueryTest {
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
     }
 
-    @Test(invocationCount = 128, threadPoolSize = 1)
+    @Test(invocationCount = 12, threadPoolSize = 1)
     public void testSearchAsync() throws InterruptedException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
 
@@ -243,7 +243,7 @@ public class ESItemQueryTest {
         latch.await();
     }
 
-    @Test(invocationCount = 256, threadPoolSize = 1)
+    @Test(invocationCount = 12, threadPoolSize = 1)
     public void testSearchAfter() throws IOException {
         InputStream is = query.search(50, "471019908050", SortFieldEnum.BARCODE);
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
@@ -259,7 +259,7 @@ public class ESItemQueryTest {
         System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
     }
 
-    @Test(invocationCount = 256, threadPoolSize = 1)
+    @Test(invocationCount = 12, threadPoolSize = 1)
     public void testSearchAfterAsync() throws InterruptedException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
 

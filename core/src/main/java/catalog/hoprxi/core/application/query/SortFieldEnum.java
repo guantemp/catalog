@@ -18,86 +18,55 @@ package catalog.hoprxi.core.application.query;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
- * 定义物品（Item）搜索时可用的排序字段枚举。
- * <p>
- * 该枚举不仅封装了前端或 API 传入的排序字段名称（如 "ID", "NAME"），
- * 还映射了底层存储（如 Elasticsearch 或数据库）中对应的实际字段路径。
- * </p>
- *
- * <h3>命名约定与排序方向</h3>
- * <p>本枚举利用命名前缀隐式控制排序方向：</p>
- * <ul>
- *     <li><strong>升序 (ASC)</strong>：枚举常量名不以 {@code _} 开头（例如 {@link #NAME}, {@link #LAST_RECEIPT_PRICE}）。
- *         调用 {@link #sort()} 方法将返回 {@code "asc"}。</li>
- *     <li><strong>降序 (DESC)</strong>：枚举常量名以 {@code _} 开头（例如 {@link #_NAME}, {@link #_LAST_RECEIPT_PRICE}）。
- *         调用 {@link #sort()} 方法将返回 {@code "desc"}。</li>
- * </ul>
- * <p>这种设计允许客户端仅通过传递字段名称字符串即可同时指定“排序字段”和“排序顺序”。</p>
- *
- * <h3>字段映射示例</h3>
- * <table border="1" cellpadding="5" cellspacing="0">
- *   <tr>
- *     <th>枚举常量</th>
- *     <th>映射的实际字段路径 (field)</th>
- *     <th>默认排序方向</th>
- *   </tr>
- *   <tr>
- *     <td>{@link #ID}</td>
- *     <td>{@code id}</td>
- *     <td>ASC</td>
- *   </tr>
- *   <tr>
- *     <td>{@link #_ID}</td>
- *     <td>{@code id}</td>
- *     <td>DESC</td>
- *   </tr>
- *   <tr>
- *     <td>{@link #NAME}</td>
- *     <td>{@code name.mnemonic.raw}</td>
- *     <td>ASC</td>
- *   </tr>
- *   <tr>
- *     <td>{@link #LAST_RECEIPT_PRICE}</td>
- *     <td>{@code last_receipt_price.price.number}</td>
- *     <td>ASC</td>
- *   </tr>
- * </table>
- *
+ *  * 商品排序字段枚举。
+ *  * <p>
+ *  * 该枚举定义了商品列表支持的所有排序字段，并通过命名约定隐式控制排序方向：
+ *  * <ul>
+ *  *   <li><b>升序 (ASC)</b>: 枚举名不带下划线前缀 (例如: {@link #NAME}, {@link #BARCODE})。</li>
+ *  *   <li><b>降序 (DESC)</b>: 枚举名带下划线前缀 (例如: {@link #_NAME}, {@link #_ID})。</li>
+ *  * </ul>
+ *  * <p>
+ *  * <b>设计特点：</b>
+ *  * <ol>
+ *  *   <li><b>高性能查找</b>: 内部维护了一个静态 {@code HashMap} 缓存，将输入字符串（不区分大小写）映射到枚举实例，避免每次调用 {@code valueOf()} 时的异常捕获开销。</li>
+ *  *   <li><b>容错处理</b>: 当输入为空、空白或未知字段时，默认降级为 {@link #_ID} (按 ID 降序)，通常用于展示最新录入的商品。</li>
+ *  *   <li><b>类型安全</b>: 强制调用者只能选择预定义的排序字段，防止 SQL 注入风险。</li>
+ *  * </ol>
+ *  *
+ *  * <h3>使用示例</h3>
+ *  * <pre>{@code
+ *  * // 1. 解析用户输入 (支持 "name", "NAME", "_name" 等)
+ *  * SortFieldEnum sortField = SortFieldEnum.of("name");
+ *  *
+ *  * // 2. 获取排序方向 ("asc" 或 "desc")
+ *  * String direction = sortField.sort();
+ *  * // 若输入为 "name" -> 返回 "asc"
+ *  * // 若输入为 "_name" -> 返回 "desc"
+ *  *
+ *  * }</pre>
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @version 0.0.1 builder 2024-11-24
- * @since JDK8.0
+ * @version 0.0.2 builder 2026-03-19
+ * @since JDK21
  */
 public enum SortFieldEnum {
-    ID("id"), _ID("id"),
+    ID, _ID,
     /**
-     * 物品助记码/名称 (升序)，映射到 {@code name.mnemonic.raw}
+     * 物品助记码/名称 (升序)
      */
-    NAME("name.mnemonic.raw"), _NAME("name.mnemonic.raw"),
-    BARCODE("barcode.raw"), _BARCODE("barcode.raw"),
-    MADE_IN("madeIn.code"), _MADE_IN("madeIn.code"),
-    GRADE("grade"), _GRADE("grade"),
-    SPEC("spec"), _SPEC("spec"),
-    CATEGORY("category.name"), _CATEGORY("category.name"),
-    BRAND("brand.name"), _BRAND("brand.name"),
-    LAST_RECEIPT_PRICE("last_receipt_price.price.number"), _LAST_RECEIPT_PRICE("last_receipt_price.price.number"),
-    RETAIL_PRICE("retail_price.number"), _RETAIL_PRICE("retail_price.number"),
-    MEMBER_PRICE("member_price.price.number"), _MEMBER_PRICE("member_price.price.number"),
-    VIP_PRICE("vip_price.price.number"), _VIP_PRICE("vip_price.price.number");
-    private final String esField;
+    NAME, _NAME,
+    BARCODE, _BARCODE,
+    MADE_IN, _MADE_IN,
+    GRADE, _GRADE,
+    SPEC, _SPEC,
+    CATEGORY, _CATEGORY,
+    BRAND, _BRAND,
+    LAST_RECEIPT_PRICE, _LAST_RECEIPT_PRICE,
+    RETAIL_PRICE, _RETAIL_PRICE,
+    MEMBER_PRICE, _MEMBER_PRICE,
+    VIP_PRICE, _VIP_PRICE;
 
-    SortFieldEnum(String esField) {
-        this.esField = Objects.requireNonNull(esField, "field is required").trim();
-    }
-
-    /**
-     * 底层存储对应的实际字段名称
-     */
-    public String field() {
-        return esField;
-    }
 
     private static final Map<String, SortFieldEnum> CACHE = new HashMap<>();
 
@@ -115,8 +84,6 @@ public enum SortFieldEnum {
         if (s == null || s.trim().isEmpty()) {
             return SortFieldEnum._ID;
         }
-
-        String target = s.trim(); // 去除可能的首尾空格
         // 直接查找，找不到则返回默认值
         return CACHE.getOrDefault(s.toUpperCase(), SortFieldEnum._ID);
     }

@@ -193,7 +193,7 @@ public final class ESBrandQuery implements BrandQuery {
 
         generator.writeArrayFieldStart("sort");
         generator.writeStartObject();
-        generator.writeStringField(sortField.field(), sortField.sort());
+        generator.writeStringField(MapSortField.mapSortToField(sortField), sortField.sort());
         generator.writeEndObject();
         generator.writeEndArray();
     }

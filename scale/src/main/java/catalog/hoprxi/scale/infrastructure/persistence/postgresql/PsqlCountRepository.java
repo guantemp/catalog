@@ -278,7 +278,7 @@ public class PsqlCountRepository implements CountRepository {
                     last_receipt_price, retail_price, member_price, vip_price,search_vector
                 ) VALUES (
                     ?, ?::jsonb,  ?, ?, ?::grade, ?::jsonb, ?, ?,
-                    ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb,?
+                    ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb, to_tsvector('simple', ?)
                 )
                 ON CONFLICT (plu) DO UPDATE SET
                     name = EXCLUDED.name,

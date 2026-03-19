@@ -448,7 +448,7 @@ public class ESItemQuery implements ItemQuery {
         Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
-        System.out.println(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
+        //System.out.println(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
         request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
 
         ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
@@ -572,10 +572,11 @@ public class ESItemQuery implements ItemQuery {
     private static void buildSortRequest(JsonGenerator generator, SortFieldEnum sortField) throws IOException {
         generator.writeArrayFieldStart("sort");
         generator.writeStartObject();
-        generator.writeStringField(sortField.field(), sortField.sort());
+        generator.writeStringField(MapSortField.mapSortToField(sortField), sortField.sort());
         generator.writeEndObject();
         generator.writeEndArray();
     }
+
 
     private static void buildAggsRequest(JsonGenerator generator) throws IOException {
         generator.writeObjectFieldStart("aggs");

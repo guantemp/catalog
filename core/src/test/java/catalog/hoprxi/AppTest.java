@@ -18,6 +18,7 @@ package catalog.hoprxi;
 
 import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.MapSortField;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.BrandSpec;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.CategorySpec;
 import catalog.hoprxi.core.domain.model.GradeEnum;
@@ -406,7 +407,7 @@ public class AppTest {
 
         generator.writeArrayFieldStart("sort");
         generator.writeStartObject();
-        generator.writeStringField(SortFieldEnum.ID.field(), SortFieldEnum.ID.sort());
+        generator.writeStringField(MapSortField.mapSortToField(SortFieldEnum.ID), SortFieldEnum.ID.sort());
         generator.writeEndObject();
         generator.writeEndArray();
 
