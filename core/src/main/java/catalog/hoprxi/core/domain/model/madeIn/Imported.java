@@ -17,56 +17,33 @@
 package catalog.hoprxi.core.domain.model.madeIn;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.1 2019-08-28
+ * @since JDK21
+ * @version 0.0.2 2026-03-22
  */
-public class Imported implements MadeIn {
+public record Imported(String code, String country) implements MadeIn {
     // 进口（国家或地区,如：美国）
-    private final String country;
-    private final String code;
-    private final Pattern CODE_PATTERBN = Pattern.compile("^\\d{3}$");
+    private static final Pattern CODE_PATTERN = Pattern.compile("^\\d{2,3}$");
 
-    public Imported(String code, String country) {
-        this.country = Objects.requireNonNull(country, "country required");
-        code = Objects.requireNonNull(code, "city required").trim();
-        if (!CODE_PATTERBN.matcher(code).matches())
-            throw new IllegalArgumentException("code is three digit");
-        this.code = code;
-    }
+    public Imported {
+        Objects.requireNonNull(country, "country required");
+        Objects.requireNonNull(code, "code required");
+        code = code.trim();
 
-    @Override
-    public String code() {
-        return this.code;
+        if (code.isEmpty()) {
+            throw new IllegalArgumentException("code cannot be empty after trim");
+        }
+        if (!CODE_PATTERN.matcher(code).matches()) {
+            // 建议：将错误信息动态化，告诉用户实际传了什么，方便调试
+            throw new IllegalArgumentException("code must be two or three digits, but got: '" + code + "'");
+        }
     }
 
     @Override
     public String madeIn() {
         return country;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Imported imported)) return false;
-
-        return Objects.equals(code, imported.code);
-    }
-
-    @Override
-    public int hashCode() {
-        return code != null ? code.hashCode() : 0;
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", Imported.class.getSimpleName() + "[", "]")
-                .add("madeIn='" + country + "'")
-                .add("code='" + code + "'")
-                .toString();
     }
 }

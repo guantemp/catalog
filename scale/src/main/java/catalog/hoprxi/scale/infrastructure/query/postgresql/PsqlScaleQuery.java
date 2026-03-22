@@ -107,7 +107,7 @@ public class PsqlScaleQuery implements ScaleQuery {
 
         final StringBuilder sb = new StringBuilder("""
                 SELECT
-                    s.id, s.name, s.grade, s.made_in, s.spec, s.shelf_life,
+                    s.plu, s.name, s.grade, s.made_in, s.spec, s.shelf_life,
                     s.last_receipt_price, s.retail_price, s.member_price, s.vip_price,
                     json_build_object('id', c.id, 'name', c.name::jsonb ->> 'name') AS category,
                     json_build_object('id', b.id, 'name', b.name::jsonb ->> 'name') AS brand
@@ -119,6 +119,7 @@ public class PsqlScaleQuery implements ScaleQuery {
         if (!whereClause.isEmpty()) {
             sb.append("WHERE ").append(whereClause);
         }
+
         String orderClause = buildOrderClause(sortField);
         sb.append(orderClause);
 
@@ -130,34 +131,28 @@ public class PsqlScaleQuery implements ScaleQuery {
         return null;
     }
 
-    private String buildOrderClause(SortFieldEnum sortBy) {
+    private static String buildOrderClause(SortFieldEnum sortBy) {
         if (sortBy == null) {
             sortBy = SortFieldEnum._ID;
         }
-
-        String direction = sortBy.sort();
-        return " ORDER BY " + mapEsFieldToDbField(sortBy) + " " + direction.toUpperCase();
+        return " ORDER BY " + mapEsFieldToDbField(sortBy) + " " + sortBy.sort().toUpperCase();
     }
 
-    private String mapEsFieldToDbField(SortFieldEnum sortField) {
+    private static String mapEsFieldToDbField(SortFieldEnum sortField) {
         return switch (sortField) {
-            case ID -> "s.id";
-            //case NAME_MNEMONIC -> "i.name ->> 'mnemonic'";
-            case BARCODE -> "s.barcode";
-            case MADE_IN -> "s.made_in";
-            case GRADE -> "s.grade";
-            case SPEC -> "s.spec";
-            // case CATEGORY_NAME -> "c.name";
-            //case BRAND_NAME -> "b.name";
-            case LAST_RECEIPT_PRICE -> "s.last_receipt_price";
-            case RETAIL_PRICE -> "s.retail_price";
-            case MEMBER_PRICE -> "s.member_price";
-            case VIP_PRICE -> "s.vip_price";
+            case ID,_ID -> "s.id";
+            case NAME,_NAME -> "s.name ->> 'mnemonic'";
+            case BARCODE,_BARCODE -> "s.barcode";
+            case MADE_IN,_MADE_IN -> "s.made_in";
+            case GRADE,_GRADE -> "s.grade";
+            case SPEC,_SPEC -> "s.spec";
+            case CATEGORY,_CATEGORY -> "c.id";
+            case BRAND,_BRAND -> "b.id";
+            case LAST_RECEIPT_PRICE,_LAST_RECEIPT_PRICE -> "(s.last_receipt_price->>'number')::numeric";
+            case RETAIL_PRICE,_RETAIL_PRICE -> "(s.retail_price->>'number')::numeric";
+            case MEMBER_PRICE,_MEMBER_PRICE -> "(s.member_price->>'number')::numeric";
+            case VIP_PRICE,_VIP_PRICE -> "(s.vip_price->>'number')::numeric";
             //case STOCK -> "i.stock";
-            default -> {
-                System.err.println("Warning: Unknown sort field: " + sortField);
-                yield "s.id";
-            }
         };
     }
 }

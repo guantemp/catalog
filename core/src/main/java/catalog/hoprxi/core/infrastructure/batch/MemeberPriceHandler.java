@@ -30,12 +30,21 @@ import java.util.StringJoiner;
 public class MemeberPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        UnitEnum systemUnit = UnitEnum.of(itemImportEvent.map.get(ItemMapping.UNIT));
+        String units = itemImportEvent.map.get(ItemMapping.UNIT);
+        if (units == null) units = "";
+        String cleanS = units.replace("\u3000", "").replace(" ", "").trim();
+
+        // 2. 【新增】如果清洗后为空，给予默认值（例如 "个" 或 "PCS"）
+        // 如果你们系统有默认单位，请替换下面的 "个"
+        if (cleanS.isEmpty()) {
+            cleanS = UnitEnum.PCS.name();
+        }
+        UnitEnum unit = UnitEnum.of(cleanS);
         StringJoiner joiner = new StringJoiner(",", "'{\"name\":\"会员价\",\"price\": ", "}'");
         StringJoiner subJoiner = new StringJoiner(",", "{", "}");
         subJoiner.add("\"number\":" + (itemImportEvent.map.get(ItemMapping.MEMBER_PRICE) == null ? "0" : itemImportEvent.map.get(ItemMapping.MEMBER_PRICE)));
         subJoiner.add("\"currencyCode\":\"CNY\"");
-        subJoiner.add("\"unit\":\"" + systemUnit.name() + "\"");
+        subJoiner.add("\"unit\":\"" + unit.name() + "\"");
         joiner.add(subJoiner.toString());
        //System.out.println(joiner.toString());
         itemImportEvent.map.put(ItemMapping.MEMBER_PRICE, joiner.toString());

@@ -30,12 +30,21 @@ import java.util.StringJoiner;
 public class VipPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        UnitEnum systemUnit = UnitEnum.of(itemImportEvent.map.get(ItemMapping.UNIT));
+        String units = itemImportEvent.map.get(ItemMapping.UNIT);
+        if (units == null) units = "";
+        String cleanS = units.replace("\u3000", "").replace(" ", "").trim();
+
+        // 2. 【新增】如果清洗后为空，给予默认值（例如 "个" 或 "PCS"）
+        // 如果你们系统有默认单位，请替换下面的 "个"
+        if (cleanS.isEmpty()) {
+            cleanS = UnitEnum.PCS.name();
+        }
+        UnitEnum unit = UnitEnum.of(cleanS);
         StringJoiner joiner = new StringJoiner(",", "'{\"name\":\"VIP\",\"price\": ", "}'");
         StringJoiner subJoiner = new StringJoiner(",", "{", "}");
         subJoiner.add("\"number\":" + (itemImportEvent.map.get(ItemMapping.VIP_PRICE) == null ? "0" : itemImportEvent.map.get(ItemMapping.VIP_PRICE)));
         subJoiner.add("\"currencyCode\":\"CNY\"");
-        subJoiner.add("\"unit\":\"" + systemUnit.name() + "\"");
+        subJoiner.add("\"unit\":\"" + unit.name() + "\"");
         joiner.add(subJoiner.toString());
         itemImportEvent.map.put(ItemMapping.VIP_PRICE, joiner.toString());
     }

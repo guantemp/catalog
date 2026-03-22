@@ -99,7 +99,7 @@ public class MaidenHandler implements EventHandler<ItemImportEvent> {
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         String madeIn = itemImportEvent.map.get(ItemMapping.MADE_IN);
         if (madeIn == null || madeIn.isBlank()) {
-            itemImportEvent.map.put(ItemMapping.MADE_IN, "{\"_class\":\"catalog.hoprxi.core.domain.model.madeIn.UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}");
+            itemImportEvent.map.put(ItemMapping.MADE_IN, "{\"_class\":\"UNKNOWN\",\"code\":" + MadeIn.UNKNOWN.code() + ",\"madeIn\":\"" + MadeIn.UNKNOWN.madeIn() + "\"}");
             return;
         }
         ClassicHttpRequest httpGet = ClassicRequestBuilder.get(AREA_URL).build();

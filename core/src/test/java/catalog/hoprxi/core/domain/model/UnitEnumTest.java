@@ -32,5 +32,6 @@ public class UnitEnumTest {
         for (UnitEnum unit : UnitEnum.values())
             System.out.println(unit.name() + ": " + unit);
         Assert.assertEquals(UnitEnum.BEN, UnitEnum.of("本"));
+        Assert.assertEquals(UnitEnum.DAI, UnitEnum.of("袋"));
     }
 }

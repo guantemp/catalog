@@ -123,7 +123,7 @@
      -->
     <appender name="level_console" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>debug</level>
+            <level>INFO</level>
             <onMatch>ACCEPT</onMatch>
             <onMismatch>DENY</onMismatch>
         </filter>
@@ -137,7 +137,7 @@
      -->
     <appender name="threshold_console" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>info</level>
+            <level>INFO</level>
         </filter>
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{0} -%msg%n</pattern>
@@ -181,12 +181,12 @@
         </encoder>
     </appender>
     <!-- level属性：指定根logger的分配级别 -->
-    <root level="info">
+    <root level="INFO">
         <appender-ref ref="STDOUT"></appender-ref>
     </root>
 
     <!-- name:指定logger名称；level：指定logger的分配级别；additivity(非必须，默认为true 冒泡到root)：设置appender叠加性 -->
-    <logger name="catalog.hoprxi.core" level="debug" additivity="true">
+    <logger name="catalog.hoprxi.core" level="INFO" additivity="true">
        <!-- <appender-ref ref="size_time_file"></appender-ref> -->
         <appender-ref ref="API_HIS_INFO"></appender-ref>
     </logger>
