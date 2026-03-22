@@ -38,6 +38,37 @@
     <name>catalog</name>
     <url>https://www.hoprxi.com</url>
 
+    <dependencyManagement>
+        <dependencies>
+            <!-- 强制统一 Log4j2 版本，解决 NoSuchMethodError -->
+            <!-- 版本需与你项目中引入的最高版本一致，这里参考 POI 引入的 2.24.3 -->
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-bom</artifactId>
+                <version>2.24.3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- 如果 BOM 导入不生效，可以显式声明以下核心包 -->
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>2.24.3</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>2.24.3</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j2-impl</artifactId> <!-- 如果需要桥接 -->
+                <version>2.24.3</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.testng</groupId>

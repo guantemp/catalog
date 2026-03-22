@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import org.testng.annotations.Test;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -28,7 +29,10 @@ import java.io.IOException;
  * @version 0.0.1 builder 2022-11-29
  */
 public class PsqlItemExportTest {
-
+    static {
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
+    }
     @Test
     public void testExport() throws IOException {
         PsqlItemExport export = new PsqlItemExport();

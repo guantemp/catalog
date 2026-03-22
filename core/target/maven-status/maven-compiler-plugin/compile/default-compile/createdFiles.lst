@@ -4,7 +4,6 @@ catalog\hoprxi\core\infrastructure\batch\LastReceiptPriceHandler.class
 catalog\hoprxi\core\infrastructure\query\elasticsearch\ESItemQuery.class
 catalog\hoprxi\core\domain\model\barcode\ISBN.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$16.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\filter\BrandFilter.class
 catalog\hoprxi\core\infrastructure\batch\BrandHandler.class
 catalog\hoprxi\core\infrastructure\batch\Verify.class
 catalog\hoprxi\core\domain\model\GradeEnum.class
@@ -23,7 +22,6 @@ catalog\hoprxi\core\domain\model\price\UnitEnum$5.class
 catalog\hoprxi\core\domain\model\barcode\Barcode.class
 catalog\hoprxi\core\application\command\CategoryMoveNodeCommand.class
 catalog\hoprxi\core\domain\model\barcode\UPC_A.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\filter\LastReceiptPriceFilter.class
 catalog\hoprxi\core\domain\BrandValidatorService.class
 catalog\hoprxi\core\infrastructure\batch\AssembleHandler.class
 catalog\hoprxi\core\infrastructure\batch\CategoryHandler.class
@@ -50,7 +48,6 @@ catalog\hoprxi\core\application\batch\ItemImportService.class
 catalog\hoprxi\core\application\command\CategoryDeleteCommand.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$36.class
 catalog\hoprxi\core\domain\model\shelfLife\ShelfLife$1.class
-catalog\hoprxi\core\application\query\ItemQueryFilter.class
 catalog\hoprxi\core\infrastructure\query\elasticsearch\ESCategoryQuery.class
 catalog\hoprxi\core\domain\model\ItemRepository.class
 catalog\hoprxi\core\domain\model\ProhibitStorageItemRepository.class
@@ -63,7 +60,6 @@ catalog\hoprxi\core\domain\model\price\UnitEnum$30.class
 catalog\hoprxi\core\infrastructure\batch\VipPriceHandler.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$32.class
 catalog\hoprxi\core\rest\CategoryService.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\filter\RetailPriceFilter.class
 catalog\hoprxi\core\domain\model\ProhibitTradingItem.class
 catalog\hoprxi\core\infrastructure\batch\FailedValidationHandler.class
 catalog\hoprxi\core\domain\model\price\Price.class
@@ -71,12 +67,10 @@ catalog\hoprxi\core\application\command\EmptyCommand.class
 catalog\hoprxi\core\infrastructure\query\elasticsearch\ESItemQuery$4.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$12.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$9.class
-catalog\hoprxi\core\application\query\ItemJsonQuery.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlItemQuery.class
 catalog\hoprxi\core\domain\model\brand\Brand.class
 catalog\hoprxi\core\application\view\ItemView$CategoryView.class
 catalog\hoprxi\core\infrastructure\batch\RetailPriceHandler.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\filter\MemberPriceFilter.class
 catalog\hoprxi\core\infrastructure\batch\MaidenHandler.class
 catalog\hoprxi\core\domain\model\barcode\BarcodeGenerateServices.class
 catalog\hoprxi\App.class
@@ -113,7 +107,6 @@ catalog\hoprxi\core\domain\model\price\UnitEnum$33.class
 catalog\hoprxi\core\domain\model\category\CategoryCreated.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$10.class
 catalog\hoprxi\core\domain\model\ItemRetailPriceAdjusted.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\filter\VipPriceFilter.class
 catalog\hoprxi\core\infrastructure\query\JsonByteBufOutputStream.class
 catalog\hoprxi\core\application\query\NotFoundException.class
 catalog\hoprxi\core\infrastructure\batch\MemeberPriceHandler.class
@@ -139,7 +132,6 @@ catalog\hoprxi\core\domain\model\price\UnitEnum$26.class
 catalog\hoprxi\core\infrastructure\persistence\PersistenceException.class
 catalog\hoprxi\core\application\handler\ItemMadinChangeAggHandler.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$40.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\filter\CategoryFilter.class
 catalog\hoprxi\core\application\command\BrandDeleteCommand.class
 catalog\hoprxi\core\application\view\ItemView$BrandView.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$20.class
@@ -150,7 +142,6 @@ catalog\hoprxi\core\application\handler\ItemCreateHandler.class
 catalog\hoprxi\core\domain\model\shelfLife\ShelfLifeService.class
 catalog\hoprxi\core\application\setup\PsqlSetup.class
 catalog\hoprxi\core\infrastructure\batch\PsqlItemImportWithDisruptor$1.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\filter\KeywordFilter.class
 catalog\hoprxi\core\domain\model\ItemSpecificationChanged.class
 catalog\hoprxi\core\domain\model\ProhibitTradingItemRepository.class
 catalog\hoprxi\core\rest\ItemService.class

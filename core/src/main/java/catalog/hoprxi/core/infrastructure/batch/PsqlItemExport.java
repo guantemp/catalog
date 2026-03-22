@@ -115,16 +115,43 @@ public class PsqlItemExport implements ItemExportService {
     }
 
     private static CellStyle getCurrencyCell(SXSSFWorkbook workbook) {
-        CellStyle cellstyle = getStyle(workbook);
+        // 创建一个全新的样式
+        CellStyle style = workbook.createCellStyle();
+
+        // 复制 getStyle 的逻辑 (或者调用 getStyle 后 clone，但 POI Style 没有直接的 clone 方法给 SXSSF)
+        // 最笨但最有效的方法：把上面的配置抄一遍，或者提取一个私有方法 setCommonStyle(style, font)
+
+        Font font = workbook.createFont();
+        font.setFontHeightInPoints((short) 12);
+        font.setFontName("仿宋");
+
+        style.setFillForegroundColor(HSSFColor.HSSFColorPredefined.LIGHT_YELLOW.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBottomBorderColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex());
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setLeftBorderColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex());
+        style.setBorderRight(BorderStyle.THIN);
+        style.setRightBorderColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex());
+        style.setBorderTop(BorderStyle.THIN);
+        style.setTopBorderColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex());
+        style.setFont(font);
+        style.setWrapText(false);
+        // 货币通常右对齐
+        style.setAlignment(HorizontalAlignment.RIGHT);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+
+        // 设置货币格式
         XSSFDataFormat dataFormat = workbook.getXSSFWorkbook().createDataFormat();
-        cellstyle.setDataFormat(dataFormat.getFormat("¥* #,##0.00##;¥* -#,##0.00##"));//.getBuiltinFormat("0.00%"),
-        return cellstyle;
+        style.setDataFormat(dataFormat.getFormat("¥* #,##0.00##;¥* -#,##0.00##"));
+
+        return style;
     }
 
     @Override
     public void exportToXls(OutputStream outputStream) throws IOException {
         PsqlItemQuery query = new PsqlItemQuery();
-        ItemView[] itemViews = query.queryAll(0, 2000);
+        ItemView[] itemViews = query.queryAll(0, 40000);
         SXSSFWorkbook workbook = null;
         BufferedOutputStream bufferedOutPut = null;
         /*
@@ -195,12 +222,14 @@ public class PsqlItemExport implements ItemExportService {
             SXSSFCell cell4 = firstrow.createCell(3);
             cell4.setCellStyle(topStyle);
             cell4.setCellValue("条码");
-            XSSFComment comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 3, 0, 5, 15));
+            XSSFComment comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 3, 1, 5, 15));
             // 输入批注信息
-            comment.setString(new XSSFRichTextString("条码规则：\n 1、条码支持EAN8,EAN13,UPC_A,UPC_E,ITF14\n" +
-                    "2、最后一位为校验码，如果你不知道如何计算该校验码，请输入条码的前7位(ean8),前12位(EAN13),前6位(UPC_A),前11位(UPC_E),导入时系统將为你自动补全!\n" +
-                    "3、导入时会验证校验码，有不符合要求的条码列不会被导入\n" +
-                    "4、系统中已存在的条码，在结果表会导出系统中的数据与输入源数据对比，以便你再次导入时选择使用那条数据"));
+            comment.setString(new XSSFRichTextString("""
+                    条码规则：
+                    1、条码支持EAN8,EAN13,UPC_A,UPC_E,ITF14
+                    2、最后一位为校验码，如果你不知道如何计算该校验码，请输入条码的前7位(ean8),前12位(EAN13),前6位(UPC_A),前11位(UPC_E),导入时系统將为你自动补全!
+                    3、导入时会验证校验码，有不符合要求的条码列不会被导入
+                    4、系统中已存在的条码，在结果表会导出系统中的数据与输入源数据对比，以便你再次导入时选择使用那条数据"""));
             // 添加作者,选中单元格,看状态栏
             comment.setAuthor("guan-xianghuang");
             cell4.setCellComment(comment);
@@ -212,7 +241,7 @@ public class PsqlItemExport implements ItemExportService {
             SXSSFCell cell6 = firstrow.createCell(5);
             cell6.setCellStyle(topStyle);
             cell6.setCellValue("等级");
-            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 5, 0, 7, 7));
+            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 5, 1, 7, 8));
             comment.setString(new XSSFRichTextString("等级规则：\n\n 1、请使用字样：不合格品、合格品、一等品、优等品\n2、留空或不是以上字符的默认为合格品"));
             comment.setAuthor("guan-xianghuang");
             cell6.setCellComment(comment);
@@ -220,7 +249,7 @@ public class PsqlItemExport implements ItemExportService {
             SXSSFCell cell7 = firstrow.createCell(6);
             cell7.setCellStyle(topStyle);
             cell7.setCellValue("类别");
-            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 6, 0, 10, 10));
+            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 6, 1, 10, 11));
             comment.setString(new XSSFRichTextString("类别规则：\n\n 1、查询并填入(https://hoprxi.tooo.top/catalog/core/v1/categories)ID值（白酒id:496796322118291471）\n2、使用如下格式：日化/洗涤用品/洗衣液、洗涤用品/洗衣液，不存在的类别将会新建（类如：日化、洗涤用品如不存在将被将新建在首层）,请特别注意名字（前后空格会自动删除）必须完全一致，防止建立过多的新类\n" +
                     "3、留空或使用'undefined',‘未定义’，'" + Label.CATEGORY_UNDEFINED + "'字符的导入为缺省未分类"));
             cell7.setCellComment(comment);
@@ -228,21 +257,21 @@ public class PsqlItemExport implements ItemExportService {
             SXSSFCell cell8 = firstrow.createCell(7);
             cell8.setCellStyle(topStyle);
             cell8.setCellValue("保质期");
-            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 7, 0, 9, 7));
+            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 7, 1, 9, 7));
             comment.setString(new XSSFRichTextString("保质期：\n1、单位为天(day)\n2、允许输入2/2d代表天，m/M代表月,y/Y代表年,比如：2或2d表示2天，2m/2M表示2个月60天，1.5y/1.5Y代表一年半540天"));
             cell8.setCellComment(comment);
             // 创建列
             SXSSFCell cell9 = firstrow.createCell(8);
             cell9.setCellStyle(topStyle);
             cell9.setCellValue("产地");
-            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 8, 0, 11, 9));
-            comment.setString(new XSSFRichTextString("产地规则：\n1、进口商品标明进口国，国产商品标记到到市\n2、获取行政区划码(https://hoprxi.tooo.top/area/v1/areas)，输入编号（510500 代表四川泸州市）\n3、输入例：乐山、乐山市、重庆市、四川.泸州，四川省泸州、四川省泸州市、四川省.泸州市、广西.南宁、广西壮族自治区南宁\n5、没有找到匹配地址或留空，返回空白地址"));
+            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 8, 1, 11, 10));
+            comment.setString(new XSSFRichTextString("产地规则：\n1、进口商品标明进口国，国产商品标记到到市\n2、获取行政区划码(https://slave.tooo.top/area/v1/areas)，输入编号（510500 代表四川泸州市）\n3、输入例：乐山、乐山市、重庆市、四川.泸州，四川省泸州、四川省泸州市、四川省.泸州市、广西.南宁、广西壮族自治区南宁\n5、没有找到匹配地址或留空，返回空白地址"));
             cell9.setCellComment(comment);
 
             SXSSFCell cell3 = firstrow.createCell(9);
             cell3.setCellStyle(topStyle);
             cell3.setCellValue("计价单位");
-            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 9, 0, 11, 3));
+            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 9, 1, 11, 4));
             comment.setString(new XSSFRichTextString("单位规则：\n留空或不符合系统提供的单位的缺省为PCS"));
             cell3.setCellComment(comment);
             // 创建列
@@ -261,7 +290,7 @@ public class PsqlItemExport implements ItemExportService {
             SXSSFCell cell14 = firstrow.createCell(13);
             cell14.setCellStyle(topStyle);
             cell14.setCellValue("品牌");
-            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 13, 0, 15, 9));
+            comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 13, 1, 15, 9));
             comment.setString(new XSSFRichTextString("品牌规则：\n\n 1、留空或使用'undefined',‘未定义’，'" + Label.BRAND_UNDEFINED + "'字符的导入为未定义品牌\n2、允许2个名称，如'好来/黑人','好来'是主名称,'黑人'是别名"));
             comment.setAuthor("guan-xianghuang");
             cell14.setCellComment(comment);
@@ -274,64 +303,68 @@ public class PsqlItemExport implements ItemExportService {
             //topFont.setFontName("仿宋");
             //style.setFont(topFont);
             //setColumnTopStyle(topStyle);
+            CellStyle defaultStyle = getStyle(workbook);
+            CellStyle currencyStyle = getCurrencyCell(workbook);
+
             for (ItemView itemView : itemViews) {
                 // 创建行
-                SXSSFRow row = sheet.createRow(sheet.getLastRowNum() + 1);
+                int rowNum = sheet.getLastRowNum() + 1;
+                SXSSFRow row = sheet.createRow(rowNum);
                 //设置单元格的值，并且设置样式
                 SXSSFCell cell00 = row.createCell(0);
-                cell00.setCellStyle(getStyle(workbook));
+                cell00.setCellStyle(defaultStyle);
                 cell00.setCellValue(itemView.id());
                 //设置单元格的值，并且设置样式
                 SXSSFCell cell01 = row.createCell(1);
-                cell01.setCellStyle(getStyle(workbook));
+                cell01.setCellStyle(defaultStyle);
                 cell01.setCellValue(itemView.name().name());
                 //设置单元格的值，并且设置样式
                 SXSSFCell cell02 = row.createCell(2);
-                cell02.setCellStyle(getStyle(workbook));
+                cell02.setCellStyle(defaultStyle);
                 cell02.setCellValue(itemView.name().alias());
                 //设置单元格的值，并且设置样式
                 SXSSFCell cell04 = row.createCell(3);
-                cell04.setCellStyle(getStyle(workbook));
+                cell04.setCellStyle(defaultStyle);
                 cell04.setCellValue(String.valueOf(itemView.barcode().barcode()));
 
                 SXSSFCell cell05 = row.createCell(4);
-                cell05.setCellStyle(getStyle(workbook));
+                cell05.setCellStyle(defaultStyle);
                 cell05.setCellValue(itemView.spec().value());
 
                 SXSSFCell cell06 = row.createCell(5);
-                cell06.setCellStyle(getStyle(workbook));
+                cell06.setCellStyle(defaultStyle);
                 cell06.setCellValue(itemView.grade().toString());
 
                 SXSSFCell cell07 = row.createCell(6);
-                cell07.setCellStyle(getStyle(workbook));
+                cell07.setCellStyle(defaultStyle);
                 cell07.setCellValue(itemView.categoryView().name());
 
                 SXSSFCell cell08 = row.createCell(7);
-                cell08.setCellStyle(getStyle(workbook));
+                cell08.setCellStyle(defaultStyle);
                 cell08.setCellValue(itemView.shelfLife().days() + "天");
 
                 SXSSFCell cell09 = row.createCell(8);
-                cell09.setCellStyle(getStyle(workbook));
+                cell09.setCellStyle(defaultStyle);
                 cell09.setCellValue(itemView.madeIn().madeIn());
 
                 SXSSFCell cell03 = row.createCell(9);
-                cell03.setCellStyle(getCurrencyCell(workbook));
+                cell03.setCellStyle(currencyStyle);
                 cell03.setCellValue(itemView.retailPrice().price().unit().toString());
 
                 SXSSFCell cell010 = row.createCell(10);
-                cell010.setCellStyle(getCurrencyCell(workbook));
+                cell010.setCellStyle(currencyStyle);
                 cell010.setCellValue(itemView.retailPrice().price().amount().getNumber().doubleValueExact());
 
                 SXSSFCell cell011 = row.createCell(11);
-                cell011.setCellStyle(getCurrencyCell(workbook));
+                cell011.setCellStyle(currencyStyle);
                 cell011.setCellValue(itemView.memberPrice().price().amount().getNumber().doubleValue());
 
                 SXSSFCell cell012 = row.createCell(12);
-                cell012.setCellStyle(getCurrencyCell(workbook));
+                cell012.setCellStyle(currencyStyle);
                 cell012.setCellValue(itemView.vipPrice().price().amount().getNumber().doubleValueExact());
 
                 SXSSFCell cell013 = row.createCell(13);
-                cell013.setCellStyle(getStyle(workbook));
+                cell013.setCellStyle(defaultStyle);
                 cell013.setCellValue(itemView.brandView().name());
             }
             DataValidation dataValidation = dropDownList(sheet, new String[]{"不合格品", "合格品", "一等品", "优等品"}, 1, 15, 5, 6);
