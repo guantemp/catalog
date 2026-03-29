@@ -56,16 +56,6 @@
     </dependencies>
 
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering> <!-- 是否开启变量替换文本，不要开启，缺省不知道是个啥 ${...} -->
-                <excludes>
-                    <!-- 排除需要外置到 conf 目录的文件/文件夹 -->
-                    <exclude>**/**</exclude>
-                </excludes>
-            </resource>
-        </resources>
         <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
             <plugins>
                 <plugin>

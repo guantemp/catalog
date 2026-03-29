@@ -74,6 +74,7 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>7.7.0</version>
+            <scope>test</scope>
         </dependency>
         <!-- Source: https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
         <dependency>
@@ -90,5 +91,30 @@
             <scope>compile</scope>
         </dependency>
     </dependencies>
+
+    <build>
+    <resources>
+        <resource>
+            <directory>src/main/resources</directory>
+            <filtering>false</filtering> <!-- 是否开启变量替换文本，不要开启，缺省不知道是个啥 ${...} -->
+            <excludes>
+                <!-- 排除需要外置到 conf 目录的文件/文件夹 -->
+                <exclude>**/**</exclude>
+            </excludes>
+        </resource>
+    </resources>
+    <testResources>
+        <!-- 1. 优先加载 src/test/resources (用于覆盖特定测试配置) -->
+        <testResource>
+            <directory>src/test/resources</directory>
+            <filtering>false</filtering>
+        </testResource>
+        <!-- 2. 自动包含 src/main/resources 的所有文件 (解决找不到文件的问题) -->
+        <testResource>
+            <directory>src/main/resources</directory>
+            <filtering>false</filtering>
+        </testResource>
+    </testResources>
+    </build>
 
 </project>

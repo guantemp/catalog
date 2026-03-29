@@ -29,6 +29,7 @@ import reactor.core.publisher.Flux;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -76,18 +77,17 @@ public class PsqlScaleQuery implements ScaleQuery {
 
 
     @Override
-    public Flux<ByteBuf> searchAsync(SqlClauseSpec[] filters, int offset, int size, SortFieldEnum sortField) {
+    public Flux<ByteBuf> searchAsync(SqlClauseSpec[] specs, int offset, int size, SortFieldEnum sortField) {
         if (offset < 0 || offset > 10000) throw new IllegalArgumentException("from must lager 10000");
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
         if (sortField == null) {
             sortField = SortFieldEnum._ID;
-            LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
 
-        List<SqlClauseSpec> specs = Arrays.asList(filters);
-        // 6. 过滤出满足条件的规格，然后生成 SQL 片段
-        List<SqlClause> clauses = specs.stream()
+        // 过滤出满足条件的规格，然后生成 SQL 片段
+        List<SqlClause> clauses = Stream.of(specs)
                 .filter(SqlClauseSpec::isSatisfied) // 只保留满足的规格
                 .map(SqlClauseSpec::toClause)      // 转换为 SQL 片段
                 .toList();

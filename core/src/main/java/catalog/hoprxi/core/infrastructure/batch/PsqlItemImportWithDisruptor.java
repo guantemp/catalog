@@ -22,9 +22,11 @@ import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.poi.ss.usermodel.*;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -35,7 +37,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.concurrent.Executors;
-import java.util.stream.Stream;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -143,17 +144,65 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
 
     @Override
     public void importItemFromCsv(InputStream is, ItemMapping[] itemMappings) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-        Stream<String> lines = reader.lines();
-        lines.skip(1).map(line -> line.split(",")).forEach(columns -> {
-            EnumMap<ItemMapping, String> map = new EnumMap<>(ItemMapping.class);
-            for (int m = 0, n = itemMappings.length; m < n; m++) {
-                if (itemMappings[m] == ItemMapping.IGNORE || itemMappings[m] == ItemMapping.LAST_ROW)
-                    continue;
-                map.put(itemMappings[m], columns[m]);
+        if (itemMappings == null || itemMappings.length == 0) {
+            itemMappings = DEFAULT_CORR;
+        }
+
+        Disruptor<ItemImportEvent> disruptor = new Disruptor<>(
+                ItemImportEvent::new,
+                512,
+                Executors.defaultThreadFactory(),
+                ProducerType.SINGLE,
+                new SleepingWaitStrategy()
+        );
+
+        disruptor.handleEventsWith(
+                new IdHandler(), new NameHandler(), new BarcodeHandler(), new CategoryHandler(), new BrandHandler(),
+                new GrandHandler(), new MaidenHandler(), new SpecHandler(), new ShelfLifeHandler(),
+                new LastReceiptPriceHandler(), new RetailPriceHandler(), new MemeberPriceHandler(), new VipPriceHandler()
+        ).then(new AssembleHandler(), new FailedValidationHandler());
+
+        disruptor.start();
+        RingBuffer<ItemImportEvent> ringBuffer = disruptor.getRingBuffer();
+
+        CSVFormat format = CSVFormat.DEFAULT          // 预定义格式
+                .builder()             // 获取 builder（非静态方法）
+                .setSkipHeaderRecord(true)
+                .get();
+        try (CSVParser parser = CSVParser.parse(
+                new InputStreamReader(is, StandardCharsets.UTF_8),
+                format)) {
+
+            // 1. 正常处理每一行数据
+            for (CSVRecord record : parser) {
+                EnumMap<ItemMapping, String> map = new EnumMap<>(ItemMapping.class);
+                for (int i = 0; i < itemMappings.length; i++) {
+                    ItemMapping mapping = itemMappings[i];
+                    if (mapping == ItemMapping.IGNORE || mapping == ItemMapping.LAST_ROW) {
+                        continue;
+                    }
+                    String value = null;
+                    if (i < record.size()) {
+                        value = record.get(i);
+                        if (value != null) {
+                            value = value.trim();
+                            if (value.isEmpty()) value = null;
+                        }
+                    }
+                    map.put(mapping, value);
+                }
+                ringBuffer.publishEvent((event, sequence, rMap) -> event.setMap(rMap), map);
             }
-            System.out.println(map.get(ItemMapping.NAME));
-        });
+
+            // 2. 👇 关键：在 shutdown 前发送 END_EVENT
+            EnumMap<ItemMapping, String> endSignal = new EnumMap<>(ItemMapping.class);
+            endSignal.put(ItemMapping.LAST_ROW, "END"); // 特殊标记
+            ringBuffer.publishEvent((event, sequence, rMap) -> event.setMap(rMap), endSignal);
+
+        } finally {
+            // 等待所有事件处理完成（可选，但推荐）
+            disruptor.shutdown(); // 内部会等待已发布事件处理完毕（取决于 WaitStrategy 和 handler 耗时）
+        }
     }
 
     @Override

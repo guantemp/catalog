@@ -27,11 +27,14 @@ import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.server.docs.DocService;
 import com.linecorp.armeria.server.encoding.EncodingService;
+import com.linecorp.armeria.server.file.FileService;
 import com.linecorp.armeria.server.logging.LoggingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -104,20 +107,19 @@ public class Bootstrap {
         //  添加装饰器（中间件）
         sb.decorator(LoggingService.newDecorator()); // 日志记录
         sb.decorator(EncodingService.newDecorator()); // 压缩
-/*
-        FileServiceBuilder fsb =
-                FileService.builder(Paths.get(System.getProperty("user.dir"), "/html"));
-        fsb.autoIndex(true);
-        FileService fs = fsb.build();
-        sb.serviceUnder("/html", fs);
-        HttpFile index = HttpFile.of(Paths.get(System.getProperty("user.dir"), "/html/upload.html"));
-        sb.serviceUnder("/", index.asService());//相当于缺省index.html
- */
+
+        Path htmlDir = Paths.get(System.getProperty("user.dir"), "html");
+        FileService fs = FileService.builder(htmlDir)
+                .autoIndex(true)      // 开启目录浏览（可选）
+                .build();
+        sb.serviceUnder("/", fs);
         // 设置默认首页：访问 / 返回 HTML
+        /*
         sb.service("/", (ctx, req) ->
                 HttpResponse.of(HttpStatus.OK, MediaType.HTML_UTF_8,
                         "<html><body><h1>Welcome to My Catalog Service!</h1><h1><a href=\"../docs\">View the document</a></h1></body></html>")
         );
+         */
         //添加文档服务
         sb.serviceUnder("/docs", DocService.builder()
                 //.exampleRequests("/v1/brands", "query")

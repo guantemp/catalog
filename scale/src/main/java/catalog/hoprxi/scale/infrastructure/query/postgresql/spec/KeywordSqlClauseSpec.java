@@ -31,12 +31,10 @@ import java.util.Objects;
  * @version 0.0.1 builder 2026/3/8
  */
 
-public class KeywordSqlClauseSpec implements SqlClauseSpec {
+public record KeywordSqlClauseSpec(String keyword) implements SqlClauseSpec {
 
-    private final String keyword;
-
-    public KeywordSqlClauseSpec(String keyword) {
-        this.keyword = Objects.requireNonNull(keyword,"keyword is null").trim();
+    public KeywordSqlClauseSpec {
+       Objects.requireNonNull(keyword,"keyword is null");
     }
 
     @Override
@@ -52,6 +50,6 @@ public class KeywordSqlClauseSpec implements SqlClauseSpec {
         String sql = """
             s.search_vector @@ to_tsquery('simple', ?)
             """;
-        return new SqlClause(sql, Arrays.asList(keyword));
+        return new SqlClause(sql, Collections.singletonList(keyword));
     }
 }
