@@ -16,19 +16,35 @@
 
 package catalog.hoprxi.scale.infrastructure.query.postgresql;
 
+import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
+import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
+import catalog.hoprxi.core.infrastructure.query.JsonByteBufOutputStream;
 import catalog.hoprxi.scale.application.query.ScaleQuery;
 import catalog.hoprxi.scale.application.query.SqlClause;
 import catalog.hoprxi.scale.application.query.SqlClauseSpec;
 import catalog.hoprxi.scale.domain.model.Plu;
+import catalog.hoprxi.scale.infrastructure.PsqlUtil;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import io.netty.buffer.ByteBuf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -39,6 +55,7 @@ import java.util.stream.Stream;
 
 public class PsqlScaleQuery implements ScaleQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlScaleQuery.class);
+    private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
     @Override
     public Flux<ByteBuf> findAsync(Plu plu) {
@@ -85,13 +102,11 @@ public class PsqlScaleQuery implements ScaleQuery {
             sortField = SortFieldEnum._ID;
             //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
-
         // 过滤出满足条件的规格，然后生成 SQL 片段
         List<SqlClause> clauses = Stream.of(specs)
                 .filter(SqlClauseSpec::isSatisfied) // 只保留满足的规格
                 .map(SqlClauseSpec::toClause)      // 转换为 SQL 片段
                 .toList();
-
         StringBuilder whereClause = new StringBuilder();
 
         List<Object> allParams = new ArrayList<>();
@@ -128,6 +143,9 @@ public class PsqlScaleQuery implements ScaleQuery {
         allParams.add(offset);
         System.out.println(sb);
         System.out.println(Arrays.toString(allParams.toArray()));
+
+
+
         return null;
     }
 
@@ -155,4 +173,67 @@ public class PsqlScaleQuery implements ScaleQuery {
             //case STOCK -> "i.stock";
         };
     }
+
+    private static Flux<ByteBuf> findAsync(String sql, Consumer<PreparedStatement> paramSetter, String info) {
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        CompletableFuture.runAsync(() -> {
+            try (Connection connection = PsqlUtil.getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
+                paramSetter.accept(ps);
+                try (ResultSet rs = ps.executeQuery();
+                     OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
+                    if (rs.next()) {
+                        gen.writeStartObject();
+                        gen.writeNumberField("plu", rs.getInt("plu"));
+                        gen.writeFieldName("name");
+                        gen.writeRawValue(rs.getString("name"));
+                        gen.writeStringField("spec", rs.getString("spec"));
+                        gen.writeStringField("grade", rs.getString("grade"));
+                        gen.writeFieldName("madeIn");
+                        gen.writeRawValue(rs.getString("made_in"));
+                        gen.writeNumberField("shelf_life", rs.getLong("shelf_life"));
+                        gen.writeFieldName("last_receipt_price");
+                        gen.writeRawValue(rs.getString("last_receipt_price"));
+                        gen.writeFieldName("retail_price");
+                        gen.writeRawValue(rs.getString("retail_price"));
+                        gen.writeFieldName("member_price");
+                        gen.writeRawValue(rs.getString("member_price"));
+                        gen.writeFieldName("vip_price");
+                        gen.writeRawValue(rs.getString("vip_price"));
+                        gen.writeFieldName("category");
+                        gen.writeRawValue(rs.getString("category"));
+                        gen.writeFieldName("brand");
+                        gen.writeRawValue(rs.getString("brand"));
+                        gen.writeEndObject();
+                    }
+                    gen.flush();
+                }
+            } catch (SQLException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).whenComplete((v, err) -> {
+            if (err != null && !isCancelled.get()) {
+                Throwable cause = err;
+                if (err instanceof RuntimeException) cause = err.getCause();// 取出里面的原始 Exception,区分数据库异常和业务异常
+                if (cause instanceof SQLException) {
+                    LOGGER.warn("Database error while fetching item {}", info, cause);
+                    sink.tryEmitError(new PersistenceException("Database error while fetching item " + info, cause));
+                } else if (cause instanceof IOException) {
+                    LOGGER.warn("Failed to serialize for item {}", info, cause);
+                    sink.tryEmitError(new PersistenceException("Failed to serialize cause by", cause));
+                } else {  //未知错误 (兜底，防止请求挂起),比如代码逻辑错误导致的 NullPointerException 等
+                    LOGGER.error("Unexpected system error while fetching item {}", info, cause);
+                    sink.tryEmitError(new SearchException("Unexpected error: " + err.getMessage(), cause));
+                }
+            } else if (!isCancelled.get()) {
+                sink.tryEmitComplete();
+            }
+        });
+
+        return sink.asFlux()
+                .doOnCancel(() -> isCancelled.set(true))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", info))
+                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+    }
+
 }
