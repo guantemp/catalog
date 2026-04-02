@@ -198,7 +198,6 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
             EnumMap<ItemMapping, String> endSignal = new EnumMap<>(ItemMapping.class);
             endSignal.put(ItemMapping.LAST_ROW, "END"); // 特殊标记
             ringBuffer.publishEvent((event, sequence, rMap) -> event.setMap(rMap), endSignal);
-
         } finally {
             // 等待所有事件处理完成（可选，但推荐）
             disruptor.shutdown(); // 内部会等待已发布事件处理完毕（取决于 WaitStrategy 和 handler 耗时）

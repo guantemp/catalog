@@ -22,6 +22,7 @@ import catalog.hoprxi.core.domain.model.Specification;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import com.huaban.analysis.jieba.JiebaSegmenter;
 import com.huaban.analysis.jieba.SegToken;
+import salt.hoprxi.to.PinYin;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -97,21 +98,26 @@ public final class SearchUtils {
                     List<String> result = new ArrayList<>();
                     // 1. 原词永远加入
                     result.add(w);
-
                     // 2. 如果是双字 且 不在“不可拆分列表”中，尝试拆分
                     if (w.length() == 2 && !UNBREAKABLE_DOUBLE_CHARS.contains(w)) {
                         String s1 = String.valueOf(w.charAt(0));
                         String s2 = String.valueOf(w.charAt(1));
-
                         // 只有当单字在白名单中才加入，避免加入 "的", "了" 等
                         if (MEANINGFUL_SINGLE_CHARS.contains(s1)) result.add(s1);
                         if (MEANINGFUL_SINGLE_CHARS.contains(s2)) result.add(s2);
                     }
                     return result.stream();
+                }).filter(w -> !STOP_WORDS.contains(w))// 过滤掉停用单字，提高准确率
+                .flatMap(w -> {//拼音
+                    String fullPinyin = PinYin.toPinYing(w);
+                    // 获取首字母，例如 "中国" -> "zg"
+                    // 注意：TinyPinyin 的 getFirstLetter 方法，或者你可以自己写逻辑取首字母
+                    String firstLetter = PinYin.toShortPinYing(w);
+
+                    // 返回一个包含3种形式的流
+                    return Arrays.stream(new String[]{w, fullPinyin, firstLetter});
                 })
-                // 3. 全局过滤停用词
-                .filter(w -> !STOP_WORDS.contains(w))// 过滤掉单字，提高准确率，如需搜单字可去掉此行
-                .distinct()
+                .distinct()//去重
                 .collect(Collectors.joining(" "));
     }
 }

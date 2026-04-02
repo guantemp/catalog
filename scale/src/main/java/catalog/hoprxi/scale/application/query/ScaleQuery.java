@@ -98,4 +98,12 @@ public interface ScaleQuery {
      * @throws IllegalArgumentException 如果 offset < 0 或 size <= 0。
      */
     Flux<ByteBuf> searchAsync(SqlClauseSpec[] specs, int offset, int size, SortFieldEnum sortField);
+
+    default Flux<ByteBuf> searchAsync(int offset, int size){
+        return this.searchAsync(new SqlClauseSpec[0],offset,size,SortFieldEnum._ID);
+    }
+
+    default Flux<ByteBuf> searchAsync(SqlClauseSpec[] specs){
+        return this.searchAsync(specs,0,48,SortFieldEnum._ID);
+    }
 }

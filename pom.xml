@@ -40,6 +40,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>4.2.8.Final</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <!-- 强制统一 Log4j2 版本，解决 NoSuchMethodError -->
             <!-- 版本需与你项目中引入的最高版本一致，这里参考 POI 引入的 2.24.3 -->
             <dependency>

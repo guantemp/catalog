@@ -19,24 +19,76 @@ package catalog.hoprxi.scale.infrastructure.query.postgresql;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.scale.application.query.ScaleQuery;
 import catalog.hoprxi.scale.application.query.SqlClauseSpec;
-import catalog.hoprxi.scale.infrastructure.query.postgresql.spec.BrandSqlClauseSpec;
-import catalog.hoprxi.scale.infrastructure.query.postgresql.spec.CategorySqlClauseSpec;
+import catalog.hoprxi.scale.domain.model.Plu;
 import catalog.hoprxi.scale.infrastructure.query.postgresql.spec.KeywordSqlClauseSpec;
 import catalog.hoprxi.scale.infrastructure.query.postgresql.spec.RetailPriceSqlClauseSpec;
+import io.netty.buffer.ByteBuf;
 import org.javamoney.moneta.Money;
 import org.testng.annotations.Test;
+import reactor.core.publisher.Flux;
+import salt.hoprxi.crypto.util.StoreKeyLoad;
+
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
 
 public class PsqlScaleQueryTest {
-    private static ScaleQuery query = new PsqlScaleQuery();
-
-    @Test
-    public void testFindAsync() {
+    static {
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
+                new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
 
-    @Test
-    public void testSearchAsync() {
-        query.searchAsync(new SqlClauseSpec[]{new KeywordSqlClauseSpec("苹果"), new CategorySqlClauseSpec(new long[]{21, 234L}), new BrandSqlClauseSpec(new long[]{214234L}),
-                        new RetailPriceSqlClauseSpec(Money.of(99, "CNY"), Money.of(199, "CNY"))},
-                20, 50, SortFieldEnum._LAST_RECEIPT_PRICE);
+    private static final ScaleQuery query = new PsqlScaleQuery();
+
+    @Test(invocationCount = 5, threadPoolSize = 1)
+    public void testFindAsync() throws InterruptedException {
+        Flux<ByteBuf>[] fluxes = new Flux[]{
+                query.findAsync(new Plu(102)),
+                query.findAsync(new Plu(100)),
+                query.findAsync(new Plu(1))
+        };
+        PsqlScaleQueryTest.printResult(fluxes);
+    }
+
+    @Test()
+    public void testSearchAsync() throws InterruptedException {
+        Flux<ByteBuf>[] fluxes = new Flux[]{
+                query.searchAsync(new SqlClauseSpec[]{new KeywordSqlClauseSpec("鱼")}, 0, 50, SortFieldEnum._ID),
+                query.searchAsync(0, 20),
+                query.searchAsync(new SqlClauseSpec[]{new RetailPriceSqlClauseSpec(Money.of(1.99, "CNY"), Money.of(199, "CNY"))},
+                        0, 50, SortFieldEnum._LAST_RECEIPT_PRICE)
+        };
+        PsqlScaleQueryTest.printResult(fluxes);
+    }
+
+    private static void printResult(Flux<ByteBuf>[] fluxes) throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(fluxes.length);
+        // 为每个查询在独立线程中启动订阅
+        for (int i = 0; i < fluxes.length; i++) {
+            StringBuilder sb = new StringBuilder();
+            final int queryIndex = i;
+            new Thread(() -> {
+                System.out.println("[Thread-" + Thread.currentThread().threadId() + "] Starting query #" + queryIndex);
+                fluxes[queryIndex].subscribe(
+                        byteBuf -> {
+                            try {
+                                sb.append(byteBuf.toString(StandardCharsets.UTF_8));
+                            } finally {
+                                byteBuf.release(); // 安全释放
+                            }
+                        },
+                        error -> {
+                            System.err.println("[Thread-" + Thread.currentThread().threadId() + "] Error: " + error.getMessage());
+                            error.printStackTrace();
+                        },
+                        () -> {
+                            //System.out.println("[Thread-" + Thread.currentThread().threadId() + "] Query #" + queryIndex + " completed");
+                            System.out.println(sb);
+                            latch.countDown();
+                        }
+                );
+            }).start();
+        }
+        // 等待所有查询完成（30秒超时）
+        latch.await();
     }
 }

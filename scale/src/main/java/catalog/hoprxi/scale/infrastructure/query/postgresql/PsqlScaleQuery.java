@@ -66,32 +66,49 @@ public class PsqlScaleQuery implements ScaleQuery {
                     json_build_object('id', c.id, 'name', c.name::jsonb ->> 'name') AS category,
                     json_build_object('id', b.id, 'name', b.name::jsonb ->> 'name') AS brand
                 FROM scale s
-                LEFT JOIN category c ON i.category_id = c.id
-                LEFT JOIN brand b ON b.id = i.brand_id
+                LEFT JOIN category c ON s.category_id = c.id
+                LEFT JOIN brand b ON b.id = s.brand_id
                 WHERE plu = ?
                 """;
-/*
-        try (Connection connection = PsqlUtil.getConnection();
-             PreparedStatement ps = connection.prepareStatement(sb.toString())) {
-            ps.setInt(1,plu.id());
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    //return PsqlWeightRepository.rebuild(rs);
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        CompletableFuture.runAsync(() -> {
+            try (Connection connection = PsqlUtil.getConnection();
+                 PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, plu.id());
+                try (ResultSet rs = ps.executeQuery();
+                     OutputStream os = new JsonByteBufOutputStream(sink, isCancelled);
+                     JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
+                    if (rs.next()) {
+                        PsqlScaleQuery.writeAloneScale(rs, gen);
+                    }
                 }
+            } catch (SQLException | IOException e) {
+                throw new RuntimeException(e);
             }
-            return null;// 如果没有返回数据，正常返回 null，不要抛异常
-        } catch (SQLException e) {// 【关键修复 2】区分数据库异常和业务异常
-            LOGGER.error("Database access failure while fetching weight for PLU={}", plu.id(), e);
-            throw new PersistenceException("Database query execution failed for PLU " + plu.id() + ": " + e.getMessage(), e);
-        } /*catch (IOException e) {// 重建对象时的错误属于系统内部错误，不是“未找到”
-            LOGGER.error("Critical failure: Unable to map result set to weight object (id={})", plu.id(), e);
-            throw new PersistenceException("Internal error: Failed to reconstruct weight entity from database result (ID: " + plu.id() + ")", e);
-        }
-        */
-
-        return null;
+        }).whenComplete((v, err) -> {
+            if (err != null && !isCancelled.get()) {
+                Throwable cause = err;
+                if (err instanceof RuntimeException) cause = err.getCause();// 取出里面的原始 Exception,区分数据库异常和业务异常
+                if (cause instanceof SQLException) {
+                    LOGGER.warn("Database error while fetching scale {}", plu, cause);
+                    sink.tryEmitError(new PersistenceException("Database error while fetching item " + plu, cause));
+                } else if (cause instanceof IOException) {
+                    LOGGER.warn("Failed to serialize for scale {}", plu, cause);
+                    sink.tryEmitError(new PersistenceException("Failed to serialize cause by", cause));
+                } else {  //未知错误 (兜底，防止请求挂起),比如代码逻辑错误导致的 NullPointerException 等
+                    LOGGER.error("Unexpected system error while fetching scale {}", plu, cause);
+                    sink.tryEmitError(new SearchException("Unexpected error: " + err.getMessage(), cause));
+                }
+            } else if (!isCancelled.get()) {
+                sink.tryEmitComplete();
+            }
+        });
+        return sink.asFlux()
+                .doOnCancel(() -> isCancelled.set(true))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for plu: {}", plu))
+                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
     }
-
 
     @Override
     public Flux<ByteBuf> searchAsync(SqlClauseSpec[] specs, int offset, int size, SortFieldEnum sortField) {
@@ -102,13 +119,22 @@ public class PsqlScaleQuery implements ScaleQuery {
             sortField = SortFieldEnum._ID;
             //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
+        final StringBuilder sql = new StringBuilder("""
+                SELECT
+                    s.plu, s.name, s.grade, s.made_in, s.spec, s.shelf_life,
+                    s.last_receipt_price, s.retail_price, s.member_price, s.vip_price,
+                    json_build_object('id', c.id, 'name', c.name::jsonb ->> 'name') AS category,
+                    json_build_object('id', b.id, 'name', b.name::jsonb ->> 'name') AS brand
+                FROM scale s
+                LEFT JOIN category c ON s.category_id = c.id
+                LEFT JOIN brand b ON s.brand_id = b.id
+                """);
         // 过滤出满足条件的规格，然后生成 SQL 片段
         List<SqlClause> clauses = Stream.of(specs)
                 .filter(SqlClauseSpec::isSatisfied) // 只保留满足的规格
                 .map(SqlClauseSpec::toClause)      // 转换为 SQL 片段
                 .toList();
         StringBuilder whereClause = new StringBuilder();
-
         List<Object> allParams = new ArrayList<>();
         for (SqlClause clause : clauses) {
             if (!clause.sql().isEmpty()) {
@@ -119,34 +145,93 @@ public class PsqlScaleQuery implements ScaleQuery {
                 allParams.addAll(clause.params());
             }
         }
-
-        final StringBuilder sb = new StringBuilder("""
-                SELECT
-                    s.plu, s.name, s.grade, s.made_in, s.spec, s.shelf_life,
-                    s.last_receipt_price, s.retail_price, s.member_price, s.vip_price,
-                    json_build_object('id', c.id, 'name', c.name::jsonb ->> 'name') AS category,
-                    json_build_object('id', b.id, 'name', b.name::jsonb ->> 'name') AS brand
-                FROM scale s
-                LEFT JOIN category c ON s.category_id = c.id
-                LEFT JOIN brand b ON s.brand_id = b.id
-                """);
-
         if (!whereClause.isEmpty()) {
-            sb.append("WHERE ").append(whereClause);
+            sql.append("WHERE ").append(whereClause);
         }
+        String orderClause = PsqlScaleQuery.buildOrderClause(sortField);
+        sql.append(orderClause);
 
-        String orderClause = buildOrderClause(sortField);
-        sb.append(orderClause);
-
-        sb.append(" LIMIT ? OFFSET ?");
+        sql.append(" LIMIT ? OFFSET ?");
         allParams.add(size);
         allParams.add(offset);
-        System.out.println(sb);
-        System.out.println(Arrays.toString(allParams.toArray()));
+        Object[] paramsArray = allParams.toArray();
+        System.out.println(sql.toString());
+        System.out.println(Arrays.toString(paramsArray));
 
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        CompletableFuture.runAsync(() -> {
+            try (Connection connection = PsqlUtil.getConnection();
+                 PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+                for (int i = 0, j = paramsArray.length; i < j; i++) {
+                    ps.setObject(i + 1, paramsArray[i]);
+                }
+                try (ResultSet rs = ps.executeQuery();
+                     OutputStream os = new JsonByteBufOutputStream(sink, isCancelled);
+                     JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
+                    int total = 0;
+                    gen.writeStartObject();
+                    gen.writeArrayFieldStart("scales");
+                    while (rs.next()) {
+                        PsqlScaleQuery.writeAloneScale(rs, gen);
+                        total += 1;
+                    }
+                    gen.writeEndArray();
+                    gen.writeNumberField("total", total);
+                    gen.writeEndObject();
+                    gen.flush();
+                }
+            } catch (SQLException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).whenComplete((v, err) -> {
+            if (err != null && !isCancelled.get()) {
+                Throwable cause = err;
+                if (err instanceof RuntimeException) cause = err.getCause();// 取出里面的原始 Exception,区分数据库异常和业务异常
+                if (cause instanceof SQLException) {
+                    LOGGER.warn("Database error while fetching scale {}", "info", cause);
+                    sink.tryEmitError(new PersistenceException("Database error while fetching item " + "info", cause));
+                } else if (cause instanceof IOException) {
+                    LOGGER.warn("Failed to serialize for scale {}", "info", cause);
+                    sink.tryEmitError(new PersistenceException("Failed to serialize cause by", cause));
+                } else {  //未知错误 (兜底，防止请求挂起),比如代码逻辑错误导致的 NullPointerException 等
+                    LOGGER.error("Unexpected system error while fetching scale {}", "info", cause);
+                    sink.tryEmitError(new SearchException("Unexpected error: " + err.getMessage(), cause));
+                }
+            } else if (!isCancelled.get()) {
+                sink.tryEmitComplete();
+            }
+        });
 
+        return sink.asFlux()
+                .doOnCancel(() -> isCancelled.set(true))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for scale"))
+                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+    }
 
-        return null;
+    private static void writeAloneScale(ResultSet rs, JsonGenerator gen) throws IOException, SQLException {
+        gen.writeStartObject();
+        gen.writeNumberField("plu", rs.getInt("plu"));
+        gen.writeFieldName("name");
+        gen.writeRawValue(rs.getString("name"));
+        gen.writeStringField("spec", rs.getString("spec"));
+        gen.writeStringField("grade", rs.getString("grade"));
+        gen.writeFieldName("madeIn");
+        gen.writeRawValue(rs.getString("made_in"));
+        gen.writeNumberField("shelf_life", rs.getLong("shelf_life"));
+        gen.writeFieldName("last_receipt_price");
+        gen.writeRawValue(rs.getString("last_receipt_price"));
+        gen.writeFieldName("retail_price");
+        gen.writeRawValue(rs.getString("retail_price"));
+        gen.writeFieldName("member_price");
+        gen.writeRawValue(rs.getString("member_price"));
+        gen.writeFieldName("vip_price");
+        gen.writeRawValue(rs.getString("vip_price"));
+        gen.writeFieldName("category");
+        gen.writeRawValue(rs.getString("category"));
+        gen.writeFieldName("brand");
+        gen.writeRawValue(rs.getString("brand"));
+        gen.writeEndObject();
     }
 
     private static String buildOrderClause(SortFieldEnum sortBy) {
@@ -158,18 +243,18 @@ public class PsqlScaleQuery implements ScaleQuery {
 
     private static String mapEsFieldToDbField(SortFieldEnum sortField) {
         return switch (sortField) {
-            case ID,_ID -> "s.id";
-            case NAME,_NAME -> "s.name ->> 'mnemonic'";
-            case BARCODE,_BARCODE -> "s.barcode";
-            case MADE_IN,_MADE_IN -> "s.made_in";
-            case GRADE,_GRADE -> "s.grade";
-            case SPEC,_SPEC -> "s.spec";
-            case CATEGORY,_CATEGORY -> "c.id";
-            case BRAND,_BRAND -> "b.id";
-            case LAST_RECEIPT_PRICE,_LAST_RECEIPT_PRICE -> "(s.last_receipt_price->>'number')::numeric";
-            case RETAIL_PRICE,_RETAIL_PRICE -> "(s.retail_price->>'number')::numeric";
-            case MEMBER_PRICE,_MEMBER_PRICE -> "(s.member_price->>'number')::numeric";
-            case VIP_PRICE,_VIP_PRICE -> "(s.vip_price->>'number')::numeric";
+            case ID, _ID -> "s.plu";
+            case NAME, _NAME -> "s.name ->> 'mnemonic'";
+            case BARCODE, _BARCODE -> "s.barcode";
+            case MADE_IN, _MADE_IN -> "s.made_in";
+            case GRADE, _GRADE -> "s.grade";
+            case SPEC, _SPEC -> "s.spec";
+            case CATEGORY, _CATEGORY -> "c.id";
+            case BRAND, _BRAND -> "b.id";
+            case LAST_RECEIPT_PRICE, _LAST_RECEIPT_PRICE -> "(s.last_receipt_price->>'number')::numeric";
+            case RETAIL_PRICE, _RETAIL_PRICE -> "(s.retail_price->>'number')::numeric";
+            case MEMBER_PRICE, _MEMBER_PRICE -> "(s.member_price->>'number')::numeric";
+            case VIP_PRICE, _VIP_PRICE -> "(s.vip_price->>'number')::numeric";
             //case STOCK -> "i.stock";
         };
     }
@@ -183,28 +268,7 @@ public class PsqlScaleQuery implements ScaleQuery {
                 try (ResultSet rs = ps.executeQuery();
                      OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
                     if (rs.next()) {
-                        gen.writeStartObject();
-                        gen.writeNumberField("plu", rs.getInt("plu"));
-                        gen.writeFieldName("name");
-                        gen.writeRawValue(rs.getString("name"));
-                        gen.writeStringField("spec", rs.getString("spec"));
-                        gen.writeStringField("grade", rs.getString("grade"));
-                        gen.writeFieldName("madeIn");
-                        gen.writeRawValue(rs.getString("made_in"));
-                        gen.writeNumberField("shelf_life", rs.getLong("shelf_life"));
-                        gen.writeFieldName("last_receipt_price");
-                        gen.writeRawValue(rs.getString("last_receipt_price"));
-                        gen.writeFieldName("retail_price");
-                        gen.writeRawValue(rs.getString("retail_price"));
-                        gen.writeFieldName("member_price");
-                        gen.writeRawValue(rs.getString("member_price"));
-                        gen.writeFieldName("vip_price");
-                        gen.writeRawValue(rs.getString("vip_price"));
-                        gen.writeFieldName("category");
-                        gen.writeRawValue(rs.getString("category"));
-                        gen.writeFieldName("brand");
-                        gen.writeRawValue(rs.getString("brand"));
-                        gen.writeEndObject();
+                        writeAloneScale(rs, gen);
                     }
                     gen.flush();
                 }
