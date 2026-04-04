@@ -22,8 +22,10 @@ import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.brand.AboutBrand;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
+import io.netty.buffer.ByteBuf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 import salt.hoprxi.cache.Cache;
 import salt.hoprxi.cache.CacheFactory;
 
@@ -195,8 +197,29 @@ public class PsqlBrandQuery implements BrandQuery {
         return BrandQuery.super.find(id);
     }
 
+    /**
+     * @param id
+     * @return
+     */
+    @Override
+    public Flux<ByteBuf> findAsync(long id) {
+        return null;
+    }
+
     @Override
     public InputStream search(String name, int offset, int size, SortFieldEnum sortField) {
+        return null;
+    }
+
+    /**
+     * @param name
+     * @param offset
+     * @param size
+     * @param sortField
+     * @return
+     */
+    @Override
+    public Flux<ByteBuf> searchAsync(String name, int offset, int size, SortFieldEnum sortField) {
         return null;
     }
 

@@ -16,6 +16,9 @@
 
 package catalog.hoprxi.core.application.query;
 
+import io.netty.buffer.ByteBuf;
+import reactor.core.publisher.Flux;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
@@ -33,6 +36,8 @@ public interface BrandQuery {
     default InputStream find(long id) throws SearchException {
         return new ByteArrayInputStream(new byte[0]);
     }
+
+    Flux<ByteBuf> findAsync(long id);
 
     /**
      * @param name
@@ -55,6 +60,8 @@ public interface BrandQuery {
         return search(null, offset, size, SortFieldEnum._ID);
     }
 
+    Flux<ByteBuf> searchAsync(String name, int offset, int size, SortFieldEnum sortField);
+
     /**
      * @param name
      * @param size
@@ -64,7 +71,7 @@ public interface BrandQuery {
      */
     InputStream search(String name, int size, String searchAfter, SortFieldEnum sortField);
 
-    default InputStream search(String name,int size, String searchAfter) {
+    default InputStream search(String name, int size, String searchAfter) {
         return search(name, size, searchAfter, SortFieldEnum._ID);
     }
 

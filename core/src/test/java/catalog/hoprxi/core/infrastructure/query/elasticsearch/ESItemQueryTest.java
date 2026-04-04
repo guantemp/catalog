@@ -47,7 +47,7 @@ public class ESItemQueryTest {
     public void testFindAsync() throws InterruptedException, ExecutionException, TimeoutException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
 
-        long[] ids = {51746812605656589L, 51748312021100428L, 51748057162606289L};
+        long[] ids = {55307473635765901L, 55307896123812197L, 55307820773139539L,55307834488513967L};
         // 使用固定线程池或虚拟线程（Java 21+）
         ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor(); // Java 21+
         // 或：Executors.newFixedThreadPool(ids.length);
@@ -121,13 +121,13 @@ public class ESItemQueryTest {
     @Test(invocationCount = 12, threadPoolSize = 2)
     public void testFind() throws IOException {
         System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
-        try (InputStream is = query.find(51746812605656589L)) {
+        try (InputStream is = query.find(55307569718879243L)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
-        try (InputStream is = query.find(51748312021100428L)) {
+        try (InputStream is = query.find(55307366284650146L)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
-        try (InputStream is = query.find(51748057162606289L)) {
+        try (InputStream is = query.find(55307834480125257L)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
     }

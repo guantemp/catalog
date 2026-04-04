@@ -39,7 +39,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-
         <hoprxi.event.version>1.0-SNAPSHOT</hoprxi.event.version>
     </properties>
 
@@ -88,7 +87,7 @@
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>elasticsearch-rest-client</artifactId>
-            <version>8.11.0</version>
+            <version>8.19.6</version>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>

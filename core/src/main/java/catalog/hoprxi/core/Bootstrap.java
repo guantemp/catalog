@@ -129,10 +129,10 @@ public class Bootstrap {
         //sb.contextPath("/catalog/core/v1");测试没作用
 
         Server server = sb.http(PORT)
-                .annotatedService("/catalog/core/v1", new UnitService())
-                .annotatedService("/catalog/core/v1", new BrandService())
-                .annotatedService("/catalog/core/v1", new CategoryService())
-                .annotatedService("/catalog/core/v1", new ItemService())
+                .annotatedService("/v1", new UnitService())
+                .annotatedService("/v1", new BrandService())
+                .annotatedService("/v1", new CategoryService())
+                .annotatedService("/v1", new ItemService())
                 .build();
         server.closeOnJvmShutdown();
         server.start().join();

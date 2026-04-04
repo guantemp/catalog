@@ -17,19 +17,22 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 
-import catalog.hoprxi.core.application.query.*;
+import catalog.hoprxi.core.application.query.ItemQuery;
+import catalog.hoprxi.core.application.query.ItemQuerySpec;
+import catalog.hoprxi.core.application.query.SearchException;
+import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.domain.model.barcode.BarcodeValidServices;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import catalog.hoprxi.core.infrastructure.query.JsonByteBufOutputStream;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
+import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
@@ -41,7 +44,6 @@ import reactor.core.publisher.Sinks;
 
 import java.io.*;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -73,13 +75,13 @@ public class ESItemQuery implements ItemQuery {
             Response response = ESUtil.restClient().performRequest(request);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os);
                  InputStream is = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(is)) {
-                ESItemQuery.extractSourceSkipMeta(parser, generator);
+                Extract.extractSourceSkipMeta(parser, generator);
                 success = true;
                 return new ByteBufInputStream(buffer, true);
             }
         } catch (ResponseException e) {
             if (e.getResponse().getStatusLine().getStatusCode() == 404) {
-                LOGGER.warn("Item not found in Elasticsearch: id={}", id);
+                LOGGER.info("Item not found in Elasticsearch: id={}", id);
                 throw new SearchException(String.format("The item(id=%s) not found", id));
             }
             LOGGER.error("Elasticsearch error for id={}", id, e);
@@ -104,7 +106,8 @@ public class ESItemQuery implements ItemQuery {
             @Override
             public void onSuccess(Response response) {
                 if (isCancelled.get()) {
-                    sink.tryEmitError(new RuntimeException("Processing cancelled"));
+                    EntityUtils.consumeQuietly(response.getEntity()); // 必须加
+                    sink.tryEmitComplete();
                     return;
                 }
                 CompletableFuture.runAsync(() -> {
@@ -113,33 +116,21 @@ public class ESItemQuery implements ItemQuery {
                         if (isCancelled.get()) {
                             return; // silent cancel; sink 已由外部处理或无需响应
                         }
-                        ESItemQuery.extractSourceSkipMeta(parser, generator);
+                        Extract.extractSourceSkipMeta(parser, generator);
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
+                    } finally {
+                        EntityUtils.consumeQuietly(response.getEntity());
                     }
                 }, TRANSFORM_POOL).whenComplete((v, err) -> {
-                    if (err != null && !isCancelled.get()) {
-                        Throwable cause = err;
-                        if (err instanceof UncheckedIOException) {
-                            cause = err.getCause(); // 解包 IO 异常
-                        }
-                        if (cause instanceof IOException) { // 如果是普通 RuntimeException，cause 就是 err 本身，保持不动
-                            LOGGER.warn("Transform failed due to IO error for item id={}", id, cause);
-                            sink.tryEmitError(new SearchException("Transform failed: IO error", cause));
-                        } else {//【修复空指针】：确保 cause 不为 null 再调用 getMessage()
-                            LOGGER.error("Unexpected system error (Bug) while fetching item id={}", id, cause);
-                            sink.tryEmitError(new SearchException("Unexpected error: " + cause.getMessage(), cause));
-                        }
-                    } else if (!isCancelled.get()) {
-                        sink.tryEmitComplete();
-                    }
+                    MapException.mapExceptionAndEmit(sink, err, isCancelled, id);
                 });
             }
 
             @Override
             public void onFailure(Exception exception) {
                 if (!isCancelled.get()) {
-                    sink.tryEmitError(ESItemQuery.mapException(exception, id));
+                    sink.tryEmitError(MapException.mapException(exception, id));
                 }
             }
         });
@@ -147,30 +138,6 @@ public class ESItemQuery implements ItemQuery {
                 .doOnCancel(() -> isCancelled.set(true))
                 .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", id))
                 .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
-    }
-
-    private static void extractSourceSkipMeta(JsonParser parser, JsonGenerator generator) throws IOException {
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.FIELD_NAME && "_source".equals(parser.currentName())) {
-                parser.nextToken(); // move to value (START_OBJECT)
-                if (parser.currentToken() != JsonToken.START_OBJECT) {
-                    throw new IllegalStateException("_source is not an object");
-                }
-                generator.writeStartObject();
-                while (parser.nextToken() != JsonToken.END_OBJECT) {
-                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.currentName())) {
-                        parser.nextToken();
-                        parser.skipChildren(); // skip value of _meta
-                    } else {
-                        generator.copyCurrentEvent(parser); // copy field name
-                        parser.nextToken();
-                        generator.copyCurrentStructure(parser); // copy entire value (handles nested)
-                    }
-                }
-                generator.writeEndObject();
-            }
-        }
-        generator.flush();
     }
 
     @Override
@@ -219,7 +186,8 @@ public class ESItemQuery implements ItemQuery {
             @Override
             public void onSuccess(Response response) {
                 if (isCancelled.get()) {
-                    sink.tryEmitError(new IOException("Processing cancelled"));
+                    EntityUtils.consumeQuietly(response.getEntity()); // 必须加
+                    sink.tryEmitComplete();
                     return;
                 }
                 CompletableFuture.runAsync(() -> {
@@ -228,25 +196,21 @@ public class ESItemQuery implements ItemQuery {
                         if (isCancelled.get()) {
                             return; // silent cancel; sink 已由外部处理或无需响应
                         }
-                        ESItemQuery.extractSourceSkipMeta(parser, generator);
-                    } catch (IOException | RuntimeException e) {
-                        if (!isCancelled.get()) {
-                            sink.tryEmitError(e);
-                        }
+                        Extract.extractSourceSkipMeta(parser, generator);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    } finally {
+                        EntityUtils.consumeQuietly(response.getEntity());
                     }
-                }).whenComplete((v, err) -> {
-                    if (err != null && !isCancelled.get()) {
-                        sink.tryEmitError(new SearchException("Transform failed", err));
-                    } else if (!isCancelled.get()) {
-                        sink.tryEmitComplete();
-                    }
+                }, TRANSFORM_POOL).whenComplete((v, err) -> {
+                    MapException.mapExceptionAndEmit(sink, err, isCancelled, barcode);
                 });
             }
 
             @Override
             public void onFailure(Exception e) {
                 if (!isCancelled.get()) {
-                    sink.tryEmitError(ESItemQuery.mapException(e, barcode));
+                    sink.tryEmitError(MapException.mapException(e, barcode));
                 }
             }
         });
@@ -284,29 +248,12 @@ public class ESItemQuery implements ItemQuery {
         return writer.toString();
     }
 
-    private static Throwable mapException(Exception e, Object identifier) {
-        if (e instanceof ResponseException) {
-            int status = ((ResponseException) e).getResponse().getStatusLine().getStatusCode();
-            if (status == 404) {
-                return new NotFoundException("Item not found: " + identifier);
-            } else if (status >= 400 && status < 500) {
-                return new SearchException("Client error: " + status);
-            } else {
-                return new SearchException("Server error: " + status);
-            }
-        } else if (e instanceof IOException) {
-            LOGGER.error("I/O error for id={}", identifier, e);
-            return new SearchException("Network error", e);
-        }
-        return new SearchException("Unexpected error", e);
-    }
-
     @Override
     public InputStream search(ItemQuerySpec[] specs, int size, String searchAfter, SortFieldEnum sortField) {
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (sortField == null) {
             sortField = SortFieldEnum._ID;
-            LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         Request request = new Request("GET", "/item/_search");
         request.setOptions(ESUtil.requestOptions());
@@ -324,7 +271,7 @@ public class ESItemQuery implements ItemQuery {
         } catch (ResponseException e) {
             if (e.getResponse().getStatusLine().getStatusCode() == 404) {
                 LOGGER.warn("Item not found in Elasticsearch");
-                throw new SearchException("The item(id=%s) not found");
+                throw new SearchException("The item not found");
             }
             LOGGER.error("Elasticsearch error", e);
             throw new SearchException("Elasticsearch internal error", e);
@@ -343,7 +290,7 @@ public class ESItemQuery implements ItemQuery {
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (sortField == null) {
             sortField = SortFieldEnum._ID;
-            LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
         AtomicBoolean isCancelled = new AtomicBoolean(false);
         Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
@@ -355,7 +302,8 @@ public class ESItemQuery implements ItemQuery {
             @Override
             public void onSuccess(Response response) {
                 if (isCancelled.get()) {
-                    sink.tryEmitError(new IOException("Processing cancelled"));
+                    EntityUtils.consumeQuietly(response.getEntity()); // 必须加
+                    sink.tryEmitComplete();
                     return;
                 }
                 CompletableFuture.runAsync(() -> {
@@ -365,24 +313,20 @@ public class ESItemQuery implements ItemQuery {
                             return; // silent cancel; sink 已由外部处理或无需响应
                         }
                         Extract.extract(parser, generator, "items");
-                    } catch (IOException | RuntimeException e) {
-                        if (!isCancelled.get()) {
-                            sink.tryEmitError(e);
-                        }
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    } finally {
+                        EntityUtils.consumeQuietly(response.getEntity());
                     }
-                }).whenComplete((v, err) -> {
-                    if (err != null && !isCancelled.get()) {
-                        sink.tryEmitError(new SearchException("Transform failed", err));
-                    } else if (!isCancelled.get()) {
-                        sink.tryEmitComplete();
-                    }
+                }, TRANSFORM_POOL).whenComplete((v, err) -> {
+                    MapException.mapExceptionAndEmit(sink, err, isCancelled, ESItemQuery.extractIdentifier(specs));
                 });
             }
 
             @Override
             public void onFailure(Exception e) {
                 if (!isCancelled.get()) {
-                    sink.tryEmitError(ESItemQuery.mapException(e, ESItemQuery.extractIdentifier(specs)));
+                    sink.tryEmitError(MapException.mapException(e, ESItemQuery.extractIdentifier(specs)));
                 }
             }
         });
@@ -455,7 +399,8 @@ public class ESItemQuery implements ItemQuery {
             @Override
             public void onSuccess(Response response) {
                 if (isCancelled.get()) {
-                    sink.tryEmitError(new IOException("Processing cancelled"));
+                    EntityUtils.consumeQuietly(response.getEntity()); // 必须加
+                    sink.tryEmitComplete();
                     return;
                 }
                 CompletableFuture.runAsync(() -> {
@@ -465,32 +410,26 @@ public class ESItemQuery implements ItemQuery {
                             return; // silent cancel; sink 已由外部处理或无需响应
                         }
                         Extract.extract(parser, generator, "items");
-                    } catch (IOException | RuntimeException e) {
-                        if (!isCancelled.get()) {
-                            sink.tryEmitError(e);
-                        }
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    } finally {
+                        EntityUtils.consumeQuietly(response.getEntity());
                     }
-                }).whenComplete((v, err) -> {
-                    if (err != null && !isCancelled.get()) {
-                        sink.tryEmitError(new SearchException("Transform failed", err));
-                    } else if (!isCancelled.get()) {
-                        sink.tryEmitComplete();
-                    }
+                }, TRANSFORM_POOL).whenComplete((v, err) -> {
+                    MapException.mapExceptionAndEmit(sink, err, isCancelled, ESItemQuery.extractIdentifier(specs));
                 });
             }
 
             @Override
             public void onFailure(Exception e) {
                 if (!isCancelled.get()) {
-                    sink.tryEmitError(ESItemQuery.mapException(e, specs));
+                    sink.tryEmitError(MapException.mapException(e, specs));
                 }
             }
         });
         return sink.asFlux()
                 .doOnCancel(() -> isCancelled.set(true))
-                .doOnTerminate(() -> LOGGER.debug("Request terminated for filter: {}", Arrays.stream(specs)
-                        .filter(Objects::nonNull)
-                        .map(Object::toString)))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for filter: {}", Arrays.stream(specs).map(Object::toString)))
                 .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
     }
 

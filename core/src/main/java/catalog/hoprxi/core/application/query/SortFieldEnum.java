@@ -52,9 +52,6 @@ import java.util.Map;
  */
 public enum SortFieldEnum {
     ID, _ID,
-    /**
-     * 物品助记码/名称 (升序)
-     */
     NAME, _NAME,
     BARCODE, _BARCODE,
     MADE_IN, _MADE_IN,

@@ -78,10 +78,13 @@ public class ItemService {
     private static final String MINI_SEPARATION = ",";
 
     private static final ItemQuery QUERY = new ESItemQuery();
-    private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
+    private static final JsonFactory JSON_FACTORY = JsonFactory.builder()
+            .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
+            .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
+            .build();
     private final Handler<ItemDeleteCommand, Boolean> deleteHandler = new ItemDeleteHandler();
 
-    @Get("/items/:id")
+    @Get("/items/{id}")
     @Description("Retrieves the item information by the given ID.")
     public HttpResponse find(ServiceRequestContext ctx, @Param("id") long id) {
         Flux<ByteBuf> dataFlux = QUERY.findAsync(id); // 假设返回 Flux<ByteBuf>
@@ -335,7 +338,7 @@ public class ItemService {
         String name = null, alias = null;
         while (parser.nextToken() != JsonToken.END_OBJECT) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                String fieldName = parser.getCurrentName();
+                String fieldName = parser.currentName();
                 parser.nextToken();
                 switch (fieldName) {
                     case "name" -> name = parser.getValueAsString();
@@ -389,7 +392,7 @@ public class ItemService {
         String name = "";
         Price price = Price.zero(Locale.getDefault());
         while (parser.nextToken() != JsonToken.END_OBJECT) {
-            String fieldName = parser.getCurrentName();
+            String fieldName = parser.currentName();
             parser.nextToken();
             switch (fieldName) {
                 case "price" -> price = readPrice(parser);

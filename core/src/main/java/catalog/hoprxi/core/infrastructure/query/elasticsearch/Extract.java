@@ -31,6 +31,30 @@ import java.util.Objects;
 
 public final class Extract {
 
+    public static void extractSourceSkipMeta(JsonParser parser, JsonGenerator gen) throws IOException {
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME && "_source".equals(parser.currentName())) {
+                parser.nextToken(); // move to value (START_OBJECT)
+                if (parser.currentToken() != JsonToken.START_OBJECT) {
+                    throw new IllegalStateException("_source is not an object");
+                }
+                gen.writeStartObject();
+                while (parser.nextToken() != JsonToken.END_OBJECT) {
+                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.currentName())) {
+                        parser.nextToken();
+                        parser.skipChildren(); // skip value of _meta
+                    } else {
+                        gen.copyCurrentEvent(parser); // copy field name
+                        parser.nextToken();
+                        gen.copyCurrentStructure(parser); // copy entire value (handles nested)
+                    }
+                }
+                gen.writeEndObject();
+            }
+        }
+        gen.flush();
+    }
+
     public static void extract(JsonParser parser, JsonGenerator gen, String objectName) throws IOException {
         Extract.extractInternal(parser, gen, objectName, true);
     }
