@@ -227,4 +227,16 @@ public class PsqlBrandQuery implements BrandQuery {
     public InputStream search(String name, int size, String searchAfter, SortFieldEnum sortField) {
         return null;
     }
+
+    /**
+     * @param name
+     * @param size
+     * @param searchAfter
+     * @param sortField
+     * @return
+     */
+    @Override
+    public Flux<ByteBuf> searchAsync(String name, int size, String searchAfter, SortFieldEnum sortField) {
+        return null;
+    }
 }

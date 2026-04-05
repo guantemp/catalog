@@ -78,4 +78,6 @@ public interface BrandQuery {
     default InputStream search(int size, String searchAfter, SortFieldEnum sortField) {
         return search(null, size, searchAfter, sortField);
     }
+
+    Flux<ByteBuf> searchAsync(String name, int size, String searchAfter, SortFieldEnum sortField);
 }

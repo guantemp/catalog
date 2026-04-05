@@ -292,6 +292,61 @@ public final class ESBrandQuery implements BrandQuery {
         }
     }
 
+    @Override
+    public Flux<ByteBuf> searchAsync(String name, int size, String searchAfter, SortFieldEnum sortField) {
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("The size value range is 0-10000");
+        if (sortField == null) {
+            sortField = SortFieldEnum._ID;
+            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        Request request = new Request("GET", "/brand/_search");
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESBrandQuery.buildSearchAfterJsonRequest(name, size, searchAfter, sortField));
+        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+            @Override
+            public void onSuccess(Response response) {
+                if (isCancelled.get()) {
+                    EntityUtils.consumeQuietly(response.getEntity()); // 必须加
+                    sink.tryEmitComplete().orThrow();
+                    return;
+                }
+                CompletableFuture.runAsync(() -> {
+                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
+                         JsonByteBufOutputStream jbbos = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(jbbos)) {
+                        if (isCancelled.get()) {
+                            return; // silent cancel; sink 已由外部处理或无需响应
+                        }
+                        Extract.extract(parser, generator, "brands");
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    } finally {
+                        EntityUtils.consumeQuietly(response.getEntity());
+                    }
+                }, TRANSFORM_POOL).whenComplete((v, err) -> {
+                    if (err != null) {
+                        MapException.mapExceptionAndEmit(sink, err, isCancelled, name);
+                    } else {
+                        sink.tryEmitComplete().orThrow();
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                if (!isCancelled.get()) {
+                    sink.tryEmitError(MapException.mapException(e, name));
+                }
+            }
+        });
+
+        return sink.asFlux()
+                .doOnCancel(() -> isCancelled.set(true))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for barcode: {}", name))
+                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+    }
+
     private static String buildSearchAfterJsonRequest(String name, int size, String searchAfter, SortFieldEnum sortField) {
         StringWriter writer = new StringWriter(128);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {

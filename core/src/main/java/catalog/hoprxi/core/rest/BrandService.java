@@ -29,49 +29,42 @@ import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandQuery;
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.linecorp.armeria.common.*;
-import com.linecorp.armeria.common.stream.StreamMessage;
-import com.linecorp.armeria.common.stream.StreamWriter;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufOutputStream;
-import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.time.Year;
 import java.util.EnumSet;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2025/8/27
+ * @version 0.0.2 builder 2026/4/5
  */
 public class BrandService {
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
-
-    private static final int SINGLE_BUFFER_SIZE = 512; // 0.5KB缓冲区
-    private static final int BATCH_BUFFER_SIZE = 8192;// 8KB缓冲区
-    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Brand");
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
 
     private static final EnumSet<SortFieldEnum> SUPPORT_SORT_FIELD = EnumSet.of(SortFieldEnum._ID, SortFieldEnum.ID, SortFieldEnum.NAME, SortFieldEnum._NAME);
     private static final BrandQuery QUERY = new ESBrandQuery();
-    private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
+    private static final JsonFactory JSON_FACTORY = JsonFactory.builder()
+            .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
+            .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
+            .build();
+    ;
 
     @Get("/brands/{id}")
     @Description("Retrieves the brand information by the given brand ID.")
@@ -79,12 +72,14 @@ public class BrandService {
         Flux<ByteBuf> dataFlux = QUERY.findAsync(id);
 
         Flux<HttpObject> responseStream = dataFlux
-                // 🔥 关键：只包装，绝对不手动 release！
                 .map(HttpData::wrap)
-                // 🔥 switchOnFirst 正确处理 头/空/异常
                 .switchOnFirst((signal, flux) -> {
                     if (signal.hasError()) {// 1. 首信号异常
-                        return handleErrorResponse(ctx, id, signal.getThrowable());
+                        LOGGER.error("Internal server error", signal.getThrowable());
+                        return Flux.just(
+                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
+                        //return handleErrorResponse(ctx, signal.getThrowable());
                     }
                     if (signal.hasValue()) { // 2. 有数据 → 先响应头
                         return Flux.concat(
@@ -92,44 +87,14 @@ public class BrandService {
                                         .contentType(MediaType.JSON_UTF_8)
                                         .build()), flux);
                     }
+                    //404
                     return Flux.just(
-                            ResponseHeaders.of(HttpStatus.NOT_FOUND),
-                            HttpData.ofUtf8("{\"error\":\"Item not found\",\"id\":" + id + "}")
-                    );
+                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                    .contentType(MediaType.JSON_UTF_8)
+                                    .build(),
+                            HttpData.ofUtf8(String.format("{\"Warn\":\"Brand not found for id : %d }\"", id)));
                 });
-
         return HttpResponse.of(responseStream);
-        /*
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.whenRequestCancelled().thenAccept(stream::close);
-        ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled() || ctx.isTimedOut()) return;
-            ByteBuf buffer = ctx.alloc().buffer(SINGLE_BUFFER_SIZE);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                InputStream is = QUERY.find(id);
-                BrandService.copyRaw(gen, is);
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.wrap(buffer));
-                buffer = null;
-                stream.close();
-            } catch (IOException e) {
-                BrandService.handleStreamError(stream, e);
-            } finally {
-                if (buffer != null) buffer.release();
-            }
-        });
-        return HttpResponse.of(stream);
-         */
-    }
-
-    private Publisher<? extends HttpObject> handleErrorResponse(ServiceRequestContext ctx, long id, Throwable cause) {
-        LOGGER.warn("Error for id={}", id, cause);
-        ByteBuf buf = ctx.alloc().buffer();
-        buf.writeCharSequence("{\"error\":\"Item not found\",\"id\":" + id + "}", StandardCharsets.UTF_8);
-        return Flux.just(
-                ResponseHeaders.of(HttpStatus.NOT_FOUND),
-                HttpData.wrap(buf)
-        );
     }
 
     @Get("/brands")
@@ -140,58 +105,65 @@ public class BrandService {
         int size = params.getInt("size", SIZE);
         String cursor = params.get("cursor", "");
         SortFieldEnum sortField = SortFieldEnum.of(params.get("sort", ""));
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        if (!SUPPORT_SORT_FIELD.contains(sortField)) {//not support sort
-            stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.ofUtf8("{\"status\":\"error\",\"code\":500,\"message\":\"Not support sort filed\"}"));
-            stream.close();
-        } else {
-            ctx.blockingTaskExecutor().execute(() -> {
-                ByteBuf buffer = ctx.alloc().buffer(BATCH_BUFFER_SIZE);
-                try (OutputStream os = new ByteBufOutputStream(buffer);
-                     JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                    if (cursor.isEmpty()) {
-                        BrandService.copyRaw(gen, QUERY.search(search, offset, size, sortField));
-                    } else {
-                        BrandService.copyRaw(gen, QUERY.search(search, size, cursor, sortField));
-                    }
-                    stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                    stream.write(HttpData.wrap(buffer));
-                    stream.close();
-                } catch (IOException e) {
-                    if (buffer.refCnt() > 0) {
-                        buffer.release();
-                    }
-                    BrandService.handleStreamError(stream, e);
-                }
-            });
+        // 1. 前置校验：不支持的排序 → 直接返回 错误 Flux
+        if (!SUPPORT_SORT_FIELD.contains(sortField)) {
+            return HttpResponse.of(
+                    Flux.just(
+                            ResponseHeaders.builder(HttpStatus.BAD_REQUEST)  // 建议用400
+                                    .contentType(MediaType.JSON_UTF_8)
+                                    .build(),
+                            HttpData.ofUtf8("{\"status\":\"error\",\"code\":400,\"message\":\"Not support sort field\"}")
+                    )
+            );
         }
-        return HttpResponse.of(stream);
-    }
 
-    private static void copyRaw(JsonGenerator generator, InputStream source) throws IOException {
-        JsonParser parser = JSON_FACTORY.createParser(source);
-        while (parser.nextToken() != null) {
-            generator.copyCurrentEvent(parser);
+        Flux<ByteBuf> dataFlux;
+        if (cursor.isEmpty()) {
+            dataFlux = QUERY.searchAsync(search, offset, size, sortField);
+        } else {
+            dataFlux = QUERY.searchAsync(search, size, cursor, sortField);
         }
-        generator.flush();
+        Flux<HttpObject> stream = dataFlux
+                .map(HttpData::wrap)
+                .switchOnFirst((signal, flux) -> {
+                    if (signal.hasError()) {// 1. 首信号异常
+                        return Flux.just(
+                                ResponseHeaders.of(HttpStatus.NOT_FOUND),
+                                HttpData.ofUtf8("{\"error\":\"Brand not found\"}")
+                        );
+                    }
+                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
+                        return Flux.concat(
+                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build()), flux);
+                    }
+                    return Flux.just(
+                            ResponseHeaders.of(HttpStatus.NOT_FOUND),
+                            HttpData.ofUtf8("{\"warn\":\"Not found\"}")
+                    );
+                });
+
+        return HttpResponse.of(stream);
     }
 
     @Post("/brands")
     public HttpResponse create(ServiceRequestContext ctx, HttpData body) {
         RequestHeaders headers = ctx.request().headers();
-        if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
+        MediaType contentType = headers.contentType();
+        if (contentType == null || !(MediaType.JSON.is(contentType) || MediaType.JSON_UTF_8.is(contentType)))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                     MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         ctx.blockingTaskExecutor().execute(() -> {
-            try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
+            try (InputStream inputStream = body.toInputStream();
+                 JsonParser parser = JSON_FACTORY.createParser(inputStream)) {
                 Brand brand = BrandService.createBrand(parser);
                 ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
                         "{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand)));
             } catch (Exception e) {
-                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                        "{\"status\":500,\"code\":500,\"message\":\"Can't create a brand,cause by {}\"}", e.getMessage())));
+                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                        "{\"status\":400,\"code\":400,\"message\":\"JSON format error,cause by {%s}\"}", e.getMessage())));
             }
         });
         return HttpResponse.of(future);
@@ -201,6 +173,9 @@ public class BrandService {
         String name = null, alias = null, story = null;
         URL logo = null, homepage = null;
         Year since = null;
+        if (parser.nextToken() != JsonToken.START_OBJECT) {
+            throw new IOException("Expected JSON object");
+        }
         while (parser.nextToken() != null) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
                 String fieldName = parser.currentName();
@@ -209,9 +184,20 @@ public class BrandService {
                     case "name" -> name = parser.getValueAsString();
                     case "alias" -> alias = parser.getValueAsString();
                     case "story" -> story = parser.getValueAsString();
-                    case "homepage" -> homepage = new URI(parser.getValueAsString()).toURL();
-                    case "logo" -> logo = new URI(parser.getValueAsString()).toURL();
-                    case "since" -> since = Year.of(parser.getIntValue());
+                    case "homepage" -> {
+                        String urlStr = parser.getValueAsString();
+                        if (urlStr != null) homepage = new URI(urlStr).toURL();
+                    }
+                    case "logo" -> {
+                        String urlStr = parser.getValueAsString();
+                        if (urlStr != null) logo = new URI(urlStr).toURL();
+                    }
+                    case "since" -> {
+                        if (parser.currentToken() == JsonToken.VALUE_NUMBER_INT) {
+                            since = Year.of(parser.getIntValue());
+                        }
+                    }
+                    default -> parser.skipChildren();
                 }
             }
         }
@@ -224,43 +210,54 @@ public class BrandService {
     @Put("/brands/{id}")
     public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id) {
         RequestHeaders headers = ctx.request().headers();
-        if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
+        MediaType contentType = headers.contentType();
+        if (contentType == null || !(MediaType.JSON.is(contentType) || MediaType.JSON_UTF_8.is(contentType)))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                     MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.whenRequestCancelled().thenAccept(stream::close);
+        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         ctx.blockingTaskExecutor().execute(() -> {
             if (ctx.isCancelled() || ctx.isTimedOut()) return;
-            BrandService.update(body, id);
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":201,\"message\":\"A brand has update,it's %s\"}"));
-            stream.close();
+            try (InputStream inputStream = body.toInputStream();
+                 JsonParser parser = JSON_FACTORY.createParser(inputStream)) {
+                Brand brand = BrandService.update(parser, id);
+                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
+                        "{\"status\":\"success\",\"code\":200,\"message\":\"A brand created,it's %s\"}", brand)));
+            } catch (Exception e) {
+                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                        "{\"status\":400,\"code\":400,\"message\":\"JSON format error,cause by {%s}\"}", e.getMessage())));
+            }
         });
-        return HttpResponse.of(stream);
+        return HttpResponse.of(future);
     }
 
-    private static void update(HttpData body, long id) {
+    private static Brand update(JsonParser parser, long id) throws IOException, URISyntaxException {
         String name = null, alias = null, story = null;
         URL logo = null, homepage = null;
         Year since = null;
-        try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
-            while (parser.nextToken() != null) {
-                if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                    String fieldName = parser.currentName();
-                    parser.nextToken();
-                    switch (fieldName) {
-                        case "name" -> name = parser.getValueAsString();
-                        case "alias" -> alias = parser.getValueAsString();
-                        case "story" -> story = parser.getValueAsString();
-                        case "homepage" -> homepage = new URI(parser.getValueAsString()).toURL();
-                        case "logo" -> logo = new URI(parser.getValueAsString()).toURL();
-                        case "since" -> since = Year.of(parser.getIntValue());
+        while (parser.nextToken() != null) {
+            if (JsonToken.FIELD_NAME == parser.currentToken()) {
+                String fieldName = parser.currentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "name" -> name = parser.getValueAsString();
+                    case "alias" -> alias = parser.getValueAsString();
+                    case "story" -> story = parser.getValueAsString();
+                    case "homepage" -> {
+                        String urlStr = parser.getValueAsString();
+                        if (urlStr != null) homepage = new URI(urlStr).toURL();
                     }
+                    case "logo" -> {
+                        String urlStr = parser.getValueAsString();
+                        if (urlStr != null) logo = new URI(urlStr).toURL();
+                    }
+                    case "since" -> {
+                        if (parser.currentToken() == JsonToken.VALUE_NUMBER_INT) {
+                            since = Year.of(parser.getIntValue());
+                        }
+                    }
+                    default -> parser.skipChildren();
                 }
             }
-        } catch (IOException | URISyntaxException e) {
-            LOGGER.error("The process error", e);
-            //System.out.println(e);
         }
         BrandUpdateCommand command = new BrandUpdateCommand(id);
         if (name != null || alias != null)
@@ -268,29 +265,39 @@ public class BrandService {
         if (story != null || homepage != null || logo != null || since != null)
             command.setAbout(logo, homepage, since, story);
         Handler<BrandUpdateCommand, Brand> handler = new BrandUpdateHandler();
-        Brand brand = handler.execute(command);
+        return handler.execute(command);
     }
 
     @Delete("/brands/:id")
     public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id) {
+        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
+        ctx.blockingTaskExecutor().execute(() -> {
+            try {
+                BrandDeleteCommand delete = new BrandDeleteCommand(id);
+                Handler<BrandDeleteCommand, Boolean> handler = new BrandDeleteHandler();
+                handler.execute(delete);
+                String message = String.format("Brand(id=%d) deleted successfully", id);
+                ctx.eventLoop().execute(() ->
+                        future.complete(HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8
+                                , String.format("{\"status\":\"success\",\"code\":200,\"message\":\"%s\"}", message)))
+                );
+            } catch (Exception e) {
+                ctx.eventLoop().execute(() ->
+                        future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                                String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage())))
+                );
+            }
+        });
+        return HttpResponse.of(future);
+/*
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
-
-            BrandDeleteCommand delete = new BrandDeleteCommand(id);
-            Handler<BrandDeleteCommand, Boolean> handler = new BrandDeleteHandler();
-            handler.execute(delete);
-
             stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":200,\"message\":\"The brand(id=%s) is deleted\"}", id));
+            stream.write(HttpData.ofUtf8(String.format("{\"status\":\"success\",\"code\":200,\"message\":\"The brand(id=%s) is deleted\"}", id)));
             stream.close();
         });
         return HttpResponse.of(stream);
-    }
-
-    private static void handleStreamError(StreamWriter<HttpObject> stream, IOException e) {
-        stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-        stream.write(HttpData.ofUtf8("{\"status\":\"error\",\"code\":500,\"message\":\"Error,it's %s\"}", e.getMessage()));
-        stream.close();
+ */
     }
 }
