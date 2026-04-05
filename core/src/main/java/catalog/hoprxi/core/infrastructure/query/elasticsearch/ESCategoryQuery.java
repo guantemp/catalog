@@ -29,6 +29,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.util.ReferenceCountUtil;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
@@ -68,15 +69,32 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public InputStream root() {
+        Request request = new Request("GET", "/category/_search");
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(buildRootJsonRequest());
+
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
+        boolean success = false;
+        Response response = null;
         try {
-            Request request = new Request("GET", "/category/_search");
-            request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(buildRootJsonRequest());
-            Response response = ESUtil.restClient().performRequest(request);
-            return this.reorganization(response.getEntity().getContent());
+
+            response = ESUtil.restClient().performRequest(request);
+            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
+                 OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+                Extract.extractWithoutAggs(parser, generator, "categories");
+                success = true;
+                return new ByteBufInputStream(buffer, true);
+            }
         } catch (IOException e) {
             LOGGER.warn("No search was found for anything resembling root categories", e);
             throw new SearchException("No search was found for anything resembling root categories", e);
+        } finally {
+            if (response != null) {
+                EntityUtils.consumeQuietly(response.getEntity());
+            }
+            if (!success && buffer.refCnt() > 0) {
+                ReferenceCountUtil.safeRelease(buffer);
+            }
         }
     }
 

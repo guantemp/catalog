@@ -80,11 +80,11 @@ public class ESCategoryQueryTest {
                 query.findAsync(143),
                 query.findAsync(-1L)
         };
-        printresult(fluxes);
+        printResult(fluxes);
         query.findAsync(19L).blockFirst();
     }
 
-    private static void printresult(Flux<ByteBuf>[] fluxes) {
+    private static void printResult(Flux<ByteBuf>[] fluxes) {
         int total = fluxes.length;
         CountDownLatch latch = new CountDownLatch(total);
 
@@ -178,6 +178,15 @@ public class ESCategoryQueryTest {
 
     @Test
     public void testSearchAysnc() {
+        Flux<ByteBuf>[] fluxes = new Flux[]{
+                query.searchAsync("酒"),
+                query.searchAsync("白萝卜"),
+                query.searchAsync("wine"),
+                query.searchAsync("oil"),
+                query.searchAsync("oil", 1, 2),
+                query.searchAsync(null, 0, 1)
+        };
+        printResult(fluxes);
 
     }
 

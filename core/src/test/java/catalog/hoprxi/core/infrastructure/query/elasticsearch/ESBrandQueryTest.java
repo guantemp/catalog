@@ -44,35 +44,24 @@ public class ESBrandQueryTest {
     private static final BrandQuery query = new ESBrandQuery();
 
     @Test(priority = 1, invocationCount = 1, threadPoolSize = 1, expectedExceptions = SearchException.class)
-    public void testFind() throws IOException, InterruptedException {
-        try (InputStream is = query.find(495651176959596552L)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.find(495651176959596602L)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.find(-1L)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.find(55307444711845017L)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-
-        try (InputStream is = query.find(817884324788650L)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+    public void testFind() throws IOException {
+        Long[] ids = new Long[]{495651176959596552L, 495651176959596602L, -1L, 55307444711845017L, 55308342812993069L,19L};
+        for (Long id : ids) {
+            try (InputStream is = query.find(id)) {
+                System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+            }
         }
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testFindAsync() throws InterruptedException {
+    public void testFindAsync() {
         Flux<ByteBuf>[] fluxes = new Flux[]{
                 query.findAsync(495651176959596552L),
                 query.findAsync(495651176959596602L),
                 query.findAsync(55307444711845017L),
                 query.findAsync(-1L),
-                query.findAsync(817884324788650L)
+                query.findAsync(55308342812993069L)
         };
-
         printResult(fluxes);
     }
 

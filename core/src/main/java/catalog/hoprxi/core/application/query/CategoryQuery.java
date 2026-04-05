@@ -38,7 +38,6 @@ public interface CategoryQuery {
     Flux<ByteBuf> findAsync(long id);
 
     /**
-     *
      * @param id category id
      * @return children of category id
      */
@@ -51,7 +50,12 @@ public interface CategoryQuery {
     default InputStream search(String key) {
         return this.search(key, 0, 64);
     }
+
     Flux<ByteBuf> searchAsync(String key, int offset, int size);
+
+    default Flux<ByteBuf> searchAsync(String key) {
+        return this.searchAsync(key, 0, 64);
+    }
 
     InputStream searchSiblings(long id);
 
