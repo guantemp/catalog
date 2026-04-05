@@ -44,13 +44,10 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.linecorp.armeria.common.*;
-import com.linecorp.armeria.common.stream.StreamMessage;
-import com.linecorp.armeria.common.stream.StreamWriter;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
 import org.javamoney.moneta.Money;
-import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -58,7 +55,6 @@ import reactor.core.publisher.Flux;
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -74,7 +70,7 @@ import java.util.function.BiFunction;
 public class ItemService {
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
-    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Item");
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
     private static final String MINI_SEPARATION = ",";
 
     private static final ItemQuery QUERY = new ESItemQuery();
@@ -82,33 +78,32 @@ public class ItemService {
             .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
-    private final Handler<ItemDeleteCommand, Boolean> deleteHandler = new ItemDeleteHandler();
 
     @Get("/items/{id}")
     @Description("Retrieves the item information by the given ID.")
-    public HttpResponse find(ServiceRequestContext ctx, @Param("id") long id) {
+    public HttpResponse find(@Param("id") long id) {
         Flux<ByteBuf> dataFlux = QUERY.findAsync(id); // 假设返回 Flux<ByteBuf>
-        Flux<HttpObject> bodyStream = dataFlux.map(HttpData::wrap);// 先不发 headers！等第一个数据到来再发
         // 使用 switchMap：一旦有第一个元素，就前置 headers
-        Flux<HttpObject> responseStream = bodyStream
+        Flux<HttpObject> responseStream = dataFlux
+                .map(HttpData::wrap)
                 .switchOnFirst((signal, flux) -> {
                     if (signal.hasError()) { // 第一个信号就是错误
-                        return handleErrorResponse(ctx, id, signal.getThrowable());
-                    } else if (signal.isOnComplete()) {
-                        // 空流？返回 404 或 204
                         return Flux.just(
-                                ResponseHeaders.of(HttpStatus.NOT_FOUND),
-                                HttpData.ofUtf8("{\"error\":\"Item not found\",\"id\":" + id + "}")
-                        );
-                    } else {
-                        return Flux.concat(// 有数据：前置 200 headers
-                                Flux.just(ResponseHeaders.of(HttpStatus.OK)),
-                                flux // 原始流（包含第一个元素）
-                        );
+                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
                     }
-                })
-                .onErrorResume(e -> handleErrorResponse(ctx, id, e));
-
+                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
+                        return Flux.concat(
+                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build()), flux);
+                    }
+                    return Flux.just(
+                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                    .contentType(MediaType.JSON_UTF_8)
+                                    .build(),
+                            HttpData.ofUtf8(String.format("{\"Warn\":\"Item not found for id : %d }\"", id)));
+                });
         return HttpResponse.of(responseStream);
  
         /*
@@ -135,16 +130,6 @@ public class ItemService {
          */
     }
 
-    private Publisher<? extends HttpObject> handleErrorResponse(ServiceRequestContext ctx, long id, Throwable cause) {
-        LOGGER.warn("Error for id={}", id, cause);
-        ByteBuf buf = ctx.alloc().buffer();
-        buf.writeCharSequence("{\"error\":\"Item not found\",\"id\":" + id + "}", StandardCharsets.UTF_8);
-        return Flux.just(
-                ResponseHeaders.of(HttpStatus.NOT_FOUND),
-                HttpData.wrap(buf)
-        );
-    }
-
     @Get("/items")
     public HttpResponse search(ServiceRequestContext ctx) {
         QueryParams params = ctx.queryParams();
@@ -157,40 +142,36 @@ public class ItemService {
 
         Flux<ByteBuf> dataFlux;
         if (cursor.isBlank()) {
-            dataFlux = QUERY.searchAsync(this.parseFilter(search, filter), offset, size, sortField);
+            dataFlux = QUERY.searchAsync(ItemService.parseFilter(search, filter), offset, size, sortField);
         } else {
-            dataFlux = QUERY.searchAsync(this.parseFilter(search, filter), size, cursor, sortField);
+            dataFlux = QUERY.searchAsync(ItemService.parseFilter(search, filter), size, cursor, sortField);
         }
-        Flux<HttpObject> bodyStream = dataFlux.map(HttpData::wrap);// 先不发 headers！等第一个数据到来再发
-        // 使用 switchMap：一旦有第一个元素，就前置 headers
-        Flux<HttpObject> responseStream = bodyStream
+        Flux<HttpObject> responseStream = dataFlux
+                .map(HttpData::wrap)
                 .switchOnFirst((signal, flux) -> {
                     if (signal.hasError()) {// 信号->错误
                         return Flux.just(
                                 ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                                HttpData.ofUtf8("{\"error\":\"Item not found\",\"id\":" + "}")
-                        );
-                    } else if (signal.isOnComplete()) {   // 空流？返回 404 或 204
-                        return Flux.just(
-                                ResponseHeaders.of(HttpStatus.NOT_FOUND),
-                                HttpData.ofUtf8("{\"error\":\"Item not found\",\"id\":" + "}")
-                        );
-                    } else {
-                        return Flux.concat(// 有数据：前置 200 headers
-                                Flux.just(ResponseHeaders.of(HttpStatus.OK)),
-                                flux // 原始流（包含第一个元素）
-                        );
+                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
                     }
-                })
-                .onErrorResume(e -> Flux.just(
-                        ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                        HttpData.ofUtf8("{\"error\":\"Item not found\",\"id\":" + e + "}")
-                ));
+                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
+                        return Flux.concat(
+                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build()), flux);
+                    }
+                    return Flux.just(
+                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                    .contentType(MediaType.JSON_UTF_8)
+                                    .build(),
+                            HttpData.ofUtf8("{\"warn\":\"Not found\"}")
+                    );
+                });
 
         return HttpResponse.of(responseStream);
     }
 
-    private ItemQuerySpec[] parseFilter(String query, String filter) {
+    private static ItemQuerySpec[] parseFilter(String query, String filter) {
         List<ItemQuerySpec> filterList = new ArrayList<>();
         if (!query.isBlank())
             filterList.add(new KeywordSpec(query));
@@ -208,12 +189,10 @@ public class ItemService {
                 }
             }
         }
-        //for (ItemQueryFilter f : filterList)
-        //System.out.println(f);
         return filterList.toArray(new ItemQuerySpec[0]);
     }
 
-    private void parseCid(List<ItemQuerySpec> filterList, String cids) {
+    private static void parseCid(List<ItemQuerySpec> filterList, String cids) {
         if (!cids.isBlank()) {
             String[] ss = cids.split(MINI_SEPARATION);
             long[] categoryIds = new long[ss.length];
@@ -224,7 +203,7 @@ public class ItemService {
         }
     }
 
-    private void parseBid(List<ItemQuerySpec> filterList, String bids) {
+    private static void parseBid(List<ItemQuerySpec> filterList, String bids) {
         if (!bids.isBlank()) {
             String[] ss = bids.split(MINI_SEPARATION);
             long[] brandIds = new long[ss.length];
@@ -235,7 +214,7 @@ public class ItemService {
         }
     }
 
-    private void parseRetailPrice(List<ItemQuerySpec> filterList, String retail_price) {
+    private static void parseRetailPrice(List<ItemQuerySpec> filterList, String retail_price) {
         if (!retail_price.isBlank()) {
             String[] ss = retail_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
@@ -244,7 +223,7 @@ public class ItemService {
         }
     }
 
-    private void parseMemberPrice(List<ItemQuerySpec> filterList, String member_price) {
+    private static void parseMemberPrice(List<ItemQuerySpec> filterList, String member_price) {
         if (!member_price.isBlank()) {
             String[] ss = member_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
@@ -253,7 +232,7 @@ public class ItemService {
         }
     }
 
-    private void parseVipPrice(List<ItemQuerySpec> filterList, String vip_price) {
+    private static void parseVipPrice(List<ItemQuerySpec> filterList, String vip_price) {
         if (!vip_price.isBlank()) {
             String[] ss = vip_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
@@ -262,7 +241,7 @@ public class ItemService {
         }
     }
 
-    private void parseLastReceiptPrice(List<ItemQuerySpec> filterList, String last_receipt_price) {
+    private static void parseLastReceiptPrice(List<ItemQuerySpec> filterList, String last_receipt_price) {
         if (!last_receipt_price.isBlank()) {
             String[] ss = last_receipt_price.split(MINI_SEPARATION);
             if (ss.length == 2) {
@@ -281,20 +260,19 @@ public class ItemService {
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         ctx.blockingTaskExecutor().execute(() -> {
             try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
-                Item item = this.createItem(parser);
-                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
-                        "{\"status\":\"success\",\"code\":201,\"message\":\"A item created,it's %s\"}", item)));
+                Item item = ItemService.createItem(parser);
+                future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
+                        "{\"status\":\"success\",\"code\":201,\"message\":\"A item created,it's %s\"}", item));
             } catch (Exception e) {
                 LOGGER.warn(e.getMessage(), e);
-                //System.out.println(e);
-                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                        "{\"status\":fail,\"code\":500,\"message\":\"Can't create a item,cause by %s\"}", e)));
+                future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                        "{\"status\":fail,\"code\":500,\"message\":\"Can't create a item,cause by %s\"}", e));
             }
         });
         return HttpResponse.of(future);
     }
 
-    private Item createItem(JsonParser parser) throws IOException {
+    private static Item createItem(JsonParser parser) throws IOException {
         Name name = Name.EMPTY;
         MadeIn madeIn = MadeIn.UNKNOWN;
         GradeEnum grade = GradeEnum.QUALIFIED;
@@ -312,15 +290,14 @@ public class ItemService {
                 parser.nextToken();
                 switch (fieldName) {
                     case "barcode" -> barcode = BarcodeGenerateServices.createBarcode(parser.getValueAsString());
-                    case "name" -> name = this.readName(parser);
+                    case "name" -> name = readName(parser);
                     case "spec" -> spec = Specification.of(parser.getValueAsString());
                     case "grade" -> grade = GradeEnum.of(parser.getValueAsString());
-                    case "madeIn" -> madeIn = this.readMadeIn(parser);
-                    case "latestReceiptPrice", "last_receipt_price" ->
-                            lastReceiptPrice = this.readLastReceiptPrice(parser);
-                    case "retailPrice", "retail_price" -> retailPrice = new RetailPrice(this.readPrice(parser));
-                    case "memberPrice", "member_price" -> memberPrice = this.readMemberPrice(parser);
-                    case "vipPrice", "vip_price" -> vipPrice = this.readVipPrice(parser);
+                    case "madeIn" -> madeIn = readMadeIn(parser);
+                    case "latestReceiptPrice", "last_receipt_price" -> lastReceiptPrice = readLastReceiptPrice(parser);
+                    case "retailPrice", "retail_price" -> retailPrice = new RetailPrice(readPrice(parser));
+                    case "memberPrice", "member_price" -> memberPrice = readMemberPrice(parser);
+                    case "vipPrice", "vip_price" -> vipPrice = readVipPrice(parser);
                     case "category", "categoryId" -> categoryId = readId(parser);
                     case "brand", "brandId" -> brandId = readId(parser);
                 }
@@ -331,7 +308,7 @@ public class ItemService {
         return handler.execute(command);
     }
 
-    private Name readName(JsonParser parser) throws IOException {
+    private static Name readName(JsonParser parser) throws IOException {
         if (parser.currentToken() != JsonToken.START_OBJECT) {
             throw new IllegalArgumentException("Expected JSON object for 'name'");
         }
@@ -349,7 +326,7 @@ public class ItemService {
         return new Name(name, alias);
     }
 
-    private MadeIn readMadeIn(JsonParser parser) throws IOException {
+    private static MadeIn readMadeIn(JsonParser parser) throws IOException {
         if (parser.currentToken() != JsonToken.START_OBJECT) {
             throw new IllegalArgumentException("Expected JSON object for 'madeIn'");
         }
@@ -373,19 +350,19 @@ public class ItemService {
         return new Domestic(code, madeIn);
     }
 
-    private LastReceiptPrice readLastReceiptPrice(JsonParser parser) throws IOException {
+    private static LastReceiptPrice readLastReceiptPrice(JsonParser parser) throws IOException {
         return readNamedPrice(parser, LastReceiptPrice::new);
     }
 
-    private MemberPrice readMemberPrice(JsonParser parser) throws IOException {
+    private static MemberPrice readMemberPrice(JsonParser parser) throws IOException {
         return readNamedPrice(parser, MemberPrice::new);
     }
 
-    private VipPrice readVipPrice(JsonParser parser) throws IOException {
+    private static VipPrice readVipPrice(JsonParser parser) throws IOException {
         return readNamedPrice(parser, VipPrice::new);
     }
 
-    private <T> T readNamedPrice(JsonParser parser, BiFunction<String, Price, T> constructor) throws IOException {
+    private static <T> T readNamedPrice(JsonParser parser, BiFunction<String, Price, T> constructor) throws IOException {
         if (parser.getCurrentToken() != JsonToken.START_OBJECT) {
             throw new IllegalArgumentException("Expected JSON object for named price field");
         }
@@ -402,7 +379,7 @@ public class ItemService {
         return constructor.apply(name, price);
     }
 
-    private Price readPrice(JsonParser parser) throws IOException {
+    private static Price readPrice(JsonParser parser) throws IOException {
         if (parser.getCurrentToken() != JsonToken.START_OBJECT) {
             throw new IllegalArgumentException("Expected JSON object for 'price'");
         }
@@ -424,7 +401,7 @@ public class ItemService {
     }
 
     //read category or brand id
-    private long readId(JsonParser parser) throws IOException {
+    private static long readId(JsonParser parser) throws IOException {
         JsonToken token = parser.currentToken();
         if (token == JsonToken.VALUE_NUMBER_INT) {
             return parser.getValueAsLong();
@@ -475,25 +452,26 @@ public class ItemService {
     @StatusCode(200)
     @Delete("/items/:id")
     public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id) {
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.whenRequestCancelled().thenAccept(stream::close);
-
+        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled() || ctx.isTimedOut()) return;
-            ItemDeleteCommand delete = new ItemDeleteCommand(id);
             try {
-                deleteHandler.execute(delete);
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":200,\"message\":\"The item(id=%d) is moved to the recycle bin, you can retrieve it later in the recycle bin!\"}", id));
+                ItemDeleteCommand command = new ItemDeleteCommand(id);
+                final Handler<ItemDeleteCommand, Boolean> handler = new ItemDeleteHandler();
+                handler.execute(command);
+                HttpResponse successResp = HttpResponse.of(
+                        HttpStatus.OK,
+                        MediaType.JSON_UTF_8,
+                        HttpData.ofUtf8(String.format("{\"status\":\"success\",\"code\":200,\"message\":" +
+                                "\"The item(id=%d) is moved to the recycle bin, you can retrieve it later in the recycle bin!\"}", id)));
+                future.complete(successResp);
             } catch (Exception e) {
-                LOGGER.warn("Failed to delete item {}", id, e);
-                stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR));
-                stream.write(HttpData.ofUtf8("{\"error\":\"Server error\"}"));
-            } finally {
-                stream.close();
+                HttpResponse errorResp = HttpResponse.of(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        MediaType.JSON_UTF_8,
+                        String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage()));
+                future.complete(errorResp);
             }
         });
-        return HttpResponse.of(stream);
+        return HttpResponse.of(future);
     }
-
 }

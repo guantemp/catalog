@@ -131,8 +131,8 @@ public class Bootstrap {
         Server server = sb.http(PORT)
                 .annotatedService("/v1", new UnitService())
                 .annotatedService("/v1", new BrandService())
-                .annotatedService("/v1", new CategoryService())
                 .annotatedService("/v1", new ItemService())
+                .annotatedService("/v1", new CategoryService())
                 .build();
         server.closeOnJvmShutdown();
         server.start().join();

@@ -98,10 +98,10 @@ public final class ESBrandQuery implements BrandQuery {
 
     @Override
     public Flux<ByteBuf> findAsync(long id) {
-        AtomicBoolean isCancelled = new AtomicBoolean(false);
-        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
         Request request = new Request("GET", "/brand/_doc/" + id);//PREFIX+"/_doc/"
         request.setOptions(ESUtil.requestOptions());
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
         ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
             @Override
             public void onSuccess(Response response) {
@@ -211,7 +211,7 @@ public final class ESBrandQuery implements BrandQuery {
                         if (isCancelled.get()) {
                             return; // silent cancel; sink 已由外部处理或无需响应
                         }
-                        Extract.extract(parser, generator, "brands");
+                        Extract.extractWithoutAggs(parser, generator, "brands");
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
                     } finally {
@@ -272,7 +272,7 @@ public final class ESBrandQuery implements BrandQuery {
             response = ESUtil.restClient().performRequest(request);
             try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os);
                  InputStream is = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(is)) {
-                Extract.extract(parser, generator, "brands");
+                Extract.extractWithoutAggs(parser, generator, "brands");
                 success = true;
                 return new ByteBufInputStream(buffer, true);
             }

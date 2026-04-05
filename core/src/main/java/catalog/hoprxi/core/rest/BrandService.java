@@ -64,13 +64,11 @@ public class BrandService {
             .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
-    ;
 
     @Get("/brands/{id}")
     @Description("Retrieves the brand information by the given brand ID.")
-    public HttpResponse find(ServiceRequestContext ctx, @Param("id") long id) {
+    public HttpResponse find(@Param("id") long id) {
         Flux<ByteBuf> dataFlux = QUERY.findAsync(id);
-
         Flux<HttpObject> responseStream = dataFlux
                 .map(HttpData::wrap)
                 .switchOnFirst((signal, flux) -> {
@@ -108,13 +106,10 @@ public class BrandService {
         // 1. 前置校验：不支持的排序 → 直接返回 错误 Flux
         if (!SUPPORT_SORT_FIELD.contains(sortField)) {
             return HttpResponse.of(
-                    Flux.just(
-                            ResponseHeaders.builder(HttpStatus.BAD_REQUEST)  // 建议用400
-                                    .contentType(MediaType.JSON_UTF_8)
-                                    .build(),
-                            HttpData.ofUtf8("{\"status\":\"error\",\"code\":400,\"message\":\"Not support sort field\"}")
-                    )
-            );
+                    ResponseHeaders.builder(HttpStatus.BAD_REQUEST)  // 建议用400
+                            .contentType(MediaType.JSON_UTF_8)
+                            .build(),
+                    HttpData.ofUtf8("{\"status\":\"error\",\"code\":400,\"message\":\"Not support sort field\"}"));
         }
 
         Flux<ByteBuf> dataFlux;
@@ -128,9 +123,8 @@ public class BrandService {
                 .switchOnFirst((signal, flux) -> {
                     if (signal.hasError()) {// 1. 首信号异常
                         return Flux.just(
-                                ResponseHeaders.of(HttpStatus.NOT_FOUND),
-                                HttpData.ofUtf8("{\"error\":\"Brand not found\"}")
-                        );
+                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
                     }
                     if (signal.hasValue()) { // 2. 有数据 → 先响应头
                         return Flux.concat(
@@ -139,7 +133,9 @@ public class BrandService {
                                         .build()), flux);
                     }
                     return Flux.just(
-                            ResponseHeaders.of(HttpStatus.NOT_FOUND),
+                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                    .contentType(MediaType.JSON_UTF_8)
+                                    .build(),
                             HttpData.ofUtf8("{\"warn\":\"Not found\"}")
                     );
                 });
@@ -159,11 +155,11 @@ public class BrandService {
             try (InputStream inputStream = body.toInputStream();
                  JsonParser parser = JSON_FACTORY.createParser(inputStream)) {
                 Brand brand = BrandService.createBrand(parser);
-                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
-                        "{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand)));
+                future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
+                        "{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand));
             } catch (Exception e) {
-                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
-                        "{\"status\":400,\"code\":400,\"message\":\"JSON format error,cause by {%s}\"}", e.getMessage())));
+                future.complete(HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                        "{\"status\":400,\"code\":400,\"message\":\"JSON format error,cause by {%s}\"}", e.getMessage()));
             }
         });
         return HttpResponse.of(future);
@@ -197,7 +193,7 @@ public class BrandService {
                             since = Year.of(parser.getIntValue());
                         }
                     }
-                    default -> parser.skipChildren();
+                    //default -> parser.skipChildren();
                 }
             }
         }
@@ -220,11 +216,11 @@ public class BrandService {
             try (InputStream inputStream = body.toInputStream();
                  JsonParser parser = JSON_FACTORY.createParser(inputStream)) {
                 Brand brand = BrandService.update(parser, id);
-                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
-                        "{\"status\":\"success\",\"code\":200,\"message\":\"A brand created,it's %s\"}", brand)));
+                future.complete(HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
+                        "{\"status\":\"success\",\"code\":200,\"message\":\"A brand updated,it's %s\"}", brand));
             } catch (Exception e) {
-                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
-                        "{\"status\":400,\"code\":400,\"message\":\"JSON format error,cause by {%s}\"}", e.getMessage())));
+                future.complete(HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                        "{\"status\":400,\"code\":400,\"message\":\"JSON format error,cause by {%s}\"}", e.getMessage()));
             }
         });
         return HttpResponse.of(future);
@@ -234,6 +230,9 @@ public class BrandService {
         String name = null, alias = null, story = null;
         URL logo = null, homepage = null;
         Year since = null;
+        if (parser.nextToken() != JsonToken.START_OBJECT) {
+            throw new IOException("Expected JSON object");
+        }
         while (parser.nextToken() != null) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
                 String fieldName = parser.currentName();
@@ -255,7 +254,7 @@ public class BrandService {
                             since = Year.of(parser.getIntValue());
                         }
                     }
-                    default -> parser.skipChildren();
+                    //default -> parser.skipChildren();
                 }
             }
         }
@@ -264,6 +263,7 @@ public class BrandService {
             command.setName(name, alias);
         if (story != null || homepage != null || logo != null || since != null)
             command.setAbout(logo, homepage, since, story);
+        System.out.println(command);
         Handler<BrandUpdateCommand, Brand> handler = new BrandUpdateHandler();
         return handler.execute(command);
     }
@@ -274,18 +274,22 @@ public class BrandService {
         ctx.blockingTaskExecutor().execute(() -> {
             try {
                 BrandDeleteCommand delete = new BrandDeleteCommand(id);
-                Handler<BrandDeleteCommand, Boolean> handler = new BrandDeleteHandler();
+                Handler<BrandDeleteCommand, Boolean> handler = new BrandDeleteHandler(); // 建议优化为单例
                 handler.execute(delete);
                 String message = String.format("Brand(id=%d) deleted successfully", id);
-                ctx.eventLoop().execute(() ->
-                        future.complete(HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8
-                                , String.format("{\"status\":\"success\",\"code\":200,\"message\":\"%s\"}", message)))
+                HttpResponse successResp = HttpResponse.of(
+                        HttpStatus.OK,
+                        MediaType.JSON_UTF_8,
+                        String.format("{\"status\":\"success\",\"code\":200,\"message\":\"%s\"}", message)
                 );
+                future.complete(successResp);
+
             } catch (Exception e) {
-                ctx.eventLoop().execute(() ->
-                        future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                                String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage())))
-                );
+                HttpResponse errorResp = HttpResponse.of(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        MediaType.JSON_UTF_8,
+                        String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage()));
+                future.complete(errorResp);
             }
         });
         return HttpResponse.of(future);

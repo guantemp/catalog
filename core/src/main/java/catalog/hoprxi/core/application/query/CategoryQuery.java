@@ -16,6 +16,9 @@
 
 package catalog.hoprxi.core.application.query;
 
+import io.netty.buffer.ByteBuf;
+import reactor.core.publisher.Flux;
+
 import java.io.InputStream;
 
 public interface CategoryQuery {
@@ -24,11 +27,15 @@ public interface CategoryQuery {
      */
     InputStream root();
 
+    Flux<ByteBuf> rootAsync();
+
     /**
      * @param id category id
      * @return category where id is correct
      */
     InputStream find(long id) throws SearchException;
+
+    Flux<ByteBuf> findAsync(long id);
 
     /**
      *
@@ -39,11 +46,12 @@ public interface CategoryQuery {
 
     InputStream descendants(long id);
 
-    InputStream search(String key, int offset, int limit);
+    InputStream search(String key, int offset, int size);
 
     default InputStream search(String key) {
         return this.search(key, 0, 64);
     }
+    Flux<ByteBuf> searchAsync(String key, int offset, int size);
 
     InputStream searchSiblings(long id);
 

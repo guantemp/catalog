@@ -58,6 +58,7 @@ public class BrandUpdateCommand implements Command {
 
     public void setName(String name, String alias) {
         this.name = name;
+        this.alias = alias;
     }
 
 
@@ -91,5 +92,18 @@ public class BrandUpdateCommand implements Command {
 
     public URL homepage() {
         return homepage;
+    }
+
+    @Override
+    public String toString() {
+        return "BrandUpdateCommand{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", alias='" + alias + '\'' +
+                ", logo=" + logo +
+                ", since=" + since +
+                ", story='" + story + '\'' +
+                ", homepage=" + homepage +
+                '}';
     }
 }

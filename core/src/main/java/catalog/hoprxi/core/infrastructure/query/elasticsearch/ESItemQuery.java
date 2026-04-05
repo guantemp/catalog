@@ -107,7 +107,7 @@ public class ESItemQuery implements ItemQuery {
             public void onSuccess(Response response) {
                 if (isCancelled.get()) {
                     EntityUtils.consumeQuietly(response.getEntity()); // 必须加
-                    sink.tryEmitComplete();
+                    sink.tryEmitComplete().orThrow();
                     return;
                 }
                 CompletableFuture.runAsync(() -> {
@@ -123,7 +123,11 @@ public class ESItemQuery implements ItemQuery {
                         EntityUtils.consumeQuietly(response.getEntity());
                     }
                 }, TRANSFORM_POOL).whenComplete((v, err) -> {
-                    MapException.mapExceptionAndEmit(sink, err, isCancelled, id);
+                    if (err != null) {
+                        MapException.mapExceptionAndEmit(sink, err, isCancelled, id);
+                    } else {
+                        sink.tryEmitComplete().orThrow();
+                    }
                 });
             }
 
@@ -187,7 +191,7 @@ public class ESItemQuery implements ItemQuery {
             public void onSuccess(Response response) {
                 if (isCancelled.get()) {
                     EntityUtils.consumeQuietly(response.getEntity()); // 必须加
-                    sink.tryEmitComplete();
+                    sink.tryEmitComplete().orThrow();
                     return;
                 }
                 CompletableFuture.runAsync(() -> {
@@ -203,7 +207,11 @@ public class ESItemQuery implements ItemQuery {
                         EntityUtils.consumeQuietly(response.getEntity());
                     }
                 }, TRANSFORM_POOL).whenComplete((v, err) -> {
-                    MapException.mapExceptionAndEmit(sink, err, isCancelled, barcode);
+                    if (err != null) {
+                        MapException.mapExceptionAndEmit(sink, err, isCancelled, barcode);
+                    } else {
+                        sink.tryEmitComplete().orThrow();
+                    }
                 });
             }
 
@@ -250,7 +258,7 @@ public class ESItemQuery implements ItemQuery {
 
     @Override
     public InputStream search(ItemQuerySpec[] specs, int size, String searchAfter, SortFieldEnum sortField) {
-        if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("The size must be greater than or less than 10000");
         if (sortField == null) {
             sortField = SortFieldEnum._ID;
             //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
@@ -287,7 +295,7 @@ public class ESItemQuery implements ItemQuery {
 
     @Override
     public Flux<ByteBuf> searchAsync(ItemQuerySpec[] specs, int size, String searchAfter, SortFieldEnum sortField) {
-        if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("The size must be greater than or less than 10000");
         if (sortField == null) {
             sortField = SortFieldEnum._ID;
             //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
@@ -303,7 +311,7 @@ public class ESItemQuery implements ItemQuery {
             public void onSuccess(Response response) {
                 if (isCancelled.get()) {
                     EntityUtils.consumeQuietly(response.getEntity()); // 必须加
-                    sink.tryEmitComplete();
+                    sink.tryEmitComplete().orThrow();
                     return;
                 }
                 CompletableFuture.runAsync(() -> {
@@ -319,7 +327,11 @@ public class ESItemQuery implements ItemQuery {
                         EntityUtils.consumeQuietly(response.getEntity());
                     }
                 }, TRANSFORM_POOL).whenComplete((v, err) -> {
-                    MapException.mapExceptionAndEmit(sink, err, isCancelled, ESItemQuery.extractIdentifier(specs));
+                    if (err != null) {
+                        MapException.mapExceptionAndEmit(sink, err, isCancelled, ESItemQuery.extractIdentifier(specs));
+                    } else {
+                        sink.tryEmitComplete().orThrow();
+                    }
                 });
             }
 
@@ -349,6 +361,7 @@ public class ESItemQuery implements ItemQuery {
             generator.writeEndObject();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
+            throw new IllegalStateException("Cannot assemble request JSON", e);
         }
         return writer.toString();
     }
@@ -369,7 +382,7 @@ public class ESItemQuery implements ItemQuery {
                 return "Keyword filter"; // 假设 getValue() 返回 String 或 Number
             }
         }
-        for (ItemQuerySpec f : filters) { // 次选条码
+        for (ItemQuerySpec f : filters) { // 次选类别
             if ("CategoryFilter".equals(f.getClass().getSimpleName())) {
                 return "Category filter";
             }
@@ -400,7 +413,7 @@ public class ESItemQuery implements ItemQuery {
             public void onSuccess(Response response) {
                 if (isCancelled.get()) {
                     EntityUtils.consumeQuietly(response.getEntity()); // 必须加
-                    sink.tryEmitComplete();
+                    sink.tryEmitComplete().orThrow();
                     return;
                 }
                 CompletableFuture.runAsync(() -> {
@@ -416,7 +429,11 @@ public class ESItemQuery implements ItemQuery {
                         EntityUtils.consumeQuietly(response.getEntity());
                     }
                 }, TRANSFORM_POOL).whenComplete((v, err) -> {
-                    MapException.mapExceptionAndEmit(sink, err, isCancelled, ESItemQuery.extractIdentifier(specs));
+                    if (err != null) {
+                        MapException.mapExceptionAndEmit(sink, err, isCancelled, ESItemQuery.extractIdentifier(specs));
+                    } else {
+                        sink.tryEmitComplete().orThrow();
+                    }
                 });
             }
 

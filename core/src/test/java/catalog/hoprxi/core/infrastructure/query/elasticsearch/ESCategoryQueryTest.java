@@ -17,8 +17,11 @@
 package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.CategoryQuery;
+import catalog.hoprxi.core.application.query.NotFoundException;
 import catalog.hoprxi.core.application.query.SearchException;
+import io.netty.buffer.ByteBuf;
 import org.testng.annotations.Test;
+import reactor.core.publisher.Flux;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.io.BufferedReader;
@@ -26,6 +29,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class ESCategoryQueryTest {
     static {
@@ -38,26 +44,88 @@ public class ESCategoryQueryTest {
     @Test
     public void testRoot() throws IOException {
         InputStream is = query.root();
-        String s = inputStreamToString(is);
-        System.out.println("root:\n" + s);
-        System.out.println(s.length());
+        System.out.println("root:\n" + new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        Flux<ByteBuf> flux = query.rootAsync();
+        String json = flux
+                .map(buf -> buf.toString(StandardCharsets.UTF_8))
+                .collect(Collectors.joining())
+                .block();
+        System.out.println(json);
     }
 
     @Test(expectedExceptions = SearchException.class)
     public void testFind() throws IOException {
-        InputStream is = query.find(-1);
-        String s = inputStreamToString(is);
-        System.out.println("find:\n" + s);
-        is = query.find(143);
-        s = inputStreamToString(is);
-        System.out.println("find:\n" + s);
-        is = query.find(121);
-        s = inputStreamToString(is);
-        System.out.println("find:\n" + s);
-        is = query.find(62078013263165440L);
-        s = inputStreamToString(is);
-        System.out.println("find:\n" + s);
-        query.find(19);
+        try (InputStream is = query.find(-1L)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.find(143)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.find(121)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.find(496796322118291482L)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.find(19)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test(expectedExceptions = NotFoundException.class)
+    public void testFindAsync() {
+        Flux<ByteBuf>[] fluxes = new Flux[]{
+                query.findAsync(121),
+                query.findAsync(496796322118291482L),
+                query.findAsync(143),
+                query.findAsync(-1L)
+        };
+        printresult(fluxes);
+        query.findAsync(19L).blockFirst();
+    }
+
+    private static void printresult(Flux<ByteBuf>[] fluxes) {
+        int total = fluxes.length;
+        CountDownLatch latch = new CountDownLatch(total);
+
+        // 2. 遍历订阅，使用 Reactor 异步机制，绝对不要手动 new Thread
+        for (int i = 0; i < total; i++) {
+            final int idx = i;
+            fluxes[i]
+                    // 关键：指定订阅线程池（避免阻塞主线程）
+                    .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                    .subscribe(
+                            byteBuf -> {
+                                // 正常处理数据
+                                try {
+                                    String content = byteBuf.toString(StandardCharsets.UTF_8);
+                                    System.out.println("[Query-" + idx + "] 接收数据：" + content);
+                                } finally {
+                                    byteBuf.release(); // 必须释放
+                                }
+                            },
+                            error -> {
+                                System.err.println("[Query-" + idx + "] 异常：" + error.getMessage());
+                                error.printStackTrace();
+                                latch.countDown(); // 异常也要倒计时！
+                            },
+                            () -> {
+                                System.out.println("[Query-" + idx + "] 执行完成");
+                                latch.countDown(); // 只有完成才倒计时
+                            }
+                    );
+        }
+
+        // 3. 等待（必须加超时，防止永久卡死）
+        try {
+            boolean completed = latch.await(30, TimeUnit.SECONDS);
+            if (!completed) {
+                System.err.println("测试超时！存在未完成的异步请求");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("等待被中断", e);
+        }
     }
 
     @Test
@@ -88,24 +156,29 @@ public class ESCategoryQueryTest {
 
     @Test
     public void testSearch() throws IOException {
-        InputStream is = query.search("酒");
-        String s = inputStreamToString(is);
-        System.out.println("Search:\n" + s);
-        is = query.search("白萝卜");
-        s = inputStreamToString(is);
-        System.out.println("Search:\n" + s);
-        is = query.search("wine");
-        s = inputStreamToString(is);
-        System.out.println("Search:\n" + s);
-        is = query.search("oil");
-        s = inputStreamToString(is);
-        System.out.println("Search:\n" + s);
-        is = query.search("oil",1,2);
-        s = inputStreamToString(is);
-        System.out.println("Search:\n" + s);
-        is = query.search(null,0,1);
-        s = inputStreamToString(is);
-        System.out.println("Search:\n" + s);
+        try (InputStream is = query.search("酒")) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search("白萝卜")) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search("wine")) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search("oil")) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search("oil", 1, 2)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search(null, 0, 1)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test
+    public void testSearchAysnc() {
+
     }
 
     @Test
