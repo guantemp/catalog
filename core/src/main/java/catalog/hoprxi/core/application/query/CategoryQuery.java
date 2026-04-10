@@ -21,12 +21,31 @@ import reactor.core.publisher.Flux;
 
 import java.io.InputStream;
 
+/**
+ * Query interface for category information.
+ * Provides both synchronous and reactive asynchronous operations for category tree queries,
+ * including root node lookup, detail query by ID, children/descendants query, search, path query, etc.
+ * <p>
+ * Synchronous methods return {@link InputStream}, while reactive async methods return {@link Flux<ByteBuf>}.
+ * </p>
+ *
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @since JDK21
+ * @version 0.0.1 builder 2025/9/18
+ */
+
 public interface CategoryQuery {
     /**
      * @return category root node
      */
     InputStream root();
 
+    /**
+     * 异步查询分类根节点数据
+     * 基于响应式编程，返回ByteBuf数据流
+     *
+     * @return 分类根节点响应式数据流
+     */
     Flux<ByteBuf> rootAsync();
 
     /**
@@ -43,7 +62,11 @@ public interface CategoryQuery {
      */
     InputStream children(long id);
 
+    Flux<ByteBuf> childrenAsync(long id);
+
     InputStream descendants(long id);
+
+    Flux<ByteBuf> descendantsAsync(long id);
 
     InputStream search(String key, int offset, int size);
 
@@ -60,4 +83,6 @@ public interface CategoryQuery {
     InputStream searchSiblings(long id);
 
     InputStream path(long id);
+
+    Flux<ByteBuf> pathAsync(long id);
 }

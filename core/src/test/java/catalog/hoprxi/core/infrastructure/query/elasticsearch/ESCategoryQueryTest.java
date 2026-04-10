@@ -130,28 +130,28 @@ public class ESCategoryQueryTest {
 
     @Test
     public void testChildren() throws IOException {
-        InputStream is = query.children(151);
-        String s = inputStreamToString(is);
-        System.out.println("Children:\n" + s);
-        is = query.children(1514);
-        s = inputStreamToString(is);
-        System.out.println("Children:\n" + s);
-        is = query.children(711);
-        s = inputStreamToString(is);
-        System.out.println("Children:\n" + s);
-        is = query.children(1);
-        s = inputStreamToString(is);
-        System.out.println("Children:\n" + s);
+        try (InputStream is = query.children(151)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.children(1514)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.children(1)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.children(711)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
     }
 
     @Test
     public void testDescendants() throws IOException {
-        InputStream is = query.descendants(1);
-        String s = inputStreamToString(is);
-        System.out.println("Descendants:\n" + s);
-        is = query.descendants(14);
-        s = inputStreamToString(is);
-        System.out.println("Descendants:\n" + s);
+        try (InputStream is = query.descendants(1)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.descendants(14)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
     }
 
     @Test
@@ -196,12 +196,12 @@ public class ESCategoryQueryTest {
 
     @Test
     public void testPath() throws IOException {
-        InputStream is = query.path(1514);
-        String s = inputStreamToString(is);
-        System.out.println("Search:\n" + s);
-        is = query.path(-1);
-        s = inputStreamToString(is);
-        System.out.println("Search:\n" + s);
+        try (InputStream is = query.path(1513)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.path(-1)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
     }
 
     private static String inputStreamToString(InputStream is) throws IOException {

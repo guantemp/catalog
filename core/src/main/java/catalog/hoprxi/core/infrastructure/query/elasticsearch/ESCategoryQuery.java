@@ -41,7 +41,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
 import java.io.*;
-import java.util.Stack;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -55,29 +58,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ESCategoryQuery implements CategoryQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
-    private static final String SINGLE_PREFIX = "/" + ESUtil.customized() + "_category";
-    private static final String SEARCH_ENDPOINT = SINGLE_PREFIX + "/_search";
+    private static final String PREFIX = ESUtil.customized().isBlank() ? "/category" : "/" + ESUtil.customized() + "_category";
+    private static final String SEARCH_ENDPOINT = PREFIX + "/_search";
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder()
             .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
-
     private static final int MAX_SIZE = 9999;
-    private static final int SINGLE_BUFFER_SIZE = 512; // 0.5KB缓冲区
-    private static final int BATCH_BUFFER_SIZE = 8192;// 8KB缓冲区
+    private static final int SINGLE_BUFFER_SIZE = 2048; // 2KB缓冲区/单值
+    private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
     private static final ExecutorService TRANSFORM_POOL = Executors.newVirtualThreadPerTaskExecutor();
 
     @Override
     public InputStream root() {
-        Request request = new Request("GET", "/category/_search");
+        Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(buildRootJsonRequest());
+        request.setJsonEntity(ESCategoryQuery.buildRootRequest());
 
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
         boolean success = false;
         Response response = null;
         try {
-
             response = ESUtil.restClient().performRequest(request);
             try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
                  OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
@@ -100,9 +101,9 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public Flux<ByteBuf> rootAsync() {
-        Request request = new Request("GET", "/category/_search");
+        Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(buildRootJsonRequest());
+        request.setJsonEntity(ESCategoryQuery.buildRootRequest());
 
         AtomicBoolean isCancelled = new AtomicBoolean(false);
         Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
@@ -144,11 +145,11 @@ public class ESCategoryQuery implements CategoryQuery {
         });
         return sink.asFlux()
                 .doOnCancel(() -> isCancelled.set(true))
-                .doOnTerminate(() -> LOGGER.debug("Request terminated"))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated,check"))
                 .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
     }
 
-    private static String buildRootJsonRequest() {
+    private static String buildRootRequest() {
         StringWriter writer = new StringWriter();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -168,7 +169,7 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public InputStream find(long id) {
-        Request request = new Request("GET", "/category/_doc/" + id);//PREFIX+"/_doc/"
+        Request request = new Request("GET", PREFIX + "/_doc/" + id);//PREFIX+"/_doc/"
         request.setOptions(ESUtil.requestOptions());
         ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
         try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
@@ -189,8 +190,9 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public Flux<ByteBuf> findAsync(long id) {
-        Request request = new Request("GET", "/category/_doc/" + id);//PREFIX+"/_doc/"
+        Request request = new Request("GET", PREFIX + "/_doc/" + id);
         request.setOptions(ESUtil.requestOptions());
+
         AtomicBoolean isCancelled = new AtomicBoolean(false);
         Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
         ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
@@ -203,7 +205,7 @@ public class ESCategoryQuery implements CategoryQuery {
                 }
                 CompletableFuture.runAsync(() -> {
                     try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                         OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+                         OutputStream os = new JsonByteBufOutputStream(sink, isCancelled, 2048); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
                         if (isCancelled.get()) {
                             return; // silent cancel; sink 已由外部处理或无需响应
                         }
@@ -237,19 +239,85 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public InputStream children(long id) {
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESCategoryQuery.buildChildrenRequest(id));
+
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
+        boolean success = false;
+        Response response = null;
         try {
-            Request request = new Request("GET", "/category/_search");
-            request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(this.writeChildrenJsonEntity(id));
-            Response response = ESUtil.restClient().performRequest(request);
-            return this.reorganization(response.getEntity().getContent());
+            response = ESUtil.restClient().performRequest(request);
+            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
+                 OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+                Extract.extractWithoutAggs(parser, generator, "categories");
+                success = true;
+                return new ByteBufInputStream(buffer, true);
+            }
         } catch (IOException e) {
             LOGGER.warn("There are no related category(id={}) available ", id, e);
             throw new SearchException(String.format("There are no related category(id=%d) available", id), e);
+        } finally {
+            if (response != null) {
+                EntityUtils.consumeQuietly(response.getEntity());
+            }
+            if (!success && buffer.refCnt() > 0) {
+                ReferenceCountUtil.safeRelease(buffer);
+            }
         }
     }
 
-    private String writeChildrenJsonEntity(long id) {
+    @Override
+    public Flux<ByteBuf> childrenAsync(long id) {
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESCategoryQuery.buildChildrenRequest(id));
+
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+            @Override
+            public void onSuccess(Response response) {
+                if (isCancelled.get()) {
+                    EntityUtils.consumeQuietly(response.getEntity()); // 必须加
+                    sink.tryEmitComplete().orThrow();
+                    return;
+                }
+                CompletableFuture.runAsync(() -> {
+                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
+                         OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+                        if (isCancelled.get()) {
+                            return; // silent cancel; sink 已由外部处理或无需响应
+                        }
+                        Extract.extractWithoutAggs(parser, generator, "categories");
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    } finally {
+                        EntityUtils.consumeQuietly(response.getEntity());
+                    }
+                }, TRANSFORM_POOL).whenComplete((v, err) -> {
+                    if (err != null) {
+                        MapException.mapExceptionAndEmit(sink, err, isCancelled, id);
+                    } else {
+                        sink.tryEmitComplete().orThrow();
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Exception exception) {
+                if (!isCancelled.get()) {
+                    sink.tryEmitError(MapException.mapException(exception, id));
+                }
+            }
+        });
+        return sink.asFlux()
+                .doOnCancel(() -> isCancelled.set(true))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", id))
+                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+    }
+
+    private static String buildChildrenRequest(long id) {
         StringWriter writer = new StringWriter(128);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -282,42 +350,117 @@ public class ESCategoryQuery implements CategoryQuery {
             generator.writeEndArray();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
+            throw new IllegalStateException("Cannot assemble request JSON", e);
         }
         return writer.toString();
     }
 
     @Override
     public InputStream descendants(long id) {
-        long rootId = -1;
+        long familyId = -1;
         int left = 1, right = 1;
-        Request request = new Request("GET", "/category/_doc/" + id);
+        Request request = new Request("GET", PREFIX + "/_doc/" + id);
         request.setOptions(ESUtil.requestOptions());
         try {
             Response response = ESUtil.restClient().performRequest(request);
-            JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
-            while (parser.nextToken() != null) {
-                if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                    String fieldName = parser.getCurrentName();
-                    parser.nextToken();
-                    switch (fieldName) {
-                        case "root_id" -> rootId = parser.getValueAsLong();
-                        case "left" -> left = parser.getValueAsInt();
-                        case "right" -> right = parser.getValueAsInt();
+            try (InputStream content = response.getEntity().getContent();
+                 JsonParser parser = JSON_FACTORY.createParser(content)) {
+                while (parser.nextToken() != null) {
+                    JsonToken jsonToken = parser.currentToken();
+                    if (JsonToken.FIELD_NAME == jsonToken) {
+                        String fieldName = parser.currentName();
+                        parser.nextToken();
+                        switch (fieldName) {
+                            case "root_id" -> familyId = parser.getValueAsLong();
+                            case "left" -> left = parser.getValueAsInt();
+                            case "right" -> right = parser.getValueAsInt();
+                        }
                     }
                 }
+            } finally {
+                EntityUtils.consumeQuietly(response.getEntity());// 必须静默消费实体，防止连接泄漏
             }
-            request = new Request("GET", "/category/_search");
-            request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(this.writeDescendantJsonEntity(rootId, left, right));
-            response = ESUtil.restClient().performRequest(request);
-            return this.descendantToTree(response.getEntity().getContent());
+        } catch (ResponseException e) {
+            LOGGER.error("Failed to query category by id: {}, response exception", id, e);
+            throw new IllegalStateException(String.format("Failed to query category by id: %d, response exception", id), e);
         } catch (IOException e) {
-            LOGGER.error("There are no related category(id={}) available", id, e);
-            throw new SearchException(String.format("There are no related category(id=%d) available", id), e);
+            LOGGER.error("IO exception when querying category by id: {}", id, e);
+            throw new IllegalStateException(String.format("IO exception when querying category by id: %d", id), e);
+        }
+
+        request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESCategoryQuery.buildDescendantRequest(familyId, left, right));
+
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
+        boolean success = false;
+        Response response = null;
+        try {
+            response = ESUtil.restClient().performRequest(request);
+            try (InputStream content = response.getEntity().getContent();
+                 JsonParser parser = JSON_FACTORY.createParser(content);
+                 OutputStream os = new ByteBufOutputStream(buffer);
+                 JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+
+                ESCategoryQuery.descendantToTree(parser, generator);
+                success = true;
+                return new ByteBufInputStream(buffer, true);
+            }
+        } catch (ResponseException e) {
+            LOGGER.error("Failed to query category path by id: {}, rootId: {}", id, familyId, e);
+            throw new SearchException(String.format("Failed to query category path for id: %d", id), e);
+        } catch (IOException e) {
+            LOGGER.error("IO exception when querying category path for id: {}", id, e);
+            throw new SearchException(String.format("IO exception when querying category path for id: %d", id), e);
+        } finally {
+            if (response != null) {
+                EntityUtils.consumeQuietly(response.getEntity());
+            }
+            if (!success && buffer.refCnt() > 0) {
+                ReferenceCountUtil.safeRelease(buffer);
+            }
         }
     }
 
-    private String writeDescendantJsonEntity(long rootId, int left, int right) {
+    @Override
+    public Flux<ByteBuf> descendantsAsync(long id) {
+        CompletableFuture<Map<String, Object>> nodeInfoFuture = CompletableFuture.supplyAsync(() -> {
+            Request request = new Request("GET", PREFIX + "/_doc/" + id);
+            request.setOptions(ESUtil.requestOptions());
+
+            try {
+                Response response = ESUtil.restClient().performRequest(request);
+                try (InputStream content = response.getEntity().getContent();
+                     JsonParser parser = JSON_FACTORY.createParser(content)) {
+
+                    Map<String, Object> result = new HashMap<>();
+                    while (parser.nextToken() != null) {
+                        if (JsonToken.FIELD_NAME == parser.currentToken()) {
+                            String fieldName = parser.currentName();
+                            parser.nextToken();
+                            switch (fieldName) {
+                                case "root_id" -> result.put("familyId", parser.getValueAsLong());
+                                case "left" -> result.put("left", parser.getValueAsInt());
+                                case "right" -> result.put("right", parser.getValueAsInt());
+                            }
+                        }
+                    }
+                    return result;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        nodeInfoFuture.thenCompose(nodeInfo -> {
+            long familyId = (Long) nodeInfo.get("familyId");
+            int left = (Integer) nodeInfo.get("left");
+            int right = (Integer) nodeInfo.get("right");
+            return null;
+        });
+        return null;
+    }
+
+    private static String buildDescendantRequest(long rootId, int left, int right) {
         StringWriter writer = new StringWriter(256);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -361,95 +504,172 @@ public class ESCategoryQuery implements CategoryQuery {
             generator.writeEndObject();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
+            throw new IllegalStateException("Cannot assemble request JSON", e);
         }
         return writer.toString();
     }
 
-    private InputStream descendantToTree(InputStream is) throws IOException {
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        boolean transferMark = false;
-        Stack<Integer> stack = new Stack<>();
-        try (OutputStream os = new ByteBufOutputStream(buffer); JsonParser parser = JSON_FACTORY.createParser(is); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-            generator.writeStartObject();//start
-            while (parser.nextToken() != null) {
-                if (parser.currentToken() == JsonToken.FIELD_NAME && "total".equals(parser.currentName())) {//all number
-                    while (parser.nextToken() != null) {
-                        if (parser.currentToken() == JsonToken.FIELD_NAME && "value".equals(parser.currentName())) {
-                            parser.nextToken();
-                            generator.writeNumberField("total", parser.getValueAsInt());
-                            break;
-                        }
+    /**
+     * 将 ElasticSearch 嵌套集模型（left/right）扁平化结果 转换为 标准树形JSON结构
+     * <p>
+     * 【功能说明】：
+     * 读取 ES 查询返回的 hits 结果，根据 _source 中的 left / right 嵌套集数值，
+     * 自动构建层级树结构，输出根节点为对象的标准树形 JSON。
+     * <p>
+     * 【输出结构】：
+     * <pre>
+     * {
+     *   "total": 43,
+     *   "category": {
+     *     "id": 1,
+     *     "name": { ... },
+     *     "left": 1,
+     *     "right": 86,
+     *     "children": [ ... ]
+     *   }
+     * }
+     * </pre>
+     *
+     * @param parser   Jackson JsonParser，用于读取 ES 原始 JSON 数据流
+     * @param generator Jackson JsonGenerator，用于输出标准树形 JSON 结构
+     * @throws IOException 当 JSON 解析、生成、IO 异常时抛出
+     * @throws IllegalStateException 当 ES 数据结构不符合预期（非对象/非数组）时抛出
+     */
+    private static void descendantToTree(JsonParser parser, JsonGenerator generator) throws IOException {
+        Deque<Integer> rightValueStack = new ArrayDeque<>();
+        generator.writeStartObject();//start
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                String name = parser.currentName();
+                if ("hits".equals(name)) {//first hits
+                    parser.nextToken(); // should be START_OBJECT
+                    if (parser.currentToken() != JsonToken.START_OBJECT) {
+                        throw new IllegalStateException("Hits' must be an object");
                     }
-                }
-                if (parser.currentToken() == JsonToken.START_ARRAY && "hits".equals(parser.currentName())) {
-                    generator.writeObjectFieldStart("categories");
-                    boolean first = true;
-                    while (parser.nextToken() != null) {
-                        if (parser.currentToken() == JsonToken.END_ARRAY && "hits".equals(parser.currentName()))
-                            break;
-                        int currentLeft = 1, currentRight = 1;
-                        if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {//root source
-                            if (!first)//第一次已写categories:{,不需要开始{
-                                generator.writeStartObject();
-                            while (parser.nextToken() != null) {
-                                if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.currentName()))
-                                    break;//end _meta
-                                generator.copyCurrentEvent(parser);
-                                if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                                    String fileName = parser.currentName();
+                    while (parser.nextToken() != JsonToken.END_OBJECT) {//loop first hits
+                        if (parser.currentToken() != JsonToken.FIELD_NAME) continue;
+                        String hitsField = parser.currentName();
+                        if ("total".equals(hitsField)) {//loop total
+                            parser.nextToken();
+                            if (parser.currentToken() != JsonToken.START_OBJECT) {
+                                throw new IllegalStateException("Total must be an object");
+                            }
+                            while (parser.nextToken() != JsonToken.END_OBJECT) { // Extract only "value"
+                                if (parser.currentToken() == JsonToken.FIELD_NAME && "value".equals(parser.currentName())) {
                                     parser.nextToken();
-                                    generator.copyCurrentEvent(parser);
-                                    switch (fileName) {
-                                        case "left" -> currentLeft = parser.getValueAsInt();
-                                        case "right" -> currentRight = parser.getValueAsInt();
-                                    }
+                                    generator.writeNumberField("total", parser.getValueAsLong());
+                                } else {
+                                    //parser.nextToken();
+                                    parser.skipChildren();
                                 }
                             }
-                            first = false;//第一 categories 本体结束了,下面需要写开始{
-                        }//end source
-                        if (currentRight - currentLeft == 1) {//叶子
-                            generator.writeEndObject();
+                        } else if ("hits".equals(hitsField)) {//hits.hits
+                            parser.nextToken(); // should be START_ARRAY
+                            if (parser.currentToken() != JsonToken.START_ARRAY) {
+                                throw new IllegalStateException("'hits.hits' must be an array");
+                            }
+                            generator.writeObjectFieldStart("category");//不管里面有没有，先写个
+                            boolean first = true;
+                            while (parser.nextToken() != JsonToken.END_ARRAY) {//loop hits array
+                                if (parser.getCurrentToken() != JsonToken.START_OBJECT) {//not start blank start object
+                                    parser.skipChildren();
+                                    continue;
+                                }
+                                int left = 1, right = 1;
+                                while (parser.nextToken() != JsonToken.END_OBJECT) {//loop { 开始在hits下面的{}中循环,包含_source,_index啥的
+                                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_source".equals(parser.currentName())) {// enter _source
+                                        parser.nextToken();
+                                        if (parser.currentToken() != JsonToken.START_OBJECT) {
+                                            parser.skipChildren();
+                                            continue;
+                                        }
+                                        if (!first)//第一个,上面写了category:{,不写了,后面需要写｛
+                                            generator.writeStartObject();
+                                        while (parser.nextToken() != JsonToken.END_OBJECT) {//loop source
+                                            if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                                                String srcField = parser.currentName();
+                                                if ("_meta".equals(srcField)) {
+                                                    //parser.nextToken();
+                                                    parser.skipChildren();
+                                                } else {
+                                                    generator.writeFieldName(srcField);
+                                                    parser.nextToken();
+                                                    switch (srcField) {//这个位置必须固定在这里
+                                                        case "left" -> left = parser.getValueAsInt();
+                                                        case "right" -> right = parser.getValueAsInt();
+                                                    }
+                                                    //System.out.println(parser.currentToken()+":"+parser.currentName()+":"+first);
+                                                    //System.out.println(right + ":" + left + ":" + (right - left));
+                                                    generator.copyCurrentStructure(parser);
+                                                }
+                                            }
+                                        }//end loop source
+                                    } else {
+                                        //parser.nextToken();
+                                        parser.skipChildren(); // skip _id, _index, sort, _score, etc.
+                                    }
+                                }//end loop {
+                                first = false;//第一 category 本体source结束了,下面直接写开始{
+                                if (right - left == 1) {//叶子,闭合
+                                    generator.writeEndObject();
+                                }
+                                if (right - left > 1) {//有儿子
+                                    generator.writeArrayFieldStart("children");
+                                    rightValueStack.push(right);
+                                }
+                                while (!rightValueStack.isEmpty() && rightValueStack.peek() - right == 1) {
+                                    generator.writeEndArray();//end children array
+                                    generator.writeEndObject();//每个end children array后面就结束父对象
+                                    right = rightValueStack.pop();
+                                }
+                            }//end loop hits array
+                        } else {//skip warp hits
+                            //parser.nextToken();
+                            parser.skipChildren(); // skip max_score, etc.
                         }
-                        if (currentRight - currentLeft > 1) {
-                            generator.writeArrayFieldStart("children");
-                            stack.push(currentRight);
-                        }
-                        while (!stack.isEmpty() && stack.peek() - currentRight == 1) {//end children array
-                            generator.writeEndArray();
-                            generator.writeEndObject();
-                            currentRight = stack.pop();
-                        }
-                    }//end hits
-                    while (!stack.isEmpty()) {
-                        generator.writeEndArray();
-                        generator.writeEndObject();
-                        stack.pop();
                     }
+                } else {//skip not wrap hits
+                    //parser.nextToken();
+                    parser.skipChildren(); // skip max_score, etc.
                 }
             }
-            generator.writeEndObject();//end
-            generator.flush();
-            ByteBufInputStream result = new ByteBufInputStream(buffer, true);// 创建输入流并转移所有权
-            transferMark = true;
-            return result;
-        } finally {
-            if (!transferMark && buffer != null && buffer.refCnt() > 0) {
-                buffer.release(); // 只有在失败时才需要手动释放
-            }
         }
+        while (!rightValueStack.isEmpty()) {
+            generator.writeEndArray();
+            generator.writeEndObject();
+            rightValueStack.pop();
+        }
+        generator.writeEndObject();//end
+        generator.flush();
     }
 
     @Override
     public InputStream search(String key, int offset, int size) {
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESCategoryQuery.buildKeyRequest(key, offset, size));
+
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
+        boolean success = false;
+        Response response = null;
         try {
-            Request request = new Request("GET", "/category/_search");
-            request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(buildKeyRequest(key, offset, size));
-            Response response = ESUtil.restClient().performRequest(request);
-            return this.reorganization(response.getEntity().getContent());
+            response = ESUtil.restClient().performRequest(request);
+            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
+                 OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+                Extract.extractWithoutAggs(parser, generator, "categories");
+                success = true;
+                return new ByteBufInputStream(buffer, true);
+            }
         } catch (IOException e) {
-            LOGGER.debug("No search was found for anything resembling key {} category ", key, e);
+            LOGGER.error("No search was found for anything resembling key {} category ", key, e);
             throw new SearchException(String.format("No search was found for anything resembling key %s category", key), e);
+        } finally {
+            if (response != null) {
+                EntityUtils.consumeQuietly(response.getEntity());
+            }
+            if (!success && buffer.refCnt() > 0) {
+                ReferenceCountUtil.safeRelease(buffer);
+            }
         }
     }
 
@@ -459,7 +679,7 @@ public class ESCategoryQuery implements CategoryQuery {
         if (size < 0 || size > 10000) throw new IllegalArgumentException("Size value range is 0-10000");
         if (size + offset > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
 
-        Request request = new Request("GET", "/category/_search");
+        Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(buildKeyRequest(key, offset, size));
 
@@ -568,40 +788,154 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public InputStream path(long id) {
+        long rootId = -1;
+        int left = 1, right = 1;
+        Request request = new Request("GET", PREFIX + "/_doc/" + id);
+        request.setOptions(ESUtil.requestOptions());
         try {
-            long rootId = -1;
-            int left = 1, right = 1;
-            Request request = new Request("GET", "/category/_doc/" + id);
-            request.setOptions(ESUtil.requestOptions());
             Response response = ESUtil.restClient().performRequest(request);
-            JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
-            while (!parser.isClosed()) {
-                JsonToken jsonToken = parser.nextToken();
-                if (JsonToken.FIELD_NAME == jsonToken) {
-                    String fieldName = parser.currentName();
-                    parser.nextToken();
-                    switch (fieldName) {
-                        case "root_id" -> rootId = parser.getValueAsInt();
-                        case "left" -> left = parser.getValueAsInt();
-                        case "right" -> right = parser.getValueAsInt();
+            try (InputStream content = response.getEntity().getContent();
+                 JsonParser parser = JSON_FACTORY.createParser(content)) {
+                while (parser.nextToken() != null) {
+                    JsonToken jsonToken = parser.currentToken();
+                    if (JsonToken.FIELD_NAME == jsonToken) {
+                        String fieldName = parser.currentName();
+                        parser.nextToken();
+                        switch (fieldName) {
+                            case "root_id" -> rootId = parser.getValueAsLong();
+                            case "left" -> left = parser.getValueAsInt();
+                            case "right" -> right = parser.getValueAsInt();
+                        }
                     }
                 }
+            } finally {
+                EntityUtils.consumeQuietly(response.getEntity());// 必须静默消费实体，防止连接泄漏
             }
-            request = new Request("GET", "/category/_search");
-            request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(this.buildPathRequest(rootId, left, right));
-            response = ESUtil.restClient().performRequest(request);
-            return this.reorganization(response.getEntity().getContent());
         } catch (ResponseException e) {
-            LOGGER.warn("The category(id={}) not found", id, e);
-            throw new RuntimeException(e);
+            LOGGER.error("Failed to query category by id: {}, response exception", id, e);
+            throw new IllegalStateException(String.format("Failed to query category by id: %d, response exception", id), e);
         } catch (IOException e) {
-            LOGGER.error("I/O failed", e);
-            throw new RuntimeException(e);
+            LOGGER.error("IO exception when querying category by id: {}", id, e);
+            throw new IllegalStateException(String.format("IO exception when querying category by id: %d", id), e);
+        }
+
+        request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESCategoryQuery.buildPathRequest(rootId, left, right));
+
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
+        boolean success = false;
+        Response response = null;
+        try {
+            response = ESUtil.restClient().performRequest(request);
+            try (InputStream content = response.getEntity().getContent();
+                 JsonParser parser = JSON_FACTORY.createParser(content);
+                 OutputStream os = new ByteBufOutputStream(buffer);
+                 JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+
+                Extract.extractWithoutAggs(parser, generator, "categories");
+                success = true;
+                return new ByteBufInputStream(buffer, true);
+            }
+        } catch (ResponseException e) {
+            LOGGER.error("Failed to query category path by id: {}, rootId: {}", id, rootId, e);
+            throw new SearchException(String.format("Failed to query category path for id: %d", id), e);
+        } catch (IOException e) {
+            LOGGER.error("IO exception when querying category path for id: {}", id, e);
+            throw new SearchException(String.format("IO exception when querying category path for id: %d", id), e);
+        } finally {
+            if (response != null) {
+                EntityUtils.consumeQuietly(response.getEntity());
+            }
+            if (!success && buffer.refCnt() > 0) {
+                ReferenceCountUtil.safeRelease(buffer);
+            }
         }
     }
 
-    private String buildPathRequest(long rootId, int left, int right) {
+    @Override
+    public Flux<ByteBuf> pathAsync(long id) {
+        long rootId = -1;
+        int left = 1, right = 1;
+
+        Request request = new Request("GET", PREFIX + "/_doc/" + id);
+        request.setOptions(ESUtil.requestOptions());
+        try {
+            Response response = ESUtil.restClient().performRequest(request);
+            try (InputStream content = response.getEntity().getContent();
+                 JsonParser parser = JSON_FACTORY.createParser(content)) {
+                while (parser.nextToken() != null) {
+                    JsonToken jsonToken = parser.currentToken();
+                    if (JsonToken.FIELD_NAME == jsonToken) {
+                        String fieldName = parser.currentName();
+                        parser.nextToken();
+                        switch (fieldName) {
+                            case "root_id" -> rootId = parser.getValueAsLong();
+                            case "left" -> left = parser.getValueAsInt();
+                            case "right" -> right = parser.getValueAsInt();
+                        }
+                    }
+                }
+            } finally {
+                EntityUtils.consumeQuietly(response.getEntity());// 必须静默消费实体，防止连接泄漏
+            }
+        } catch (ResponseException e) {
+            LOGGER.error("Failed to query category by id: {}, response exception", id, e);
+            throw new IllegalStateException(String.format("Failed to query category by id: %d, response exception", id), e);
+        } catch (IOException e) {
+            LOGGER.error("IO exception when querying category by id: {}", id, e);
+            throw new IllegalStateException(String.format("IO exception when querying category by id: %d", id), e);
+        }
+
+        request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESCategoryQuery.buildPathRequest(rootId, left, right));
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+            @Override
+            public void onSuccess(Response response) {
+                if (isCancelled.get()) {
+                    EntityUtils.consumeQuietly(response.getEntity()); // 必须加
+                    sink.tryEmitComplete().orThrow();
+                    return;
+                }
+                CompletableFuture.runAsync(() -> {
+                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
+                         JsonByteBufOutputStream jbbos = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(jbbos)) {
+                        if (isCancelled.get()) {
+                            return; // silent cancel; sink 已由外部处理或无需响应
+                        }
+                        Extract.extractWithoutAggs(parser, generator, "categories");
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    } finally {
+                        EntityUtils.consumeQuietly(response.getEntity());
+                    }
+                }, TRANSFORM_POOL).whenComplete((v, err) -> {
+                    if (err != null) {
+                        MapException.mapExceptionAndEmit(sink, err, isCancelled, id);
+                    } else {
+                        sink.tryEmitComplete().orThrow();
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                if (!isCancelled.get()) {
+                    sink.tryEmitError(MapException.mapException(e, id));
+                }
+            }
+        });
+
+        return sink.asFlux()
+                .doOnCancel(() -> isCancelled.set(true))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated"))
+                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+    }
+
+    private static String buildPathRequest(long rootId, int left, int right) {
         StringWriter writer = new StringWriter(256);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -648,85 +982,5 @@ public class ESCategoryQuery implements CategoryQuery {
             throw new IllegalStateException("Cannot assemble request JSON", e);
         }
         return writer.toString();
-    }
-
-    private InputStream reorganization(InputStream is) throws IOException {
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        boolean transferMark = false;
-        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os); JsonParser parser = JSON_FACTORY.createParser(is);) {
-            generator.writeStartObject();
-            while (parser.nextToken() != null) {
-                if (parser.currentToken() == JsonToken.FIELD_NAME && "hits".equals(parser.currentName())) {
-                    this.parseHits(parser, generator);
-                    break;
-                }
-            }
-            generator.writeEndObject();
-            generator.flush();
-            ByteBufInputStream result = new ByteBufInputStream(buffer, true);// 创建输入流并转移所有权
-            transferMark = true;
-            return result;
-        } finally {
-            if (!transferMark && buffer != null && buffer.refCnt() > 0) {
-                buffer.release(); // 只有在失败时才需要手动释放
-            }
-        }
-    }
-
-    private void parseHits(JsonParser parser, JsonGenerator generator) throws IOException {
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                String fieldName = parser.currentName();
-                if ("total".equals(fieldName)) {
-                    while (parser.nextToken() != null) {
-                        if (parser.currentToken() == JsonToken.FIELD_NAME && "value".equals(parser.currentName())) {
-                            parser.nextToken();
-                            generator.writeNumberField("total", parser.getValueAsInt());
-                            break;
-                        }
-                    }
-                } else if ("hits".equals(fieldName)) {
-                    generator.writeArrayFieldStart("categories");
-                    while (parser.nextToken() != null) {
-                        if (parser.currentToken() == JsonToken.START_OBJECT) {
-                            generator.writeStartObject();
-                            this.parserSource(parser, generator);
-                            this.parserSort(parser, generator);
-                            generator.writeEndObject();
-                        }
-                        if (parser.currentToken() == JsonToken.END_ARRAY && "hits".equals(parser.currentName())) {
-                            break;
-                        }
-                    }
-                    generator.writeEndArray();
-                }
-            }
-        }
-    }
-
-    private void parserSource(JsonParser parser, JsonGenerator generator) throws IOException {
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.START_OBJECT && "_source".equals(parser.currentName())) {
-                while (parser.nextToken() != null) {
-                    if (parser.currentToken() == JsonToken.FIELD_NAME && "_meta".equals(parser.currentName())) { //filter _meta
-                        break;
-                    }
-                    generator.copyCurrentEvent(parser);
-                }
-            }
-            if (parser.currentToken() == JsonToken.END_OBJECT && "_source".equals(parser.currentName()))
-                break;
-        }
-    }
-
-    private void parserSort(JsonParser parser, JsonGenerator generator) throws IOException {
-        if (parser.nextToken() == JsonToken.FIELD_NAME && "sort".equals(parser.currentName())) {
-            generator.copyCurrentEvent(parser);
-            while (parser.nextToken() != null) {
-                generator.copyCurrentEvent(parser);
-                if (parser.currentToken() == JsonToken.END_ARRAY && "sort".equals(parser.currentName()))
-                    break;
-            }
-        }
     }
 }

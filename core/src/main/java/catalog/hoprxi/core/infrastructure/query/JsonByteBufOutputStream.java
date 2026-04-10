@@ -23,6 +23,7 @@ import reactor.core.publisher.Sinks;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /***
@@ -32,15 +33,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 
 public class JsonByteBufOutputStream extends OutputStream {
-    private static final int DEFAULT_BUFFER_SIZE = 16 * 1024;//8kb
+    private static final int DEFAULT_BUFFER_SIZE = 16 * 1024;//16kb
     private final Sinks.Many<ByteBuf> sink;
     private final AtomicBoolean isCancelled;
     private final ByteBuf byteBuf;
     private volatile boolean closed = false;
 
     public JsonByteBufOutputStream(Sinks.Many<ByteBuf> sink, AtomicBoolean isCancelled, int bufferSize) {
-        this.sink = sink;
-        this.isCancelled = isCancelled;
+        this.sink = Objects.requireNonNull(sink,"sink required");
+        this.isCancelled = Objects.requireNonNull(isCancelled,"isCancelled required");
         this.byteBuf = PooledByteBufAllocator.DEFAULT.buffer(bufferSize);
     }
 

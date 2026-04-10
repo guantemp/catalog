@@ -192,11 +192,13 @@ public final class ESBrandQuery implements BrandQuery {
             sortField = SortFieldEnum._ID;
             //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
-        AtomicBoolean isCancelled = new AtomicBoolean(false);
-        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+
         Request request = new Request("GET", "/brand/_search");
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
+
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
         ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
             @Override
             public void onSuccess(Response response) {

@@ -86,7 +86,7 @@ public final class Extract {
                                 throw new IllegalStateException("Total must be an object");
                             }
                             while (parser.nextToken() != JsonToken.END_OBJECT) { // Extract only "value"
-                                if (parser.currentToken() == JsonToken.FIELD_NAME && "value".equals(parser.getCurrentName())) {
+                                if (parser.currentToken() == JsonToken.FIELD_NAME && "value".equals(parser.currentName())) {
                                     parser.nextToken();
                                     gen.writeNumberField("total", parser.getValueAsLong());
                                 } else {
@@ -100,7 +100,7 @@ public final class Extract {
                                 throw new IllegalStateException("ES7 'hits.hits' must be an array");
                             }
 
-                            gen.writeArrayFieldStart(objectName);
+                            gen.writeArrayFieldStart(objectName);//start arrays
                             while (parser.nextToken() != JsonToken.END_ARRAY) {
                                 if (parser.getCurrentToken() != JsonToken.START_OBJECT) {
                                     parser.skipChildren();
