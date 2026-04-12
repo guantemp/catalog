@@ -33,7 +33,6 @@ import com.typesafe.config.ConfigFactory;
 import org.javamoney.moneta.Money;
 import org.javamoney.moneta.format.CurrencyStyle;
 import org.testng.annotations.Test;
-import salt.hoprxi.crypto.util.AESUtil;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import javax.crypto.BadPaddingException;

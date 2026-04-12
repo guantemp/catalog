@@ -105,7 +105,6 @@ public class ItemService {
                             HttpData.ofUtf8(String.format("{\"Warn\":\"Item not found for id : %d }\"", id)));
                 });
         return HttpResponse.of(responseStream);
- 
         /*
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
@@ -450,28 +449,27 @@ public class ItemService {
     }
 
     @StatusCode(200)
-    @Delete("/items/:id")
+    @Delete("/items/{id}")
     public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id) {
-        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
-        ctx.blockingTaskExecutor().execute(() -> {
-            try {
-                ItemDeleteCommand command = new ItemDeleteCommand(id);
-                final Handler<ItemDeleteCommand, Boolean> handler = new ItemDeleteHandler();
-                handler.execute(command);
-                HttpResponse successResp = HttpResponse.of(
-                        HttpStatus.OK,
-                        MediaType.JSON_UTF_8,
-                        HttpData.ofUtf8(String.format("{\"status\":\"success\",\"code\":200,\"message\":" +
-                                "\"The item(id=%d) is moved to the recycle bin, you can retrieve it later in the recycle bin!\"}", id)));
-                future.complete(successResp);
-            } catch (Exception e) {
-                HttpResponse errorResp = HttpResponse.of(
+        return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
+            // 业务逻辑
+            ItemDeleteCommand command = new ItemDeleteCommand(id);
+            Handler<ItemDeleteCommand, Boolean> handler = new ItemDeleteHandler();
+            handler.execute(command);
+
+            // 成功响应
+            return HttpResponse.of(
+                    HttpStatus.OK,
+                    MediaType.JSON_UTF_8,
+                    String.format("{\"status\":\"success\",\"code\":200,\"message\":\"The item(id=%d) is moved to the recycle bin, you can retrieve it later in the recycle bin!\"}", id)
+            );
+        }, ctx.blockingTaskExecutor()).exceptionally(e ->
+                // 统一异常处理
+                HttpResponse.of(
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         MediaType.JSON_UTF_8,
-                        String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage()));
-                future.complete(errorResp);
-            }
-        });
-        return HttpResponse.of(future);
+                        String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage())
+                )
+        ));
     }
 }

@@ -24,10 +24,8 @@ import org.testng.annotations.Test;
 import reactor.core.publisher.Flux;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -43,8 +41,13 @@ public class ESCategoryQueryTest {
 
     @Test
     public void testRoot() throws IOException {
-        InputStream is = query.root();
-        System.out.println("root:\n" + new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        try (InputStream is = query.root()) {
+            System.out.println("root:\n" + new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test
+    public void testRootAysnc() throws IOException {
         Flux<ByteBuf> flux = query.rootAsync();
         String json = flux
                 .map(buf -> buf.toString(StandardCharsets.UTF_8))
@@ -80,8 +83,105 @@ public class ESCategoryQueryTest {
                 query.findAsync(143),
                 query.findAsync(-1L)
         };
-        printResult(fluxes);
+        ESCategoryQueryTest.printResult(fluxes);
         query.findAsync(19L).blockFirst();
+    }
+
+
+    @Test
+    public void testChildren() throws IOException {
+        try (InputStream is = query.children(151)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.children(1514)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.children(1)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.children(711)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test
+    public void testChildrenAsync() throws IOException {
+        Flux<ByteBuf>[] fluxes = new Flux[]{
+                query.childrenAsync(151),
+                query.childrenAsync(1514),
+                query.childrenAsync(1),
+                query.childrenAsync(711),
+        };
+        ESCategoryQueryTest.printResult(fluxes);
+    }
+
+
+    @Test
+    public void testDescendantsAsync() throws IOException {
+        Flux<ByteBuf>[] fluxes = new Flux[]{
+                query.descendantsAsync(1),
+                query.descendantsAsync(14)
+        };
+        ESCategoryQueryTest.printResult(fluxes);
+    }
+
+    @Test
+    public void testSearch() throws IOException {
+        try (InputStream is = query.search("酒")) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search("白萝卜")) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search("wine")) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search("oil")) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search("oil", 1, 2)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search(null, 0, 1)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test
+    public void testSearchAsync() {
+        Flux<ByteBuf>[] fluxes = new Flux[]{
+                query.searchAsync("酒"),
+                query.searchAsync("白萝卜"),
+                query.searchAsync("wine"),
+                query.searchAsync("oil"),
+                query.searchAsync("oil", 1, 2),
+                query.searchAsync(null, 0, 1)
+        };
+        ESCategoryQueryTest.printResult(fluxes);
+    }
+
+    @Test
+    public void testSearchSiblings() {
+    }
+
+    @Test
+    public void testPath() throws IOException {
+        try (InputStream is = query.path(1513)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.path(-1)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test
+    public void testPathAsync() throws IOException {
+        Flux<ByteBuf>[] fluxes = new Flux[]{
+                query.pathAsync(1513),
+                query.pathAsync(-1),
+                query.pathAsync(1513465)
+        };
+        ESCategoryQueryTest.printResult(fluxes);
     }
 
     private static void printResult(Flux<ByteBuf>[] fluxes) {
@@ -127,94 +227,4 @@ public class ESCategoryQueryTest {
             throw new RuntimeException("等待被中断", e);
         }
     }
-
-    @Test
-    public void testChildren() throws IOException {
-        try (InputStream is = query.children(151)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.children(1514)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.children(1)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.children(711)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-    }
-
-    @Test
-    public void testDescendants() throws IOException {
-        try (InputStream is = query.descendants(1)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.descendants(14)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-    }
-
-    @Test
-    public void testSearch() throws IOException {
-        try (InputStream is = query.search("酒")) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.search("白萝卜")) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.search("wine")) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.search("oil")) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.search("oil", 1, 2)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.search(null, 0, 1)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-    }
-
-    @Test
-    public void testSearchAysnc() {
-        Flux<ByteBuf>[] fluxes = new Flux[]{
-                query.searchAsync("酒"),
-                query.searchAsync("白萝卜"),
-                query.searchAsync("wine"),
-                query.searchAsync("oil"),
-                query.searchAsync("oil", 1, 2),
-                query.searchAsync(null, 0, 1)
-        };
-        printResult(fluxes);
-
-    }
-
-    @Test
-    public void testSearchSiblings() {
-    }
-
-    @Test
-    public void testPath() throws IOException {
-        try (InputStream is = query.path(1513)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.path(-1)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-    }
-
-    private static String inputStreamToString(InputStream is) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(is, StandardCharsets.UTF_8))) {
-            char[] buffer = new char[8192]; // 8KB 缓冲区
-            int charsRead;
-            while ((charsRead = reader.read(buffer)) != -1) {
-                sb.append(buffer, 0, charsRead);
-            }
-        }
-        return sb.toString();
-    }
-
 }

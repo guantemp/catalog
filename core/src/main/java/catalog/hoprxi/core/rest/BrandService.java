@@ -270,38 +270,23 @@ public class BrandService {
 
     @Delete("/brands/:id")
     public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id) {
-        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
-        ctx.blockingTaskExecutor().execute(() -> {
-            try {
-                BrandDeleteCommand delete = new BrandDeleteCommand(id);
-                Handler<BrandDeleteCommand, Boolean> handler = new BrandDeleteHandler(); // 建议优化为单例
-                handler.execute(delete);
-                String message = String.format("Brand(id=%d) deleted successfully", id);
-                HttpResponse successResp = HttpResponse.of(
-                        HttpStatus.OK,
-                        MediaType.JSON_UTF_8,
-                        String.format("{\"status\":\"success\",\"code\":200,\"message\":\"%s\"}", message)
-                );
-                future.complete(successResp);
+        return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
+            BrandDeleteCommand delete = new BrandDeleteCommand(id);
+            Handler<BrandDeleteCommand, Boolean> handler = new BrandDeleteHandler();
+            handler.execute(delete);
 
-            } catch (Exception e) {
-                HttpResponse errorResp = HttpResponse.of(
+            String message = String.format("Brand(id=%d) deleted successfully", id);
+            return HttpResponse.of(
+                    HttpStatus.OK,
+                    MediaType.JSON_UTF_8,
+                    String.format("{\"status\":\"success\",\"code\":200,\"message\":\"%s\"}", message)
+            );
+        }, ctx.blockingTaskExecutor()).exceptionally(e ->
+                HttpResponse.of(
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         MediaType.JSON_UTF_8,
-                        String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage()));
-                future.complete(errorResp);
-            }
-        });
-        return HttpResponse.of(future);
-/*
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.whenRequestCancelled().thenAccept(stream::close);
-        ctx.blockingTaskExecutor().execute(() -> {
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.ofUtf8(String.format("{\"status\":\"success\",\"code\":200,\"message\":\"The brand(id=%s) is deleted\"}", id)));
-            stream.close();
-        });
-        return HttpResponse.of(stream);
- */
+                        String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage())
+                )
+        ));
     }
 }

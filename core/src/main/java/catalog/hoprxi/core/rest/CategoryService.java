@@ -25,7 +25,7 @@ import catalog.hoprxi.core.application.handler.CategoryCreateHandler;
 import catalog.hoprxi.core.application.handler.CategoryDeleteHandler;
 import catalog.hoprxi.core.application.handler.Handler;
 import catalog.hoprxi.core.application.query.CategoryQuery;
-import catalog.hoprxi.core.application.query.SearchException;
+import catalog.hoprxi.core.application.query.NotFoundException;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESCategoryQuery;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -33,19 +33,14 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.linecorp.armeria.common.*;
-import com.linecorp.armeria.common.stream.StreamMessage;
-import com.linecorp.armeria.common.stream.StreamWriter;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufOutputStream;
-import io.netty.buffer.PooledByteBufAllocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.Objects;
@@ -58,7 +53,7 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2025/9/20
  */
 public class CategoryService {
-    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Category");
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
     private static final int SINGLE_BUFFER_SIZE = 512; // 0.5KB缓冲区
@@ -68,164 +63,211 @@ public class CategoryService {
     private static final CategoryQuery QUERY = new ESCategoryQuery();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
-    @Get("/categories/:id")
+    @Get("/categories/{id}")
     @Description("Retrieves the category information by the given category ID.")
-    public HttpResponse find(ServiceRequestContext ctx, @Param("id") long id) {
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.whenRequestCancelled().thenAccept(stream::close);
-        ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled() || ctx.isTimedOut()) return;
-            ByteBuf buffer = ctx.alloc().buffer(SINGLE_BUFFER_SIZE);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                InputStream source = QUERY.find(id);
-
-                this.copyRaw(gen, source);
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.wrap(buffer));
-                buffer.release();
-                stream.close();
-            } catch (SearchException | IOException e) {
-                this.handleStreamError(stream, e);
-            } finally {
-                if (buffer != null) buffer.release();
-            }
-        });
-        return HttpResponse.of(stream);
+    public HttpResponse find(@Param("id") long id) {
+        Flux<ByteBuf> dataFlux = QUERY.findAsync(id); // 假设返回 Flux<ByteBuf>
+        // 使用 switchMap：一旦有第一个元素，就前置 headers
+        Flux<HttpObject> responseStream = dataFlux
+                .map(HttpData::wrap)
+                .switchOnFirst((signal, flux) -> {
+                    if (signal.hasError()) { // 第一个信号就是错误
+                        return Flux.just(
+                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
+                    }
+                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
+                        return Flux.concat(
+                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build()), flux);
+                    }
+                    return Flux.just(
+                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                    .contentType(MediaType.JSON_UTF_8)
+                                    .build(),
+                            HttpData.ofUtf8(String.format("{\"Warn\":\"Category not found for id : %d }\"", id)));
+                });
+        return HttpResponse.of(responseStream);
     }
 
     @Get("/categories/{id}/children")
-    public HttpResponse children(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.whenRequestCancelled().thenAccept(stream::close);
-        ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled() || ctx.isTimedOut()) return;
-            ByteBuf buffer = ctx.alloc().buffer(BATCH_BUFFER_SIZE);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                InputStream source = QUERY.children(id);
-                if (pretty) gen.useDefaultPrettyPrinter();
-                this.copyRaw(gen, source);
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.wrap(buffer));
-                buffer = null;
-                stream.close();
-            } catch (IOException e) {
-                this.handleStreamError(stream, e);
-            } finally {
-                if (buffer != null) buffer.release();        // 确保buffer释放
-            }
-        });
-        return HttpResponse.of(stream);
+    public HttpResponse children(@Param("id") long id) {
+        Flux<ByteBuf> dataFlux = QUERY.childrenAsync(id)
+                .onErrorResume(NotFoundException.class, err ->
+                        Flux.error(new NotFoundException("Category not found: " + id))); // 假设返回 Flux<ByteBuf>
+        // 使用 switchMap：一旦有第一个元素，就前置 headers
+        Flux<HttpObject> responseStream = dataFlux
+                .map(HttpData::wrap)
+                .switchOnFirst((signal, flux) -> {
+                    if (signal.hasError()) { // 第一个信号就是错误
+                        Throwable error = signal.getThrowable();
+                        System.out.println(error);
+                        if (error instanceof NotFoundException) {
+                            return Flux.just(
+                                    ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                            .contentType(MediaType.JSON_UTF_8)
+                                            .build(),
+                                    HttpData.ofUtf8(String.format("{\"Error\":\"Category not found: %d\"}", id)));
+                        } else {
+                            return Flux.just(
+                                    ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                    HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
+                        }
+                    }
+                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
+                        return Flux.concat(
+                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build()), flux);
+                    }
+                    return Flux.just(
+                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                    .contentType(MediaType.JSON_UTF_8)
+                                    .build(),
+                            HttpData.ofUtf8(String.format("{\"Warn\":\"Not found category of id : %d }\"", id)));
+                });
+        return HttpResponse.of(responseStream);
     }
 
-    @Get("regex:^/categories/(?<id>.*)/(?:descendants|desc.)$")
-    public HttpResponse descendants(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.whenRequestCancelled().thenAccept(stream::close);
-        ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled() || ctx.isTimedOut()) return;
-            ByteBuf buffer = ctx.alloc().buffer(BATCH_BUFFER_SIZE);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                InputStream is = QUERY.descendants(id);
-                if (pretty) gen.useDefaultPrettyPrinter();
-                this.copyRaw(gen, is);
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.wrap(buffer));
-                buffer = null;
-                stream.close();
-            } catch (IOException e) {
-                this.handleStreamError(stream, e);
-            } finally {
-                if (buffer != null) buffer.release();        // 确保buffer释放
-            }
-        });
-        return HttpResponse.of(stream);
+    @Get("/categories/{id}/descendants")
+    public HttpResponse descendants(@Param("id") long id) {
+        Flux<ByteBuf> dataFlux = QUERY.descendantsAsync(id); // 假设返回 Flux<ByteBuf>
+        // 使用 switchMap：一旦有第一个元素，就前置 headers
+        Flux<HttpObject> responseStream = dataFlux
+                .map(HttpData::wrap)
+                .switchOnFirst((signal, flux) -> {
+                    if (signal.hasError()) { // 第一个信号就是错误
+                        Throwable error = signal.getThrowable();
+                        //System.out.println(error);
+                        if (error instanceof NotFoundException) {
+                            return Flux.just(
+                                    ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                            .contentType(MediaType.JSON_UTF_8)
+                                            .build(),
+                                    HttpData.ofUtf8(String.format("{\"Error\":\"Category not found: %d\"}", id)));
+                        } else {
+                            return Flux.just(
+                                    ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                    HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
+                        }
+                    }
+                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
+                        return Flux.concat(
+                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build()), flux);
+                    }
+                    return Flux.just(
+                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                    .contentType(MediaType.JSON_UTF_8)
+                                    .build(),
+                            HttpData.ofUtf8(String.format("{\"Warn\":\"Not found category of id : %d }\"", id)));
+                });
+        return HttpResponse.of(responseStream);
     }
+
+    @Get("/categories/{id}/desc.")
+    public HttpResponse desc(@Param("id") long id) {
+        return descendants(id);
+    }
+
 
     @Get("/categories/{id}/path")
-    public HttpResponse path(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.whenRequestCancelled().thenAccept(stream::close);
-        ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled() || ctx.isTimedOut()) return;
-            ByteBuf buffer = ctx.alloc().buffer(SINGLE_BUFFER_SIZE);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                InputStream source = QUERY.path(id);
-                if (pretty) gen.useDefaultPrettyPrinter();
-                this.copyRaw(gen, source);
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.wrap(buffer));
-                buffer = null;
-                stream.close();
-            } catch (IOException e) {
-                this.handleStreamError(stream, e);
-            } finally {
-                if (buffer != null) buffer.release();        // 确保buffer释放
-            }
-        });
-        return HttpResponse.of(stream);
+    public HttpResponse path(@Param("id") long id) {
+        Flux<ByteBuf> dataFlux = QUERY.pathAsync(id); // 假设返回 Flux<ByteBuf>
+        // 使用 switchMap：一旦有第一个元素，就前置 headers
+        Flux<HttpObject> responseStream = dataFlux
+                .map(HttpData::wrap)
+                .switchOnFirst((signal, flux) -> {
+                    if (signal.hasError()) { // 第一个信号就是错误
+                        Throwable error = signal.getThrowable();
+                        //System.out.println(error);
+                        if (error instanceof NotFoundException) {
+                            return Flux.just(
+                                    ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                            .contentType(MediaType.JSON_UTF_8)
+                                            .build(),
+                                    HttpData.ofUtf8(String.format("{\"Error\":\"Category not found: %d\"}", id)));
+                        } else {
+                            return Flux.just(
+                                    ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                    HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
+                        }
+                    }
+                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
+                        return Flux.concat(
+                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build()), flux);
+                    }
+                    return Flux.just(
+                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                    .contentType(MediaType.JSON_UTF_8)
+                                    .build(),
+                            HttpData.ofUtf8(String.format("{\"Warn\":\"Not found category of id : %d }\"", id)));
+                });
+        return HttpResponse.of(responseStream);
     }
 
     @Get("/categories/root")
-    public HttpResponse root(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.whenRequestCancelled().thenAccept(stream::close);
-        ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled() || ctx.isTimedOut()) return;
-            ByteBuf buffer = ctx.alloc().buffer(BATCH_BUFFER_SIZE);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                InputStream source = QUERY.root();
-                if (pretty) gen.useDefaultPrettyPrinter();
-                this.copyRaw(gen, source);
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.wrap(buffer));
-                buffer = null;
-                stream.close();
-            } catch (IOException e) {
-                this.handleStreamError(stream, e);
-            } finally {
-                if (buffer != null) buffer.release();        // 确保buffer释放
-            }
-        });
-        return HttpResponse.of(stream);
-    }
-
-    private void copyRaw(JsonGenerator generator, InputStream source) throws IOException {
-        JsonParser parser = JSON_FACTORY.createParser(source);
-        while (parser.nextToken() != null) {
-            generator.copyCurrentEvent(parser);
-        }
-        generator.flush();
+    public HttpResponse root() {
+        Flux<ByteBuf> dataFlux = QUERY.rootAsync(); // 假设返回 Flux<ByteBuf>
+        // 使用 switchMap：一旦有第一个元素，就前置 headers
+        Flux<HttpObject> responseStream = dataFlux
+                .map(HttpData::wrap)
+                .switchOnFirst((signal, flux) -> {
+                    if (signal.hasError()) { // 第一个信号就是错误
+                        return Flux.just(
+                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
+                    }
+                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
+                        return Flux.concat(
+                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build()), flux);
+                    }
+                    return Flux.just(
+                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                    .contentType(MediaType.JSON_UTF_8)
+                                    .build(),
+                            HttpData.ofUtf8("{\"Warn\":\"Not found category root}\""));
+                });
+        return HttpResponse.of(responseStream);
     }
 
     @Get("/categories")
-    public HttpResponse search(ServiceRequestContext ctx, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse search(ServiceRequestContext ctx) {
         QueryParams params = ctx.queryParams();
         String search = params.get("s", "");
         int offset = params.getInt("offset", OFFSET);
         int size = params.getInt("size", SIZE);
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.blockingTaskExecutor().execute(() -> {
-            ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                if (pretty) gen.useDefaultPrettyPrinter();
-                this.copyRaw(gen, QUERY.search(search, offset, size));
-                stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-                stream.write(HttpData.wrap(buffer));
-                buffer=null;
-                stream.close();
-            } catch (IOException e) {
-                this.handleStreamError(stream, e);
-            } finally {
-                if (buffer != null) buffer.release();        // 确保buffer释放
-            }
-        });
-        return HttpResponse.of(stream);
-    }
 
-    private void handleStreamError(StreamWriter<HttpObject> stream, Exception e) {
-        stream.write(ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-        stream.write(HttpData.ofUtf8("{\"status\":\"error\",\"code\":500,\"message\":\"Error,it's %s\"}", e.getMessage()));
-        stream.close();
+        Flux<ByteBuf> dataFlux = QUERY.searchAsync(search, offset, size);
+        Flux<HttpObject> responseStream = dataFlux
+                .map(HttpData::wrap)
+                .switchOnFirst((signal, flux) -> {
+                    if (signal.hasError()) {// 信号->错误
+                        return Flux.just(
+                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
+                    }
+                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
+                        return Flux.concat(
+                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build()), flux);
+                    }
+                    return Flux.just(
+                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                    .contentType(MediaType.JSON_UTF_8)
+                                    .build(),
+                            HttpData.ofUtf8("{\"warn\":\"Not found\"}")
+                    );
+                });
+
+        return HttpResponse.of(responseStream);
     }
 
     @Post("/categories")
@@ -237,18 +279,18 @@ public class CategoryService {
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         ctx.blockingTaskExecutor().execute(() -> {
             try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
-                Category category = this.createCategory(parser);
-                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
-                        "{\"status\":\"success\",\"code\":201,\"message\":\"A category created,it's %s\"}", category)));
+                Category category = CategoryService.createCategory(parser);
+                future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
+                        String.format("{\"status\":\"success\",\"code\":201,\"message\":\"A category created,it's %s\"}", category)));
             } catch (Exception e) {
-                ctx.eventLoop().execute(() -> future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                        "{\"status\":500,\"code\":500,\"message\":\"Can't create a category,cause by %s\"}", e)));
+                future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                        String.format("{\"status\":500,\"code\":500,\"message\":\"Can't create a category,cause by %s\"}", e.getMessage())));
             }
         });
         return HttpResponse.of(future);
     }
 
-    private Category createCategory(JsonParser parser) throws IOException {
+    private static Category createCategory(JsonParser parser) throws IOException {
         String name = null, alias = null, description = null;
         URL icon = null;
         long parentId = 0;
@@ -277,16 +319,9 @@ public class CategoryService {
         if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                     MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.whenRequestCancelled().thenAccept(stream::close);
-        ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled() || ctx.isTimedOut()) return;
-            this.update(body, id);
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":201,\"message\":\"A category has update,it's %s\"}"));
-            stream.close();
-        });
-        return HttpResponse.of(stream);
+
+        return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
+                "{\"status\":\"success\",\"code\":200,\"message\":\"A brand updated,it\"}");
     }
 
     private void update(HttpData body, long id) {
@@ -356,20 +391,25 @@ public class CategoryService {
         return result;
     }
 
-    @Delete("/categories/:id")
-    public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.whenRequestCancelled().thenAccept(stream::close);
-        ctx.blockingTaskExecutor().execute(() -> {
-
-            CategoryDeleteCommand delete = new CategoryDeleteCommand(id);
+    @Delete("/categories/{id}")
+    public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id) {
+        return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
+            CategoryDeleteCommand command = new CategoryDeleteCommand(id);
             Handler<CategoryDeleteCommand, Boolean> handler = new CategoryDeleteHandler();
-            handler.execute(delete);
+            handler.execute(command);
 
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            stream.write(HttpData.ofUtf8("{\"status\":\"success\",\"code\":200,\"message\":\"The category(id=%s) is deleted\"}", id));
-            stream.close();
-        });
-        return HttpResponse.of(stream);
+            return HttpResponse.of(
+                    HttpStatus.OK,
+                    MediaType.JSON_UTF_8,
+                    String.format("{\"status\":\"success\",\"code\":200,\"message\":\"The category(id=%d) is moved to the recycle bin, you can retrieve it later in the recycle bin!\"}", id)
+            );
+        }, ctx.blockingTaskExecutor()).exceptionally(e ->
+                HttpResponse.of(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        MediaType.JSON_UTF_8,
+                        String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage())
+                )
+        ));
     }
 }
+

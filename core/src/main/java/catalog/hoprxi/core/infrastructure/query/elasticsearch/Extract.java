@@ -90,7 +90,6 @@ public final class Extract {
                                     parser.nextToken();
                                     gen.writeNumberField("total", parser.getValueAsLong());
                                 } else {
-                                    parser.nextToken();
                                     parser.skipChildren();
                                 }
                             }
@@ -132,7 +131,6 @@ public final class Extract {
                                         parser.nextToken();
                                         gen.copyCurrentStructure(parser);
                                     } else {
-                                        parser.nextToken();
                                         parser.skipChildren(); // skip _id, _index, sort, _score, etc.
                                     }
                                 }
@@ -141,7 +139,6 @@ public final class Extract {
                             gen.writeEndArray();//end objectName array
                             hasHitsArray = true;//have object
                         } else {
-                            parser.nextToken();
                             parser.skipChildren(); // skip max_score, etc.
                         }
                     }
@@ -156,11 +153,9 @@ public final class Extract {
                         gen.writeFieldName("aggregations");
                         gen.copyCurrentStructure(parser);
                     } else {
-                        parser.nextToken();
                         parser.skipChildren(); // 跳过 aggregations
                     }
                 } else {
-                    parser.nextToken();
                     parser.skipChildren(); // skip took, timed_out, _shards, etc.
                 }
             }

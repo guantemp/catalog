@@ -5,6 +5,7 @@ catalog\hoprxi\core\infrastructure\query\elasticsearch\ESItemQuery.class
 catalog\hoprxi\core\domain\model\barcode\ISBN.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$16.class
 catalog\hoprxi\core\infrastructure\batch\BrandHandler.class
+catalog\hoprxi\core\infrastructure\query\elasticsearch\ESBrandQuery$1.class
 catalog\hoprxi\core\infrastructure\batch\Verify.class
 catalog\hoprxi\core\infrastructure\query\elasticsearch\spec\RetailPriceSpec.class
 catalog\hoprxi\core\domain\model\GradeEnum.class
@@ -60,6 +61,7 @@ catalog\hoprxi\core\domain\model\Show.class
 catalog\hoprxi\core\application\batch\ItemExportService.class
 catalog\hoprxi\core\application\query\CategoryQuery.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$30.class
+catalog\hoprxi\core\infrastructure\query\elasticsearch\ESBrandQuery$2.class
 catalog\hoprxi\core\infrastructure\batch\VipPriceHandler.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$32.class
 catalog\hoprxi\core\rest\CategoryService.class
@@ -153,6 +155,7 @@ catalog\hoprxi\core\domain\model\ItemSpecificationChanged.class
 catalog\hoprxi\core\domain\model\ProhibitTradingItemRepository.class
 catalog\hoprxi\core\rest\ItemService.class
 catalog\hoprxi\core\domain\model\brand\BrandRenamed.class
+catalog\hoprxi\core\infrastructure\query\elasticsearch\ESBrandQuery$3.class
 catalog\hoprxi\core\domain\model\ItemMadeInChanged.class
 catalog\hoprxi\core\infrastructure\ESUtil.class
 catalog\hoprxi\core\application\handler\CategoryCreateHandler.class
@@ -166,6 +169,7 @@ catalog\hoprxi\core\domain\model\price\UnitEnum$1.class
 catalog\hoprxi\core\domain\model\price\MemberPrice.class
 catalog\hoprxi\core\domain\model\madeIn\Imported.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$13.class
+catalog\hoprxi\core\infrastructure\query\elasticsearch\MapException.class
 catalog\hoprxi\core\domain\model\category\CategoryRepository.class
 catalog\hoprxi\core\domain\model\category\CategoryDescriptionChanged.class
 catalog\hoprxi\core\domain\model\price\AgilePrice.class
@@ -221,6 +225,7 @@ catalog\hoprxi\core\application\command\ItemRetailPriceAdjustCommand.class
 catalog\hoprxi\core\infrastructure\batch\DisruptorExceptionHandler.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$3.class
 catalog\hoprxi\core\domain\model\ProhibitSellItemRepository.class
+catalog\hoprxi\core\infrastructure\query\elasticsearch\ESCategoryQuery$2.class
 catalog\hoprxi\core\infrastructure\batch\MaidenHandler$MdeInView.class
 catalog\hoprxi\core\infrastructure\query\elasticsearch\spec\VipPriceSpec.class
 catalog\hoprxi\core\infrastructure\batch\ExecuteSqlEvent.class
@@ -234,5 +239,6 @@ catalog\hoprxi\core\domain\model\category\Category.class
 catalog\hoprxi\core\domain\model\shelfLife\ShelfLifeService$OnSchedule.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$4.class
 catalog\hoprxi\core\infrastructure\query\elasticsearch\Extract.class
+catalog\hoprxi\core\infrastructure\query\elasticsearch\ESCategoryQuery$1.class
 catalog\hoprxi\core\application\view\CategoryView.class
 catalog\hoprxi\core\domain\model\madeIn\MadeIn.class

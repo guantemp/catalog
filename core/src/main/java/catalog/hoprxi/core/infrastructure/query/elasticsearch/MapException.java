@@ -45,9 +45,13 @@ public final class MapException {
      * @param identifier 异常关联的资源标识（ID / 关键字），用于日志与错误提示
      * @return 转换后的业务异常（NotFoundException / SearchException）
      */
-    public static Throwable mapException(Exception e, Object identifier) {
-        if (e instanceof ResponseException) {
-            int status = ((ResponseException) e).getResponse().getStatusLine().getStatusCode();
+    public static Throwable mapException(Exception err, Object identifier) {
+        Throwable cause = err;
+        if (err instanceof UncheckedIOException) {
+            cause = err.getCause(); // 解包 IO 异常
+        }
+        if (cause  instanceof ResponseException) {
+            int status = ((ResponseException) cause ).getResponse().getStatusLine().getStatusCode();
             if (status == 404) {
                 return new NotFoundException("Not found for: " + identifier);
             } else if (status >= 400 && status < 500) {
@@ -55,11 +59,11 @@ public final class MapException {
             } else {
                 return new SearchException("Server error: " + status);
             }
-        } else if (e instanceof IOException) {
-            LOGGER.error("I/O error for id={}", identifier, e);
-            return new SearchException("Network error", e);
+        } else if (cause instanceof IOException) {
+            LOGGER.error("I/O error for id={}", identifier, cause );
+            return new SearchException("Network error", cause );
         }
-        return new SearchException("Unexpected error", e);
+        return new SearchException("Unexpected error", cause );
     }
 
     /**
@@ -78,7 +82,17 @@ public final class MapException {
             if (err instanceof UncheckedIOException) {
                 cause = err.getCause(); // 解包 IO 异常
             }
-            if (cause instanceof IOException) { // 如果是普通 RuntimeException，cause 就是 err 本身，保持不动
+            System.out.println(cause);
+            if (cause instanceof ResponseException) {
+                int status = ((ResponseException) cause).getResponse().getStatusLine().getStatusCode();
+                if (status == 404) {
+                    sink.tryEmitError(new NotFoundException("Not found"));
+                } else if (status >= 400 && status < 500) {
+                    sink.tryEmitError(new SearchException("Client error: " + status));
+                } else {
+                    sink.tryEmitError(new SearchException("Server error: " + status));
+                }
+            } else if (cause instanceof IOException) { // 如果是普通 RuntimeException，cause 就是 err 本身，保持不动
                 LOGGER.warn("Transform failed due to IO error for id={}", key, cause);
                 sink.tryEmitError(new SearchException("Transform failed: IO error", cause));
             } else {//【修复空指针】：确保 cause 不为 null 再调用 getMessage()

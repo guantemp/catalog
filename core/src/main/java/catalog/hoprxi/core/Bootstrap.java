@@ -20,9 +20,6 @@ import catalog.hoprxi.core.rest.BrandService;
 import catalog.hoprxi.core.rest.CategoryService;
 import catalog.hoprxi.core.rest.ItemService;
 import catalog.hoprxi.core.rest.UnitService;
-import com.linecorp.armeria.common.HttpResponse;
-import com.linecorp.armeria.common.HttpStatus;
-import com.linecorp.armeria.common.MediaType;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.server.docs.DocService;
@@ -113,13 +110,6 @@ public class Bootstrap {
                 .autoIndex(true)      // 开启目录浏览（可选）
                 .build();
         sb.serviceUnder("/", fs);
-        // 设置默认首页：访问 / 返回 HTML
-        /*
-        sb.service("/", (ctx, req) ->
-                HttpResponse.of(HttpStatus.OK, MediaType.HTML_UTF_8,
-                        "<html><body><h1>Welcome to My Catalog Service!</h1><h1><a href=\"../docs\">View the document</a></h1></body></html>")
-        );
-         */
         //添加文档服务
         sb.serviceUnder("/docs", DocService.builder()
                 //.exampleRequests("/v1/brands", "query")
@@ -132,7 +122,7 @@ public class Bootstrap {
                 .annotatedService("/v1", new UnitService())
                 .annotatedService("/v1", new BrandService())
                 .annotatedService("/v1", new ItemService())
-                .annotatedService("/v1", new CategoryService())
+                .annotatedService("/v1",new CategoryService())
                 .build();
         server.closeOnJvmShutdown();
         server.start().join();

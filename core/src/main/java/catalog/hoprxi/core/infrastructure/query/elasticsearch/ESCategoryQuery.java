@@ -31,16 +31,15 @@ import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.http.util.EntityUtils;
-import org.elasticsearch.client.Request;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseException;
-import org.elasticsearch.client.ResponseListener;
+import org.elasticsearch.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 import java.io.*;
+import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
@@ -48,6 +47,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /***
@@ -60,12 +60,8 @@ public class ESCategoryQuery implements CategoryQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
     private static final String PREFIX = ESUtil.customized().isBlank() ? "/category" : "/" + ESUtil.customized() + "_category";
     private static final String SEARCH_ENDPOINT = PREFIX + "/_search";
-    private static final JsonFactory JSON_FACTORY = JsonFactory.builder()
-            .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
-            .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
-            .build();
+    private static final JsonFactory JSON_FACTORY = JsonFactory.builder().disable(JsonFactory.Feature.INTERN_FIELD_NAMES).disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES).build();
     private static final int MAX_SIZE = 9999;
-    private static final int SINGLE_BUFFER_SIZE = 2048; // 2KB缓冲区/单值
     private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
     private static final ExecutorService TRANSFORM_POOL = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -75,28 +71,7 @@ public class ESCategoryQuery implements CategoryQuery {
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESCategoryQuery.buildRootRequest());
 
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        boolean success = false;
-        Response response = null;
-        try {
-            response = ESUtil.restClient().performRequest(request);
-            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                 OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-                Extract.extractWithoutAggs(parser, generator, "categories");
-                success = true;
-                return new ByteBufInputStream(buffer, true);
-            }
-        } catch (IOException e) {
-            LOGGER.warn("No search was found for anything resembling root categories", e);
-            throw new SearchException("No search was found for anything resembling root categories", e);
-        } finally {
-            if (response != null) {
-                EntityUtils.consumeQuietly(response.getEntity());
-            }
-            if (!success && buffer.refCnt() > 0) {
-                ReferenceCountUtil.safeRelease(buffer);
-            }
-        }
+        return ESCategoryQuery.byteBufInputStream("root", request);
     }
 
     @Override
@@ -105,48 +80,7 @@ public class ESCategoryQuery implements CategoryQuery {
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESCategoryQuery.buildRootRequest());
 
-        AtomicBoolean isCancelled = new AtomicBoolean(false);
-        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
-        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                if (isCancelled.get()) {
-                    EntityUtils.consumeQuietly(response.getEntity()); // 必须加
-                    sink.tryEmitComplete().orThrow();
-                    return;
-                }
-                CompletableFuture.runAsync(() -> {
-                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                         OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-                        if (isCancelled.get()) {
-                            return; // silent cancel; sink 已由外部处理或无需响应
-                        }
-                        Extract.extractWithoutAggs(parser, generator, "categories");
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    } finally {
-                        EntityUtils.consumeQuietly(response.getEntity());
-                    }
-                }, TRANSFORM_POOL).whenComplete((v, err) -> {
-                    if (err != null) {
-                        MapException.mapExceptionAndEmit(sink, err, isCancelled, "");
-                    } else {
-                        sink.tryEmitComplete().orThrow();
-                    }
-                });
-            }
-
-            @Override
-            public void onFailure(Exception exception) {
-                if (!isCancelled.get()) {
-                    sink.tryEmitError(MapException.mapException(exception, ""));
-                }
-            }
-        });
-        return sink.asFlux()
-                .doOnCancel(() -> isCancelled.set(true))
-                .doOnTerminate(() -> LOGGER.debug("Request terminated,check"))
-                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+        return ESCategoryQuery.byteBufFlux("root", request);
     }
 
     private static String buildRootRequest() {
@@ -169,23 +103,10 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public InputStream find(long id) {
-        Request request = new Request("GET", PREFIX + "/_doc/" + id);//PREFIX+"/_doc/"
+        Request request = new Request("GET", PREFIX + "/_doc/" + id);
         request.setOptions(ESUtil.requestOptions());
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(SINGLE_BUFFER_SIZE);
-        try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-            Response response = ESUtil.restClient().performRequest(request);
-            JsonParser parser = JSON_FACTORY.createParser(response.getEntity().getContent());
-            Extract.extractSourceSkipMeta(parser, generator);
-            return new ByteBufInputStream(buffer, true);
-        } catch (ResponseException e) {
-            if (buffer.refCnt() > 0) buffer.release();
-            LOGGER.error("The category(id={}) not found", id, e);
-            throw new SearchException(String.format("The category(id=%s) not found", id), e);
-        } catch (IOException e) {
-            if (buffer.refCnt() > 0) buffer.release();
-            LOGGER.error("I/O failed", e);
-            throw new SearchException("Error: Elasticsearch timeout or no connection", e);
-        }
+
+        return ESCategoryQuery.byteBufInputStream(String.valueOf(id), request, true);
     }
 
     @Override
@@ -193,48 +114,7 @@ public class ESCategoryQuery implements CategoryQuery {
         Request request = new Request("GET", PREFIX + "/_doc/" + id);
         request.setOptions(ESUtil.requestOptions());
 
-        AtomicBoolean isCancelled = new AtomicBoolean(false);
-        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
-        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                if (isCancelled.get()) {
-                    EntityUtils.consumeQuietly(response.getEntity()); // 必须加
-                    sink.tryEmitComplete().orThrow();
-                    return;
-                }
-                CompletableFuture.runAsync(() -> {
-                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                         OutputStream os = new JsonByteBufOutputStream(sink, isCancelled, 2048); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-                        if (isCancelled.get()) {
-                            return; // silent cancel; sink 已由外部处理或无需响应
-                        }
-                        Extract.extractSourceSkipMeta(parser, generator);
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    } finally {
-                        EntityUtils.consumeQuietly(response.getEntity());
-                    }
-                }, TRANSFORM_POOL).whenComplete((v, err) -> {
-                    if (err != null) {
-                        MapException.mapExceptionAndEmit(sink, err, isCancelled, id);
-                    } else {
-                        sink.tryEmitComplete().orThrow();
-                    }
-                });
-            }
-
-            @Override
-            public void onFailure(Exception exception) {
-                if (!isCancelled.get()) {
-                    sink.tryEmitError(MapException.mapException(exception, id));
-                }
-            }
-        });
-        return sink.asFlux()
-                .doOnCancel(() -> isCancelled.set(true))
-                .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", id))
-                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+        return ESCategoryQuery.byteBufFlux(String.valueOf(id), request, true);
     }
 
     @Override
@@ -243,28 +123,7 @@ public class ESCategoryQuery implements CategoryQuery {
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESCategoryQuery.buildChildrenRequest(id));
 
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        boolean success = false;
-        Response response = null;
-        try {
-            response = ESUtil.restClient().performRequest(request);
-            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                 OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-                Extract.extractWithoutAggs(parser, generator, "categories");
-                success = true;
-                return new ByteBufInputStream(buffer, true);
-            }
-        } catch (IOException e) {
-            LOGGER.warn("There are no related category(id={}) available ", id, e);
-            throw new SearchException(String.format("There are no related category(id=%d) available", id), e);
-        } finally {
-            if (response != null) {
-                EntityUtils.consumeQuietly(response.getEntity());
-            }
-            if (!success && buffer.refCnt() > 0) {
-                ReferenceCountUtil.safeRelease(buffer);
-            }
-        }
+        return ESCategoryQuery.byteBufInputStream(String.valueOf(id), request);
     }
 
     @Override
@@ -273,48 +132,7 @@ public class ESCategoryQuery implements CategoryQuery {
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESCategoryQuery.buildChildrenRequest(id));
 
-        AtomicBoolean isCancelled = new AtomicBoolean(false);
-        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
-        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                if (isCancelled.get()) {
-                    EntityUtils.consumeQuietly(response.getEntity()); // 必须加
-                    sink.tryEmitComplete().orThrow();
-                    return;
-                }
-                CompletableFuture.runAsync(() -> {
-                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                         OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-                        if (isCancelled.get()) {
-                            return; // silent cancel; sink 已由外部处理或无需响应
-                        }
-                        Extract.extractWithoutAggs(parser, generator, "categories");
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    } finally {
-                        EntityUtils.consumeQuietly(response.getEntity());
-                    }
-                }, TRANSFORM_POOL).whenComplete((v, err) -> {
-                    if (err != null) {
-                        MapException.mapExceptionAndEmit(sink, err, isCancelled, id);
-                    } else {
-                        sink.tryEmitComplete().orThrow();
-                    }
-                });
-            }
-
-            @Override
-            public void onFailure(Exception exception) {
-                if (!isCancelled.get()) {
-                    sink.tryEmitError(MapException.mapException(exception, id));
-                }
-            }
-        });
-        return sink.asFlux()
-                .doOnCancel(() -> isCancelled.set(true))
-                .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", id))
-                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+        return ESCategoryQuery.byteBufFlux(String.valueOf(id), request);
     }
 
     private static String buildChildrenRequest(long id) {
@@ -363,8 +181,7 @@ public class ESCategoryQuery implements CategoryQuery {
         request.setOptions(ESUtil.requestOptions());
         try {
             Response response = ESUtil.restClient().performRequest(request);
-            try (InputStream content = response.getEntity().getContent();
-                 JsonParser parser = JSON_FACTORY.createParser(content)) {
+            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content)) {
                 while (parser.nextToken() != null) {
                     JsonToken jsonToken = parser.currentToken();
                     if (JsonToken.FIELD_NAME == jsonToken) {
@@ -397,10 +214,7 @@ public class ESCategoryQuery implements CategoryQuery {
         Response response = null;
         try {
             response = ESUtil.restClient().performRequest(request);
-            try (InputStream content = response.getEntity().getContent();
-                 JsonParser parser = JSON_FACTORY.createParser(content);
-                 OutputStream os = new ByteBufOutputStream(buffer);
-                 JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content); OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
 
                 ESCategoryQuery.descendantToTree(parser, generator);
                 success = true;
@@ -424,40 +238,69 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public Flux<ByteBuf> descendantsAsync(long id) {
-        CompletableFuture<Map<String, Object>> nodeInfoFuture = CompletableFuture.supplyAsync(() -> {
+        return Mono.defer(() -> {
+            Sinks.One<Map<String, Object>> sink = Sinks.one();
+            AtomicBoolean isCancelled = new AtomicBoolean(false);
             Request request = new Request("GET", PREFIX + "/_doc/" + id);
             request.setOptions(ESUtil.requestOptions());
 
-            try {
-                Response response = ESUtil.restClient().performRequest(request);
-                try (InputStream content = response.getEntity().getContent();
-                     JsonParser parser = JSON_FACTORY.createParser(content)) {
+            Cancellable cancellable = ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+                @Override
+                public void onSuccess(Response response) {
+                    // 取消标记，和你第二步的逻辑一模一样
+                    if (isCancelled.get()) {
+                        EntityUtils.consumeQuietly(response.getEntity());
+                        sink.tryEmitEmpty();
+                        return;
+                    }
 
-                    Map<String, Object> result = new HashMap<>();
-                    while (parser.nextToken() != null) {
-                        if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                            String fieldName = parser.currentName();
-                            parser.nextToken();
-                            switch (fieldName) {
-                                case "root_id" -> result.put("familyId", parser.getValueAsLong());
-                                case "left" -> result.put("left", parser.getValueAsInt());
-                                case "right" -> result.put("right", parser.getValueAsInt());
+                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content)) {
+                        // 解析完，把结果塞给Mono，和你sink.tryEmitNext 一样
+                        Map<String, Object> nodeInfo = new HashMap<>();
+                        while (parser.nextToken() != null) {
+                            JsonToken jsonToken = parser.currentToken();
+                            if (JsonToken.FIELD_NAME == jsonToken) {
+                                String fieldName = parser.currentName();
+                                parser.nextToken();
+                                switch (fieldName) {
+                                    case "root_id" -> nodeInfo.put("familyId", parser.getValueAsLong());
+                                    case "left" -> nodeInfo.put("left", parser.getValueAsInt());
+                                    case "right" -> nodeInfo.put("right", parser.getValueAsInt());
+                                }
                             }
                         }
+                        sink.tryEmitValue(nodeInfo);
+                    } catch (IOException e) {
+                        sink.tryEmitError(new UncheckedIOException(e));
+                    } finally {
+                        // 你原来的finally，静默消费实体，防止连接泄漏，完全一样
+                        EntityUtils.consumeQuietly(response.getEntity());
                     }
-                    return result;
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+
+                @Override
+                public void onFailure(Exception exception) {
+                    // 异常处理，和你第二步的逻辑一模一样
+                    if (isCancelled.get()) return;
+                    LOGGER.error("Failed to query category by id: {}, response exception", id, exception);
+                    sink.tryEmitError(MapException.mapException(exception, id));
+                }
+            });
+
+            return sink.asMono().doOnCancel(() -> {
+                isCancelled.set(true);
+                cancellable.cancel();
+            });
+        }).cast(Map.class).flatMapMany(node -> {
+            long familyId = (long) node.get("familyId");
+            int left = (int) node.get("left");
+            int right = (int) node.get("right");
+            Request request = new Request("GET", SEARCH_ENDPOINT);
+            request.setOptions(ESUtil.requestOptions());
+            request.setJsonEntity(ESCategoryQuery.buildDescendantRequest(familyId, left, right));
+
+            return ESCategoryQuery.byteBufFlux(String.valueOf(id), request);
         });
-        nodeInfoFuture.thenCompose(nodeInfo -> {
-            long familyId = (Long) nodeInfo.get("familyId");
-            int left = (Integer) nodeInfo.get("left");
-            int right = (Integer) nodeInfo.get("right");
-            return null;
-        });
-        return null;
     }
 
     private static String buildDescendantRequest(long rootId, int left, int right) {
@@ -530,9 +373,9 @@ public class ESCategoryQuery implements CategoryQuery {
      * }
      * </pre>
      *
-     * @param parser   Jackson JsonParser，用于读取 ES 原始 JSON 数据流
+     * @param parser    Jackson JsonParser，用于读取 ES 原始 JSON 数据流
      * @param generator Jackson JsonGenerator，用于输出标准树形 JSON 结构
-     * @throws IOException 当 JSON 解析、生成、IO 异常时抛出
+     * @throws IOException           当 JSON 解析、生成、IO 异常时抛出
      * @throws IllegalStateException 当 ES 数据结构不符合预期（非对象/非数组）时抛出
      */
     private static void descendantToTree(JsonParser parser, JsonGenerator generator) throws IOException {
@@ -559,7 +402,6 @@ public class ESCategoryQuery implements CategoryQuery {
                                     parser.nextToken();
                                     generator.writeNumberField("total", parser.getValueAsLong());
                                 } else {
-                                    //parser.nextToken();
                                     parser.skipChildren();
                                 }
                             }
@@ -605,7 +447,6 @@ public class ESCategoryQuery implements CategoryQuery {
                                             }
                                         }//end loop source
                                     } else {
-                                        //parser.nextToken();
                                         parser.skipChildren(); // skip _id, _index, sort, _score, etc.
                                     }
                                 }//end loop {
@@ -624,12 +465,10 @@ public class ESCategoryQuery implements CategoryQuery {
                                 }
                             }//end loop hits array
                         } else {//skip warp hits
-                            //parser.nextToken();
                             parser.skipChildren(); // skip max_score, etc.
                         }
                     }
                 } else {//skip not wrap hits
-                    //parser.nextToken();
                     parser.skipChildren(); // skip max_score, etc.
                 }
             }
@@ -645,32 +484,15 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public InputStream search(String key, int offset, int size) {
+        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("Offset value range is 0-10000");
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("Size value range is 0-10000");
+        if (size + offset > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
+
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESCategoryQuery.buildKeyRequest(key, offset, size));
 
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        boolean success = false;
-        Response response = null;
-        try {
-            response = ESUtil.restClient().performRequest(request);
-            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                 OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-                Extract.extractWithoutAggs(parser, generator, "categories");
-                success = true;
-                return new ByteBufInputStream(buffer, true);
-            }
-        } catch (IOException e) {
-            LOGGER.error("No search was found for anything resembling key {} category ", key, e);
-            throw new SearchException(String.format("No search was found for anything resembling key %s category", key), e);
-        } finally {
-            if (response != null) {
-                EntityUtils.consumeQuietly(response.getEntity());
-            }
-            if (!success && buffer.refCnt() > 0) {
-                ReferenceCountUtil.safeRelease(buffer);
-            }
-        }
+        return ESCategoryQuery.byteBufInputStream(key, request);
     }
 
     @Override
@@ -683,49 +505,7 @@ public class ESCategoryQuery implements CategoryQuery {
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(buildKeyRequest(key, offset, size));
 
-        AtomicBoolean isCancelled = new AtomicBoolean(false);
-        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
-        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                if (isCancelled.get()) {
-                    EntityUtils.consumeQuietly(response.getEntity()); // 必须加
-                    sink.tryEmitComplete().orThrow();
-                    return;
-                }
-                CompletableFuture.runAsync(() -> {
-                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                         JsonByteBufOutputStream jbbos = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(jbbos)) {
-                        if (isCancelled.get()) {
-                            return; // silent cancel; sink 已由外部处理或无需响应
-                        }
-                        Extract.extractWithoutAggs(parser, generator, "categories");
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    } finally {
-                        EntityUtils.consumeQuietly(response.getEntity());
-                    }
-                }, TRANSFORM_POOL).whenComplete((v, err) -> {
-                    if (err != null) {
-                        MapException.mapExceptionAndEmit(sink, err, isCancelled, key);
-                    } else {
-                        sink.tryEmitComplete().orThrow();
-                    }
-                });
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                if (!isCancelled.get()) {
-                    sink.tryEmitError(MapException.mapException(e, key));
-                }
-            }
-        });
-
-        return sink.asFlux()
-                .doOnCancel(() -> isCancelled.set(true))
-                .doOnTerminate(() -> LOGGER.debug("Request terminated"))
-                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+        return ESCategoryQuery.byteBufFlux(key, request);
     }
 
     private static String buildKeyRequest(String key, int offset, int limit) {
@@ -794,8 +574,7 @@ public class ESCategoryQuery implements CategoryQuery {
         request.setOptions(ESUtil.requestOptions());
         try {
             Response response = ESUtil.restClient().performRequest(request);
-            try (InputStream content = response.getEntity().getContent();
-                 JsonParser parser = JSON_FACTORY.createParser(content)) {
+            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content)) {
                 while (parser.nextToken() != null) {
                     JsonToken jsonToken = parser.currentToken();
                     if (JsonToken.FIELD_NAME == jsonToken) {
@@ -828,10 +607,7 @@ public class ESCategoryQuery implements CategoryQuery {
         Response response = null;
         try {
             response = ESUtil.restClient().performRequest(request);
-            try (InputStream content = response.getEntity().getContent();
-                 JsonParser parser = JSON_FACTORY.createParser(content);
-                 OutputStream os = new ByteBufOutputStream(buffer);
-                 JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content); OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
 
                 Extract.extractWithoutAggs(parser, generator, "categories");
                 success = true;
@@ -855,84 +631,73 @@ public class ESCategoryQuery implements CategoryQuery {
 
     @Override
     public Flux<ByteBuf> pathAsync(long id) {
-        long rootId = -1;
-        int left = 1, right = 1;
+        return Mono.defer(() -> {
+            Sinks.One<Map<String, Object>> sink = Sinks.one();
+            AtomicBoolean isCancelled = new AtomicBoolean(false);
+            Request request = new Request("GET", PREFIX + "/_doc/" + id);
+            request.setOptions(ESUtil.requestOptions());
 
-        Request request = new Request("GET", PREFIX + "/_doc/" + id);
-        request.setOptions(ESUtil.requestOptions());
-        try {
-            Response response = ESUtil.restClient().performRequest(request);
-            try (InputStream content = response.getEntity().getContent();
-                 JsonParser parser = JSON_FACTORY.createParser(content)) {
-                while (parser.nextToken() != null) {
-                    JsonToken jsonToken = parser.currentToken();
-                    if (JsonToken.FIELD_NAME == jsonToken) {
-                        String fieldName = parser.currentName();
-                        parser.nextToken();
-                        switch (fieldName) {
-                            case "root_id" -> rootId = parser.getValueAsLong();
-                            case "left" -> left = parser.getValueAsInt();
-                            case "right" -> right = parser.getValueAsInt();
-                        }
-                    }
-                }
-            } finally {
-                EntityUtils.consumeQuietly(response.getEntity());// 必须静默消费实体，防止连接泄漏
-            }
-        } catch (ResponseException e) {
-            LOGGER.error("Failed to query category by id: {}, response exception", id, e);
-            throw new IllegalStateException(String.format("Failed to query category by id: %d, response exception", id), e);
-        } catch (IOException e) {
-            LOGGER.error("IO exception when querying category by id: {}", id, e);
-            throw new IllegalStateException(String.format("IO exception when querying category by id: %d", id), e);
-        }
-
-        request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESCategoryQuery.buildPathRequest(rootId, left, right));
-        AtomicBoolean isCancelled = new AtomicBoolean(false);
-        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
-        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                if (isCancelled.get()) {
-                    EntityUtils.consumeQuietly(response.getEntity()); // 必须加
-                    sink.tryEmitComplete().orThrow();
-                    return;
-                }
-                CompletableFuture.runAsync(() -> {
-                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                         JsonByteBufOutputStream jbbos = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(jbbos)) {
+            try {
+                Cancellable cancellable = ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+                    @Override
+                    public void onSuccess(Response response) {
+                        // 取消标记，和你第二步的逻辑一模一样
                         if (isCancelled.get()) {
-                            return; // silent cancel; sink 已由外部处理或无需响应
+                            EntityUtils.consumeQuietly(response.getEntity());
+                            sink.tryEmitEmpty();
+                            return;
                         }
-                        Extract.extractWithoutAggs(parser, generator, "categories");
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    } finally {
-                        EntityUtils.consumeQuietly(response.getEntity());
+
+                        try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content)) {
+                            // 解析完，把结果塞给Mono，和你sink.tryEmitNext 一样
+                            Map<String, Object> nodeInfo = new HashMap<>();
+                            while (parser.nextToken() != null) {
+                                JsonToken jsonToken = parser.currentToken();
+                                if (JsonToken.FIELD_NAME == jsonToken) {
+                                    String fieldName = parser.currentName();
+                                    parser.nextToken();
+                                    switch (fieldName) {
+                                        case "root_id" -> nodeInfo.put("familyId", parser.getValueAsLong());
+                                        case "left" -> nodeInfo.put("left", parser.getValueAsInt());
+                                        case "right" -> nodeInfo.put("right", parser.getValueAsInt());
+                                    }
+                                }
+                            }
+                            sink.tryEmitValue(nodeInfo);
+                        } catch (IOException e) {
+                            sink.tryEmitError(new UncheckedIOException(e));
+                        } finally {
+                            // 你原来的finally，静默消费实体，防止连接泄漏，完全一样
+                            EntityUtils.consumeQuietly(response.getEntity());
+                        }
                     }
-                }, TRANSFORM_POOL).whenComplete((v, err) -> {
-                    if (err != null) {
-                        MapException.mapExceptionAndEmit(sink, err, isCancelled, id);
-                    } else {
-                        sink.tryEmitComplete().orThrow();
+
+                    @Override
+                    public void onFailure(Exception exception) {
+                        // 异常处理，和你第二步的逻辑一模一样
+                        if (isCancelled.get()) return;
+                        LOGGER.error("Failed to query category by id: {}, response exception", id, exception);
+                        sink.tryEmitError(MapException.mapException(exception, id));
                     }
                 });
-            }
+                return sink.asMono().doOnCancel(() -> {
+                    isCancelled.set(true);
+                    cancellable.cancel();
+                });
 
-            @Override
-            public void onFailure(Exception e) {
-                if (!isCancelled.get()) {
-                    sink.tryEmitError(MapException.mapException(e, id));
-                }
+            } catch (Exception e) {
+                return Mono.error(e);
             }
+        }).cast(Map.class).flatMapMany(node -> {
+            long familyId = (long) node.get("familyId");
+            int left = (int) node.get("left");
+            int right = (int) node.get("right");
+            Request request = new Request("GET", SEARCH_ENDPOINT);
+            request.setOptions(ESUtil.requestOptions());
+            request.setJsonEntity(ESCategoryQuery.buildPathRequest(familyId, left, right));
+
+            return ESCategoryQuery.byteBufFlux(String.valueOf(id), request);
         });
-
-        return sink.asFlux()
-                .doOnCancel(() -> isCancelled.set(true))
-                .doOnTerminate(() -> LOGGER.debug("Request terminated"))
-                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
     }
 
     private static String buildPathRequest(long rootId, int left, int right) {
@@ -982,5 +747,109 @@ public class ESCategoryQuery implements CategoryQuery {
             throw new IllegalStateException("Cannot assemble request JSON", e);
         }
         return writer.toString();
+    }
+
+    /**
+     * 同步执行 Elasticsearch 请求并返回包含分类数据的输入流
+     * <p>
+     * 此方法执行同步请求，将响应中的 "categories" 字段提取到 ByteBuf 中，
+     * 并返回一个可读取该缓冲区的输入流。方法内部处理资源管理和异常处理。
+     * </p>
+     *
+     * @param tips    用于日志记录和错误消息的关键字标识符
+     * @param request 要执行的 Elasticsearch 请求对象
+     * @return 包含提取后的分类数据的输入流，调用方负责关闭流
+     * @throws SearchException 当请求失败或无法找到匹配的数据时抛出
+     */
+    private static ByteBufInputStream byteBufInputStream(String tips, Request request, boolean alone) {
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
+        boolean success = false;
+        Response response = null;
+        try {
+            response = ESUtil.restClient().performRequest(request);
+            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content); OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+                if (alone) Extract.extractSourceSkipMeta(parser, generator);
+                else Extract.extractWithoutAggs(parser, generator, "categories");
+                success = true;
+                return new ByteBufInputStream(buffer, true);
+            }
+        } catch (IOException e) {
+            LOGGER.error("No search was found for anything resembling key {} category ", tips, e);
+            throw new SearchException(String.format("No search was found for anything resembling key %s category", tips), e);
+        } finally {
+            if (response != null) {
+                EntityUtils.consumeQuietly(response.getEntity());
+            }
+            if (!success && buffer.refCnt() > 0) {
+                ReferenceCountUtil.safeRelease(buffer);
+            }
+        }
+    }
+
+    private static ByteBufInputStream byteBufInputStream(String tips, Request request) {
+        return ESCategoryQuery.byteBufInputStream(tips, request, false);
+    }
+
+    /**
+     * 异步执行 Elasticsearch 请求并返回包含分类数据的响应式流
+     * <p>
+     * 此方法执行异步请求，将响应中的 "categories" 字段逐块转换为 ByteBuf 流。
+     * 支持取消操作、超时控制和资源自动释放。
+     * </p>
+     *
+     * @param tips    用于日志记录和错误消息的提示标识符
+     * @param request 要执行的 Elasticsearch 请求对象
+     * @return 包含提取后的分类数据的响应式流，每个元素是一个 ByteBuf
+     * 流会在 15 秒后自动超时，超时时抛出 {@link TimeoutException}
+     * @implNote 内部使用单播接收器以提高性能，支持背压缓冲
+     * 自动处理取消操作和资源释放
+     */
+    private static Flux<ByteBuf> byteBufFlux(String tips, Request request, boolean alone) {
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+            @Override
+            public void onSuccess(Response response) {
+                if (isCancelled.get()) {
+                    EntityUtils.consumeQuietly(response.getEntity()); // 必须加
+                    sink.tryEmitComplete().orThrow();
+                    return;
+                }
+                CompletableFuture.runAsync(() -> {
+                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content); OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+                        if (isCancelled.get()) {
+                            return; // silent cancel; sink 已由外部处理或无需响应
+                        }
+                        if (alone) Extract.extractSourceSkipMeta(parser, generator);
+                        else Extract.extractWithoutAggs(parser, generator, "categories");
+                    } catch (IOException e) {
+
+                        throw new UncheckedIOException(e);
+                    } finally {
+                        EntityUtils.consumeQuietly(response.getEntity());
+                    }
+                }, TRANSFORM_POOL).whenComplete((v, err) -> {
+
+                    if (err != null) {
+                        MapException.mapExceptionAndEmit(sink, err, isCancelled, tips);
+                    } else {
+                        sink.tryEmitComplete().orThrow();
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Exception exception) {
+                if (!isCancelled.get()) {
+                    sink.tryEmitError(MapException.mapException(exception, tips));
+                }
+            }
+        });
+
+        return sink.asFlux().timeout(Duration.ofSeconds(15), Mono.error(new TimeoutException("Request timed out for : " + tips))).doOnCancel(() -> isCancelled.set(true)).doOnTerminate(() -> LOGGER.debug("Request terminated for {}", tips)).doOnDiscard(ByteBuf.class, ByteBuf::release);
+    }
+
+    private static Flux<ByteBuf> byteBufFlux(String tips, Request request) {
+        return ESCategoryQuery.byteBufFlux(tips, request, false);
     }
 }
