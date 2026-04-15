@@ -245,6 +245,9 @@ public class CategoryService {
         int size = params.getInt("size", SIZE);
 
         Flux<ByteBuf> dataFlux = QUERY.searchAsync(search, offset, size);
+
+        dataFlux.count().subscribe(count -> System.out.println("总共收到 " + count + " 个 ByteBuf"));
+
         Flux<HttpObject> responseStream = dataFlux
                 .map(HttpData::wrap)
                 .switchOnFirst((signal, flux) -> {

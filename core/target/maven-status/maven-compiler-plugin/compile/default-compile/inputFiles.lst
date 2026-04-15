@@ -105,6 +105,7 @@ E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\batch
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\command\BrandUpdateCommand.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\command\ItemRenameCommand.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\shelfLife\ShelfLife.java
+E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\query\JsonByteBufFlux.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\brand\BrandCreated.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\batch\IdHandler.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\ItemGradeChanged.java

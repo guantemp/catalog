@@ -60,7 +60,10 @@ public class ESCategoryQuery implements CategoryQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
     private static final String PREFIX = ESUtil.customized().isBlank() ? "/category" : "/" + ESUtil.customized() + "_category";
     private static final String SEARCH_ENDPOINT = PREFIX + "/_search";
-    private static final JsonFactory JSON_FACTORY = JsonFactory.builder().disable(JsonFactory.Feature.INTERN_FIELD_NAMES).disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES).build();
+    private static final JsonFactory JSON_FACTORY = JsonFactory.builder()
+            .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
+            .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
+            .build();
     private static final int MAX_SIZE = 9999;
     private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
     private static final ExecutorService TRANSFORM_POOL = Executors.newVirtualThreadPerTaskExecutor();
@@ -823,13 +826,11 @@ public class ESCategoryQuery implements CategoryQuery {
                         if (alone) Extract.extractSourceSkipMeta(parser, generator);
                         else Extract.extractWithoutAggs(parser, generator, "categories");
                     } catch (IOException e) {
-
                         throw new UncheckedIOException(e);
                     } finally {
                         EntityUtils.consumeQuietly(response.getEntity());
                     }
                 }, TRANSFORM_POOL).whenComplete((v, err) -> {
-
                     if (err != null) {
                         MapException.mapExceptionAndEmit(sink, err, isCancelled, tips);
                     } else {
@@ -846,7 +847,10 @@ public class ESCategoryQuery implements CategoryQuery {
             }
         });
 
-        return sink.asFlux().timeout(Duration.ofSeconds(15), Mono.error(new TimeoutException("Request timed out for : " + tips))).doOnCancel(() -> isCancelled.set(true)).doOnTerminate(() -> LOGGER.debug("Request terminated for {}", tips)).doOnDiscard(ByteBuf.class, ByteBuf::release);
+        return sink.asFlux()
+                .timeout(Duration.ofSeconds(15), Mono.error(new TimeoutException("Request timed out for : " + tips)))
+                .doOnCancel(() -> isCancelled.set(true)).doOnTerminate(() -> LOGGER.debug("Request terminated for {}", tips))
+                .doOnDiscard(ByteBuf.class, ByteBuf::release);
     }
 
     private static Flux<ByteBuf> byteBufFlux(String tips, Request request) {

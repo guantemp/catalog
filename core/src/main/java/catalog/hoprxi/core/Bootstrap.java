@@ -98,7 +98,7 @@ public class Bootstrap {
 
         ServerBuilder sb = Server.builder();
         //http2 配置
-        sb.http2MaxFrameSize(16384) // 16KB帧大小
+        sb.http2MaxFrameSize(16*1024) // 16KB帧大小
                 .http2InitialConnectionWindowSize(1024 * 1024) // 1MB连接窗口
                 .http2InitialStreamWindowSize(512 * 1024);// 512KB流窗口
         //  添加装饰器（中间件）

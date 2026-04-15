@@ -112,12 +112,10 @@ public class BrandService {
                     HttpData.ofUtf8("{\"status\":\"error\",\"code\":400,\"message\":\"Not support sort field\"}"));
         }
 
-        Flux<ByteBuf> dataFlux;
-        if (cursor.isEmpty()) {
-            dataFlux = QUERY.searchAsync(search, offset, size, sortField);
-        } else {
-            dataFlux = QUERY.searchAsync(search, size, cursor, sortField);
-        }
+        Flux<ByteBuf> dataFlux = cursor.isBlank()
+                ? QUERY.searchAsync(search, offset, size, sortField)
+                : QUERY.searchAsync(search, size, cursor, sortField);
+
         Flux<HttpObject> stream = dataFlux
                 .map(HttpData::wrap)
                 .switchOnFirst((signal, flux) -> {

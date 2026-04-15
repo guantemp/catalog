@@ -24,6 +24,7 @@ import catalog.hoprxi.core.application.handler.ItemCreateHandler;
 import catalog.hoprxi.core.application.handler.ItemDeleteHandler;
 import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.query.ItemQuerySpec;
+import catalog.hoprxi.core.application.query.NotFoundException;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Item;
@@ -47,14 +48,21 @@ import com.linecorp.armeria.common.*;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.util.ReferenceCountUtil;
 import org.javamoney.moneta.Money;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
+import reactor.core.scheduler.Schedulers;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -88,9 +96,18 @@ public class ItemService {
                 .map(HttpData::wrap)
                 .switchOnFirst((signal, flux) -> {
                     if (signal.hasError()) { // 第一个信号就是错误
-                        return Flux.just(
-                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
+                        Throwable error = signal.getThrowable();
+                        if (error instanceof NotFoundException) {
+                            return Flux.just(
+                                    ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                            .contentType(MediaType.JSON_UTF_8)
+                                            .build(),
+                                    HttpData.ofUtf8(String.format("{\"Error\":\"Item not found: %d\"}", id)));
+                        } else {
+                            return Flux.just(
+                                    ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                    HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
+                        }
                     }
                     if (signal.hasValue()) { // 2. 有数据 → 先响应头
                         return Flux.concat(
@@ -105,7 +122,7 @@ public class ItemService {
                             HttpData.ofUtf8(String.format("{\"Warn\":\"Item not found for id : %d }\"", id)));
                 });
         return HttpResponse.of(responseStream);
-        /*
+              /*
         StreamWriter<HttpObject> stream = StreamMessage.streaming();
         ctx.whenRequestCancelled().thenAccept(stream::close);
         ctx.blockingTaskExecutor().execute(() -> {
@@ -130,8 +147,7 @@ public class ItemService {
     }
 
     @Get("/items")
-    public HttpResponse search(ServiceRequestContext ctx) {
-        QueryParams params = ctx.queryParams();
+    public HttpResponse search(ServiceRequestContext ctx, QueryParams params) {
         String search = params.get("s", "");
         String filter = params.get("filter", "");
         int offset = params.getInt("offset", OFFSET);
@@ -139,35 +155,41 @@ public class ItemService {
         String cursor = params.get("cursor", "");
         SortFieldEnum sortField = SortFieldEnum.of(params.get("sort", "_ID"));
 
-        Flux<ByteBuf> dataFlux;
-        if (cursor.isBlank()) {
-            dataFlux = QUERY.searchAsync(ItemService.parseFilter(search, filter), offset, size, sortField);
-        } else {
-            dataFlux = QUERY.searchAsync(ItemService.parseFilter(search, filter), size, cursor, sortField);
-        }
-        Flux<HttpObject> responseStream = dataFlux
-                .map(HttpData::wrap)
-                .switchOnFirst((signal, flux) -> {
-                    if (signal.hasError()) {// 信号->错误
-                        return Flux.just(
-                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
-                    }
-                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
-                        return Flux.concat(
-                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
-                                        .contentType(MediaType.JSON_UTF_8)
-                                        .build()), flux);
-                    }
-                    return Flux.just(
-                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
-                                    .contentType(MediaType.JSON_UTF_8)
-                                    .build(),
-                            HttpData.ofUtf8("{\"warn\":\"Not found\"}")
-                    );
-                });
+        Flux<ByteBuf> dataFlux = cursor.isBlank()
+                ? QUERY.searchAsync(ItemService.parseFilter(search, filter), offset, size, sortField)
+                : QUERY.searchAsync(ItemService.parseFilter(search, filter), size, cursor, sortField);
 
-        return HttpResponse.of(responseStream);
+        Flux<ByteBuf> rawSafeFlux = Flux.create(sink -> {
+            // 这里会被执行在独立的线程池中
+            dataFlux.subscribe(
+                    pooledByteBuf -> {
+                        try {
+                            // 2. 物理拷贝（CPU 密集型操作，适合在独立线程做）
+                            ByteBuf safeCopy = PooledByteBufAllocator.DEFAULT.heapBuffer(pooledByteBuf.readableBytes());
+                            safeCopy.writeBytes(pooledByteBuf);
+
+                            // 3. 推送给下游
+                            sink.next(safeCopy);
+                        } finally {
+                            ReferenceCountUtil.release(pooledByteBuf);
+                        }
+                    },
+                    sink::error,
+                    sink::complete
+            );
+        }, FluxSink.OverflowStrategy.BUFFER);
+
+// 4. 【关键】强制切换线程
+// 告诉 Reactor：请在 BoundedElastic 线程池里启动上面的 create 逻辑
+// 这样就不会阻塞 Netty 的 I/O 线程了
+        Flux<ByteBuf> safeFlux = rawSafeFlux.subscribeOn(Schedulers.boundedElastic());
+
+
+        ResponseHeaders headers = ResponseHeaders.builder(200)
+                .contentType(MediaType.JSON_UTF_8) // 或者 MediaType.PLAIN_TEXT_UTF_8
+                .build();
+
+        return HttpResponse.of(headers, safeFlux.map(HttpData::wrap));
     }
 
     private static ItemQuerySpec[] parseFilter(String query, String filter) {
@@ -253,7 +275,7 @@ public class ItemService {
     public HttpResponse create(ServiceRequestContext ctx, HttpData body) {
         RequestHeaders headers = ctx.request().headers();
         if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) ||
-                MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
+              MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                     MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
@@ -452,19 +474,15 @@ public class ItemService {
     @Delete("/items/{id}")
     public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id) {
         return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
-            // 业务逻辑
             ItemDeleteCommand command = new ItemDeleteCommand(id);
             Handler<ItemDeleteCommand, Boolean> handler = new ItemDeleteHandler();
             handler.execute(command);
 
-            // 成功响应
             return HttpResponse.of(
                     HttpStatus.OK,
                     MediaType.JSON_UTF_8,
-                    String.format("{\"status\":\"success\",\"code\":200,\"message\":\"The item(id=%d) is moved to the recycle bin, you can retrieve it later in the recycle bin!\"}", id)
-            );
+                    String.format("{\"status\":\"success\",\"code\":200,\"message\":\"The item(id=%d) is moved to the recycle bin, you can retrieve it later in the recycle bin!\"}", id));
         }, ctx.blockingTaskExecutor()).exceptionally(e ->
-                // 统一异常处理
                 HttpResponse.of(
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         MediaType.JSON_UTF_8,

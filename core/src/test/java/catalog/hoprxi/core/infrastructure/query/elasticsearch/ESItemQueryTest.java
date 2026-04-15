@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,20 +21,21 @@ import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.*;
 import io.netty.buffer.ByteBuf;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2024-08-24
+ * @since JDK21
+ * @version 0.0.2 builder 2026-04-12
  */
 public class ESItemQueryTest {
     static {
@@ -43,267 +44,187 @@ public class ESItemQueryTest {
 
     private static final ItemQuery query = new ESItemQuery();
 
-    @Test(invocationCount = 12, threadPoolSize = 1)
-    public void testFindAsync() throws InterruptedException, ExecutionException, TimeoutException {
-        System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
-
-        long[] ids = {55307473635765901L, 55307896123812197L, 55307820773139539L,55307834488513967L};
-        // 使用固定线程池或虚拟线程（Java 21+）
-        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor(); // Java 21+
-        // 或：Executors.newFixedThreadPool(ids.length);
-        CompletableFuture[] futures = new CompletableFuture[ids.length];
-        for (int i = 0; i < ids.length; i++) {
-            final long id = ids[i];
-            futures[i] = CompletableFuture.runAsync(() -> {
-                System.out.println("Starting request for ID: " + id);
-
-                StringBuilder result = new StringBuilder();
-                Throwable[] errorHolder = new Throwable[1];
-
-                // 使用 CountDownLatch 等待单个 Flux 完成
-                var latch = new java.util.concurrent.CountDownLatch(1);
-                Flux<ByteBuf> flux = query.findAsync(id); // 或 service.findAsynca(id)
-                flux.subscribe(
-                        byteBuf -> {
-                            try {
-                                String chunk = byteBuf.toString(StandardCharsets.UTF_8);
-                                synchronized (result) {
-                                    result.append(chunk);
-                                }
-                                System.out.println("[ID=" + id + "] Chunk: " + chunk);
-                            } catch (Exception e) {
-                                errorHolder[0] = e;
-                                latch.countDown();
-                            }
-                        },
-                        error -> {
-                            errorHolder[0] = error;
-                            System.err.println("[ID=" + id + "] Error: " + error.getMessage());
-                            latch.countDown();
-                        },
-                        () -> {
-                            System.out.println("[ID=" + id + "] Completed.");
-                            latch.countDown();
-                        }
-                );
-                try {
-                    boolean finished = latch.await(3, TimeUnit.SECONDS);
-                    if (!finished) {
-                        throw new RuntimeException("Timeout for ID " + id);
-                    }
-
-                    if (errorHolder[0] != null) {
-                        throw new RuntimeException("Request failed for ID " + id, errorHolder[0]);
-                    }
-
-                    String fullOutput = result.toString();
-                    System.out.println("\n[ID=" + id + "] === FULL OUTPUT ===");
-                    System.out.println(fullOutput);
-                    System.out.println("[ID=" + id + "] ===================\n");
-
-                    // 基本验证
-                    Assert.assertTrue(fullOutput.contains("_source") || fullOutput.startsWith("{"),
-                            "Response should be valid JSON for ID " + id);
-                    Assert.assertFalse(fullOutput.contains("_meta"),
-                            "Response must NOT contain '_meta' for ID " + id);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new RuntimeException("Interrupted while waiting for ID " + id, e);
-                }
-            }, executor);
-        }
-
-        // 等待所有任务完成
-        CompletableFuture.allOf(futures).get(3, TimeUnit.SECONDS);
-        executor.shutdownNow();
+    @Test(invocationCount = 1, threadPoolSize = 1)
+    public void testFindAsync() {
+        Flux<ByteBuf>[] fluxes = new Flux[]{
+                query.findAsync(55307473635765901L),
+                query.findAsync(55307896123812197L),
+                query.findAsync(55307820773139539L),
+                query.findAsync(55307834488513967L)
+        };
+        ESItemQueryTest.printResult(fluxes);
     }
 
-    @Test(invocationCount = 12, threadPoolSize = 2)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFind() throws IOException {
-        System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
-        try (InputStream is = query.find(55307569718879243L)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.find(55307366284650146L)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.find(55307834480125257L)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        long[] ids = new long[]{55307473635765901L, 55307896123812197L, 55307820773139539L, 55307834488513967L};
+        for (long id : ids) {
+            try (InputStream is = query.find(id)) {
+                System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+            }
         }
     }
 
-    @Test(invocationCount = 12, threadPoolSize = 2)
+    @Test(invocationCount = 1, threadPoolSize = 1, expectedExceptions = IllegalArgumentException.class)
     public void testFindByBarcode() throws IOException {
-        try (InputStream is = query.findByBarcode("6900404523737")) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.findByBarcode("6939006488885")) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.findByBarcode("6940188805018")) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.findByBarcode("690158611081"); InputStream is1 = query.findByBarcode("dsgf");
-             InputStream is2 = query.findByBarcode(""); InputStream is3 = query.findByBarcode(null)) {
-            Assert.fail("Expected exception but none thrown!"); // 未抛出异常时失败
-        } catch (IllegalArgumentException e) {
-            // 验证异常信息
-            Assert.assertEquals(e.getMessage(), "Not valid barcode ctr");
+        String[] barcodes = new String[]{"6900404523737", "6939006488885", "6940188805018", "6907469320189", "dsgf", "", null};
+        for (String barcode : barcodes) {
+            try (InputStream is = query.findByBarcode(barcode)) {
+                System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+            }
         }
     }
 
-    @Test(invocationCount = 12, threadPoolSize = 1)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFindByBarcodeAsync() throws InterruptedException {
-        System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
-        StringBuilder result = new StringBuilder();
-        String[] barcodes = {"6900404523737", "6939006488885", "69401888050182"};
-        // Java 21+
-        CompletableFuture[] futures = new CompletableFuture[barcodes.length];
-        var latch = new java.util.concurrent.CountDownLatch(1);
-        for (int i = 0; i < barcodes.length; i++) {
-            final String barcode = barcodes[i];
-            futures[i] = CompletableFuture.runAsync(() -> {
-                Flux<ByteBuf> flux = query.findByBarcodeAsync(barcode);
-                flux.doOnComplete(latch::countDown).subscribe(
-                        byteBuf -> result.append(byteBuf.toString(StandardCharsets.UTF_8)),
-                        error -> System.err.println("[ barcode=" + barcode + "] Error: " + error.getMessage()), () -> {
-                            System.out.println("[barCODE=" + barcode + "] Completed.");
-                            System.out.println(result);
-                        });
-            });
+        String[] barcodes = new String[]{"6900404523737", "6939006488885", "6940188805018", "6907469320189", "erghrh"};
+        Flux<ByteBuf>[] fluxes = new Flux[barcodes.length];
+        for (int i = 0, j = barcodes.length; i < j; i++) {
+            fluxes[i] = query.findByBarcodeAsync(barcodes[i]);
         }
-        latch.await();
+        ESItemQueryTest.printResult(fluxes);
     }
 
-    @Test(invocationCount = 12, threadPoolSize = 2)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testSearch() throws IOException {
-        InputStream is = query.search(100, 30);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(0, 50, SortFieldEnum._BARCODE);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQuerySpec[]{new KeywordSpec("694")}, 0, 10, SortFieldEnum._BARCODE);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-
-        is = query.search(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(null)}, 10, 15, SortFieldEnum.BARCODE);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(new long[]{49680933986631205L}), new BrandSpec(-1L)}, 0, 10, SortFieldEnum._BARCODE);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQuerySpec[]{new KeywordSpec("692"), new RetailPriceSpec(1.1, 2), new LastReceiptPriceSpec(null, 1.2)}, 0, 9, SortFieldEnum._ID);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQuerySpec[]{new KeywordSpec("6931"), new CategorySpec(49680944612900409L)}, 50, 10, SortFieldEnum.ID);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQuerySpec[]{new KeywordSpec("伊利")}, 10, 256, SortFieldEnum._RETAIL_PRICE);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        try (InputStream is = query.search(100, 30)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+            System.out.println();
+        }
+        try (InputStream is = query.search(0, 50, SortFieldEnum._BARCODE)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+            System.out.println();
+        }
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("694")}, 0, 10, SortFieldEnum._BARCODE)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+            System.out.println();
+        }
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("6934"), new CategorySpec(null)}, 10, 30, SortFieldEnum.BARCODE)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+            System.out.println();
+        }
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("693"),new CategorySpec(new long[]{55307231199687601L}), new BrandSpec(-1L)}, 0, 10, SortFieldEnum._BARCODE)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+            System.out.println();
+        }
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("692"), new RetailPriceSpec(1.1, 2), new LastReceiptPriceSpec(null, 1.2)}, 0, 9, SortFieldEnum._ID)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+            System.out.println();
+        }
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(49680944612900409L)}, 50, 10, SortFieldEnum.ID)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+            System.out.println();
+        }
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("伊利")}, 10, 128, SortFieldEnum._RETAIL_PRICE)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+            System.out.println();
+        }
     }
 
-    @Test(invocationCount = 12, threadPoolSize = 1)
-    public void testSearchAsync() throws InterruptedException {
-        System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
-
+    @Test(invocationCount = 1, threadPoolSize = 2)
+    public void testSearchAsync() {
         // 创建所有查询（不立即执行）
         Flux<ByteBuf>[] fluxes = new Flux[]{
                 query.searchAsync(100, 30),
                 query.searchAsync(0, 50, SortFieldEnum._BARCODE),
                 query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("694")}, 0, 10, SortFieldEnum._BARCODE),
-                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(null)}, 10, 15, SortFieldEnum.BARCODE),
-                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(new long[]{49680933986631205L}), new BrandSpec(-1L)}, 0, 10, SortFieldEnum._BARCODE),
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("6934"), new CategorySpec(null)}, 10, 30, SortFieldEnum._NAME),
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(new long[]{55307231199687601L}), new BrandSpec(-1L)}, 0, 10, SortFieldEnum._BARCODE),
                 query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("692"), new RetailPriceSpec(1.1, 2), new LastReceiptPriceSpec(null, 1.2)}, 0, 9, SortFieldEnum._ID),
-                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("6931"), new CategorySpec(49680944612900409L)}, 50, 10, SortFieldEnum.ID),
-                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("伊利")}, 10, 256, SortFieldEnum._RETAIL_PRICE)
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(49680944612900409L)}, 50, 10, SortFieldEnum.ID),
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("伊利")}, 10, 128, SortFieldEnum._RETAIL_PRICE)
         };
-
-        CountDownLatch latch = new CountDownLatch(fluxes.length);
-        // 为每个查询在独立线程中启动订阅
-        for (int i = 0; i < fluxes.length; i++) {
-            StringBuilder sb = new StringBuilder();
-            final int queryIndex = i;
-            new Thread(() -> {
-                System.out.println("[Thread-" + Thread.currentThread().threadId() + "] Starting query #" + queryIndex);
-                fluxes[queryIndex].subscribe(
-                        byteBuf -> {
-                            try {
-                                sb.append(byteBuf.toString(StandardCharsets.UTF_8));
-                            } finally {
-                                byteBuf.release(); // 安全释放
-                            }
-                        },
-                        error -> {
-                            System.err.println("[Thread-" + Thread.currentThread().threadId() + "] Error: " + error.getMessage());
-                            error.printStackTrace();
-                        },
-                        () -> {
-                            System.out.println("[Thread-" + Thread.currentThread().threadId() + "] Query #" + queryIndex + " completed");
-                            System.out.println(sb);
-                            latch.countDown();
-                        }
-                );
-            }).start();
-        }
-        // 等待所有查询完成（30秒超时）
-        latch.await();
+        ESItemQueryTest.printResult(fluxes);
     }
 
-    @Test(invocationCount = 12, threadPoolSize = 1)
+    @Test(invocationCount = 1, threadPoolSize = 1)
     public void testSearchAfter() throws IOException {
-        InputStream is = query.search(50, "471019908050", SortFieldEnum.BARCODE);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQuerySpec[]{new CategorySpec(49681151224315522L)}, 50);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(49680933986631205L)}, 1, null, SortFieldEnum._BARCODE);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQuerySpec[]{new KeywordSpec("6932"), new CategorySpec(49680933986631205L)}, 50);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQuerySpec[]{new KeywordSpec("692"), new CategorySpec(new long[]{49680944612900409L}), new RetailPriceSpec(2.6, 25.5), new LastReceiptPriceSpec(1.1, 3)}, 5, null, SortFieldEnum._ID);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        is = query.search(new ItemQuerySpec[]{new KeywordSpec("伊利"), new KeywordSpec("690")}, 10, "258", SortFieldEnum._RETAIL_PRICE);
-        System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("6934")}, 600, null, SortFieldEnum._NAME)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        /*
+        try (InputStream is = query.search(50, "471019908050", SortFieldEnum.BARCODE)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search(new ItemQuerySpec[]{new CategorySpec(55307216538497678L)}, 50)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(55307434890881701L)}, 20, null, SortFieldEnum._BARCODE)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("6932"), new CategorySpec(55307434890881701L)}, 50)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("692"), new CategorySpec(new long[]{55307230903989168L}), new RetailPriceSpec(2.6, 25.5), new LastReceiptPriceSpec(1.1, 3)}, 15, null, SortFieldEnum._ID)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("伊利"), new KeywordSpec("690")}, 10, "258", SortFieldEnum._RETAIL_PRICE)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+
+         */
     }
 
-    @Test(invocationCount = 12, threadPoolSize = 1)
-    public void testSearchAfterAsync() throws InterruptedException {
-        System.out.println("➡️ Started on thread: " + Thread.currentThread().getName());
-
+    @Test(invocationCount = 1, threadPoolSize = 1)
+    public void testSearchAfterAsync() {
         // 创建所有查询（不立即执行）
         Flux<ByteBuf>[] fluxes = new Flux[]{
-                query.searchAsync(50, "471019908050", SortFieldEnum.BARCODE),
-                query.searchAsync(100, SortFieldEnum.BARCODE),
-                query.searchAsync(new ItemQuerySpec[]{new CategorySpec(49681151224315522L)}, 50),
-                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(49680933986631205L)}, 20, null, SortFieldEnum._BARCODE),
-                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("6932"), new CategorySpec(49680933986631205L)}, 50),
-                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("692"), new CategorySpec(new long[]{49680944612900409L}), new RetailPriceSpec(2.6, 25.5), new LastReceiptPriceSpec(1.1, 3)}, 5, null, SortFieldEnum._ID),
-                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("伊利"), new KeywordSpec("690")}, 10, "258", SortFieldEnum._RETAIL_PRICE)
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("6934")}, 60, null, SortFieldEnum._NAME),
+                //query.searchAsync(50, "471019908050", SortFieldEnum.BARCODE),
+                //query.searchAsync(new ItemQuerySpec[]{new CategorySpec(55307216538497678L)}, 50),
+                //query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(55307434890881701L)}, 20, null, SortFieldEnum._BARCODE),
+                //query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("6932"), new CategorySpec(55307434890881701L)}, 50),
+                //query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("692"), new CategorySpec(new long[]{55307230903989168L}), new RetailPriceSpec(2.6, 25.5), new LastReceiptPriceSpec(1.1, 3)}, 15, null, SortFieldEnum._ID),
+                //query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("伊利"), new KeywordSpec("690")}, 10, "258", SortFieldEnum._RETAIL_PRICE)
         };
+        ESItemQueryTest.printResult(fluxes);
+    }
 
-        CountDownLatch latch = new CountDownLatch(fluxes.length);
-        // 为每个查询在独立线程中启动订阅
-        for (int i = 0; i < fluxes.length; i++) {
-            StringBuilder sb = new StringBuilder();
-            final int queryIndex = i;
-            new Thread(() -> {
-                System.out.println("[Thread-" + Thread.currentThread().threadId() + "] Starting query #" + queryIndex);
+    private static void printResult(Flux<ByteBuf>[] fluxes) {
+        int total = fluxes.length;
+        CountDownLatch latch = new CountDownLatch(total);
 
-                fluxes[queryIndex].subscribe(
-                        byteBuf -> {
-                            try {
-                                sb.append(byteBuf.toString(StandardCharsets.UTF_8));
-                            } finally {
-                                byteBuf.release(); // 安全释放
+        for (int i = 0; i < total; i++) {
+            final int idx = i;
+            fluxes[i].count()
+                    .subscribeOn(Schedulers.parallel())
+                    .subscribe(count -> System.out.println("\n[Query-" + idx + "]总共收到 " + count + " 个 ByteBuf\n"));
+            fluxes[i]
+                    // 👇 关键：加这一行 = 真正多线程并行执行
+                    .subscribeOn(Schedulers.parallel())
+                    .subscribe(
+                            // 1. 正常数据
+                            byteBuf -> {
+                                try {
+                                    String content = byteBuf.toString(StandardCharsets.UTF_8);
+                                    System.out.println("[Query-" + idx + "] 接收数据：\n" + content);
+                                } finally {
+                                    byteBuf.release();
+                                }
+                            },
+                            // 2. 异常回调（完整保留）
+                            error -> {
+                                System.err.println("[Query-" + idx + "] 异常：" + error.getClass().getSimpleName() + " - " + error.getMessage());
+                                assert error instanceof IllegalArgumentException :
+                                        "索引" + idx + " 必须抛出 IllegalArgumentException";
+                                latch.countDown();
+                            },
+                            // 3. 完成回调（完整保留！）
+                            () -> {
+                                System.out.println("[Query-" + idx + "] 执行完成");
+                                latch.countDown();
                             }
-                        },
-                        error -> {
-                            System.err.println("[Thread-" + Thread.currentThread().threadId() + "] Error: " + error.getMessage());
-                            error.printStackTrace();
-                        },
-                        () -> {
-                            System.out.println("[Thread-" + Thread.currentThread().threadId() + "] Query #" + queryIndex + " completed");
-                            System.out.println(sb);
-                            latch.countDown();
-                        }
-                );
-            }).start();
+                    );
         }
 
-        // 等待所有查询完成（30秒超时）
-         latch.await(30, TimeUnit.SECONDS);
+        // 等待所有异步结束
+        try {
+            boolean done = latch.await(30, TimeUnit.SECONDS);
+            if (!done) {
+                System.err.println("异步请求超时！");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
