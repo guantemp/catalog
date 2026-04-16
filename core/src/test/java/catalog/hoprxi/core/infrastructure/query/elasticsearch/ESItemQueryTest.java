@@ -85,7 +85,7 @@ public class ESItemQueryTest {
         ESItemQueryTest.printResult(fluxes);
     }
 
-    @Test(invocationCount = 1, threadPoolSize = 1)
+    @Test(invocationCount = 1, threadPoolSize = 1,priority = 2)
     public void testSearch() throws IOException {
         try (InputStream is = query.search(100, 30)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
@@ -137,9 +137,9 @@ public class ESItemQueryTest {
         ESItemQueryTest.printResult(fluxes);
     }
 
-    @Test(invocationCount = 1, threadPoolSize = 1)
+    @Test(invocationCount = 1, threadPoolSize = 1,priority = 2)
     public void testSearchAfter() throws IOException {
-        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("6934")}, 600, null, SortFieldEnum._NAME)) {
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("6934")}, 60, null, SortFieldEnum._NAME)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
         /*

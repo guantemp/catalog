@@ -18,17 +18,14 @@ package catalog.hoprxi.core.infrastructure;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
-import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 
-import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -89,15 +86,46 @@ public class ESUtil {
                     httpClientBuilder.setMaxConnPerRoute(40);//每个 host 最多 80 连接
 
                     // 如果需要跳过证书验证（仅测试环境！）不推荐生产使用
-                    /*
-                    SSLContext sslContext = SSLContextBuilder.create()
-                            .loadTrustMaterial(null, (chain, authType) -> true)
-                            .build();
+/*
+                    SSLContext sslContext = null;
+                    try {
+                        sslContext = SSLContextBuilder.create()
+                                .loadTrustMaterial(null, (chain, authType) -> true)
+                                .build();
+                    } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
+                        throw new RuntimeException(e);
+                    }
                     httpClientBuilder.setSSLContext(sslContext);
                     httpClientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
-*/
+
+ */
                     return httpClientBuilder;
-                }).build();
+                }).setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
+                    @Override
+                    public RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder builder) {
+                        // 长连接核心！！！
+                        builder.setSocketTimeout(15000);
+                        builder.setConnectTimeout(5000);
+                        // 开启 tcp keep-alive
+                        return builder;
+                    }
+                })
+                .setRequestConfigCallback(requestConfigBuilder -> {
+                    requestConfigBuilder.setContentCompressionEnabled(true); // 开启请求压缩
+                    return requestConfigBuilder;
+                }).setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
+                    @Override
+                    public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpAsyncClientBuilder) {
+                        httpAsyncClientBuilder
+                                // ==============================
+                                // 2. 开启长连接池（8.x 官方写法）
+                                // ==============================
+                                .setMaxConnTotal(30)       // 最大连接
+                                .setMaxConnPerRoute(30);    // 单路由最大连接
+                        return httpAsyncClientBuilder;
+                    }
+                })
+                .build();
     }
 
     public static String host() {
