@@ -42,41 +42,28 @@ import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESItemQuery;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.*;
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.linecorp.armeria.common.*;
-import com.linecorp.armeria.common.stream.StreamMessage;
-import com.linecorp.armeria.common.stream.StreamWriter;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxSink;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
@@ -96,8 +83,6 @@ public class ItemService {
             .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
-    private static final Scheduler VIRTUAL_THREAD =
-            Schedulers.fromExecutor(Executors.newVirtualThreadPerTaskExecutor());
 
     @Get("/items/{id}")
     @Description("Retrieves the item information by the given ID.")
@@ -159,7 +144,8 @@ public class ItemService {
     }
 
     @Get("/items")
-    public HttpResponse search(ServiceRequestContext ctx, QueryParams params) {
+    public HttpResponse search(QueryParams params) {
+        ServiceRequestContext.current().setRequestTimeoutMillis(60_000);
         String search = params.get("s", "");
         String filter = params.get("filter", "");
         int offset = params.getInt("offset", OFFSET);
@@ -172,53 +158,49 @@ public class ItemService {
                 : QUERY.searchAsync(ItemService.parseFilter(search, filter), size, cursor, sortField);
 
         Flux<ByteBuf> rawSafeFlux = dataFlux
-                .subscribeOn(VIRTUAL_THREAD)
-                .onBackpressureBuffer(64) // 限制缓冲队列大小，满了会触发丢弃或错误策
-                .map(pooledByteBuf -> {
-                    try {
-                        ByteBuf copy = PooledByteBufAllocator.DEFAULT.heapBuffer(pooledByteBuf.readableBytes());
-                        copy.writeBytes(pooledByteBuf);
-                        return copy;
-                    } finally {
-                        ReferenceCountUtil.release(pooledByteBuf);
-                    }
+                //.subscribeOn(VIRTUAL_THREAD)
+                .limitRate(64)    // 安全背压，不丢数据
+                .map(buf -> {
+                    ByteBuf copy = buf.copy();
+                    ReferenceCountUtil.release(buf);  // <-- 加这一行
+                    return copy;
                 });
+
         AtomicReference<HttpStatus> responseStatus = new AtomicReference<>(HttpStatus.OK);
 
         Flux<ByteBuf> finalFlux = rawSafeFlux.onErrorResume(e -> {
-            HttpStatus status;
-            String message;
+                    HttpStatus status;
+                    String message;
+                    if (e instanceof IllegalArgumentException) {
+                        status = HttpStatus.BAD_REQUEST;
+                        message = "Invalid parameter";
+                    } else if (e instanceof NotFoundException) {
+                        status = HttpStatus.NOT_FOUND;
+                        message = "Data not found";
+                    } else {
+                        status = HttpStatus.INTERNAL_SERVER_ERROR;
+                        message = "Server error";
+                    }
+                    responseStatus.set(status);
 
-            if (e instanceof IllegalArgumentException) {
-                status =  HttpStatus.BAD_REQUEST;
-                message = "Invalid parameter";
-            } else if (e instanceof NotFoundException) {
-                status =  HttpStatus.NOT_FOUND;
-                message = "Data not found";
-            } else {
-                status =  HttpStatus.INTERNAL_SERVER_ERROR;
-                message = "Server error";
-            }
-            responseStatus.set(status);
+                    // 构造错误JSON → 转成 ByteBuf → 返回 Flux<ByteBuf>（完全匹配）
+                    byte[] errorBytes = ("{\"error\":\"%s\"}".formatted(message.replace("\"", "\\\"")))
+                            .getBytes(StandardCharsets.UTF_8);
 
-            // 构造错误JSON → 转成 ByteBuf → 返回 Flux<ByteBuf>（完全匹配）
-            byte[] errorBytes = ("{\"error\":\"%s\"}".formatted(message.replace("\"", "\\\"")))
-                    .getBytes(StandardCharsets.UTF_8);
+                    ByteBuf buf = PooledByteBufAllocator.DEFAULT.heapBuffer(errorBytes.length);
+                    buf.writeBytes(errorBytes);
 
-            ByteBuf buf = PooledByteBufAllocator.DEFAULT.heapBuffer(errorBytes.length);
-            buf.writeBytes(errorBytes);
-
-            return Flux.just(buf);
-        }).transform(flux -> flux
+                    return Flux.just(buf);
+                })
                 .window(64)        // 每64条打包成1个大数据块
                 .concatMap(w -> w.reduce(
-                        PooledByteBufAllocator.DEFAULT.compositeBuffer(),
-                        (composite, buf) -> {
-                            composite.addComponent(true, buf);
-                            return composite;
-                        }
-                ))
-        );
+                                PooledByteBufAllocator.DEFAULT.compositeBuffer(),
+                                (composite, buf) -> {
+                                    composite.addComponent(true, buf);
+                                    return composite;
+                                }
+                        )
+                );
 
         ResponseHeaders headers = ResponseHeaders.builder(responseStatus.get())
                 .contentType(MediaType.JSON_UTF_8) // 或者 MediaType.PLAIN_TEXT_UTF_8

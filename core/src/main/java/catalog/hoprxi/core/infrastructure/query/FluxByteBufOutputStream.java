@@ -19,6 +19,7 @@ package catalog.hoprxi.core.infrastructure.query;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.util.ReferenceCountUtil;
 import reactor.core.publisher.FluxSink;
 
 import java.io.IOException;
@@ -112,6 +113,10 @@ public class FluxByteBufOutputStream extends OutputStream {
             // 注意：这里不需要 release(safeBuf)，因为 sink.next 成功后 ownership 已经转移
             // 只有在 new 失败时才需要处理，但通常这里直接抛异常即可
             throw new IOException("Sink emit failed", e);
+        }
+        finally {
+            // ✅ 唯一必须加的关键代码
+            ReferenceCountUtil.release(buffer);
         }
     }
 

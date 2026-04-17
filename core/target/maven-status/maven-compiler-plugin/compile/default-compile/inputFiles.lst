@@ -105,7 +105,6 @@ E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\batch
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\command\BrandUpdateCommand.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\command\ItemRenameCommand.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\shelfLife\ShelfLife.java
-E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\query\JsonByteBufFlux.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\brand\BrandCreated.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\batch\IdHandler.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\ItemGradeChanged.java
@@ -129,6 +128,7 @@ E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\batch\Br
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\persistence\PersistenceException.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\application\handler\ItemMadinChangeAggHandler.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\batch\ExecuteSqlEvent.java
+E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\query\FluxByteBufOutputStream.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\brand\Brand.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\infrastructure\batch\Verify.java
 E:\workspace\catalog\core\src\main\java\catalog\hoprxi\core\domain\model\ProhibitTradingItem.java

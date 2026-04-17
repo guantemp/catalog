@@ -406,14 +406,14 @@ public class ESItemQuery implements ItemQuery {
                             sink.error(MapException.mapException(exception, tips));
                         }
                     });
-                }, FluxSink.OverflowStrategy.BUFFER) // 策略：如果下游慢，先缓冲（或者用 ERROR 直接报错）
+                }, FluxSink.OverflowStrategy.LATEST) // 策略：如果下游慢，先缓冲（或者用 ERROR 直接报错）
                 .doOnTerminate(() -> {
                     String threadName = Thread.currentThread().getName();
                     // 这里的 this 指的是 doOnTerminate 这个操作符内部的上下文，或者直接打印 tips 对应的唯一请求标识
                     LOGGER.debug("Request terminated for id: {}, Thread: {}, FluxIdentity: {}",
                             tips, threadName, System.identityHashCode(tips));
                 })
-                .doOnDiscard(ByteBuf.class, ByteBuf::release);
+                .doOnDiscard(ByteBuf.class, ReferenceCountUtil::safeRelease);
     }
 
     private static Flux<ByteBuf> byteBufFlux(String tips, Request request) {
