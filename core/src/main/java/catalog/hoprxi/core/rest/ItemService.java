@@ -54,6 +54,8 @@ import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
@@ -64,6 +66,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
@@ -83,6 +88,7 @@ public class ItemService {
             .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
+    private static final Scheduler TRANSFORM_POOL = Schedulers.fromExecutorService(Executors.newVirtualThreadPerTaskExecutor());
 
     @Get("/items/{id}")
     @Description("Retrieves the item information by the given ID.")
@@ -158,8 +164,8 @@ public class ItemService {
                 : QUERY.searchAsync(ItemService.parseFilter(search, filter), size, cursor, sortField);
 
         Flux<ByteBuf> rawSafeFlux = dataFlux
-                //.subscribeOn(VIRTUAL_THREAD)
-                .limitRate(64)    // 安全背压，不丢数据
+                .subscribeOn(TRANSFORM_POOL)
+                .limitRate(256)    // 背压，不丢数据
                 .map(buf -> {
                     ByteBuf copy = buf.copy();
                     ReferenceCountUtil.release(buf);  // <-- 加这一行
@@ -192,7 +198,7 @@ public class ItemService {
 
                     return Flux.just(buf);
                 })
-                .window(64)        // 每64条打包成1个大数据块
+                .window(256)        // 每64条打包成1个大数据块
                 .concatMap(w -> w.reduce(
                                 PooledByteBufAllocator.DEFAULT.compositeBuffer(),
                                 (composite, buf) -> {

@@ -371,7 +371,7 @@ public class ESItemQuery implements ItemQuery {
 
     private static Flux<ByteBuf> byteBufFlux(String tips, Request request, boolean alone) {
         return Flux.<ByteBuf>create(sink -> {
-                    AtomicBoolean isCancelled = new AtomicBoolean(false);
+                    final AtomicBoolean isCancelled = new AtomicBoolean(false);
                     sink.onCancel(() -> isCancelled.set(true));
                     // 1. 发起 ES 请求 (运行在 ES I/O 线程)
                     ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
@@ -381,11 +381,29 @@ public class ESItemQuery implements ItemQuery {
                                 EntityUtils.consumeQuietly(response.getEntity());
                                 return;
                             }
+                            final InputStream content;
+                            try {
+                                content = response.getEntity().getContent();
+                            } catch (IOException e) {
+                                sink.error(MapException.mapException(e, tips));
+                                EntityUtils.consumeQuietly(response.getEntity());
+                                return;
+                            }
                             // 2. 切换到业务线程池处理耗时逻辑
                             // 注意：这里直接在线程池里操作 sink，Reactor 会自动处理线程安全
                             TRANSFORM_POOL.execute(() -> {
-                                try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
+                                if (isCancelled.get()) {
+                                    try {
+                                        if (content != null) content.close();
+                                    } catch (Exception ignore) {
+                                    }
+                                    EntityUtils.consumeQuietly(response.getEntity());
+                                    return;
+                                }
+                                try (content; JsonParser parser = JSON_FACTORY.createParser(content);
                                      OutputStream os = new FluxByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+                                    // 禁用 Jackson 自动刷新，交给Netty 的 ByteBuf控制，大幅减少IO次数
+                                    //generator.disable(JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM);
                                     // 执行解析，数据会通过 os 自动 emit 给下游
                                     if (alone) {
                                         Extract.extractSourceSkipMeta(parser, generator);
@@ -406,7 +424,7 @@ public class ESItemQuery implements ItemQuery {
                             sink.error(MapException.mapException(exception, tips));
                         }
                     });
-                }, FluxSink.OverflowStrategy.LATEST) // 策略：如果下游慢，先缓冲（或者用 ERROR 直接报错）
+                }, FluxSink.OverflowStrategy.BUFFER) // 这里保持BUFFER，但必须配合上游limitRate，否则可能oom
                 .doOnTerminate(() -> {
                     String threadName = Thread.currentThread().getName();
                     // 这里的 this 指的是 doOnTerminate 这个操作符内部的上下文，或者直接打印 tips 对应的唯一请求标识
