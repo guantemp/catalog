@@ -321,7 +321,7 @@ public class PsqlItemExport implements ItemExportService {
                 //设置单元格的值，并且设置样式
                 SXSSFCell cell02 = row.createCell(2);
                 cell02.setCellStyle(defaultStyle);
-                cell02.setCellValue(itemView.name().alias());
+                cell02.setCellValue(itemView.name().shortName());
                 //设置单元格的值，并且设置样式
                 SXSSFCell cell04 = row.createCell(3);
                 cell04.setCellStyle(defaultStyle);

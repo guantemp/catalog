@@ -80,21 +80,6 @@ public class Brand {
         return about;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Brand)) return false;
-
-        Brand brand = (Brand) o;
-
-        return id == brand.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return Long.hashCode(id);
-    }
-
     public long id() {
         return id;
     }
@@ -107,7 +92,7 @@ public class Brand {
         Objects.requireNonNull(newName, "newName required");
         if (!newName.equals(name)) {
             this.name = newName;
-            DomainRegistry.domainEventPublisher().publish(new BrandRenamed(id, newName.name(), newName.mnemonic(), newName.alias()));
+            DomainRegistry.domainEventPublisher().publish(new BrandRenamed(id, newName.name(), newName.shortName()));
         }
     }
 
@@ -122,5 +107,18 @@ public class Brand {
                 .add("name=" + name)
                 .add("about=" + about)
                 .toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Brand brand = (Brand) o;
+        return id == brand.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(id);
     }
 }

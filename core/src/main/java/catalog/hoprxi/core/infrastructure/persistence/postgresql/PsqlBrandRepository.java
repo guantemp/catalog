@@ -31,8 +31,8 @@ import salt.hoprxi.id.LongId;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -40,6 +40,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Year;
+import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -47,75 +48,60 @@ import java.time.Year;
  * @version 0.0.1 builder 2022-08-21
  */
 public class PsqlBrandRepository implements BrandRepository {
-    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Brand");
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-    private static final Constructor<Name> nameConstructor;
-
-    static {
-        try {
-            nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
-            nameConstructor.setAccessible(true);
-        } catch (NoSuchMethodException e) {
-            LOGGER.error("Name class no such constructor", e);
-            throw new RuntimeException("Name class no such constructor", e);
-        }
-    }
 
     @Override
     public Brand find(long id) {
-        try (Connection connection = PsqlUtil.getConnection()) {
-            final String findSql = "select id,name,about from brand where id=?";
-            PreparedStatement preparedStatement = connection.prepareStatement(findSql);
-            preparedStatement.setLong(1, id);
-            ResultSet rs = preparedStatement.executeQuery();
-            return rebuild(rs);
+        final String findSql = "select id,name,about from brand where id=?";
+        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement ps = connection.prepareStatement(findSql)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery();) {
+                return rebuild(rs);
+            }
         } catch (SQLException e) {
-            LOGGER.error("Database error", e);
-            throw new SearchException("Database error", e);
-        } catch (IOException | InvocationTargetException | InstantiationException |
-                 IllegalAccessException e) {
-            LOGGER.error("Can't rebuild brand with (id = {})", id, e);
-            return null;
+            LOGGER.error("Database query failed for brand id={}", id, e);
+            throw new SearchException("Database error when querying brand", e);
+        } catch (IOException  e) {
+            LOGGER.error("Failed to rebuild brand with id={}", id, e);
+            // 4. 反序列化失败不返回 null，直接抛异常，避免上游空指针
+            throw new SearchException("Failed to parse brand data from JSON", e);
         }
     }
 
-    private Brand rebuild(ResultSet resultSet) throws SQLException, InvocationTargetException, InstantiationException, IllegalAccessException, IOException {
-        if (resultSet.next()) {
-            long id = resultSet.getLong("id");
+    private Brand rebuild(ResultSet rs) throws SQLException, IOException {
+        if (rs.next()) {
+            long id = rs.getLong("id");
             if (Brand.UNDEFINED.id() == id)
                 return Brand.UNDEFINED;
-            Name name = toName(resultSet.getString("name"));
-            AboutBrand about = toAboutBrand(resultSet.getString("about"));
+            Name name = PsqlBrandRepository.toName(rs.getString("name"));
+            AboutBrand about = PsqlBrandRepository.toAboutBrand(rs.getString("about"));
             return new Brand(id, name, about);
         }
         return null;
     }
 
-    private Name toName(String json) throws IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        String name = null, alias = null, mnemonic = null;
+    private static Name toName(String json) throws IOException {
+        if (json == null || json.isBlank()) {
+            return Name.EMPTY;
+        }
+        String name = null, shortName = null;
         try (JsonParser parser = JSON_FACTORY.createParser(json.getBytes(StandardCharsets.UTF_8))) {
             while (parser.nextToken() != null) {
                 if (JsonToken.FIELD_NAME.equals(parser.currentToken())) {
-                    String fieldName = parser.getCurrentName();
+                    String fieldName = parser.currentName();
                     parser.nextToken();
                     switch (fieldName) {
-                        case "name":
-                            name = parser.getValueAsString();
-                            break;
-                        case "alias":
-                            alias = parser.getValueAsString();
-                            break;
-                        case "mnemonic":
-                            mnemonic = parser.getValueAsString();
-                            break;
+                        case "name" -> name = parser.getValueAsString();
+                        case "shortName" -> shortName = parser.getValueAsString();
                     }
                 }
             }
-            return nameConstructor.newInstance(name, mnemonic, alias);
+            return new Name(name, shortName);
         }
     }
 
-    private AboutBrand toAboutBrand(String json) throws IOException {
+    private static AboutBrand toAboutBrand(String json) throws IOException {
         if (json == null)
             return null;
         String story = null;
@@ -124,21 +110,13 @@ public class PsqlBrandRepository implements BrandRepository {
         try (JsonParser parser = JSON_FACTORY.createParser(json.getBytes(StandardCharsets.UTF_8))) {
             while (parser.nextToken() != null) {
                 if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                    String fieldName = parser.getCurrentName();
+                    String fieldName = parser.currentName();
                     parser.nextToken();
                     switch (fieldName) {
-                        case "story":
-                            story = parser.getValueAsString();
-                            break;
-                        case "since":
-                            since = Year.of(parser.getIntValue());
-                            break;
-                        case "homepage":
-                            homepage = new URL(parser.getValueAsString());
-                            break;
-                        case "logo":
-                            logo = new URL(parser.getValueAsString());
-                            break;
+                        case "story" -> story = parser.getValueAsString();
+                        case "since" -> since = Year.of(parser.getIntValue());
+                        case "homepage" -> homepage = URI.create(parser.getValueAsString()).toURL();
+                        case "logo" -> logo = URI.create(parser.getValueAsString()).toURL();
                     }
                 }
             }
@@ -153,29 +131,36 @@ public class PsqlBrandRepository implements BrandRepository {
 
     @Override
     public void remove(long id) {
-        try (Connection connection = PsqlUtil.getConnection()) {
-            final String removeSql = "delete from brand where id=?";
-            PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
-            preparedStatement.setLong(1, id);
-            preparedStatement.executeUpdate();
+        final String DELETE_SQL = """
+                DELETE FROM brand 
+                WHERE id = ?
+                """;
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement ps = connection.prepareStatement(DELETE_SQL)) {
+            ps.setLong(1, id);
+            ps.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error("Can't remove brand(id={})", id, e);
-            throw new PersistenceException(String.format("Can't remove brand(id={})", id), e);
+            throw new PersistenceException(String.format("Can't remove brand(id={%d})", id), e);
         }
     }
 
     @Override
     public void save(Brand brand) {
+        Objects.requireNonNull(brand, "brand required");
+        final String INSERT_OR_UPDATE_SQL = """
+                INSERT INTO brand (id, name, about) 
+                VALUES (?, ?, ?) 
+                ON CONFLICT(id) DO UPDATE 
+                SET name = EXCLUDED.name, about = EXCLUDED.about
+                """;
         PGobject name = new PGobject();
         name.setType("jsonb");
         PGobject about = new PGobject();
         about.setType("jsonb");
-        try (Connection connection = PsqlUtil.getConnection()) {
-            name.setValue(toJson(brand.name()));
-            about.setValue(toJson(brand.about()));
-            //insert into brand (id,name,about) values (?,?::jsonb,?::jsonb) 没有用PGobject修饰的sql
-            final String replaceInto = "insert into brand (id,name,about) values (?,?,?) on conflict(id) do update set name=EXCLUDED.name,about=EXCLUDED.about";
-            PreparedStatement ps = connection.prepareStatement(replaceInto);
+        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement ps = connection.prepareStatement(INSERT_OR_UPDATE_SQL)) {
+            name.setValue(PsqlBrandRepository.toJson(brand.name()));
+            about.setValue(PsqlBrandRepository.toJson(brand.about()));
             ps.setLong(1, brand.id());
             ps.setObject(2, name);
             ps.setObject(3, about);
@@ -186,24 +171,25 @@ public class PsqlBrandRepository implements BrandRepository {
         }
     }
 
-    private String toJson(Name name) {
-        try (ByteArrayOutputStream output = new ByteArrayOutputStream(); JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+    private static String toJson(Name name) {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream();
+             JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
             generator.writeStartObject();
             generator.writeStringField("name", name.name());
-            generator.writeStringField("mnemonic", name.mnemonic());
-            generator.writeStringField("alias", name.alias());
+            generator.writeStringField("shortName", name.shortName());
             generator.writeEndObject();
             generator.close();
             return output.toString();
         } catch (IOException e) {
             LOGGER.error("Not write name as json", e);
+            throw new IllegalStateException("Failed to serialize Name object", e);
         }
-        return null;
     }
 
-    private String toJson(AboutBrand about) {
+    private static String toJson(AboutBrand about) {
         if (about == null) return null;
-        try (ByteArrayOutputStream output = new ByteArrayOutputStream(); JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream();
+             JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
             generator.writeStartObject();
             generator.writeNumberField("since", about.since().getValue());
             if (about.story() != null)
@@ -217,7 +203,7 @@ public class PsqlBrandRepository implements BrandRepository {
             return output.toString();
         } catch (IOException e) {
             LOGGER.error("Not write about as json", e);
+            throw new IllegalStateException("Failed to serialize AboutBrand object", e);
         }
-        return null;
     }
 }

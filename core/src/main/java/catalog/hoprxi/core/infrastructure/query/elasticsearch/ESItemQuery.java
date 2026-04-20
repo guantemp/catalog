@@ -27,10 +27,7 @@ import catalog.hoprxi.core.infrastructure.query.FluxByteBufOutputStream;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import io.netty.buffer.ByteBufOutputStream;
-import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.*;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
@@ -41,6 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.MonoSink;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -77,11 +76,10 @@ public class ESItemQuery implements ItemQuery {
     }
 
     @Override
-    public Flux<ByteBuf> findAsync(long id) {
+    public Mono<ByteBuf> findAsync(long id) {
         Request request = new Request("GET", PREFIX + "/_doc/" + id);
         request.setOptions(ESUtil.requestOptions());
-
-        return ESItemQuery.byteBufFlux(String.valueOf(id), request, true);
+        return ESItemQuery.toMonoByteBuf(String.valueOf(id), request);
     }
 
     @Override
@@ -96,14 +94,14 @@ public class ESItemQuery implements ItemQuery {
     }
 
     @Override
-    public Flux<ByteBuf> findByBarcodeAsync(String barcode) {
-        if (!BarcodeValidServices.valid(barcode)) return Flux.error(new IllegalArgumentException("Not valid barcode"));
+    public Mono<ByteBuf> findByBarcodeAsync(String barcode) {
+        if (!BarcodeValidServices.valid(barcode)) return Mono.error(new IllegalArgumentException("Not valid barcode"));
 
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESItemQuery.buildBarcodeFindRequest(barcode));
 
-        return ESItemQuery.byteBufFlux(barcode, request);
+        return ESItemQuery.toMonoByteBuf(barcode,request);
     }
 
     private static String buildBarcodeFindRequest(String barcode) {
@@ -261,6 +259,9 @@ public class ESItemQuery implements ItemQuery {
     private static void buildSortRequest(JsonGenerator generator, SortFieldEnum sortField) throws IOException {
         generator.writeArrayFieldStart("sort");
         generator.writeStartObject();
+        generator.writeStringField("_score", sortField.sort());
+        generator.writeEndObject();
+        generator.writeStartObject();
         generator.writeStringField(MapSortField.mapSortToField(sortField), sortField.sort());
         generator.writeEndObject();
         generator.writeEndArray();
@@ -277,6 +278,19 @@ public class ESItemQuery implements ItemQuery {
     private static void buildCompositeAggRequest(JsonGenerator gen, String aggName, String... fields)
             throws IOException {
         gen.writeObjectFieldStart(aggName);
+        gen.writeObjectFieldStart("multi_terms");
+        gen.writeNumberField("size", ESItemQuery.AGGS_SIZE);
+        gen.writeArrayFieldStart("terms");
+        for (String field : fields) {
+            gen.writeStartObject();
+            gen.writeStringField("field", field);
+            gen.writeEndObject();
+        }
+        gen.writeEndArray();
+        gen.writeEndObject();//end multi_terms
+        gen.writeEndObject();//end aggname
+/*
+        gen.writeObjectFieldStart(aggName);
         gen.writeObjectFieldStart("composite");
         gen.writeNumberField("size", ESItemQuery.AGGS_SIZE);
         gen.writeArrayFieldStart("sources");
@@ -292,6 +306,8 @@ public class ESItemQuery implements ItemQuery {
         gen.writeEndArray();//end array sources
         gen.writeEndObject(); // end composite
         gen.writeEndObject(); // end aggName
+
+ */
     }
 
     /**
@@ -436,5 +452,58 @@ public class ESItemQuery implements ItemQuery {
 
     private static Flux<ByteBuf> byteBufFlux(String tips, Request request) {
         return ESItemQuery.byteBufFlux(tips, request, false);
+    }
+
+    private static Mono<ByteBuf> toMonoByteBuf(String tips, Request request) {
+        return Mono.create((MonoSink<ByteBuf> sink) -> {
+                    final AtomicBoolean isCancelled = new AtomicBoolean(false);
+                    // 取消监听
+                    sink.onCancel(() -> isCancelled.set(true));
+                    // ES 异步请求
+                    ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+                        @Override
+                        public void onSuccess(Response response) {
+                            if (isCancelled.get()) {
+                                EntityUtils.consumeQuietly(response.getEntity());
+                                return;
+                            }
+                            // 线程池处理
+                            TRANSFORM_POOL.execute(() -> {
+                                if (isCancelled.get()) {
+                                    EntityUtils.consumeQuietly(response.getEntity());
+                                    return;
+                                }
+                                ByteBuf buf = ByteBufAllocator.DEFAULT.directBuffer();
+                                try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
+                                     OutputStream os = new ByteBufOutputStream(buf); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+                                    Extract.extractSourceSkipMeta(parser, generator);
+                                    generator.flush();
+                                    if (!isCancelled.get()) {
+                                        sink.success(buf);
+                                    } else {
+                                        ReferenceCountUtil.release(buf);
+                                    }
+                                } catch (IOException e) {
+                                    ReferenceCountUtil.release(buf);
+                                    if (!isCancelled.get()) {
+                                        sink.error(MapException.mapException(e, tips));
+                                    }
+                                }
+                                //如果 try 块正常执行完，content 已经被读取并关闭了，此时再调用 consumeQuietly 可能会尝试读取已经关闭的流（虽然 Quietly 会吞掉异常，但这是一种“坏味道”）
+                            });
+                        }
+
+                        @Override
+                        public void onFailure(Exception exception) {
+                            if (!isCancelled.get()) {
+                                sink.error(MapException.mapException(exception, tips));
+                            }
+                        }
+                    });
+                })
+                .doOnTerminate(() -> {
+                    LOGGER.debug("Request terminated for id: {}", tips);
+                })
+                .doOnDiscard(ByteBuf.class, ReferenceCountUtil::safeRelease);
     }
 }

@@ -395,7 +395,7 @@ public class PsqlCategoryRepositoryTest {
         Assert.assertEquals(beer.parentId(), 12);//drinks
         Assert.assertEquals(beer.name().name(), "啤酒");
         Assert.assertEquals(beer.description(), "是一种以小麦芽和大麦芽为主要原料，并加啤酒花，经过液态糊化和糖化，再经过液态发酵酿制而成的酒精饮料");
-        Assert.assertEquals(beer.name().alias(), "beer");
+        Assert.assertEquals(beer.name().shortName(), "beer");
 
         Category leisure_food = repository.find(111);
         Assert.assertNotNull(leisure_food);

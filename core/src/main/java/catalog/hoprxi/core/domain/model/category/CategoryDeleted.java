@@ -28,7 +28,7 @@ import java.time.LocalDateTime;
  */
 
 public class CategoryDeleted implements DomainEvent {
-    private long id;
+    private final long id;
     private final LocalDateTime occurredOn;
     private final int version;
 

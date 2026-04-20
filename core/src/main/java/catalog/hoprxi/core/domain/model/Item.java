@@ -247,7 +247,7 @@ public class Item {
         Objects.requireNonNull(name, "name required");
         if (!this.name.equals(name)) {
             this.name = name;
-            DomainRegistry.domainEventPublisher().publish(new ItemRenamed(id, name.name(), name.mnemonic(), name.alias()));
+            DomainRegistry.domainEventPublisher().publish(new ItemRenamed(id, name.name(),name.shortName()));
         }
     }
 

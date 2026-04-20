@@ -225,7 +225,7 @@ public class BrandService {
     }
 
     private static Brand update(JsonParser parser, long id) throws IOException, URISyntaxException {
-        String name = null, alias = null, story = null;
+        String name = null, shortName = null, story = null;
         URL logo = null, homepage = null;
         Year since = null;
         if (parser.nextToken() != JsonToken.START_OBJECT) {
@@ -237,7 +237,7 @@ public class BrandService {
                 parser.nextToken();
                 switch (fieldName) {
                     case "name" -> name = parser.getValueAsString();
-                    case "alias" -> alias = parser.getValueAsString();
+                    case "shortName" -> shortName = parser.getValueAsString();
                     case "story" -> story = parser.getValueAsString();
                     case "homepage" -> {
                         String urlStr = parser.getValueAsString();
@@ -257,8 +257,8 @@ public class BrandService {
             }
         }
         BrandUpdateCommand command = new BrandUpdateCommand(id);
-        if (name != null || alias != null)
-            command.setName(name, alias);
+        if (name != null || shortName != null)
+            command.setName(name, shortName);
         if (story != null || homepage != null || logo != null || since != null)
             command.setAbout(logo, homepage, since, story);
         System.out.println(command);

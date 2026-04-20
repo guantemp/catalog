@@ -38,7 +38,7 @@ public class CategoryCreateHandler implements Handler<CategoryCreateCommand, Cat
         Category category = new Category(command.parentId(), repository.nextIdentity(), name, command.description(), command.icon());
         repository.save(category);
         //领域事件
-        CategoryCreated event = new CategoryCreated(category.parentId(), category.id(), category.name().name(), category.name().alias(),
+        CategoryCreated event = new CategoryCreated(category.parentId(), category.id(), category.name().name(), category.name().shortName(),
                 category.icon(), category.description());
         DomainRegistry.domainEventPublisher().publish(event);
         return category;

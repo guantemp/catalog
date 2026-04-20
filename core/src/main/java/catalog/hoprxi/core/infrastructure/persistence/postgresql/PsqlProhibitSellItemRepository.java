@@ -330,8 +330,7 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeStringField("name", name.name());
-            generator.writeStringField("mnemonic", name.mnemonic());
-            generator.writeStringField("alias", name.alias());
+            generator.writeStringField("shortName", name.shortName());
             generator.writeEndObject();
         } catch (IOException e) {
             LOGGER.error("Not write name as json", e);

@@ -54,6 +54,7 @@ import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
@@ -66,9 +67,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
@@ -93,60 +92,35 @@ public class ItemService {
     @Get("/items/{id}")
     @Description("Retrieves the item information by the given ID.")
     public HttpResponse find(@Param("id") long id) {
-        Flux<ByteBuf> dataFlux = QUERY.findAsync(id); // 假设返回 Flux<ByteBuf>
-        // 使用 switchMap：一旦有第一个元素，就前置 headers
-        Flux<HttpObject> responseStream = dataFlux
-                .map(HttpData::wrap)
-                .switchOnFirst((signal, flux) -> {
-                    if (signal.hasError()) { // 第一个信号就是错误
-                        Throwable error = signal.getThrowable();
-                        if (error instanceof NotFoundException) {
-                            return Flux.just(
-                                    ResponseHeaders.builder(HttpStatus.NOT_FOUND)
-                                            .contentType(MediaType.JSON_UTF_8)
-                                            .build(),
-                                    HttpData.ofUtf8(String.format("{\"Error\":\"Item not found: %d\"}", id)));
-                        } else {
-                            return Flux.just(
-                                    ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                                    HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
-                        }
-                    }
-                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
-                        return Flux.concat(
-                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+        Mono<ByteBuf> dataMono = QUERY.findAsync(id);
+        // 将 Mono<ByteBuf> 转换为 Flux<HttpObject>
+        Flux<HttpObject> responseFlux = dataMono
+                .flatMapMany(byteBuf -> Flux.using(
+                        () -> byteBuf,
+                        buf -> Flux.just(// 业务逻辑：正常响应
+                                ResponseHeaders.builder(HttpStatus.OK)
                                         .contentType(MediaType.JSON_UTF_8)
-                                        .build()), flux);
+                                        .build(),
+                                HttpData.wrap(buf) // Armeria 接管生命周期
+                        ),
+                        ReferenceCountUtil::release // 资源清理：仅在异常路径执行
+                ))
+                .onErrorResume(error -> {
+                    if (error instanceof NotFoundException) {
+                        return Flux.just(
+                                ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build(),
+                                HttpData.ofUtf8(String.format("{\"Error\":\"Item not found: %d\"}", id))
+                        );
+                    } else {
+                        return Flux.just(
+                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
+                        );
                     }
-                    return Flux.just(
-                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
-                                    .contentType(MediaType.JSON_UTF_8)
-                                    .build(),
-                            HttpData.ofUtf8(String.format("{\"Warn\":\"Item not found for id : %d }\"", id)));
                 });
-        return HttpResponse.of(responseStream);
-              /*
-        StreamWriter<HttpObject> stream = StreamMessage.streaming();
-        ctx.whenRequestCancelled().thenAccept(stream::close);
-        ctx.blockingTaskExecutor().execute(() -> {
-            if (ctx.isCancelled() || ctx.isTimedOut()) return;
-            stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
-            try (InputStream is = QUERY.find(id)) {
-                byte[] buf = new byte[SINGLE_BUFFER_SIZE];
-                int n;
-                while ((n = is.read(buf)) != -1) {
-                    ByteBuf chunk = ctx.alloc().buffer(n);
-                    chunk.writeBytes(buf, 0, n);
-                    stream.write(HttpData.wrap(chunk));
-                }
-                stream.close();
-            } catch (IOException e) {
-                this.handleStreamError(stream, e);
-                LOGGER.warn("Error,it's {}", e.getMessage());
-            }
-        });
-        return HttpResponse.of(stream);
-         */
+        return HttpResponse.of(responseFlux);
     }
 
     @Get("/items")
@@ -198,7 +172,7 @@ public class ItemService {
 
                     return Flux.just(buf);
                 })
-                .window(256)        // 每64条打包成1个大数据块
+                .window(256)        // 每256条打包成1个大数据块
                 .concatMap(w -> w.reduce(
                                 PooledByteBufAllocator.DEFAULT.compositeBuffer(),
                                 (composite, buf) -> {
@@ -209,7 +183,7 @@ public class ItemService {
                 );
 
         ResponseHeaders headers = ResponseHeaders.builder(responseStatus.get())
-                .contentType(MediaType.JSON_UTF_8) // 或者 MediaType.PLAIN_TEXT_UTF_8
+                .contentType(MediaType.JSON_UTF_8)
                 .build();
 
         return HttpResponse.of(headers, finalFlux.map(HttpData::wrap));

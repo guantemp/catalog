@@ -35,19 +35,17 @@ public class BrandCreated implements DomainEvent {
     private final URL homePage;
     private final String name;
     private final String alias;
-    private final String mnemonic;
     private final long id;
     private final LocalDateTime occurredOn;
     private final int version;
 
-    public BrandCreated(long id, String name, String mnemonic, String alias, URL homePage, URL logo, Year since, String story) {
+    public BrandCreated(long id, String name, String shortName, URL homePage, URL logo, Year since, String story) {
         this.logo = logo;
         this.since = since;
         this.story = story;
         this.homePage = homePage;
         this.name = name;
-        this.alias = alias;
-        this.mnemonic = mnemonic;
+        this.alias = shortName;
         this.id = id;
         this.version = 1;
         this.occurredOn = LocalDateTime.now();
@@ -88,10 +86,6 @@ public class BrandCreated implements DomainEvent {
         return alias;
     }
 
-    public String mnemonic() {
-        return mnemonic;
-    }
-
     public long id() {
         return id;
     }
@@ -118,7 +112,6 @@ public class BrandCreated implements DomainEvent {
                 .add("homePage=" + homePage)
                 .add("name='" + name + "'")
                 .add("alias='" + alias + "'")
-                .add("mnemonic='" + mnemonic + "'")
                 .add("id=" + id)
                 .add("occurredOn=" + occurredOn)
                 .add("version=" + version)

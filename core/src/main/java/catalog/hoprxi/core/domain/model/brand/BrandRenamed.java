@@ -27,8 +27,7 @@ import java.time.LocalDateTime;
  */
 public class BrandRenamed implements DomainEvent {
     private String name;
-    private String mnemonic;
-    private String alias;
+    private String shortName;
     private LocalDateTime occurredOn;
     private long id;
     private int version;
@@ -37,14 +36,12 @@ public class BrandRenamed implements DomainEvent {
     /**
      * @param id
      * @param name
-     * @param mnemonic
-     * @param alias
+     * @param shortName
      */
-    public BrandRenamed(long id, String name, String mnemonic, String alias) {
+    public BrandRenamed(long id, String name, String shortName) {
         this.id = id;
         this.name = name;
-        this.mnemonic = mnemonic;
-        this.alias = alias;
+        this.shortName = shortName;
         this.occurredOn = LocalDateTime.now();
         this.version = 1;
     }
@@ -66,12 +63,8 @@ public class BrandRenamed implements DomainEvent {
         return name;
     }
 
-    public String mnemonic() {
-        return mnemonic;
-    }
-
     public String alias() {
-        return alias;
+        return shortName;
     }
 
     @Override

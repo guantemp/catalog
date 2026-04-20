@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,16 @@
  *  limitations under the License.
  */
 
-package catalog.hoprxi.core.domain.model.category;
+package catalog.hoprxi.core.rest;
 
-
-import java.net.URL;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2025/9/22
+ * @version 0.0.1 builder 2026/4/18
  */
 
-public record CategoryCreated(long parentId, long id, String name, String shortName, URL icon, String description) {
+public class FileUploadService {
+
 
 }

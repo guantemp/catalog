@@ -27,18 +27,16 @@ import java.time.LocalDateTime;
  * @since JDK8.0
  */
 public class ItemRenamed implements DomainEvent {
-    private String name;
-    private String alias;
-    private String mnemonic;
-    private LocalDateTime occurredOn;
-    private long id;
-    private int version;
+    private final String name;
+    private final String shortName;
+    private final LocalDateTime occurredOn;
+    private final long id;
+    private final int version;
 
-    public ItemRenamed(long id, String name, String mnemonic, String alias) {
+    public ItemRenamed(long id, String name, String shortName) {
         this.id = id;
         this.name = name;
-        this.mnemonic = mnemonic;
-        this.alias = alias;
+        this.shortName = shortName;
         occurredOn = LocalDateTime.now();
         version = 1;
     }
@@ -58,11 +56,7 @@ public class ItemRenamed implements DomainEvent {
     }
 
     public String alias() {
-        return alias;
-    }
-
-    public String mnemonic() {
-        return mnemonic;
+        return shortName;
     }
 
     public long id() {

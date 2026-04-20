@@ -16,78 +16,68 @@
 
 package catalog.hoprxi.core.domain.model;
 
-import salt.hoprxi.to.PinYin;
-
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.3 builder 2024-05-09
+ * @since JDK21
+ * @version 0.1 builder 2026-04-20
  */
 public class Name {
-    private static final int MAX_LENGTH = 128;
+    private static final int MAX_LENGTH = 256;
     private String name;
-    private final String mnemonic;
-    private String alias;
-
+    private String shortName;
+    /**
+     * 空名称对象（空对象模式）
+     * <p>调用 rename 仍返回自身，避免空指针</p>
+     */
     public static final Name EMPTY = new Name() {
         @Override
-        public Name rename(String name, String alias) {
+        public Name rename(String name, String shortName) {
             return this;
         }
     };
 
     private Name() {
         this.name = "";
-        this.mnemonic = "";
-        this.alias = "";
+        this.shortName = "";
     }
 
     /**
-     * Reconstructing constructors for designs valueOf name classes
+     * 构造方法：传入正式名称与简称
+     *
+     * @param name      正式名称，不能为 null，长度不超过 256
+     * @param shortName 简称，不能为 null，长度不超过 256
      */
-    private Name(String name, String mnemonic, String alias) {
+    public Name(String name, String shortName) {
         setName(name);
-        this.mnemonic = mnemonic;
-        setAlias(alias);
+        setShortName(shortName);
     }
 
-    /**
-     * @param name
-     * @param alias equal name if null
-     * @throws IllegalArgumentException if name is <code>NULL</code>
-     */
-    public Name(String name, String alias) {
-        setName(name);
-        this.mnemonic = PinYin.toShortPinYing(this.name);
-        setAlias(alias);
-    }
-
-    /**
-     * @param name
-     * @throws IllegalArgumentException if name is <code>NULL</code>
-     */
     public Name(String name) {
-        this(name, name);
+        this(name, "");
     }
 
-    public static Name valueOf(String name) {
+    /**
+     * 静态工厂方法：通过正式名称创建 Name 实例
+     *
+     * @param name 正式名称
+     * @return Name 实例
+     */
+    public static Name of(String name) {
         return new Name(name);
     }
 
-    public String alias() {
-        return alias;
+    public String shortName() {
+        return shortName;
     }
 
-    private void setAlias(String alias) {
-        if (alias == null)
-            alias = name;
-        else
-            alias = alias.trim();
-        if (alias.length() > MAX_LENGTH)
-            throw new IllegalArgumentException("alias length rang is 0-128");
-        this.alias = alias;
+    private void setShortName(String shortName) {
+        shortName = Objects.requireNonNull(shortName, "alias required").trim();
+        if (shortName.length() > MAX_LENGTH)
+            throw new IllegalArgumentException(String.format("alias length rang is 0-%d", MAX_LENGTH));
+        this.shortName = shortName;
     }
 
     public String name() {
@@ -97,48 +87,48 @@ public class Name {
     private void setName(String name) {
         name = Objects.requireNonNull(name, "name required").trim();
         if (name.length() > MAX_LENGTH)
-            throw new IllegalArgumentException("name length rang is 0-128");
+            throw new IllegalArgumentException(String.format("name length rang is 0-%d", MAX_LENGTH));
         this.name = name;
     }
 
-    public String mnemonic() {
-        return mnemonic;
-    }
-
-    public Name rename(String name, String alias) {
-        if (this.name.equals(name) && this.alias.equals(alias))
+    /**
+     * 重命名，生成新的 Name 对象
+     * <p>值对象不可变，修改属性时返回新实例</p>
+     *
+     * @param name      新正式名称
+     * @param shortName 新简称
+     * @return 新的 Name 实例（或自身，若未变化）
+     */
+    public Name rename(String name, String shortName) {
+        if ("".equals(name) && "".equals(shortName))
+            return EMPTY;
+        if (this.name.equals(name) && this.shortName.equals(shortName))
             return this;
-        if (name == null && alias != null)
-            return new Name(this.name, alias);
-        return new Name(name, alias);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Name name1 = (Name) o;
-
-        if (!Objects.equals(name, name1.name)) return false;
-        if (!Objects.equals(mnemonic, name1.mnemonic)) return false;
-        return Objects.equals(alias, name1.alias);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (mnemonic != null ? mnemonic.hashCode() : 0);
-        result = 31 * result + (alias != null ? alias.hashCode() : 0);
-        return result;
+        if (name == null && shortName != null)
+            return new Name(this.name, shortName);
+        return new Name(name, shortName);
     }
 
     @Override
     public String toString() {
-        return "Name{" +
-                "name='" + name + '\'' +
-                ", mnemonic='" + mnemonic + '\'' +
-                ", alias='" + alias + '\'' +
-                '}';
+        return new StringJoiner(", ", Name.class.getSimpleName() + "[", "]")
+                .add("name='" + name + "'")
+                .add("shortName='" + shortName + "'")
+                .toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Name name1 = (Name) o;
+        return Objects.equals(name, name1.name) && Objects.equals(shortName, name1.shortName);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(name);
+        result = 31 * result + Objects.hashCode(shortName);
+        return result;
     }
 }

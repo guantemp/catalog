@@ -23,6 +23,7 @@ import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.*;
 import io.netty.buffer.ByteBuf;
 import org.testng.annotations.Test;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
@@ -46,13 +47,13 @@ public class ESItemQueryTest {
 
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFindAsync() {
-        Flux<ByteBuf>[] fluxes = new Flux[]{
+        Mono<ByteBuf>[] monos = new Mono[]{
                 query.findAsync(55307473635765901L),
                 query.findAsync(55307896123812197L),
                 query.findAsync(55307820773139539L),
                 query.findAsync(55307834488513967L)
         };
-        ESItemQueryTest.printResult(fluxes);
+        ESItemQueryTest.printResult(monos);
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1)
@@ -76,16 +77,16 @@ public class ESItemQueryTest {
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1)
-    public void testFindByBarcodeAsync() throws InterruptedException {
+    public void testFindByBarcodeAsync() {
         String[] barcodes = new String[]{"6900404523737", "6939006488885", "6940188805018", "6907469320189", "erghrh"};
-        Flux<ByteBuf>[] fluxes = new Flux[barcodes.length];
+        Mono<ByteBuf>[] monos = new Mono[barcodes.length];
         for (int i = 0, j = barcodes.length; i < j; i++) {
-            fluxes[i] = query.findByBarcodeAsync(barcodes[i]);
+            monos[i] = query.findByBarcodeAsync(barcodes[i]);
         }
-        ESItemQueryTest.printResult(fluxes);
+        ESItemQueryTest.printResult(monos);
     }
 
-    @Test(invocationCount = 1, threadPoolSize = 1,priority = 2)
+    @Test(invocationCount = 1, threadPoolSize = 1, priority = 2)
     public void testSearch() throws IOException {
         try (InputStream is = query.search(100, 30)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
@@ -103,7 +104,7 @@ public class ESItemQueryTest {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
             System.out.println();
         }
-        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("693"),new CategorySpec(new long[]{55307231199687601L}), new BrandSpec(-1L)}, 0, 10, SortFieldEnum._BARCODE)) {
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(new long[]{55307231199687601L}), new BrandSpec(-1L)}, 0, 10, SortFieldEnum._BARCODE)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
             System.out.println();
         }
@@ -137,7 +138,7 @@ public class ESItemQueryTest {
         ESItemQueryTest.printResult(fluxes);
     }
 
-    @Test(invocationCount = 1, threadPoolSize = 1,priority = 2)
+    @Test(invocationCount = 1, threadPoolSize = 1, priority = 2)
     public void testSearchAfter() throws IOException {
         try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("6934")}, 60, null, SortFieldEnum._NAME)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
@@ -225,6 +226,40 @@ public class ESItemQueryTest {
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        }
+    }
+
+    public static void printResult(Mono<ByteBuf>[] monos) {
+        // 1. 使用 Mono.when 合并
+        // 这会让数组里所有的 Mono 同时开始执行（并发）
+        // 注意：Mono.when 会等待所有 Mono 完成，但只返回 Void (不返回具体数据)
+        // 如果你想处理数据，需要用 Mono.zip 或者分别 subscribe
+        // 这里为了演示简单且保留数据内容，我们改用 Flux.merge 或者分别订阅
+
+        // 方案 A：如果只是想等它们都跑完（不管数据内容，或者数据内容已经在内部处理了）
+        // Mono.when(monos).subscribe(() -> System.out.println("全部完成"));
+
+        // 方案 B (推荐)：为了能看到每个 ID 的具体返回内容，我们利用 Flux.merge 把它们当成流处理
+        // 或者简单地遍历订阅（这也是并发执行的）
+
+        System.out.println(">>> 开始并发执行 " + monos.length + " 个 Mono 任务...");
+
+        for (int i = 0; i < monos.length; i++) {
+            final int index = i; // 用于日志标记
+            monos[i].subscribe(
+                    byteBuf -> {
+                        // onNext
+                        if (byteBuf != null) {
+                            String content = byteBuf.toString(StandardCharsets.UTF_8);
+                            System.out.println("[任务 " + index + "] 收到结果长度: " + content.length());
+                            // System.out.println(content); // 如果需要看具体 JSON
+                        }
+                    },
+                    error -> {
+                        // onError
+                        System.err.println("[任务 " + index + "] 发生错误: " + error.getMessage());
+                    }
+            );
         }
     }
 }

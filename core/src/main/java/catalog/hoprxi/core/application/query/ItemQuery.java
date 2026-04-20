@@ -18,6 +18,7 @@ package catalog.hoprxi.core.application.query;
 
 import io.netty.buffer.ByteBuf;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
 
@@ -63,7 +64,7 @@ public interface ItemQuery {
      * @param id 物品的唯一标识符。
      * @return 发射 {@link io.netty.buffer.ByteBuf} 的异步流。
      */
-    Flux<ByteBuf> findAsync(long id);
+    Mono<ByteBuf> findAsync(long id);
 
     /**
      * 根据条形码同步查找物品。
@@ -79,7 +80,7 @@ public interface ItemQuery {
      * @param barcode 物品的条形码字符串。
      * @return 发射 {@link io.netty.buffer.ByteBuf} 的异步流。
      */
-    Flux<ByteBuf> findByBarcodeAsync(String barcode);
+    Mono<ByteBuf> findByBarcodeAsync(String barcode);
 
     /**
      * 根据查询条件同步搜索物品列表（基于游标分页）。

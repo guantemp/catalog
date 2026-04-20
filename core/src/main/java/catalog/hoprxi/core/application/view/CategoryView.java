@@ -45,7 +45,7 @@ public class CategoryView {
     }
 
     public static CategoryView identifiableCategoryView(long id) {
-        return new CategoryView(id, id, Name.valueOf(PLACEHOLDER), null, null, true);
+        return new CategoryView(id, id, Name.of(PLACEHOLDER), null, null, true);
     }
 
     public boolean isRoot() {
