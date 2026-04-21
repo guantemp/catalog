@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.ItemQuery;
 import catalog.hoprxi.core.application.query.ItemQuerySpec;
-import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.domain.model.barcode.BarcodeValidServices;
 import catalog.hoprxi.core.infrastructure.ESUtil;
@@ -27,19 +26,17 @@ import catalog.hoprxi.core.infrastructure.query.FluxByteBufOutputStream;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import io.netty.buffer.*;
+import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.ResponseListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoSink;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,7 +49,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.2 builder 2025/10/24
+ * @version 0.0.3 builder 2026/04/22
  */
 
 public class ESItemQuery implements ItemQuery {
@@ -64,22 +61,20 @@ public class ESItemQuery implements ItemQuery {
             .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
-    private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
     private static final ExecutorService TRANSFORM_POOL = Executors.newVirtualThreadPerTaskExecutor();
 
     @Override
     public InputStream find(long id) {
         Request request = new Request("GET", PREFIX + "/_doc/" + id);
         request.setOptions(ESUtil.requestOptions());
-
-        return ESItemQuery.byteBufInputStream(String.valueOf(id), request, true);
+        return ReactiveStream.toSingleByteBufInputStream(request,String.valueOf(id));
     }
 
     @Override
     public Mono<ByteBuf> findAsync(long id) {
         Request request = new Request("GET", PREFIX + "/_doc/" + id);
         request.setOptions(ESUtil.requestOptions());
-        return ESItemQuery.toMonoByteBuf(String.valueOf(id), request);
+        return ReactiveStream.toMonoByteBuf(request, String.valueOf(id));
     }
 
     @Override
@@ -90,7 +85,7 @@ public class ESItemQuery implements ItemQuery {
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESItemQuery.buildBarcodeFindRequest(barcode));
 
-        return ESItemQuery.byteBufInputStream(barcode, request);
+        return ReactiveStream.toSingleByteBufInputStream( request,barcode);
     }
 
     @Override
@@ -101,7 +96,7 @@ public class ESItemQuery implements ItemQuery {
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESItemQuery.buildBarcodeFindRequest(barcode));
 
-        return ESItemQuery.toMonoByteBuf(barcode,request);
+        return ReactiveStream.toMonoByteBuf(request, barcode);
     }
 
     private static String buildBarcodeFindRequest(String barcode) {
@@ -143,7 +138,7 @@ public class ESItemQuery implements ItemQuery {
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, size, cursor, sortField));
 
-        return ESItemQuery.byteBufInputStream(ESItemQuery.extractIdentifier(specs), request);
+        return ReactiveStream.toByteBufInputStream(request, "items", ESItemQuery.extractIdentifier(specs));
     }
 
     @Override
@@ -217,7 +212,7 @@ public class ESItemQuery implements ItemQuery {
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
-        return ESItemQuery.byteBufInputStream(ESItemQuery.extractIdentifier(specs), request);
+        return ReactiveStream.toByteBufInputStream(request,"items",ESItemQuery.extractIdentifier(specs));
     }
 
     private static String buildSearchRequest(ItemQuerySpec[] filters, int offset, int size, SortFieldEnum sortField) {
@@ -352,39 +347,6 @@ public class ESItemQuery implements ItemQuery {
         return "filters(" + filters.length + ")";
     }
 
-    private static ByteBufInputStream byteBufInputStream(String tips, Request request, boolean alone) {
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        boolean success = false;
-        try {
-            Response response = ESUtil.restClient().performRequest(request);
-            try (OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os);
-                 InputStream is = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(is)) {
-                if (alone) Extract.extractSourceSkipMeta(parser, generator);
-                else Extract.extract(parser, generator, "items");
-                success = true;
-                return new ByteBufInputStream(buffer, true);
-            }
-        } catch (ResponseException e) {
-            if (e.getResponse().getStatusLine().getStatusCode() == 404) {
-                LOGGER.info("Item not found in Elasticsearch: id={}", tips);
-                throw new SearchException(String.format("The item(id=%s) not found", tips));
-            }
-            LOGGER.error("Elasticsearch error for id={}", tips, e);
-            throw new SearchException("Elasticsearch internal error", e);
-        } catch (IOException e) {
-            LOGGER.error("I/O failed", e);
-            throw new SearchException("Error: Elasticsearch timeout or no connection", e);
-        } finally {
-            if (!success && buffer.refCnt() > 0) {
-                ReferenceCountUtil.safeRelease(buffer);
-            }
-        }
-    }
-
-    private static ByteBufInputStream byteBufInputStream(String tips, Request request) {
-        return ESItemQuery.byteBufInputStream(tips, request, false);
-    }
-
     private static Flux<ByteBuf> byteBufFlux(String tips, Request request, boolean alone) {
         return Flux.<ByteBuf>create(sink -> {
                     final AtomicBoolean isCancelled = new AtomicBoolean(false);
@@ -452,58 +414,5 @@ public class ESItemQuery implements ItemQuery {
 
     private static Flux<ByteBuf> byteBufFlux(String tips, Request request) {
         return ESItemQuery.byteBufFlux(tips, request, false);
-    }
-
-    private static Mono<ByteBuf> toMonoByteBuf(String tips, Request request) {
-        return Mono.create((MonoSink<ByteBuf> sink) -> {
-                    final AtomicBoolean isCancelled = new AtomicBoolean(false);
-                    // 取消监听
-                    sink.onCancel(() -> isCancelled.set(true));
-                    // ES 异步请求
-                    ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
-                        @Override
-                        public void onSuccess(Response response) {
-                            if (isCancelled.get()) {
-                                EntityUtils.consumeQuietly(response.getEntity());
-                                return;
-                            }
-                            // 线程池处理
-                            TRANSFORM_POOL.execute(() -> {
-                                if (isCancelled.get()) {
-                                    EntityUtils.consumeQuietly(response.getEntity());
-                                    return;
-                                }
-                                ByteBuf buf = ByteBufAllocator.DEFAULT.directBuffer();
-                                try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                                     OutputStream os = new ByteBufOutputStream(buf); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-                                    Extract.extractSourceSkipMeta(parser, generator);
-                                    generator.flush();
-                                    if (!isCancelled.get()) {
-                                        sink.success(buf);
-                                    } else {
-                                        ReferenceCountUtil.release(buf);
-                                    }
-                                } catch (IOException e) {
-                                    ReferenceCountUtil.release(buf);
-                                    if (!isCancelled.get()) {
-                                        sink.error(MapException.mapException(e, tips));
-                                    }
-                                }
-                                //如果 try 块正常执行完，content 已经被读取并关闭了，此时再调用 consumeQuietly 可能会尝试读取已经关闭的流（虽然 Quietly 会吞掉异常，但这是一种“坏味道”）
-                            });
-                        }
-
-                        @Override
-                        public void onFailure(Exception exception) {
-                            if (!isCancelled.get()) {
-                                sink.error(MapException.mapException(exception, tips));
-                            }
-                        }
-                    });
-                })
-                .doOnTerminate(() -> {
-                    LOGGER.debug("Request terminated for id: {}", tips);
-                })
-                .doOnDiscard(ByteBuf.class, ReferenceCountUtil::safeRelease);
     }
 }

@@ -26,6 +26,7 @@ import io.netty.buffer.ByteBuf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import salt.hoprxi.cache.Cache;
 import salt.hoprxi.cache.CacheFactory;
 
@@ -202,7 +203,7 @@ public class PsqlBrandQuery implements BrandQuery {
      * @return
      */
     @Override
-    public Flux<ByteBuf> findAsync(long id) {
+    public Mono<ByteBuf> findAsync(long id) {
         return null;
     }
 

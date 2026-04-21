@@ -18,6 +18,7 @@ package catalog.hoprxi.core.application.query;
 
 import io.netty.buffer.ByteBuf;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -37,7 +38,7 @@ public interface BrandQuery {
         return new ByteArrayInputStream(new byte[0]);
     }
 
-    Flux<ByteBuf> findAsync(long id);
+    Mono<ByteBuf> findAsync(long id);
 
     /**
      * @param name

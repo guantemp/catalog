@@ -90,17 +90,17 @@ public class PsqlBrandRepositoryTest {
         System.out.println(brand);
         assertNotNull(brand);
         Brand undefined = repository.find(-1L);
-        assertTrue(Brand.UNDEFINED == undefined);
+        assertSame(undefined, Brand.UNDEFINED);
     }
 
 
     @Test(priority = 3)
     public void testSave() {
         Brand brand = repository.find(495651176959596602L);
-        assertEquals(new Name("官的"), brand.name());
+        assertEquals(brand.name(), new Name("官的"));
         brand.rename(new Name("官响环", "没情商"));
         repository.save(brand);
         brand = repository.find(495651176959596602L);
-        assertEquals(new Name("官响环", "没情商"), brand.name());
+        assertEquals(brand.name(), new Name("官响环", "没情商"));
     }
 }

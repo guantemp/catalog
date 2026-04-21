@@ -22,6 +22,7 @@ import catalog.hoprxi.core.application.query.SortFieldEnum;
 import io.netty.buffer.ByteBuf;
 import org.testng.annotations.Test;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.io.IOException;
@@ -45,7 +46,7 @@ public class ESBrandQueryTest {
 
     @Test(priority = 1, invocationCount = 1, threadPoolSize = 1, expectedExceptions = SearchException.class)
     public void testFind() throws IOException {
-        Long[] ids = new Long[]{495651176959596552L, 495651176959596602L, -1L, 55307444711845017L, 55308342812993069L,19L};
+        Long[] ids = new Long[]{495651176959596552L, 495651176959596602L, -1L, 55307444711845017L, 55308342812993069L, 19L};
         for (Long id : ids) {
             try (InputStream is = query.find(id)) {
                 System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
@@ -55,14 +56,91 @@ public class ESBrandQueryTest {
 
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFindAsync() {
-        Flux<ByteBuf>[] fluxes = new Flux[]{
+        Mono<ByteBuf>[] monos = new Mono[]{
                 query.findAsync(495651176959596552L),
                 query.findAsync(495651176959596602L),
                 query.findAsync(55307444711845017L),
                 query.findAsync(-1L),
                 query.findAsync(55308342812993069L)
         };
-        printResult(fluxes);
+        ESBrandQueryTest.printResult(monos);
+    }
+
+    @Test(priority = 2)
+    public void testSearch() throws IOException {
+        try (InputStream is = query.search(100, 15)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search(100, 5, SortFieldEnum._NAME)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search(0, 256, SortFieldEnum._ID)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search(64, null, SortFieldEnum.NAME)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search(128, "62078470412941622", SortFieldEnum.ID)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search("", 8, "62078807563681609", SortFieldEnum.ID)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search("天", 0, 20)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search("白萝卜", 10, 5)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.search("天", 0, 20, SortFieldEnum.NAME)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test(priority = 3)
+    public void testSearchAsync() throws IOException {
+        Flux<ByteBuf>[] fluxes = new Flux[]{
+                query.searchAsync("", 100, 15, SortFieldEnum._ID),
+                query.searchAsync(null, 100, 5, SortFieldEnum._NAME),
+                query.searchAsync("天", 0, 20, SortFieldEnum.NAME),
+                query.searchAsync("白萝卜", 10, 5, SortFieldEnum.NAME),
+                query.searchAsync("", 8, "62078807563681609", SortFieldEnum.ID)
+        };
+        ESBrandQueryTest.printResult(fluxes);
+    }
+
+    public static void printResult(Mono<ByteBuf>[] monos) {
+        // 1. 使用 Mono.when 合并
+        // 这会让数组里所有的 Mono 同时开始执行（并发）
+        // 注意：Mono.when 会等待所有 Mono 完成，但只返回 Void (不返回具体数据)
+        // 如果你想处理数据，需要用 Mono.zip 或者分别 subscribe
+        // 这里为了演示简单且保留数据内容，我们改用 Flux.merge 或者分别订阅
+
+        // 方案 A：如果只是想等它们都跑完（不管数据内容，或者数据内容已经在内部处理了）
+        // Mono.when(monos).subscribe(() -> System.out.println("全部完成"));
+
+        // 方案 B (推荐)：为了能看到每个 ID 的具体返回内容，我们利用 Flux.merge 把它们当成流处理
+        // 或者简单地遍历订阅（这也是并发执行的）
+
+        System.out.println(">>> 开始并发执行 " + monos.length + " 个 Mono 任务...");
+
+        for (int i = 0; i < monos.length; i++) {
+            final int index = i; // 用于日志标记
+            monos[i].subscribe(
+                    byteBuf -> {
+                        // onNext
+                        if (byteBuf != null) {
+                            String content = byteBuf.toString(StandardCharsets.UTF_8);
+                            System.out.println("[任务 " + index + "] 收到结果长度: " + content.length());
+                            // System.out.println(content); // 如果需要看具体 JSON
+                        }
+                    },
+                    error -> {
+                        // onError
+                        System.err.println("[任务 " + index + "] 发生错误: " + error.getMessage());
+                    }
+            );
+        }
     }
 
     private static void printResult(Flux<ByteBuf>[] fluxes) {
@@ -106,42 +184,6 @@ public class ESBrandQueryTest {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("等待被中断", e);
-        }
-    }
-
-    @Test(priority = 2)
-    public void testSearchAll() throws IOException {
-        try (InputStream is = query.search(100, 15)) {
-            System.out.println("offset=100,size=5");
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.search(100, 5, SortFieldEnum._NAME)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.search(0, 256, SortFieldEnum._ID)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.search(64, null, SortFieldEnum.NAME)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.search(128, "62078470412941622", SortFieldEnum.ID)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.search("", 8, "62078807563681609", SortFieldEnum.ID)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-    }
-
-    @Test(priority = 3)
-    public void testSearchName() throws IOException {
-        try (InputStream is = query.search("天", 0, 20)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.search("白萝卜", 10, 5)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        }
-        try (InputStream is = query.search("天", 0, 20, SortFieldEnum.NAME)) {
-            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
     }
 }

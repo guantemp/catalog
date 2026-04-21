@@ -25,6 +25,7 @@ import catalog.hoprxi.core.application.handler.BrandDeleteHandler;
 import catalog.hoprxi.core.application.handler.BrandUpdateHandler;
 import catalog.hoprxi.core.application.handler.Handler;
 import catalog.hoprxi.core.application.query.BrandQuery;
+import catalog.hoprxi.core.application.query.NotFoundException;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESBrandQuery;
@@ -35,9 +36,11 @@ import com.linecorp.armeria.common.*;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
+import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,31 +71,35 @@ public class BrandService {
     @Get("/brands/{id}")
     @Description("Retrieves the brand information by the given brand ID.")
     public HttpResponse find(@Param("id") long id) {
-        Flux<ByteBuf> dataFlux = QUERY.findAsync(id);
-        Flux<HttpObject> responseStream = dataFlux
-                .map(HttpData::wrap)
-                .switchOnFirst((signal, flux) -> {
-                    if (signal.hasError()) {// 1. 首信号异常
-                        LOGGER.error("Internal server error", signal.getThrowable());
+        Mono<ByteBuf> dataMono = QUERY.findAsync(id);
+        // 将 Mono<ByteBuf> 转换为 Flux<HttpObject>
+        Flux<HttpObject> responseFlux = dataMono
+                .flatMapMany(byteBuf -> Flux.using(
+                        () -> byteBuf,
+                        buf -> Flux.just(// 业务逻辑：正常响应
+                                ResponseHeaders.builder(HttpStatus.OK)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build(),
+                                HttpData.wrap(buf) // Armeria 接管生命周期
+                        ),
+                        ReferenceCountUtil::release // 资源清理：仅在异常路径执行
+                ))
+                .onErrorResume(error -> {
+                    if (error instanceof NotFoundException) {
+                        return Flux.just(
+                                ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build(),
+                                HttpData.ofUtf8(String.format("{\"Error\":\"Brand not found: %d\"}", id))
+                        );
+                    } else {
                         return Flux.just(
                                 ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
-                        //return handleErrorResponse(ctx, signal.getThrowable());
+                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
+                        );
                     }
-                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
-                        return Flux.concat(
-                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
-                                        .contentType(MediaType.JSON_UTF_8)
-                                        .build()), flux);
-                    }
-                    //404
-                    return Flux.just(
-                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
-                                    .contentType(MediaType.JSON_UTF_8)
-                                    .build(),
-                            HttpData.ofUtf8(String.format("{\"Warn\":\"Brand not found for id : %d }\"", id)));
                 });
-        return HttpResponse.of(responseStream);
+        return HttpResponse.of(responseFlux);
     }
 
     @Get("/brands")
