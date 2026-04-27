@@ -104,9 +104,23 @@ public class Name {
             return EMPTY;
         if (this.name.equals(name) && this.shortName.equals(shortName))
             return this;
-        if (name == null && shortName != null)
-            return new Name(this.name, shortName);
         return new Name(name, shortName);
+    }
+
+    public Name rename(String name) {
+        if ("".equals(name) && "".equals(this.shortName))
+            return EMPTY;
+        if (this.name.equals(name))
+            return this;
+        return new Name(name, this.shortName);
+    }
+
+    public Name reshortName(String shortName) {
+        if ("".equals(this.name) && "".equals(shortName))
+            return EMPTY;
+        if (this.shortName.equals(shortName))
+            return this;
+        return new Name(this.name, shortName);
     }
 
     @Override

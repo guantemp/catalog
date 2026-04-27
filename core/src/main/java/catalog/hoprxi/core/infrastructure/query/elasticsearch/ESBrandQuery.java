@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,13 +33,11 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
- * @version 0.0.1 builder 2025/8/29
+ * @version 0.0.2 builder 2026/04/22
  */
 
 public final class ESBrandQuery implements BrandQuery {
@@ -50,8 +48,6 @@ public final class ESBrandQuery implements BrandQuery {
             .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
-    private static final int BATCH_BUFFER_SIZE = 8192;// 8KB缓冲区
-    private static final ExecutorService TRANSFORM_POOL = Executors.newVirtualThreadPerTaskExecutor();
 
     @Override
     public InputStream find(long id) throws SearchException {
@@ -76,8 +72,11 @@ public final class ESBrandQuery implements BrandQuery {
             sortField = SortFieldEnum._ID;
             //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
+
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
+        System.out.println();
+        System.out.println(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
         request.setJsonEntity(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
         return ReactiveStream.toByteBufInputStream(request, "brands", name);
     }
@@ -94,8 +93,9 @@ public final class ESBrandQuery implements BrandQuery {
 
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
+        System.out.println();
+        System.out.println(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
         request.setJsonEntity(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
-
         return ReactiveStream.toFluxByteBuf(request, "brands", name);
     }
 
@@ -107,11 +107,12 @@ public final class ESBrandQuery implements BrandQuery {
             generator.writeNumberField("size", limit);
             ESBrandQuery.buildCommonJsonRequest(name, sortField, generator);
             generator.writeEndObject();
+            generator.flush();
+            return writer.toString();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
             throw new IllegalStateException("Cannot assemble request JSON");
         }
-        return writer.toString();
     }
 
     @Override
@@ -121,8 +122,10 @@ public final class ESBrandQuery implements BrandQuery {
             sortField = SortFieldEnum._ID;
             //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
-        Request request = new Request("GET", "/brand/_search");
+        Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
+        System.out.println();
+        System.out.println(ESBrandQuery.buildSearchAfterJsonRequest(name, size, searchAfter, sortField));
         request.setJsonEntity(ESBrandQuery.buildSearchAfterJsonRequest(name, size, searchAfter, sortField));
         return ReactiveStream.toByteBufInputStream(request, "brands", name);
     }
@@ -135,7 +138,7 @@ public final class ESBrandQuery implements BrandQuery {
             //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
 
-        Request request = new Request("GET", "/brand/_search");
+        Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESBrandQuery.buildSearchAfterJsonRequest(name, size, searchAfter, sortField));
         return ReactiveStream.toFluxByteBuf(request, "brands", name);
@@ -147,17 +150,18 @@ public final class ESBrandQuery implements BrandQuery {
             generator.writeStartObject();
             generator.writeNumberField("size", size);
             ESBrandQuery.buildCommonJsonRequest(name, sortField, generator);
-            if (searchAfter != null && !searchAfter.isEmpty()) {
+            if (searchAfter != null && !searchAfter.isBlank()) {
                 generator.writeArrayFieldStart("search_after");
                 generator.writeString(searchAfter);
                 generator.writeEndArray();
             }
             generator.writeEndObject();
+            generator.flush();
+            return writer.toString();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
             throw new IllegalStateException("Cannot assemble request JSON", e);
         }
-        return writer.toString();
     }
 
     private static void buildCommonJsonRequest(String name, SortFieldEnum sortField, JsonGenerator generator) throws IOException {
@@ -167,8 +171,6 @@ public final class ESBrandQuery implements BrandQuery {
             generator.writeEndObject();//match_all
         } else {
             generator.writeObjectFieldStart("bool");
-            generator.writeObjectFieldStart("filter");
-            generator.writeObjectFieldStart("bool");
             generator.writeArrayFieldStart("should");
 
             generator.writeStartObject();
@@ -176,25 +178,23 @@ public final class ESBrandQuery implements BrandQuery {
             generator.writeStringField("query", name);
             generator.writeArrayFieldStart("fields");
             generator.writeString("name.name");
-            generator.writeString("name.alias");
+            generator.writeString("name.shortName");
             generator.writeEndArray();
-            generator.writeEndObject();
-            generator.writeEndObject();
-
-            generator.writeStartObject();
-            generator.writeObjectFieldStart("term");
-            generator.writeStringField("name.mnemonic", name);
             generator.writeEndObject();
             generator.writeEndObject();
 
             generator.writeEndArray();//end should
             generator.writeEndObject();//end bool
-            generator.writeEndObject();
-            generator.writeEndObject();//end bool
+
         }
         generator.writeEndObject();//end query
 
         generator.writeArrayFieldStart("sort");
+        /*
+        generator.writeStartObject();
+        generator.writeStringField("_score", sortField.sort());
+        generator.writeEndObject();
+         */
         generator.writeStartObject();
         generator.writeStringField(MapSortField.mapSortToField(sortField), sortField.sort());
         generator.writeEndObject();

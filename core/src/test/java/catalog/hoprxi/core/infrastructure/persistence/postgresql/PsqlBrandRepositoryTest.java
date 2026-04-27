@@ -34,7 +34,7 @@ import static org.testng.Assert.*;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0
- * @version 0.0.1 builder 2022-09-20
+ * @version 0.0.1 builder 2025-09-20
  */
 public class PsqlBrandRepositoryTest {
     static {

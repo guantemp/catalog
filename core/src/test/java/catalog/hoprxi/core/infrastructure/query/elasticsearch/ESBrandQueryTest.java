@@ -71,16 +71,16 @@ public class ESBrandQueryTest {
         try (InputStream is = query.search(100, 15)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
-        try (InputStream is = query.search(100, 5, SortFieldEnum._NAME)) {
+        try (InputStream is = query.search(10, 5, SortFieldEnum._NAME)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
-        try (InputStream is = query.search(0, 256, SortFieldEnum._ID)) {
+        try (InputStream is = query.search(0, 64, SortFieldEnum._ID)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
         try (InputStream is = query.search(64, null, SortFieldEnum.NAME)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
-        try (InputStream is = query.search(128, "62078470412941622", SortFieldEnum.ID)) {
+        try (InputStream is = query.search(128, "55307914039782154", SortFieldEnum.ID)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
         try (InputStream is = query.search("", 8, "62078807563681609", SortFieldEnum.ID)) {
@@ -89,22 +89,26 @@ public class ESBrandQueryTest {
         try (InputStream is = query.search("天", 0, 20)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
-        try (InputStream is = query.search("白萝卜", 10, 5)) {
+        try (InputStream is = query.search("天", 0, 20, SortFieldEnum.NAME)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
-        try (InputStream is = query.search("天", 0, 20, SortFieldEnum.NAME)) {
+        try (InputStream is = query.search("白萝卜", 10, 5)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
     }
 
     @Test(priority = 3)
-    public void testSearchAsync() throws IOException {
+    public void testSearchAsync() {
         Flux<ByteBuf>[] fluxes = new Flux[]{
                 query.searchAsync("", 100, 15, SortFieldEnum._ID),
-                query.searchAsync(null, 100, 5, SortFieldEnum._NAME),
+                query.searchAsync(null, 100, 30, SortFieldEnum._NAME),
+                query.searchAsync("", 0, 64, SortFieldEnum._ID),
                 query.searchAsync("天", 0, 20, SortFieldEnum.NAME),
+                query.searchAsync("天", 0, 20,SortFieldEnum._ID),
                 query.searchAsync("白萝卜", 10, 5, SortFieldEnum.NAME),
-                query.searchAsync("", 8, "62078807563681609", SortFieldEnum.ID)
+                query.searchAsync("", 8, "62078807563681609", SortFieldEnum.ID),
+                query.searchAsync("", 128, "495651176959596546", SortFieldEnum.ID),
+                query.searchAsync("", 64, null, SortFieldEnum.NAME)
         };
         ESBrandQueryTest.printResult(fluxes);
     }
@@ -132,7 +136,7 @@ public class ESBrandQueryTest {
                         if (byteBuf != null) {
                             String content = byteBuf.toString(StandardCharsets.UTF_8);
                             System.out.println("[任务 " + index + "] 收到结果长度: " + content.length());
-                            // System.out.println(content); // 如果需要看具体 JSON
+                            System.out.println(content); // 如果需要看具体 JSON
                         }
                     },
                     error -> {
