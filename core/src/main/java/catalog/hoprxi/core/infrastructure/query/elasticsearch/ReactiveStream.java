@@ -20,9 +20,11 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.infrastructure.ESUtil;
 import catalog.hoprxi.core.infrastructure.query.FluxByteBufOutputStream;
+import catalog.hoprxi.core.infrastructure.query.JsonByteBufOutputStream;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.linecorp.armeria.common.HttpData;
 import io.netty.buffer.*;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.http.util.EntityUtils;
@@ -32,16 +34,15 @@ import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.ResponseListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxSink;
-import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoSink;
+import reactor.core.publisher.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /***
@@ -115,7 +116,7 @@ public final class ReactiveStream {
      * @throws SearchException 当 ES 请求失败或发生 IO 异常时抛出
      */
 
-    public static ByteBufInputStream toByteBufInputStream(Request request, String objectName,String tips) {
+    public static ByteBufInputStream toByteBufInputStream(Request request, String objectName, String tips) {
         Response response;
         try {
             response = ESUtil.restClient().performRequest(request);
@@ -170,14 +171,26 @@ public final class ReactiveStream {
                                 EntityUtils.consumeQuietly(response.getEntity());
                                 return;
                             }
+                            final InputStream content;
+                            try {
+                                content = response.getEntity().getContent();
+                            } catch (IOException e) {
+                                sink.error(MapException.mapException(e, tips));
+                                EntityUtils.consumeQuietly(response.getEntity());
+                                return;
+                            }
                             // 线程池处理
                             TRANSFORM_POOL.execute(() -> {
                                 if (isCancelled.get()) {
+                                    try {
+                                        if (content != null) content.close();
+                                    } catch (Exception ignore) {
+                                    }
                                     EntityUtils.consumeQuietly(response.getEntity());
                                     return;
                                 }
-                                ByteBuf buf = ByteBufAllocator.DEFAULT.directBuffer();
-                                try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
+                                ByteBuf buf = ByteBufAllocator.DEFAULT.directBuffer(SINGLE_BUFFER_SIZE);
+                                try (content; JsonParser parser = JSON_FACTORY.createParser(content);
                                      OutputStream os = new ByteBufOutputStream(buf); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
                                     Extract.extractSourceSkipMeta(parser, generator);
                                     generator.flush();
@@ -220,6 +233,65 @@ public final class ReactiveStream {
      * @return 包含 ByteBuf 数据块的 Flux 流
      */
     public static Flux<ByteBuf> toFluxByteBuf(Request request, String objectsName, String tips) {
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+            @Override
+            public void onSuccess(Response response) {
+                if (isCancelled.get()) {
+                    EntityUtils.consumeQuietly(response.getEntity());
+                    return;
+                }
+                final InputStream content;
+                try {
+                    content = response.getEntity().getContent();
+                } catch (IOException e) {
+                    sink.tryEmitError(MapException.mapException(e, tips));
+                    EntityUtils.consumeQuietly(response.getEntity());
+                    return;
+                }
+                TRANSFORM_POOL.execute(() -> {
+                    if (isCancelled.get()) {
+                        try {
+                            if (content != null) content.close();
+                        } catch (Exception ignore) {
+                        }
+                        EntityUtils.consumeQuietly(response.getEntity());
+                        return;
+                    }
+                    try (content; JsonParser parser = JSON_FACTORY.createParser(content);
+                         OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+                        Extract.extract(parser, generator, objectsName);
+                        Sinks.EmitResult result = sink.tryEmitComplete();
+                        if (result.isFailure() && result != Sinks.EmitResult.FAIL_TERMINATED) {
+                            LOGGER.warn("Failed to emit complete: {}", result);
+                        }
+                    } catch (IOException e) {
+                        Sinks.EmitResult result = sink.tryEmitError(e);
+                        if (result.isFailure() && result != Sinks.EmitResult.FAIL_TERMINATED) {
+                            LOGGER.warn("emitError failed: {}", result);
+                        }
+                    } finally {
+                        EntityUtils.consumeQuietly(response.getEntity());
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Exception exception) {
+                if (!isCancelled.get()) {
+                    sink.tryEmitError(MapException.mapException(exception, tips));
+                }
+            }
+        });
+
+        return sink.asFlux()
+                .timeout(Duration.ofSeconds(20), Mono.error(new TimeoutException("Request timed out for : " + tips)))
+                .doOnCancel(() -> isCancelled.set(true)).doOnTerminate(() -> LOGGER.debug("Request terminated for {}", tips))
+                .doOnDiscard(ByteBuf.class, ReferenceCountUtil::safeRelease);
+    }
+
+    private static Flux<ByteBuf> byteBufFlux(String tips, Request request, boolean alone) {
         return Flux.<ByteBuf>create(sink -> {
                     final AtomicBoolean isCancelled = new AtomicBoolean(false);
                     sink.onCancel(() -> isCancelled.set(true));
@@ -255,7 +327,11 @@ public final class ReactiveStream {
                                     // 禁用 Jackson 自动刷新，交给Netty 的 ByteBuf控制，大幅减少IO次数
                                     //generator.disable(JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM);
                                     // 执行解析，数据会通过 os 自动 emit 给下游
-                                    Extract.extract(parser, generator, objectsName);
+                                    if (alone) {
+                                        Extract.extractSourceSkipMeta(parser, generator);
+                                    } else {
+                                        Extract.extract(parser, generator, "items");
+                                    }
                                     sink.complete();
                                 } catch (IOException e) {
                                     sink.error(MapException.mapException(e, tips));

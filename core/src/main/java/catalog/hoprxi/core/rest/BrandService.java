@@ -155,18 +155,17 @@ public class BrandService {
         if (contentType == null || !(MediaType.JSON.is(contentType) || MediaType.JSON_UTF_8.is(contentType)))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                     MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
-        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
-        ctx.blockingTaskExecutor().execute(() -> {
+        CompletableFuture<HttpResponse> future = CompletableFuture.supplyAsync(() -> {
             try (InputStream inputStream = body.toInputStream();
                  JsonParser parser = JSON_FACTORY.createParser(inputStream)) {
                 Brand brand = BrandService.createBrand(parser);
-                future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
-                        "{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand));
+               return HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
+                        "{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand);
             } catch (Exception e) {
-                future.complete(HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
-                        "{\"status\":400,\"code\":400,\"message\":\"JSON format error,cause by {%s}\"}", e.getMessage()));
+                return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                        "{\"status\":400,\"code\":400,\"message\":\"JSON format error,cause by {%s}\"}", e.getMessage());
             }
-        });
+        }, ctx.blockingTaskExecutor());
         return HttpResponse.of(future);
     }
 

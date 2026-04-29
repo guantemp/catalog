@@ -36,96 +36,92 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class FluxByteBufOutputStream extends OutputStream {
     private static final int DEFAULT_BUFFER_SIZE = 16 * 1024; // 16kb 流式块
     private final FluxSink<ByteBuf> sink;
-    private final AtomicBoolean cancelled;
-    private final ByteBuf buffer;
+    private final AtomicBoolean isCancelled;
+    private ByteBuf buffer;
+    private final int chunkSize;
     private volatile boolean closed = false;
 
     // 传入 Flux.create 的原生 sink
-    public FluxByteBufOutputStream(FluxSink<ByteBuf> sink, AtomicBoolean cancelled) {
-        this(sink, cancelled, DEFAULT_BUFFER_SIZE);
+    public FluxByteBufOutputStream(FluxSink<ByteBuf> sink, AtomicBoolean isCancelled) {
+        this(sink, isCancelled, DEFAULT_BUFFER_SIZE);
     }
 
-    public FluxByteBufOutputStream(FluxSink<ByteBuf> sink, AtomicBoolean cancelled, int bufferSize) {
+    public FluxByteBufOutputStream(FluxSink<ByteBuf> sink, AtomicBoolean isCancelled, int chunkSize) {
         this.sink = Objects.requireNonNull(sink, "FluxSink must not be null");
-        this.cancelled = Objects.requireNonNull(cancelled, "cancelled flag must not be null");
-        this.buffer = PooledByteBufAllocator.DEFAULT.buffer(bufferSize);
+        this.isCancelled = Objects.requireNonNull(isCancelled, "cancelled flag must not be null");
+        this.chunkSize = chunkSize;
+        this.buffer = PooledByteBufAllocator.DEFAULT.buffer(chunkSize);
     }
 
     @Override
     public void write(int b) throws IOException {
-        ensureWritable(1);
+        ensureWritable();
+        if (buffer == null) buffer = PooledByteBufAllocator.DEFAULT.buffer(chunkSize);
+        if (!buffer.isWritable()) {
+            // 满了就发
+            if (buffer != null && buffer.readableBytes() > 0) {
+                // 发送当前缓冲区（所有权转移给下游）
+                sink.next(buffer);
+                buffer = null;  // 生产者不再持有
+            }
+            if (buffer == null) buffer = PooledByteBufAllocator.DEFAULT.buffer(chunkSize);
+        }
         buffer.writeByte(b);
     }
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        if (len <= 0) return;
-        checkCancelled();
+        ensureWritable();
+        if (len == 0) return;
+        if (buffer == null) buffer = PooledByteBufAllocator.DEFAULT.buffer(chunkSize);
 
         int remaining = len;
         int offset = off;
         while (remaining > 0) {
-            if (buffer.writableBytes() == 0) flush();
-
-            int write = Math.min(buffer.writableBytes(), remaining);
-            buffer.writeBytes(b, offset, write);
-            offset += write;
-            remaining -= write;
+            // 如果当前容量不足，先发送再分配新缓冲区
+            if (buffer.writableBytes() == 0) {
+                // 满了就发
+                if (buffer != null && buffer.readableBytes() > 0) {
+                    // 发送当前缓冲区（所有权转移给下游）
+                    sink.next(buffer);
+                    buffer = null;  // 生产者不再持有
+                }
+                if (buffer == null) buffer = PooledByteBufAllocator.DEFAULT.buffer(chunkSize);
+            }
+            int toWrite = Math.min(buffer.writableBytes(), remaining);
+            buffer.writeBytes(b, offset, toWrite);
+            offset += toWrite;
+            remaining -= toWrite;
         }
     }
 
     @Override
     public void flush() throws IOException {
-        checkCancelled();
-        if (buffer.readableBytes() == 0) return;
-        // 零拷贝切片发送
-        ByteBuf slice = buffer.readRetainedSlice(buffer.readableBytes());
-        try {
-            sink.next(slice);
-            buffer.clear();
-        } catch (Throwable e) {
-            slice.release();
-            throw new IOException("Sink emit failed", e);
+        if (isCancelled.get()) throw new IOException("Stream cancelled");
+        if (buffer != null && buffer.readableBytes() > 0) {
+            sink.next(buffer);
+            buffer = null;
         }
     }
 
     @Override
     public void close() throws IOException {
-        checkCancelled();
-        if (buffer.readableBytes() == 0) return;
-
+        if (closed) return;
         try {
-            // 1. 申请一个新的 Heap Buffer (或者 Direct Buffer，取决于你的场景)
-            // 这一步是关键：分配新的内存，切断与内部 buffer 的联系
-            ByteBuf safeBuf = PooledByteBufAllocator.DEFAULT.heapBuffer(buffer.readableBytes());
-
-            // 2. 将当前 buffer 的数据 拷贝 到新 buffer 中
-            safeBuf.writeBytes(buffer);
-
-            // 3. 发送给下游
-            // 此时下游拿到的是 safeBuf，与我们内部的 buffer 完全无关
-            sink.next(safeBuf);
-
-            // 4. 清理内部 buffer，准备复用
-            buffer.clear();
-
-        } catch (Throwable e) {
-            // 注意：这里不需要 release(safeBuf)，因为 sink.next 成功后 ownership 已经转移
-            // 只有在 new 失败时才需要处理，但通常这里直接抛异常即可
-            throw new IOException("Sink emit failed", e);
-        }
-        finally {
-            // ✅ 唯一必须加的关键代码
-            ReferenceCountUtil.release(buffer);
+            // 发送最后一块（如果有数据）
+            flush();
+        } finally {
+            closed = true;
+            // 释放当前缓冲区（如果没有发送且还有数据，flush 已经发送则 buffer=null；如果没数据则直接释放）
+            if (buffer != null) {
+                ReferenceCountUtil.release(buffer);
+                buffer = null;
+            }
         }
     }
 
-    private void ensureWritable(int size) throws IOException {
-        checkCancelled();
-        if (buffer.writableBytes() < size) flush();
-    }
-
-    private void checkCancelled() throws IOException {
-        if (cancelled.get()) throw new IOException("Stream cancelled by downstream");
+    private void ensureWritable() throws IOException {
+        if (isCancelled.get()) throw new IOException("Stream cancelled");
+        if (closed) throw new IOException("Stream closed");
     }
 }

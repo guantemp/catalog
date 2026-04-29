@@ -819,7 +819,8 @@ public class ESCategoryQuery implements CategoryQuery {
                     return;
                 }
                 CompletableFuture.runAsync(() -> {
-                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content); OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
+                         OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
                         if (isCancelled.get()) {
                             return; // silent cancel; sink 已由外部处理或无需响应
                         }

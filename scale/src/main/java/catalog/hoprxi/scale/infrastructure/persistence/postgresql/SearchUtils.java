@@ -83,7 +83,7 @@ public final class SearchUtils {
 
         // 1. 拼接所有需要被搜索的字段
         if (name != null)
-            rawText.append(" ").append(name.name()).append(" ").append(name.shortName()).append(" ").append(name.mnemonic());
+            rawText.append(" ").append(name.name()).append(" ").append(name.shortName());
         if (spec != null) rawText.append(" ").append(spec.value());
         if (madeIn != null) rawText.append(" ").append(madeIn.madeIn());
 

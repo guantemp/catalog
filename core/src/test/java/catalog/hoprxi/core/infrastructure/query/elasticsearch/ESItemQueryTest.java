@@ -21,6 +21,7 @@ import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.*;
 import io.netty.buffer.ByteBuf;
+import io.netty.util.ReferenceCountUtil;
 import org.testng.annotations.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -187,43 +188,33 @@ public class ESItemQueryTest {
 
         for (int i = 0; i < total; i++) {
             final int idx = i;
-            fluxes[i].count()
-                    .subscribeOn(Schedulers.parallel())
-                    .subscribe(count -> System.out.println("\n[Query-" + idx + "]总共收到 " + count + " 个 ByteBuf\n"));
             fluxes[i]
-                    // 👇 关键：加这一行 = 真正多线程并行执行
                     .subscribeOn(Schedulers.parallel())
+                    .collectList()  // 一次订阅，收集所有 ByteBuf 到 List
                     .subscribe(
-                            // 1. 正常数据
-                            byteBuf -> {
-                                try {
-                                    String content = byteBuf.toString(StandardCharsets.UTF_8);
-                                    System.out.println("[Query-" + idx + "] 接收数据：\n" + content);
-                                } finally {
-                                    byteBuf.release();
+                            list -> {
+                                System.out.println("\n[Query-" + idx + "] 总共收到 " + list.size() + " 个 ByteBuf");
+                                for (ByteBuf byteBuf : list) {
+                                    try {
+                                        String content = byteBuf.toString(StandardCharsets.UTF_8);
+                                        System.out.println("[Query-" + idx + "] 接收数据：\n" + content);
+                                    } finally {
+                                        ReferenceCountUtil.safeRelease(byteBuf);
+                                    }
                                 }
-                            },
-                            // 2. 异常回调（完整保留）
-                            error -> {
-                                System.err.println("[Query-" + idx + "] 异常：" + error.getClass().getSimpleName() + " - " + error.getMessage());
-                                assert error instanceof IllegalArgumentException :
-                                        "索引" + idx + " 必须抛出 IllegalArgumentException";
                                 latch.countDown();
                             },
-                            // 3. 完成回调（完整保留！）
-                            () -> {
-                                System.out.println("[Query-" + idx + "] 执行完成");
+                            error -> {
+                                System.err.println("[Query-" + idx + "] 异常：" + error.getClass().getSimpleName() + " - " + error.getMessage());
+                                assert error instanceof IllegalArgumentException;
                                 latch.countDown();
                             }
                     );
         }
 
-        // 等待所有异步结束
         try {
             boolean done = latch.await(30, TimeUnit.SECONDS);
-            if (!done) {
-                System.err.println("异步请求超时！");
-            }
+            if (!done) System.err.println("异步请求超时！");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

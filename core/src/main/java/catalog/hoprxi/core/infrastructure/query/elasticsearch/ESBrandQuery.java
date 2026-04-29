@@ -75,8 +75,6 @@ public final class ESBrandQuery implements BrandQuery {
 
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
-        System.out.println();
-        System.out.println(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
         request.setJsonEntity(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
         return ReactiveStream.toByteBufInputStream(request, "brands", name);
     }
@@ -93,8 +91,6 @@ public final class ESBrandQuery implements BrandQuery {
 
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
-        System.out.println();
-        System.out.println(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
         request.setJsonEntity(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
         return ReactiveStream.toFluxByteBuf(request, "brands", name);
     }
@@ -124,8 +120,6 @@ public final class ESBrandQuery implements BrandQuery {
         }
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
-        System.out.println();
-        System.out.println(ESBrandQuery.buildSearchAfterJsonRequest(name, size, searchAfter, sortField));
         request.setJsonEntity(ESBrandQuery.buildSearchAfterJsonRequest(name, size, searchAfter, sortField));
         return ReactiveStream.toByteBufInputStream(request, "brands", name);
     }

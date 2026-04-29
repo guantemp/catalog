@@ -48,7 +48,6 @@ import com.linecorp.armeria.common.*;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
@@ -61,14 +60,13 @@ import reactor.core.scheduler.Schedulers;
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 
 /***
@@ -87,7 +85,7 @@ public class ItemService {
             .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
-    private static final Scheduler TRANSFORM_POOL = Schedulers.fromExecutorService(Executors.newVirtualThreadPerTaskExecutor());
+    private static final Scheduler SCHEDULER_EXECUTOR = Schedulers.fromExecutorService(Executors.newVirtualThreadPerTaskExecutor());
 
     @Get("/items/{id}")
     @Description("Retrieves the item information by the given ID.")
@@ -137,56 +135,36 @@ public class ItemService {
                 ? QUERY.searchAsync(ItemService.parseFilter(search, filter), offset, size, sortField)
                 : QUERY.searchAsync(ItemService.parseFilter(search, filter), size, cursor, sortField);
 
-        Flux<ByteBuf> rawSafeFlux = dataFlux
-                .subscribeOn(TRANSFORM_POOL)
-                .limitRate(256)    // 背压，不丢数据
-                .map(buf -> {
-                    ByteBuf copy = buf.copy();
-                    ReferenceCountUtil.release(buf);  // <-- 加这一行
-                    return copy;
-                });
-
-        AtomicReference<HttpStatus> responseStatus = new AtomicReference<>(HttpStatus.OK);
-
-        Flux<ByteBuf> finalFlux = rawSafeFlux.onErrorResume(e -> {
-                    HttpStatus status;
-                    String message;
-                    if (e instanceof IllegalArgumentException) {
-                        status = HttpStatus.BAD_REQUEST;
-                        message = "Invalid parameter";
-                    } else if (e instanceof NotFoundException) {
-                        status = HttpStatus.NOT_FOUND;
-                        message = "Data not found";
-                    } else {
-                        status = HttpStatus.INTERNAL_SERVER_ERROR;
-                        message = "Server error";
-                    }
-                    responseStatus.set(status);
-
-                    // 构造错误JSON → 转成 ByteBuf → 返回 Flux<ByteBuf>（完全匹配）
-                    byte[] errorBytes = ("{\"error\":\"%s\"}".formatted(message.replace("\"", "\\\"")))
-                            .getBytes(StandardCharsets.UTF_8);
-
-                    ByteBuf buf = PooledByteBufAllocator.DEFAULT.heapBuffer(errorBytes.length);
-                    buf.writeBytes(errorBytes);
-
-                    return Flux.just(buf);
+        // 使用 switchMap：一旦有第一个元素，就前置 headers
+        Flux<HttpObject> responseStream = dataFlux
+                .map(HttpData::wrap)
+                .transform(flux -> {
+                    AtomicBoolean headersSent = new AtomicBoolean(false);
+                    return flux.concatMap(data -> {
+                        if (!headersSent.getAndSet(true)) {
+                            // 第一个数据：先响应头 200，再发数据
+                            return Flux.concat(
+                                    Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+                                            .contentType(MediaType.JSON_UTF_8)
+                                            .build()),
+                                    Flux.just(data)
+                            );
+                        }
+                        return Flux.just(data);
+                    });
                 })
-                .window(256)        // 每256条打包成1个大数据块
-                .concatMap(w -> w.reduce(
-                                PooledByteBufAllocator.DEFAULT.compositeBuffer(),
-                                (composite, buf) -> {
-                                    composite.addComponent(true, buf);
-                                    return composite;
-                                }
-                        )
-                );
-
-        ResponseHeaders headers = ResponseHeaders.builder(responseStatus.get())
-                .contentType(MediaType.JSON_UTF_8)
-                .build();
-
-        return HttpResponse.of(headers, finalFlux.map(HttpData::wrap));
+                .switchIfEmpty(Flux.just(
+                        ResponseHeaders.of(HttpStatus.NOT_FOUND),
+                        HttpData.ofUtf8(String.format("{\"Warn\":\"Category not found for id : %s\"}", search))
+                ))
+                .onErrorResume(throwable -> {
+                    //log.error("Data stream error", throwable);
+                    return Flux.just(
+                            ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                            HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
+                    );
+                });
+        return HttpResponse.of(responseStream);
         /* ===================== 这个也可以，不能测试除者个性能核心：拼成一个ByteBuf，关闭chunked =====================
         Mono<ByteBuf> fullMono = dataFlux
                 .subscribeOn(VIRTUAL_THREAD)
