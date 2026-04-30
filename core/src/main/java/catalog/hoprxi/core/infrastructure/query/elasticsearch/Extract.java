@@ -19,6 +19,8 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import io.netty.buffer.ByteBuf;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -167,5 +169,9 @@ public final class Extract {
         }
         gen.writeEndObject();
         gen.flush();
+    }
+
+    public static Flux<ByteBuf> extractAsync(Flux<ByteBuf> responseChunks) {
+        return null;
     }
 }
