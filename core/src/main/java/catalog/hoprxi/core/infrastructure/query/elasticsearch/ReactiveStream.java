@@ -24,7 +24,6 @@ import catalog.hoprxi.core.infrastructure.query.JsonByteBufOutputStream;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.linecorp.armeria.common.HttpData;
 import io.netty.buffer.*;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.http.util.EntityUtils;
@@ -121,8 +120,8 @@ public final class ReactiveStream {
         try {
             response = ESUtil.restClient().performRequest(request);
         } catch (ResponseException e) {
-            LOGGER.error("No search was found for anything resembling name({}) brand", tips, e);
-            throw new SearchException(String.format("No search was found for anything resembling name(%s) brand", tips), e);
+            LOGGER.error("No search was found for anything resembling name ({})", tips, e);
+            throw new SearchException(String.format("No search was found for anything resembling name(%s)", tips), e);
         } catch (IOException e) {
             // 3. 处理网络/IO 异常
             LOGGER.error("I/O failed for request: {}", tips, e);

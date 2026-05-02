@@ -22,9 +22,7 @@ import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import catalog.hoprxi.core.infrastructure.persistence.PersistenceException;
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.*;
 import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +30,7 @@ import salt.hoprxi.id.LongId;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.sql.*;
@@ -48,50 +44,59 @@ import java.util.Objects;
  * @version 0.0.2 builder 2025-03-18
  */
 public class PsqlCategoryRepository implements CategoryRepository {
-    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Category");
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-    private static final Constructor<Name> nameConstructor;
-
-    static {
-        try {
-            nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
-            nameConstructor.setAccessible(true);
-        } catch (NoSuchMethodException e) {
-            LOGGER.error("Name class no such constructor", e);
-            throw new RuntimeException("Name class no such constructor", e);
-        }
-    }
 
     @Override
     public Category find(long id) {
         try (Connection connection = PsqlUtil.getConnection()) {
-            final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url from category where id=?";
+            final String findSql = "select id,parent_id,name,description,icon_url from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, id);
             ResultSet rs = preparedStatement.executeQuery();
-            return rebuild(rs);
+            return PsqlCategoryRepository.rebuild(rs);
         } catch (SQLException e) {
             LOGGER.error("Database error", e);
             throw new SearchException("Database error", e);
-        } catch (InvocationTargetException | InstantiationException | IllegalAccessException |
-                 MalformedURLException e) {
+        } catch (InvocationTargetException | InstantiationException | IllegalAccessException | IOException e) {
             LOGGER.error("Can't rebuild name", e);
-            return null;
+            throw new SearchException("Can't rebuild category", e);
         }
     }
 
-    private Category rebuild(ResultSet rs) throws SQLException, InvocationTargetException, InstantiationException, IllegalAccessException, MalformedURLException {
+    private static Category rebuild(ResultSet rs) throws SQLException, InvocationTargetException, InstantiationException, IllegalAccessException, IOException {
         if (rs.next()) {
             long id = rs.getLong("id");
             if (id == Category.UNDEFINED.id()) return Category.UNDEFINED;
             long parent_id = rs.getLong("parent_id");
-            //Constructor
-            Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
+            Name name = PsqlCategoryRepository.buildName(rs.getString("name"));
             String description = rs.getString("description");
             URL icon = rs.getString("icon_url") == null ? null : URI.create(rs.getString("icon_url")).toURL();
             return new Category(parent_id, id, name, description, icon);
         }
         return null;
+    }
+
+    private static Name buildName(String json) throws IOException {
+        if (json == null)
+            return Name.EMPTY;
+        String name = "", shortName = "";
+        try (JsonParser parser = JSON_FACTORY.createParser(json)) {
+            if (parser.nextToken() != JsonToken.START_OBJECT) return Name.EMPTY;
+            while (parser.nextToken() != JsonToken.END_OBJECT) {
+                if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                    String field = parser.currentName();
+                    String val = parser.nextTextValue();
+                    if (val != null) {
+                        switch (field) {
+                            case "name" -> name = val;
+                            case "shortName" -> shortName = val;
+                        }
+                    }
+                }
+            }
+        }
+        return new Name(name, shortName);
     }
 
     @Override
@@ -132,7 +137,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     public Category[] root() {
         try (Connection connection = PsqlUtil.getConnection()) {
             List<Category> categoryList = new ArrayList<>();
-            final String rootSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url from category where id = parent_id";
+            final String rootSql = "select id,parent_id,name,description,icon_url from category where id = parent_id";
             PreparedStatement preparedStatement = connection.prepareStatement(rootSql);
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()) {
@@ -142,7 +147,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                     continue;
                 }
                 long parent_id = rs.getLong("parent_id");
-                Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
+                Name name = PsqlCategoryRepository.buildName(rs.getString("name"));
                 String description = rs.getString("description");
                 URL icon = rs.getString("icon_url") == null ? null : URI.create(rs.getString("icon_url")).toURL();
                 categoryList.add(new Category(parent_id, id, name, description, icon));
@@ -151,10 +156,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         } catch (SQLException e) {
             LOGGER.error("Database error", e);
             throw new SearchException("Database error", e);
-        } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-            LOGGER.error("Can't rebuild name", e);
-            return new Category[0];
-        } catch (MalformedURLException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -173,7 +175,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 if (category.parentId() == resultSet.getLong("parent_id")) {  //not move from old tree
                     final String updateSql = "update category set name=?,description=?,icon_url=? where id=?";
                     PreparedStatement ps1 = connection.prepareStatement(updateSql);
-                    name.setValue(toJson(category.name()));
+                    name.setValue(PsqlCategoryRepository.toJson(category.name()));
                     ps1.setObject(1, name);
                     ps1.setString(2, category.description());
                     ps1.setString(3, category.icon() == null ? null : category.icon().toExternalForm());
@@ -188,7 +190,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                     PreparedStatement ps1 = connection.prepareStatement(insertRoot);
                     ps1.setLong(1, category.id());
                     ps1.setLong(2, category.parentId());
-                    name.setValue(toJson(category.name()));
+                    name.setValue(PsqlCategoryRepository.toJson(category.name()));
                     ps1.setObject(3, name);
                     ps1.setString(4, category.description());
                     ps1.setString(5, category.icon() == null ? null : category.icon().toExternalForm());
@@ -224,12 +226,12 @@ public class PsqlCategoryRepository implements CategoryRepository {
         Statement statement = connection.createStatement();
         //需要移动的节点及其子节点的 left, right 值置为负,归属到新的树形（root_id),移动节点的顶点parent_id设置为新的父节点的id值
         statement.addBatch("update category set \"left\"=0-\"left\",\"right\"=0-\"right\",root_id=" + targetRootId + " where \"left\">=" + left + " and \"right\"<=" + right + " and root_id=" + originalRootId);
-        StringBuilder updateSql = new StringBuilder("update category set parent_id=").append(category.parentId())
-                .append(",name='").append(toJson(category.name()))
-                .append("',description='").append(category.description())
-                .append("',icon_url=").append(category.icon() == null ? null : "'" + category.icon().toExternalForm() + "'")
-                .append(" where id=").append(category.id());
-        statement.addBatch(updateSql.toString());
+        String updateSql = "update category set parent_id=" + category.parentId() +
+                ",name='" + toJson(category.name()) +
+                "',description='" + category.description() +
+                "',icon_url=" + (category.icon() == null ? null : "'" + category.icon().toExternalForm() + "'") +
+                " where id=" + category.id();
+        statement.addBatch(updateSql);
         //原始树中被移动节点（含子节点）后面的节点往前移, 填充空缺位置
         statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and root_id=" + originalRootId);
         statement.addBatch("update category set \"right\"= \"right\"-" + offset + " where \"right\">" + right + " and root_id=" + originalRootId);
@@ -257,7 +259,18 @@ public class PsqlCategoryRepository implements CategoryRepository {
             Statement statement = connection.createStatement();
             statement.addBatch("update category set \"right\"=\"right\"+2 where \"right\">=" + right + " and root_id=" + rootId);
             statement.addBatch("update category set \"left\"= \"left\"+2 where \"left\">" + right + " and root_id=" + rootId);
-            StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,root_id,\"left\",\"right\",description,icon_url) values(").append(category.id()).append(",").append(category.parentId()).append(",'").append(toJson(category.name())).append("',").append(rootId).append(",").append(right).append(",").append(right + 1).append(",");
+            StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,root_id,\"left\",\"right\",description,icon_url) values(")
+                    .append(category.id())
+                    .append(",")
+                    .append(category.parentId()).append(",'")
+                    .append(PsqlCategoryRepository.toJson(category.name()))
+                    .append("',")
+                    .append(rootId)
+                    .append(",")
+                    .append(right)
+                    .append(",")
+                    .append(right + 1)
+                    .append(",");
             if (category.description() != null)
                 insertSql.append("'").append(category.description()).append("'");
             else insertSql.append((String) null);
@@ -274,12 +287,12 @@ public class PsqlCategoryRepository implements CategoryRepository {
         }
     }
 
-    private String toJson(Name name) {
+    private static String toJson(Name name) {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
             generator.writeStartObject();
             generator.writeStringField("name", name.name());
-            generator.writeStringField("alias", name.shortName());
+            generator.writeStringField("shortName", name.shortName());
             generator.writeEndObject();
         } catch (IOException e) {
             LOGGER.error("Not write name as json", e);

@@ -119,6 +119,7 @@ public class Bootstrap {
         //sb.contextPath("/catalog/core/v1");测试没作用
 
         Server server = sb.http(PORT)
+
                 .annotatedService("/v1", new UnitService())
                 .annotatedService("/v1", new BrandService())
                 .annotatedService("/v1", new ItemService())

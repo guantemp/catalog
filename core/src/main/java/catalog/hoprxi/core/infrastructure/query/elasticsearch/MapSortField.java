@@ -29,7 +29,7 @@ public final class MapSortField {
     public static String mapSortToField(SortFieldEnum sortField) {
         return switch (sortField) {
             case ID, _ID -> "id";
-            case NAME, _NAME -> "name.mnemonic.raw";
+            case NAME, _NAME -> "name.name.raw";
             case BARCODE, _BARCODE -> "barcode.raw";
             case MADE_IN, _MADE_IN -> "made_in";
             case GRADE, _GRADE -> "grade";

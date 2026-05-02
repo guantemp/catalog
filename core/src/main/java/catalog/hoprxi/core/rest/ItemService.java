@@ -203,7 +203,6 @@ public class ItemService {
          */
     }
 
-
     private static ItemQuerySpec[] parseFilter(String query, String filter) {
         List<ItemQuerySpec> filterList = new ArrayList<>();
         if (!query.isBlank())
@@ -345,18 +344,18 @@ public class ItemService {
         if (parser.currentToken() != JsonToken.START_OBJECT) {
             throw new IllegalArgumentException("Expected JSON object for 'name'");
         }
-        String name = null, alias = null;
+        String name = null, shortName = null;
         while (parser.nextToken() != JsonToken.END_OBJECT) {
             if (JsonToken.FIELD_NAME == parser.currentToken()) {
                 String fieldName = parser.currentName();
                 parser.nextToken();
                 switch (fieldName) {
                     case "name" -> name = parser.getValueAsString();
-                    case "alias" -> alias = parser.getValueAsString();
+                    case "shortName" -> shortName = parser.getValueAsString();
                 }
             }
         }
-        return new Name(name, alias);
+        return new Name(name, shortName);
     }
 
     private static MadeIn readMadeIn(JsonParser parser) throws IOException {

@@ -86,10 +86,10 @@ public class ESBrandQueryTest {
         try (InputStream is = query.search("", 8, "62078807563681609", SortFieldEnum.ID)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
-        try (InputStream is = query.search("天", 0, 20)) {
+        try (InputStream is = query.search("天", 0, 200)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
-        try (InputStream is = query.search("天", 0, 20, SortFieldEnum.NAME)) {
+        try (InputStream is = query.search("天", 0, 30, SortFieldEnum.NAME)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
         try (InputStream is = query.search("白萝卜", 10, 5)) {

@@ -113,7 +113,7 @@ public class PsqlItemRepositoryTest {
         memberPrice = new MemberPrice(new Price(Money.of(9.5, currency), UnitEnum.TI));
         vipPrice = new VipPrice("PLUS", new Price(Money.of(8.8, currency), UnitEnum.TI));
         barcode = BarcodeGenerateServices.createBarcode("6923555240896");
-        Item five = new Item(52496163982907404L, barcode, new Name("天友纯牛奶", "天友纯牛奶"), Domestic.CHONG_QING, new Specification("350ml"), GradeEnum.QUALIFIED, new ShelfLife(90), lastReceiptPrice, retailPrice, memberPrice, vipPrice, dairy.id(), tianyou.id());
+        Item five = new Item(52496163982907404L, barcode, new Name("天友纯牛奶", ""), Domestic.CHONG_QING, new Specification("350ml"), GradeEnum.QUALIFIED, new ShelfLife(90), lastReceiptPrice, retailPrice, memberPrice, vipPrice, dairy.id(), tianyou.id());
         itemRepository.save(five);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(12.1, currency), UnitEnum.ZHU));
@@ -164,7 +164,7 @@ public class PsqlItemRepositoryTest {
     }
 
     @AfterTest
-    public void tearDown() {
+    public void tearDown() {/*
         itemRepository.delete(52496163982907400L);
         itemRepository.delete(52496163982907401L);
         itemRepository.delete(52496163982907402L);
@@ -193,6 +193,7 @@ public class PsqlItemRepositoryTest {
         categoryRepository.remove(52495569397272597L);
         categoryRepository.remove(52495569397272598L);
         categoryRepository.remove(52495569397272599L);
+        */
     }
 
 
@@ -201,10 +202,10 @@ public class PsqlItemRepositoryTest {
         Item ten = itemRepository.find(52496321492179005L);
         System.out.println("52496321492179005L:\n" + ten);
         //old Name("长虹5号碱性电池", "长虹电池")
-        ten.rename(new Name("长虹5号碳性电池 ", "长虹1号"));
+        ten.rename(new Name("长虹1号碳性电池 ", "长虹电池"));
         itemRepository.save(ten);
         ten = itemRepository.find(52496321492179005L);
-        Assert.assertEquals(ten.name(), new Name("长虹5号碳性电池", "长虹1号"));
+        Assert.assertEquals(ten.name(), new Name("长虹1号碳性电池", "长虹电池"));
         // old Name("250ml天友纯牛奶(高钙）", "250ml天友高钙纯牛奶")
         Item six = itemRepository.find(52496163982907405L);
         Assert.assertNotNull(six);

@@ -102,7 +102,7 @@ public class PsqlItemRepository implements ItemRepository {
     private static Name buildName(String json) throws IOException {
         if (json == null)
             return Name.EMPTY;
-        String name = "", alias = "";
+        String name = "", shortName = "";
         try (JsonParser parser = JSON_FACTORY.createParser(json)) {
             if (parser.nextToken() != JsonToken.START_OBJECT) return Name.EMPTY;
             while (parser.nextToken() != JsonToken.END_OBJECT) {
@@ -112,13 +112,13 @@ public class PsqlItemRepository implements ItemRepository {
                     if (val != null) {
                         switch (field) {
                             case "name" -> name = val;
-                            case "alias" -> alias = val;
+                            case "shortName" -> shortName = val;
                         }
                     }
                 }
             }
         }
-        return new Name(name, alias);
+        return new Name(name, shortName);
     }
 
     private static MadeIn buildMadeIn(String json) throws IOException {

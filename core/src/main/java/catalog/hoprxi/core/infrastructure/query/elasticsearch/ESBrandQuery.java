@@ -72,7 +72,6 @@ public final class ESBrandQuery implements BrandQuery {
             sortField = SortFieldEnum._ID;
             //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
-
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
@@ -88,7 +87,6 @@ public final class ESBrandQuery implements BrandQuery {
             sortField = SortFieldEnum._ID;
             //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
         }
-
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
@@ -164,22 +162,19 @@ public final class ESBrandQuery implements BrandQuery {
             generator.writeObjectFieldStart("match_all");
             generator.writeEndObject();//match_all
         } else {
-            generator.writeObjectFieldStart("bool");
-            generator.writeArrayFieldStart("should");
-
-            generator.writeStartObject();
+            generator.writeObjectFieldStart("constant_score");
+            generator.writeObjectFieldStart("filter");
             generator.writeObjectFieldStart("multi_match");
             generator.writeStringField("query", name);
             generator.writeArrayFieldStart("fields");
             generator.writeString("name.name");
             generator.writeString("name.shortName");
-            generator.writeEndArray();
-            generator.writeEndObject();
-            generator.writeEndObject();
-
-            generator.writeEndArray();//end should
-            generator.writeEndObject();//end bool
-
+            generator.writeString("name.name.pinyin");
+            generator.writeString("name.shortName.pinyin");
+            generator.writeEndArray();//end array fields
+            generator.writeEndObject();//end multi_match
+            generator.writeEndObject();//end filter
+            generator.writeEndObject();//end constant_score
         }
         generator.writeEndObject();//end query
 
