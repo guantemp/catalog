@@ -57,6 +57,7 @@ public class FileUploadService {
         return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
             try {
                 AggregatedMultipart agg = multipart.aggregate().join();
+                System.out.println(agg.field("file").filename());
                 byte[] bytes = agg.field("file").content().array();
 
                 if (bytes == null) {
@@ -70,6 +71,7 @@ public class FileUploadService {
                 Path target = Paths.get("./uploads", filename);
                 Files.createDirectories(target.getParent());
                 Files.move(tempFile.toPath(), target);
+
 
                 return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
                         "{\"code\":200,\"message\":\"success\"}");
