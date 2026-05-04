@@ -20,6 +20,7 @@ package catalog.hoprxi.core.rest;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.MediaType;
+import com.linecorp.armeria.common.multipart.AggregatedMultipart;
 import com.linecorp.armeria.common.multipart.Multipart;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.Consumes;
@@ -55,15 +56,8 @@ public class FileUploadService {
         ServiceRequestContext ctx = ServiceRequestContext.current();
         return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
             try {
-                var agg = multipart.aggregate().join();
-                byte[] bytes = null;
-
-                for (var part : agg.bodyParts()) {
-                    if ("file".equals(part.name())) {
-                        bytes = part.content().array();
-                        break;
-                    }
-                }
+                AggregatedMultipart agg = multipart.aggregate().join();
+                byte[] bytes = agg.field("file").content().array();
 
                 if (bytes == null) {
                     return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.PLAIN_TEXT_UTF_8, "No file");
