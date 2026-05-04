@@ -16,10 +16,7 @@
 
 package catalog.hoprxi.core;
 
-import catalog.hoprxi.core.rest.BrandService;
-import catalog.hoprxi.core.rest.CategoryService;
-import catalog.hoprxi.core.rest.ItemService;
-import catalog.hoprxi.core.rest.UnitService;
+import catalog.hoprxi.core.rest.*;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.server.docs.DocService;
@@ -98,7 +95,7 @@ public class Bootstrap {
 
         ServerBuilder sb = Server.builder();
         //http2 配置
-        sb.http2MaxFrameSize(16*1024) // 16KB帧大小
+        sb.http2MaxFrameSize(16 * 1024) // 16KB帧大小
                 .http2InitialConnectionWindowSize(1024 * 1024) // 1MB连接窗口
                 .http2InitialStreamWindowSize(512 * 1024);// 512KB流窗口
         //  添加装饰器（中间件）
@@ -110,6 +107,12 @@ public class Bootstrap {
                 .autoIndex(true)      // 开启目录浏览（可选）
                 .build();
         sb.serviceUnder("/", fs);
+
+        Path uploadsDir = Paths.get(System.getProperty("user.dir"), "uploads");
+        FileService uploads = FileService.builder(uploadsDir)
+                .autoIndex(true)      // 开启目录浏览（可选）
+                .build();
+        sb.serviceUnder("/", uploads);
         //添加文档服务
         sb.serviceUnder("/docs", DocService.builder()
                 //.exampleRequests("/v1/brands", "query")
@@ -119,11 +122,11 @@ public class Bootstrap {
         //sb.contextPath("/catalog/core/v1");测试没作用
 
         Server server = sb.http(PORT)
-
                 .annotatedService("/v1", new UnitService())
                 .annotatedService("/v1", new BrandService())
                 .annotatedService("/v1", new ItemService())
-                .annotatedService("/v1",new CategoryService())
+                .annotatedService("/v1", new CategoryService())
+                .annotatedService("/v1", new FileUploadService())
                 .build();
         server.closeOnJvmShutdown();
         server.start().join();

@@ -1,0 +1,270 @@
+<!--
+  ~ Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~       http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~  Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~  See the License for the specific language governing permissions and
+  ~  limitations under the License.
+  -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件上传</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .upload-container {
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 550px;
+        }
+
+        .upload-title {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        /* 上传区域 */
+        .upload-area {
+            border: 2px dashed #409eff;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 25px;
+        }
+
+        .upload-area:hover {
+            background-color: #f0f7ff;
+            border-color: #66b1ff;
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            color: #409eff;
+            margin-bottom: 15px;
+        }
+
+        .upload-tip {
+            color: #666;
+            font-size: 14px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        /* 文件列表 */
+        .file-list {
+            margin-bottom: 20px;
+        }
+
+        .file-item {
+            padding: 10px 12px;
+            background: #fafafa;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 按钮 */
+        .upload-btn {
+            width: 100%;
+            height: 44px;
+            background-color: #409eff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .upload-btn:disabled {
+            background-color: #a0cfff;
+            cursor: not-allowed;
+        }
+
+        .upload-btn:hover:not(:disabled) {
+            background-color: #66b1ff;
+        }
+
+        /* 状态提示 */
+        .status {
+            margin-top: 15px;
+            font-size: 14px;
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .success {
+            background-color: #e6f7ff;
+            color: #00b42a;
+            display: block;
+        }
+
+        .error {
+            background-color: #fef0f0;
+            color: #f53f3f;
+            display: block;
+        }
+
+        /* 进度条 */
+        .progress {
+            height: 6px;
+            background-color: #e5e6eb;
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-inner {
+            height: 100%;
+            width: 0%;
+            background-color: #409eff;
+            transition: width 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+<div class="upload-container">
+    <h2 class="upload-title">文件上传</h2>
+
+    <!-- 上传选择区域 -->
+    <div class="upload-area" id="upload-area">
+        <div class="upload-icon">📁</div>
+        <div class="upload-tip">点击选择文件，或拖拽文件到此处</div>
+        <input type="file" id="file-input" multiple>
+    </div>
+
+    <!-- 已选文件列表 -->
+    <div class="file-list" id="file-list"></div>
+
+    <!-- 上传进度 -->
+    <div class="progress" id="progress">
+        <div class="progress-inner" id="progress-inner"></div>
+    </div>
+
+    <!-- 上传按钮 -->
+    <button class="upload-btn" id="upload-btn" disabled>开始上传</button>
+
+    <!-- 状态提示 -->
+    <div id="status" class="status"></div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('file-input');
+    const uploadArea = document.getElementById('upload-area');
+    const uploadBtn = document.getElementById('upload-btn');
+    const fileList = document.getElementById('file-list');
+    const status = document.getElementById('status');
+    const progress = document.getElementById('progress');
+    const progressInner = document.getElementById('progress-inner');
+
+    let selectedFiles = [];
+
+    uploadArea.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        selectedFiles = Array.from(e.target.files);
+        showFileList();
+        uploadBtn.disabled = selectedFiles.length === 0;
+    });
+
+    function showFileList() {
+        fileList.innerHTML = '';
+        selectedFiles.forEach(file => {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.textContent = file.name;
+            fileList.appendChild(item);
+        });
+    }
+
+    // 上传
+    uploadBtn.addEventListener('click', async () => {
+        if (!selectedFiles.length) return;
+
+        uploadBtn.disabled = true;
+        status.className = 'status';
+        progress.style.display = 'block';
+        progressInner.style.width = '0%';
+
+        // ✅ 官方要求：只传 1 个，key = file
+        const formData = new FormData();
+        formData.append('file', selectedFiles[0]);
+
+        try {
+            const progressInterval = setInterval(() => {
+                let w = parseInt(progressInner.style.width);
+                if (w < 90) progressInner.style.width = w + 5 + '%';
+            }, 150);
+
+            // ====================== 绝对正确的请求 ======================
+            const response = await fetch('/file/upload', {
+                method: 'POST',
+                body: formData
+                // 注意：这里不能加任何 headers！！！
+            });
+            // =============================================================
+
+            clearInterval(progressInterval);
+            progressInner.style.width = '100%';
+
+            if (response.ok) {
+                status.className = 'status success';
+                status.textContent = '✅ 上传成功！';
+            } else {
+                throw new Error('上传失败');
+            }
+
+        } catch (err) {
+            status.className = 'status error';
+            status.textContent = '❌ 上传失败：' + err.message;
+        } finally {
+            uploadBtn.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>

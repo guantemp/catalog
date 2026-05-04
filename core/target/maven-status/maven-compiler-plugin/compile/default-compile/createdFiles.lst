@@ -5,7 +5,6 @@ catalog\hoprxi\core\infrastructure\query\elasticsearch\ESItemQuery.class
 catalog\hoprxi\core\domain\model\barcode\ISBN.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$16.class
 catalog\hoprxi\core\infrastructure\batch\BrandHandler.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\ESBrandQuery$1.class
 catalog\hoprxi\core\infrastructure\batch\Verify.class
 catalog\hoprxi\core\infrastructure\query\elasticsearch\spec\RetailPriceSpec.class
 catalog\hoprxi\core\domain\model\GradeEnum.class
@@ -42,6 +41,7 @@ catalog\hoprxi\core\domain\model\category\CategoryNodeMoved.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$24.class
 catalog\hoprxi\core\application\handler\BrandCreateHandler.class
 catalog\hoprxi\core\domain\model\barcode\EanCheckService.class
+catalog\hoprxi\core\infrastructure\query\elasticsearch\ReactiveStream$1.class
 catalog\hoprxi\core\application\handler\ItemRetailPriceAdjustAggHandler.class
 catalog\hoprxi\core\domain\model\barcode\BarcodeValidServices.class
 catalog\hoprxi\core\application\command\BrandUpdateCommand.class
@@ -59,7 +59,6 @@ catalog\hoprxi\core\domain\model\Show.class
 catalog\hoprxi\core\application\batch\ItemExportService.class
 catalog\hoprxi\core\application\query\CategoryQuery.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$30.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\ESBrandQuery$2.class
 catalog\hoprxi\core\infrastructure\batch\VipPriceHandler.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$32.class
 catalog\hoprxi\core\rest\CategoryService.class
@@ -77,6 +76,7 @@ catalog\hoprxi\core\infrastructure\batch\MaidenHandler.class
 catalog\hoprxi\core\domain\model\barcode\BarcodeGenerateServices.class
 catalog\hoprxi\App.class
 catalog\hoprxi\core\domain\model\barcode\EAN_8.class
+catalog\hoprxi\core\rest\FileUploadService.class
 catalog\hoprxi\core\application\handler\BrandUpdateHandler.class
 catalog\hoprxi\core\application\query\BrandQuery.class
 catalog\hoprxi\core\domain\model\ProhibitStorageItem.class
@@ -86,6 +86,7 @@ catalog\hoprxi\core\domain\model\category\CategoryDeleted.class
 catalog\hoprxi\core\application\command\ItemMadeInChangCommand.class
 catalog\hoprxi\core\domain\model\barcode\EAN_13.class
 catalog\hoprxi\core\application\command\CategoryCreateCommand.class
+catalog\hoprxi\core\infrastructure\query\elasticsearch\ReactiveStream.class
 catalog\hoprxi\core\domain\model\price\VipPrice.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$35.class
 catalog\hoprxi\core\domain\CategoryValidatorService.class
@@ -136,6 +137,7 @@ catalog\hoprxi\core\domain\model\price\UnitEnum$8.class
 catalog\hoprxi\core\domain\model\ItemProhibitSold.class
 catalog\hoprxi\core\infrastructure\query\elasticsearch\MapSortField.class
 catalog\hoprxi\core\rest\UnitService.class
+catalog\hoprxi\core\infrastructure\query\elasticsearch\ReactiveStream$3.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$26.class
 catalog\hoprxi\core\infrastructure\persistence\PersistenceException.class
 catalog\hoprxi\core\application\handler\ItemMadinChangeAggHandler.class
@@ -154,7 +156,6 @@ catalog\hoprxi\core\domain\model\ItemSpecificationChanged.class
 catalog\hoprxi\core\domain\model\ProhibitTradingItemRepository.class
 catalog\hoprxi\core\rest\ItemService.class
 catalog\hoprxi\core\domain\model\brand\BrandRenamed.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\ESBrandQuery$3.class
 catalog\hoprxi\core\domain\model\ItemMadeInChanged.class
 catalog\hoprxi\core\infrastructure\ESUtil.class
 catalog\hoprxi\core\application\handler\CategoryCreateHandler.class
@@ -174,7 +175,7 @@ catalog\hoprxi\core\domain\model\category\CategoryRepository.class
 catalog\hoprxi\core\domain\model\category\CategoryDescriptionChanged.class
 catalog\hoprxi\core\domain\model\price\AgilePrice.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$25.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\ESItemQuery$1.class
+catalog\hoprxi\core\infrastructure\query\elasticsearch\ReactiveStream$2.class
 catalog\hoprxi\core\domain\model\ProhibitSellItemPermitSold.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$7.class
 catalog\hoprxi\core\infrastructure\batch\PsqlItemExecuteHandler.class

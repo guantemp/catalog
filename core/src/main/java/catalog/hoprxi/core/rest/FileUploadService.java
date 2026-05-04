@@ -20,10 +20,9 @@ package catalog.hoprxi.core.rest;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.MediaType;
-import com.linecorp.armeria.internal.shaded.guava.base.Optional;
+import com.linecorp.armeria.common.multipart.Multipart;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.Consumes;
-import com.linecorp.armeria.server.annotation.Param;
 import com.linecorp.armeria.server.annotation.Post;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,11 +32,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.UUID;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CompletableFuture;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -55,56 +51,47 @@ public class FileUploadService {
      */
     @Post("/upload")
     @Consumes("multipart/form-data")
-    public HttpResponse uploadFile(@Param("file") File file,
-                                   @FormParam("renameFile") Boolean renameFile,
-                                   @Param("rename") Optional<Boolean> rename,
-                                   @Param("targetDir") Optional<String> targetDir) {
-        if (FileUploadService.isValid(file)) {
-            return HttpResponse.of(HttpStatus.BAD_REQUEST,
-                    MediaType.JSON_UTF_8,
-                    "{\"error\": \" faltel file\"}");
-        }
-        boolean keepOriginal = rename.or(false);
-        String subDir = targetDir.or("");
-        try {
-            String fileUrl = FileUploadService.upload(file, keepOriginal, subDir);
-        } catch (IOException e) {
-            LOGGER.error("Failed to store file", e);
-            return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR,
-                    MediaType.JSON_UTF_8,
-                    "Storage failed: " + e.getMessage());
-        }
-        return HttpResponse.of(HttpStatus.BAD_REQUEST,
-                MediaType.JSON_UTF_8,
-                "{\"error\": \" faltel file\"}");
-    }
+    public HttpResponse upload(Multipart multipart) throws IOException {
+        ServiceRequestContext ctx = ServiceRequestContext.current();
+        return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
+            try {
+                var agg = multipart.aggregate().join();
+                byte[] bytes = null;
 
-    private static String upload(File file, boolean keepOriginal, String subDir) throws IOException {
-        Path uploadBasePath = Paths.get("./uploads").toAbsolutePath().normalize();
-        Path tempPath = Paths.get("./tmp_uploads").toAbsolutePath().normalize();
-        String dateDir = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        Path finalDir = uploadBasePath.resolve(subDir).resolve(dateDir);
-        Files.createDirectories(finalDir);
+                for (var part : agg.bodyParts()) {
+                    if ("file".equals(part.name())) {
+                        bytes = part.content().array();
+                        break;
+                    }
+                }
 
-        String fileName = file.getName();
-        if (!keepOriginal) {
-            String extension = "";//扩展名
-            int dotIdx = fileName.lastIndexOf('.');
-            if (dotIdx >= 0) {
-                extension = fileName.substring(dotIdx);
+                if (bytes == null) {
+                    return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.PLAIN_TEXT_UTF_8, "No file");
+                }
+
+                File tempFile = File.createTempFile("upload", null);
+                Files.write(tempFile.toPath(), bytes);
+
+                String filename = UUID.randomUUID().toString().replace("-", "");
+                Path target = Paths.get("./uploads", filename);
+                Files.createDirectories(target.getParent());
+                Files.move(tempFile.toPath(), target);
+
+                return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
+                        "{\"code\":200,\"message\":\"success\"}");
+            } catch (Exception e) {
+                return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR);
             }
-            fileName = UUID.randomUUID() + extension;
-        }
-
-        Path targetPath = finalDir.resolve(fileName);
-        Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-        // 3. 生成访问 URL
-        String relativePath = Paths.get(subDir, dateDir, fileName).toString().replace('\\', '/');
-        return staticUrlPrefix + relativePath;
+        }, ctx.blockingTaskExecutor()).exceptionally(e ->
+                HttpResponse.of(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        MediaType.JSON_UTF_8,
+                        String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage())
+                )
+        ));
     }
 
-    private static boolean isValid(File uploadedFile) {
+    private static boolean validateFile(File file) {
         return true;
     }
-
 }
