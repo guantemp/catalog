@@ -170,6 +170,7 @@
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
+                        <!--去掉html,其它copy到conf目录-->
                         <configuration>
                             <outputDirectory>${project.build.directory}/conf</outputDirectory>
                             <resources>

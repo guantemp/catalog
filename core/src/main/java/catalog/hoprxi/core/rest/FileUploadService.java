@@ -20,21 +20,24 @@ package catalog.hoprxi.core.rest;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.MediaType;
-import com.linecorp.armeria.common.multipart.AggregatedMultipart;
-import com.linecorp.armeria.common.multipart.Multipart;
+import com.linecorp.armeria.common.multipart.MultipartFile;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.Consumes;
+import com.linecorp.armeria.server.annotation.Param;
 import com.linecorp.armeria.server.annotation.Post;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import salt.hoprxi.to.ByteToHex;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -52,22 +55,63 @@ public class FileUploadService {
      */
     @Post("/upload")
     @Consumes("multipart/form-data")
-    public HttpResponse upload(Multipart multipart) throws IOException {
+    public HttpResponse upload(ServiceRequestContext ctx, @Param("file") MultipartFile multipartFile) throws IOException {
+        if (multipartFile == null || multipartFile.file().length() == 0) {
+            return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                    "{\"code\":400,\"message\":\"请选择要上传的文件\"}");
+        }
+        String filename = multipartFile.filename();
+        filename = Paths.get(filename).getFileName().toString();
+        if (true) {
+            String suffix = "";
+            int dotIndex = filename.lastIndexOf(".");
+            if (dotIndex > 0) {
+                suffix = filename.substring(dotIndex);
+            }
+            filename = UUID.randomUUID().toString().replace("-", "") + suffix;
+        }
+        File file = multipartFile.file();
+        String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        Path target = Paths.get("./uploads", today, filename);
+        Files.createDirectories(target.getParent());
+        Files.move(file.toPath(), target);
+
+        String scheme = ctx.sessionProtocol().isTls() ? "https" : "http";
+        String host = ctx.request().authority();
+        String accessUrl = String.format("%s://%s/uploads/%s/%s", scheme, host, today, filename);
+
+        return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, String.format("""
+                {
+                    "code":200,
+                    "message":"success",
+                    "url":"%s"
+                }""", accessUrl));
+        /*
         ServiceRequestContext ctx = ServiceRequestContext.current();
         return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
+            AggregatedMultipart agg = multipart.aggregate().join();
+            AggregatedBodyPart bodyPart = agg.field("file");
+            // 2. 校验：文件是否存在
+            if (bodyPart == null) {
+                return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                        "{\"code\":400,\"message\":\"未上传文件\"}");
+            }
             try {
-                AggregatedMultipart agg = multipart.aggregate().join();
-                System.out.println(agg.field("file").filename());
-                byte[] bytes = agg.field("file").content().array();
 
-                if (bytes == null) {
-                    return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.PLAIN_TEXT_UTF_8, "No file");
-                }
+                String filename = bodyPart.filename();
+                byte[] bytes = bodyPart.content().array();
 
                 File tempFile = File.createTempFile("upload", null);
                 Files.write(tempFile.toPath(), bytes);
 
-                String filename = UUID.randomUUID().toString().replace("-", "");
+                // 文件名处理
+                String suffix = "";
+                int dotIndex = filename.lastIndexOf(".");
+                if (dotIndex > 0) {
+                    suffix = filename.substring(dotIndex);
+                }
+                filename = UUID.randomUUID().toString() + suffix;
+
                 Path target = Paths.get("./uploads", filename);
                 Files.createDirectories(target.getParent());
                 Files.move(tempFile.toPath(), target);
@@ -85,9 +129,87 @@ public class FileUploadService {
                         String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage())
                 )
         ));
+         */
     }
 
-    private static boolean validateFile(File file) {
-        return true;
+    @Post("/uploads")
+    @Consumes("multipart/form-data")
+    public HttpResponse uploads(ServiceRequestContext ctx, @Param("file") MultipartFile[] multipartFiles) throws IOException {
+        if (multipartFiles == null || multipartFiles.length == 0) {
+            return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                    "{\"code\":400,\"message\":\"请选择要上传的文件\"}");
+        }
+        // 日期目录 yyyy-MM-dd
+        String dateDir = LocalDate.now()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String scheme = ctx.sessionProtocol().isTls() ? "https" : "http";
+        String domain = ctx.request().authority();
+        List<Map<String, String>> successList = new ArrayList<>();
+        List<String> failMsgList = new ArrayList<>();
+        for (MultipartFile multipartFile : multipartFiles) {
+            String originalName = multipartFile.filename();
+            if (originalName.isBlank()) {
+                failMsgList.add("存在空文件名文件");
+                continue;
+            }
+            // 1. 防路径穿越：只保留纯文件名
+            originalName = Paths.get(originalName).getFileName().toString();
+            File file = multipartFile.file();
+            if (validFormat(file)) {
+                // 3. 截取后缀，生成UUID唯一文件名
+                String suffix = "";
+                int dotIdx = originalName.lastIndexOf(".");
+                if (dotIdx > 0) {
+                    suffix = originalName.substring(dotIdx).toLowerCase();
+                }
+                String saveName = UUID.randomUUID() + suffix;
+                // 4. 目标路径：uploads/日期/文件名
+                Path target = Paths.get("./uploads", dateDir, saveName);
+                Files.createDirectories(target.getParent());
+                Files.move(file.toPath(), target);
+                String url = String.format("%s://%s/uploads/%s/%s",
+                        scheme, domain, dateDir, saveName);
+                Map<String, String> item = new HashMap<>();
+                item.put("originalName", originalName);
+                item.put("url", url);
+                successList.add(item);
+            }
+        }
+        // 统一返回JSON
+        String json = """
+                {
+                    "code": 200,
+                    "message": "处理完成",
+                    "successCount": %d,
+                    "failCount": %d,
+                    "fileList": %s,
+                    "failList": %s
+                }
+                """.formatted(
+                successList.size(),
+                failMsgList.size(),
+                new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(successList),
+                new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(failMsgList)
+        );
+        return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, json);
+    }
+
+
+    private static boolean validFormat(File file) {
+        //jpg,png,gif,pdf,doc,docx
+        String[] heads = new String[]{"FFD8FF", "89504E47", "47494638", "25504446", "D0CF11E0", "504B0304"};
+        try (FileInputStream fis = new FileInputStream(file)) {
+            byte[] header = new byte[8];
+            int readLen = fis.read(header);
+            if (readLen < 4) return false;
+
+            String hex = ByteToHex.toHexStr(header).toUpperCase();
+            for (String head : heads)
+                if (head.equals(hex))
+                    return true;
+            return false;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

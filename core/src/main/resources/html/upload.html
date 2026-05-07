@@ -245,16 +245,19 @@
                 body: formData
                 // 注意：这里不能加任何 headers！！！
             });
-            // =============================================================
+            const result = await response.json();
 
             clearInterval(progressInterval);
             progressInner.style.width = '100%';
 
-            if (response.ok) {
+            // 处理后端返回的 JSON
+            if (result.code === 200) {
                 status.className = 'status success';
-                status.textContent = '✅ 上传成功！';
+                // 显示成功信息 + 文件URL
+                status.innerHTML = `✅ ${result.message} <br> 文件地址：<a href="${result.url}" target="_blank">${result.url}</a>`;
             } else {
-                throw new Error('上传失败');
+                status.className = 'status error';
+                status.textContent = '❌ 上传失败：' + result.message;
             }
 
         } catch (err) {
