@@ -21,18 +21,14 @@ import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.util.ReferenceCountUtil;
 import org.testng.annotations.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -54,7 +50,7 @@ public class ESItemQueryTest {
                 query.findAsync(55307820773139539L),
                 query.findAsync(55307834488513967L)
         };
-        ESItemQueryTest.printResult(monos);
+        PrintUtil.printMono(monos);
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1)
@@ -84,7 +80,7 @@ public class ESItemQueryTest {
         for (int i = 0, j = barcodes.length; i < j; i++) {
             monos[i] = query.findByBarcodeAsync(barcodes[i]);
         }
-        ESItemQueryTest.printResult(monos);
+        PrintUtil.printMono(monos);
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1, priority = 2)
@@ -136,7 +132,7 @@ public class ESItemQueryTest {
                 query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("693"), new CategorySpec(49680944612900409L)}, 50, 10, SortFieldEnum.ID),
                 query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("伊利")}, 10, 128, SortFieldEnum._RETAIL_PRICE)
         };
-        ESItemQueryTest.printResult(fluxes);
+        PrintUtil.printFlux(fluxes);
     }
 
     @Test(invocationCount = 1, threadPoolSize = 1, priority = 2)
@@ -179,78 +175,7 @@ public class ESItemQueryTest {
                 //query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("692"), new CategorySpec(new long[]{55307230903989168L}), new RetailPriceSpec(2.6, 25.5), new LastReceiptPriceSpec(1.1, 3)}, 15, null, SortFieldEnum._ID),
                 //query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("伊利"), new KeywordSpec("690")}, 10, "258", SortFieldEnum._RETAIL_PRICE)
         };
-        ESItemQueryTest.printResult(fluxes);
+      PrintUtil.printFlux(fluxes);
     }
 
-    private static void printResult(Flux<ByteBuf>[] fluxes) {
-        int total = fluxes.length;
-        CountDownLatch latch = new CountDownLatch(total);
-
-        for (int i = 0; i < total; i++) {
-            final int idx = i;
-            fluxes[i]
-                    .subscribeOn(Schedulers.parallel())
-                    .collectList()  // 一次订阅，收集所有 ByteBuf 到 List
-                    .subscribe(
-                            list -> {
-                                System.out.println("\n[Query-" + idx + "] 总共收到 " + list.size() + " 个 ByteBuf");
-                                for (ByteBuf byteBuf : list) {
-                                    try {
-                                        String content = byteBuf.toString(StandardCharsets.UTF_8);
-                                        System.out.println("[Query-" + idx + "] 接收数据：\n" + content);
-                                    } finally {
-                                        ReferenceCountUtil.safeRelease(byteBuf);
-                                    }
-                                }
-                                latch.countDown();
-                            },
-                            error -> {
-                                System.err.println("[Query-" + idx + "] 异常：" + error.getClass().getSimpleName() + " - " + error.getMessage());
-                                assert error instanceof IllegalArgumentException;
-                                latch.countDown();
-                            }
-                    );
-        }
-
-        try {
-            boolean done = latch.await(30, TimeUnit.SECONDS);
-            if (!done) System.err.println("异步请求超时！");
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    public static void printResult(Mono<ByteBuf>[] monos) {
-        // 1. 使用 Mono.when 合并
-        // 这会让数组里所有的 Mono 同时开始执行（并发）
-        // 注意：Mono.when 会等待所有 Mono 完成，但只返回 Void (不返回具体数据)
-        // 如果你想处理数据，需要用 Mono.zip 或者分别 subscribe
-        // 这里为了演示简单且保留数据内容，我们改用 Flux.merge 或者分别订阅
-
-        // 方案 A：如果只是想等它们都跑完（不管数据内容，或者数据内容已经在内部处理了）
-        // Mono.when(monos).subscribe(() -> System.out.println("全部完成"));
-
-        // 方案 B (推荐)：为了能看到每个 ID 的具体返回内容，我们利用 Flux.merge 把它们当成流处理
-        // 或者简单地遍历订阅（这也是并发执行的）
-
-        System.out.println(">>> 开始并发执行 " + monos.length + " 个 Mono 任务...");
-
-        for (int i = 0; i < monos.length; i++) {
-            final int index = i; // 用于日志标记
-            monos[i].subscribe(
-                    byteBuf -> {
-                        // onNext
-                        if (byteBuf != null) {
-                            String content = byteBuf.toString(StandardCharsets.UTF_8);
-                            System.out.println("[任务 " + index + "] 收到结果长度: " + content.length());
-                            // System.out.println(content); // 如果需要看具体 JSON
-                        }
-                    },
-                    error -> {
-                        // onError
-                        System.err.println("[任务 " + index + "] 发生错误: " + error.getMessage());
-                    }
-            );
-        }
-    }
 }

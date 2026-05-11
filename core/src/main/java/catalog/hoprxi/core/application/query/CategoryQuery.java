@@ -18,6 +18,7 @@ package catalog.hoprxi.core.application.query;
 
 import io.netty.buffer.ByteBuf;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
 
@@ -54,7 +55,7 @@ public interface CategoryQuery {
      */
     InputStream find(long id) throws SearchException;
 
-    Flux<ByteBuf> findAsync(long id);
+    Mono<ByteBuf> findAsync(long id);
 
     /**
      * @param id category id

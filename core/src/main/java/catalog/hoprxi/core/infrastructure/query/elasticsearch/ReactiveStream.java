@@ -178,6 +178,7 @@ public final class ReactiveStream {
                                 EntityUtils.consumeQuietly(response.getEntity());
                                 return;
                             }
+
                             // 线程池处理
                             TRANSFORM_POOL.execute(() -> {
                                 if (isCancelled.get()) {
@@ -188,11 +189,11 @@ public final class ReactiveStream {
                                     EntityUtils.consumeQuietly(response.getEntity());
                                     return;
                                 }
-                                ByteBuf buf = ByteBufAllocator.DEFAULT.directBuffer(SINGLE_BUFFER_SIZE);
+                                ByteBuf buf = PooledByteBufAllocator.DEFAULT.directBuffer(SINGLE_BUFFER_SIZE);
                                 try (content; JsonParser parser = JSON_FACTORY.createParser(content);
                                      OutputStream os = new ByteBufOutputStream(buf); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
                                     Extract.extractSourceSkipMeta(parser, generator);
-                                    generator.flush();
+                                    generator.close();
                                     if (!isCancelled.get()) {
                                         sink.success(buf);
                                     } else {
@@ -218,6 +219,7 @@ public final class ReactiveStream {
                 })
                 .doOnTerminate(() -> LOGGER.debug("Request terminated from {}", (Object[]) tips))
                 .doOnDiscard(ByteBuf.class, ReferenceCountUtil::safeRelease);
+
     }
 
     /**
@@ -289,7 +291,7 @@ public final class ReactiveStream {
                 .doOnCancel(() -> isCancelled.set(true)).doOnTerminate(() -> LOGGER.debug("Request terminated for {}", tips))
                 .doOnDiscard(ByteBuf.class, ReferenceCountUtil::safeRelease);
     }
-
+/*
     private static Flux<ByteBuf> byteBufFlux(String tips, Request request, boolean alone) {
         return Flux.<ByteBuf>create(sink -> {
                     final AtomicBoolean isCancelled = new AtomicBoolean(false);
@@ -354,5 +356,5 @@ public final class ReactiveStream {
                 })
                 .doOnDiscard(ByteBuf.class, ReferenceCountUtil::safeRelease);
     }
-
+ */
 }

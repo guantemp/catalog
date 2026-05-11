@@ -36,9 +36,11 @@ import com.linecorp.armeria.common.*;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
+import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.net.URI;
@@ -66,29 +68,34 @@ public class CategoryService {
     @Get("/categories/{id}")
     @Description("Retrieves the category information by the given category ID.")
     public HttpResponse find(@Param("id") long id) {
-        Flux<ByteBuf> dataFlux = QUERY.findAsync(id); // 假设返回 Flux<ByteBuf>
-        // 使用 switchMap：一旦有第一个元素，就前置 headers
-        Flux<HttpObject> responseStream = dataFlux
-                .map(HttpData::wrap)
-                .switchOnFirst((signal, flux) -> {
-                    if (signal.hasError()) { // 第一个信号就是错误
+        Mono<ByteBuf> mono = QUERY.findAsync(id);
+        Flux<HttpObject> responseFlux = mono
+                .flatMapMany(byteBuf -> Flux.using(
+                        () -> byteBuf,
+                        buf -> Flux.just(// 业务逻辑：正常响应
+                                ResponseHeaders.builder(HttpStatus.OK)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build(),
+                                HttpData.wrap(buf) // Armeria 接管生命周期
+                        ),
+                        ReferenceCountUtil::release // 资源清理：仅在异常路径执行
+                ))
+                .onErrorResume(error -> {
+                    if (error instanceof NotFoundException) {
+                        return Flux.just(
+                                ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build(),
+                                HttpData.ofUtf8(String.format("{\"Error\":\"Category not found: %d\"}", id))
+                        );
+                    } else {
                         return Flux.just(
                                 ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
+                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
+                        );
                     }
-                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
-                        return Flux.concat(
-                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
-                                        .contentType(MediaType.JSON_UTF_8)
-                                        .build()), flux);
-                    }
-                    return Flux.just(
-                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
-                                    .contentType(MediaType.JSON_UTF_8)
-                                    .build(),
-                            HttpData.ofUtf8(String.format("{\"Warn\":\"Category not found for id : %d }\"", id)));
                 });
-        return HttpResponse.of(responseStream);
+        return HttpResponse.of(responseFlux);
     }
 
     @Get("/categories/{id}/children")

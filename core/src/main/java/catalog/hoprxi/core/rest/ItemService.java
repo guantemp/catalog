@@ -74,7 +74,7 @@ import java.util.function.BiFunction;
  * @since JDK21
  * @version 0.0.1 builder 2025/10/19
  */
-public class ItemService {
+public final class ItemService {
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
@@ -113,7 +113,8 @@ public class ItemService {
                         );
                     } else {
                         return Flux.just(
-                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                ResponseHeaders.builder(HttpStatus.INTERNAL_SERVER_ERROR).contentType(MediaType.JSON_UTF_8)
+                                        .build(),
                                 HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
                         );
                     }

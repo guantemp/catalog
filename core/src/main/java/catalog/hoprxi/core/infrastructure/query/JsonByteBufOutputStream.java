@@ -19,6 +19,7 @@ package catalog.hoprxi.core.infrastructure.query;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
 import reactor.core.publisher.Sinks;
 
@@ -44,7 +45,7 @@ public final class JsonByteBufOutputStream extends OutputStream {
         this.sink = Objects.requireNonNull(sink, "sink required");
         this.isCancelled = Objects.requireNonNull(isCancelled, "isCancelled required");
         this.chunkSize = chunkSize;
-        this.buffer = ByteBufAllocator.DEFAULT.directBuffer(chunkSize);
+        this.buffer = PooledByteBufAllocator.DEFAULT.directBuffer(chunkSize);
     }
 
     public JsonByteBufOutputStream(Sinks.Many<ByteBuf> sink, AtomicBoolean isCancelled) {
@@ -54,7 +55,7 @@ public final class JsonByteBufOutputStream extends OutputStream {
     @Override
     public void write(int b) throws IOException {
         ensureWritable();
-        if (buffer == null) buffer = ByteBufAllocator.DEFAULT.directBuffer(chunkSize);
+        if (buffer == null) buffer = PooledByteBufAllocator.DEFAULT.directBuffer(chunkSize);
         if (!buffer.isWritable()) {
             // 满了就发
             if (buffer != null && buffer.readableBytes() > 0) {
@@ -66,7 +67,7 @@ public final class JsonByteBufOutputStream extends OutputStream {
                 }
                 buffer = null;  // 生产者不再持有
             }
-            if (buffer == null) buffer = ByteBufAllocator.DEFAULT.directBuffer(chunkSize);
+            if (buffer == null) buffer = PooledByteBufAllocator.DEFAULT.directBuffer(chunkSize);
         }
         buffer.writeByte(b);
     }
@@ -75,7 +76,7 @@ public final class JsonByteBufOutputStream extends OutputStream {
     public void write(byte[] b, int off, int len) throws IOException {
         ensureWritable();
         if (len == 0) return;
-        if (buffer == null) buffer = ByteBufAllocator.DEFAULT.directBuffer(chunkSize);
+        if (buffer == null) buffer = PooledByteBufAllocator.DEFAULT.directBuffer(chunkSize);
 
         int remaining = len;
         int offset = off;
@@ -92,7 +93,7 @@ public final class JsonByteBufOutputStream extends OutputStream {
                     }
                     buffer = null;  // 生产者不再持有
                 }
-                if (buffer == null) buffer = ByteBufAllocator.DEFAULT.directBuffer(chunkSize);
+                if (buffer == null) buffer = PooledByteBufAllocator.DEFAULT.directBuffer(chunkSize);
             }
             int toWrite = Math.min(buffer.writableBytes(), remaining);
             buffer.writeBytes(b, offset, toWrite);

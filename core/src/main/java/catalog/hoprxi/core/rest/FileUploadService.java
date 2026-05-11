@@ -25,6 +25,8 @@ import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.Consumes;
 import com.linecorp.armeria.server.annotation.Param;
 import com.linecorp.armeria.server.annotation.Post;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import salt.hoprxi.to.ByteToHex;
@@ -47,6 +49,13 @@ import java.util.*;
 
 public class FileUploadService {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
+    private static String uploadDirectories = "./uploads";
+    private static boolean rename = true;
+    private static boolean separateByDate = true;
+
+    static {
+        Config config = ConfigFactory.load("core");
+    }
 
     /**
      * 文件上传处理接口（支持多文件）
@@ -55,37 +64,41 @@ public class FileUploadService {
      */
     @Post("/upload")
     @Consumes("multipart/form-data")
-    public HttpResponse upload(ServiceRequestContext ctx, @Param("file") MultipartFile multipartFile) throws IOException {
+    public HttpResponse upload(ServiceRequestContext ctx, @Param("file") MultipartFile multipartFile) {
         if (multipartFile == null || multipartFile.file().length() == 0) {
             return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
                     "{\"code\":400,\"message\":\"请选择要上传的文件\"}");
         }
-        String filename = multipartFile.filename();
-        filename = Paths.get(filename).getFileName().toString();
-        if (true) {
-            String suffix = "";
-            int dotIndex = filename.lastIndexOf(".");
-            if (dotIndex > 0) {
-                suffix = filename.substring(dotIndex);
+        try {
+            String filename = Paths.get(multipartFile.filename()).getFileName().toString();
+            if (rename) {
+                String suffix = "";
+                int dotIndex = filename.lastIndexOf(".");
+                if (dotIndex > 0) {
+                    suffix = filename.substring(dotIndex);
+                }
+                filename = UUID.randomUUID().toString().replace("-", "") + suffix;
             }
-            filename = UUID.randomUUID().toString().replace("-", "") + suffix;
+            String today = separateByDate ? LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : "";
+            Path target = Paths.get(uploadDirectories, today, filename);
+            Files.createDirectories(target.getParent());
+
+            Files.move(multipartFile.file().toPath(), target);
+
+            String scheme = ctx.sessionProtocol().isTls() ? "https" : "http";
+            String host = ctx.request().authority();
+            String accessUrl = String.format("%s://%s/uploads/%s/%s", scheme, host, today, filename);
+
+            return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, String.format("""
+                    {
+                        "code":200,
+                        "message":"success",
+                        "url":"%s"
+                    }""", accessUrl));
+        } catch (IOException e) {
+            String json = String.format("{\"code\":500,\"message\":\"%s\"}", e.getMessage());
+            return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8, json);
         }
-        File file = multipartFile.file();
-        String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        Path target = Paths.get("./uploads", today, filename);
-        Files.createDirectories(target.getParent());
-        Files.move(file.toPath(), target);
-
-        String scheme = ctx.sessionProtocol().isTls() ? "https" : "http";
-        String host = ctx.request().authority();
-        String accessUrl = String.format("%s://%s/uploads/%s/%s", scheme, host, today, filename);
-
-        return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, String.format("""
-                {
-                    "code":200,
-                    "message":"success",
-                    "url":"%s"
-                }""", accessUrl));
         /*
         ServiceRequestContext ctx = ServiceRequestContext.current();
         return HttpResponse.of(CompletableFuture.supplyAsync(() -> {

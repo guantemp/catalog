@@ -34,9 +34,7 @@ public interface BrandQuery {
      * @param id of brand
      * @return empty if not find
      */
-    default InputStream find(long id) throws SearchException {
-        return new ByteArrayInputStream(new byte[0]);
-    }
+    InputStream find(long id);
 
     Mono<ByteBuf> findAsync(long id);
 
@@ -61,8 +59,6 @@ public interface BrandQuery {
         return search(null, offset, size, SortFieldEnum._ID);
     }
 
-    Flux<ByteBuf> searchAsync(String name, int offset, int size, SortFieldEnum sortField);
-
     /**
      * @param name
      * @param size
@@ -79,6 +75,8 @@ public interface BrandQuery {
     default InputStream search(int size, String searchAfter, SortFieldEnum sortField) {
         return search(null, size, searchAfter, sortField);
     }
+
+    Flux<ByteBuf> searchAsync(String name, int offset, int size, SortFieldEnum sortField);
 
     Flux<ByteBuf> searchAsync(String name, int size, String searchAfter, SortFieldEnum sortField);
 }

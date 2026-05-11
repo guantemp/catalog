@@ -195,7 +195,7 @@ public class PsqlBrandQuery implements BrandQuery {
 
     @Override
     public InputStream find(long id) {
-        return BrandQuery.super.find(id);
+        return null;
     }
 
     /**

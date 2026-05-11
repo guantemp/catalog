@@ -24,6 +24,7 @@ import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import io.netty.buffer.ByteBuf;
+import org.apache.http.HttpEntity;
 import org.elasticsearch.client.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +76,7 @@ public final class ESBrandQuery implements BrandQuery {
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
+
         return ReactiveStream.toByteBufInputStream(request, "brands", name);
     }
 
@@ -90,18 +92,18 @@ public final class ESBrandQuery implements BrandQuery {
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
+
         return ReactiveStream.toFluxByteBuf(request, "brands", name);
     }
 
     private static String buildSearchJsonRequest(String name, int offset, int limit, SortFieldEnum sortField) {
-        StringWriter writer = new StringWriter(384);
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+        try (StringWriter writer = new StringWriter(64); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeNumberField("from", offset);
             generator.writeNumberField("size", limit);
             ESBrandQuery.buildCommonJsonRequest(name, sortField, generator);
             generator.writeEndObject();
-            generator.flush();
+            generator.close();
             return writer.toString();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);
@@ -137,8 +139,7 @@ public final class ESBrandQuery implements BrandQuery {
     }
 
     private static String buildSearchAfterJsonRequest(String name, int size, String searchAfter, SortFieldEnum sortField) {
-        StringWriter writer = new StringWriter(128);
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+        try (StringWriter writer = new StringWriter(128); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeNumberField("size", size);
             ESBrandQuery.buildCommonJsonRequest(name, sortField, generator);
@@ -148,7 +149,7 @@ public final class ESBrandQuery implements BrandQuery {
                 generator.writeEndArray();
             }
             generator.writeEndObject();
-            generator.flush();
+            generator.close();
             return writer.toString();
         } catch (IOException e) {
             LOGGER.error("Cannot assemble request JSON", e);

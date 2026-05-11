@@ -17,6 +17,10 @@
 package catalog.hoprxi.core;
 
 import catalog.hoprxi.core.rest.*;
+import com.linecorp.armeria.common.ContentTooLargeException;
+import com.linecorp.armeria.common.HttpResponse;
+import com.linecorp.armeria.common.HttpStatus;
+import com.linecorp.armeria.common.MediaType;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.server.docs.DocService;
@@ -101,18 +105,15 @@ public class Bootstrap {
         //  添加装饰器（中间件）
         sb.decorator(LoggingService.newDecorator()); // 日志记录
         sb.decorator(EncodingService.newDecorator()); // 压缩
-
+        //静态资源加入armeria的路径，可访问,生产环境放入nginx
         Path htmlDir = Paths.get(System.getProperty("user.dir"), "html");
         FileService fs = FileService.builder(htmlDir)
                 .autoIndex(true)      // 开启目录浏览（可选）
                 .build();
         sb.serviceUnder("/", fs);
-
         Path uploadsDir = Paths.get(System.getProperty("user.dir"), "uploads");
-        FileService uploads = FileService.builder(uploadsDir)
-                .autoIndex(true)      // 开启目录浏览（可选）
-                .build();
-        sb.serviceUnder("/", uploads);
+        FileService uploads = FileService.builder(uploadsDir).build();
+        sb.serviceUnder("/uploads", uploads);
         //添加文档服务
         sb.serviceUnder("/docs", DocService.builder()
                 //.exampleRequests("/v1/brands", "query")
@@ -120,14 +121,25 @@ public class Bootstrap {
         //ssl
         //sb.https(8443).tls(new File("certificate.crt"), new File("private.key"), "myPassphrase");
         //sb.contextPath("/catalog/core/v1");测试没作用
+        sb.maxRequestLength(2 * 1024 * 1024)
+                .decorator(delegate -> (ctx, req) -> delegate.serve(ctx, req).recover(cause -> {
+                    if (cause instanceof ContentTooLargeException) {
+                        return HttpResponse.of(
+                                HttpStatus.REQUEST_ENTITY_TOO_LARGE,
+                                MediaType.JSON_UTF_8,
+                                "{\"code\":413,\"message\":\"文件太大，最大允许 2MB\"}"
+                        );
+                    }
+                    return HttpResponse.ofFailure(cause);
+                }));
 
-        Server server = sb.http(PORT)
-                .annotatedService("/v1", new UnitService())
+        sb.annotatedService("/v1", new UnitService())
                 .annotatedService("/v1", new BrandService())
                 .annotatedService("/v1", new ItemService())
                 .annotatedService("/v1", new CategoryService())
-                .annotatedService("/v1", new FileUploadService())
-                .build();
+                .annotatedService("/v1", new FileUploadService());
+
+        Server server = sb.http(PORT).build();
         server.closeOnJvmShutdown();
         server.start().join();
         System.out.printf("Server has been started. Serving dummy service at http://127.0.0.1:%d%n", server.activeLocalPort());
