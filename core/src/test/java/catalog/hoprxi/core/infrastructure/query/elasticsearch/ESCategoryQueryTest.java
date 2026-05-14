@@ -107,7 +107,18 @@ public class ESCategoryQueryTest {
         };
        PrintUtil.printFlux(fluxes);
     }
-
+    @Test(expectedExceptions = IllegalStateException.class)
+    public void testDescendants() throws IOException {
+        try (InputStream is = query.descendants(1)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.descendants(14)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+        try (InputStream is = query.descendants(23543251)) {
+            System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+        }
+    }
 
     @Test
     public void testDescendantsAsync() {
@@ -155,7 +166,7 @@ public class ESCategoryQueryTest {
     }
 
     @Test
-    public void testSearchSiblings() {
+    public void testSiblings() {
     }
 
     @Test

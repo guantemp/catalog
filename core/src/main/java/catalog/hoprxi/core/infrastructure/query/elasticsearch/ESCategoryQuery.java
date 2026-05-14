@@ -434,7 +434,7 @@ public class ESCategoryQuery implements CategoryQuery {
     }
 
     @Override
-    public InputStream searchSiblings(long id) {
+    public InputStream siblings(long id) {
         return null;
     }
 
@@ -473,33 +473,8 @@ public class ESCategoryQuery implements CategoryQuery {
         request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESCategoryQuery.buildPathRequest(familyId, left, right));
-        System.out.println(ESCategoryQuery.buildPathRequest(familyId, left, right));
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        boolean success = false;
-        Response response = null;
-        try {
-            response = ESUtil.restClient().performRequest(request);
-            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                 OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
 
-                Extract.extract(parser, generator, "categories");
-                success = true;
-                return new ByteBufInputStream(buffer, true);
-            }
-        } catch (ResponseException e) {
-            LOGGER.error("Failed to query category path by id: {}, familyId: {}", id, familyId, e);
-            throw new SearchException(String.format("Failed to query category path for id: %d", id), e);
-        } catch (IOException e) {
-            LOGGER.error("IO exception when querying category path for id: {}", id, e);
-            throw new SearchException(String.format("IO exception when querying category path for id: %d", id), e);
-        } finally {
-            if (response != null) {
-                EntityUtils.consumeQuietly(response.getEntity());
-            }
-            if (!success && buffer.refCnt() > 0) {
-                ReferenceCountUtil.safeRelease(buffer);
-            }
-        }
+        return ReactiveStream.toByteBufInputStream(request,"categories",String.valueOf(id));
     }
 
     @Override
@@ -591,7 +566,7 @@ public class ESCategoryQuery implements CategoryQuery {
             generator.writeNumberField("size", MAX_SIZE);
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
-            generator.writeArrayFieldStart("must");
+            generator.writeArrayFieldStart("filter");
 
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");

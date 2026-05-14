@@ -75,6 +75,11 @@ public final class ReactiveStream {
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
 
+    @FunctionalInterface
+    private interface ExtractFunction {
+        void extract(JsonParser parser, JsonGenerator generator) throws IOException;
+    }
+
     /**
      * 同步阻塞方式获取单个 ByteBuf 输入流。
      * <p>
@@ -234,6 +239,7 @@ public final class ReactiveStream {
                 .doOnDiscard(ByteBuf.class, ReferenceCountUtil::safeRelease);
     }
 
+
     /**
      * 将 Elasticsearch 请求转换为 Flux<ByteBuf>。
      * <p>
@@ -246,62 +252,8 @@ public final class ReactiveStream {
      * @return 包含 ByteBuf 数据块的 Flux 流
      */
     public static Flux<ByteBuf> toFluxByteBuf(Request request, String objectsName, String tips) {
-        AtomicBoolean isCancelled = new AtomicBoolean(false);
-        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
-        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
-            @Override
-            public void onSuccess(Response response) {
-                if (isCancelled.get()) {
-                    EntityUtils.consumeQuietly(response.getEntity());
-                    return;
-                }
-                final InputStream content;
-                try {
-                    content = response.getEntity().getContent();
-                } catch (IOException e) {
-                    sink.tryEmitError(MapException.mapException(e, tips));
-                    EntityUtils.consumeQuietly(response.getEntity());
-                    return;
-                }
-                TRANSFORM_POOL.execute(() -> {
-                    if (isCancelled.get()) {
-                        try {
-                            if (content != null) content.close();
-                        } catch (Exception ignore) {
-                        }
-                        EntityUtils.consumeQuietly(response.getEntity());
-                        return;
-                    }
-                    try (content; JsonParser parser = JSON_FACTORY.createParser(content);
-                         OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-                        Extract.extract(parser, generator, objectsName);
-                        Sinks.EmitResult result = sink.tryEmitComplete();
-                        if (result.isFailure() && result != Sinks.EmitResult.FAIL_TERMINATED) {
-                            LOGGER.warn("Failed to emit complete: {}", result);
-                        }
-                    } catch (IOException e) {
-                        Sinks.EmitResult result = sink.tryEmitError(e);
-                        if (result.isFailure() && result != Sinks.EmitResult.FAIL_TERMINATED) {
-                            LOGGER.warn("emitError failed: {}", result);
-                        }
-                    } finally {
-                        EntityUtils.consumeQuietly(response.getEntity());
-                    }
-                });
-            }
-
-            @Override
-            public void onFailure(Exception exception) {
-                if (!isCancelled.get()) {
-                    sink.tryEmitError(MapException.mapException(exception, tips));
-                }
-            }
-        });
-
-        return sink.asFlux()
-                .timeout(Duration.ofSeconds(20), Mono.error(new TimeoutException("Request timed out for : " + tips)))
-                .doOnCancel(() -> isCancelled.set(true)).doOnTerminate(() -> LOGGER.debug("Request terminated for {}", tips))
-                .doOnDiscard(ByteBuf.class, ReferenceCountUtil::safeRelease);
+        return toFluxByteBufInternal(request, tips,
+                (parser, generator) -> Extract.extract(parser, generator, objectsName));
     }
 
     /**
@@ -309,7 +261,7 @@ public final class ReactiveStream {
      * <p>
      * 此方法专门用于处理带有 left/right 闭区间字段的 ES 数据（如目录树、组织架构等）。
      * 它会将扁平的结果集动态重组为带有 "children" 数组的嵌套 JSON 树，并通过 Flux 流式输出。
-     * 内部使用 {@link Extract#extractAsTree(JsonParser, JsonGenerator,String)} 完成树形转换。
+     * 内部使用 {@link Extract#extractAsTree(JsonParser, JsonGenerator, String)} 完成树形转换。
      * </p>
      *
      * @param request Elasticsearch 的请求对象
@@ -318,6 +270,11 @@ public final class ReactiveStream {
      * @return 包含树形 JSON 数据块（ByteBuf）的 Flux 流
      */
     public static Flux<ByteBuf> toTreeFluxByteBuf(Request request, String title, String tips) {
+        return toFluxByteBufInternal(request, tips,
+                (parser, generator) -> Extract.extractAsTree(parser, generator, title));
+    }
+
+    private static Flux<ByteBuf> toFluxByteBufInternal(Request request, String tips, ExtractFunction extractor) {
         AtomicBoolean isCancelled = new AtomicBoolean(false);
         Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
         ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
@@ -346,7 +303,7 @@ public final class ReactiveStream {
                     }
                     try (content; JsonParser parser = JSON_FACTORY.createParser(content);
                          OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-                        Extract.extractAsTree(parser, generator, title);
+                        extractor.extract(parser, generator);
                         Sinks.EmitResult result = sink.tryEmitComplete();
                         if (result.isFailure() && result != Sinks.EmitResult.FAIL_TERMINATED) {
                             LOGGER.warn("Failed to emit complete: {}", result);
