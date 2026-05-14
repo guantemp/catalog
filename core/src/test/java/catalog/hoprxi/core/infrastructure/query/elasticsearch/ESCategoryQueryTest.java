@@ -113,7 +113,8 @@ public class ESCategoryQueryTest {
     public void testDescendantsAsync() {
         Flux<ByteBuf>[] fluxes = new Flux[]{
                 query.descendantsAsync(1),
-                query.descendantsAsync(14)
+                query.descendantsAsync(14),
+                query.descendantsAsync(23543251),
         };
         PrintUtil.printFlux(fluxes);
     }

@@ -102,7 +102,7 @@ public class PsqlBrandRepository implements BrandRepository {
     }
 
     private static AboutBrand toAboutBrand(String json) throws IOException {
-        if (json == null)
+        if (json == null||json.isBlank())
             return null;
         String story = null;
         Year since = null;

@@ -19,12 +19,14 @@ package catalog.hoprxi.core.infrastructure.query.elasticsearch;
 
 import catalog.hoprxi.core.application.query.SearchException;
 import catalog.hoprxi.core.infrastructure.ESUtil;
-import catalog.hoprxi.core.infrastructure.query.FluxByteBufOutputStream;
 import catalog.hoprxi.core.infrastructure.query.JsonByteBufOutputStream;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import io.netty.buffer.*;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
@@ -33,7 +35,10 @@ import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.ResponseListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.MonoSink;
+import reactor.core.publisher.Sinks;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,10 +49,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/***
+/**
+ * Elasticsearch 响应流式处理工具类。
+ * <p>
+ * 提供将 Elasticsearch 同步/异步请求结果转换为 Reactor 响应式流（{@link Mono} / {@link Flux}）
+ * 或同步阻塞流（{@link ByteBufInputStream}）的能力。所有内存操作均基于 Netty 的 {@link ByteBuf}
+ * 进行管理，支持背压控制和高并发场景下的内存安全。
+ * </p>
+ *
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
+ * @version 0.0.2 builder 2026/5/14
  * @since JDK21
- * @version 0.0.1 builder 2026/4/21
  */
 
 public final class ReactiveStream {
@@ -55,6 +67,9 @@ public final class ReactiveStream {
     private static final ExecutorService TRANSFORM_POOL = Executors.newVirtualThreadPerTaskExecutor();
     private static final int SINGLE_BUFFER_SIZE = 2 * 1024;// 2KB缓冲区
     private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
+    /**
+     * Jackson JSON 工厂，禁用字段名缓存以减少内存开销。
+     */
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder()
             .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
@@ -114,7 +129,6 @@ public final class ReactiveStream {
      * @return 包含解析后数据的 ByteBufInputStream
      * @throws SearchException 当 ES 请求失败或发生 IO 异常时抛出
      */
-
     public static ByteBufInputStream toByteBufInputStream(Request request, String objectName, String tips) {
         Response response;
         try {
@@ -131,7 +145,7 @@ public final class ReactiveStream {
         boolean success = false;
         try (InputStream is = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(is);
              OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-            Extract.extractWithoutAggs(parser, generator, objectName);
+            Extract.extract(parser, generator, objectName);
             success = true;
             return new ByteBufInputStream(buffer, true);
         } catch (IOException e) {
@@ -178,7 +192,6 @@ public final class ReactiveStream {
                                 EntityUtils.consumeQuietly(response.getEntity());
                                 return;
                             }
-
                             // 线程池处理
                             TRANSFORM_POOL.execute(() -> {
                                 if (isCancelled.get()) {
@@ -219,7 +232,6 @@ public final class ReactiveStream {
                 })
                 .doOnTerminate(() -> LOGGER.debug("Request terminated from {}", (Object[]) tips))
                 .doOnDiscard(ByteBuf.class, ReferenceCountUtil::safeRelease);
-
     }
 
     /**
@@ -263,6 +275,78 @@ public final class ReactiveStream {
                     try (content; JsonParser parser = JSON_FACTORY.createParser(content);
                          OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
                         Extract.extract(parser, generator, objectsName);
+                        Sinks.EmitResult result = sink.tryEmitComplete();
+                        if (result.isFailure() && result != Sinks.EmitResult.FAIL_TERMINATED) {
+                            LOGGER.warn("Failed to emit complete: {}", result);
+                        }
+                    } catch (IOException e) {
+                        Sinks.EmitResult result = sink.tryEmitError(e);
+                        if (result.isFailure() && result != Sinks.EmitResult.FAIL_TERMINATED) {
+                            LOGGER.warn("emitError failed: {}", result);
+                        }
+                    } finally {
+                        EntityUtils.consumeQuietly(response.getEntity());
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Exception exception) {
+                if (!isCancelled.get()) {
+                    sink.tryEmitError(MapException.mapException(exception, tips));
+                }
+            }
+        });
+
+        return sink.asFlux()
+                .timeout(Duration.ofSeconds(20), Mono.error(new TimeoutException("Request timed out for : " + tips)))
+                .doOnCancel(() -> isCancelled.set(true)).doOnTerminate(() -> LOGGER.debug("Request terminated for {}", tips))
+                .doOnDiscard(ByteBuf.class, ReferenceCountUtil::safeRelease);
+    }
+
+    /**
+     * 将 Elasticsearch 请求转换为 Flux&lt;ByteBuf&gt;，并将结果解析为树形结构（基于 left/right 嵌套集模型）。
+     * <p>
+     * 此方法专门用于处理带有 left/right 闭区间字段的 ES 数据（如目录树、组织架构等）。
+     * 它会将扁平的结果集动态重组为带有 "children" 数组的嵌套 JSON 树，并通过 Flux 流式输出。
+     * 内部使用 {@link Extract#extractAsTree(JsonParser, JsonGenerator,String)} 完成树形转换。
+     * </p>
+     *
+     * @param request Elasticsearch 的请求对象
+     * @param title   输出树形结构的根字段名称，该字段的值即为整个树对象；不可为 {@code null} 或空白
+     * @param tips    用于日志记录或异常信息的上下文标识
+     * @return 包含树形 JSON 数据块（ByteBuf）的 Flux 流
+     */
+    public static Flux<ByteBuf> toTreeFluxByteBuf(Request request, String title, String tips) {
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+            @Override
+            public void onSuccess(Response response) {
+                if (isCancelled.get()) {
+                    EntityUtils.consumeQuietly(response.getEntity());
+                    return;
+                }
+                final InputStream content;
+                try {
+                    content = response.getEntity().getContent();
+                } catch (IOException e) {
+                    sink.tryEmitError(MapException.mapException(e, tips));
+                    EntityUtils.consumeQuietly(response.getEntity());
+                    return;
+                }
+                TRANSFORM_POOL.execute(() -> {
+                    if (isCancelled.get()) {
+                        try {
+                            if (content != null) content.close();
+                        } catch (Exception ignore) {
+                        }
+                        EntityUtils.consumeQuietly(response.getEntity());
+                        return;
+                    }
+                    try (content; JsonParser parser = JSON_FACTORY.createParser(content);
+                         OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+                        Extract.extractAsTree(parser, generator, title);
                         Sinks.EmitResult result = sink.tryEmitComplete();
                         if (result.isFailure() && result != Sinks.EmitResult.FAIL_TERMINATED) {
                             LOGGER.warn("Failed to emit complete: {}", result);

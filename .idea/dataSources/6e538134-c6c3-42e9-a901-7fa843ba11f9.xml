@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <dataSource name="catalog@slave.tooo.top">
   <database-model serializer="dbm" dbms="POSTGRES" family-id="POSTGRES" format-version="4.53">
-    <root id="1"/>
+    <root id="1">
+      <ServerVersion>15.5</ServerVersion>
+      <StartupTime>1778550803</StartupTime>
+    </root>
     <database id="2" parent="1" name="catalog">
       <Current>1</Current>
       <Grants>11||10|C|G
@@ -14,7 +17,6 @@
 14120||10|C|G
 14120||-9223372036854775808|U|G
 14120||10|U|G</Grants>
-      <IntrospectionStateNumber>54030</IntrospectionStateNumber>
       <ObjectId>16384</ObjectId>
       <OwnerName>hoprxi</OwnerName>
     </database>
@@ -3479,7 +3481,6 @@
     <schema id="269" parent="2" name="public">
       <Comment>standard public schema</Comment>
       <Current>1</Current>
-      <IntrospectionStateNumber>54030</IntrospectionStateNumber>
       <ObjectId>2200</ObjectId>
       <StateNumber>527</StateNumber>
       <OwnerName>postgres</OwnerName>
@@ -5775,8 +5776,8 @@ prohibitSellItem</Labels>
       <OwnerName>postgres</OwnerName>
     </table>
     <table id="465" parent="269" name="category">
-      <ObjectId>18651</ObjectId>
-      <StateNumber>13776</StateNumber>
+      <ObjectId>193302</ObjectId>
+      <StateNumber>21876</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
@@ -7893,127 +7894,119 @@ prohibitSellItem</Labels>
       <StateNumber>50740</StateNumber>
       <UnderlyingIndexId>19894</UnderlyingIndexId>
     </key>
-    <column id="989" parent="465" name="id">
+    <column id="989" parent="465" name="parent_id">
       <NotNull>1</NotNull>
       <Position>1</Position>
-      <StateNumber>13776</StateNumber>
+      <StateNumber>21876</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="990" parent="465" name="name">
+    <column id="990" parent="465" name="id">
+      <NotNull>1</NotNull>
       <Position>2</Position>
-      <StateNumber>13776</StateNumber>
+      <StateNumber>21876</StateNumber>
+      <StoredType>bigint|0s</StoredType>
+      <TypeId>20</TypeId>
+    </column>
+    <column id="991" parent="465" name="name">
+      <Position>3</Position>
+      <StateNumber>21876</StateNumber>
       <StoredType>jsonb|0s</StoredType>
       <TypeId>3802</TypeId>
     </column>
-    <column id="991" parent="465" name="description">
-      <Position>3</Position>
-      <StateNumber>13776</StateNumber>
-      <StoredType>varchar(512)|0s</StoredType>
-      <TypeId>1043</TypeId>
-    </column>
-    <column id="992" parent="465" name="logo_uri">
+    <column id="992" parent="465" name="description">
       <Position>4</Position>
-      <StateNumber>13776</StateNumber>
+      <StateNumber>21876</StateNumber>
       <StoredType>varchar(512)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <column id="993" parent="465" name="root_id">
-      <NotNull>1</NotNull>
+    <column id="993" parent="465" name="icon_url">
       <Position>5</Position>
-      <StateNumber>13776</StateNumber>
-      <StoredType>bigint|0s</StoredType>
-      <TypeId>20</TypeId>
+      <StateNumber>21876</StateNumber>
+      <StoredType>varchar(512)|0s</StoredType>
+      <TypeId>1043</TypeId>
     </column>
-    <column id="994" parent="465" name="parent_id">
+    <column id="994" parent="465" name="family_id">
       <NotNull>1</NotNull>
       <Position>6</Position>
-      <StateNumber>13776</StateNumber>
+      <StateNumber>21876</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
     <column id="995" parent="465" name="left">
       <NotNull>1</NotNull>
       <Position>7</Position>
-      <StateNumber>13776</StateNumber>
+      <StateNumber>21876</StateNumber>
       <StoredType>integer|0s</StoredType>
       <TypeId>23</TypeId>
     </column>
     <column id="996" parent="465" name="right">
       <NotNull>1</NotNull>
       <Position>8</Position>
-      <StateNumber>13776</StateNumber>
+      <StateNumber>21876</StateNumber>
       <StoredType>integer|0s</StoredType>
       <TypeId>23</TypeId>
     </column>
-    <foreign-key id="997" parent="465" name="category_root_id_fkey">
-      <ColNames>root_id</ColNames>
-      <NameSurrogate>1</NameSurrogate>
-      <ObjectId>18658</ObjectId>
-      <StateNumber>13776</StateNumber>
-      <RefKeyColPositions>1</RefKeyColPositions>
-      <RefKeyColNames>id</RefKeyColNames>
-      <RefTableId>18651</RefTableId>
-      <RefTableName>category</RefTableName>
-      <RefTableKind>table</RefTableKind>
-    </foreign-key>
-    <foreign-key id="998" parent="465" name="category_parent_id_fkey">
+    <foreign-key id="997" parent="465" name="category_parent_id_fkey">
       <ColNames>parent_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
-      <ObjectId>18663</ObjectId>
-      <StateNumber>13776</StateNumber>
-      <RefKeyColPositions>1</RefKeyColPositions>
-      <RefKeyColNames>id</RefKeyColNames>
-      <RefTableId>18651</RefTableId>
-      <RefTableName>category</RefTableName>
-      <RefTableKind>table</RefTableKind>
+      <ObjectId>193309</ObjectId>
+      <StateNumber>21876</StateNumber>
+      <RefKeyColPositions>2</RefKeyColPositions>
+      <RefTableId>193302</RefTableId>
+    </foreign-key>
+    <foreign-key id="998" parent="465" name="category_family_id_fkey">
+      <ColNames>family_id</ColNames>
+      <NameSurrogate>1</NameSurrogate>
+      <ObjectId>193314</ObjectId>
+      <StateNumber>21876</StateNumber>
+      <RefKeyColPositions>2</RefKeyColPositions>
+      <RefTableId>193302</RefTableId>
     </foreign-key>
     <index id="999" parent="465" name="category_pkey">
       <ColNames>id</ColNames>
       <NameSurrogate>1</NameSurrogate>
-      <ObjectId>18656</ObjectId>
+      <ObjectId>193307</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>13776</StateNumber>
+      <StateNumber>21876</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <index id="1000" parent="465" name="category_rootid_parentid_index">
-      <ColNames>root_id
-parent_id</ColNames>
-      <ObjectId>18669</ObjectId>
-      <StateNumber>13778</StateNumber>
+    <index id="1000" parent="465" name="category_parentid_index">
+      <ColNames>parent_id</ColNames>
+      <ObjectId>193321</ObjectId>
+      <StateNumber>21876</StateNumber>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <index id="1001" parent="465" name="category_left_index">
-      <ColNames>left</ColNames>
-      <ObjectId>18670</ObjectId>
-      <StateNumber>13779</StateNumber>
+    <index id="1001" parent="465" name="category_full_index">
+      <ColNames>id
+left
+right
+family_id</ColNames>
+      <ObjectId>193322</ObjectId>
+      <StateNumber>21876</StateNumber>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <index id="1002" parent="465" name="category_right_index">
-      <ColNames>right</ColNames>
-      <ObjectId>18671</ObjectId>
-      <StateNumber>13780</StateNumber>
+    <index id="1002" parent="465" name="category_left_index">
+      <ColNames>family_id
+left</ColNames>
+      <ObjectId>193319</ObjectId>
+      <StateNumber>21876</StateNumber>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <index id="1003" parent="465" name="category_name_index">
-      <ColNames>&#x1b;(name -&gt;&gt; &apos;name&apos;::text)</ColNames>
-      <FunctionBased>1</FunctionBased>
-      <ObjectId>18668</ObjectId>
-      <StateNumber>13777</StateNumber>
-      <AccessMethodId>2742</AccessMethodId>
-      <ClassNames>gin_trgm_ops</ClassNames>
-      <ClassIds>18141</ClassIds>
-      <CollationNames>default</CollationNames>
-      <CollationIds>100</CollationIds>
-      <CollationParentNames>pg_catalog</CollationParentNames>
+    <index id="1003" parent="465" name="category_right_index">
+      <ColNames>family_id
+right</ColNames>
+      <ObjectId>193320</ObjectId>
+      <StateNumber>21876</StateNumber>
+      <AccessMethodId>403</AccessMethodId>
     </index>
     <key id="1004" parent="465" name="category_pkey">
       <NameSurrogate>1</NameSurrogate>
-      <ObjectId>18657</ObjectId>
+      <ObjectId>193308</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>13776</StateNumber>
-      <UnderlyingIndexId>18656</UnderlyingIndexId>
+      <StateNumber>21876</StateNumber>
+      <UnderlyingIndexId>193307</UnderlyingIndexId>
     </key>
     <column id="1005" parent="466" name="id">
       <NotNull>1</NotNull>

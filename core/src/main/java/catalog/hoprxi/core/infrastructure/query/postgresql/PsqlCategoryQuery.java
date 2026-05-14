@@ -47,19 +47,9 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
     private static Tree<CategoryView>[] trees;
     private static Constructor<Name> nameConstructor;
 
-    static {
-        try {
-            nameConstructor = Name.class.getDeclaredConstructor(String.class, String.class, String.class);
-            nameConstructor.setAccessible(true);
-        } catch (NoSuchMethodException e) {
-            LOGGER.error("Not query Name class has such constructor", e);
-        }
-    }
-
     public PsqlCategoryQuery() {
         root();
     }
-
 
     public CategoryView[] root() {
         if (trees != null) {
@@ -131,7 +121,6 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
     }
 
 
-
     public CategoryView[] children(long id) {
         CategoryView[] children = new CategoryView[0];
         CategoryView identifiable = CategoryView.identifiableCategoryView(id);
@@ -182,7 +171,7 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
     public void queryAndFillDescendants(Tree<CategoryView> tree, long id) {
         try (Connection connection = PsqlUtil.getConnection()) {
             final String descendantsSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url,\"right\" - \"left\" as distance from category \n" +
-                    "where root_id = (select root_id from category where id = ?)\n" +
+                    "where family_Id = (select family_Id from category where id = ?)\n" +
                     "  and \"left\" >= (select \"left\" from category where id = ?)\n" +
                     "  and \"right\" <= (select \"right\" from category where id = ?)\n" +
                     "order by \"left\"";

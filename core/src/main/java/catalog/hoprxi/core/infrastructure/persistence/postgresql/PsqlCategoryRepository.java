@@ -107,7 +107,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     @Override
     public void remove(long id) throws PersistenceException {
         try (Connection connection = PsqlUtil.getConnection()) {
-            final String removeSql = "select \"left\",\"right\",root_id from category where id=?";
+            final String removeSql = "select \"left\",\"right\",family_Id from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(removeSql);
             preparedStatement.setLong(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -115,14 +115,14 @@ public class PsqlCategoryRepository implements CategoryRepository {
                 int right = resultSet.getInt("right");
                 int left = resultSet.getInt("left");
                 int offset = right - left + 1;
-                long rootId = resultSet.getLong("root_id");
+                long familyId = resultSet.getLong("family_Id");
                 connection.setAutoCommit(false);
                 Statement statement = connection.createStatement();
                 //移除自己及所有后代
-                statement.addBatch("delete from category where \"left\">=" + left + " and \"right\"<=" + right + " and root_id=" + rootId);
+                statement.addBatch("delete from category where \"left\">=" + left + " and \"right\"<=" + right + " and family_Id=" + familyId);
                 //所有大于left的其它类前移
-                statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and root_id=" + rootId);
-                statement.addBatch("update category set \"right\"= \"right\"-" + offset + " where \"right\">" + right + " and root_id=" + rootId);
+                statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and family_Id=" + familyId);
+                statement.addBatch("update category set \"right\"= \"right\"-" + offset + " where \"right\">" + right + " and family_Id=" + familyId);
                 statement.executeBatch();
                 connection.commit();
                 connection.setAutoCommit(true);
@@ -167,7 +167,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
         PGobject name = new PGobject();
         name.setType("jsonb");
         try (Connection connection = PsqlUtil.getConnection()) {
-            final String isExistsSql = "select id,parent_id,\"left\",\"right\",root_id from category where id=?";
+            final String isExistsSql = "select id,parent_id,\"left\",\"right\",family_Id from category where id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(isExistsSql);
             preparedStatement.setLong(1, category.id());
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -182,11 +182,11 @@ public class PsqlCategoryRepository implements CategoryRepository {
                     ps1.setLong(4, category.id());
                     ps1.executeUpdate();
                 } else {//move to new tree node
-                    this.moveCategory(connection, category, resultSet.getInt("left"), resultSet.getInt("right"), resultSet.getLong("root_id"));
+                    moveCategory(connection, category, resultSet.getInt("left"), resultSet.getInt("right"), resultSet.getLong("family_Id"));
                 }
             } else {//new
                 if (category.isRoot()) {
-                    final String insertRoot = "insert into category (id,parent_id,name,description,icon_url,root_id,\"left\",\"right\") values (?,?,?,?,?,?,1,2)";
+                    final String insertRoot = "insert into category (id,parent_id,name,description,icon_url,family_Id,\"left\",\"right\") values (?,?,?,?,?,?,1,2)";
                     PreparedStatement ps1 = connection.prepareStatement(insertRoot);
                     ps1.setLong(1, category.id());
                     ps1.setLong(2, category.parentId());
@@ -197,7 +197,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
                     ps1.setLong(6, category.id());
                     ps1.executeUpdate();
                 } else {
-                    this.insertNewCategory(category, connection);
+                    insertNewCategory(category, connection);
                 }
             }
         } catch (SQLException e) {
@@ -206,40 +206,40 @@ public class PsqlCategoryRepository implements CategoryRepository {
         }
     }
 
-    private void moveCategory(Connection connection, Category category, int left, int right, long originalRootId) throws SQLException {
+    private void moveCategory(Connection connection, Category category, int left, int right, long originalfamilyId) throws SQLException {
         int offset = right - left + 1;
         int targetRight = 0;
-        long targetRootId = -1L;
+        long targetfamilyId = -1L;
         //获取数据库中父节点
-        final String targetSql = "select \"right\",root_id from category where id=?";
+        final String targetSql = "select \"right\",family_Id from category where id=?";
         PreparedStatement ps = connection.prepareStatement(targetSql);
         ps.setLong(1, category.parentId());
         ResultSet rs = ps.executeQuery();
         if (rs.next()) {
-            targetRootId = rs.getLong("root_id");
+            targetfamilyId = rs.getLong("family_Id");
             targetRight = rs.getInt("right");
             //目标节点位于被移动节点后面
-            if (targetRootId == originalRootId && targetRight > right)
+            if (targetfamilyId == originalfamilyId && targetRight > right)
                 targetRight = targetRight - offset;
         }
         connection.setAutoCommit(false);
         Statement statement = connection.createStatement();
-        //需要移动的节点及其子节点的 left, right 值置为负,归属到新的树形（root_id),移动节点的顶点parent_id设置为新的父节点的id值
-        statement.addBatch("update category set \"left\"=0-\"left\",\"right\"=0-\"right\",root_id=" + targetRootId + " where \"left\">=" + left + " and \"right\"<=" + right + " and root_id=" + originalRootId);
+        //需要移动的节点及其子节点的 left, right 值置为负,归属到新的树形（family_Id),移动节点的顶点parent_id设置为新的父节点的id值
+        statement.addBatch("update category set \"left\"=0-\"left\",\"right\"=0-\"right\",family_Id=" + targetfamilyId + " where \"left\">=" + left + " and \"right\"<=" + right + " and family_Id=" + originalfamilyId);
         String updateSql = "update category set parent_id=" + category.parentId() +
-                ",name='" + toJson(category.name()) +
-                "',description='" + category.description() +
-                "',icon_url=" + (category.icon() == null ? null : "'" + category.icon().toExternalForm() + "'") +
-                " where id=" + category.id();
+                           ",name='" + toJson(category.name()) +
+                           "',description='" + category.description() +
+                           "',icon_url=" + (category.icon() == null ? null : "'" + category.icon().toExternalForm() + "'") +
+                           " where id=" + category.id();
         statement.addBatch(updateSql);
         //原始树中被移动节点（含子节点）后面的节点往前移, 填充空缺位置
-        statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and root_id=" + originalRootId);
-        statement.addBatch("update category set \"right\"= \"right\"-" + offset + " where \"right\">" + right + " and root_id=" + originalRootId);
+        statement.addBatch("update category set \"left\"= \"left\"-" + offset + " where \"left\">" + left + " and family_Id=" + originalfamilyId);
+        statement.addBatch("update category set \"right\"= \"right\"-" + offset + " where \"right\">" + right + " and family_Id=" + originalfamilyId);
         //目标树被移动到父节点的队尾留出移动项目的空间
-        statement.addBatch("update category set \"left\"= \"left\"+" + offset + " where \"left\">" + targetRight + " and root_id=" + targetRootId);
-        statement.addBatch("update category set \"right\"= \"right\"+" + offset + " where \"right\">=" + targetRight + " and root_id=" + targetRootId);
+        statement.addBatch("update category set \"left\"= \"left\"+" + offset + " where \"left\">" + targetRight + " and family_Id=" + targetfamilyId);
+        statement.addBatch("update category set \"right\"= \"right\"+" + offset + " where \"right\">=" + targetRight + " and family_Id=" + targetfamilyId);
         //将负值记录填充到正确位置,队尾位置
-        statement.addBatch("update category set \"left\"=0-\"left\"-(" + (left - targetRight) + "),\"right\"=0-\"right\"-(" + (left - targetRight) + ") where \"left\"<0 and root_id=" + targetRootId);
+        statement.addBatch("update category set \"left\"=0-\"left\"-(" + (left - targetRight) + "),\"right\"=0-\"right\"-(" + (left - targetRight) + ") where \"left\"<0 and family_Id=" + targetfamilyId);
         //System.out.println("handle category set \"left\"=0-\"left\"-(" + (left - targetRight) + "),\"right\"=0-\"right\"-(" + (left - targetRight) + ") where \"left\"<0");
         statement.executeBatch();
         connection.commit();
@@ -248,24 +248,24 @@ public class PsqlCategoryRepository implements CategoryRepository {
 
 
     private void insertNewCategory(Category category, Connection connection) throws SQLException {
-        final String parentSql = "select \"right\",root_id from category where id=?";
+        final String parentSql = "select \"right\",family_Id from category where id=?";
         PreparedStatement ps = connection.prepareStatement(parentSql);
         ps.setLong(1, category.parentId());
         ResultSet rs = ps.executeQuery();
         if (rs.next()) {
             int right = rs.getInt("right");
-            long rootId = rs.getLong("root_id");
+            long familyId = rs.getLong("family_Id");
             connection.setAutoCommit(false);
             Statement statement = connection.createStatement();
-            statement.addBatch("update category set \"right\"=\"right\"+2 where \"right\">=" + right + " and root_id=" + rootId);
-            statement.addBatch("update category set \"left\"= \"left\"+2 where \"left\">" + right + " and root_id=" + rootId);
-            StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,root_id,\"left\",\"right\",description,icon_url) values(")
+            statement.addBatch("update category set \"right\"=\"right\"+2 where \"right\">=" + right + " and family_Id=" + familyId);
+            statement.addBatch("update category set \"left\"= \"left\"+2 where \"left\">" + right + " and family_Id=" + familyId);
+            StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,family_Id,\"left\",\"right\",description,icon_url) values(")
                     .append(category.id())
                     .append(",")
                     .append(category.parentId()).append(",'")
                     .append(PsqlCategoryRepository.toJson(category.name()))
                     .append("',")
-                    .append(rootId)
+                    .append(familyId)
                     .append(",")
                     .append(right)
                     .append(",")
@@ -288,15 +288,16 @@ public class PsqlCategoryRepository implements CategoryRepository {
     }
 
     private static String toJson(Name name) {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream(); JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
             generator.writeStartObject();
             generator.writeStringField("name", name.name());
             generator.writeStringField("shortName", name.shortName());
             generator.writeEndObject();
+            generator.close();
+            return output.toString();
         } catch (IOException e) {
-            LOGGER.error("Not write name as json", e);
+            LOGGER.error("Not write about as json", e);
+            throw new IllegalStateException("Failed to serialize AboutBrand object", e);
         }
-        return output.toString();
     }
 }
