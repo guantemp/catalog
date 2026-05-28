@@ -206,21 +206,45 @@ public final class ReactiveStream {
     }
 
     /**
-     * 同步执行 ES 请求并将结果转换为 ByteBufInputStream。
-     * <p>
-     * 该方法专门用于处理包含 "brands" 聚合的查询结果（基于 Extract.extractWithoutAggs 的逻辑）。
-     * 使用 Netty 的 PooledByteBufAllocator 分配内存，并在发生异常时确保内存被正确释放。
+     * 同步执行 Elasticsearch 请求，并将响应结果转换为 {@link ByteBufInputStream}，
+     * 使用 {@link Extract#extract(JsonParser, JsonGenerator, String)} 进行解析。
      *
-     * @param request ES 请求对象
-     * @param tips    用于日志记录的上下文信息（如搜索关键词）
-     * @return 包含解析后数据的 ByteBufInputStream
-     * @throws SearchException 当 ES 请求失败或发生 IO 异常时抛出
+     * <p>该方法基于 Netty 的 {@code PooledByteBufAllocator} 分配内存，并在发生异常时确保内存被正确释放。
+     * 解析后的数据格式遵循 {@code Extract.extract} 的输出结构：包含总命中数（{@code total}）、
+     * 文档数组（以 {@code objectName} 命名）以及聚合结果（如果存在）。
+     *
+     * @param request    Elasticsearch 请求对象，用于执行查询
+     * @param objectName 输出 JSON 中文档数组的字段名称（例如 {@code "items"}、{@code "brands"}），
+     *                   该名称会直接传递给 {@link Extract#extract(JsonParser, JsonGenerator, String)}
+     * @param tips       日志记录的上下文信息（如搜索关键词、操作标识），用于问题追踪
+     * @return 包含解析后数据的 {@link ByteBufInputStream}，调用方负责关闭流以释放内存
+     * @throws SearchException 当 ES 请求执行失败、响应解析错误或发生 I/O 异常时抛出
+     *
+     * @see Extract#extract(JsonParser, JsonGenerator, String)
+     * @see ReactiveStream#toByteBufInputStreamInternal(Request, String, ExtractFunction)
      */
     public static ByteBufInputStream toByteBufInputStream(Request request, String objectName, String tips) {
         return ReactiveStream.toByteBufInputStreamInternal(request, tips,
                 (parser, generator) -> Extract.extract(parser, generator, objectName));
     }
 
+    /**
+     * 同步执行 Elasticsearch 请求，并将响应结果以树形结构转换为 {@link ByteBufInputStream}，
+     * 使用 {@link Extract#extractAsTree(JsonParser, JsonGenerator, String)} 进行解析。
+     *
+     * <p>该方法适用于处理包含复杂嵌套聚合（如聚合桶层级树）的响应，输出格式为以 {@code title} 为根键的树状 JSON。
+     * 内存分配使用 Netty 的 {@code PooledByteBufAllocator}，并在异常时自动释放资源。
+     *
+     * @param request Elasticsearch 请求对象
+     * @param title   树形输出的根字段名称（例如 {@code "aggregations"}、{@code "categories"}），
+     *                该名称会传递给 {@link Extract#extractAsTree(JsonParser, JsonGenerator, String)}
+     * @param tips    日志记录的上下文信息（如搜索关键词、操作标识），用于问题追踪
+     * @return 包含树形解析数据的 {@link ByteBufInputStream}，调用方负责关闭流以释放内存
+     * @throws SearchException 当 ES 请求执行失败、响应解析错误或发生 I/O 异常时抛出
+     *
+     * @see Extract#extractAsTree(JsonParser, JsonGenerator, String)
+     * @see ReactiveStream#toByteBufInputStreamInternal(Request, String, ExtractFunction)
+     */
     public static ByteBufInputStream toTreeByteBufInputStream(Request request, String title, String tips) {
         return ReactiveStream.toByteBufInputStreamInternal(request, tips,
                 (parser, generator) -> Extract.extractAsTree(parser, generator, title));

@@ -33,6 +33,37 @@ import java.util.Objects;
 
 public final class Extract {
 
+    /**
+     * 从当前解析器位置开始，搜索第一个 {@code _source} 对象，并将其内容复制到输出生成器中，
+     * 同时跳过 {@code _meta} 字段（如果存在）。
+     *
+     * <p>该方法不依赖任何特定的外部结构（如聚合或 hits），只要遇到顶层或嵌套的 {@code _source} 字段，
+     * 就会将其整个对象内容复制到输出，但会过滤掉内部的 {@code _meta} 字段。
+     *
+     * <p><b>处理逻辑：</b>
+     * <ul>
+     *   <li>遍历所有 token，直到找到名为 {@code _source} 的字段；</li>
+     *   <li>进入该字段的值（必须是 {@code START_OBJECT}）；</li>
+     *   <li>开始输出一个对象（{@code gen.writeStartObject()}）；</li>
+     *   <li>遍历 {@code _source} 对象内部的所有字段：</li>
+     *   <ul>
+     *     <li>如果字段名是 {@code _meta}，则跳过其整个值（不输出）；</li>
+     *     <li>否则，先复制字段名，然后复制对应的整个值（支持嵌套结构）；</li>
+     *   </ul>
+     *   <li>输出对象结束标记；</li>
+     *   <li>关闭生成器。</li>
+     * </ul>
+     *
+     * <p><b>典型用途：</b>从 Elasticsearch 的 {@code _source} 中提取文档字段，同时丢弃元数据字段 {@code _meta}。
+     *
+     * @param parser JSON 解析器，应指向任意位置（方法会向前扫描直到找到 {@code _source}）
+     * @param gen    JSON 生成器，用于输出处理后的对象
+     * @throws IOException 如果解析或生成过程中发生 I/O 错误
+     * @throws IllegalStateException 如果找到的 {@code _source} 字段的值不是对象（START_OBJECT）
+     *
+     * @see JsonParser#skipChildren()
+     * @see JsonGenerator#copyCurrentStructure(JsonParser)
+     */
     public static void extractSourceSkipMeta(JsonParser parser, JsonGenerator gen) throws IOException {
         while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.FIELD_NAME && "_source".equals(parser.currentName())) {
@@ -57,6 +88,65 @@ public final class Extract {
         gen.close();
     }
 
+
+    /**
+     * 从 Elasticsearch 搜索或聚合响应中提取关键信息，生成一个简化的结果对象。
+     *
+     * <p>该方法解析标准 ES 搜索响应（包含 {@code hits} 和可选的 {@code aggregations}），提取：
+     * <ul>
+     *   <li>总命中数（{@code hits.total.value}），写入字段 {@code total}；</li>
+     *   <li>文档列表，写入以给定 {@code objectName} 为名称的数组字段；</li>
+     *   <li>聚合结果（如果存在），原样复制到字段 {@code aggregations}。</li>
+     * </ul>
+     * 对于每个命中文档（{@code hits.hits} 数组中的元素），该方法提取 {@code _source} 对象中的所有字段
+     * （但会跳过 {@code _meta} 字段），同时还会提取顶层的 {@code sort} 字段（如果存在），
+     * 并将其与 {@code _source} 内容合并输出到同一个对象中。
+     *
+     * <p><b>输出结构示例：</b>
+     * <pre>
+     * {
+     *   "total": 123,
+     *   "items": [
+     *     {
+     *       "id": 1,
+     *       "name": "商品",
+     *       "sort": [1234567890]
+     *     },
+     *     ...
+     *   ],
+     *   "aggregations": { ... }   // 如果原响应中包含 aggregations
+     * }
+     * </pre>
+     *
+     * <p><b>处理逻辑：</b>
+     * <ol>
+     *   <li>读取根对象的各个字段：</li>
+     *   <ul>
+     *     <li>如果是 {@code hits} 字段，进入并解析：</li>
+     *     <ul>
+     *       <li>从 {@code hits.total.value} 提取总数，写入 {@code total}；</li>
+     *       <li>从 {@code hits.hits} 数组中提取每个命中的 {@code _source} 和 {@code sort} 字段，</li>
+     *       <li>以 {@code objectName} 为数组名输出这些对象；</li>
+     *     </ul>
+     *     <li>如果是 {@code aggregations} 字段，原样复制到输出；</li>
+     *     <li>其他根级字段（如 {@code took}、{@code _shards}、{@code timed_out}）直接跳过；</li>
+     *   </ul>
+     *   <li>如果响应中没有 {@code hits} 字段或 {@code hits.hits} 数组为空，则输出 {@code total: 0} 和空数组；</li>
+     *   <li>关闭生成器。</li>
+     * </ol>
+     *
+     * @param parser     JSON 解析器，应指向 Elasticsearch 响应对象的开始（通常为 {@code START_OBJECT}）
+     * @param gen        JSON 生成器，用于输出处理后的结果
+     * @param objectName 文档数组的字段名，例如 {@code "items"}、{@code "documents"} 等，不能为空
+     * @throws NullPointerException 如果 {@code objectName} 为 {@code null}
+     * @throws IOException 如果解析或生成过程中发生 I/O 错误
+     * @throws IllegalStateException 如果 JSON 结构不符合 Elasticsearch 响应的预期格式
+     *                               （例如 {@code hits} 或 {@code hits.hits} 的类型错误）
+     *
+     * @apiNote 该方法会修改解析器的位置，调用前请确保解析器处于响应对象的开始处或任意位置（方法会向前扫描）。
+     *          {@code _source} 中的 {@code _meta} 字段会被自动跳过，不包含在输出中。
+     *          {@code sort} 字段如果存在，会与 {@code _source} 的内容合并到同一个输出对象中。
+     */
     public static void extract(JsonParser parser, JsonGenerator gen, String objectName) throws IOException {
         Objects.requireNonNull(objectName, "objectName is required");
         boolean hitsFound = false;
@@ -160,6 +250,67 @@ public final class Extract {
         gen.close();
     }
 
+    /**
+     * 从 Elasticsearch 聚合响应中提取建议结果。
+     *
+     * <p>该方法解析输入的 JSON 流，定位到 {@code buckets} 数组，遍历每个 bucket 对象，
+     * 查找其中的 {@code _source} 对象，并从 {@code _source} 中提取 {@code id}、{@code barcode}
+     * 和 {@code name} 字段（{@code name} 字段支持直接字符串或形如 {@code {"name": "实际值"}} 的嵌套对象）。
+     * 提取后的数据以 JSON 对象数组的形式写入输出生成器，每个对象包含 {@code id}、{@code barcode}、{@code name} 字段。
+     *
+     * <p>该方法是纯流式处理，不创建中间 DOM 树，内存效率高。对于非 {@code _source} 的字段，
+     * 使用 {@link JsonParser#skipChildren()} 快速跳过，确保解析性能。
+     *
+     * @param parser JSON 解析器，应指向聚合响应的根节点或任意位置（方法会自动定位到 {@code buckets} 数组）
+     * @param gen    JSON 生成器，用于输出结果数组
+     * @throws IOException 如果解析或生成过程中发生 I/O 错误
+     * @throws IllegalStateException 如果未找到 {@code buckets} 数组或 JSON 结构不符合预期
+     *
+     * @implNote 该方法假设输入的 JSON 符合 Elasticsearch 聚合响应格式，例如：
+     * <pre>
+     * {
+     *   "aggregations": {
+     *     "sampler": {
+     *       "suggests": {
+     *         "buckets": [
+     *           {
+     *             "key": "...",
+     *             "doc_count": 1,
+     *             "hit": {
+     *               "hits": {
+     *                 "hits": [
+     *                   {
+     *                     "_source": {
+     *                       "id": 123,
+     *                       "barcode": "123456",
+     *                       "name": { "name": "商品名称" }
+     *                     }
+     *                   }
+     *                 ]
+     *               }
+     *             }
+     *           }
+     *         ]
+     *       }
+     *     }
+     *   }
+     * }
+     * </pre>
+     *
+     * <p>处理逻辑要点：
+     * <ul>
+     *   <li>跳过 {@code buckets} 之前的所有 token；</li>
+     *   <li>对每个 bucket 对象使用深度计数器 {@code depth} 确保完整消费；</li>
+     *   <li>遇到 {@code _source} 字段时，独立循环解析其内部，不依赖外部深度计数器增减；</li>
+     *   <li>{@code name} 字段如果为对象，则进一步解析内层 {@code name} 字段；</li>
+     *   <li>非 {@code _source} 的字段统一用 {@code skipChildren()} 跳过；</li>
+     *   <li>输出结果数组，每个元素包含 id, barcode, name（仅当相应字段存在时写入）。</li>
+     * </ul>
+     *
+     * @see JsonParser#skipChildren()
+     * @see JsonGenerator#writeStartArray()
+     * @see JsonGenerator#writeEndArray()
+     */
     public static void extractSuggest(JsonParser parser, JsonGenerator gen) throws IOException {
         // 1. 定位到 buckets 数组
         while (parser.nextToken() != null) {
