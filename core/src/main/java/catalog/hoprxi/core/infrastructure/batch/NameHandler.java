@@ -36,8 +36,7 @@ public class NameHandler implements EventHandler<ItemImportEvent> {
         alias = alias == null ? name : alias.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
         StringJoiner joiner = new StringJoiner(",", "'{", "}'");
         joiner.add("\"name\":\"" + name + "\"");
-        joiner.add("\"mnemonic\":\"" + PinYin.toShortPinYing(name) + "\"");
-        joiner.add("\"alias\":\"" + (alias == null ? name : alias.replaceAll("'", "''")).replaceAll("\\\\", "\\\\\\\\") + "\"");
+        joiner.add("\"shortName\":\"" + (alias == null ? name : alias.replaceAll("'", "''")).replaceAll("\\\\", "\\\\\\\\") + "\"");
         //StringJoiner joiner = new StringJoiner(",", "", "");
         //joiner.add("'" + name + "'").add("'" + PinYin.toShortPinYing(name) + "'").add("'" + alias + "'");
         //System.out.println(joiner);

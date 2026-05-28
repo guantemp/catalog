@@ -142,10 +142,9 @@ public final class Extract {
                         gen.writeEndArray();
                     }
                 } else if ("aggregations".equals(name)) {
-
-                        parser.nextToken();
-                        gen.writeFieldName("aggregations");
-                        gen.copyCurrentStructure(parser);
+                    parser.nextToken();
+                    gen.writeFieldName("aggregations");
+                    gen.copyCurrentStructure(parser);
 
                 } else {
                     parser.skipChildren(); // skip took, timed_out, _shards, etc.
@@ -158,6 +157,104 @@ public final class Extract {
             gen.writeEndArray();
         }
         gen.writeEndObject();
+        gen.close();
+    }
+
+    public static void extractSuggest(JsonParser parser, JsonGenerator gen) throws IOException {
+        // 1. 定位到 buckets 数组
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME && "buckets".equals(parser.currentName())) {
+                parser.nextToken(); // 进入数组 START_ARRAY
+                break;
+            }
+        }
+        if (parser.currentToken() != JsonToken.START_ARRAY) {
+            throw new IllegalStateException("未找到 buckets 数组");
+        }
+
+        gen.writeStartArray(); // 输出外层数组
+        // 2. 遍历每个 bucket
+        while (parser.nextToken() != JsonToken.END_ARRAY) {
+            if (parser.currentToken() != JsonToken.START_OBJECT) continue;
+
+            long id = 0L;
+            String name = null, barcode = null;
+            // 当前 bucket 对象的嵌套深度（从1开始，因为当前在 START_OBJECT）
+            int depth = 1;
+            //System.out.println("\nstart:" + depth);
+            // 只要 depth > 0 就一直读，保证完整消耗当前 bucket 对象
+            while (depth > 0) {
+                JsonToken token = parser.nextToken();
+                if (token == null) break;
+                switch (token) {
+                    case START_OBJECT:
+                    case START_ARRAY:
+                        depth++;
+                        break;
+                    case END_OBJECT:
+                    case END_ARRAY:
+                        depth--;
+                        break;
+                    case FIELD_NAME:
+                        if ("_source".equals(parser.currentName())) {
+                            // 找到 _source 字段，读取它的值
+                            token = parser.nextToken();
+                            if (token == JsonToken.START_OBJECT) {
+                                // 不能增加深度，因为 _source 对象会有一个 END_OBJECT 来减少深度使depth==0来退出对象循环
+                                //depth++;
+                                // 解析 _source 对象内部
+                                while (parser.nextToken() != JsonToken.END_OBJECT) {
+                                    if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                                        String srcField = parser.currentName();
+
+                                        parser.nextToken(); // 进入值
+                                        switch (srcField) {
+                                            case "barcode" -> barcode = parser.getValueAsString();
+                                            case "id" -> id = parser.getLongValue();
+                                            case "name" -> {
+                                                // name 可能是字符串或对象 {"name":"xxx"}
+                                                if (parser.currentToken() == JsonToken.START_OBJECT) {
+                                                    while (parser.nextToken() != JsonToken.END_OBJECT) {
+                                                        if (parser.currentToken() == JsonToken.FIELD_NAME && "name".equals(parser.currentName())) {
+                                                            parser.nextToken();
+                                                            name = parser.getValueAsString();
+                                                        } else {
+                                                            parser.skipChildren();
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            case null, default -> parser.skipChildren(); // 跳过其他字段
+                                        }
+                                    }
+                                }
+                                // 此时 parser 在 _source 的 END_OBJECT 上，但该 END_OBJECT 尚未被外层 switch 处理
+                                // 由于我们已经手动 depth++，并且这个 END_OBJECT 会在下一次循环开始时被外层捕获并 depth--
+                                // 为了避免重复减，我们在这里不额外处理，让外层循环自然处理
+                            } else {
+                                // _source 不是对象，直接跳过整个值
+                                parser.skipChildren();
+                            }
+                            //System.out.println("_source:" + depth);
+                        }
+                        break;
+                    default:    // 其他 token（如字符串、数字等）忽略
+                        break;
+                }
+                //System.out.println(parser.currentToken() + ":" + parser.currentName());
+                //System.out.println("_bukes:" + depth);
+            }
+            // 当前 bucket 处理完毕，输出提取的结果
+            if (barcode != null || name != null || id != 0L) {
+                gen.writeStartObject();
+                if (id != 0L) gen.writeNumberField("id", id);
+                if (barcode != null) gen.writeStringField("barcode", barcode);
+                if (name != null) gen.writeStringField("name", name);
+                gen.writeEndObject();
+            }
+        }
+
+        gen.writeEndArray();
         gen.close();
     }
 
@@ -189,11 +286,11 @@ public final class Extract {
      * @param parser Jackson JSON 解析器，已指向 Elasticsearch 响应的起始位置
      * @param gen    Jackson JSON 生成器，用于输出重组后的树形 JSON
      * @param title  输出树形结构的根字段名称，该字段的值即为整个树对象；不可为 {@code null} 或空白
-     * @throws IOException 如果解析或生成过程中发生 I/O 错误
+     * @throws IOException           如果解析或生成过程中发生 I/O 错误
      * @throws IllegalStateException 如果输入 JSON 结构不符合预期（例如缺少 {@code hits.hits} 数组，
-     *         或 {@code _source} 中缺少 {@code left}/{@code right} 字段）
+     *                               或 {@code _source} 中缺少 {@code left}/{@code right} 字段）
      */
-    public static void extractAsTree(JsonParser parser, JsonGenerator gen,String title) throws IOException {
+    public static void extractAsTree(JsonParser parser, JsonGenerator gen, String title) throws IOException {
         Deque<Integer> rightValueStack = new ArrayDeque<>();
         gen.writeStartObject();//start
         while (parser.nextToken() != null) {

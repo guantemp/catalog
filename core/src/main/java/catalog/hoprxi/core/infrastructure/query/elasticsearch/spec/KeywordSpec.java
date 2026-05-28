@@ -29,7 +29,8 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2025-04-04
  */
 public record KeywordSpec(String keyword) implements ItemQuerySpec {
-    private static final Pattern BARCODE = Pattern.compile("^\\d{2,14}$");
+    private static final Pattern BARCODE = Pattern.compile("^\\d{5,14}$");
+    private static final Pattern NUMBER = Pattern.compile("^\\d{2,4}$");
 
     public KeywordSpec {
         Objects.requireNonNull(keyword, "keyword required");
@@ -37,36 +38,72 @@ public record KeywordSpec(String keyword) implements ItemQuerySpec {
 
     @Override
     public void queryClause(JsonGenerator generator) throws IOException {
+        generator.writeArrayFieldStart("should");
         if (BARCODE.matcher(keyword).matches()) {//only barcode query
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");
-            generator.writeStringField("barcode", keyword);
-            generator.writeEndObject();
-            generator.writeEndObject();
+            generator.writeObjectFieldStart("barcode.raw");
+            generator.writeStringField("value",keyword);
+            generator.writeNumberField("boost",5);
+            generator.writeEndObject();//barcode.raw
+            generator.writeEndObject();//end term
+            generator.writeEndObject();//end
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeObjectFieldStart("barcode");
+            generator.writeStringField("value",keyword);
+            generator.writeNumberField("boost",2);
+            generator.writeEndObject();//barcode.raw
+            generator.writeEndObject();//end term
+            generator.writeEndObject();//end
         } else {
             generator.writeStartObject();
-            generator.writeObjectFieldStart("bool");
-            generator.writeArrayFieldStart("should");
+            generator.writeObjectFieldStart("multi_match");
+            generator.writeStringField("query", keyword);
+            generator.writeArrayFieldStart("fields");
+            generator.writeString("name.name^3");
+            generator.writeString("name.shortName^2");
+            generator.writeString("spec^1.5");
+            generator.writeString("madeIn.madeIn^1");
+            generator.writeEndArray();//end fields
+            generator.writeEndObject();//end multi_match
+            generator.writeEndObject();//end
 
             generator.writeStartObject();
             generator.writeObjectFieldStart("multi_match");
             generator.writeStringField("query", keyword);
             generator.writeArrayFieldStart("fields");
-            generator.writeString("name.name");
-            generator.writeString("name.alias");
-            generator.writeEndArray();
-            generator.writeEndObject();
-            generator.writeEndObject();
-
-            generator.writeStartObject();
-            generator.writeObjectFieldStart("term");
-            generator.writeStringField("name.mnemonic", keyword);
-            generator.writeEndObject();
-            generator.writeEndObject();
-
-            generator.writeEndArray();//end should
-            generator.writeEndObject();//end bool
+            generator.writeString("name.name.pinyin^3");
+            generator.writeString("shortName.pinyin^2");
+            generator.writeString("spec.pinyin^1.5");
+            generator.writeString("madeIn.pinyin^1");
+            generator.writeEndArray();//end fields
+            generator.writeEndObject();//end multi_match
             generator.writeEndObject();//end
+
+            if (keyword.length() >= 2 && keyword.length() <= 4) {
+                generator.writeStartObject();
+                generator.writeObjectFieldStart("match");
+                generator.writeObjectFieldStart("suggest");
+                generator.writeStringField("query", keyword);
+                generator.writeNumberField("boost", 0.5);
+                generator.writeEndObject();//end suggest
+                generator.writeEndObject();//end match
+                generator.writeEndObject();//end
+            }
+            if (NUMBER.matcher(keyword).matches()){
+                generator.writeStartObject();
+                generator.writeObjectFieldStart("term");
+                generator.writeObjectFieldStart("barcode");
+                generator.writeStringField("value", keyword);
+                generator.writeNumberField("boost", 4);
+                generator.writeEndObject();//end suggest
+                generator.writeEndObject();//end term
+                generator.writeEndObject();//end
+            }
         }
+        generator.writeEndArray();//end should
+        generator.writeNumberField("minimum_should_match",1);
     }
 }

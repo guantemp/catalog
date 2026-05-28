@@ -171,4 +171,6 @@ public interface ItemQuery {
     default Flux<ByteBuf> searchAsync(int offset, int size) {
         return searchAsync(new ItemQuerySpec[0], offset, size, SortFieldEnum._ID);
     }
+
+    Mono<ByteBuf> suggest(String key);
 }

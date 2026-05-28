@@ -124,49 +124,6 @@ public final class ReactiveStream {
     }
 
     /**
-     * 同步执行 ES 请求并将结果转换为 ByteBufInputStream。
-     * <p>
-     * 该方法专门用于处理包含 "brands" 聚合的查询结果（基于 Extract.extractWithoutAggs 的逻辑）。
-     * 使用 Netty 的 PooledByteBufAllocator 分配内存，并在发生异常时确保内存被正确释放。
-     *
-     * @param request ES 请求对象
-     * @param tips    用于日志记录的上下文信息（如搜索关键词）
-     * @return 包含解析后数据的 ByteBufInputStream
-     * @throws SearchException 当 ES 请求失败或发生 IO 异常时抛出
-     */
-    public static ByteBufInputStream toByteBufInputStream(Request request, String objectName, String tips) {
-        Response response;
-        try {
-            response = ESUtil.restClient().performRequest(request);
-        } catch (ResponseException e) {
-            LOGGER.error("No search was found for anything resembling name ({})", tips, e);
-            throw new SearchException(String.format("No search was found for anything resembling name(%s)", tips), e);
-        } catch (IOException e) {
-            // 3. 处理网络/IO 异常
-            LOGGER.error("I/O failed for request: {}", tips, e);
-            throw new SearchException("Error: Elasticsearch timeout or no connection", e);
-        }
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.directBuffer(BATCH_BUFFER_SIZE);
-        boolean success = false;
-        try (InputStream is = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(is);
-             OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-            Extract.extract(parser, generator, objectName);
-            success = true;
-            return new ByteBufInputStream(buffer, true);
-        } catch (IOException e) {
-            LOGGER.error("Failed to process response stream for: {}", tips, e);
-            throw new SearchException("Error processing Elasticsearch response stream", e);
-        } finally {
-            if (response != null) {
-                EntityUtils.consumeQuietly(response.getEntity());
-            }
-            if (!success) {
-                ReferenceCountUtil.safeRelease(buffer);
-            }
-        }
-    }
-
-    /**
      * 将 Elasticsearch 请求转换为 Mono<ByteBuf>。
      * <p>
      * 此方法适用于返回单个结果集的场景。它异步执行 ES 请求，将响应体中的 JSON 数据
@@ -177,6 +134,14 @@ public final class ReactiveStream {
      * @return 包含处理后的 ByteBuf 的 Mono。如果请求失败或取消，Mono 将终止。
      */
     public static Mono<ByteBuf> toMonoByteBuf(Request request, String... tips) {
+        return ReactiveStream.toMonoByteBufInternal(request, tips, Extract::extractSourceSkipMeta);
+    }
+
+    public static Mono<ByteBuf> toSuggestMonoByteBuf(Request request) {
+        return ReactiveStream.toMonoByteBufInternal(request, new String[0], Extract::extractSuggest);
+    }
+
+   private static Mono<ByteBuf> toMonoByteBufInternal(Request request, String[] tips, ExtractFunction extractor) {
         return Mono.create((MonoSink<ByteBuf> sink) -> {
                     final AtomicBoolean isCancelled = new AtomicBoolean(false);
                     // 取消监听
@@ -210,7 +175,8 @@ public final class ReactiveStream {
                                 ByteBuf buf = PooledByteBufAllocator.DEFAULT.directBuffer(SINGLE_BUFFER_SIZE);
                                 try (content; JsonParser parser = JSON_FACTORY.createParser(content);
                                      OutputStream os = new ByteBufOutputStream(buf); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-                                    Extract.extractSourceSkipMeta(parser, generator);
+
+                                    extractor.extract(parser, generator);
                                     generator.close();
                                     if (!isCancelled.get()) {
                                         sink.success(buf);
@@ -239,6 +205,58 @@ public final class ReactiveStream {
                 .doOnDiscard(ByteBuf.class, ReferenceCountUtil::safeRelease);
     }
 
+    /**
+     * 同步执行 ES 请求并将结果转换为 ByteBufInputStream。
+     * <p>
+     * 该方法专门用于处理包含 "brands" 聚合的查询结果（基于 Extract.extractWithoutAggs 的逻辑）。
+     * 使用 Netty 的 PooledByteBufAllocator 分配内存，并在发生异常时确保内存被正确释放。
+     *
+     * @param request ES 请求对象
+     * @param tips    用于日志记录的上下文信息（如搜索关键词）
+     * @return 包含解析后数据的 ByteBufInputStream
+     * @throws SearchException 当 ES 请求失败或发生 IO 异常时抛出
+     */
+    public static ByteBufInputStream toByteBufInputStream(Request request, String objectName, String tips) {
+        return ReactiveStream.toByteBufInputStreamInternal(request, tips,
+                (parser, generator) -> Extract.extract(parser, generator, objectName));
+    }
+
+    public static ByteBufInputStream toTreeByteBufInputStream(Request request, String title, String tips) {
+        return ReactiveStream.toByteBufInputStreamInternal(request, tips,
+                (parser, generator) -> Extract.extractAsTree(parser, generator, title));
+    }
+
+   private static ByteBufInputStream toByteBufInputStreamInternal(Request request, String tips, ExtractFunction extractor) {
+        Response response;
+        try {
+            response = ESUtil.restClient().performRequest(request);
+        } catch (ResponseException e) {
+            LOGGER.error("No search was found for anything resembling name ({})", tips, e);
+            throw new SearchException(String.format("No search was found for anything resembling name(%s)", tips), e);
+        } catch (IOException e) {
+            // 3. 处理网络/IO 异常
+            LOGGER.error("I/O failed for request: {}", tips, e);
+            throw new SearchException("Error: Elasticsearch timeout or no connection", e);
+        }
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.directBuffer(BATCH_BUFFER_SIZE);
+        boolean success = false;
+        try (InputStream is = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(is);
+             OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
+            extractor.extract(parser, generator);
+            success = true;
+            return new ByteBufInputStream(buffer, true);
+        } catch (IOException e) {
+            LOGGER.error("Failed to process response stream for: {}", tips, e);
+            throw new SearchException("Error processing Elasticsearch response stream", e);
+        } finally {
+            if (response != null) {
+                EntityUtils.consumeQuietly(response.getEntity());
+            }
+            if (!success) {
+                ReferenceCountUtil.safeRelease(buffer);
+            }
+        }
+    }
 
     /**
      * 将 Elasticsearch 请求转换为 Flux<ByteBuf>。
@@ -252,7 +270,7 @@ public final class ReactiveStream {
      * @return 包含 ByteBuf 数据块的 Flux 流
      */
     public static Flux<ByteBuf> toFluxByteBuf(Request request, String objectsName, String tips) {
-        return toFluxByteBufInternal(request, tips,
+        return ReactiveStream.toFluxByteBufInternal(request, tips,
                 (parser, generator) -> Extract.extract(parser, generator, objectsName));
     }
 
@@ -270,7 +288,7 @@ public final class ReactiveStream {
      * @return 包含树形 JSON 数据块（ByteBuf）的 Flux 流
      */
     public static Flux<ByteBuf> toTreeFluxByteBuf(Request request, String title, String tips) {
-        return toFluxByteBufInternal(request, tips,
+        return ReactiveStream.toFluxByteBufInternal(request, tips,
                 (parser, generator) -> Extract.extractAsTree(parser, generator, title));
     }
 

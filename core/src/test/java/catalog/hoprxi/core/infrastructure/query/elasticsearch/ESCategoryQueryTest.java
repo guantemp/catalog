@@ -31,7 +31,7 @@ import java.nio.charset.StandardCharsets;
 public class ESCategoryQueryTest {
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
-                new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "129.28.29.105:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
+                new String[]{"slave.tooo.top:9200"});
     }
 
     private static final CategoryQuery query = new ESCategoryQuery();
@@ -144,10 +144,10 @@ public class ESCategoryQueryTest {
         try (InputStream is = query.search("oil")) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
-        try (InputStream is = query.search("oil", 1, 2)) {
+        try (InputStream is = query.search("油", 0, 2)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
-        try (InputStream is = query.search(null, 0, 1)) {
+        try (InputStream is = query.search(null, 0, 3)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
     }
@@ -159,8 +159,8 @@ public class ESCategoryQueryTest {
                 query.searchAsync("白萝卜"),
                 query.searchAsync("wine"),
                 query.searchAsync("oil"),
-                query.searchAsync("oil", 1, 2),
-                query.searchAsync(null, 0, 1)
+                query.searchAsync("油", 1, 3),
+                query.searchAsync(null, 10, 1)
         };
         PrintUtil.printFlux(fluxes);
     }

@@ -210,31 +210,7 @@ public class ESCategoryQuery implements CategoryQuery {
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESCategoryQuery.buildDescendantRequest(familyId, left, right));
 
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(BATCH_BUFFER_SIZE);
-        boolean success = false;
-        Response response = null;
-        try {
-            response = ESUtil.restClient().performRequest(request);
-            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content);
-                 OutputStream os = new ByteBufOutputStream(buffer); JsonGenerator generator = JSON_FACTORY.createGenerator(os)) {
-                Extract.extractAsTree(parser, generator, "category");
-                success = true;
-                return new ByteBufInputStream(buffer, true);
-            }
-        } catch (ResponseException e) {
-            LOGGER.error("Failed to query category path by id: {}, familyId: {}", id, familyId, e);
-            throw new SearchException(String.format("Failed to query category path for id: %d", id), e);
-        } catch (IOException e) {
-            LOGGER.error("IO exception when querying category path for id: {}", id, e);
-            throw new SearchException(String.format("IO exception when querying category path for id: %d", id), e);
-        } finally {
-            if (response != null) {
-                EntityUtils.consumeQuietly(response.getEntity());
-            }
-            if (!success && buffer.refCnt() > 0) {
-                ReferenceCountUtil.safeRelease(buffer);
-            }
-        }
+        return ReactiveStream.toTreeByteBufInputStream(request, "category", String.valueOf(id));
     }
 
     @Override
@@ -375,9 +351,9 @@ public class ESCategoryQuery implements CategoryQuery {
 
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(buildKeyRequest(key, offset, size));
+        request.setJsonEntity(ESCategoryQuery.buildKeyRequest(key, offset, size));
 
-        return ReactiveStream.toFluxByteBuf(request, "", key);
+        return ReactiveStream.toFluxByteBuf(request, "categories", key);
     }
 
     private static String buildKeyRequest(String key, int offset, int limit) {
@@ -390,31 +366,19 @@ public class ESCategoryQuery implements CategoryQuery {
                 generator.writeObjectFieldStart("match_all");
                 generator.writeEndObject();//match_all
             } else {
-                generator.writeObjectFieldStart("bool");
+                generator.writeObjectFieldStart("constant_score");
                 generator.writeObjectFieldStart("filter");
-                generator.writeObjectFieldStart("bool");
-                generator.writeArrayFieldStart("should");
-
-                generator.writeStartObject();
                 generator.writeObjectFieldStart("multi_match");
                 generator.writeStringField("query", key);
                 generator.writeArrayFieldStart("fields");
                 generator.writeString("name.name");
-                generator.writeString("name.alias");
-                generator.writeEndArray();
-                generator.writeEndObject();
-                generator.writeEndObject();
-
-                generator.writeStartObject();
-                generator.writeObjectFieldStart("term");
-                generator.writeStringField("name.mnemonic", key);
-                generator.writeEndObject();
-                generator.writeEndObject();
-
-                generator.writeEndArray();//end should
-                generator.writeEndObject();//end bool
-                generator.writeEndObject();
-                generator.writeEndObject();//end bool
+                generator.writeString("name.shortName");
+                generator.writeString("name.name.pinyin");
+                generator.writeString("name.shortName.pinyin");
+                generator.writeEndArray();//end array fields
+                generator.writeEndObject();//end multi_match
+                generator.writeEndObject();//end filter
+                generator.writeEndObject();//end constant_score
             }
             generator.writeEndObject();//end query
 
