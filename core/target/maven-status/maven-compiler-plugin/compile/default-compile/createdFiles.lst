@@ -137,7 +137,6 @@ catalog\hoprxi\core\domain\model\price\UnitEnum$8.class
 catalog\hoprxi\core\domain\model\ItemProhibitSold.class
 catalog\hoprxi\core\infrastructure\query\elasticsearch\MapSortField.class
 catalog\hoprxi\core\rest\UnitService.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\ReactiveStream$3.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$26.class
 catalog\hoprxi\core\infrastructure\persistence\PersistenceException.class
 catalog\hoprxi\core\application\handler\ItemMadinChangeAggHandler.class
@@ -183,7 +182,6 @@ catalog\hoprxi\core\application\handler\CategoryDeleteHandler.class
 catalog\hoprxi\core\infrastructure\batch\PsqlItemImportWithDisruptor.class
 catalog\hoprxi\core\domain\model\category\CategoryRenamed.class
 catalog\hoprxi\core\application\handler\ItemMemberPriceAdjustedAggHandler.class
-catalog\hoprxi\core\infrastructure\query\elasticsearch\ESCategoryQuery$3.class
 catalog\hoprxi\core\application\command\CategoryUpdateCommand.class
 catalog\hoprxi\core\util\DomainRegistry.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlBrandRepository.class

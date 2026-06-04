@@ -121,13 +121,13 @@ public class Bootstrap {
         //ssl
         //sb.https(8443).tls(new File("certificate.crt"), new File("private.key"), "myPassphrase");
         //sb.contextPath("/catalog/core/v1");测试没作用
-        sb.maxRequestLength(2 * 1024 * 1024)
+        sb.maxRequestLength(10 * 1024 * 1024)
                 .decorator(delegate -> (ctx, req) -> delegate.serve(ctx, req).recover(cause -> {
                     if (cause instanceof ContentTooLargeException) {
                         return HttpResponse.of(
                                 HttpStatus.REQUEST_ENTITY_TOO_LARGE,
                                 MediaType.JSON_UTF_8,
-                                "{\"code\":413,\"message\":\"文件太大，最大允许 2MB\"}"
+                                "{\"code\":413,\"message\":\"文件太大，最大允许 10MB\"}"
                         );
                     }
                     return HttpResponse.ofFailure(cause);

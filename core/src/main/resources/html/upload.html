@@ -271,10 +271,11 @@
                 status.innerHTML = `✅ ${result.message}<br>文件地址：<a href="${result.url}" target="_blank">${result.url}</a>`;
             } else {
                 status.className = 'status error';
-                status.textContent = '❌ 上传失败：' + result.message;
+                status.textContent = '❌ 上传失败啊啊啊：' + result.message;
             }
 
         } catch (err) {
+            console.log('❌ 上传失败：' + err.message);
             status.className = 'status error';
             status.textContent = '❌ 上传失败：' + err.message;
         } finally {

@@ -49,7 +49,7 @@ import java.util.*;
 
 public class FileUploadService {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
-    private static String uploadDirectories = "./uploads";
+    private static final String uploadDirectories = "./uploads";
     private static boolean rename = true;
     private static boolean separateByDate = true;
 
@@ -66,6 +66,7 @@ public class FileUploadService {
     @Consumes("multipart/form-data")
     public HttpResponse upload(ServiceRequestContext ctx, @Param("file") MultipartFile multipartFile) {
         if (multipartFile == null || multipartFile.file().length() == 0) {
+            LOGGER.info("请选择要上传的文件");
             return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
                     "{\"code\":400,\"message\":\"请选择要上传的文件\"}");
         }
@@ -85,7 +86,11 @@ public class FileUploadService {
 
             Files.move(multipartFile.file().toPath(), target);
 
-            String scheme = ctx.sessionProtocol().isTls() ? "https" : "http";
+            String scheme = ctx.request().headers().get("X-Forwarded-Proto");
+            if (scheme == null || scheme.isEmpty()) {
+                // 如果没有经过 Nginx（例如本地直连测试），则回退到原始判断
+                scheme = ctx.sessionProtocol().isTls() ? "https" : "http";
+            }
             String host = ctx.request().authority();
             String accessUrl = String.format("%s://%s/uploads/%s/%s", scheme, host, today, filename);
 
@@ -96,6 +101,7 @@ public class FileUploadService {
                         "url":"%s"
                     }""", accessUrl));
         } catch (IOException e) {
+            LOGGER.error("文件上传发生严重错误，目标目录: {}", uploadDirectories, e);
             String json = String.format("{\"code\":500,\"message\":\"%s\"}", e.getMessage());
             return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8, json);
         }
