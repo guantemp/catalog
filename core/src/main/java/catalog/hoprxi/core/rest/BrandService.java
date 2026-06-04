@@ -70,36 +70,30 @@ public class BrandService {
 
     @Get("/brands/{id}")
     @Description("Retrieves the brand information by the given brand ID.")
-    public HttpResponse find(@Param("id") long id) {
-        Mono<ByteBuf> dataMono = QUERY.findAsync(id);
-        // 将 Mono<ByteBuf> 转换为 Flux<HttpObject>
-        Flux<HttpObject> responseFlux = dataMono
-                .flatMapMany(byteBuf -> Flux.using(
-                        () -> byteBuf,
-                        buf -> Flux.just(// 业务逻辑：正常响应
-                                ResponseHeaders.builder(HttpStatus.OK)
-                                        .contentType(MediaType.JSON_UTF_8)
-                                        .build(),
-                                HttpData.wrap(buf) // Armeria 接管生命周期
-                        ),
-                        ReferenceCountUtil::release // 资源清理：仅在异常路径执行
+    public Mono<HttpResponse> find(@Param("id") long id) {
+        return QUERY.findAsync(id)
+                .map(byteBuf -> HttpResponse.of(
+                        ResponseHeaders.builder(HttpStatus.OK)
+                                .contentType(MediaType.JSON_UTF_8)
+                                .build(),
+                        HttpData.wrap(byteBuf)
                 ))
-                .onErrorResume(error -> {
-                    if (error instanceof NotFoundException) {
-                        return Flux.just(
+                .onErrorResume(NotFoundException.class, error ->
+                        Mono.just(HttpResponse.of(
                                 ResponseHeaders.builder(HttpStatus.NOT_FOUND)
                                         .contentType(MediaType.JSON_UTF_8)
                                         .build(),
-                                HttpData.ofUtf8(String.format("{\"Error\":\"Brand not found: %d\"}", id))
-                        );
-                    } else {
-                        return Flux.just(
-                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                                HttpData.ofUtf8(String.format("{\"Error\":\"Item not found: %d\"}", id))
+                        ))
+                )
+                .onErrorResume(error ->
+                        Mono.just(HttpResponse.of(
+                                ResponseHeaders.builder(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build(),
                                 HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
-                        );
-                    }
-                });
-        return HttpResponse.of(responseFlux);
+                        ))
+                );
     }
 
     @Get("/brands")

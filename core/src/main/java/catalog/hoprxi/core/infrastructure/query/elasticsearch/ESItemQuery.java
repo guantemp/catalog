@@ -49,6 +49,8 @@ public class ESItemQuery implements ItemQuery {
     private static final String PREFIX = ESUtil.customized().isBlank() ? "/item" : "/" + ESUtil.customized() + "_item";
     private static final String SEARCH_ENDPOINT = PREFIX + "/_search";
     private static final int AGGS_SIZE = 15;
+    private static final int SUGGEST_SIZE = 10;
+    private static final short SHARD_SUGGEST_SIZE = 100;
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder()
             .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
@@ -181,7 +183,7 @@ public class ESItemQuery implements ItemQuery {
 
     @Override
     public Flux<ByteBuf> searchAsync(ItemQuerySpec[] specs, int offset, int size, SortFieldEnum sortField) {
-        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("from must lager 10000");
+        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("offset must lager 10000");
         if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
         if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
         if (sortField == null) {
@@ -303,16 +305,16 @@ public class ESItemQuery implements ItemQuery {
     public Mono<ByteBuf> suggest(String keyword) {
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESItemQuery.buildSuggestRequest(keyword, 10, 1));
+        request.setJsonEntity(ESItemQuery.buildSuggestRequest(keyword, 1));
 
         return ReactiveStream.toSuggestMonoByteBuf(request);
     }
 
-    private static String buildSuggestRequest(String keyword, int size, int score) {
+    private static String buildSuggestRequest(String keyword, int score) {
         try (StringWriter writer = new StringWriter(); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             // 开始最外层对象 {
             generator.writeStartObject();
-            generator.writeNumberField("size", 0);
+            generator.writeNumberField("size", ESItemQuery.SUGGEST_SIZE);
             // 开始 "query" 对象
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("bool");
@@ -330,6 +332,13 @@ public class ESItemQuery implements ItemQuery {
             generator.writeStringField("suggest.pinyin", keyword);
             generator.writeEndObject();
             generator.writeEndObject();
+            // 第三个 should 对象
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("match");
+            generator.writeStringField("barcode", keyword);
+            generator.writeEndObject();
+            generator.writeEndObject();
+
             generator.writeEndArray(); // 结束 "should" 数组
             // 开始 "filter" 数组
             generator.writeArrayFieldStart("filter");
@@ -350,17 +359,18 @@ public class ESItemQuery implements ItemQuery {
             generator.writeObjectFieldStart("aggs");
             generator.writeObjectFieldStart("sampler");
             generator.writeObjectFieldStart("sampler");
-            generator.writeNumberField("shard_size", 2000);
+            generator.writeNumberField("shard_size", 200);
             generator.writeEndObject(); // 结束内层 "sampler"
 
             generator.writeObjectFieldStart("aggs");
             generator.writeObjectFieldStart("suggests");
             generator.writeObjectFieldStart("terms");
             generator.writeStringField("field", "suggest.raw");
-            generator.writeNumberField("size", size);
+            generator.writeNumberField("size", ESItemQuery.SUGGEST_SIZE);
             generator.writeObjectFieldStart("order");
             generator.writeStringField("hot", "desc");
             generator.writeEndObject(); // 结束 "order"
+            generator.writeNumberField("shard_size", ESItemQuery.SHARD_SUGGEST_SIZE);
             generator.writeEndObject(); // 结束 "terms"
 
             generator.writeObjectFieldStart("aggs");

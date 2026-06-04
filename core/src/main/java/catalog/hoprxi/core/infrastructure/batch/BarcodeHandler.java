@@ -17,13 +17,18 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
-import catalog.hoprxi.core.application.view.ItemView;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;
 import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
 import catalog.hoprxi.core.domain.model.barcode.InvalidBarcodeException;
-import catalog.hoprxi.core.infrastructure.query.postgresql.PsqlItemQuery;
+import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import com.lmax.disruptor.EventHandler;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,44 +39,70 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 0.0.1 builder 2023-05-08
  */
 public class BarcodeHandler implements EventHandler<ItemImportEvent> {
-    private static final Map<String, Barcode> BARCODE_MAP = new HashMap<>(2480);
-    private static final PsqlItemQuery ITEM_QUERY = new PsqlItemQuery();
+    private static final Map<String, Barcode> BARCODE_CACHE = new HashMap<>(2480);
+    private static final AtomicInteger START;
+    private static final String PREFIX;
+    private static final String BARCODE_TYPE;
 
-    private static final AtomicInteger start = new AtomicInteger(1);
-    private static final String PREFIX = "21";
+    static {
+        Config config = ConfigFactory.load("import");
+        PREFIX = config.hasPath("barcode.prefix") ? config.getString("barcode.prefix") : "20";
+        BARCODE_TYPE = config.hasPath("barcode.type") ? config.getString("barcode.type") : "ean_8";
+        START = config.hasPath("barcode.start") ? new AtomicInteger(config.getInt("barcode.start")) : new AtomicInteger(1);
+    }
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
         String barcode = itemImportEvent.map.get(ItemMapping.BARCODE);
         itemImportEvent.verify = Verify.OK;
-        if (barcode == null || barcode.isEmpty()) {
-            //根据设置规则生成店内码
-            itemImportEvent.map.put(ItemMapping.BARCODE, BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(start.getAndIncrement(), 1, PREFIX)[0].toPlanString());
+        if (barcode == null || barcode.isBlank()) {
+            switch (BARCODE_TYPE) {    //根据设置规则生成店内码
+                case "ean_8" ->
+                        itemImportEvent.map.put(ItemMapping.BARCODE, BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString());
+                case "ean_13" ->
+                        itemImportEvent.map.put(ItemMapping.BARCODE, BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString());
+            }
             return;
         }
         Barcode bar;
         try {
             bar = BarcodeGenerateServices.createBarcode(barcode);
         } catch (InvalidBarcodeException e) {
-            try {
+            try {//缺少效验和的计算生成
                 bar = BarcodeGenerateServices.createBarcodeCompleteChecksum(barcode);
             } catch (IllegalArgumentException f) {
                 itemImportEvent.verify = Verify.BARCODE_CHECK_SUM_ERROR;
                 return;
             }
         }
-        if (BARCODE_MAP.containsValue(bar)) {
+
+        if (BARCODE_CACHE.containsValue(bar)) {
             itemImportEvent.verify = Verify.BARCODE_REPEAT;
             return;
         }
-        BARCODE_MAP.put(barcode, bar);
+        BARCODE_CACHE.put(barcode, bar);
 
-        ItemView[] itemViews = ITEM_QUERY.queryByBarcode("^" + bar.toPlanString() + "$");
-        if (itemViews.length != 0) {
+        if (BarcodeHandler.find(bar.toPlanString())) {
             itemImportEvent.verify = Verify.BARCODE_EXIST;
             return;
         }
+
         itemImportEvent.map.put(ItemMapping.BARCODE, "'" + bar.toPlanString() + "'");
         //System.out.println("barcode:"+itemImportEvent.map.get(Corresponding.BARCODE));
+    }
+
+    private static boolean find(String barcode) {
+        final String query = "select id from item where barcode = ?";
+        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, barcode);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next())
+                    return true;
+            }
+        } catch (SQLException e) {
+            // log.error("e: ", e);
+            //LOGGER.error("Can't rebuild brand with (name = {})", name, e);
+        }
+        return false;
     }
 }

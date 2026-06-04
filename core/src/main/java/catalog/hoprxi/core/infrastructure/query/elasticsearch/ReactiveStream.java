@@ -65,7 +65,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class ReactiveStream {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
     private static final ExecutorService TRANSFORM_POOL = Executors.newVirtualThreadPerTaskExecutor();
-    private static final int SINGLE_BUFFER_SIZE = 2 * 1024;// 2KB缓冲区
+    private static final int SINGLE_BUFFER_SIZE = 1024;// 2KB缓冲区
     private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
     /**
      * Jackson JSON 工厂，禁用字段名缓存以减少内存开销。

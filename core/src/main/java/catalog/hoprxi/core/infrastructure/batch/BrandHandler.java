@@ -24,6 +24,8 @@ import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
 import com.lmax.disruptor.EventHandler;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,10 +41,15 @@ import java.util.regex.Pattern;
  * @version 0.0.2 builder 2025-10-02
  */
 public class BrandHandler implements EventHandler<ItemImportEvent> {
-    private static final Pattern ID_PATTERN = Pattern.compile("^\\d{12,19}$");
-    private static final String DELIMITER = "/";
-    private static final BrandRepository BRAND_REPO = new PsqlBrandRepository();
+    private static final Pattern ID_PATTERN = Pattern.compile("^\\d{1,19}$");
+    private static final String DELIMITER;
+    private static final BrandRepository repository = new PsqlBrandRepository();
     private static final Logger log = LoggerFactory.getLogger(BrandHandler.class);
+
+    static {
+        Config config = ConfigFactory.load("import");
+        DELIMITER = config.hasPath("brand_delimiter") ? config.getString("brand_delimiter") : "/";
+    }
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
@@ -52,39 +59,37 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
             return;
         }
         if (ID_PATTERN.matcher(brand).matches()) {//数字，可能是id
-            if (!this.find(Long.parseLong(brand)))//没有查到该id
+            if (!BrandHandler.find(Long.parseLong(brand)))//没有查到该id,错误的id
                 itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(Brand.UNDEFINED.id()));
             return;
         }
 
-        String[] ss = brand.split(DELIMITER);//name/alias
+        String[] ss = brand.split(DELIMITER);//name/name/name
         String query = "^" + ss[0] + "$";
         if (ss.length > 1)
             query = query + "|^" + ss[1] + "$";
 
-        long id = findIDByName(query);
+        long id = BrandHandler.findIdByName(query);
         //System.out.println("brand:"+id);
         if (id != Brand.UNDEFINED.id()) {//has find id
             itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(id));
         } else {//新建
-            Brand temp = ss.length > 1 ? new Brand(BRAND_REPO.nextIdentity(), new Name(ss[0], ss[1])) : new Brand(BRAND_REPO.nextIdentity(), ss[0]);
-            BRAND_REPO.save(temp);
+            Brand temp = ss.length > 1 ? new Brand(repository.nextIdentity(), new Name(ss[0], ss[1])) : new Brand(repository.nextIdentity(), ss[0]);
+            repository.save(temp);
             itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(temp.id()));
         }
     }
 
-    private long findIDByName(String name) {
+    private static long findIdByName(String name) {
         final String query = "select id from brand where name::jsonb->>'name' ~ ? " +
-                             "union select id from brand where name::jsonb->>'mnemonic' ~ ? " +
-                             "union select id from brand where name::jsonb->>'alias' ~ ?";
-        try (Connection connection = PsqlUtil.getConnection()) {
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
+                             "union select id from brand where name::jsonb->>'shortName' ~ ? ";
+        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, name);
-            preparedStatement.setString(3, name);
-            ResultSet rs = preparedStatement.executeQuery();
-            if (rs.next())
-                return rs.getLong("id");
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next())
+                    return rs.getLong("id");
+            }
         } catch (SQLException e) {
             log.error("e: ", e);
             //LOGGER.error("Can't rebuild brand with (name = {})", name, e);
@@ -92,14 +97,14 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
         return Brand.UNDEFINED.id();
     }
 
-    private boolean find(long id) {
+    private static boolean find(long id) {
         final String query = "select id from brand where id = ?";
-        try (Connection connection = PsqlUtil.getConnection()) {
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
+        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setLong(1, id);
-            ResultSet rs = preparedStatement.executeQuery();
-            if (rs.next())
-                return true;
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next())
+                    return true;
+            }
         } catch (SQLException e) {
             log.error("e: ", e);
             //LOGGER.error("Can't rebuild brand with (name = {})", name, e);

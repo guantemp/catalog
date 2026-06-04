@@ -48,7 +48,6 @@ import com.linecorp.armeria.common.*;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.util.ReferenceCountUtil;
 import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,42 +88,35 @@ public final class ItemService {
 
     @Get("/items/{id}")
     @Description("Retrieves the item information by the given ID.")
-    public HttpResponse find(@Param("id") long id) {
-        Mono<ByteBuf> dataMono = QUERY.findAsync(id);
-        // 将 Mono<ByteBuf> 转换为 Flux<HttpObject>
-        Flux<HttpObject> responseFlux = dataMono
-                .flatMapMany(byteBuf -> Flux.using(
-                        () -> byteBuf,
-                        buf -> Flux.just(// 业务逻辑：正常响应
-                                ResponseHeaders.builder(HttpStatus.OK)
-                                        .contentType(MediaType.JSON_UTF_8)
-                                        .build(),
-                                HttpData.wrap(buf) // Armeria 接管生命周期
-                        ),
-                        ReferenceCountUtil::release // 资源清理：仅在异常路径执行
+    public Mono<HttpResponse> find(@Param("id") long id) {
+        return QUERY.findAsync(id)
+                .map(byteBuf -> HttpResponse.of(
+                        ResponseHeaders.builder(HttpStatus.OK)
+                                .contentType(MediaType.JSON_UTF_8)
+                                .build(),
+                        HttpData.wrap(byteBuf)
                 ))
-                .onErrorResume(error -> {
-                    if (error instanceof NotFoundException) {
-                        return Flux.just(
+                .onErrorResume(NotFoundException.class, error ->
+                        Mono.just(HttpResponse.of(
                                 ResponseHeaders.builder(HttpStatus.NOT_FOUND)
                                         .contentType(MediaType.JSON_UTF_8)
                                         .build(),
                                 HttpData.ofUtf8(String.format("{\"Error\":\"Item not found: %d\"}", id))
-                        );
-                    } else {
-                        return Flux.just(
-                                ResponseHeaders.builder(HttpStatus.INTERNAL_SERVER_ERROR).contentType(MediaType.JSON_UTF_8)
+                        ))
+                )
+                .onErrorResume(error ->
+                        Mono.just(HttpResponse.of(
+                                ResponseHeaders.builder(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .contentType(MediaType.JSON_UTF_8)
                                         .build(),
                                 HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
-                        );
-                    }
-                });
-        return HttpResponse.of(responseFlux);
+                        ))
+                );
     }
 
     @Get("/items")
     public HttpResponse search(QueryParams params) {
-        ServiceRequestContext.current().setRequestTimeoutMillis(60_000);
+        //ServiceRequestContext.current().setRequestTimeoutMillis(60_000);
         String search = params.get("s", "");
         String filter = params.get("filter", "");
         int offset = params.getInt("offset", OFFSET);
@@ -156,17 +148,23 @@ public final class ItemService {
                 })
                 .switchIfEmpty(Flux.just(
                         ResponseHeaders.of(HttpStatus.NOT_FOUND),
-                        HttpData.ofUtf8(String.format("{\"Warn\":\"Category not found for id : %s\"}", search))
+                        HttpData.ofUtf8(String.format("{\"Warn\":\"No items found for search keyword: %s\"}", search))
                 ))
                 .onErrorResume(throwable -> {
+                    if (throwable instanceof IllegalArgumentException) {
+                        return Flux.just(
+                                ResponseHeaders.of(HttpStatus.BAD_REQUEST),
+                                HttpData.ofUtf8(String.format("{\"error\":\"Invalid parameter: %s\"}", throwable.getMessage()))
+                        );
+                    }
                     //log.error("Data stream error", throwable);
                     return Flux.just(
                             ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                            HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
+                            HttpData.ofUtf8("{\"error\":\"Internal server error\"}")
                     );
                 });
         return HttpResponse.of(responseStream);
-        /* ===================== 这个也可以，不能测试除者个性能核心：拼成一个ByteBuf，关闭chunked =====================
+        /* ===================== 这个也可以，不能测试除者个性能核心：拼成一个ByteBuf，但事实是全内存，关闭chunked =====================
         Mono<ByteBuf> fullMono = dataFlux
                 .subscribeOn(VIRTUAL_THREAD)
                 .collect(
@@ -213,12 +211,12 @@ public final class ItemService {
             String[] con = s.split(":");//Project name : Project value
             if (con.length == 2) {
                 switch (con[0]) {
-                    case "cid", "categoryId" -> parseCid(filterList, con[1]);
-                    case "bid", "brandId" -> parseBid(filterList, con[1]);
-                    case "retail_price", "r_price" -> parseRetailPrice(filterList, con[1]);
-                    case "last_receipt_price", "l_r_price" -> parseLastReceiptPrice(filterList, con[1]);
-                    case "member_price", "m_price" -> parseMemberPrice(filterList, con[1]);
-                    case "vip_price", "v_price" -> parseVipPrice(filterList, con[1]);
+                    case "cid", "categoryId" -> ItemService.parseCid(filterList, con[1]);
+                    case "bid", "brandId" -> ItemService.parseBid(filterList, con[1]);
+                    case "retail_price", "r_price" -> ItemService.parseRetailPrice(filterList, con[1]);
+                    case "last_receipt_price", "l_r_price" -> ItemService.parseLastReceiptPrice(filterList, con[1]);
+                    case "member_price", "m_price" -> ItemService.parseMemberPrice(filterList, con[1]);
+                    case "vip_price", "v_price" -> ItemService.parseVipPrice(filterList, con[1]);
                 }
             }
         }
@@ -281,6 +279,27 @@ public final class ItemService {
                 filterList.add(new LastReceiptPriceSpec(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
             }
         }
+    }
+
+    @Get("/items/suggest")
+    public Mono<HttpResponse> suggest(@Param("word") String word) {
+        return QUERY.suggest(word)
+                .map(byteBuf -> HttpResponse.of(
+                        ResponseHeaders.builder(HttpStatus.OK)
+                                .contentType(MediaType.JSON_UTF_8)
+                                .build(),
+                        HttpData.wrap(byteBuf)
+                ))
+                .onErrorResume(NotFoundException.class, e ->
+                        Mono.just(HttpResponse.of(
+                                ResponseHeaders.builder(HttpStatus.NOT_FOUND).contentType(MediaType.JSON_UTF_8).build(),
+                                HttpData.ofUtf8("{\"Error\":\"not found\"}")
+                        ))
+                )
+                .onErrorResume(e ->
+                        Mono.just(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                                "{\"status\":fail,\"code\":500,\"message\":\"Internal server error,cause by %s\"}", e))
+                );
     }
 
     @Post("/items")

@@ -300,33 +300,34 @@ public class PsqlItemRepository implements ItemRepository {
     }
 
     private static String toJson(Name name) {
-        StringWriter writer = new StringWriter(128);
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+        try (StringWriter writer = new StringWriter(128); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeStringField("name", name.name());
             generator.writeStringField("shortName", name.shortName());
             generator.writeEndObject();
+            generator.close();
+            return writer.toString();
         } catch (IOException e) {
             LOGGER.error("Not write name as json", e);
             throw new RuntimeException("Failed to serialize Name: " + name, e);
         }
-        return writer.toString();
     }
 
     private static String toJson(MadeIn madeIn) {
-        StringWriter writer = new StringWriter(128);
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+        try (StringWriter writer = new StringWriter(128); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeStringField("_class", madeIn.getClass().getSimpleName());
             generator.writeStringField("code", madeIn.code());
             generator.writeStringField("madeIn", madeIn.madeIn());
             generator.writeEndObject();
+            generator.close();
+            return writer.toString();
         } catch (IOException e) {
             LOGGER.error("Not write madeIn {} as json", madeIn, e);
             throw new RuntimeException("Failed to serialize MadeIn: " + madeIn, e);
         }
         //System.out.println(output.size());
-        return writer.toString();
+
     }
 
     private static String toJson(LastReceiptPrice lastReceiptPrice) {
@@ -342,8 +343,7 @@ public class PsqlItemRepository implements ItemRepository {
     }
 
     private static String priceToJsonWithName(String name, Price price) {
-        StringWriter writer = new StringWriter(96);
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+        try (StringWriter writer = new StringWriter(96); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeStringField("name", name);
             generator.writeObjectFieldStart("price");
@@ -354,16 +354,17 @@ public class PsqlItemRepository implements ItemRepository {
             generator.writeStringField("unit", price.unit().name());
             generator.writeEndObject();
             generator.writeEndObject();
+            generator.close();
+            return writer.toString();
         } catch (IOException e) {
             LOGGER.error("Not write Price as json", e);
             throw new RuntimeException("Failed to serialize Price (with name)", e);
         }
-        return writer.toString();
+
     }
 
     private static String toJson(RetailPrice retailPrice) {
-        StringWriter writer = new StringWriter(96);
-        try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+        try (StringWriter writer = new StringWriter(96); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             //System.out.println("retailPrice: " + retailPrice.price().amount().getNumber().numberValue(BigDecimal.class));
             generator.writeNumberField("number", retailPrice.price().amount().getNumber().numberValue(BigDecimal.class));
@@ -372,9 +373,11 @@ public class PsqlItemRepository implements ItemRepository {
             //generator.writeStringField("roundingMode", retailPrice.price().amount().getContext().get("java.math.RoundingMode", RoundingMode.class).name());
             generator.writeStringField("unit", retailPrice.price().unit().name());
             generator.writeEndObject();
+            generator.close();
+            return writer.toString();
         } catch (IOException e) {
             LOGGER.error("Not write RetailPrice as json", e);
+            throw new RuntimeException("Failed to serialize Price (with name)", e);
         }
-        return writer.toString();
     }
 }

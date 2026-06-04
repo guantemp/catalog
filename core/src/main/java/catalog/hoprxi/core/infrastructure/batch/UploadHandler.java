@@ -63,7 +63,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class UploadHandler implements EventHandler<ItemImportEvent> {
     private static final String UPLOAD_URI;
     private final URI uri;
-    private static CloseableHttpClient httpClient;
+    private static final CloseableHttpClient httpClient;
 
     static {
         Config areaUrl = ConfigFactory.load("core");

@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2023-05-08
  */
 public class IdHandler implements EventHandler<ItemImportEvent> {
-    private static final Pattern ID_PATTERN = Pattern.compile("^\\d{12,19}$");
+    private static final Pattern ID_PATTERN = Pattern.compile("^\\d{7,19}$");
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {

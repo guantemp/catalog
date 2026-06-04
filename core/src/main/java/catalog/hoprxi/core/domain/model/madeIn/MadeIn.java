@@ -46,9 +46,27 @@ public interface MadeIn {
         }
     };
 
+    MadeIn CHINA = new MadeIn() {
+        @Override
+        public String madeIn() {
+            return "中国";
+        }
+
+        @Override
+        public String code() {
+            return "156";
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", "MadeIn[", "]")
+                    .add("madeIn='CHINA'")
+                    .add("code='156'")
+                    .toString();
+        }
+    };
+
     String madeIn();
 
-    default String code() {
-        return "156";
-    }
+    String code();
 }

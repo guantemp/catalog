@@ -18,7 +18,6 @@ package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
 import com.lmax.disruptor.EventHandler;
-import salt.hoprxi.to.PinYin;
 
 import java.util.StringJoiner;
 
@@ -32,13 +31,13 @@ public class NameHandler implements EventHandler<ItemImportEvent> {
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
         String name = itemImportEvent.map.get(ItemMapping.NAME);
         name = name.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
-        String alias = itemImportEvent.map.get(ItemMapping.ALIAS);
-        alias = alias == null ? name : alias.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
+        //没有简称置空
+        String shortName = itemImportEvent.map.get(ItemMapping.SHORT_NAME);
+        shortName = shortName == null ? "" : shortName.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
+
         StringJoiner joiner = new StringJoiner(",", "'{", "}'");
         joiner.add("\"name\":\"" + name + "\"");
-        joiner.add("\"shortName\":\"" + (alias == null ? name : alias.replaceAll("'", "''")).replaceAll("\\\\", "\\\\\\\\") + "\"");
-        //StringJoiner joiner = new StringJoiner(",", "", "");
-        //joiner.add("'" + name + "'").add("'" + PinYin.toShortPinYing(name) + "'").add("'" + alias + "'");
+        joiner.add("\"shortName\":\"" + shortName + "\"");
         //System.out.println(joiner);
         itemImportEvent.map.put(ItemMapping.NAME, joiner.toString());
     }
