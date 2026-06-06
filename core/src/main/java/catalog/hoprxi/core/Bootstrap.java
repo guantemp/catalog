@@ -111,11 +111,11 @@ public class Bootstrap {
                 .autoIndex(true)      // 开启目录浏览（可选）
                 .build();
         sb.serviceUnder("/", fs);
-        /*
+
         Path uploadsDir = Paths.get(System.getProperty("user.dir"), "uploads");
         FileService uploads = FileService.builder(uploadsDir).build();
         sb.serviceUnder("/uploads", uploads);
-         */
+
         //添加文档服务
         sb.serviceUnder("/docs", DocService.builder()
                 //.exampleRequests("/v1/brands", "query")

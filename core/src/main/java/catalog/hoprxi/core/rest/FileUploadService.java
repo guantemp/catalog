@@ -40,7 +40,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -95,7 +97,7 @@ public class FileUploadService {
                 scheme = ctx.sessionProtocol().isTls() ? "https" : "http";
             }
             String host = ctx.request().authority();
-            String accessUrl = String.format("%s://%s/uploads/%s/%s", scheme, host, date, filename);
+            String accessUrl = String.format("%s://%s/%s/%s/%s", scheme, host, UPLOAD_DIRECTORIES, date, filename);
 
             return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, String.format("""
                     {
@@ -172,11 +174,11 @@ public class FileUploadService {
                     .toArray(String[]::new));
 
             String jsonResponse = String.format("""
-                {
-                    "code": 200,
-                    "message": "success",
-                    "urls": [%s]
-                }""", urlsJsonArray);
+                    {
+                        "code": 200,
+                        "message": "success",
+                        "urls": [%s]
+                    }""", urlsJsonArray);
 
             return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, jsonResponse);
 
