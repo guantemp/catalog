@@ -20,6 +20,7 @@ package catalog.hoprxi.core.rest;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.MediaType;
+import com.linecorp.armeria.common.annotation.Nullable;
 import com.linecorp.armeria.common.multipart.MultipartFile;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.Consumes;
@@ -49,12 +50,11 @@ import java.util.*;
 
 public class FileUploadService {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
-    private static final String uploadDirectories = "./uploads";
-    private static boolean rename = true;
-    private static boolean separateByDate = true;
+    private static final String UPLOAD_DIRECTORIES;
 
     static {
-        Config config = ConfigFactory.load("core");
+        Config config = ConfigFactory.load("core").getConfig("upload");
+        UPLOAD_DIRECTORIES = config.hasPath("directory") ? config.getString("directory") : "uploads";
     }
 
     /**
@@ -64,12 +64,16 @@ public class FileUploadService {
      */
     @Post("/upload")
     @Consumes("multipart/form-data")
-    public HttpResponse upload(ServiceRequestContext ctx, @Param("file") MultipartFile multipartFile) {
+    public HttpResponse upload(ServiceRequestContext ctx, @Param("file") MultipartFile multipartFile,
+                               @Param(value = "rename") @Nullable Boolean renameParam,
+                               @Param("separateByDate") @Nullable Boolean separateByDateParam) {
         if (multipartFile == null || multipartFile.file().length() == 0) {
-            LOGGER.info("请选择要上传的文件");
+            //LOGGER.info("请选择要上传的文件");
             return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
                     "{\"code\":400,\"message\":\"请选择要上传的文件\"}");
         }
+        boolean rename = (renameParam != null) ? renameParam : true;
+        boolean separateByDate = (separateByDateParam != null) ? separateByDateParam : true;
         try {
             String filename = Paths.get(multipartFile.filename()).getFileName().toString();
             if (rename) {
@@ -80,19 +84,18 @@ public class FileUploadService {
                 }
                 filename = UUID.randomUUID().toString().replace("-", "") + suffix;
             }
-            String today = separateByDate ? LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : "";
-            Path target = Paths.get(uploadDirectories, today, filename);
+            String date = separateByDate ? LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : "";
+            Path target = Paths.get(UPLOAD_DIRECTORIES, date, filename);
             Files.createDirectories(target.getParent());
 
             Files.move(multipartFile.file().toPath(), target);
 
             String scheme = ctx.request().headers().get("X-Forwarded-Proto");
-            if (scheme == null || scheme.isEmpty()) {
-                // 如果没有经过 Nginx（例如本地直连测试），则回退到原始判断
+            if (scheme == null || scheme.isEmpty()) { // 如果没有经过 Nginx（例如本地直连测试），则回退到原始判断
                 scheme = ctx.sessionProtocol().isTls() ? "https" : "http";
             }
             String host = ctx.request().authority();
-            String accessUrl = String.format("%s://%s/uploads/%s/%s", scheme, host, today, filename);
+            String accessUrl = String.format("%s://%s/uploads/%s/%s", scheme, host, date, filename);
 
             return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, String.format("""
                     {
@@ -101,116 +104,87 @@ public class FileUploadService {
                         "url":"%s"
                     }""", accessUrl));
         } catch (IOException e) {
-            LOGGER.error("文件上传发生严重错误，目标目录: {}", uploadDirectories, e);
+            LOGGER.error("文件上传发生严重错误，目标目录: {}", UPLOAD_DIRECTORIES, e);
             String json = String.format("{\"code\":500,\"message\":\"%s\"}", e.getMessage());
             return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8, json);
         }
-        /*
-        ServiceRequestContext ctx = ServiceRequestContext.current();
-        return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
-            AggregatedMultipart agg = multipart.aggregate().join();
-            AggregatedBodyPart bodyPart = agg.field("file");
-            // 2. 校验：文件是否存在
-            if (bodyPart == null) {
-                return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
-                        "{\"code\":400,\"message\":\"未上传文件\"}");
-            }
-            try {
-
-                String filename = bodyPart.filename();
-                byte[] bytes = bodyPart.content().array();
-
-                File tempFile = File.createTempFile("upload", null);
-                Files.write(tempFile.toPath(), bytes);
-
-                // 文件名处理
-                String suffix = "";
-                int dotIndex = filename.lastIndexOf(".");
-                if (dotIndex > 0) {
-                    suffix = filename.substring(dotIndex);
-                }
-                filename = UUID.randomUUID().toString() + suffix;
-
-                Path target = Paths.get("./uploads", filename);
-                Files.createDirectories(target.getParent());
-                Files.move(tempFile.toPath(), target);
-
-
-                return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
-                        "{\"code\":200,\"message\":\"success\"}");
-            } catch (Exception e) {
-                return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        }, ctx.blockingTaskExecutor()).exceptionally(e ->
-                HttpResponse.of(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        MediaType.JSON_UTF_8,
-                        String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage())
-                )
-        ));
-         */
     }
 
     @Post("/uploads")
     @Consumes("multipart/form-data")
-    public HttpResponse uploads(ServiceRequestContext ctx, @Param("file") MultipartFile[] multipartFiles) throws IOException {
+    public HttpResponse upload(ServiceRequestContext ctx,
+                               @Param("files") MultipartFile[] multipartFiles, // 1. 将参数改为数组，字段名建议改为 "files"
+                               @Param(value = "rename") @Nullable Boolean renameParam,
+                               @Param("separateByDate") @Nullable Boolean separateByDateParam) {
+        // 2. 校验数组是否为空
         if (multipartFiles == null || multipartFiles.length == 0) {
             return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
                     "{\"code\":400,\"message\":\"请选择要上传的文件\"}");
         }
-        // 日期目录 yyyy-MM-dd
-        String dateDir = LocalDate.now()
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        String scheme = ctx.sessionProtocol().isTls() ? "https" : "http";
-        String domain = ctx.request().authority();
-        List<Map<String, String>> successList = new ArrayList<>();
-        List<String> failMsgList = new ArrayList<>();
-        for (MultipartFile multipartFile : multipartFiles) {
-            String originalName = multipartFile.filename();
-            if (originalName.isBlank()) {
-                failMsgList.add("存在空文件名文件");
-                continue;
-            }
-            // 1. 防路径穿越：只保留纯文件名
-            originalName = Paths.get(originalName).getFileName().toString();
-            File file = multipartFile.file();
-            if (validFormat(file)) {
-                // 3. 截取后缀，生成UUID唯一文件名
-                String suffix = "";
-                int dotIdx = originalName.lastIndexOf(".");
-                if (dotIdx > 0) {
-                    suffix = originalName.substring(dotIdx).toLowerCase();
-                }
-                String saveName = UUID.randomUUID() + suffix;
-                // 4. 目标路径：uploads/日期/文件名
-                Path target = Paths.get("./uploads", dateDir, saveName);
-                Files.createDirectories(target.getParent());
-                Files.move(file.toPath(), target);
-                String url = String.format("%s://%s/uploads/%s/%s",
-                        scheme, domain, dateDir, saveName);
-                Map<String, String> item = new HashMap<>();
-                item.put("originalName", originalName);
-                item.put("url", url);
-                successList.add(item);
-            }
+        boolean rename = (renameParam != null) ? renameParam : true;
+        boolean separateByDate = (separateByDateParam != null) ? separateByDateParam : true;
+        // 3. 用于收集所有成功上传文件的访问URL
+        List<String> uploadedUrls = new ArrayList<>();
+
+        // 4. 获取请求头中的协议和主机信息（只需获取一次，提高性能）
+        String scheme = ctx.request().headers().get("X-Forwarded-Proto");
+        if (scheme == null || scheme.isEmpty()) {
+            scheme = ctx.sessionProtocol().isTls() ? "https" : "http";
         }
-        // 统一返回JSON
-        String json = """
+        String host = ctx.request().authority();
+
+        try {
+            // 5. 遍历每一个上传的文件
+            for (MultipartFile multipartFile : multipartFiles) {
+                // 过滤掉前端可能传过来的空文件
+                if (multipartFile == null || multipartFile.file().length() == 0) {
+                    continue;
+                }
+
+                // 处理文件名（重命名逻辑保持不变）
+                String filename = Paths.get(multipartFile.filename()).getFileName().toString();
+                if (rename) {
+                    String suffix = "";
+                    int dotIndex = filename.lastIndexOf(".");
+                    if (dotIndex > 0) {
+                        suffix = filename.substring(dotIndex);
+                    }
+                    filename = UUID.randomUUID().toString().replace("-", "") + suffix;
+                }
+
+                // 按日期生成路径并自动创建目录
+                String date = separateByDate ? LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : "";
+                Path target = Paths.get(UPLOAD_DIRECTORIES, date, filename);
+                Files.createDirectories(target.getParent());
+
+                // 移动文件到目标路径
+                Files.move(multipartFile.file().toPath(), target);
+
+                // 拼接访问URL并加入列表
+                String accessUrl = String.format("%s://%s/uploads/%s/%s", scheme, host, date, filename);
+                uploadedUrls.add(accessUrl);
+            }
+
+            // 6. 返回包含所有文件URL的JSON数组
+            // 这里使用简单的字符串拼接构建JSON，如果你的项目中有JSON库（如Jackson/Gson），建议替换
+            String urlsJsonArray = String.join(",", uploadedUrls.stream()
+                    .map(url -> "\"" + url + "\"")
+                    .toArray(String[]::new));
+
+            String jsonResponse = String.format("""
                 {
                     "code": 200,
-                    "message": "处理完成",
-                    "successCount": %d,
-                    "failCount": %d,
-                    "fileList": %s,
-                    "failList": %s
-                }
-                """.formatted(
-                successList.size(),
-                failMsgList.size(),
-                new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(successList),
-                new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(failMsgList)
-        );
-        return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, json);
+                    "message": "success",
+                    "urls": [%s]
+                }""", urlsJsonArray);
+
+            return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, jsonResponse);
+
+        } catch (IOException e) {
+            LOGGER.error("多文件上传发生严重错误，目标目录: {}", UPLOAD_DIRECTORIES, e);
+            String json = String.format("{\"code\":500,\"message\":\"%s\"}", e.getMessage());
+            return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8, json);
+        }
     }
 
 

@@ -62,12 +62,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class UploadHandler implements EventHandler<ItemImportEvent> {
     private static final String UPLOAD_URI;
+    private static final String UPLOAD_IMG_DIRECTORY;
     private final URI uri;
     private static final CloseableHttpClient httpClient;
 
     static {
-        Config areaUrl = ConfigFactory.load("core");
-        UPLOAD_URI = areaUrl.hasPath("upload_url") ? areaUrl.getString("upload_url") : "https://www.hoprxi.com/catalog/core/v1/upload";
+        Config config = ConfigFactory.load("import");
+        config = config.getConfig("upload");
+        UPLOAD_URI = config.hasPath("uri") ? config.getString("uri") : "https://www.hoprxi.com/catalog/v1/upload";
+        UPLOAD_IMG_DIRECTORY = config.hasPath("img_directory") ? config.getString("img_directory") : "";
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         SSLContext sslContext;
         try {
@@ -94,10 +97,6 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
 
     public UploadHandler() {
         this.uri = URI.create(UPLOAD_URI);
-    }
-
-    public UploadHandler(URI uri) {
-        this.uri = uri;
     }
 
     private final JsonFactory jasonFactory = JsonFactory.builder().build();
