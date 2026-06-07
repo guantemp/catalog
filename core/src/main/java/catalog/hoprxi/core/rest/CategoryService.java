@@ -28,25 +28,25 @@ import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.query.NotFoundException;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESCategoryQuery;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.*;
 import com.linecorp.armeria.common.*;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 /***
@@ -58,44 +58,37 @@ public class CategoryService {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
-    private static final int SINGLE_BUFFER_SIZE = 512; // 0.5KB缓冲区
-    private static final int BATCH_BUFFER_SIZE = 8192;// 8KB缓冲区
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
-
+    private static final ExecutorService VIRTUAL_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
     private static final CategoryQuery QUERY = new ESCategoryQuery();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
     @Get("/categories/{id}")
     @Description("Retrieves the category information by the given category ID.")
-    public HttpResponse find(@Param("id") long id) {
-        Mono<ByteBuf> mono = QUERY.findAsync(id);
-        Flux<HttpObject> responseFlux = mono
-                .flatMapMany(byteBuf -> Flux.using(
-                        () -> byteBuf,
-                        buf -> Flux.just(// 业务逻辑：正常响应
-                                ResponseHeaders.builder(HttpStatus.OK)
-                                        .contentType(MediaType.JSON_UTF_8)
-                                        .build(),
-                                HttpData.wrap(buf) // Armeria 接管生命周期
-                        ),
-                        ReferenceCountUtil::release // 资源清理：仅在异常路径执行
+    public Mono<HttpResponse> find(@Param("id") long id) {
+        return QUERY.findAsync(id)
+                .map(byteBuf -> HttpResponse.of(
+                        ResponseHeaders.builder(HttpStatus.OK)
+                                .contentType(MediaType.JSON_UTF_8)
+                                .build(),
+                        HttpData.wrap(byteBuf)
                 ))
-                .onErrorResume(error -> {
-                    if (error instanceof NotFoundException) {
-                        return Flux.just(
+                .onErrorResume(NotFoundException.class, error ->
+                        Mono.just(HttpResponse.of(
                                 ResponseHeaders.builder(HttpStatus.NOT_FOUND)
                                         .contentType(MediaType.JSON_UTF_8)
                                         .build(),
                                 HttpData.ofUtf8(String.format("{\"Error\":\"Category not found: %d\"}", id))
-                        );
-                    } else {
-                        return Flux.just(
-                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                        ))
+                )
+                .onErrorResume(error ->
+                        Mono.just(HttpResponse.of(
+                                ResponseHeaders.builder(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build(),
                                 HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
-                        );
-                    }
-                });
-        return HttpResponse.of(responseFlux);
+                        ))
+                );
     }
 
     @Get("/categories/{id}/children")
@@ -104,74 +97,70 @@ public class CategoryService {
                 .onErrorResume(NotFoundException.class, err ->
                         Flux.error(new NotFoundException("Category not found: " + id))); // 假设返回 Flux<ByteBuf>
         // 使用 switchMap：一旦有第一个元素，就前置 headers
-        Flux<HttpObject> responseStream = dataFlux
+        Flux<HttpObject> stream = dataFlux
                 .map(HttpData::wrap)
-                .switchOnFirst((signal, flux) -> {
-                    if (signal.hasError()) { // 第一个信号就是错误
-                        Throwable error = signal.getThrowable();
-                        System.out.println(error);
-                        if (error instanceof NotFoundException) {
-                            return Flux.just(
-                                    ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                .transform(flux -> {
+                    AtomicBoolean headersSent = new AtomicBoolean(false);
+                    return flux.concatMap(data -> {
+                        if (!headersSent.getAndSet(true)) {
+                            // 第一个数据：先响应头 200，再发数据
+                            return Flux.concat(
+                                    Flux.just(ResponseHeaders.builder(HttpStatus.OK)
                                             .contentType(MediaType.JSON_UTF_8)
-                                            .build(),
-                                    HttpData.ofUtf8(String.format("{\"Error\":\"Category not found: %d\"}", id)));
-                        } else {
-                            return Flux.just(
-                                    ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                                    HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
+                                            .build()),
+                                    Flux.just(data)
+                            );
                         }
-                    }
-                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
-                        return Flux.concat(
-                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
-                                        .contentType(MediaType.JSON_UTF_8)
-                                        .build()), flux);
-                    }
+                        return Flux.just(data);
+                    });
+                })
+                .switchIfEmpty(Flux.just(
+                        ResponseHeaders.of(HttpStatus.NOT_FOUND),
+                        HttpData.ofUtf8("{\"Warn\":\"Category not found for\"}")
+                ))
+                .onErrorResume(throwable -> {
+                    //log.error("Data stream error", throwable);
                     return Flux.just(
-                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
-                                    .contentType(MediaType.JSON_UTF_8)
-                                    .build(),
-                            HttpData.ofUtf8(String.format("{\"Warn\":\"Not found category of id : %d }\"", id)));
+                            ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                            HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
+                    );
                 });
-        return HttpResponse.of(responseStream);
+        return HttpResponse.of(stream);
     }
 
     @Get("/categories/{id}/descendants")
     public HttpResponse descendants(@Param("id") long id) {
         Flux<ByteBuf> dataFlux = QUERY.descendantsAsync(id); // 假设返回 Flux<ByteBuf>
         // 使用 switchMap：一旦有第一个元素，就前置 headers
-        Flux<HttpObject> responseStream = dataFlux
+        Flux<HttpObject> stream = dataFlux
                 .map(HttpData::wrap)
-                .switchOnFirst((signal, flux) -> {
-                    if (signal.hasError()) { // 第一个信号就是错误
-                        Throwable error = signal.getThrowable();
-                        //System.out.println(error);
-                        if (error instanceof NotFoundException) {
-                            return Flux.just(
-                                    ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                .transform(flux -> {
+                    AtomicBoolean headersSent = new AtomicBoolean(false);
+                    return flux.concatMap(data -> {
+                        if (!headersSent.getAndSet(true)) {
+                            // 第一个数据：先响应头 200，再发数据
+                            return Flux.concat(
+                                    Flux.just(ResponseHeaders.builder(HttpStatus.OK)
                                             .contentType(MediaType.JSON_UTF_8)
-                                            .build(),
-                                    HttpData.ofUtf8(String.format("{\"Error\":\"Category not found: %d\"}", id)));
-                        } else {
-                            return Flux.just(
-                                    ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                                    HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
+                                            .build()),
+                                    Flux.just(data)
+                            );
                         }
-                    }
-                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
-                        return Flux.concat(
-                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
-                                        .contentType(MediaType.JSON_UTF_8)
-                                        .build()), flux);
-                    }
+                        return Flux.just(data);
+                    });
+                })
+                .switchIfEmpty(Flux.just(
+                        ResponseHeaders.of(HttpStatus.NOT_FOUND),
+                        HttpData.ofUtf8("{\"Warn\":\"Category not found for : %s\"}")
+                ))
+                .onErrorResume(throwable -> {
+                    //log.error("Data stream error", throwable);
                     return Flux.just(
-                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
-                                    .contentType(MediaType.JSON_UTF_8)
-                                    .build(),
-                            HttpData.ofUtf8(String.format("{\"Warn\":\"Not found category of id : %d }\"", id)));
+                            ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                            HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
+                    );
                 });
-        return HttpResponse.of(responseStream);
+        return HttpResponse.of(stream);
     }
 
     @Get("/categories/{id}/desc.")
@@ -184,64 +173,70 @@ public class CategoryService {
     public HttpResponse path(@Param("id") long id) {
         Flux<ByteBuf> dataFlux = QUERY.pathAsync(id); // 假设返回 Flux<ByteBuf>
         // 使用 switchMap：一旦有第一个元素，就前置 headers
-        Flux<HttpObject> responseStream = dataFlux
+        Flux<HttpObject> stream = dataFlux
                 .map(HttpData::wrap)
-                .switchOnFirst((signal, flux) -> {
-                    if (signal.hasError()) { // 第一个信号就是错误
-                        Throwable error = signal.getThrowable();
-                        //System.out.println(error);
-                        if (error instanceof NotFoundException) {
-                            return Flux.just(
-                                    ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                .transform(flux -> {
+                    AtomicBoolean headersSent = new AtomicBoolean(false);
+                    return flux.concatMap(data -> {
+                        if (!headersSent.getAndSet(true)) {
+                            // 第一个数据：先响应头 200，再发数据
+                            return Flux.concat(
+                                    Flux.just(ResponseHeaders.builder(HttpStatus.OK)
                                             .contentType(MediaType.JSON_UTF_8)
-                                            .build(),
-                                    HttpData.ofUtf8(String.format("{\"Error\":\"Category not found: %d\"}", id)));
-                        } else {
-                            return Flux.just(
-                                    ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                                    HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
+                                            .build()),
+                                    Flux.just(data)
+                            );
                         }
-                    }
-                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
-                        return Flux.concat(
-                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
-                                        .contentType(MediaType.JSON_UTF_8)
-                                        .build()), flux);
-                    }
+                        return Flux.just(data);
+                    });
+                })
+                .switchIfEmpty(Flux.just(
+                        ResponseHeaders.of(HttpStatus.NOT_FOUND),
+                        HttpData.ofUtf8("{\"Warn\":\"Not found path\"}")
+                ))
+                .onErrorResume(throwable -> {
+                    //log.error("Data stream error", throwable);
                     return Flux.just(
-                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
-                                    .contentType(MediaType.JSON_UTF_8)
-                                    .build(),
-                            HttpData.ofUtf8(String.format("{\"Warn\":\"Not found category of id : %d }\"", id)));
+                            ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                            HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
+                    );
                 });
-        return HttpResponse.of(responseStream);
+        return HttpResponse.of(stream);
     }
 
     @Get("/categories/root")
     public HttpResponse root() {
         Flux<ByteBuf> dataFlux = QUERY.rootAsync(); // 假设返回 Flux<ByteBuf>
         // 使用 switchMap：一旦有第一个元素，就前置 headers
-        Flux<HttpObject> responseStream = dataFlux
+        Flux<HttpObject> stream = dataFlux
                 .map(HttpData::wrap)
-                .switchOnFirst((signal, flux) -> {
-                    if (signal.hasError()) { // 第一个信号就是错误
-                        return Flux.just(
-                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
-                    }
-                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
-                        return Flux.concat(
-                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
-                                        .contentType(MediaType.JSON_UTF_8)
-                                        .build()), flux);
-                    }
+                .transform(flux -> {
+                    AtomicBoolean headersSent = new AtomicBoolean(false);
+                    return flux.concatMap(data -> {
+                        if (!headersSent.getAndSet(true)) {
+                            // 第一个数据：先响应头 200，再发数据
+                            return Flux.concat(
+                                    Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+                                            .contentType(MediaType.JSON_UTF_8)
+                                            .build()),
+                                    Flux.just(data)
+                            );
+                        }
+                        return Flux.just(data);
+                    });
+                })
+                .switchIfEmpty(Flux.just(
+                        ResponseHeaders.of(HttpStatus.NOT_FOUND),
+                        HttpData.ofUtf8("{\"Warn\":\"Category not found\"}")
+                ))
+                .onErrorResume(throwable -> {
+                    //log.error("Data stream error", throwable);
                     return Flux.just(
-                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
-                                    .contentType(MediaType.JSON_UTF_8)
-                                    .build(),
-                            HttpData.ofUtf8("{\"Warn\":\"Not found category root}\""));
+                            ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                            HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
+                    );
                 });
-        return HttpResponse.of(responseStream);
+        return HttpResponse.of(stream);
     }
 
     @Get("/categories")
@@ -253,31 +248,38 @@ public class CategoryService {
 
         Flux<ByteBuf> dataFlux = QUERY.searchAsync(search, offset, size);
 
-        dataFlux.count().subscribe(count -> System.out.println("总共收到 " + count + " 个 ByteBuf"));
+        //dataFlux.count().subscribe(count -> System.out.println("总共收到 " + count + " 个 ByteBuf"));
 
-        Flux<HttpObject> responseStream = dataFlux
+        // 使用 switchMap：一旦有第一个元素，就前置 headers
+        Flux<HttpObject> stream = dataFlux
                 .map(HttpData::wrap)
-                .switchOnFirst((signal, flux) -> {
-                    if (signal.hasError()) {// 信号->错误
-                        return Flux.just(
-                                ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}"));
-                    }
-                    if (signal.hasValue()) { // 2. 有数据 → 先响应头
-                        return Flux.concat(
-                                Flux.just(ResponseHeaders.builder(HttpStatus.OK)
-                                        .contentType(MediaType.JSON_UTF_8)
-                                        .build()), flux);
-                    }
+                .transform(flux -> {
+                    AtomicBoolean headersSent = new AtomicBoolean(false);
+                    return flux.concatMap(data -> {
+                        if (!headersSent.getAndSet(true)) {
+                            // 第一个数据：先响应头 200，再发数据
+                            return Flux.concat(
+                                    Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+                                            .contentType(MediaType.JSON_UTF_8)
+                                            .build()),
+                                    Flux.just(data)
+                            );
+                        }
+                        return Flux.just(data);
+                    });
+                })
+                .switchIfEmpty(Flux.just(
+                        ResponseHeaders.of(HttpStatus.NOT_FOUND),
+                        HttpData.ofUtf8(String.format("{\"Warn\":\"Category not found for : %s\"}", search))
+                ))
+                .onErrorResume(throwable -> {
+                    //log.error("Data stream error", throwable);
                     return Flux.just(
-                            ResponseHeaders.builder(HttpStatus.NOT_FOUND)
-                                    .contentType(MediaType.JSON_UTF_8)
-                                    .build(),
-                            HttpData.ofUtf8("{\"warn\":\"Not found\"}")
+                            ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                            HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
                     );
                 });
-
-        return HttpResponse.of(responseStream);
+        return HttpResponse.of(stream);
     }
 
     @Post("/categories")
@@ -301,7 +303,7 @@ public class CategoryService {
     }
 
     private static Category createCategory(JsonParser parser) throws IOException {
-        String name = null, alias = null, description = null;
+        String name = null, shortName = null, description = null;
         URL icon = null;
         long parentId = 0;
         while (parser.nextToken() != null) {
@@ -311,52 +313,71 @@ public class CategoryService {
                 switch (fieldName) {
                     case "parent_id" -> parentId = parser.getValueAsLong();
                     case "name" -> name = parser.getValueAsString();
-                    case "alias" -> alias = parser.getValueAsString();
+                    case "shortName" -> shortName = parser.getValueAsString();
                     case "description" -> description = parser.getValueAsString();
                     case "icon" -> icon = URI.create(parser.getValueAsString()).toURL();
                 }
             }
         }
-        CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, alias, description, icon);
+        CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, shortName, description, icon);
         Handler<CategoryCreateCommand, Category> handler = new CategoryCreateHandler();
         return handler.execute(command);
     }
 
-    @StatusCode(201)
     @Put("/categories/{id}")
     public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
         RequestHeaders headers = ctx.request().headers();
-        if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
-            return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-                    MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
-
-        return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
-                "{\"status\":\"success\",\"code\":200,\"message\":\"A brand updated,it\"}");
+        MediaType contentType = headers.contentType();
+        if (contentType == null || !(MediaType.JSON.is(contentType) || MediaType.JSON_UTF_8.is(contentType)))
+            return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE, MediaType.JSON_UTF_8,
+                    "{\"status\":415,\"code\":415,\"message\":\"Expected JSON content\"}");
+        // 1. 内存安全：使用 InputStream 进行流式解析，避免大文件 OOM
+        try (InputStream inputStream = body.toInputStream()) {
+            if (inputStream.available() == 0) {
+                return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                        "{\"status\":400,\"code\":400,\"message\":\"Empty request body\"}");
+            }
+            return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
+                try (JsonParser parser = JSON_FACTORY.createParser(inputStream)) {
+                    Category category = CategoryService.update(parser, id);
+                    return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
+                            String.format("{\"status\":\"success\",\"code\":200,\"message\":\"A brand updated, it's %s\"}", category));
+                } catch (JsonProcessingException e) {
+                    // 精细异常捕获：JSON 格式错误返回 400
+                    return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                            "{\"status\":400,\"message\":\"Invalid JSON format\"}");
+                } catch (Exception e) {
+                    // 其他业务或系统异常返回 500
+                    return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                            "{\"status\":500,\"message\":\"Internal server error\"}");
+                }
+            }, VIRTUAL_EXECUTOR));
+        } catch (IOException e) {
+            // 处理获取流本身的异常
+            return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                    "{\"status\":500,\"message\":\"Failed to read request body\"}");
+        }
     }
 
-    private void update(HttpData body, long id) {
-        String name = null, alias = null, description = null;
+    private static Category update(JsonParser parser, long id) throws IOException {
+        String name = null, shortName = null, description = null;
         URL icon = null;
         long parentId = -1L;
-        try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
-            while (parser.nextToken() != null) {
-                if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                    String fieldName = parser.currentName();
-                    parser.nextToken();
-                    switch (fieldName) {
-                        case "parent_id" -> parentId = parser.getValueAsLong();
-                        case "name" -> name = parser.getValueAsString();
-                        case "alias" -> alias = parser.getValueAsString();
-                        case "description" -> description = parser.getValueAsString();
-                        case "icon" -> icon = URI.create(parser.getValueAsString()).toURL();
-                    }
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                String fieldName = parser.currentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "parent_id" -> parentId = parser.getValueAsLong();
+                    case "name" -> name = parser.getValueAsString();
+                    case "shortName" -> shortName = parser.getValueAsString();
+                    case "description" -> description = parser.getValueAsString();
+                    case "icon" -> icon = URI.create(parser.getValueAsString()).toURL();
                 }
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
-        if (name != null || alias != null) {
-            CategoryRenameCommand renameComm = new CategoryRenameCommand(id, name, alias);
+        if (name != null || shortName != null) {
+            CategoryRenameCommand renameComm = new CategoryRenameCommand(id, name, shortName);
         }
         if (parentId != Long.MIN_VALUE)
             new CategoryMoveNodeCommand(id, parentId);
@@ -366,9 +387,10 @@ public class CategoryService {
             if (icon != null)
                 commands.add(new CategoryChangeIconCommand(id, URI.create(icon).toURL()));
              */
+        return null;
     }
 
-    private boolean validate(JsonGenerator generator, boolean root, String parentId, String name, String alias, String description, String uri) throws IOException {
+    private boolean validate(JsonGenerator generator, boolean root, String parentId, String name, String shortName, String description, String uri) throws IOException {
         boolean result = true;
         if (!root && (parentId == null || parentId.isEmpty())) {
             generator.writeStartObject();
@@ -383,10 +405,10 @@ public class CategoryService {
             generator.writeStringField("code", "10_05_02");
             generator.writeStringField("message", "name is required");
         }
-        if (alias != null && alias.length() > 256) {
+        if (shortName != null && shortName.length() > 256) {
             generator.writeStringField("status", "FAIL");
             generator.writeStringField("code", "10_05_03");
-            generator.writeStringField("message", "alias length rang is 1-256");
+            generator.writeStringField("message", "shortName length rang is 1-256");
         }
         if (description != null && description.length() > 512) {
             generator.writeStringField("status", "FAIL");
@@ -404,22 +426,24 @@ public class CategoryService {
     @Delete("/categories/{id}")
     public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id) {
         return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
-            CategoryDeleteCommand command = new CategoryDeleteCommand(id);
-            Handler<CategoryDeleteCommand, Boolean> handler = new CategoryDeleteHandler();
-            handler.execute(command);
+            try {
+                CategoryDeleteCommand delete = new CategoryDeleteCommand(id);
+                Handler<CategoryDeleteCommand, Boolean> handler = new CategoryDeleteHandler();
+                handler.execute(delete);
 
-            return HttpResponse.of(
-                    HttpStatus.OK,
-                    MediaType.JSON_UTF_8,
-                    String.format("{\"status\":\"success\",\"code\":200,\"message\":\"The category(id=%d) is moved to the recycle bin, you can retrieve it later in the recycle bin!\"}", id)
-            );
-        }, ctx.blockingTaskExecutor()).exceptionally(e ->
-                HttpResponse.of(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        MediaType.JSON_UTF_8,
-                        String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage())
-                )
-        ));
+                // 1. 删除成功，推荐使用 204 No Content
+                return HttpResponse.of(HttpStatus.NO_CONTENT);
+
+            } catch (NotFoundException e) {
+                // 2. 精细化异常处理：资源不存在返回 404
+                return HttpResponse.of(HttpStatus.NOT_FOUND, MediaType.JSON_UTF_8,
+                        String.format("{\"status\":\"error\",\"code\":404,\"message\":\"%s\"}", e.getMessage()));
+            } catch (Exception e) {
+                // 3. 其他未知异常返回 500
+                return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                        "{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed due to internal error\"}");
+            }
+        }, VIRTUAL_EXECUTOR)); // 4. 推荐使用虚拟线程替代 blockingTaskExecutor
     }
 }
 

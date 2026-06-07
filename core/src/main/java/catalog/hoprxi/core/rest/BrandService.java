@@ -37,11 +37,11 @@ import com.linecorp.armeria.common.*;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.util.ReferenceCountUtil;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -136,7 +136,7 @@ public class BrandService {
                 })
                 .switchIfEmpty(Flux.just(
                         ResponseHeaders.of(HttpStatus.NOT_FOUND),
-                        HttpData.ofUtf8(String.format("{\"Warn\":\"Category not found for id : %s\"}", search))
+                        HttpData.ofUtf8(String.format("{\"Warn\":\"Brand not found for: %s\"}", search))
                 ))
                 .onErrorResume(throwable -> {
                     //log.error("Data stream error", throwable);
@@ -214,7 +214,6 @@ public class BrandService {
         return handler.execute(command);
     }
 
-    @StatusCode(201)
     @Put("/brands/{id}")
     public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id) {
         RequestHeaders headers = ctx.request().headers();
@@ -222,26 +221,32 @@ public class BrandService {
         if (contentType == null || !(MediaType.JSON.is(contentType) || MediaType.JSON_UTF_8.is(contentType)))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE, MediaType.JSON_UTF_8,
                     "{\"status\":415,\"code\":415,\"message\":\"Expected JSON content\"}");
-        CompletableFuture<HttpResponse> future = CompletableFuture.supplyAsync(() -> {
-            byte[] content = body.array();
-            if (content.length == 0) {
+        // 1. 内存安全：使用 InputStream 进行流式解析，避免大文件 OOM
+        try (InputStream inputStream = body.toInputStream()) {
+            if (inputStream.available() == 0) {
                 return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
                         "{\"status\":400,\"code\":400,\"message\":\"Empty request body\"}");
             }
-            try (JsonParser parser = JSON_FACTORY.createParser(content)) {
-                Brand brand = BrandService.update(parser, id);
-                return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
-                        "{\"status\":\"success\",\"code\":200,\"message\":\"A brand updated,it's %s\"}", brand);
-            } catch (JsonProcessingException e) {
-                // 5. 统一异常处理，避免泄露敏感信息
-                return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
-                        "{\"status\":400,\"message\":\"Invalid JSON format\"}");
-            } catch (Exception e) {
-                return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                        "{\"status\":500,\"message\":\"Internal server error\"}");
-            }
-        }, VIRTUAL_EXECUTOR);
-        return HttpResponse.of(future);
+            return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
+                try (JsonParser parser = JSON_FACTORY.createParser(inputStream)) {
+                    Brand brand = BrandService.update(parser, id);
+                    return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
+                            String.format("{\"status\":\"success\",\"code\":200,\"message\":\"A brand updated, it's %s\"}", brand));
+                } catch (JsonProcessingException e) {
+                    // 精细异常捕获：JSON 格式错误返回 400
+                    return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                            "{\"status\":400,\"message\":\"Invalid JSON format\"}");
+                } catch (Exception e) {
+                    // 其他业务或系统异常返回 500
+                    return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                            "{\"status\":500,\"message\":\"Internal server error\"}");
+                }
+            }, VIRTUAL_EXECUTOR));
+        } catch (IOException e) {
+            // 处理获取流本身的异常
+            return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                    "{\"status\":500,\"message\":\"Failed to read request body\"}");
+        }
     }
 
     private static Brand update(JsonParser parser, long id) throws IOException, URISyntaxException {
@@ -281,30 +286,32 @@ public class BrandService {
             command.setName(name, shortName);
         if (story != null || homepage != null || logo != null || since != null)
             command.setAbout(logo, homepage, since, story);
-        System.out.println(command);
+        //System.out.println(command);
         Handler<BrandUpdateCommand, Brand> handler = new BrandUpdateHandler();
         return handler.execute(command);
     }
 
+    @StatusCode(204)
     @Delete("/brands/:id")
-    public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id) {
+    public HttpResponse delete(@Param("id") long id) {
         return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
-                    BrandDeleteCommand delete = new BrandDeleteCommand(id);
-                    Handler<BrandDeleteCommand, Boolean> handler = new BrandDeleteHandler();
-                    handler.execute(delete);
+            try {
+                BrandDeleteCommand delete = new BrandDeleteCommand(id);
+                Handler<BrandDeleteCommand, Boolean> handler = new BrandDeleteHandler();
+                handler.execute(delete);
 
-                    String message = String.format("Brand(id=%d) deleted successfully", id);
-                    return HttpResponse.of(
-                            HttpStatus.OK,
-                            MediaType.JSON_UTF_8,
-                            String.format("{\"status\":\"success\",\"code\":200,\"message\":\"%s\"}", message)
-                    );
-                }, ctx.blockingTaskExecutor()).exceptionally(e ->
-                        HttpResponse.of(
-                                HttpStatus.INTERNAL_SERVER_ERROR,
-                                MediaType.JSON_UTF_8,
-                                "{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed due to internal error\"}")
-                )
-        );
+                // 1. 删除成功，推荐使用 204 No Content
+                return HttpResponse.of(HttpStatus.NO_CONTENT);
+
+            } catch (NotFoundException e) {
+                // 2. 精细化异常处理：资源不存在返回 404
+                return HttpResponse.of(HttpStatus.NOT_FOUND, MediaType.JSON_UTF_8,
+                        String.format("{\"status\":\"error\",\"code\":404,\"message\":\"%s\"}", e.getMessage()));
+            } catch (Exception e) {
+                // 3. 其他未知异常返回 500
+                return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                        "{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed due to internal error\"}");
+            }
+        }, VIRTUAL_EXECUTOR)); // 4. 推荐使用虚拟线程替代 blockingTaskExecutor
     }
 }

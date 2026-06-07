@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品品牌 - 列表 (莫兰迪绿·Tooltip版)</title>
+    <!-- 引入 data.js -->
+    <script src="./data.js"></script>
+    <!-- 引入 Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- 引入图标库 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            /* --- 莫兰迪绿配色 --- */
+            --bg-body: #f0f2f5; /* 浅灰背景 */
+            --bg-card: #ffffff; /* 卡片纯白 */
+            --text-main: #2c3e50; /* 深蓝灰文字 */
+            --text-sub: #95a5a6; /* 浅灰文字 */
+            --border: #dfe6e9; /* 柔和边框 */
+            /* 品牌色：莫兰迪绿 */
+            --primary: #55efc4; /* 主色：薄荷绿 */
+            --primary-hover: #00b894; /* 悬停：深绿 */
+            --primary-light: #e6fffa; /* 选中背景：极淡绿 */
+            --danger: #ff7675; /* 危险：珊瑚红 */
+            --danger-light: #ffeaa7; /* 危险背景：淡黄 */
+            --success-light: #dff9fb; /* 成功背景：淡青 */
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow: 0 4px 12px rgba(85, 239, 196, 0.15);
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-body);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text-main);
+        }
+        /* --- 顶部工具栏 --- */
+        .toolbar {
+            background: var(--bg-card);
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .toolbar-left {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .btn-default {
+            background: #fff;
+            color: var(--text-main);
+            border-color: var(--border);
+        }
+        .btn-default:hover {
+            background: #f9fafb;
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #2d3436;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            color: white;
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #d63031;
+        }
+        .search-box {
+            position: relative;
+            margin-left: 10px;
+        }
+        .search-box input {
+            padding: 6px 12px 6px 30px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-size: 13px;
+            outline: none;
+            width: 200px;
+            transition: border-color 0.2s;
+        }
+        .search-box input:focus {
+            border-color: var(--primary);
+        }
+        .search-box i {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-sub);
+            font-size: 12px;
+        }
+        /* --- 品牌网格 --- */
+        .brand-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+            gap: 15px;
+        }
+        .brand-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            position: relative;
+            transition: all 0.2s;
+            cursor: pointer;
+            height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            box-sizing: border-box;
+            overflow: visible; /* 允许tooltip溢出 */
+        }
+        .brand-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+            border-color: var(--primary);
+        }
+        /* 选中状态 */
+        .brand-card.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            box-shadow: 0 0 0 1px var(--primary);
+        }
+        /* 选中标记 */
+        .selection-indicator {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .brand-card.selected .selection-indicator {
+            opacity: 1;
+        }
+        /* 悬浮操作按钮 */
+        .card-actions {
+            position: absolute;
+            top: 7px;
+            right: 7px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 2;
+        }
+        .brand-card:hover .card-actions {
+            opacity: 1;
+        }
+        .action-btn {
+            width: 27px;
+            height: 27px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-sub);
+            background: rgba(255,255,255,0.9);
+            border: 1px solid var(--border);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .action-btn.delete:hover {
+            color: var(--danger);
+            border-color: var(--danger);
+            background: var(--danger-light);
+        }
+        /* 品牌 Logo 区域 */
+        .logo-placeholder {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            color: var(--text-sub);
+            font-size: 18px;
+            background-color: #f8fafc;
+            border-radius: 4px;
+        }
+        .logo-img-wrapper {
+            width: 45px;
+            height: 45px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* 确保图片适应容器 */
+        }
+        /* 品牌名称 - 添加相对定位以便tooltip定位 */
+        .brand-name {
+            position: relative; /* 关键：为tooltip提供定位上下文 */
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-main);
+            margin-bottom: 8px; /* 增大与logo的间距，为tooltip留空间 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            /* 移除 cursor: help */
+        }
+
+        /* Tooltip 样式 */
+        .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: calc(100% + 5px); /* 显示在元素上方 */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--text-main);
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: normal;
+            z-index: 100;
+            transition: opacity 0.2s, visibility 0.2s;
+            pointer-events: none; /* 防止tooltip干扰鼠标事件 */
+            min-width: 60px;
+            max-width: 150px;
+            word-wrap: break-word;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* 使用after伪元素创建tooltip箭头 */
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%; /* 箭头在tooltip底部 */
+            left: 50%;
+            margin-left: -3px;
+            border-width: 3px;
+            border-style: solid;
+            border-color: var(--text-main) transparent transparent transparent;
+        }
+
+        /* 悬停时显示tooltip */
+        .brand-name:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* 额外信息容器 - 现在只包含状态标签 */
+        .extra-info-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-top: auto; /* 推动标签到底部 */
+        }
+        /* 简介状态标签 */
+        .status-tag {
+            font-size: 9px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+        }
+        .status-has {
+            background-color: var(--success-light);
+            color: #00b894;
+            border: 1px solid #a7f3d0;
+        }
+        .status-none {
+            background-color: #f1f5f9;
+            color: #64748b;
+            border: 1px dashed #cbd5e1;
+        }
+        /* --- 弹窗 --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            animation: fadeIn 0.2s ease-out;
+        }
+        .modal {
+            background: var(--bg-card);
+            width: 600px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            animation: slideUp 0.2s ease-out;
+        }
+        .modal-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+        }
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin: 0;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text-sub);
+            cursor: pointer;
+        }
+        .close-btn:hover {
+            color: var(--text-main);
+        }
+        .modal-body {
+            padding: 24px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .info-row {
+            margin-bottom: 16px;
+        }
+        .info-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .info-value {
+            font-size: 14px;
+            color: var(--text-main);
+            line-height: 1.6;
+            word-break: break-all;
+        }
+        /* 编辑表单样式 */
+        .edit-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-label {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 14px;
+        }
+        .form-input {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            border-color: var(--primary);
+        }
+        .form-textarea {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            resize: vertical;
+            min-height: 80px;
+            transition: border-color 0.2s;
+        }
+        .form-textarea:focus {
+            border-color: var(--primary);
+        }
+        .reset-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .reset-btn-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-sub);
+            background: rgba(255,255,255,0.9);
+            border: 1px solid var(--border);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 8px; /* 给图标右边留点空间 */
+        }
+        .reset-btn-icon:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .reset-tip {
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+        .inline-group {
+            display: flex;
+            gap: 15px;
+        }
+        .inline-group .form-group {
+            flex: 1;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: #f8fafc;
+        }
+        .modal-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .modal-btn-secondary {
+            background: #fff;
+            color: var(--text-main);
+            border-color: var(--border);
+        }
+        .modal-btn-secondary:hover {
+            background: #f9fafb;
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        .modal-btn-primary {
+            background: var(--primary);
+            color: #2d3436;
+            font-weight: 600;
+        }
+        .modal-btn-primary:hover {
+            background: var(--primary-hover);
+            color: white;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 10px;
+        }
+        .pagination button {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .pagination .current-page {
+            padding: 6px 12px;
+            font-weight: bold;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- 顶部工具栏 -->
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button class="btn btn-primary" @click="handleAdd">
+                <i class="fas fa-plus"></i> 新增
+            </button>
+            <button class="btn btn-danger" :disabled="selectedIds.length === 0" @click="handleBatchDelete" style="opacity: selectedIds.length === 0 ? 0.6 : 1;">
+                <i class="fas fa-trash-alt"></i> 删除 ({{ selectedIds.length }})
+            </button>
+            <button class="btn btn-default" @click="loadData">
+                <i class="fas fa-sync-alt"></i> 刷新
+            </button>
+            <button class="btn btn-default">
+                <i class="fas fa-cog"></i> 设置
+            </button>
+        </div>
+        <div class="toolbar-right">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="可输入编码/名称进行查询" v-model="searchQuery">
+            </div>
+            <button class="btn btn-primary">
+                <i class="fas fa-search"></i> 查询
+            </button>
+        </div>
+    </div>
+
+    <!-- 品牌网格 -->
+    <div class="brand-grid">
+        <div
+                class="brand-card"
+                v-for="brand in paginatedBrands"
+                :key="brand.id"
+                :class="{ selected: selectedIds.includes(brand.id) }"
+                @click="toggleSelect(brand.id)"
+        >
+            <!-- 选中标记 -->
+            <div class="selection-indicator" v-if="selectedIds.includes(brand.id)">
+                <i class="fas fa-check"></i>
+            </div>
+
+            <!-- 悬浮操作按钮 -->
+            <div class="card-actions" @click.stop>
+                <div class="action-btn" @click="handleEdit(brand)" title="编辑">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <div class="action-btn delete" @click="handleDelete(brand.id)" title="删除">
+                    <i class="fas fa-trash"></i>
+                </div>
+            </div>
+
+            <!-- 品牌 Logo -->
+            <div class="logo-img-wrapper" @click.stop>
+                <img v-if="brand.about?.logo" :src="brand.about.logo" class="logo-img" alt="Logo">
+                <div v-else class="logo-placeholder">
+                    <i class="fas fa-image"></i>
+                </div>
+            </div>
+
+            <!-- 品牌名称 - 包含Tooltip -->
+            <div class="brand-name" @click.stop>
+                {{ brand.name }} <span v-if="brand.shortname">({{ brand.shortname }})</span>
+                <!-- Tooltip 内容：仅在有since时显示 -->
+                <div class="tooltip" v-if="brand.about?.since">
+                    {{ brand.about.since }}
+                </div>
+            </div>
+
+            <!-- 底部信息容器：仅包含状态标签 -->
+            <div class="extra-info-container">
+                <div class="status-tag" :class="brand.about?.story ? 'status-has' : 'status-none'" @click.stop="openModal(brand)">
+                    <i class="fas" :class="brand.about?.story ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
+                    <span v-if="brand.about?.story">有简介</span>
+                    <span v-else>无简介</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分页控件 -->
+    <div class="pagination">
+        <button @click="prevPage" :disabled="currentPage === 1">上一页</button>
+        <span class="current-page">第 {{ currentPage }} 页，共 {{ totalPages }} 页</span>
+        <button @click="nextPage" :disabled="currentPage === totalPages">下一页</button>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div class="modal-overlay" v-if="showEditModal" @click="showEditModal = false">
+        <div class="modal" @click.stop>
+            <div class="modal-header">
+                <h3 class="modal-title">编辑品牌信息</h3>
+                <button class="close-btn" @click="showEditModal = false">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form class="edit-form">
+                    <div class="reset-section">
+                        <div class="reset-btn-icon" @click="resetCurrentEditing" title="重置为原始数据">
+                            <i class="fas fa-undo"></i>
+                        </div>
+                        <div class="reset-tip">点击可恢复到上次保存的状态</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">品牌名称 *</label>
+                        <input type="text" class="form-input" v-model="editingBrand.name" placeholder="请输入品牌名称">
+                    </div>
+                    <div class="inline-group">
+                        <div class="form-group">
+                            <label class="form-label">品牌别名</label>
+                            <input type="text" class="form-input" v-model="editingBrand.shortname" placeholder="请输入品牌别名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">成立年份</label>
+                            <input type="number" class="form-input" v-model.number="editingBrand.about.since" placeholder="请输入成立年份">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">官方网站</label>
+                        <input type="url" class="form-input" v-model="editingBrand.about.homepage" placeholder="请输入官方网站地址">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">品牌Logo URL</label>
+                        <input type="url" class="form-input" v-model="editingBrand.about.logo" placeholder="请输入Logo图片URL">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">品牌故事</label>
+                        <textarea class="form-textarea" v-model="editingBrand.about.story" placeholder="请输入品牌故事或简介"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" @click="showEditModal = false">取消</button>
+                <button class="modal-btn modal-btn-primary" @click="saveEdit">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查看详情弹窗 -->
+    <div class="modal-overlay" v-if="showDetailModal" @click="showDetailModal = false">
+        <div class="modal" @click.stop>
+            <div class="modal-header">
+                <h3 class="modal-title">品牌详情</h3>
+                <button class="close-btn" @click="showDetailModal = false">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-row" v-if="detailBrand.name">
+                    <div class="info-label">品牌名称</div>
+                    <div class="info-value">{{ detailBrand.name }} <span v-if="detailBrand.shortname">({{ detailBrand.shortname }})</span></div>
+                </div>
+                <!-- 移除品牌编码行 -->
+                <div class="info-row" v-if="detailBrand.about?.since">
+                    <div class="info-label">成立年份</div>
+                    <div class="info-value">{{ detailBrand.about.since }}</div>
+                </div>
+                <div class="info-row" v-if="detailBrand.about?.homepage">
+                    <div class="info-label">官方网站</div>
+                    <div class="info-value"><a :href="detailBrand.about.homepage" target="_blank">{{ detailBrand.about.homepage }}</a></div>
+                </div>
+                <div class="info-row" v-if="detailBrand.about?.story">
+                    <div class="info-label">品牌故事</div>
+                    <div class="info-value">{{ detailBrand.about.story }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">数据ID</div>
+                    <div class="info-value">{{ detailBrand.id }}</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" @click="showDetailModal = false">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const { createApp, ref, computed } = Vue;
+
+    createApp({
+        setup() {
+            // 从 data.js 获取数据
+            const brands = ref(window.brandData.map(item => ({ ...item }))); // 深拷贝初始数据
+            const searchQuery = ref('');
+            const selectedIds = ref([]);
+            const showEditModal = ref(false);
+            const showDetailModal = ref(false);
+            const editingBrand = ref({});
+            const detailBrand = ref({});
+            const currentPage = ref(1);
+            const itemsPerPage = 12; // 每页显示数量
+
+            const filteredBrands = computed(() => {
+                if (!searchQuery.value) return brands.value;
+                const query = searchQuery.value.toLowerCase();
+                return brands.value.filter(brand =>
+                    brand.name.toLowerCase().includes(query) ||
+                    brand.code.toLowerCase().includes(query) ||
+                    (brand.shortname && brand.shortname.toLowerCase().includes(query))
+                );
+            });
+
+            const totalPages = computed(() => Math.ceil(filteredBrands.value.length / itemsPerPage));
+
+            const paginatedBrands = computed(() => {
+                const start = (currentPage.value - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                return filteredBrands.value.slice(start, end);
+            });
+
+            const loadData = () => {
+                brands.value = window.brandData.map(item => ({ ...item }));
+                currentPage.value = 1;
+            };
+
+            const toggleSelect = (id) => {
+                const index = selectedIds.value.indexOf(id);
+                if (index > -1) {
+                    selectedIds.value.splice(index, 1);
+                } else {
+                    selectedIds.value.push(id);
+                }
+            };
+
+            const handleAdd = () => {
+                editingBrand.value = {
+                    id: Date.now(),
+                    name: '',
+                    shortname: '',
+                    code: '',
+                    about: {
+                        logo: '',
+                        since: null,
+                        story: '',
+                        homepage: ''
+                    }
+                };
+                showEditModal.value = true;
+            };
+
+            const handleEdit = (brand) => {
+                editingBrand.value = JSON.parse(JSON.stringify(brand));
+                showEditModal.value = true;
+            };
+
+            const handleDelete = (id) => {
+                if (confirm('确定要删除这个品牌吗？')) {
+                    brands.value = brands.value.filter(brand => brand.id !== id);
+                    const index = selectedIds.value.indexOf(id);
+                    if (index > -1) {
+                        selectedIds.value.splice(index, 1);
+                    }
+                }
+            };
+
+            const handleBatchDelete = () => {
+                if (selectedIds.value.length === 0) return;
+                if (confirm(`确定要批量删除这 ${selectedIds.value.length} 个品牌吗？`)) {
+                    brands.value = brands.value.filter(brand => !selectedIds.value.includes(brand.id));
+                    selectedIds.value = [];
+                }
+            };
+
+            const saveEdit = () => {
+                const index = brands.value.findIndex(b => b.id === editingBrand.value.id);
+                if (index > -1) {
+                    brands.value[index] = JSON.parse(JSON.stringify(editingBrand.value));
+                } else {
+                    brands.value.push(JSON.parse(JSON.stringify(editingBrand.value)));
+                }
+                showEditModal.value = false;
+            };
+
+            const openModal = (brand) => {
+                detailBrand.value = brand;
+                showDetailModal.value = true;
+            };
+
+            const resetCurrentEditing = () => {
+                const originalBrand = window.brandData.find(b => b.id === editingBrand.value.id);
+                if (originalBrand) {
+                    editingBrand.value = JSON.parse(JSON.stringify(originalBrand));
+                }
+            };
+
+            const prevPage = () => {
+                if (currentPage.value > 1) currentPage.value--;
+            };
+
+            const nextPage = () => {
+                if (currentPage.value < totalPages.value) currentPage.value++;
+            };
+
+            return {
+                brands,
+                searchQuery,
+                selectedIds,
+                showEditModal,
+                showDetailModal,
+                editingBrand,
+                detailBrand,
+                currentPage,
+                totalPages,
+                paginatedBrands,
+                loadData,
+                toggleSelect,
+                handleAdd,
+                handleEdit,
+                handleDelete,
+                handleBatchDelete,
+                saveEdit,
+                openModal,
+                resetCurrentEditing,
+                prevPage,
+                nextPage
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>

@@ -53,8 +53,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
@@ -64,6 +62,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
@@ -78,13 +77,12 @@ public final class ItemService {
     private static final int SIZE = 64;
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
     private static final String MINI_SEPARATION = ",";
-
     private static final ItemQuery QUERY = new ESItemQuery();
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder()
             .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
-    private static final Scheduler SCHEDULER_EXECUTOR = Schedulers.fromExecutorService(Executors.newVirtualThreadPerTaskExecutor());
+    private static final ExecutorService VIRTUAL_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
 
     @Get("/items/{id}")
     @Description("Retrieves the item information by the given ID.")
@@ -473,7 +471,6 @@ public final class ItemService {
         }
     }
 
-    @StatusCode(200)
     @Put("/items/{id}")
     public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id) {
         RequestHeaders headers = ctx.request().headers();
@@ -501,24 +498,25 @@ public final class ItemService {
 
     }
 
-    @StatusCode(200)
+    @StatusCode(204)
     @Delete("/items/{id}")
-    public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id) {
+    public HttpResponse delete(@Param("id") long id) {
         return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
-            ItemDeleteCommand command = new ItemDeleteCommand(id);
-            Handler<ItemDeleteCommand, Boolean> handler = new ItemDeleteHandler();
-            handler.execute(command);
-
-            return HttpResponse.of(
-                    HttpStatus.OK,
-                    MediaType.JSON_UTF_8,
-                    String.format("{\"status\":\"success\",\"code\":200,\"message\":\"The item(id=%d) is moved to the recycle bin, you can retrieve it later in the recycle bin!\"}", id));
-        }, ctx.blockingTaskExecutor()).exceptionally(e ->
-                HttpResponse.of(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        MediaType.JSON_UTF_8,
-                        String.format("{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed: %s\"}", e.getMessage())
-                )
-        ));
+            try {
+                ItemDeleteCommand command = new ItemDeleteCommand(id);
+                Handler<ItemDeleteCommand, Boolean> handler = new ItemDeleteHandler();
+                handler.execute(command);
+                // 1. 删除成功，推荐使用 204 No Content
+                return HttpResponse.of(HttpStatus.NO_CONTENT);
+            } catch (NotFoundException e) {
+                // 2. 精细化异常处理：资源不存在返回 404
+                return HttpResponse.of(HttpStatus.NOT_FOUND, MediaType.JSON_UTF_8,
+                        String.format("{\"status\":\"error\",\"code\":404,\"message\":\"%s\"}", e.getMessage()));
+            } catch (Exception e) {
+                // 3. 其他未知异常返回 500
+                return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                        "{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed due to internal error\"}");
+            }
+        }, VIRTUAL_EXECUTOR));
     }
 }
