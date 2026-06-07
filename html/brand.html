@@ -3,398 +3,384 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商品品牌 - 列表 (莫兰迪绿·Tooltip版)</title>
-    <!-- 引入 data.js -->
-    <script src="./data.js"></script>
-    <!-- 引入 Vue 3 -->
+    <title>品牌管理 · 深色质感 | 真实接口适配</title>
+    <!-- Vue 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- 引入图标库 -->
+    <!-- 图标库 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            /* --- 莫兰迪绿配色 --- */
-            --bg-body: #f0f2f5; /* 浅灰背景 */
-            --bg-card: #ffffff; /* 卡片纯白 */
-            --text-main: #2c3e50; /* 深蓝灰文字 */
-            --text-sub: #95a5a6; /* 浅灰文字 */
-            --border: #dfe6e9; /* 柔和边框 */
-            /* 品牌色：莫兰迪绿 */
-            --primary: #55efc4; /* 主色：薄荷绿 */
-            --primary-hover: #00b894; /* 悬停：深绿 */
-            --primary-light: #e6fffa; /* 选中背景：极淡绿 */
-            --danger: #ff7675; /* 危险：珊瑚红 */
-            --danger-light: #ffeaa7; /* 危险背景：淡黄 */
-            --success-light: #dff9fb; /* 成功背景：淡青 */
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-            --shadow: 0 4px 12px rgba(85, 239, 196, 0.15);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         body {
-            margin: 0;
-            padding: 20px;
-            background-color: var(--bg-body);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            color: var(--text-main);
+            background: #121826;
+            font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 24px;
+            color: #E6EDF5;
         }
-        /* --- 顶部工具栏 --- */
+        .global-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(18, 24, 38, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            font-size: 1.2rem;
+            gap: 12px;
+            color: #7AC9FF;
+        }
         .toolbar {
-            background: var(--bg-card);
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: var(--shadow-sm);
+            background: #1E2538;
+            border-radius: 20px;
+            padding: 12px 24px;
+            margin-bottom: 28px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
-            border: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: 1px solid #2A3348;
         }
-        .toolbar-left {
+        .toolbar-left, .toolbar-right {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             align-items: center;
-        }
-        .toolbar-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-wrap: wrap;
         }
         .btn {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 6px;
+            gap: 8px;
+            padding: 8px 20px;
+            border-radius: 40px;
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: 0.2s;
             border: 1px solid transparent;
-        }
-        .btn-default {
-            background: #fff;
-            color: var(--text-main);
-            border-color: var(--border);
+            background: #2A344A;
+            color: #D1DBF0;
+            border-color: #3A455E;
         }
         .btn-default:hover {
-            background: #f9fafb;
-            color: var(--primary);
-            border-color: var(--primary);
+            background: #3A455E;
+            color: #7AC9FF;
+            border-color: #2D9CDB;
         }
         .btn-primary {
-            background: var(--primary);
-            color: #2d3436;
-            font-weight: 600;
+            background: #2D9CDB;
+            color: white;
         }
         .btn-primary:hover {
-            background: var(--primary-hover);
-            color: white;
+            background: #2383BB;
+            transform: translateY(-1px);
         }
         .btn-danger {
-            background: var(--danger);
-            color: white;
+            background: #4A2F2F;
+            color: #FFB4A2;
+            border-color: #6B4242;
         }
         .btn-danger:hover {
-            background: #d63031;
+            background: #6B3A3A;
+            color: #FFC5B3;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         .search-box {
             position: relative;
-            margin-left: 10px;
         }
         .search-box input {
-            padding: 6px 12px 6px 30px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
+            padding: 8px 12px 8px 36px;
+            border-radius: 32px;
+            border: 1px solid #3A455E;
+            background: #101624;
+            color: #E6EDF5;
             font-size: 13px;
+            width: 260px;
             outline: none;
-            width: 200px;
-            transition: border-color 0.2s;
         }
         .search-box input:focus {
-            border-color: var(--primary);
+            border-color: #2D9CDB;
+            box-shadow: 0 0 0 2px rgba(45, 156, 219, 0.2);
         }
         .search-box i {
             position: absolute;
-            left: 10px;
+            left: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--text-sub);
-            font-size: 12px;
+            color: #7F8AA8;
         }
-        /* --- 品牌网格 --- */
+        .search-box .searching-indicator {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #2D9CDB;
+            font-size: 12px;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+        /* 品牌网格 */
         .brand-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 22px;
         }
         .brand-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 12px;
-            position: relative;
-            transition: all 0.2s;
+            background: #1E2538;
+            border-radius: 24px;
+            padding: 20px 12px 16px;
+            border: 1px solid #2A3348;
+            transition: 0.2s;
             cursor: pointer;
-            height: 140px;
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            position: relative;
-            box-sizing: border-box;
-            overflow: visible; /* 允许tooltip溢出 */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         .brand-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow);
-            border-color: var(--primary);
+            transform: translateY(-3px);
+            border-color: #2D9CDB;
+            background: #252E46;
         }
-        /* 选中状态 */
         .brand-card.selected {
-            border-color: var(--primary);
-            background-color: var(--primary-light);
-            box-shadow: 0 0 0 1px var(--primary);
+            border-color: #2D9CDB;
+            background: #1D2B42;
+            box-shadow: 0 0 0 1px #2D9CDB;
         }
-        /* 选中标记 */
         .selection-indicator {
             position: absolute;
-            top: 5px;
-            left: 5px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background-color: var(--primary);
+            top: 12px;
+            left: 12px;
+            width: 22px;
+            height: 22px;
+            background: #2D9CDB;
+            border-radius: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: #121826;
             font-size: 12px;
-            z-index: 2;
             opacity: 0;
-            transition: opacity 0.2s;
+            transition: 0.2s;
         }
-        .brand-card.selected .selection-indicator {
-            opacity: 1;
-        }
-        /* 悬浮操作按钮 */
+        .brand-card.selected .selection-indicator { opacity: 1; }
         .card-actions {
             position: absolute;
-            top: 7px;
-            right: 7px;
+            top: 12px;
+            right: 12px;
             display: flex;
-            gap: 5px;
+            gap: 6px;
             opacity: 0;
-            transition: opacity 0.2s;
+            transition: 0.2s;
             z-index: 2;
         }
-        .brand-card:hover .card-actions {
-            opacity: 1;
-        }
+        .brand-card:hover .card-actions { opacity: 1; }
         .action-btn {
-            width: 27px;
-            height: 27px;
-            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            border-radius: 30px;
+            background: #2A344A;
+            border: 1px solid #4A5570;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--text-sub);
-            background: rgba(255,255,255,0.9);
-            border: 1px solid var(--border);
+            color: #B8C5E0;
             font-size: 12px;
             cursor: pointer;
-            transition: all 0.2s;
         }
         .action-btn:hover {
-            color: var(--primary);
-            border-color: var(--primary);
-            background: var(--primary-light);
+            background: #2D9CDB;
+            border-color: #7AC9FF;
+            color: white;
         }
         .action-btn.delete:hover {
-            color: var(--danger);
-            border-color: var(--danger);
-            background: var(--danger-light);
+            background: #C25A3A;
+            border-color: #FF9F80;
+            color: white;
         }
-        /* 品牌 Logo 区域 */
-        .logo-placeholder {
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 8px;
-            color: var(--text-sub);
-            font-size: 18px;
-            background-color: #f8fafc;
-            border-radius: 4px;
-        }
+        /* Logo 容器 */
         .logo-img-wrapper {
-            width: 45px;
-            height: 45px;
-            margin-bottom: 8px;
+            width: 84px;
+            height: 84px;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,245,0.25), rgba(210,225,245,0.15));
+            border-radius: 50%;
+            padding: 10px;
+            box-shadow: 0 0 0 2px rgba(45,156,219,0.3), 0 6px 14px rgba(0,0,0,0.4);
+            transition: 0.25s;
+        }
+        .brand-card:hover .logo-img-wrapper {
+            transform: scale(1.02);
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,245,0.35), rgba(210,225,245,0.25));
+            box-shadow: 0 0 0 3px rgba(45,156,219,0.5);
         }
         .logo-img {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* 确保图片适应容器 */
+            object-fit: contain;
+            filter: brightness(1.12) contrast(1.1);
         }
-        /* 品牌名称 - 添加相对定位以便tooltip定位 */
         .brand-name {
-            position: relative; /* 关键：为tooltip提供定位上下文 */
             font-weight: 600;
-            font-size: 14px;
-            color: var(--text-main);
-            margin-bottom: 8px; /* 增大与logo的间距，为tooltip留空间 */
+            font-size: 15px;
+            color: #EFF3FC;
+            margin-bottom: 8px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             width: 100%;
-            /* 移除 cursor: help */
+            position: relative;
         }
-
-        /* Tooltip 样式 */
         .tooltip {
             visibility: hidden;
             opacity: 0;
             position: absolute;
-            bottom: calc(100% + 5px); /* 显示在元素上方 */
+            bottom: calc(100% + 6px);
             left: 50%;
             transform: translateX(-50%);
-            background-color: var(--text-main);
-            color: white;
-            text-align: center;
-            border-radius: 4px;
-            padding: 4px 8px;
+            background-color: #1A1F2E;
+            color: #D6E5FF;
+            border-radius: 16px;
+            padding: 4px 10px;
             font-size: 11px;
-            font-weight: normal;
-            z-index: 100;
-            transition: opacity 0.2s, visibility 0.2s;
-            pointer-events: none; /* 防止tooltip干扰鼠标事件 */
-            min-width: 60px;
-            max-width: 150px;
-            word-wrap: break-word;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            white-space: nowrap;
+            z-index: 200;
+            transition: 0.2s;
+            pointer-events: none;
+            border: 1px solid #2D9CDB;
         }
-
-        /* 使用after伪元素创建tooltip箭头 */
         .tooltip::after {
-            content: "";
+            content: '';
             position: absolute;
-            top: 100%; /* 箭头在tooltip底部 */
+            top: 100%;
             left: 50%;
-            margin-left: -3px;
-            border-width: 3px;
+            margin-left: -4px;
+            border-width: 4px;
             border-style: solid;
-            border-color: var(--text-main) transparent transparent transparent;
+            border-color: #1A1F2E transparent transparent transparent;
         }
-
-        /* 悬停时显示tooltip */
         .brand-name:hover .tooltip {
             visibility: visible;
             opacity: 1;
         }
-
-        /* 额外信息容器 - 现在只包含状态标签 */
         .extra-info-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            margin-top: auto;
             width: 100%;
-            margin-top: auto; /* 推动标签到底部 */
         }
-        /* 简介状态标签 */
         .status-tag {
-            font-size: 9px;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            padding: 5px 12px;
+            border-radius: 40px;
+            background: #252E42;
+            color: #B8CCF0;
             cursor: pointer;
-            user-select: none;
+            border: 1px solid #3A4560;
         }
         .status-has {
-            background-color: var(--success-light);
-            color: #00b894;
-            border: 1px solid #a7f3d0;
+            background: #1D3B4A;
+            color: #86E0FF;
+            border-color: #2D9CDB;
         }
-        .status-none {
-            background-color: #f1f5f9;
-            color: #64748b;
-            border: 1px dashed #cbd5e1;
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 36px;
+            padding: 16px;
         }
-        /* --- 弹窗 --- */
+        .pagination button {
+            padding: 6px 18px;
+            border-radius: 32px;
+            border: 1px solid #3A455E;
+            background: #1E2538;
+            color: #D1DBF0;
+            cursor: pointer;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: #2D9CDB;
+            color: white;
+        }
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .pagination .current-page {
+            padding: 6px 18px;
+            background: #2A344A;
+            border-radius: 32px;
+        }
+        /* 弹窗 */
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(2px);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 100;
-            animation: fadeIn 0.2s ease-out;
+            z-index: 1000;
         }
         .modal {
-            background: var(--bg-card);
-            width: 600px;
-            border-radius: 12px;
+            background: #1E2538;
+            width: 620px;
+            border-radius: 28px;
             overflow: hidden;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            animation: slideUp 0.2s ease-out;
+            border: 1px solid #2A3348;
         }
         .modal-header {
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--border);
+            padding: 20px 28px;
+            border-bottom: 1px solid #2A3348;
+            background: #181E2C;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            background: #f8fafc;
         }
         .modal-title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 600;
-            color: var(--text-main);
-            margin: 0;
+            color: #EFF3FC;
         }
         .close-btn {
             background: none;
             border: none;
-            font-size: 20px;
-            color: var(--text-sub);
+            font-size: 26px;
+            color: #8E9CBA;
             cursor: pointer;
         }
-        .close-btn:hover {
-            color: var(--text-main);
-        }
+        .close-btn:hover { color: #2D9CDB; }
         .modal-body {
-            padding: 24px;
+            padding: 28px;
             max-height: 70vh;
             overflow-y: auto;
         }
-        .info-row {
-            margin-bottom: 16px;
-        }
-        .info-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-sub);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .info-value {
-            font-size: 14px;
-            color: var(--text-main);
-            line-height: 1.6;
-            word-break: break-all;
-        }
-        /* 编辑表单样式 */
         .edit-form {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 22px;
         }
         .form-group {
             display: flex;
@@ -403,228 +389,162 @@
         }
         .form-label {
             font-weight: 600;
-            color: var(--text-main);
-            font-size: 14px;
+            font-size: 13px;
+            color: #C4D0EC;
         }
-        .form-input {
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .form-input:focus {
-            border-color: var(--primary);
-        }
-        .form-textarea {
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
+        .form-input, .form-textarea {
+            padding: 10px 14px;
+            border-radius: 20px;
+            border: 1px solid #3A455E;
+            background: #101624;
+            color: #EFF3FC;
             font-size: 14px;
             outline: none;
-            resize: vertical;
-            min-height: 80px;
-            transition: border-color 0.2s;
         }
-        .form-textarea:focus {
-            border-color: var(--primary);
+        .form-input:focus, .form-textarea:focus {
+            border-color: #2D9CDB;
+            box-shadow: 0 0 0 2px rgba(45, 156, 219, 0.2);
         }
         .reset-section {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 12px;
+            background: #131828;
+            padding: 8px 16px;
+            border-radius: 60px;
+            width: fit-content;
         }
         .reset-btn-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            border-radius: 32px;
+            background: #2A344A;
+            border: 1px solid #4A5570;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--text-sub);
-            background: rgba(255,255,255,0.9);
-            border: 1px solid var(--border);
-            font-size: 12px;
             cursor: pointer;
-            transition: all 0.2s;
-            margin-right: 8px; /* 给图标右边留点空间 */
+            color: #B8C5E0;
         }
         .reset-btn-icon:hover {
-            color: var(--primary);
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-        .reset-tip {
-            font-size: 12px;
-            color: var(--text-sub);
+            border-color: #2D9CDB;
+            color: #7AC9FF;
+            transform: rotate(-10deg);
         }
         .inline-group {
             display: flex;
-            gap: 15px;
+            gap: 18px;
         }
-        .inline-group .form-group {
-            flex: 1;
-        }
+        .inline-group .form-group { flex: 1; }
         .modal-footer {
-            padding: 16px 24px;
-            border-top: 1px solid var(--border);
+            padding: 16px 28px;
+            border-top: 1px solid #2A3348;
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
-            background: #f8fafc;
+            gap: 12px;
+            background: #181E2C;
         }
         .modal-btn {
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 8px 24px;
+            border-radius: 40px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s;
             border: 1px solid transparent;
         }
         .modal-btn-secondary {
-            background: #fff;
-            color: var(--text-main);
-            border-color: var(--border);
-        }
-        .modal-btn-secondary:hover {
-            background: #f9fafb;
-            color: var(--primary);
-            border-color: var(--primary);
+            background: #2A344A;
+            color: #D1DBF0;
+            border-color: #3A455E;
         }
         .modal-btn-primary {
-            background: var(--primary);
-            color: #2d3436;
-            font-weight: 600;
-        }
-        .modal-btn-primary:hover {
-            background: var(--primary-hover);
+            background: #2D9CDB;
             color: white;
         }
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 20px;
-            padding: 10px;
+        .info-row {
+            margin-bottom: 18px;
+            border-bottom: 1px solid #2A3348;
+            padding-bottom: 10px;
         }
-        .pagination button {
-            padding: 6px 12px;
-            border: 1px solid var(--border);
-            background: white;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
+        .info-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #9AABCC;
+            text-transform: uppercase;
+            margin-bottom: 4px;
         }
-        .pagination button:hover:not(:disabled) {
-            background: var(--primary-light);
-            border-color: var(--primary);
+        .info-value {
+            font-size: 14px;
+            color: #E6EDF5;
+            word-break: break-word;
         }
-        .pagination button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .pagination .current-page {
-            padding: 6px 12px;
-            font-weight: bold;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: #1E2538;
+            border-radius: 28px;
+            color: #8A99B5;
         }
     </style>
 </head>
 <body>
 <div id="app">
-    <!-- 顶部工具栏 -->
     <div class="toolbar">
         <div class="toolbar-left">
-            <button class="btn btn-primary" @click="handleAdd">
-                <i class="fas fa-plus"></i> 新增
-            </button>
-            <button class="btn btn-danger" :disabled="selectedIds.length === 0" @click="handleBatchDelete" style="opacity: selectedIds.length === 0 ? 0.6 : 1;">
-                <i class="fas fa-trash-alt"></i> 删除 ({{ selectedIds.length }})
-            </button>
-            <button class="btn btn-default" @click="loadData">
-                <i class="fas fa-sync-alt"></i> 刷新
-            </button>
-            <button class="btn btn-default">
-                <i class="fas fa-cog"></i> 设置
-            </button>
+            <button class="btn btn-primary" @click="handleAdd" :disabled="loading"><i class="fas fa-plus"></i> 新增品牌</button>
+            <button class="btn btn-danger" :disabled="selectedIds.length === 0 || loading" @click="batchDelete"><i class="fas fa-trash-alt"></i> 删除 ({{ selectedIds.length }})</button>
+            <button class="btn btn-default" @click="resetSearch" :disabled="loading"><i class="fas fa-sync-alt"></i> 重置列表</button>
         </div>
         <div class="toolbar-right">
             <div class="search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="可输入编码/名称进行查询" v-model="searchQuery">
+                <input type="text" placeholder="品牌名称 / 拼音 / 首字母 (例: 安居宝 / anjubao / ajb)"
+                       v-model="searchKeyword"
+                       @keyup.enter="searchBrands"
+                       :disabled="loading">
+                <span v-if="searching" class="searching-indicator"><i class="fas fa-spinner fa-pulse"></i></span>
             </div>
-            <button class="btn btn-primary">
-                <i class="fas fa-search"></i> 查询
+            <button class="btn btn-primary" @click="searchBrands" :disabled="loading || !searchKeyword.trim()">
+                <i class="fas fa-search"></i> 搜索
             </button>
         </div>
     </div>
 
-    <!-- 品牌网格 -->
-    <div class="brand-grid">
-        <div
-                class="brand-card"
-                v-for="brand in paginatedBrands"
-                :key="brand.id"
-                :class="{ selected: selectedIds.includes(brand.id) }"
-                @click="toggleSelect(brand.id)"
-        >
-            <!-- 选中标记 -->
-            <div class="selection-indicator" v-if="selectedIds.includes(brand.id)">
-                <i class="fas fa-check"></i>
-            </div>
+    <div v-if="loading" class="global-loading">
+        <i class="fas fa-spinner fa-pulse"></i> 加载品牌数据...
+    </div>
 
-            <!-- 悬浮操作按钮 -->
+    <div class="brand-grid" v-else>
+        <div v-for="brand in paginatedBrands" :key="brand.id" class="brand-card" :class="{ selected: selectedIds.includes(brand.id) }" @click="toggleSelect(brand.id)">
+            <div class="selection-indicator" v-if="selectedIds.includes(brand.id)"><i class="fas fa-check"></i></div>
             <div class="card-actions" @click.stop>
-                <div class="action-btn" @click="handleEdit(brand)" title="编辑">
-                    <i class="fas fa-edit"></i>
-                </div>
-                <div class="action-btn delete" @click="handleDelete(brand.id)" title="删除">
-                    <i class="fas fa-trash"></i>
-                </div>
+                <div class="action-btn" @click="handleEdit(brand)"><i class="fas fa-edit"></i></div>
+                <div class="action-btn delete" @click="handleDelete(brand.id)"><i class="fas fa-trash"></i></div>
             </div>
-
-            <!-- 品牌 Logo -->
-            <div class="logo-img-wrapper" @click.stop>
-                <img v-if="brand.about?.logo" :src="brand.about.logo" class="logo-img" alt="Logo">
-                <div v-else class="logo-placeholder">
-                    <i class="fas fa-image"></i>
-                </div>
+            <div class="logo-img-wrapper">
+                <img :src="getBrandLogo(brand)" class="logo-img" @error="handleImageError">
             </div>
-
-            <!-- 品牌名称 - 包含Tooltip -->
-            <div class="brand-name" @click.stop>
-                {{ brand.name }} <span v-if="brand.shortname">({{ brand.shortname }})</span>
-                <!-- Tooltip 内容：仅在有since时显示 -->
-                <div class="tooltip" v-if="brand.about?.since">
-                    {{ brand.about.since }}
-                </div>
+            <div class="brand-name">
+                {{ brand.name }} <span v-if="brand.shortName && brand.shortName !== ''">({{ brand.shortName }})</span>
+                <div class="tooltip" v-if="brand.since">📅 成立: {{ brand.since }}</div>
             </div>
-
-            <!-- 底部信息容器：仅包含状态标签 -->
             <div class="extra-info-container">
-                <div class="status-tag" :class="brand.about?.story ? 'status-has' : 'status-none'" @click.stop="openModal(brand)">
-                    <i class="fas" :class="brand.about?.story ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
-                    <span v-if="brand.about?.story">有简介</span>
-                    <span v-else>无简介</span>
+                <div class="status-tag" :class="brand.story ? 'status-has' : ''" @click.stop="openModal(brand)">
+                    <i class="fas" :class="brand.story ? 'fa-book-open' : 'fa-file-alt'"></i>
+                    <span>{{ brand.story ? '有简介' : '无简介' }}</span>
                 </div>
             </div>
         </div>
+        <div v-if="brands.length === 0 && !loading" class="empty-state">
+            <i class="fas fa-box-open" style="font-size: 36px; margin-bottom: 12px; display: block;"></i>
+            <p v-if="lastSearchKeyword">未找到与 "{{ lastSearchKeyword }}" 相关的品牌</p>
+            <p v-else>暂无品牌数据，请点击「重置列表」或稍后再试</p>
+        </div>
     </div>
 
-    <!-- 分页控件 -->
-    <div class="pagination">
+    <div class="pagination" v-if="brands.length > 0 && !loading">
         <button @click="prevPage" :disabled="currentPage === 1">上一页</button>
-        <span class="current-page">第 {{ currentPage }} 页，共 {{ totalPages }} 页</span>
+        <span class="current-page">第 {{ currentPage }} / {{ totalPages }} 页</span>
         <button @click="nextPage" :disabled="currentPage === totalPages">下一页</button>
     </div>
 
@@ -632,85 +552,41 @@
     <div class="modal-overlay" v-if="showEditModal" @click="showEditModal = false">
         <div class="modal" @click.stop>
             <div class="modal-header">
-                <h3 class="modal-title">编辑品牌信息</h3>
+                <h3 class="modal-title"><i class="fas fa-pen-alt"></i> 编辑品牌</h3>
                 <button class="close-btn" @click="showEditModal = false">&times;</button>
             </div>
             <div class="modal-body">
-                <form class="edit-form">
+                <form @submit.prevent="saveEdit">
                     <div class="reset-section">
-                        <div class="reset-btn-icon" @click="resetCurrentEditing" title="重置为原始数据">
-                            <i class="fas fa-undo"></i>
-                        </div>
-                        <div class="reset-tip">点击可恢复到上次保存的状态</div>
+                        <div class="reset-btn-icon" @click="resetEditing"><i class="fas fa-undo"></i></div>
+                        <span style="font-size:12px; color:#9AABCC;">重置到原始数据</span>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">品牌名称 *</label>
-                        <input type="text" class="form-input" v-model="editingBrand.name" placeholder="请输入品牌名称">
-                    </div>
+                    <div class="form-group"><label class="form-label">品牌名称 *</label><input class="form-input" v-model="editingBrand.name"></div>
                     <div class="inline-group">
-                        <div class="form-group">
-                            <label class="form-label">品牌别名</label>
-                            <input type="text" class="form-input" v-model="editingBrand.shortname" placeholder="请输入品牌别名">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">成立年份</label>
-                            <input type="number" class="form-input" v-model.number="editingBrand.about.since" placeholder="请输入成立年份">
-                        </div>
+                        <div class="form-group"><label class="form-label">别名/简称</label><input class="form-input" v-model="editingBrand.shortName"></div>
+                        <div class="form-group"><label class="form-label">成立年份</label><input type="number" class="form-input" v-model.number="editingBrand.since"></div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">官方网站</label>
-                        <input type="url" class="form-input" v-model="editingBrand.about.homepage" placeholder="请输入官方网站地址">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">品牌Logo URL</label>
-                        <input type="url" class="form-input" v-model="editingBrand.about.logo" placeholder="请输入Logo图片URL">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">品牌故事</label>
-                        <textarea class="form-textarea" v-model="editingBrand.about.story" placeholder="请输入品牌故事或简介"></textarea>
-                    </div>
+                    <div class="form-group"><label class="form-label">官网</label><input class="form-input" v-model="editingBrand.homepage"></div>
+                    <div class="form-group"><label class="form-label">Logo URL</label><input class="form-input" v-model="editingBrand.logo"></div>
+                    <div class="form-group"><label class="form-label">品牌故事</label><textarea class="form-textarea" rows="3" v-model="editingBrand.story"></textarea></div>
+                    <div class="modal-footer"><button type="button" class="modal-btn modal-btn-secondary" @click="showEditModal=false">取消</button><button type="submit" class="modal-btn modal-btn-primary">保存</button></div>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn modal-btn-secondary" @click="showEditModal = false">取消</button>
-                <button class="modal-btn modal-btn-primary" @click="saveEdit">保存</button>
             </div>
         </div>
     </div>
 
-    <!-- 查看详情弹窗 -->
+    <!-- 详情弹窗 -->
     <div class="modal-overlay" v-if="showDetailModal" @click="showDetailModal = false">
         <div class="modal" @click.stop>
-            <div class="modal-header">
-                <h3 class="modal-title">品牌详情</h3>
-                <button class="close-btn" @click="showDetailModal = false">&times;</button>
-            </div>
+            <div class="modal-header"><h3 class="modal-title"><i class="fas fa-info-circle"></i> 品牌详情</h3><button class="close-btn" @click="showDetailModal=false">&times;</button></div>
             <div class="modal-body">
-                <div class="info-row" v-if="detailBrand.name">
-                    <div class="info-label">品牌名称</div>
-                    <div class="info-value">{{ detailBrand.name }} <span v-if="detailBrand.shortname">({{ detailBrand.shortname }})</span></div>
-                </div>
-                <!-- 移除品牌编码行 -->
-                <div class="info-row" v-if="detailBrand.about?.since">
-                    <div class="info-label">成立年份</div>
-                    <div class="info-value">{{ detailBrand.about.since }}</div>
-                </div>
-                <div class="info-row" v-if="detailBrand.about?.homepage">
-                    <div class="info-label">官方网站</div>
-                    <div class="info-value"><a :href="detailBrand.about.homepage" target="_blank">{{ detailBrand.about.homepage }}</a></div>
-                </div>
-                <div class="info-row" v-if="detailBrand.about?.story">
-                    <div class="info-label">品牌故事</div>
-                    <div class="info-value">{{ detailBrand.about.story }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">数据ID</div>
-                    <div class="info-value">{{ detailBrand.id }}</div>
-                </div>
+                <div class="info-row"><div class="info-label">品牌名称</div><div class="info-value">{{ detailBrand.name }} <span v-if="detailBrand.shortName">({{ detailBrand.shortName }})</span></div></div>
+                <div class="info-row" v-if="detailBrand.since"><div class="info-label">成立年份</div><div class="info-value">{{ detailBrand.since }}</div></div>
+                <div class="info-row" v-if="detailBrand.homepage"><div class="info-label">官网</div><div class="info-value"><a :href="detailBrand.homepage" target="_blank">{{ detailBrand.homepage }}</a></div></div>
+                <div class="info-row" v-if="detailBrand.story"><div class="info-label">品牌故事</div><div class="info-value">{{ detailBrand.story }}</div></div>
+                <div class="info-row"><div class="info-label">ID</div><div class="info-value">{{ detailBrand.id }}</div></div>
             </div>
-            <div class="modal-footer">
-                <button class="modal-btn modal-btn-secondary" @click="showDetailModal = false">关闭</button>
-            </div>
+            <div class="modal-footer"><button class="modal-btn modal-btn-secondary" @click="showDetailModal=false">关闭</button></div>
         </div>
     </div>
 </div>
@@ -718,63 +594,142 @@
 <script>
     const { createApp, ref, computed } = Vue;
 
+    // ================= 正则处理大整数 =================
+    // 将 JSON 字符串中 16 位及以上的数字（作为属性值时）包装为字符串
+    function safeParseBigIntJson(jsonStr) {
+        // 匹配模式：冒号 + 可选空格 + 连续16位以上数字，后面紧跟逗号、右大括号或右中括号
+        const safeStr = jsonStr.replace(/:\s*(-?\d{16,})(?=\s*[,\]}])/g, ':"$1"');
+        return JSON.parse(safeStr);
+    }
+
+    // ================= 工具函数 =================
+    const DEFAULT_LOGO = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='26' fill='%232D3748' stroke='%232D9CDB' stroke-width='1.2' /%3E%3Cpath fill='%237AC9FF' d='M30 17 L37 28 L30 39 L23 28 Z' /%3E%3Ccircle cx='30' cy='32' r='6' fill='%234FAEE6' /%3E%3Ctext x='30' y='48' font-size='9' text-anchor='middle' fill='%23B8E2FF' font-weight='bold'%3EBRAND%3C/text%3E%3C/svg%3E";
+
+    // 解析后端返回的品牌数据（严格适配您提供的结构）
+    function normalizeBrand(raw) {
+        // name 字段可能是对象，也可能是字符串（兼容），这里按对象处理
+        const nameObj = raw.name || {};
+        const about = raw.about || {};
+        return {
+            id: String(raw.id),                          // 大整数转字符串防止精度丢失
+            name: nameObj.name || '未命名',
+            shortName: nameObj.shortName || raw.shortName || '',
+            // 其他 about 字段
+            logo: about.logo || '',
+            since: about.since || null,
+            story: about.story || '',
+            homepage: about.homepage || '',
+            code: raw.code || `BRAND_${raw.id}`
+        };
+    }
+
+    // 后端搜索接口 URL
+    const SEARCH_URL = 'https://slave.tooo.top/catalog/v1/brands';
+
     createApp({
         setup() {
-            // 从 data.js 获取数据
-            const brands = ref(window.brandData.map(item => ({ ...item }))); // 深拷贝初始数据
-            const searchQuery = ref('');
+            const brands = ref([]);            // 当前显示的列表（搜索结果或全量）
             const selectedIds = ref([]);
             const showEditModal = ref(false);
             const showDetailModal = ref(false);
             const editingBrand = ref({});
             const detailBrand = ref({});
             const currentPage = ref(1);
-            const itemsPerPage = 12; // 每页显示数量
+            const itemsPerPage = 12;
+            const loading = ref(false);
+            const searchKeyword = ref('');
+            const searching = ref(false);
+            const lastSearchKeyword = ref('');
 
-            const filteredBrands = computed(() => {
-                if (!searchQuery.value) return brands.value;
-                const query = searchQuery.value.toLowerCase();
-                return brands.value.filter(brand =>
-                    brand.name.toLowerCase().includes(query) ||
-                    brand.code.toLowerCase().includes(query) ||
-                    (brand.shortname && brand.shortname.toLowerCase().includes(query))
-                );
-            });
-
-            const totalPages = computed(() => Math.ceil(filteredBrands.value.length / itemsPerPage));
-
+            // 分页数据
             const paginatedBrands = computed(() => {
                 const start = (currentPage.value - 1) * itemsPerPage;
-                const end = start + itemsPerPage;
-                return filteredBrands.value.slice(start, end);
+                return brands.value.slice(start, start + itemsPerPage);
             });
+            const totalPages = computed(() => Math.max(1, Math.ceil(brands.value.length / itemsPerPage)));
 
-            const loadData = () => {
-                brands.value = window.brandData.map(item => ({ ...item }));
-                currentPage.value = 1;
+            // 执行搜索（调用后端接口）
+            const searchBrands = async () => {
+                const kw = searchKeyword.value.trim();
+                if (!kw) {
+                    // 关键词为空，重置为全量数据（不带 s 参数）
+                    await fetchAllBrands();
+                    return;
+                }
+                searching.value = true;
+                loading.value = true;
+                try {
+                    const url = `${SEARCH_URL}?s=${encodeURIComponent(kw)}&offset=0&size=64`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const text = await response.text();
+                    const jsonData = safeParseBigIntJson(text);
+                    // 注意：后端返回格式为 {"total":0,"brands":[]} 或 {"total":2,"brands":[...]}
+                    if (jsonData && Array.isArray(jsonData.brands)) {
+                        brands.value = jsonData.brands.map(normalizeBrand);
+                        lastSearchKeyword.value = kw;
+                        currentPage.value = 1;
+                    } else {
+                        brands.value = [];
+                    }
+                } catch (err) {
+                    console.error('搜索失败:', err);
+                    alert(`搜索失败: ${err.message}`);
+                    brands.value = [];
+                } finally {
+                    loading.value = false;
+                    searching.value = false;
+                }
             };
 
-            const toggleSelect = (id) => {
-                const index = selectedIds.value.indexOf(id);
-                if (index > -1) {
-                    selectedIds.value.splice(index, 1);
-                } else {
-                    selectedIds.value.push(id);
+            // 获取全量品牌（不带搜索条件，注意这里 offset 和 size 可以根据需要调整，最大可能 200）
+            const fetchAllBrands = async () => {
+                loading.value = true;
+                try {
+                    const response = await fetch(`${SEARCH_URL}?offset=0&size=200`);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const text = await response.text();
+                    const jsonData = safeParseBigIntJson(text);
+                    if (jsonData && Array.isArray(jsonData.brands)) {
+                        brands.value = jsonData.brands.map(normalizeBrand);
+                    } else {
+                        brands.value = [];
+                    }
+                    searchKeyword.value = '';
+                    lastSearchKeyword.value = '';
+                    currentPage.value = 1;
+                } catch (err) {
+                    console.error('加载失败:', err);
+                    alert(`加载失败: ${err.message}`);
+                    brands.value = [];
+                } finally {
+                    loading.value = false;
                 }
+            };
+
+            // 重置搜索（清空关键词并重载全量）
+            const resetSearch = () => {
+                searchKeyword.value = '';
+                fetchAllBrands();
+            };
+
+            // 辅助 ID 比较
+            const isEqualId = (a, b) => String(a) === String(b);
+
+            const toggleSelect = (id) => {
+                const idx = selectedIds.value.findIndex(sid => isEqualId(sid, id));
+                idx === -1 ? selectedIds.value.push(id) : selectedIds.value.splice(idx, 1);
             };
 
             const handleAdd = () => {
                 editingBrand.value = {
-                    id: Date.now(),
+                    id: Date.now().toString(),
                     name: '',
-                    shortname: '',
-                    code: '',
-                    about: {
-                        logo: '',
-                        since: null,
-                        story: '',
-                        homepage: ''
-                    }
+                    shortName: '',
+                    logo: '',
+                    since: null,
+                    story: '',
+                    homepage: ''
                 };
                 showEditModal.value = true;
             };
@@ -785,29 +740,31 @@
             };
 
             const handleDelete = (id) => {
-                if (confirm('确定要删除这个品牌吗？')) {
-                    brands.value = brands.value.filter(brand => brand.id !== id);
-                    const index = selectedIds.value.indexOf(id);
-                    if (index > -1) {
-                        selectedIds.value.splice(index, 1);
-                    }
+                if (confirm('确定删除该品牌吗？')) {
+                    brands.value = brands.value.filter(b => !isEqualId(b.id, id));
+                    selectedIds.value = selectedIds.value.filter(sid => !isEqualId(sid, id));
                 }
             };
 
-            const handleBatchDelete = () => {
+            const batchDelete = () => {
                 if (selectedIds.value.length === 0) return;
-                if (confirm(`确定要批量删除这 ${selectedIds.value.length} 个品牌吗？`)) {
-                    brands.value = brands.value.filter(brand => !selectedIds.value.includes(brand.id));
+                if (confirm(`删除 ${selectedIds.value.length} 个品牌？`)) {
+                    brands.value = brands.value.filter(b => !selectedIds.value.some(sid => isEqualId(sid, b.id)));
                     selectedIds.value = [];
                 }
             };
 
             const saveEdit = () => {
-                const index = brands.value.findIndex(b => b.id === editingBrand.value.id);
-                if (index > -1) {
-                    brands.value[index] = JSON.parse(JSON.stringify(editingBrand.value));
+                if (!editingBrand.value.name) {
+                    alert('品牌名称不能为空');
+                    return;
+                }
+                const idx = brands.value.findIndex(b => isEqualId(b.id, editingBrand.value.id));
+                const cloned = JSON.parse(JSON.stringify(editingBrand.value));
+                if (idx !== -1) {
+                    brands.value[idx] = cloned;
                 } else {
-                    brands.value.push(JSON.parse(JSON.stringify(editingBrand.value)));
+                    brands.value.push(cloned);
                 }
                 showEditModal.value = false;
             };
@@ -817,24 +774,22 @@
                 showDetailModal.value = true;
             };
 
-            const resetCurrentEditing = () => {
-                const originalBrand = window.brandData.find(b => b.id === editingBrand.value.id);
-                if (originalBrand) {
-                    editingBrand.value = JSON.parse(JSON.stringify(originalBrand));
-                }
+            const resetEditing = () => {
+                const original = brands.value.find(b => isEqualId(b.id, editingBrand.value.id));
+                if (original) editingBrand.value = JSON.parse(JSON.stringify(original));
             };
 
-            const prevPage = () => {
-                if (currentPage.value > 1) currentPage.value--;
-            };
+            const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
+            const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
 
-            const nextPage = () => {
-                if (currentPage.value < totalPages.value) currentPage.value++;
-            };
+            const getBrandLogo = (brand) => brand.logo && brand.logo.trim() ? brand.logo : DEFAULT_LOGO;
+            const handleImageError = (e) => { if (e.target.src !== DEFAULT_LOGO) e.target.src = DEFAULT_LOGO; };
+
+            // 初始化加载全量数据
+            fetchAllBrands();
 
             return {
                 brands,
-                searchQuery,
                 selectedIds,
                 showEditModal,
                 showDetailModal,
@@ -843,17 +798,24 @@
                 currentPage,
                 totalPages,
                 paginatedBrands,
-                loadData,
+                loading,
+                searchKeyword,
+                searching,
+                lastSearchKeyword,
+                searchBrands,
+                resetSearch,
                 toggleSelect,
                 handleAdd,
                 handleEdit,
                 handleDelete,
-                handleBatchDelete,
+                batchDelete,
                 saveEdit,
                 openModal,
-                resetCurrentEditing,
+                resetEditing,
                 prevPage,
-                nextPage
+                nextPage,
+                getBrandLogo,
+                handleImageError
             };
         }
     }).mount('#app');
