@@ -3,23 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>品牌管理 · 深色质感 | 真实接口适配</title>
+    <title>品牌管理 · SaaS零售风格 | 左侧导航集成</title>
     <!-- Vue 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- 图标库 -->
+    <!-- 图标库 Font Awesome & Material Icons (用于侧边栏) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
+        /* 整体布局：侧边栏 + 右侧主内容 */
         body {
             background: #121826;
             font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            padding: 24px;
-            color: #E6EDF5;
+            overflow: hidden;
+            height: 100vh;
         }
+
+        /* 双栏弹性布局 */
+        .app-layout {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* ========= 左侧深色侧边栏 (SaaS零售风格) ========= */
+        .sidebar {
+            width: 260px;
+            background: #001529;
+            color: rgba(255,255,255,0.7);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            z-index: 10;
+            box-shadow: 2px 0 12px rgba(0,0,0,0.3);
+        }
+
+        .logo-area {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 10px;
+            background: rgba(0,0,0,0.2);
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .logo-area .material-symbols-outlined {
+            font-size: 24px;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 16px 0;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: rgba(255,255,255,0.7);
+        }
+        .nav-item:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        .nav-item.active {
+            background: #1677ff;
+            color: #fff;
+            border-right: none;
+            position: relative;
+        }
+        .nav-item .material-symbols-outlined {
+            font-size: 20px;
+        }
+
+        /* ========= 右侧主内容区域 (原品牌管理完整功能) ========= */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 24px 28px 28px 28px;
+            background: #121826;
+        }
+
+        /* 以下全部为原有品牌管理样式，仅微调内部元素间距确保适配新容器 */
         .global-loading {
             position: fixed;
             top: 0;
@@ -489,104 +569,143 @@
 </head>
 <body>
 <div id="app">
-    <div class="toolbar">
-        <div class="toolbar-left">
-            <button class="btn btn-primary" @click="handleAdd" :disabled="loading"><i class="fas fa-plus"></i> 新增品牌</button>
-            <button class="btn btn-danger" :disabled="selectedIds.length === 0 || loading" @click="batchDelete"><i class="fas fa-trash-alt"></i> 删除 ({{ selectedIds.length }})</button>
-            <button class="btn btn-default" @click="resetSearch" :disabled="loading"><i class="fas fa-sync-alt"></i> 重置列表</button>
-        </div>
-        <div class="toolbar-right">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="品牌名称 / 拼音 / 首字母 (例: 安居宝 / anjubao / ajb)"
-                       v-model="searchKeyword"
-                       @keyup.enter="searchBrands"
-                       :disabled="loading">
-                <span v-if="searching" class="searching-indicator"><i class="fas fa-spinner fa-pulse"></i></span>
+    <div class="app-layout">
+        <!-- 左侧边栏 (SaaS零售导航) -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <span class="material-symbols-outlined">storefront</span>
+                <span>SaaS 零售</span>
             </div>
-            <button class="btn btn-primary" @click="searchBrands" :disabled="loading || !searchKeyword.trim()">
-                <i class="fas fa-search"></i> 搜索
-            </button>
-        </div>
-    </div>
-
-    <div v-if="loading" class="global-loading">
-        <i class="fas fa-spinner fa-pulse"></i> 加载品牌数据...
-    </div>
-
-    <div class="brand-grid" v-else>
-        <div v-for="brand in paginatedBrands" :key="brand.id" class="brand-card" :class="{ selected: selectedIds.includes(brand.id) }" @click="toggleSelect(brand.id)">
-            <div class="selection-indicator" v-if="selectedIds.includes(brand.id)"><i class="fas fa-check"></i></div>
-            <div class="card-actions" @click.stop>
-                <div class="action-btn" @click="handleEdit(brand)"><i class="fas fa-edit"></i></div>
-                <div class="action-btn delete" @click="handleDelete(brand.id)"><i class="fas fa-trash"></i></div>
-            </div>
-            <div class="logo-img-wrapper">
-                <img :src="getBrandLogo(brand)" class="logo-img" @error="handleImageError">
-            </div>
-            <div class="brand-name">
-                {{ brand.name }} <span v-if="brand.shortName && brand.shortName !== ''">({{ brand.shortName }})</span>
-                <div class="tooltip" v-if="brand.since">📅 成立: {{ brand.since }}</div>
-            </div>
-            <div class="extra-info-container">
-                <div class="status-tag" :class="brand.story ? 'status-has' : ''" @click.stop="openModal(brand)">
-                    <i class="fas" :class="brand.story ? 'fa-book-open' : 'fa-file-alt'"></i>
-                    <span>{{ brand.story ? '有简介' : '无简介' }}</span>
+            <div class="nav-menu">
+                <div class="nav-item active">
+                    <span class="material-symbols-outlined">inventory_2</span>
+                    商品档案
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    销售管理
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined">people</span>
+                    会员管理
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined">local_shipping</span>
+                    采购管理
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined">warehouse</span>
+                    库存管理
                 </div>
             </div>
-        </div>
-        <div v-if="brands.length === 0 && !loading" class="empty-state">
-            <i class="fas fa-box-open" style="font-size: 36px; margin-bottom: 12px; display: block;"></i>
-            <p v-if="lastSearchKeyword">未找到与 "{{ lastSearchKeyword }}" 相关的品牌</p>
-            <p v-else>暂无品牌数据，请点击「重置列表」或稍后再试</p>
-        </div>
-    </div>
+        </aside>
 
-    <div class="pagination" v-if="brands.length > 0 && !loading">
-        <button @click="prevPage" :disabled="currentPage === 1">上一页</button>
-        <span class="current-page">第 {{ currentPage }} / {{ totalPages }} 页</span>
-        <button @click="nextPage" :disabled="currentPage === totalPages">下一页</button>
-    </div>
-
-    <!-- 编辑弹窗 -->
-    <div class="modal-overlay" v-if="showEditModal" @click="showEditModal = false">
-        <div class="modal" @click.stop>
-            <div class="modal-header">
-                <h3 class="modal-title"><i class="fas fa-pen-alt"></i> 编辑品牌</h3>
-                <button class="close-btn" @click="showEditModal = false">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form @submit.prevent="saveEdit">
-                    <div class="reset-section">
-                        <div class="reset-btn-icon" @click="resetEditing"><i class="fas fa-undo"></i></div>
-                        <span style="font-size:12px; color:#9AABCC;">重置到原始数据</span>
+        <!-- 右侧内容区域 - 完整的品牌管理模块（完全保留原功能） -->
+        <div class="main-content">
+            <!-- 顶部工具栏 -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <button class="btn btn-primary" @click="handleAdd" :disabled="loading"><i class="fas fa-plus"></i> 新增品牌</button>
+                    <button class="btn btn-danger" :disabled="selectedIds.length === 0 || loading" @click="batchDelete"><i class="fas fa-trash-alt"></i> 删除 ({{ selectedIds.length }})</button>
+                    <button class="btn btn-default" @click="resetSearch" :disabled="loading"><i class="fas fa-sync-alt"></i> 重置列表</button>
+                </div>
+                <div class="toolbar-right">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="品牌名称 / 拼音 / 首字母 (例: 安居宝 / anjubao / ajb)"
+                               v-model="searchKeyword"
+                               @keyup.enter="searchBrands"
+                               :disabled="loading">
+                        <span v-if="searching" class="searching-indicator"><i class="fas fa-spinner fa-pulse"></i></span>
                     </div>
-                    <div class="form-group"><label class="form-label">品牌名称 *</label><input class="form-input" v-model="editingBrand.name"></div>
-                    <div class="inline-group">
-                        <div class="form-group"><label class="form-label">别名/简称</label><input class="form-input" v-model="editingBrand.shortName"></div>
-                        <div class="form-group"><label class="form-label">成立年份</label><input type="number" class="form-input" v-model.number="editingBrand.since"></div>
-                    </div>
-                    <div class="form-group"><label class="form-label">官网</label><input class="form-input" v-model="editingBrand.homepage"></div>
-                    <div class="form-group"><label class="form-label">Logo URL</label><input class="form-input" v-model="editingBrand.logo"></div>
-                    <div class="form-group"><label class="form-label">品牌故事</label><textarea class="form-textarea" rows="3" v-model="editingBrand.story"></textarea></div>
-                    <div class="modal-footer"><button type="button" class="modal-btn modal-btn-secondary" @click="showEditModal=false">取消</button><button type="submit" class="modal-btn modal-btn-primary">保存</button></div>
-                </form>
+                    <button class="btn btn-primary" @click="searchBrands" :disabled="loading || !searchKeyword.trim()">
+                        <i class="fas fa-search"></i> 搜索
+                    </button>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- 详情弹窗 -->
-    <div class="modal-overlay" v-if="showDetailModal" @click="showDetailModal = false">
-        <div class="modal" @click.stop>
-            <div class="modal-header"><h3 class="modal-title"><i class="fas fa-info-circle"></i> 品牌详情</h3><button class="close-btn" @click="showDetailModal=false">&times;</button></div>
-            <div class="modal-body">
-                <div class="info-row"><div class="info-label">品牌名称</div><div class="info-value">{{ detailBrand.name }} <span v-if="detailBrand.shortName">({{ detailBrand.shortName }})</span></div></div>
-                <div class="info-row" v-if="detailBrand.since"><div class="info-label">成立年份</div><div class="info-value">{{ detailBrand.since }}</div></div>
-                <div class="info-row" v-if="detailBrand.homepage"><div class="info-label">官网</div><div class="info-value"><a :href="detailBrand.homepage" target="_blank">{{ detailBrand.homepage }}</a></div></div>
-                <div class="info-row" v-if="detailBrand.story"><div class="info-label">品牌故事</div><div class="info-value">{{ detailBrand.story }}</div></div>
-                <div class="info-row"><div class="info-label">ID</div><div class="info-value">{{ detailBrand.id }}</div></div>
+            <!-- 全局加载遮罩 -->
+            <div v-if="loading" class="global-loading">
+                <i class="fas fa-spinner fa-pulse"></i> 加载品牌数据...
             </div>
-            <div class="modal-footer"><button class="modal-btn modal-btn-secondary" @click="showDetailModal=false">关闭</button></div>
+
+            <!-- 品牌网格 -->
+            <div class="brand-grid" v-else>
+                <div v-for="brand in paginatedBrands" :key="brand.id" class="brand-card" :class="{ selected: selectedIds.includes(brand.id) }" @click="toggleSelect(brand.id)">
+                    <div class="selection-indicator" v-if="selectedIds.includes(brand.id)"><i class="fas fa-check"></i></div>
+                    <div class="card-actions" @click.stop>
+                        <div class="action-btn" @click="handleEdit(brand)"><i class="fas fa-edit"></i></div>
+                        <div class="action-btn delete" @click="handleDelete(brand.id)"><i class="fas fa-trash"></i></div>
+                    </div>
+                    <div class="logo-img-wrapper">
+                        <img :src="getBrandLogo(brand)" class="logo-img" @error="handleImageError">
+                    </div>
+                    <div class="brand-name">
+                        {{ brand.name }} <span v-if="brand.shortName && brand.shortName !== ''">({{ brand.shortName }})</span>
+                        <div class="tooltip" v-if="brand.since">📅 成立: {{ brand.since }}</div>
+                    </div>
+                    <div class="extra-info-container">
+                        <div class="status-tag" :class="brand.story ? 'status-has' : ''" @click.stop="openModal(brand)">
+                            <i class="fas" :class="brand.story ? 'fa-book-open' : 'fa-file-alt'"></i>
+                            <span>{{ brand.story ? '有简介' : '无简介' }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="brands.length === 0 && !loading" class="empty-state">
+                    <i class="fas fa-box-open" style="font-size: 36px; margin-bottom: 12px; display: block;"></i>
+                    <p v-if="lastSearchKeyword">未找到与 "{{ lastSearchKeyword }}" 相关的品牌</p>
+                    <p v-else>暂无品牌数据，请点击「重置列表」或稍后再试</p>
+                </div>
+            </div>
+
+            <!-- 分页器 -->
+            <div class="pagination" v-if="brands.length > 0 && !loading">
+                <button @click="prevPage" :disabled="currentPage === 1">上一页</button>
+                <span class="current-page">第 {{ currentPage }} / {{ totalPages }} 页</span>
+                <button @click="nextPage" :disabled="currentPage === totalPages">下一页</button>
+            </div>
+
+            <!-- 编辑弹窗 -->
+            <div class="modal-overlay" v-if="showEditModal" @click="showEditModal = false">
+                <div class="modal" @click.stop>
+                    <div class="modal-header">
+                        <h3 class="modal-title"><i class="fas fa-pen-alt"></i> 编辑品牌</h3>
+                        <button class="close-btn" @click="showEditModal = false">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form @submit.prevent="saveEdit">
+                            <div class="reset-section">
+                                <div class="reset-btn-icon" @click="resetEditing"><i class="fas fa-undo"></i></div>
+                                <span style="font-size:12px; color:#9AABCC;">重置到原始数据</span>
+                            </div>
+                            <div class="form-group"><label class="form-label">品牌名称 *</label><input class="form-input" v-model="editingBrand.name"></div>
+                            <div class="inline-group">
+                                <div class="form-group"><label class="form-label">别名/简称</label><input class="form-input" v-model="editingBrand.shortName"></div>
+                                <div class="form-group"><label class="form-label">成立年份</label><input type="number" class="form-input" v-model.number="editingBrand.since"></div>
+                            </div>
+                            <div class="form-group"><label class="form-label">官网</label><input class="form-input" v-model="editingBrand.homepage"></div>
+                            <div class="form-group"><label class="form-label">Logo URL</label><input class="form-input" v-model="editingBrand.logo"></div>
+                            <div class="form-group"><label class="form-label">品牌故事</label><textarea class="form-textarea" rows="3" v-model="editingBrand.story"></textarea></div>
+                            <div class="modal-footer"><button type="button" class="modal-btn modal-btn-secondary" @click="showEditModal=false">取消</button><button type="submit" class="modal-btn modal-btn-primary">保存</button></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详情弹窗 -->
+            <div class="modal-overlay" v-if="showDetailModal" @click="showDetailModal = false">
+                <div class="modal" @click.stop>
+                    <div class="modal-header"><h3 class="modal-title"><i class="fas fa-info-circle"></i> 品牌详情</h3><button class="close-btn" @click="showDetailModal=false">&times;</button></div>
+                    <div class="modal-body">
+                        <div class="info-row"><div class="info-label">品牌名称</div><div class="info-value">{{ detailBrand.name }} <span v-if="detailBrand.shortName">({{ detailBrand.shortName }})</span></div></div>
+                        <div class="info-row" v-if="detailBrand.since"><div class="info-label">成立年份</div><div class="info-value">{{ detailBrand.since }}</div></div>
+                        <div class="info-row" v-if="detailBrand.homepage"><div class="info-label">官网</div><div class="info-value"><a :href="detailBrand.homepage" target="_blank">{{ detailBrand.homepage }}</a></div></div>
+                        <div class="info-row" v-if="detailBrand.story"><div class="info-label">品牌故事</div><div class="info-value">{{ detailBrand.story }}</div></div>
+                        <div class="info-row"><div class="info-label">ID</div><div class="info-value">{{ detailBrand.id }}</div></div>
+                    </div>
+                    <div class="modal-footer"><button class="modal-btn modal-btn-secondary" @click="showDetailModal=false">关闭</button></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -595,26 +714,20 @@
     const { createApp, ref, computed } = Vue;
 
     // ================= 正则处理大整数 =================
-    // 将 JSON 字符串中 16 位及以上的数字（作为属性值时）包装为字符串
     function safeParseBigIntJson(jsonStr) {
-        // 匹配模式：冒号 + 可选空格 + 连续16位以上数字，后面紧跟逗号、右大括号或右中括号
         const safeStr = jsonStr.replace(/:\s*(-?\d{16,})(?=\s*[,\]}])/g, ':"$1"');
         return JSON.parse(safeStr);
     }
 
-    // ================= 工具函数 =================
     const DEFAULT_LOGO = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='26' fill='%232D3748' stroke='%232D9CDB' stroke-width='1.2' /%3E%3Cpath fill='%237AC9FF' d='M30 17 L37 28 L30 39 L23 28 Z' /%3E%3Ccircle cx='30' cy='32' r='6' fill='%234FAEE6' /%3E%3Ctext x='30' y='48' font-size='9' text-anchor='middle' fill='%23B8E2FF' font-weight='bold'%3EBRAND%3C/text%3E%3C/svg%3E";
 
-    // 解析后端返回的品牌数据（严格适配您提供的结构）
     function normalizeBrand(raw) {
-        // name 字段可能是对象，也可能是字符串（兼容），这里按对象处理
         const nameObj = raw.name || {};
         const about = raw.about || {};
         return {
-            id: String(raw.id),                          // 大整数转字符串防止精度丢失
+            id: String(raw.id),
             name: nameObj.name || '未命名',
             shortName: nameObj.shortName || raw.shortName || '',
-            // 其他 about 字段
             logo: about.logo || '',
             since: about.since || null,
             story: about.story || '',
@@ -623,12 +736,11 @@
         };
     }
 
-    // 后端搜索接口 URL
     const SEARCH_URL = 'https://slave.tooo.top/catalog/v1/brands';
 
     createApp({
         setup() {
-            const brands = ref([]);            // 当前显示的列表（搜索结果或全量）
+            const brands = ref([]);
             const selectedIds = ref([]);
             const showEditModal = ref(false);
             const showDetailModal = ref(false);
@@ -641,18 +753,15 @@
             const searching = ref(false);
             const lastSearchKeyword = ref('');
 
-            // 分页数据
             const paginatedBrands = computed(() => {
                 const start = (currentPage.value - 1) * itemsPerPage;
                 return brands.value.slice(start, start + itemsPerPage);
             });
             const totalPages = computed(() => Math.max(1, Math.ceil(brands.value.length / itemsPerPage)));
 
-            // 执行搜索（调用后端接口）
             const searchBrands = async () => {
                 const kw = searchKeyword.value.trim();
                 if (!kw) {
-                    // 关键词为空，重置为全量数据（不带 s 参数）
                     await fetchAllBrands();
                     return;
                 }
@@ -664,7 +773,6 @@
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const text = await response.text();
                     const jsonData = safeParseBigIntJson(text);
-                    // 注意：后端返回格式为 {"total":0,"brands":[]} 或 {"total":2,"brands":[...]}
                     if (jsonData && Array.isArray(jsonData.brands)) {
                         brands.value = jsonData.brands.map(normalizeBrand);
                         lastSearchKeyword.value = kw;
@@ -682,7 +790,6 @@
                 }
             };
 
-            // 获取全量品牌（不带搜索条件，注意这里 offset 和 size 可以根据需要调整，最大可能 200）
             const fetchAllBrands = async () => {
                 loading.value = true;
                 try {
@@ -707,13 +814,11 @@
                 }
             };
 
-            // 重置搜索（清空关键词并重载全量）
             const resetSearch = () => {
                 searchKeyword.value = '';
                 fetchAllBrands();
             };
 
-            // 辅助 ID 比较
             const isEqualId = (a, b) => String(a) === String(b);
 
             const toggleSelect = (id) => {
@@ -785,7 +890,6 @@
             const getBrandLogo = (brand) => brand.logo && brand.logo.trim() ? brand.logo : DEFAULT_LOGO;
             const handleImageError = (e) => { if (e.target.src !== DEFAULT_LOGO) e.target.src = DEFAULT_LOGO; };
 
-            // 初始化加载全量数据
             fetchAllBrands();
 
             return {

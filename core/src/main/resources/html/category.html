@@ -3,43 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>分类管理器 - 深色渐变 | 毛玻璃树形</title>
+    <title>SaaS零售 · 分类管理器 | 全屏深色协调版</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet">
     <style>
         [v-cloak] { display: none !important; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* 全局深色背景，无留白 */
         body {
-            background: linear-gradient(135deg, #0a0f1e 0%, #0f172a 50%, #1a1f35 100%);
+            background: radial-gradient(ellipse at 20% 30%, #0f172a, #070b14);
             font-family: 'Inter', system-ui, sans-serif;
-            padding: 32px;
             color: #e2e8f0;
-            min-height: 100vh;
+            overflow: hidden;
+            height: 100vh;
         }
+
+        /* 双栏全局布局：不留任何边距 */
+        .global-layout {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* ========= 左侧 SaaS 零售侧边栏 - 协调深色磨砂 ========= */
+        .saas-sidebar {
+            width: 260px;
+            background: rgba(8, 12, 24, 0.92);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(129, 140, 248, 0.2);
+            color: rgba(255, 255, 255, 0.75);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            z-index: 10;
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .logo-area {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(129, 140, 248, 0.25);
+        }
+        .logo-area .material-symbols-outlined {
+            font-size: 26px;
+            color: #818cf8;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 20px 0;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: rgba(255, 255, 255, 0.65);
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover {
+            background: rgba(129, 140, 248, 0.15);
+            color: #ffffff;
+            border-left-color: #818cf8;
+        }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(129, 140, 248, 0.2), transparent);
+            color: #ffffff;
+            border-left-color: #818cf8;
+            font-weight: 600;
+        }
+        .nav-item .material-symbols-outlined {
+            font-size: 22px;
+        }
+
+        /* ========= 右侧主内容区域 - 完全填满不留白 ========= */
+        .main-content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;          /* 关键：无任何内边距，左右不留空 */
+            background: transparent;
+        }
+
+        /* 原有分类管理器的布局容器 - 铺满且无外边距 */
         .app-layout {
             display: flex;
-            gap: 28px;
-            max-width: 1400px;
-            margin: 0 auto;
-            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+            margin: 0;
+            padding: 20px 24px 24px 20px;  /* 适当内边距保证内容不贴边但属于卡片内部呼吸感，但外部无白边；用户要求“2边不留空”指浏览器窗口边缘无空白，这里窗口边缘就是最外侧，侧边栏和右侧内容已经无外部空白，卡片与窗口边缘之间有20px留白？为了满足严格不留白，但视觉上过于拥挤，用户主要要求填满，且左右不留空白区域（即没有多余边距导致右侧出现空白背景）。这里给右侧内容区域添加少许内边距是为了卡片不贴滚动条，但窗口右边缘仍然有背景色，不是空白区域。但根据用户描述“右边要扩展填满填充，2边不留空”，可解释为右侧内容区域占满剩余宽度且左右两侧没有任何多余外边距或空白背景。目前设置padding:20px可保证卡片不会完全紧贴滚动条，但是背景是深色全局统一，不算留白。不过为了严格符合，可设置padding:0，但卡片会紧贴边缘，可能会影响操作。权衡后，使用极小的内边距保持视觉舒适，且不产生“空白区域”。因为背景统一为深色，没有白色空隙。若用户坚持完全贴边，可以改为0。这里采用0以保证指令严格。但为了更好的体验，我会在卡片内部留有内边距，但窗口边缘到卡片之间没有白色缝隙。所以现在设置padding:0，然后在.app-layout上设置padding: 0 20px 0 20px？会产生左右空白，不要。所以直接让.app-layout内部元素自然有gap，树面板和右侧面板距离边缘0，但是内容会紧贴滚动条，可通过内部容器的border-radius和内边距来调节。用户满意为准。最终选择：右侧无padding，但给.app-layout设置padding:0；但是为了不过于拥挤，给tree-panel和right-panel本身增加外边距？不要。直接在树面板和右侧面板上设置自身边距，保证内容可读。我们可在.tree-panel上设置margin-left:0，.right-panel上设置margin-right:0，且.app-layout无padding，这样左右边缘完全无空白。为确保视觉舒适，我们在滚动区域内侧添加一些内边距。*/
+            padding: 0;
         }
+
+        /* 为了视觉美观，树形面板和右侧卡片自身带一点点边距，但不会产生外部空白背景区 */
         .tree-panel {
             flex: 0 0 460px;
-            background: rgba(15, 23, 42, 0.65);
+            background: rgba(15, 23, 42, 0.75);
             backdrop-filter: blur(16px);
             border-radius: 28px;
-            box-shadow: 0 25px 40px -12px rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            box-shadow: 0 25px 40px -12px rgba(0,0,0,0.5);
             overflow: hidden;
-            height: fit-content;
-            max-height: calc(100vh - 64px);
+            height: calc(100vh - 32px);
+            display: flex;
+            flex-direction: column;
+            margin: 16px 0 16px 16px;   /* 左边距16px，右边由gap控制，不产生外部白色背景 */
+        }
+
+        .right-panel {
+            flex: 1;
+            min-width: 560px;
+            margin: 16px 16px 16px 0;
             display: flex;
             flex-direction: column;
         }
+
+        .card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            border-radius: 28px;
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            box-shadow: 0 25px 40px -12px rgba(0,0,0,0.4);
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 确保卡片内容区域可滚动，不溢出 */
+        .card-body {
+            padding: 28px 32px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* 其他样式保持原有美观，微调滚动条和颜色 */
         .tree-header {
             padding: 20px 24px 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(129, 140, 248, 0.2);
+            background: rgba(0, 0, 0, 0.3);
         }
         .tree-header-top {
             display: flex;
@@ -57,9 +174,9 @@
         }
         .tree-title i { color: #818cf8; }
         .add-root-btn {
-            background: rgba(129, 140, 248, 0.15);
-            border: 1px solid rgba(129, 140, 248, 0.4);
-            color: #a5b4fc;
+            background: rgba(129, 140, 248, 0.2);
+            border: 1px solid rgba(129, 140, 248, 0.5);
+            color: #cbd5ff;
             padding: 6px 14px;
             border-radius: 32px;
             font-size: 0.75rem;
@@ -71,9 +188,9 @@
             gap: 6px;
         }
         .add-root-btn:hover {
-            background: rgba(129, 140, 248, 0.3);
-            border-color: #818cf8;
-            color: #e0e7ff;
+            background: rgba(129, 140, 248, 0.4);
+            border-color: #a5b4fc;
+            color: white;
         }
         .search-box {
             position: relative;
@@ -189,19 +306,12 @@
             padding: 0 2px;
             font-weight: 600;
         }
-        .right-panel { flex: 1; min-width: 560px; }
-        .card {
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(16px);
-            border-radius: 28px;
-            border: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 25px 40px -12px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
+
+        /* 右侧表单样式微调 */
         .card-header {
             padding: 20px 28px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(129, 140, 248, 0.2);
+            background: rgba(0, 0, 0, 0.25);
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
@@ -214,7 +324,6 @@
             gap: 10px;
             color: #f1f5f9;
         }
-        .card-body { padding: 28px 32px; }
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -230,7 +339,7 @@
             font-size: 0.8rem;
             font-weight: 600;
             text-transform: uppercase;
-            color: #94a3b8;
+            color: #a5b4fc;
             letter-spacing: 0.3px;
         }
         .required-star {
@@ -292,8 +401,8 @@
         button.info { background: #065666; border-color: #0891b2; color: #cffafe; }
         button.info:hover { background: #0e7490; }
         button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        hr { margin: 28px 0 20px; border: none; border-top: 1px solid rgba(255,255,255,0.08); }
-        .extended-section { background: rgba(0, 0, 0, 0.2); border-radius: 24px; padding: 16px 0 8px; }
+        hr { margin: 28px 0 20px; border: none; border-top: 1px solid rgba(129, 140, 248, 0.2); }
+        .extended-section { background: rgba(0, 0, 0, 0.25); border-radius: 24px; padding: 16px 0 8px; margin-top: 12px; }
         .section-mini-title {
             font-weight: 600;
             margin: 12px 0 18px;
@@ -414,133 +523,176 @@
             gap: 12px;
         }
         .preview-error i { font-size: 3rem; }
-        @media (max-width: 1000px) { .tree-panel { flex: 0 0 360px; } }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+
+        /* 响应式微调 */
+        @media (max-width: 1000px) {
+            .tree-panel { flex: 0 0 360px; }
+        }
     </style>
 </head>
 <body>
 <div id="vueApp" v-cloak>
-    <div class="app-layout">
-        <!-- 左侧树形面板 -->
-        <div class="tree-panel">
-            <div class="tree-header">
-                <div class="tree-header-top">
-                    <div class="tree-title"><i class="fas fa-folder-tree"></i> 类别</div>
-                    <button class="add-root-btn" @click="addRootCategoryPrompt"><i class="fas fa-plus"></i> 根类</button>
+    <div class="global-layout">
+        <!-- 左侧 SaaS零售侧边栏 (优化配色) -->
+        <aside class="saas-sidebar">
+            <div class="logo-area">
+                <span class="material-symbols-outlined">storefront</span>
+                <span>SaaS 零售</span>
+            </div>
+            <div class="nav-menu">
+                <div class="nav-item active">
+                    <span class="material-symbols-outlined">category</span>
+                    分类管理
                 </div>
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" v-model="searchKeyword" placeholder="搜索分类..." @input="onSearchInput">
+                <div class="nav-item">
+                    <span class="material-symbols-outlined">inventory_2</span>
+                    商品档案
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    销售管理
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined">people</span>
+                    会员管理
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined">local_shipping</span>
+                    采购管理
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined">warehouse</span>
+                    库存管理
                 </div>
             </div>
-            <div class="tree-scroll">
-                <ul class="tree-node">
-                    <tree-item
-                            v-for="node in filteredCategoryTree"
-                            :key="node.id"
-                            :node="node"
-                            :active-id="activeCategory.id"
-                            :expanded-set="expandedSet"
-                            :search-keyword="searchKeyword"
-                            @toggle="toggleExpand"
-                            @select="selectCategory"
-                            @add-child="showAddChildPrompt"
-                            @delete-cat="deleteCategoryNode"
-                    ></tree-item>
-                </ul>
-                <div v-if="filteredCategoryTree.length === 0" style="text-align:center; margin-top:20px; color:#64748b;">未找到或暂无分类</div>
-            </div>
-        </div>
+        </aside>
 
-        <!-- 右侧属性区域 -->
-        <div class="right-panel">
-            <div class="card">
-                <div class="card-header"><h2><i class="fas fa-info-circle"></i> 基本属性</h2></div>
-                <div class="card-body">
-                    <div class="form-grid">
-                        <div class="field-group">
-                            <label><i class="fas fa-level-up-alt"></i> 上级分类 <span class="required-star">*</span></label>
-                            <select v-model="editableCategory.parent_id">
-                                <option value="-1">无（顶级分类）</option>
-                                <option v-for="cat in flatCategoryList" :value="cat.id" :disabled="cat.id === editableCategory.id">{{ cat.name.name }}</option>
-                            </select>
+        <!-- 右侧主内容区域：完全填满不留白 -->
+        <div class="main-content-area">
+            <div class="app-layout">
+                <!-- 左侧树形面板 -->
+                <div class="tree-panel">
+                    <div class="tree-header">
+                        <div class="tree-header-top">
+                            <div class="tree-title"><i class="fas fa-folder-tree"></i> 类别</div>
+                            <button class="add-root-btn" @click="addRootCategoryPrompt"><i class="fas fa-plus"></i> 根类</button>
                         </div>
-                        <div class="field-group">
-                            <label>分类名称 <span class="required-star">*</span></label>
-                            <input v-model="editableCategory.name.name" placeholder="例：品质男鞋">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" v-model="searchKeyword" placeholder="搜索分类..." @input="onSearchInput">
                         </div>
-                        <div class="field-group">
-                            <label>简称</label>
-                            <input v-model="editableCategory.name.shortName" placeholder="简称">
-                        </div>
-                        <div class="field-group full-width">
-                            <label>图标URL</label>
-                            <div class="icon-url-wrapper">
-                                <input v-model="editableCategory.icon_url" placeholder="https://... 或上传图片">
-                                <div class="icon-actions">
-                                    <button type="button" @click="triggerFileUpload"><i class="fas fa-cloud-upload-alt"></i> 上传</button>
-                                    <button type="button" @click="openModalPreview" :disabled="!editableCategory.icon_url"><i class="fas fa-eye"></i> 预览</button>
+                    </div>
+                    <div class="tree-scroll">
+                        <ul class="tree-node">
+                            <tree-item
+                                    v-for="node in filteredCategoryTree"
+                                    :key="node.id"
+                                    :node="node"
+                                    :active-id="activeCategory.id"
+                                    :expanded-set="expandedSet"
+                                    :search-keyword="searchKeyword"
+                                    @toggle="toggleExpand"
+                                    @select="selectCategory"
+                                    @add-child="showAddChildPrompt"
+                                    @delete-cat="deleteCategoryNode"
+                            ></tree-item>
+                        </ul>
+                        <div v-if="filteredCategoryTree.length === 0" style="text-align:center; margin-top:20px; color:#64748b;">未找到或暂无分类</div>
+                    </div>
+                </div>
+
+                <!-- 右侧属性区域 -->
+                <div class="right-panel">
+                    <div class="card">
+                        <div class="card-header"><h2><i class="fas fa-info-circle"></i> 基本属性</h2></div>
+                        <div class="card-body">
+                            <div class="form-grid">
+                                <div class="field-group">
+                                    <label><i class="fas fa-level-up-alt"></i> 上级分类 <span class="required-star">*</span></label>
+                                    <select v-model="editableCategory.parent_id">
+                                        <option value="-1">无（顶级分类）</option>
+                                        <option v-for="cat in flatCategoryList" :value="cat.id" :disabled="cat.id === editableCategory.id">{{ cat.name.name }}</option>
+                                    </select>
+                                </div>
+                                <div class="field-group">
+                                    <label>分类名称 <span class="required-star">*</span></label>
+                                    <input v-model="editableCategory.name.name" placeholder="例：品质男鞋">
+                                </div>
+                                <div class="field-group">
+                                    <label>简称</label>
+                                    <input v-model="editableCategory.name.shortName" placeholder="简称">
+                                </div>
+                                <div class="field-group full-width">
+                                    <label>图标URL</label>
+                                    <div class="icon-url-wrapper">
+                                        <input v-model="editableCategory.icon_url" placeholder="https://... 或上传图片">
+                                        <div class="icon-actions">
+                                            <button type="button" @click="triggerFileUpload"><i class="fas fa-cloud-upload-alt"></i> 上传</button>
+                                            <button type="button" @click="openModalPreview" :disabled="!editableCategory.icon_url"><i class="fas fa-eye"></i> 预览</button>
+                                        </div>
+                                    </div>
+                                    <input type="file" ref="fileInput" style="display:none" accept="image/*" @change="handleFileUpload">
+                                </div>
+                                <div class="field-group full-width">
+                                    <label>描述</label>
+                                    <textarea rows="2" v-model="editableCategory.description"></textarea>
                                 </div>
                             </div>
-                            <input type="file" ref="fileInput" style="display:none" accept="image/*" @change="handleFileUpload">
-                        </div>
-                        <div class="field-group full-width">
-                            <label>描述</label>
-                            <textarea rows="2" v-model="editableCategory.description"></textarea>
-                        </div>
-                    </div>
-                    <div class="btn-group">
-                        <button @click="restoreOriginal" :disabled="!isModified" class="info"><i class="fas fa-undo-alt"></i> 恢复</button>
-                        <button @click="updateCurrentCategory" :disabled="!isModified" class="warning"><i class="fas fa-save"></i> 修改</button>
-                        <button @click="deleteCurrentCategory" class="danger"><i class="fas fa-trash"></i> 删除</button>
-                    </div>
-                    <hr />
-                    <div class="extended-section">
-                        <div class="section-mini-title"><i class="fas fa-cog"></i> 扩展属性</div>
-                        <div class="attr-selector">
-                            <div class="attr-selector-left">
-                                <label>属性名：</label>
-                                <select v-model="selectedExtIdForSelect" @change="onSelectExtFromDropdown">
-                                    <option value="">-- 选择属性 --</option>
-                                    <option v-for="attr in activeExtList" :value="attr.recordId">{{ attr.displayName }} ({{ attr.fieldName }})</option>
-                                </select>
-                                <span class="badge-count" v-if="activeExtList.length">共 {{ activeExtList.length }} 个字段</span>
+                            <div class="btn-group">
+                                <button @click="restoreOriginal" :disabled="!isModified" class="info"><i class="fas fa-undo-alt"></i> 恢复</button>
+                                <button @click="updateCurrentCategory" :disabled="!isModified" class="warning"><i class="fas fa-save"></i> 修改</button>
+                                <button @click="deleteCurrentCategory" class="danger"><i class="fas fa-trash"></i> 删除</button>
                             </div>
-                            <div class="attr-actions">
-                                <button @click="saveExtAttribute" :disabled="!isSaveEnabled" class="warning"><i class="fas fa-save"></i> 保存</button>
-                                <button @click="deleteExtAttribute" :disabled="!selectedExtId" class="danger"><i class="fas fa-trash"></i> 删除</button>
-                                <button @click="clearExtForm" class="info"><i class="fas fa-eraser"></i> 清空</button>
+                            <hr />
+                            <div class="extended-section">
+                                <div class="section-mini-title"><i class="fas fa-cog"></i> 扩展属性</div>
+                                <div class="attr-selector">
+                                    <div class="attr-selector-left">
+                                        <label>属性名：</label>
+                                        <select v-model="selectedExtIdForSelect" @change="onSelectExtFromDropdown">
+                                            <option value="">-- 选择属性 --</option>
+                                            <option v-for="attr in activeExtList" :value="attr.recordId">{{ attr.displayName }} ({{ attr.fieldName }})</option>
+                                        </select>
+                                        <span class="badge-count" v-if="activeExtList.length">共 {{ activeExtList.length }} 个字段</span>
+                                    </div>
+                                    <div class="attr-actions">
+                                        <button @click="saveExtAttribute" :disabled="!isSaveEnabled" class="warning"><i class="fas fa-save"></i> 保存</button>
+                                        <button @click="deleteExtAttribute" :disabled="!selectedExtId" class="danger"><i class="fas fa-trash"></i> 删除</button>
+                                        <button @click="clearExtForm" class="info"><i class="fas fa-eraser"></i> 清空</button>
+                                    </div>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="field-group">
+                                        <label>显示名称 <span class="required-star">*</span></label>
+                                        <input v-model="extForm.displayName" placeholder="例：颜色">
+                                    </div>
+                                    <div class="field-group">
+                                        <label>别名 <span class="required-star">*</span></label>
+                                        <input v-model="extForm.fieldName" placeholder="例：YanSe">
+                                    </div>
+                                    <div class="field-group">
+                                        <label>默认值</label>
+                                        <input v-model="extForm.defaultValue" placeholder="红色、橙色、绿色">
+                                    </div>
+                                    <div class="field-group">
+                                        <label>是否必填</label>
+                                        <select v-model="extForm.isRequired">
+                                            <option>必填</option>
+                                            <option>可选</option>
+                                        </select>
+                                    </div>
+                                    <div class="field-group">
+                                        <label>排序号</label>
+                                        <input type="number" v-model="extForm.sortOrder">
+                                    </div>
+                                </div>
+                                <div class="btn-group" style="justify-content: flex-start; margin-top: 16px;">
+                                    <button @click="syncToSubClass" :disabled="!hasSubCategories" class="warning"><i class="fas fa-share-alt"></i> 同步应用到子类</button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-grid">
-                            <div class="field-group">
-                                <label>显示名称 <span class="required-star">*</span></label>
-                                <input v-model="extForm.displayName" placeholder="例：颜色">
-                            </div>
-                            <div class="field-group">
-                                <label>别名 <span class="required-star">*</span></label>
-                                <input v-model="extForm.fieldName" placeholder="例：YanSe">
-                            </div>
-                            <div class="field-group">
-                                <label>默认值</label>
-                                <input v-model="extForm.defaultValue" placeholder="红色、橙色、绿色">
-                            </div>
-                            <div class="field-group">
-                                <label>是否必填</label>
-                                <select v-model="extForm.isRequired">
-                                    <option>必填</option>
-                                    <option>可选</option>
-                                </select>
-                            </div>
-                            <div class="field-group">
-                                <label>排序号</label>
-                                <input type="number" v-model="extForm.sortOrder">
-                            </div>
-                        </div>
-                        <div class="btn-group" style="justify-content: flex-start; margin-top: 16px;">
-                            <button @click="syncToSubClass" :disabled="!hasSubCategories" class="warning"><i class="fas fa-share-alt"></i> 同步应用到子类</button>
                         </div>
                     </div>
                 </div>
@@ -548,7 +700,7 @@
         </div>
     </div>
 
-    <!-- 预览模态框 - 确保页面加载时不显示 -->
+    <!-- 预览模态框 -->
     <div v-if="modalVisible" class="modal-mask" @click.self="modalVisible = false">
         <div class="modal-container">
             <div class="modal-header">
@@ -804,7 +956,6 @@
                 }
             }
 
-            // 图标上传与预览
             const fileInput = ref(null);
             const triggerFileUpload = () => fileInput.value.click();
             const handleFileUpload = (e) => {
@@ -829,7 +980,6 @@
             };
             const onModalImageError = () => { previewError.value = true; };
 
-            // 扩展属性模块
             const extForm = ref({ displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0 });
             const extBackup = ref({ displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0 });
             const selectedExtId = ref(null);

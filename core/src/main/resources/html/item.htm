@@ -1,505 +1,716 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SaaS 零售 - 商品档案管理</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SaaS零售 | 商品档案管理</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet">
     <style>
-        /* --- 全局变量与重置 --- */
-        :root {
-            --primary: #1677ff; /* 现代科技蓝 */
-            --primary-bg: #e6f4ff;
-            --sidebar-bg: #001529;
-            --sidebar-active: #1677ff;
-            --bg-body: #f0f2f5;
-            --bg-card: #ffffff;
-            --border: #e8e8e8;
-            --text-main: #262626;
-            --text-sub: #8c8c8c;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: var(--bg-body); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
 
-        /* --- 左侧侧边栏 --- */
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f0f2f6;
+            height: 100vh;
+            overflow: hidden;
+            color: #1f2937;
+        }
+
+        /* 全局滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        /* --- 布局 --- */
+        .app-layout {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* 侧边栏 (深色) */
         .sidebar {
-            width: 220px;
-            background: var(--sidebar-bg);
-            color: rgba(255,255,255,0.65);
+            width: 260px;
+            background: #001529;
+            color: rgba(255,255,255,0.7);
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
-            transition: width 0.3s;
-        }
-        .logo {
-            height: 64px;
-            background: rgba(255,255,255,0.05);
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            font-size: 18px;
-            font-weight: bold;
-            color: #fff;
-            letter-spacing: 1px;
-        }
-        .logo .material-symbols-outlined { margin-right: 8px; font-size: 20px; }
-
-        .menu { list-style: none; padding: 16px 0; flex: 1; }
-        .menu-item {
-            padding: 12px 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            transition: all 0.3s;
-            font-size: 14px;
-        }
-        .menu-item:hover { color: #fff; background: rgba(255,255,255,0.08); }
-        .menu-item.active { background: var(--sidebar-active); color: #fff; position: relative; }
-        .menu-item.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #fff; }
-        .menu-item .material-symbols-outlined { margin-right: 12px; font-size: 18px; }
-
-        /* --- 右侧主内容区 --- */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* --- 顶部 Header --- */
-        .header {
-            height: 64px;
-            background: #fff;
-            box-shadow: 0 1px 4px rgba(0,21,41,0.08);
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            padding: 0 24px;
+            transition: all 0.2s;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.05);
             z-index: 10;
         }
-        .header-right { display: flex; align-items: center; font-size: 14px; color: var(--text-main); }
-        .header-right .material-symbols-outlined { margin-right: 8px; cursor: pointer; color: var(--text-sub); }
-        .avatar { width: 32px; height: 32px; background: var(--primary-bg); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-left: 12px; font-weight: bold; cursor: pointer; }
 
-        /* --- 主体内容区域 (滚动区) --- */
-        .content-scroll {
-            flex: 1;
-            padding: 24px;
-            overflow-y: auto;
+        .logo-area {
+            height: 64px;
             display: flex;
-            flex-direction: column;
-        }
-
-        /* --- 面包屑 --- */
-        .breadcrumb { font-size: 14px; color: var(--text-sub); margin-bottom: 20px; }
-        .breadcrumb span { margin: 0 8px; }
-
-        /* --- 核心布局：左侧树 + 右侧表 --- */
-        .main-layout {
-            display: flex;
-            flex: 1;
-            background: var(--bg-card);
-            border-radius: 8px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            overflow: hidden;
-            height: calc(100vh - 180px); /* 动态高度 */
-        }
-
-        /* --- 左侧分类树 --- */
-        .category-panel {
-            width: 240px;
-            border-right: 1px solid var(--border);
-            background: #fafafa;
-            display: flex;
-            flex-direction: column;
-        }
-        .panel-header {
-            padding: 16px;
+            align-items: center;
+            padding: 0 24px;
+            gap: 10px;
+            background: rgba(0,0,0,0.2);
+            font-size: 18px;
             font-weight: 600;
-            font-size: 15px;
-            border-bottom: 1px solid var(--border);
+            color: #fff;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .logo-area span:first-child {
+            font-size: 24px;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 16px 0;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: rgba(255,255,255,0.7);
+        }
+        .nav-item:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        .nav-item.active {
+            background: #1677ff;
+            color: #fff;
+            border-right: none;
+            position: relative;
+        }
+        .nav-item .material-symbols-outlined {
+            font-size: 20px;
+        }
+
+        /* 右侧主区域 */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #f0f2f6;
+        }
+
+        /* 头部 Header */
+        .top-header {
+            height: 64px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 28px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+            z-index: 9;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .notify-icon {
+            cursor: pointer;
+            color: #5b6876;
+        }
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        .avatar-circle {
+            width: 34px;
+            height: 34px;
+            background: #e6f4ff;
+            color: #1677ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* 滚动区域 */
+        .scroll-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px 24px 24px;
+        }
+
+        /* 面包屑 */
+        .breadcrumb {
+            font-size: 13px;
+            color: #8c8f92;
+            margin-bottom: 20px;
+        }
+        .breadcrumb a {
+            color: #8c8f92;
+            text-decoration: none;
+        }
+        .breadcrumb span {
+            margin: 0 6px;
+        }
+
+        /* 主卡片: 左侧树+右侧表格 */
+        .card-panel {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            overflow: hidden;
+            height: calc(100vh - 148px);
+            transition: all 0.2s;
+        }
+
+        /* 左侧分类区 */
+        .category-side {
+            width: 260px;
+            background: #ffffff;
+            border-right: 1px solid #edf2f7;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .cat-header {
+            padding: 18px 16px 12px 16px;
+            font-weight: 600;
+            border-bottom: 1px solid #edf2f7;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #fff;
         }
-        .panel-header .material-symbols-outlined { font-size: 18px; cursor: pointer; color: var(--primary); }
-
-        .search-box { padding: 12px; background: #fff; border-bottom: 1px solid var(--border); }
-        .search-box input { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; outline: none; }
-        .search-box input:focus { border-color: var(--primary); }
-
-        .tree-container { flex: 1; overflow-y: auto; padding: 8px 0; }
-        .tree-item {
+        .cat-header span:first-child {
+            font-size: 15px;
+        }
+        .cat-search {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .cat-search input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            font-size: 13px;
+            background: #fafbfc;
+            outline: none;
+            transition: 0.2s;
+        }
+        .cat-search input:focus {
+            border-color: #1677ff;
+            box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
+        }
+        .tree-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        .tree-node {
             padding: 10px 20px;
             cursor: pointer;
             font-size: 14px;
-            color: var(--text-main);
-            transition: all 0.2s;
             display: flex;
             align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+            color: #2c3e4f;
         }
-        .tree-item:hover { background: var(--primary-bg); color: var(--primary); }
-        .tree-item.active { background: var(--primary); color: #fff; }
-        .tree-item .material-symbols-outlined { font-size: 16px; margin-right: 8px; opacity: 0.7; }
+        .tree-node:hover {
+            background: #f0f7ff;
+            color: #1677ff;
+        }
+        .tree-node.active {
+            background: #e6f4ff;
+            color: #1677ff;
+            font-weight: 500;
+            border-right: 3px solid #1677ff;
+        }
 
-        /* --- 右侧表格区 --- */
-        .table-panel {
+        /* 右侧表格主区 */
+        .table-main {
             flex: 1;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
             background: #fff;
         }
 
-        /* 筛选区 */
-        .filter-container {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border);
+        /* 筛选栏 - 修复右对齐，与 saas 零售视觉边缘齐平 */
+        .filter-bar {
+            padding: 20px 0 16px 24px;
+            border-bottom: 1px solid #f0f2f5;
             background: #fff;
         }
-        .filter-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
-        .filter-item { display: flex; align-items: center; font-size: 14px; }
-        .filter-item label { width: 80px; text-align: right; margin-right: 12px; color: var(--text-sub); }
-        .filter-item input, .filter-item select {
-            padding: 4px 8px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 13px;
-            outline: none;
-            height: 32px;
+        /* 关键修复: 右侧零内边距，让按钮组紧贴卡片右边界，达成与顶端saas零售视觉齐平 */
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+            padding-right: 0;
+            margin-right: 0;
         }
-        .filter-item input:focus, .filter-item select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(24,144,255,0.2); }
-        .filter-item input[type="date"] { width: 130px; }
-        .filter-item input[type="text"] { width: 180px; }
-
-        .action-btns { margin-left: auto; display: flex; gap: 10px; }
-        .btn {
-            padding: 6px 15px;
-            border-radius: 4px;
-            font-size: 14px;
-            cursor: pointer;
-            border: 1px solid transparent;
+        .filter-field {
             display: flex;
             align-items: center;
-            transition: all 0.3s;
+            gap: 8px;
+            background: #fff;
         }
-        .btn .material-symbols-outlined { font-size: 16px; margin-right: 4px; }
-        .btn-primary { background: var(--primary); color: #fff; }
-        .btn-primary:hover { background: #40a9ff; }
-        .btn-default { background: #fff; border-color: var(--border); color: var(--text-main); }
-        .btn-default:hover { color: var(--primary); border-color: var(--primary); }
+        .filter-field label {
+            font-size: 13px;
+            color: #4b5565;
+            font-weight: 500;
+            width: auto;
+        }
+        .filter-field input, .filter-field select {
+            height: 34px;
+            padding: 0 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #fff;
+            transition: 0.2s;
+            outline: none;
+        }
+        .filter-field input:focus, .filter-field select:focus {
+            border-color: #1677ff;
+            box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
+        }
+        .date-range {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .date-range input {
+            width: 130px;
+        }
 
-        /* 表格主体 */
-        .table-container {
+        /* 右侧按钮组 - 强制紧贴父容器右边界，无多余间距 */
+        .right-btns {
+            margin-left: auto;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding-right: 24px;   /* 和左边内距视觉平衡，但按钮边缘实际与卡片内容右侧边界对齐 */
+        }
+        .btn {
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+        }
+        .btn-primary {
+            background: #1677ff;
+            color: white;
+            border-color: #1677ff;
+        }
+        .btn-primary:hover {
+            background: #4096ff;
+        }
+        .btn-default {
+            border-color: #d0d5dd;
+            color: #1f2937;
+        }
+        .btn-default:hover {
+            border-color: #1677ff;
+            color: #1677ff;
+        }
+        /* 第二行工具栏（新增导入导出） */
+        .action-toolbar {
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-right: 24px;
+        }
+        .tool-spacer {
+            flex: 1;
+        }
+        .icon-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            border-radius: 6px;
+            color: #5f6c7a;
+        }
+        .icon-btn:hover {
+            background: #f2f4f8;
+        }
+
+        /* 表格容器 */
+        .data-table-wrapper {
             flex: 1;
             overflow: auto;
-            padding: 0;
+            margin: 0;
         }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        th {
-            background: #fafafa;
-            text-align: left;
-            padding: 12px 16px;
-            font-weight: 600;
-            color: var(--text-main);
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1100px;
+        }
+        .data-table th {
+            background: #fafcff;
+            padding: 14px 16px;
             font-size: 13px;
-            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            color: #334155;
+            border-bottom: 1px solid #edf2f7;
+            text-align: left;
             position: sticky;
             top: 0;
+            background-color: #fff;
             z-index: 5;
         }
-        td {
-            padding: 12px 16px;
+        .data-table td {
+            padding: 14px 16px;
             font-size: 13px;
-            color: var(--text-main);
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
         }
-        tr:hover td { background: #e6f7ff; }
-        .text-center { text-align: center; }
-        .status-tag {
-            padding: 2px 8px;
-            border-radius: 2px;
+        .data-table tr:hover td {
+            background-color: #f8fafc;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .profit-rate {
+            color: #16a34a;
+            font-weight: 500;
+        }
+        .link-action {
+            color: #1677ff;
+            cursor: pointer;
+            margin-right: 12px;
             font-size: 12px;
-            background: #f6ffed;
-            color: #52c41a;
-            border: 1px solid #b7eb8f;
+        }
+        .link-action.danger {
+            color: #f43f5e;
+        }
+        .empty-row td {
+            text-align: center;
+            padding: 60px 0;
+            color: #94a3b8;
         }
 
-        /* 操作列 */
-        .action-links { display: flex; gap: 8px; }
-        .link { color: var(--primary); cursor: pointer; font-size: 13px; text-decoration: none; }
-        .link:hover { text-decoration: underline; }
-        .link.danger { color: #ff4d4f; }
-
-        /* 分页 */
-        .pagination {
-            padding: 12px 24px;
+        /* 分页区域 - 同样右边界紧凑对齐 */
+        .pagination-area {
+            padding: 16px 24px 16px 24px;
+            border-top: 1px solid #edf2f7;
             display: flex;
             justify-content: flex-end;
             align-items: center;
+            gap: 12px;
             background: #fff;
-            border-top: 1px solid var(--border);
-            margin-top: auto;
+            flex-wrap: wrap;
+        }
+        .page-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .page-item {
-            padding: 4px 12px;
-            margin: 0 4px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
+            min-width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
             cursor: pointer;
+            border: 1px solid #e2e8f0;
+            background: #fff;
             font-size: 13px;
-            color: var(--text-main);
-            min-width: 30px;
+            transition: all 0.2s;
+        }
+        .page-item.active {
+            background: #1677ff;
+            border-color: #1677ff;
+            color: white;
+        }
+        .page-item:hover:not(.disabled) {
+            border-color: #1677ff;
+            color: #1677ff;
+        }
+        .page-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .jump-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        .jump-box input {
+            width: 54px;
+            padding: 5px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
             text-align: center;
         }
-        .page-item:hover { border-color: var(--primary); color: var(--primary); }
-        .page-item.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-        .page-item.disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* 加载动画 */
         .loading-overlay {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.8);
+            inset: 0;
+            background: rgba(255,255,255,0.7);
             display: flex;
-            justify-content: center;
             align-items: center;
-            z-index: 100;
+            justify-content: center;
+            z-index: 20;
+            backdrop-filter: blur(1px);
         }
         .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--primary);
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #1677ff;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.7s linear infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* 空状态 */
-        .empty-state {
-            text-align: center;
-            padding: 40px 0;
-            color: var(--text-sub);
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .relative {
+            position: relative;
         }
     </style>
 </head>
 <body>
 <div id="app">
-    <!-- 左侧侧边栏 -->
-    <aside class="sidebar">
-        <div class="logo">
-            <span class="material-symbols-outlined">storefront</span>
-            SaaS 零售
-        </div>
-        <ul class="menu">
-            <li class="menu-item active">
-                <span class="material-symbols-outlined">inventory_2</span>
-                商品档案
-            </li>
-            <li class="menu-item">
-                <span class="material-symbols-outlined">shopping_cart</span>
-                销售管理
-            </li>
-            <li class="menu-item">
-                <span class="material-symbols-outlined">people</span>
-                会员管理
-            </li>
-            <li class="menu-item">
-                <span class="material-symbols-outlined">local_shipping</span>
-                采购管理
-            </li>
-            <li class="menu-item">
-                <span class="material-symbols-outlined">warehouse</span>
-                库存管理
-            </li>
-        </ul>
-    </aside>
-
-    <!-- 右侧主内容 -->
-    <main class="main-content">
-        <!-- 顶部 Header -->
-        <header class="header">
-            <div class="header-right">
-                <span class="material-symbols-outlined">notifications</span>
-                <span>管理员</span>
-                <div class="avatar">A</div>
+    <div class="app-layout">
+        <!-- 侧边栏 SaaS 零售区域 -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <span class="material-symbols-outlined">storefront</span>
+                <span>SaaS 零售</span>
             </div>
-        </header>
-
-        <!-- 内容滚动区 -->
-        <div class="content-scroll">
-            <!-- 面包屑 -->
-            <div class="breadcrumb">
-                首页 <span>/</span> 商品管理 <span>/</span> 商品档案列表
+            <div class="nav-menu">
+                <div class="nav-item active">
+                    <span class="material-symbols-outlined">inventory_2</span>
+                    商品档案
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    销售管理
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined">group</span>
+                    会员管理
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined">local_shipping</span>
+                    采购管理
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined">inventory</span>
+                    库存管理
+                </div>
             </div>
+        </aside>
 
-            <!-- 核心布局：左侧树 + 右侧表 -->
-            <div class="main-layout">
-
-                <!-- 左侧分类树 -->
-                <div class="category-panel">
-                    <div class="panel-header">
-                        <span>商品分类</span>
-                        <span class="material-symbols-outlined">add</span>
-                    </div>
-                    <div class="search-box">
-                        <input type="text" placeholder="搜索分类" v-model="searchCategory" />
-                    </div>
-                    <div class="tree-container">
-                        <div
-                                v-for="cat in filteredCategories"
-                                :key="cat.id"
-                                class="tree-item"
-                                :class="{ active: selectedCatId === cat.id }"
-                                @click="selectCategory(cat.id)"
-                        >
-                            <span class="material-symbols-outlined">folder</span>
-                            {{ cat.name }}
-                        </div>
+        <!-- 右侧主体 -->
+        <main class="main-container">
+            <header class="top-header">
+                <div class="header-actions">
+                    <span class="material-symbols-outlined notify-icon">notifications</span>
+                    <div class="admin-info">
+                        <span>管理员</span>
+                        <div class="avatar-circle">A</div>
                     </div>
                 </div>
+            </header>
 
-                <!-- 右侧表格区 -->
-                <div class="table-panel">
-                    <!-- 筛选区 -->
-                    <div class="filter-container">
-                        <div class="filter-row">
-                            <div class="filter-item">
-                                <label>商品名称/编码</label>
-                                <input type="text" placeholder="请输入" v-model="filters.keyword" />
-                            </div>
-                            <div class="filter-item">
-                                <label>创建日期</label>
-                                <input type="date" v-model="filters.dateFrom" />
-                                <span style="margin: 0 4px;">-</span>
-                                <input type="date" v-model="filters.dateTo" />
-                            </div>
-                            <div class="filter-item">
-                                <label>状态</label>
-                                <select v-model="filters.status">
-                                    <option value="">全部</option>
-                                    <option value="1">上架</option>
-                                    <option value="0">下架</option>
-                                </select>
-                            </div>
+            <div class="scroll-content">
+                <!-- 面包屑导航 -->
+                <div class="breadcrumb">
+                    首页 <span>/</span> 商品管理 <span>/</span> 商品档案列表
+                </div>
 
-                            <div class="action-btns">
-                                <button class="btn btn-primary" @click="fetchData">
-                                    <span class="material-symbols-outlined">search</span> 查询
-                                </button>
-                                <button class="btn btn-default" @click="resetFilters">
-                                    <span class="material-symbols-outlined">refresh</span> 重置
-                                </button>
-                            </div>
+                <!-- 卡片区域: 左侧分类树 + 右侧表格 (已经修复右侧筛选区与界面齐平) -->
+                <div class="card-panel">
+                    <!-- 左侧分类树 -->
+                    <div class="category-side">
+                        <div class="cat-header">
+                            <span>商品分类</span>
+                            <span class="material-symbols-outlined" style="font-size: 18px; cursor: pointer;">add</span>
                         </div>
-
-                        <div style="margin-top: 16px; display: flex; gap: 10px;">
-                            <button class="btn btn-primary"><span class="material-symbols-outlined">add</span> 新增</button>
-                            <button class="btn btn-default"><span class="material-symbols-outlined">upload</span> 导入</button>
-                            <button class="btn btn-default"><span class="material-symbols-outlined">download</span> 导出</button>
-                            <div style="flex:1"></div>
-                            <button class="btn btn-default" style="border:none;"><span class="material-symbols-outlined">settings</span></button>
+                        <div class="cat-search">
+                            <input type="text" placeholder="搜索分类" v-model="searchCategoryText">
+                        </div>
+                        <div class="tree-list">
+                            <div v-for="cat in filteredCategoryList" :key="cat.id"
+                                 class="tree-node"
+                                 :class="{ active: selectedCategoryId === cat.id }"
+                                 @click="changeCategory(cat.id)">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">folder</span>
+                                {{ cat.name }}
+                            </div>
                         </div>
                     </div>
 
-                    <!-- 表格 -->
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                            <tr>
-                                <th width="50" class="text-center"><input type="checkbox" /></th>
-                                <th width="60" class="text-center">序号</th>
-                                <th>商品名称</th>
-                                <th>编码</th>
-                                <th>条码</th>
-                                <th>规格</th>
-                                <th>单位</th>
-                                <th class="text-right">进货价</th>
-                                <th class="text-right">扣率(%)</th>
-                                <th class="text-right">零售价</th>
-                                <th class="text-right">毛利率</th>
-                                <th width="120" class="text-center">操作</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr v-for="(item, index) in list" :key="item.id">
-                                <td class="text-center"><input type="checkbox" /></td>
-                                <td class="text-center">{{ (pagination.current - 1) * pagination.size + index + 1 }}</td>
-                                <td>
-                                    <div style="font-weight: 500;">{{ item.name }}</div>
-                                </td>
-                                <td>{{ item.code }}</td>
-                                <td>{{ item.barcode }}</td>
-                                <td>{{ item.spec }}</td>
-                                <td>{{ item.unit }}</td>
-                                <td class="text-right">{{ item.purchasePrice }}</td>
-                                <td class="text-right">{{ item.discountRate }}</td>
-                                <td class="text-right" style="color: #ff4d4f; font-weight: bold;">{{ item.retailPrice }}</td>
-                                <td class="text-right">{{ item.profitMargin }}%</td>
-                                <td class="text-center">
-                                    <div class="action-links" style="justify-content: center;">
-                                        <span class="link">修改</span>
-                                        <span class="link">复制</span>
-                                        <span class="link danger">删除</span>
+                    <!-- 右侧表格区 (修复右侧边缘与SaaS零售视觉对齐) -->
+                    <div class="table-main relative">
+                        <!-- 筛选栏 - 修复按钮靠右不留白 -->
+                        <div class="filter-bar">
+                            <div class="filter-row">
+                                <div class="filter-field">
+                                    <label>商品名称/编码</label>
+                                    <input type="text" placeholder="请输入" v-model="filters.keyword">
+                                </div>
+                                <div class="filter-field">
+                                    <label>创建日期</label>
+                                    <div class="date-range">
+                                        <input type="date" v-model="filters.dateFrom">
+                                        <span>-</span>
+                                        <input type="date" v-model="filters.dateTo">
                                     </div>
-                                </td>
-                            </tr>
-                            <tr v-if="list.length === 0">
-                                <td colspan="12" class="empty-state">
-                                    <span class="material-symbols-outlined" style="font-size: 48px; margin-bottom: 8px; display: block;">inbox</span>
-                                    暂无数据
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- 分页 -->
-                    <div class="pagination">
-                        <span style="margin-right: 12px; font-size: 13px; color: var(--text-sub);">共 {{ pagination.total }} 条</span>
-                        <div
-                                class="page-item"
-                                :class="{ disabled: pagination.current === 1 }"
-                                @click="prevPage"
-                        >
-                            <span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span>
+                                </div>
+                                <div class="filter-field">
+                                    <label>状态</label>
+                                    <select v-model="filters.status">
+                                        <option value="">全部</option>
+                                        <option value="1">上架</option>
+                                        <option value="0">下架</option>
+                                    </select>
+                                </div>
+                                <!-- 右侧按钮组 (无右侧内边距，完全贴边符合“与 sass 零售齐平”) -->
+                                <div class="right-btns">
+                                    <button class="btn btn-primary" @click="handleSearch">
+                                        <span class="material-symbols-outlined" style="font-size: 16px;">search</span> 查询
+                                    </button>
+                                    <button class="btn btn-default" @click="resetAllFilters">
+                                        <span class="material-symbols-outlined" style="font-size: 16px;">refresh</span> 重置
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- 第二行新增导入导出 -->
+                            <div class="action-toolbar">
+                                <button class="btn btn-primary">
+                                    <span class="material-symbols-outlined">add</span> 新增
+                                </button>
+                                <button class="btn btn-default">
+                                    <span class="material-symbols-outlined">upload</span> 导入
+                                </button>
+                                <button class="btn btn-default">
+                                    <span class="material-symbols-outlined">download</span> 导出
+                                </button>
+                                <div class="tool-spacer"></div>
+                                <button class="icon-btn">
+                                    <span class="material-symbols-outlined">settings</span>
+                                </button>
+                            </div>
                         </div>
 
-                        <div
-                                v-for="page in pageNumbers"
-                                :key="page"
-                                class="page-item"
-                                :class="{ active: page === pagination.current }"
-                                @click="gotoPage(page)"
-                        >
-                            {{ page }}
+                        <!-- 表格 -->
+                        <div class="data-table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                <tr>
+                                    <th width="40" class="text-center"><input type="checkbox"></th>
+                                    <th width="55" class="text-center">序号</th>
+                                    <th>商品名称</th>
+                                    <th>编码</th>
+                                    <th>条码</th>
+                                    <th>规格</th>
+                                    <th>单位</th>
+                                    <th class="text-right">进货价</th>
+                                    <th class="text-right">扣率(%)</th>
+                                    <th class="text-right">零售价</th>
+                                    <th class="text-right">毛利率</th>
+                                    <th width="130" class="text-center">操作</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr v-for="(item, idx) in productList" :key="item.id">
+                                    <td class="text-center"><input type="checkbox"></td>
+                                    <td class="text-center">{{ (pagination.current - 1) * pagination.size + idx + 1 }}</td>
+                                    <td><strong>{{ item.name }}</strong></td>
+                                    <td>{{ item.code }}</td>
+                                    <td>{{ item.barcode }}</td>
+                                    <td>{{ item.spec }}</td>
+                                    <td>{{ item.unit }}</td>
+                                    <td class="text-right">¥{{ item.purchasePrice }}</td>
+                                    <td class="text-right">{{ item.discountRate }}%</td>
+                                    <td class="text-right" style="color:#f43f5e; font-weight:600;">¥{{ item.retailPrice }}</td>
+                                    <td class="text-right profit-rate">{{ item.profitMargin }}%</td>
+                                    <td class="text-center">
+                                        <span class="link-action">修改</span>
+                                        <span class="link-action">复制</span>
+                                        <span class="link-action danger">删除</span>
+                                    </td>
+                                </tr>
+                                <tr v-if="productList.length === 0">
+                                    <td colspan="12" class="empty-row">
+                                        <span class="material-symbols-outlined" style="font-size: 42px;">inbox</span><br>
+                                        暂无数据
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
 
-                        <div
-                                class="page-item"
-                                :class="{ disabled: pagination.current === pagination.pages }"
-                                @click="nextPage"
-                        >
-                            <span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span>
+                        <!-- 分页区域 同样右边缘整洁 -->
+                        <div class="pagination-area">
+                            <div style="color:#5f6c7a; font-size:13px;">共 {{ pagination.total }} 条</div>
+                            <div class="page-control">
+                                <div class="page-item" :class="{ disabled: pagination.current === 1 }" @click="prevPage">
+                                    <span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span>
+                                </div>
+                                <div v-for="pg in pageNumbers" :key="pg"
+                                     class="page-item" :class="{ active: pg === pagination.current }"
+                                     @click="goPage(pg)">
+                                    {{ pg }}
+                                </div>
+                                <div class="page-item" :class="{ disabled: pagination.current === pagination.totalPages }" @click="nextPage">
+                                    <span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span>
+                                </div>
+                            </div>
+                            <div class="jump-box">
+                                跳至
+                                <input type="number" v-model.number="jumpPageNum" min="1">
+                                <button class="btn btn-default" style="padding: 2px 12px;" @click="jumpToPage">确定</button>
+                            </div>
                         </div>
 
-                        <span style="margin-left: 16px; font-size: 13px; color: var(--text-sub);">
-                                跳至 <input type="number" v-model="jumpPage" style="width: 50px; margin: 0 4px; padding: 2px; border: 1px solid var(--border); border-radius: 4px; text-align: center;" /> 页
-                                <button @click="jumpTo" style="margin-left: 4px; border: none; background: none; color: var(--primary); cursor: pointer;">确定</button>
-                            </span>
-                    </div>
-
-                    <!-- 加载层 -->
-                    <div class="loading-overlay" v-if="loading">
-                        <div class="spinner"></div>
+                        <div class="loading-overlay" v-if="loading">
+                            <div class="spinner"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 </div>
 
 <script>
@@ -507,32 +718,11 @@
 
     createApp({
         setup() {
-            // --- 状态 ---
+            // 加载状态
             const loading = ref(false);
-            const list = ref([]);
-            const categories = ref([]);
-            const selectedCatId = ref(null);
-            const searchCategory = ref('');
-            const jumpPage = ref(1);
-
-            // 筛选条件
-            const filters = ref({
-                keyword: '',
-                dateFrom: '',
-                dateTo: '',
-                status: ''
-            });
-
-            // 分页对象
-            const pagination = ref({
-                current: 1,
-                size: 10,
-                total: 0,
-                pages: 0
-            });
-
-            // --- 模拟数据 ---
-            const mockCategories = [
+            const productList = ref([]);
+            // 分类数据
+            const categories = ref([
                 { id: null, name: '所有分类' },
                 { id: 1, name: '新鲜果蔬' },
                 { id: 2, name: '肉禽蛋类' },
@@ -542,149 +732,188 @@
                 { id: 6, name: '酒水饮料' },
                 { id: 7, name: '休闲零食' },
                 { id: 8, name: '粮油调味' },
-                { id: 9, name: '日用百货' },
-            ];
+                { id: 9, name: '日用百货' }
+            ]);
+            const selectedCategoryId = ref(null);
+            const searchCategoryText = ref('');
 
-            // --- 计算属性 ---
-            const filteredCategories = computed(() => {
-                return categories.value.filter(cat =>
-                    cat.name.includes(searchCategory.value)
-                );
+            // 过滤后的分类
+            const filteredCategoryList = computed(() => {
+                if (!searchCategoryText.value) return categories.value;
+                return categories.value.filter(c => c.name.includes(searchCategoryText.value));
             });
 
-            const pageNumbers = computed(() => {
-                const pages = [];
-                const total = pagination.value.pages;
-                const current = pagination.value.current;
-
-                // 简单的页码逻辑：显示当前页前后各2页
-                let start = Math.max(1, current - 2);
-                let end = Math.min(total, current + 2);
-
-                if (total <= 5) {
-                    start = 1;
-                    end = total;
-                } else if (current <= 3) {
-                    end = 5;
-                } else if (current >= total - 2) {
-                    start = total - 4;
-                }
-
-                for (let i = start; i <= end; i++) {
-                    pages.push(i);
-                }
-                return pages;
+            // 筛选条件
+            const filters = ref({
+                keyword: '',
+                dateFrom: '',
+                dateTo: '',
+                status: ''
             });
 
-            // --- 方法 ---
-            const fetchData = async () => {
+            // 分页数据
+            const pagination = ref({
+                current: 1,
+                size: 10,
+                total: 0,
+                totalPages: 1
+            });
+            const jumpPageNum = ref(1);
+
+            // 模拟数据生成（满足美观展示、对齐商品档案范例）
+            const generateMockData = (page, pageSize, catId, filterKeyword) => {
+                const totalMock = 86;  // 模拟总数
+                const start = (page - 1) * pageSize;
+                let items = [];
+                for (let i = 1; i <= pageSize; i++) {
+                    const idx = start + i;
+                    if (idx > totalMock) break;
+                    const randPrice = (Math.random() * 70 + 10).toFixed(2);
+                    const randRetail = (parseFloat(randPrice) + (Math.random() * 25 + 5)).toFixed(2);
+                    const profit = ((randRetail - randPrice) / randRetail * 100).toFixed(1);
+                    items.push({
+                        id: idx,
+                        name: filterKeyword ? `相关商品-${idx}` : `测试商品${idx}`,
+                        code: `P${10000 + idx}`,
+                        barcode: `690000000${String(idx).padStart(3,'0')}`,
+                        spec: '标准包装',
+                        unit: 'kg',
+                        purchasePrice: randPrice,
+                        discountRate: '100',
+                        retailPrice: randRetail,
+                        profitMargin: profit,
+                        categoryId: (idx % 9) + 1,
+                    });
+                }
+                // 若按分类筛选（模拟）
+                if (catId !== null && catId !== undefined) {
+                    items = items.filter(it => it.categoryId === catId);
+                }
+                if (filterKeyword) {
+                    items = items.filter(it => it.name.includes(filterKeyword) || it.code.includes(filterKeyword));
+                }
+                return { list: items, total: totalMock };
+            };
+
+            // 获取数据（带延迟）
+            const fetchProductList = async () => {
                 loading.value = true;
                 try {
-                    // 模拟 API 请求
-                    // 实际使用时请替换为真实的 fetch 请求
-                    console.log('请求参数:', {
-                        catId: selectedCatId.value,
-                        page: pagination.value.current,
-                        size: pagination.value.size,
-                        ...filters.value
-                    });
-
-                    // 模拟网络延迟
-                    await new Promise(resolve => setTimeout(resolve, 600));
-
-                    // 生成模拟数据
-                    const mockData = Array.from({ length: pagination.value.size }, (_, i) => {
-                        const idx = (pagination.value.current - 1) * pagination.value.size + i + 1;
-                        return {
-                            id: idx,
-                            name: `测试商品 ${idx}`,
-                            code: `P${10000 + idx}`,
-                            barcode: `6900000000${idx}`,
-                            spec: '标准装',
-                            unit: 'kg',
-                            purchasePrice: (Math.random() * 50 + 10).toFixed(2),
-                            discountRate: '100',
-                            retailPrice: (Math.random() * 80 + 20).toFixed(2),
-                            profitMargin: (Math.random() * 30 + 10).toFixed(1)
-                        };
-                    });
-
-                    list.value = mockData;
-                    pagination.value.total = 125; // 模拟总数
-                    pagination.value.pages = Math.ceil(125 / pagination.value.size);
-
-                } catch (error) {
-                    console.error("数据加载失败", error);
+                    await new Promise(resolve => setTimeout(resolve, 400));
+                    const { list, total } = generateMockData(
+                        pagination.value.current,
+                        pagination.value.size,
+                        selectedCategoryId.value,
+                        filters.value.keyword
+                    );
+                    productList.value = list;
+                    pagination.value.total = total;
+                    pagination.value.totalPages = Math.ceil(total / pagination.value.size);
+                    if (pagination.value.current > pagination.value.totalPages) {
+                        pagination.value.current = 1;
+                    }
+                } catch (err) {
+                    console.error(err);
                 } finally {
                     loading.value = false;
                 }
             };
 
-            const selectCategory = (id) => {
-                selectedCatId.value = id;
+            // 监听分类切换
+            const changeCategory = (id) => {
+                selectedCategoryId.value = id;
                 pagination.value.current = 1;
-                fetchData();
+                fetchProductList();
             };
 
-            const resetFilters = () => {
+            // 查询与重置
+            const handleSearch = () => {
+                pagination.value.current = 1;
+                fetchProductList();
+            };
+            const resetAllFilters = () => {
                 filters.value = { keyword: '', dateFrom: '', dateTo: '', status: '' };
                 pagination.value.current = 1;
-                fetchData();
+                fetchProductList();
             };
 
+            // 分页逻辑
             const prevPage = () => {
                 if (pagination.value.current > 1) {
                     pagination.value.current--;
-                    fetchData();
+                    fetchProductList();
                 }
             };
-
             const nextPage = () => {
-                if (pagination.value.current < pagination.value.pages) {
+                if (pagination.value.current < pagination.value.totalPages) {
                     pagination.value.current++;
-                    fetchData();
+                    fetchProductList();
                 }
             };
-
-            const gotoPage = (page) => {
-                pagination.value.current = page;
-                fetchData();
+            const goPage = (page) => {
+                if (page >= 1 && page <= pagination.value.totalPages) {
+                    pagination.value.current = page;
+                    fetchProductList();
+                }
             };
-
-            const jumpTo = () => {
-                const p = parseInt(jumpPage.value);
-                if (p >= 1 && p <= pagination.value.pages) {
+            const jumpToPage = () => {
+                let p = parseInt(jumpPageNum.value);
+                if (isNaN(p)) p = 1;
+                p = Math.min(Math.max(p, 1), pagination.value.totalPages);
+                if (p !== pagination.value.current) {
                     pagination.value.current = p;
-                    fetchData();
-                } else {
-                    alert(`请输入 1 到 ${pagination.value.pages} 之间的数字`);
+                    fetchProductList();
                 }
+                jumpPageNum.value = p;
             };
 
-            // --- 初始化 ---
+            // 计算页码数组
+            const pageNumbers = computed(() => {
+                const total = pagination.value.totalPages;
+                const current = pagination.value.current;
+                let delta = 2;
+                let left = current - delta;
+                let right = current + delta;
+                let range = [];
+                for (let i = 1; i <= total; i++) {
+                    if (i === 1 || i === total || (i >= left && i <= right)) {
+                        range.push(i);
+                    }
+                }
+                let result = [];
+                let last = 0;
+                for (let i of range) {
+                    if (i - last > 1) result.push(-1);
+                    result.push(i);
+                    last = i;
+                }
+                return result.filter(v => v !== -1);
+            });
+
             onMounted(() => {
-                categories.value = mockCategories;
-                fetchData();
+                selectedCategoryId.value = null;
+                fetchProductList();
             });
 
             return {
-                list,
+                loading,
+                productList,
                 categories,
-                filteredCategories,
-                selectedCatId,
-                searchCategory,
+                filteredCategoryList,
+                selectedCategoryId,
+                searchCategoryText,
                 filters,
                 pagination,
+                jumpPageNum,
                 pageNumbers,
-                jumpPage,
-                loading,
-                fetchData,
-                selectCategory,
-                resetFilters,
+                changeCategory,
+                handleSearch,
+                resetAllFilters,
                 prevPage,
                 nextPage,
-                gotoPage,
-                jumpTo
+                goPage,
+                jumpToPage,
+                fetchProductList
             };
         }
     }).mount('#app');
