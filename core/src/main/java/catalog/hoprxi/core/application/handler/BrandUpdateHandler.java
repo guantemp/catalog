@@ -36,8 +36,8 @@ public class BrandUpdateHandler implements Handler<BrandUpdateCommand, Brand> {
     @Override
     public Brand execute(BrandUpdateCommand command) {
         Brand brand = repository.find(command.id());
-        if (command.name() != null || command.alias() != null)
-            brand.rename(new Name(command.name(), command.alias()));
+        if (command.name() != null || command.shortName() != null)
+            brand.rename(new Name(command.name(), command.shortName()));
         if (command.story() != null || command.homepage() != null || command.logo() != null || command.since() != null)
             brand.changeAbout(new AboutBrand(command.homepage(), command.logo(), command.since(), command.story()));
         repository.save(brand);

@@ -17,8 +17,6 @@
 package catalog.hoprxi.core.application.command;
 
 
-import catalog.hoprxi.core.domain.model.brand.Brand;
-
 import java.net.URL;
 import java.time.Year;
 
@@ -28,82 +26,6 @@ import java.time.Year;
  * @version 0.0.1 builder 2025/9/11
  */
 
-public class BrandUpdateCommand implements Command {
-    private long id;
-    private String name;
-    private String alias;
-    private URL logo;
-    private Year since;
-    private String story;
-    private URL homepage;
-
-    public BrandUpdateCommand(long id) {
-        setId(id);
-    }
-
-    public BrandUpdateCommand(long id, String name, String alias, URL logo, Year since, String story, URL homepage) {
-        setId(id);
-        this.name = name;
-        this.alias = alias;
-        this.logo = logo;
-        this.since = since;
-        this.story = story;
-        this.homepage = homepage;
-    }
-
-    private void setId(long id) {
-        if (id < 0) throw new IllegalArgumentException("id is ");
-        this.id = id;
-    }
-
-    public void setName(String name, String alias) {
-        this.name = name;
-        this.alias = alias;
-    }
-
-
-    public void setAbout(URL logo, URL homepage, Year since, String story) {
-        this.logo = logo;
-    }
-
-    public long id() {
-        return id;
-    }
-
-    public String name() {
-        return name;
-    }
-
-    public String alias() {
-        return alias;
-    }
-
-    public URL logo() {
-        return logo;
-    }
-
-    public Year since() {
-        return since;
-    }
-
-    public String story() {
-        return story;
-    }
-
-    public URL homepage() {
-        return homepage;
-    }
-
-    @Override
-    public String toString() {
-        return "BrandUpdateCommand{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", alias='" + alias + '\'' +
-                ", logo=" + logo +
-                ", since=" + since +
-                ", story='" + story + '\'' +
-                ", homepage=" + homepage +
-                '}';
-    }
+public record BrandUpdateCommand(long id, String name, String shortName, URL homepage, URL logo, Year since,
+                                 String story) implements Command {
 }

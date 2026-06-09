@@ -70,7 +70,7 @@ public class PsqlBrandQuery implements BrandQuery {
         if (brand != null)
             return brand;
         try (Connection connection = PsqlUtil.getConnection()) {
-            final String findSql = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand where id=? limit 1";
+            final String findSql = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'shortName' shortName,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, Long.parseLong(id));
             ResultSet rs = preparedStatement.executeQuery();
@@ -88,7 +88,7 @@ public class PsqlBrandQuery implements BrandQuery {
 
 
     public Brand[] queryAll(int offset, int limit) {
-        final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo " +
+        final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'shortName' shortName,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo " +
                 "from brand a INNER JOIN (SELECT id FROM brand order by id desc offset ? LIMIT ?) b USING (id)";
         try (Connection connection = PsqlUtil.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
@@ -105,10 +105,10 @@ public class PsqlBrandQuery implements BrandQuery {
 
 
     public Brand[] queryByName(String name) {
-        final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
-                "where name::jsonb->>'name' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
-                "where name::jsonb->>'mnemonic' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'alias' alias,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
-                "where name::jsonb->>'alias' ~ ?";
+        final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'shortName' shortName,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
+                "where name::jsonb->>'name' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'shortName' shortName,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
+                "where name::jsonb->>'mnemonic' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'shortName' shortName,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
+                "where name::jsonb->>'shortName' ~ ?";
         try (Connection connection = PsqlUtil.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, name);
@@ -135,7 +135,7 @@ public class PsqlBrandQuery implements BrandQuery {
         long id = rs.getLong("id");
         if (Brand.UNDEFINED.id() == id)
             return Brand.UNDEFINED;
-        Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
+        Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("shortName"));
         AboutBrand about = null;
         URL homepage = rs.getString("homepage") == null ? null : URI.create(rs.getString("homepage")).toURL();
         Year since = rs.getString("since") == null ? null : Year.of(rs.getInt("since"));

@@ -22,9 +22,9 @@ import java.util.StringJoiner;
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK21
- * @version 0.1 builder 2026-04-20
+ * @version 0.2 builder 2026-06-09
  */
-public class Name {
+public final class Name {
     private static final int MAX_LENGTH = 256;
     private String name;
     private String shortName;
@@ -32,17 +32,7 @@ public class Name {
      * 空名称对象（空对象模式）
      * <p>调用 rename 仍返回自身，避免空指针</p>
      */
-    public static final Name EMPTY = new Name() {
-        @Override
-        public Name rename(String name, String shortName) {
-            return this;
-        }
-    };
-
-    private Name() {
-        this.name = "";
-        this.shortName = "";
-    }
+    public static final Name EMPTY = new Name("", "");
 
     /**
      * 构造方法：传入正式名称与简称
@@ -74,10 +64,11 @@ public class Name {
     }
 
     private void setShortName(String shortName) {
-        shortName = Objects.requireNonNull(shortName, "alias required").trim();
+        if (null == shortName)
+            shortName = "";
         if (shortName.length() > MAX_LENGTH)
-            throw new IllegalArgumentException(String.format("alias length rang is 0-%d", MAX_LENGTH));
-        this.shortName = shortName;
+            throw new IllegalArgumentException(String.format("shortName length rang is 0-%d", MAX_LENGTH));
+        this.shortName = shortName.trim();
     }
 
     public String name() {
@@ -100,24 +91,28 @@ public class Name {
      * @return 新的 Name 实例（或自身，若未变化）
      */
     public Name rename(String name, String shortName) {
-        if ("".equals(name) && "".equals(shortName))
-            return EMPTY;
-        if (this.name.equals(name) && this.shortName.equals(shortName))
+        if (this == EMPTY && "".equals(name) && "".equals(shortName)) {
             return this;
+        }
+        if (this.name.equals(name) && this.shortName.equals(shortName)) {
+            return this;
+        }
         return new Name(name, shortName);
     }
 
     public Name rename(String name) {
-        if ("".equals(name) && "".equals(this.shortName))
-            return EMPTY;
+        if (this == EMPTY && "".equals(name) && "".equals(shortName)) {
+            return this;
+        }
         if (this.name.equals(name))
             return this;
         return new Name(name, this.shortName);
     }
 
-    public Name reshortName(String shortName) {
-        if ("".equals(this.name) && "".equals(shortName))
-            return EMPTY;
+    public Name reShortName(String shortName) {
+        if (this == EMPTY && "".equals(name) && "".equals(shortName)) {
+            return this;
+        }
         if (this.shortName.equals(shortName))
             return this;
         return new Name(this.name, shortName);

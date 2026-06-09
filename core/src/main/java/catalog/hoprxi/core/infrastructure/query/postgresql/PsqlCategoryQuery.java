@@ -61,7 +61,7 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
         } else {
             List<CategoryView> categoryViewList = new ArrayList<>();
             try (Connection connection = PsqlUtil.getConnection()) {
-                final String rootSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url,\"right\" - \"left\" as distance from category where id = parent_id";
+                final String rootSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'shortName' as shortName,description,icon_url,\"right\" - \"left\" as distance from category where id = parent_id";
                 PreparedStatement preparedStatement = connection.prepareStatement(rootSql);
                 ResultSet rs = preparedStatement.executeQuery();
                 while (rs.next()) {
@@ -88,7 +88,7 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
             }
         }
         try (Connection connection = PsqlUtil.getConnection()) {
-            final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url,\"right\" - \"left\" as distance from category where id=? limit 1";
+            final String findSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'shortName' as shortName,description,icon_url,\"right\" - \"left\" as distance from category where id=? limit 1";
             PreparedStatement preparedStatement = connection.prepareStatement(findSql);
             preparedStatement.setLong(1, id);
             ResultSet rs = preparedStatement.executeQuery();
@@ -113,7 +113,7 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
     private CategoryView rebuild(ResultSet rs) throws SQLException, InvocationTargetException, InstantiationException, IllegalAccessException, MalformedURLException {
         long id = rs.getLong("id");
         long parentId = rs.getLong("parent_id");
-        Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("alias"));
+        Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("shortName"));
         String description = rs.getString("description");
         URL icon = rs.getString("icon_url") == null ? null : URI.create(rs.getString("icon_url")).toURL();
         boolean isLeaf = rs.getInt("distance") == 1 ? true : false;
@@ -138,7 +138,7 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
 
     private void queryAndFillChildren(Tree<CategoryView> tree, CategoryView parent, long id) {
         try (Connection connection = PsqlUtil.getConnection()) {
-            final String childrenSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url,\"right\" - \"left\" as distance from category where parent_id = ?";
+            final String childrenSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'shortName' as shortName,description,icon_url,\"right\" - \"left\" as distance from category where parent_id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(childrenSql);
             preparedStatement.setLong(1, id);
             ResultSet rs = preparedStatement.executeQuery();
@@ -170,7 +170,7 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
 
     public void queryAndFillDescendants(Tree<CategoryView> tree, long id) {
         try (Connection connection = PsqlUtil.getConnection()) {
-            final String descendantsSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'alias' as alias,description,icon_url,\"right\" - \"left\" as distance from category \n" +
+            final String descendantsSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'shortName' as shortName,description,icon_url,\"right\" - \"left\" as distance from category \n" +
                     "where family_Id = (select family_Id from category where id = ?)\n" +
                     "  and \"left\" >= (select \"left\" from category where id = ?)\n" +
                     "  and \"right\" <= (select \"right\" from category where id = ?)\n" +
@@ -194,11 +194,11 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
     public CategoryView[] queryByName(String regularExpression) {
         List<CategoryView> categoryViewList = new ArrayList<>();
         try (Connection connection = PsqlUtil.getConnection()) {
-            final String searchSql = "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,icon_url,\"right\" - \"left\" as distance from category where name::jsonb ->> 'name' ~ ?\n" +
+            final String searchSql = "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'shortName' as shortName, description,icon_url,\"right\" - \"left\" as distance from category where name::jsonb ->> 'name' ~ ?\n" +
                     "union\n" +
-                    "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,icon_url,\"right\" - \"left\" as distance from category where name::jsonb ->> 'alias' ~ ?\n" +
+                    "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'shortName' as shortName, description,icon_url,\"right\" - \"left\" as distance from category where name::jsonb ->> 'shortName' ~ ?\n" +
                     "union\n" +
-                    "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'alias' as alias, description,icon_url,\"right\" - \"left\" as distance from category where name::jsonb ->> 'mnemonic' ~ ?";
+                    "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'shortName' as shortName, description,icon_url,\"right\" - \"left\" as distance from category where name::jsonb ->> 'mnemonic' ~ ?";
             PreparedStatement ps = connection.prepareStatement(searchSql);
             ps.setString(1, regularExpression);
             ps.setString(2, regularExpression);

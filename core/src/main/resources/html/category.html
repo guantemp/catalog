@@ -26,7 +26,6 @@
             overflow: hidden;
         }
 
-        /* 左侧边栏 - 深色磨砂协调 */
         .saas-sidebar {
             width: 260px;
             background: rgba(8, 12, 24, 0.92);
@@ -88,7 +87,6 @@
             font-size: 22px;
         }
 
-        /* 右侧主内容 - 完全填满 */
         .main-content-area {
             flex: 1;
             overflow-y: auto;
@@ -212,6 +210,28 @@
             outline: none;
             box-shadow: 0 0 0 3px rgba(129,140,248,0.2);
         }
+        .error-banner {
+            background: rgba(220, 38, 38, 0.8);
+            backdrop-filter: blur(8px);
+            margin: 12px 16px;
+            padding: 10px 16px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ffcdd2;
+            border: 1px solid #ef4444;
+        }
+        .error-banner button {
+            background: #7f1d1d;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 30px;
+            color: white;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
         .tree-scroll {
             flex: 1;
             overflow-y: auto;
@@ -279,6 +299,7 @@
             background: #1e293b;
             flex-shrink: 0;
         }
+        /* 操作按钮悬浮显示 - 特殊分类不显示 */
         .node-actions { display: none; gap: 6px; margin-left: 8px; }
         .node-content:hover .node-actions { display: flex; }
         .node-actions i {
@@ -519,6 +540,16 @@
         @media (max-width: 1000px) {
             .tree-panel { flex: 0 0 360px; }
         }
+        .loading-placeholder {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+        .empty-placeholder {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
     </style>
 </head>
 <body>
@@ -571,8 +602,15 @@
                             <input type="text" v-model="searchKeyword" placeholder="搜索分类..." @input="onSearchInput">
                         </div>
                     </div>
+                    <div v-if="errorMsg" class="error-banner">
+                        <span><i class="fas fa-exclamation-triangle"></i> {{ errorMsg }}</span>
+                        <button @click="loadCategories"><i class="fas fa-sync-alt"></i> 重试</button>
+                    </div>
                     <div class="tree-scroll">
-                        <ul class="tree-node">
+                        <div v-if="loading" class="loading-placeholder">
+                            <i class="fas fa-spinner fa-pulse"></i> 加载分类中...
+                        </div>
+                        <ul class="tree-node" v-else-if="!loading && filteredCategoryTree.length > 0">
                             <tree-item
                                     v-for="node in filteredCategoryTree"
                                     :key="node.id"
@@ -584,9 +622,12 @@
                                     @select="selectCategory"
                                     @add-child="showAddChildPrompt"
                                     @delete-cat="deleteCategoryNode"
+                                    @node-updated="onNodeUpdated"
                             ></tree-item>
                         </ul>
-                        <div v-if="filteredCategoryTree.length === 0" style="text-align:center; margin-top:20px; color:#64748b;">未找到或暂无分类</div>
+                        <div v-else-if="!loading && filteredCategoryTree.length === 0" class="empty-placeholder">
+                            <i class="fas fa-folder-open"></i> 暂无分类数据
+                        </div>
                     </div>
                 </div>
 
@@ -598,39 +639,39 @@
                             <div class="form-grid">
                                 <div class="field-group">
                                     <label><i class="fas fa-level-up-alt"></i> 上级分类 <span class="required-star">*</span></label>
-                                    <select v-model="editableCategory.parent_id">
+                                    <select v-model="editableCategory.parent_id" :disabled="!isValidCategory || isSpecialUncategorized">
                                         <option value="-1">无（顶级分类）</option>
                                         <option v-for="cat in flatCategoryList" :value="cat.id" :disabled="cat.id === editableCategory.id">{{ cat.name.name }}</option>
                                     </select>
                                 </div>
                                 <div class="field-group">
                                     <label>分类名称 <span class="required-star">*</span></label>
-                                    <input v-model="editableCategory.name.name" placeholder="例：品质男鞋">
+                                    <input v-model="editableCategory.name.name" placeholder="例：品质男鞋" :disabled="!isValidCategory || isSpecialUncategorized">
                                 </div>
                                 <div class="field-group">
                                     <label>简称</label>
-                                    <input v-model="editableCategory.name.shortName" placeholder="简称">
+                                    <input v-model="editableCategory.name.shortName" placeholder="简称" :disabled="!isValidCategory || isSpecialUncategorized">
                                 </div>
                                 <div class="field-group full-width">
                                     <label>图标URL</label>
                                     <div class="icon-url-wrapper">
-                                        <input v-model="editableCategory.icon_url" placeholder="https://... 或上传图片">
+                                        <input v-model="editableCategory.icon_url" placeholder="https://... 或上传图片" :disabled="!isValidCategory || isSpecialUncategorized">
                                         <div class="icon-actions">
-                                            <button type="button" @click="triggerFileUpload"><i class="fas fa-cloud-upload-alt"></i> 上传</button>
-                                            <button type="button" @click="openModalPreview" :disabled="!editableCategory.icon_url"><i class="fas fa-eye"></i> 预览</button>
+                                            <button type="button" @click="triggerFileUpload" :disabled="!isValidCategory || isSpecialUncategorized"><i class="fas fa-cloud-upload-alt"></i> 上传</button>
+                                            <button type="button" @click="openModalPreview" :disabled="!editableCategory.icon_url || !isValidCategory || isSpecialUncategorized"><i class="fas fa-eye"></i> 预览</button>
                                         </div>
                                     </div>
                                     <input type="file" ref="fileInput" style="display:none" accept="image/*" @change="handleFileUpload">
                                 </div>
                                 <div class="field-group full-width">
                                     <label>描述</label>
-                                    <textarea rows="2" v-model="editableCategory.description"></textarea>
+                                    <textarea rows="2" v-model="editableCategory.description" :disabled="!isValidCategory || isSpecialUncategorized"></textarea>
                                 </div>
                             </div>
                             <div class="btn-group">
-                                <button @click="restoreOriginal" :disabled="!isModified" class="info"><i class="fas fa-undo-alt"></i> 恢复</button>
-                                <button @click="updateCurrentCategory" :disabled="!isModified" class="warning"><i class="fas fa-save"></i> 修改</button>
-                                <button @click="deleteCurrentCategory" class="danger"><i class="fas fa-trash"></i> 删除</button>
+                                <button @click="restoreOriginal" :disabled="!isModified || !isValidCategory || isSpecialUncategorized" class="info"><i class="fas fa-undo-alt"></i> 恢复</button>
+                                <button @click="updateCurrentCategory" :disabled="!isModified || !isValidCategory || isSpecialUncategorized" class="warning"><i class="fas fa-save"></i> 修改</button>
+                                <button @click="deleteCurrentCategory" :disabled="!isValidCategory || isSpecialUncategorized" class="danger"><i class="fas fa-trash"></i> 删除</button>
                             </div>
                             <hr />
                             <div class="extended-section">
@@ -638,45 +679,46 @@
                                 <div class="attr-selector">
                                     <div class="attr-selector-left">
                                         <label>属性名：</label>
-                                        <select v-model="selectedExtIdForSelect" @change="onSelectExtFromDropdown">
+                                        <select v-model="selectedExtIdForSelect" @change="onSelectExtFromDropdown" :disabled="!isValidCategory || isSpecialUncategorized">
                                             <option value="">-- 选择属性 --</option>
                                             <option v-for="attr in activeExtList" :value="attr.recordId">{{ attr.displayName }} ({{ attr.fieldName }})</option>
                                         </select>
                                         <span class="badge-count" v-if="activeExtList.length">共 {{ activeExtList.length }} 个字段</span>
+                                        <span v-else class="badge-count">暂无扩展属性</span>
                                     </div>
                                     <div class="attr-actions">
-                                        <button @click="saveExtAttribute" :disabled="!isSaveEnabled" class="warning"><i class="fas fa-save"></i> 保存</button>
-                                        <button @click="deleteExtAttribute" :disabled="!selectedExtId" class="danger"><i class="fas fa-trash"></i> 删除</button>
+                                        <button @click="saveExtAttribute" :disabled="!isSaveEnabled || !isValidCategory || isSpecialUncategorized" class="warning"><i class="fas fa-save"></i> 保存</button>
+                                        <button @click="deleteExtAttribute" :disabled="!selectedExtId || !isValidCategory || isSpecialUncategorized" class="danger"><i class="fas fa-trash"></i> 删除</button>
                                         <button @click="clearExtForm" class="info"><i class="fas fa-eraser"></i> 清空</button>
                                     </div>
                                 </div>
                                 <div class="form-grid">
                                     <div class="field-group">
                                         <label>显示名称 <span class="required-star">*</span></label>
-                                        <input v-model="extForm.displayName" placeholder="例：颜色">
+                                        <input v-model="extForm.displayName" placeholder="例：颜色" :disabled="!isValidCategory || isSpecialUncategorized">
                                     </div>
                                     <div class="field-group">
                                         <label>别名 <span class="required-star">*</span></label>
-                                        <input v-model="extForm.fieldName" placeholder="例：YanSe">
+                                        <input v-model="extForm.fieldName" placeholder="例：YanSe" :disabled="!isValidCategory || isSpecialUncategorized">
                                     </div>
                                     <div class="field-group">
                                         <label>默认值</label>
-                                        <input v-model="extForm.defaultValue" placeholder="红色、橙色、绿色">
+                                        <input v-model="extForm.defaultValue" placeholder="红色、橙色、绿色" :disabled="!isValidCategory || isSpecialUncategorized">
                                     </div>
                                     <div class="field-group">
                                         <label>是否必填</label>
-                                        <select v-model="extForm.isRequired">
+                                        <select v-model="extForm.isRequired" :disabled="!isValidCategory || isSpecialUncategorized">
                                             <option>必填</option>
                                             <option>可选</option>
                                         </select>
                                     </div>
                                     <div class="field-group">
                                         <label>排序号</label>
-                                        <input type="number" v-model="extForm.sortOrder">
+                                        <input type="number" v-model="extForm.sortOrder" :disabled="!isValidCategory || isSpecialUncategorized">
                                     </div>
                                 </div>
                                 <div class="btn-group" style="justify-content: flex-start; margin-top: 16px;">
-                                    <button @click="syncToSubClass" :disabled="!hasSubCategories" class="warning"><i class="fas fa-share-alt"></i> 同步应用到子类</button>
+                                    <button @click="syncToSubClass" :disabled="!hasSubCategories || !isValidCategory || isSpecialUncategorized" class="warning"><i class="fas fa-share-alt"></i> 同步应用到子类</button>
                                 </div>
                             </div>
                         </div>
@@ -709,115 +751,119 @@
 <script>
     const { createApp, ref, computed, onMounted, watch } = Vue;
 
-    let nextId = 1000;
-    function genId() { return `cat_${Date.now()}_${nextId++}`; }
-    const buildInitialCategories = () => {
-        const list = [];
-        const roots = ["电视热销","潮人服饰","精品鞋包","潮流箱包","美容护肤","居家生活","家用电器","食品保健"];
-        const rootMap = {};
-        roots.forEach(name => {
-            const id = genId();
-            rootMap[name] = id;
-            list.push({ id, name: { name, shortName: name.slice(0,2) }, icon_url: null, parent_id: -1, description: `${name} 分类` });
-        });
-        const jingpinId = rootMap["精品鞋包"];
-        const nvxieId = genId();
-        const pinzhinanxieId = genId();
-        list.push({ id: nvxieId, name: { name: "潮流女鞋", shortName: "女鞋" }, icon_url: null, parent_id: jingpinId, description: "时尚女鞋" });
-        list.push({ id: pinzhinanxieId, name: { name: "品质男鞋", shortName: "男鞋" }, icon_url: null, parent_id: jingpinId, description: "高端男鞋" });
-        const shoesChildren = ["板鞋","休闲鞋","商务皮鞋","户外运动鞋","帆布鞋","篮球鞋","凉鞋/凉拖","跑步鞋","网球鞋","足球鞋","羽毛球鞋"];
-        shoesChildren.forEach(name => {
-            list.push({ id: genId(), name: { name, shortName: name.slice(0,2) }, icon_url: null, parent_id: pinzhinanxieId, description: `${name} 鞋类` });
-        });
-        return list;
-    };
-    let initialCategories = buildInitialCategories();
-    const qualityShoeId = initialCategories.find(c => c.name.name === "品质男鞋")?.id || null;
-
-    let globalExtAttributes = [
-        { recordId: '1735cd95-5bcd-402e-81b5-9d9200ade675', classId: qualityShoeId, displayName: '颜色', fieldName: 'YanSe', defaultValue: '红色,橙色,黄色', isRequired: '必填', sortOrder: 2, autoId: 172 },
-        { recordId: 'dd09b32b-c14e-4d2c-97a4-9d7601a2b3c4', classId: qualityShoeId, displayName: '尺码', fieldName: 'ChiMa', defaultValue: 'S,M,L,XL', isRequired: '必填', sortOrder: 3, autoId: 173 }
-    ];
-
-    function buildTree(cats, parentId = -1) {
-        return cats.filter(c => c.parent_id === parentId).map(c => ({ ...c, children: buildTree(cats, c.id) }));
+    // ===================== 大整数保护解析 =====================
+    function safeParseBigIntJson(jsonStr) {
+        const safeStr = jsonStr.replace(/:\s*(-?\d{16,})(?=\s*[,\]}])/g, ':"$1"');
+        return JSON.parse(safeStr);
     }
-    function deleteCategoryAndChildren(cats, targetId) {
-        const toDelete = new Set();
-        const collect = (id) => { toDelete.add(id); cats.filter(c => c.parent_id === id).forEach(child => collect(child.id)); };
-        collect(targetId);
-        return cats.filter(c => !toDelete.has(c.id));
-    }
-    function generateUUID() { return `${Date.now()}-${Math.random().toString(36).substr(2, 8)}`; }
-    let lastAutoId = 500;
-    function newAutoId() { return ++lastAutoId; }
 
-    function computeDepth(cats, parentId = -1, depth = 0) {
-        for (let cat of cats) {
-            if (cat.parent_id === parentId) {
-                cat.depth = depth;
-                computeDepth(cats, cat.id, depth + 1);
-            }
+    // ===================== API 工具函数 =====================
+    const API_BASE = 'https://slave.tooo.top/catalog/v1/categories';
+
+    async function apiFetch(url, options = {}) {
+        const response = await fetch(url, options);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const text = await response.text();
+        return safeParseBigIntJson(text);
+    }
+
+    async function fetchChildren(id) {
+        const data = await apiFetch(`${API_BASE}/${id}/children`);
+        return data.categories || [];
+    }
+
+    async function fetchRoots() {
+        const data = await apiFetch(`${API_BASE}/root`);
+        return data.categories || [];
+    }
+
+    async function createCategory(payload) {
+        const response = await fetch(API_BASE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error('创建失败');
+        const text = await response.text();
+        return safeParseBigIntJson(text);
+    }
+
+    async function updateCategory(id, payload) {
+        const response = await fetch(`${API_BASE}/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error('更新失败');
+        const text = await response.text();
+        return safeParseBigIntJson(text);
+    }
+
+    async function deleteCategory(id) {
+        const response = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('删除失败');
+        const text = await response.text();
+        return text ? safeParseBigIntJson(text) : {};
+    }
+
+    // ===================== 树节点模型 =====================
+    class TreeNode {
+        constructor(apiNode) {
+            this.id = apiNode.id;
+            this.name = apiNode.name;
+            this.icon_url = apiNode.icon_url;
+            this.parent_id = apiNode.parent_id ?? -1;
+            this.description = apiNode.description;
+            this.left = apiNode.left;
+            this.right = apiNode.right;
+            this.hasChildren = (this.right - this.left) > 1;
+            this.children = [];
+            this.loaded = false;
+            this.depth = 0;
         }
     }
-    computeDepth(initialCategories);
 
-    function filterTreeByKeyword(tree, keyword) {
-        if (!keyword.trim()) return tree;
-        const lower = keyword.toLowerCase();
-        const filter = (node) => {
-            const match = node.name.name.toLowerCase().includes(lower);
-            const children = node.children ? node.children.filter(child => filter(child)).map(child => filter(child)) : [];
-            if (match || children.length) return { ...node, children };
-            return null;
-        };
-        return tree.map(node => filter(node)).filter(v => v);
-    }
-    function getExpandedIdsFromFilteredTree(tree, keyword) {
-        if (!keyword.trim()) return new Set();
-        const lower = keyword.toLowerCase();
-        const expanded = new Set();
-        const traverse = (nodes, ancestors) => {
-            for (const node of nodes) {
-                const cur = [...ancestors, node.id];
-                if (node.name.name.toLowerCase().includes(lower)) cur.forEach(id => expanded.add(id));
-                if (node.children) traverse(node.children, cur);
-            }
-        };
-        traverse(tree, []);
-        return expanded;
-    }
-
+    // ===================== 树组件 =====================
     const TreeItem = {
         name: 'TreeItem',
         props: ['node', 'activeId', 'expandedSet', 'searchKeyword'],
-        emits: ['toggle', 'select', 'add-child', 'delete-cat'],
+        emits: ['toggle', 'select', 'add-child', 'delete-cat', 'node-updated'],
+        data() {
+            return {
+                loadingChildren: false
+            };
+        },
         template: `
           <li class="node-item">
             <div class="node-content" :class="{ 'active-cat': node.id === activeId }" @click="$emit('select', node.id)">
               <div class="node-name">
-                <span v-if="hasChildren" class="toggle-box" @click.stop="$emit('toggle', node.id)">
+                <span v-if="node.hasChildren" class="toggle-box" @click.stop="handleToggle">
                   {{ isExpanded ? '−' : '+' }}
                 </span>
+                <span v-else class="toggle-box" style="visibility: hidden;"></span>
                 <img v-if="node.icon_url" :src="node.icon_url" class="node-icon-img" @error="e => e.target.style.display='none'">
                 <span v-html="highlightName"></span>
               </div>
-              <div class="node-actions">
+              <!-- 特殊分类（id=-1且名为“未分类”）不显示操作按钮 -->
+              <div class="node-actions" v-if="!isSpecialNode">
                 <i class="fas fa-plus-circle" title="添加子分类" @click.stop="$emit('add-child', node.id, node.name.name)"></i>
                 <i class="fas fa-trash" title="删除分类" @click.stop="$emit('delete-cat', node.id)"></i>
               </div>
             </div>
-            <ul class="children" v-if="hasChildren && isExpanded">
-              <tree-item v-for="child in node.children" :key="child.id" :node="child" :active-id="activeId"
-                         :expanded-set="expandedSet" :search-keyword="searchKeyword"
-                         @toggle="$emit('toggle', $event)" @select="$emit('select', $event)"
-                         @add-child="$emit('add-child', $event[0], $event[1])"
-                         @delete-cat="$emit('delete-cat', $event)"></tree-item>
+            <ul class="children" v-if="node.hasChildren && isExpanded">
+              <div v-if="loadingChildren" class="loading-placeholder">加载中...</div>
+              <template v-else>
+                <tree-item v-for="child in node.children" :key="child.id" :node="child" :active-id="activeId"
+                           :expanded-set="expandedSet" :search-keyword="searchKeyword"
+                           @toggle="$emit('toggle', $event)" @select="$emit('select', $event)"
+                           @add-child="$emit('add-child', $event[0], $event[1])"
+                           @delete-cat="$emit('delete-cat', $event)"
+                           @node-updated="$emit('node-updated', $event)"></tree-item>
+              </template>
             </ul>
           </li>
         `,
         computed: {
-            hasChildren() { return this.node.children?.length > 0; },
             isExpanded() { return this.expandedSet.has(this.node.id); },
             highlightName() {
                 const name = this.node.name.name;
@@ -826,6 +872,34 @@
                 const idx = name.toLowerCase().indexOf(kw.toLowerCase());
                 if (idx === -1) return name;
                 return name.slice(0, idx) + '<span class="search-highlight">' + name.slice(idx, idx+kw.length) + '</span>' + name.slice(idx+kw.length);
+            },
+            // 判断当前节点是否为特殊分类（id = -1 且 名称 = "未分类"）
+            isSpecialNode() {
+                return this.node.id == -1 && this.node.name && this.node.name.name === '未分类';
+            }
+        },
+        methods: {
+            async handleToggle() {
+                if (this.isExpanded) {
+                    this.$emit('toggle', this.node.id);
+                    return;
+                }
+                if (this.node.hasChildren && !this.node.loaded) {
+                    this.loadingChildren = true;
+                    try {
+                        const apiChildren = await fetchChildren(this.node.id);
+                        const newChildren = apiChildren.map(apiChild => new TreeNode(apiChild));
+                        this.node.children = newChildren;
+                        this.node.loaded = true;
+                        this.$emit('node-updated', this.node.id);
+                    } catch (err) {
+                        console.error(`Failed to load children for node ${this.node.id}`, err);
+                        alert(`加载子分类失败: ${err.message}`);
+                    } finally {
+                        this.loadingChildren = false;
+                    }
+                }
+                this.$emit('toggle', this.node.id);
             }
         }
     };
@@ -833,124 +907,286 @@
     createApp({
         components: { TreeItem },
         setup() {
-            const categories = ref([...initialCategories]);
-            const defaultActive = categories.value.find(c => c.name.name === "品质男鞋") || categories.value[0];
-            const activeCategory = ref(JSON.parse(JSON.stringify(defaultActive)));
-            const originalCategoryBackup = ref(JSON.parse(JSON.stringify(defaultActive)));
-            const editableCategory = ref(JSON.parse(JSON.stringify(defaultActive)));
-            const allExtAttrs = ref([...globalExtAttributes]);
-
+            // 数据状态
+            const categoryTree = ref([]);
+            const loading = ref(true);
+            const errorMsg = ref('');
+            const emptyCategory = { id: null, name: { name: '', shortName: '' }, icon_url: null, parent_id: -1, description: '' };
+            const activeCategory = ref({ ...emptyCategory });
+            const originalCategoryBackup = ref({ ...emptyCategory });
+            const editableCategory = ref({ ...emptyCategory });
+            const allExtAttrs = ref([]);
             const searchKeyword = ref('');
-            const rawTree = computed(() => buildTree(categories.value, -1));
-            const filteredCategoryTree = computed(() => filterTreeByKeyword(rawTree.value, searchKeyword.value));
-            const activeExtList = computed(() => allExtAttrs.value.filter(a => a.classId === activeCategory.value.id));
-            const flatCategoryList = computed(() => categories.value.filter(c => c.id !== editableCategory.value.id));
-            const isModified = computed(() => {
-                const c = editableCategory.value, o = originalCategoryBackup.value;
-                return c.name.name !== o.name.name || c.name.shortName !== o.name.shortName || c.icon_url !== o.icon_url || c.description !== o.description || c.parent_id !== o.parent_id;
-            });
-            const hasSubCategories = computed(() => categories.value.some(c => c.parent_id === activeCategory.value.id));
-
             const expandedSet = ref(new Set());
-            const initExpanded = () => {
-                const set = new Set();
-                rawTree.value.forEach(r => set.add(r.id));
-                const jingpin = categories.value.find(c => c.name.name === "精品鞋包");
-                const quality = categories.value.find(c => c.name.name === "品质男鞋");
-                if (jingpin) set.add(jingpin.id);
-                if (quality) set.add(quality.id);
-                expandedSet.value = set;
-            };
-            const toggleExpand = (id) => {
-                const set = new Set(expandedSet.value);
-                if (set.has(id)) set.delete(id); else set.add(id);
-                expandedSet.value = set;
-            };
-            const onSearchInput = () => {
-                const tree = filteredCategoryTree.value;
-                const ids = getExpandedIdsFromFilteredTree(tree, searchKeyword.value);
-                if (ids.size) {
-                    const newSet = new Set(expandedSet.value);
-                    ids.forEach(id => newSet.add(id));
-                    expandedSet.value = newSet;
-                } else if (!searchKeyword.value) initExpanded();
-            };
 
-            function recalcAllDepths() { computeDepth(categories.value); }
-            function refreshEditable() {
-                editableCategory.value = JSON.parse(JSON.stringify(activeCategory.value));
-                originalCategoryBackup.value = JSON.parse(JSON.stringify(activeCategory.value));
+            // 当前选中分类是否为有效分类（存在 id 且名称有效）
+            const isValidCategory = computed(() => {
+                return activeCategory.value.id && activeCategory.value.name && activeCategory.value.name.name && activeCategory.value.name.name !== 'undefined';
+            });
+
+            // 当前选中分类是否为特殊保留分类（id = -1 且名称 = "未分类"）
+            const isSpecialUncategorized = computed(() => {
+                return activeCategory.value.id == -1 && activeCategory.value.name && activeCategory.value.name.name === '未分类';
+            });
+
+            const filteredCategoryTree = computed(() => {
+                if (!searchKeyword.value) return categoryTree.value;
+                const lower = searchKeyword.value.toLowerCase();
+                const filter = (nodes) => {
+                    return nodes.filter(node => {
+                        const match = node.name.name.toLowerCase().includes(lower);
+                        if (match) return true;
+                        if (node.children && node.children.length) {
+                            node.children = filter(node.children);
+                            return node.children.length > 0;
+                        }
+                        return false;
+                    });
+                };
+                return filter(JSON.parse(JSON.stringify(categoryTree.value)));
+            });
+
+            const flatCategoryList = computed(() => {
+                const all = [];
+                const collect = (nodes) => {
+                    for (const node of nodes) {
+                        all.push(node);
+                        if (node.children) collect(node.children);
+                    }
+                };
+                collect(categoryTree.value);
+                return all.filter(c => c.id !== editableCategory.value.id);
+            });
+
+            const activeExtList = computed(() => allExtAttrs.value.filter(a => a.classId === activeCategory.value.id));
+            const isModified = computed(() => {
+                if (!isValidCategory.value) return false;
+                const c = editableCategory.value, o = originalCategoryBackup.value;
+                return c.name?.name !== o.name?.name || c.name?.shortName !== o.name?.shortName ||
+                    c.icon_url !== o.icon_url || c.description !== o.description || c.parent_id !== o.parent_id;
+            });
+            const hasSubCategories = computed(() => flatCategoryList.value.some(c => c.parent_id === activeCategory.value.id));
+
+            function resetExpanded() {
+                expandedSet.value = new Set();
             }
+
+            function updateTreeAndFlatten(newTree) {
+                categoryTree.value = newTree;
+                resetExpanded();
+            }
+
+            async function loadCategories() {
+                loading.value = true;
+                errorMsg.value = '';
+                try {
+                    const roots = await fetchRoots();
+                    const tree = roots.map(root => new TreeNode(root));
+                    updateTreeAndFlatten(tree);
+                    if (categoryTree.value.length > 0) {
+                        selectCategory(categoryTree.value[0].id);
+                    } else {
+                        activeCategory.value = { ...emptyCategory };
+                        refreshEditable();
+                    }
+                } catch (err) {
+                    console.error(err);
+                    errorMsg.value = '获取分类数据失败：' + (err.message || '网络错误');
+                    categoryTree.value = [];
+                    activeCategory.value = { ...emptyCategory };
+                    refreshEditable();
+                } finally {
+                    loading.value = false;
+                }
+            }
+
             function selectCategory(id) {
-                // 关键修复：确保从 categories 中找到最新数据
-                const found = categories.value.find(c => c.id === id);
-                if (found) {
+                const allNodes = [];
+                const collect = (nodes) => {
+                    for (const node of nodes) {
+                        allNodes.push(node);
+                        if (node.children) collect(node.children);
+                    }
+                };
+                collect(categoryTree.value);
+                const found = allNodes.find(n => n.id == id);
+                if (found && found.name && found.name.name && found.name.name !== 'undefined') {
                     activeCategory.value = JSON.parse(JSON.stringify(found));
                     refreshEditable();
                     clearExtForm();
                 } else {
-                    console.warn('未找到分类 id:', id);
-                }
-            }
-            function restoreOriginal() { if (isModified.value) editableCategory.value = JSON.parse(JSON.stringify(originalCategoryBackup.value)); }
-            function updateCurrentCategory() {
-                if (!editableCategory.value.name.name || !editableCategory.value.name.name.trim()) {
-                    alert("分类名称不能为空");
-                    return;
-                }
-                if (!isModified.value) { alert("无修改"); return; }
-                const idx = categories.value.findIndex(c => c.id === activeCategory.value.id);
-                if (idx !== -1) {
-                    const updated = { ...categories.value[idx], ...editableCategory.value, name: { ...editableCategory.value.name } };
-                    categories.value[idx] = updated;
-                    recalcAllDepths();
-                    activeCategory.value = JSON.parse(JSON.stringify(updated));
+                    activeCategory.value = { ...emptyCategory };
                     refreshEditable();
-                    alert("更新成功");
-                }
-            }
-            function deleteCategoryNode(id) {
-                const cat = categories.value.find(c => c.id === id);
-                if (!cat) return;
-                if (cat.parent_id === -1 && categories.value.filter(c => c.parent_id === -1).length <= 1) { alert("至少保留一个顶级分类"); return; }
-                if (confirm(`删除分类“${cat.name.name}”及其所有子类？`)) {
-                    const allIds = [];
-                    const gather = (pid) => { allIds.push(pid); categories.value.filter(c => c.parent_id === pid).forEach(ch => gather(ch.id)); };
-                    gather(id);
-                    allExtAttrs.value = allExtAttrs.value.filter(a => !allIds.includes(a.classId));
-                    categories.value = deleteCategoryAndChildren(categories.value, id);
-                    recalcAllDepths();
-                    initExpanded();
-                    if (allIds.includes(activeCategory.value.id)) {
-                        const newActive = categories.value[0];
-                        if (newActive) { activeCategory.value = JSON.parse(JSON.stringify(newActive)); refreshEditable(); }
-                    }
-                }
-            }
-            function deleteCurrentCategory() { if (activeCategory.value.id) deleteCategoryNode(activeCategory.value.id); }
-            function showAddChildPrompt(parentId, parentName) {
-                const newName = prompt(`在“${parentName}”下新增子分类`, "新分类");
-                if (!newName) return;
-                const newId = genId();
-                const newCat = { id: newId, name: { name: newName, shortName: newName.slice(0,2) }, icon_url: null, parent_id: parentId, description: `新建分类` };
-                categories.value.push(newCat);
-                recalcAllDepths();
-                initExpanded();
-                selectCategory(newId);
-            }
-            function addRootCategoryPrompt() {
-                const name = prompt("新建根分类");
-                if (name) {
-                    const newRoot = { id: genId(), name: { name, shortName: name.slice(0,2) }, icon_url: null, parent_id: -1, description: `顶级分类` };
-                    categories.value.push(newRoot);
-                    recalcAllDepths();
-                    initExpanded();
-                    selectCategory(newRoot.id);
                 }
             }
 
+            function refreshEditable() {
+                if (!isValidCategory.value || isSpecialUncategorized.value) {
+                    editableCategory.value = { ...emptyCategory };
+                    originalCategoryBackup.value = { ...emptyCategory };
+                } else {
+                    editableCategory.value = JSON.parse(JSON.stringify(activeCategory.value));
+                    originalCategoryBackup.value = JSON.parse(JSON.stringify(activeCategory.value));
+                }
+            }
+
+            function restoreOriginal() {
+                if (isModified.value && isValidCategory.value && !isSpecialUncategorized.value) {
+                    editableCategory.value = JSON.parse(JSON.stringify(originalCategoryBackup.value));
+                }
+            }
+
+            async function updateCurrentCategory() {
+                if (!isValidCategory.value || isSpecialUncategorized.value) {
+                    alert("无法修改系统保留分类");
+                    return;
+                }
+                if (!editableCategory.value.name?.name || !editableCategory.value.name.name.trim()) {
+                    alert("分类名称不能为空");
+                    return;
+                }
+                if (!isModified.value) {
+                    alert("无修改");
+                    return;
+                }
+                try {
+                    await updateCategory(activeCategory.value.id, editableCategory.value);
+                    // 更新本地树中的节点
+                    const allNodes = [];
+                    const collect = (nodes) => {
+                        for (const node of nodes) {
+                            allNodes.push(node);
+                            if (node.children) collect(node.children);
+                        }
+                    };
+                    collect(categoryTree.value);
+                    const target = allNodes.find(n => n.id == activeCategory.value.id);
+                    if (target) {
+                        target.name = editableCategory.value.name;
+                        target.icon_url = editableCategory.value.icon_url;
+                        target.description = editableCategory.value.description;
+                        target.parent_id = editableCategory.value.parent_id;
+                    }
+                    selectCategory(activeCategory.value.id);
+                    alert("更新成功");
+                } catch (err) {
+                    console.error(err);
+                    alert(`更新失败: ${err.message}`);
+                }
+            }
+
+            async function deleteCategoryNode(id) {
+                const allNodes = [];
+                const collect = (nodes) => {
+                    for (const node of nodes) {
+                        allNodes.push(node);
+                        if (node.children) collect(node.children);
+                    }
+                };
+                collect(categoryTree.value);
+                const cat = allNodes.find(n => n.id == id);
+                if (!cat) return;
+                if (cat.id == -1) {
+                    alert("系统保留分类不可删除");
+                    return;
+                }
+                if (cat.parent_id === -1 && categoryTree.value.length <= 1) {
+                    alert("至少保留一个顶级分类");
+                    return;
+                }
+                if (!confirm(`永久删除分类“${cat.name.name}”及其所有子类？`)) return;
+                try {
+                    await deleteCategory(id);
+                    await loadCategories();
+                    if (activeCategory.value.id == id) {
+                        const newActive = categoryTree.value[0];
+                        if (newActive) selectCategory(newActive.id);
+                        else activeCategory.value = { ...emptyCategory };
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert(`删除失败: ${err.message}`);
+                }
+            }
+            function deleteCurrentCategory() {
+                if (isValidCategory.value && !isSpecialUncategorized.value) deleteCategoryNode(activeCategory.value.id);
+            }
+
+            async function showAddChildPrompt(parentId, parentName) {
+                if (!parentId || parentId == -1) {
+                    alert("无法为系统保留分类添加子分类");
+                    return;
+                }
+                const newName = prompt(`在“${parentName}”下新增子分类`, "新分类");
+                if (!newName) return;
+                const payload = {
+                    name: { name: newName, shortName: newName.slice(0, 2) },
+                    icon_url: null,
+                    parent_id: parentId,
+                    description: `新建分类 ${newName}`
+                };
+                try {
+                    await createCategory(payload);
+                    await loadCategories();
+                } catch (err) {
+                    console.error(err);
+                    alert(`添加失败: ${err.message}`);
+                }
+            }
+
+            async function addRootCategoryPrompt() {
+                const name = prompt("新建根分类");
+                if (!name) return;
+                const payload = {
+                    name: { name, shortName: name.slice(0, 2) },
+                    icon_url: null,
+                    parent_id: -1,
+                    description: `顶级分类 ${name}`
+                };
+                try {
+                    await createCategory(payload);
+                    await loadCategories();
+                } catch (err) {
+                    console.error(err);
+                    alert(`添加失败: ${err.message}`);
+                }
+            }
+
+            async function editCategoryPrompt(catId) {
+                const allNodes = [];
+                const collect = (nodes) => {
+                    for (const node of nodes) {
+                        allNodes.push(node);
+                        if (node.children) collect(node.children);
+                    }
+                };
+                collect(categoryTree.value);
+                const cat = allNodes.find(n => n.id == catId);
+                if (!cat) return;
+                if (cat.id == -1) {
+                    alert("系统保留分类不可编辑");
+                    return;
+                }
+                const newName = prompt("编辑分类名称", cat.name.name);
+                if (newName && newName.trim()) {
+                    const payload = {
+                        ...cat,
+                        name: { name: newName.trim(), shortName: cat.name.shortName }
+                    };
+                    try {
+                        await updateCategory(cat.id, payload);
+                        await loadCategories();
+                        if (activeCategory.value.id == cat.id) selectCategory(cat.id);
+                    } catch (err) {
+                        console.error(err);
+                        alert(`编辑失败: ${err.message}`);
+                    }
+                }
+            }
+
+            // 图标上传与预览
             const fileInput = ref(null);
-            const triggerFileUpload = () => fileInput.value.click();
+            const triggerFileUpload = () => { if (isValidCategory.value && !isSpecialUncategorized.value) fileInput.value.click(); else alert("无法修改系统保留分类"); };
             const handleFileUpload = (e) => {
                 const file = e.target.files[0];
                 if (file && file.type.startsWith('image/')) {
@@ -973,11 +1209,13 @@
             };
             const onModalImageError = () => { previewError.value = true; };
 
+            // 扩展属性模块（静态演示）
             const extForm = ref({ displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0 });
             const extBackup = ref({ displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0 });
             const selectedExtId = ref(null);
             const selectedExtIdForSelect = ref('');
             const isSaveEnabled = computed(() => {
+                if (!isValidCategory.value || isSpecialUncategorized.value) return false;
                 const hasContent = extForm.value.displayName || extForm.value.fieldName;
                 if (!hasContent) return false;
                 if (selectedExtId.value) {
@@ -997,6 +1235,7 @@
                 selectedExtIdForSelect.value = '';
             }
             function onSelectExtFromDropdown() {
+                if (!isValidCategory.value || isSpecialUncategorized.value) return;
                 const rid = selectedExtIdForSelect.value;
                 if (rid) {
                     const attr = allExtAttrs.value.find(a => a.recordId === rid);
@@ -1019,6 +1258,7 @@
                 }
             }
             function saveExtAttribute() {
+                if (!isValidCategory.value || isSpecialUncategorized.value) { alert("无法修改系统保留分类的扩展属性"); return; }
                 if (!extForm.value.displayName || !extForm.value.displayName.trim()) { alert("显示名称不能为空"); return; }
                 if (!extForm.value.fieldName || !extForm.value.fieldName.trim()) { alert("别名不能为空"); return; }
                 const currentAlias = extForm.value.fieldName.trim();
@@ -1068,22 +1308,54 @@
             }
             function syncToSubClass() { alert("演示: 扩展属性同步子类完成"); }
 
+            function generateUUID() { return `${Date.now()}-${Math.random().toString(36).substr(2, 8)}`; }
+            let lastAutoId = 500;
+            function newAutoId() { return ++lastAutoId; }
+
+            function toggleExpand(id) {
+                const set = new Set(expandedSet.value);
+                if (set.has(id)) set.delete(id); else set.add(id);
+                expandedSet.value = set;
+            }
+
+            function onSearchInput() {
+                if (!searchKeyword.value) {
+                    resetExpanded();
+                    return;
+                }
+                const lower = searchKeyword.value.toLowerCase();
+                const expanded = new Set(expandedSet.value);
+                const traverse = (nodes, ancestors) => {
+                    for (const node of nodes) {
+                        const cur = [...ancestors, node.id];
+                        if (node.name.name.toLowerCase().includes(lower)) {
+                            cur.forEach(id => expanded.add(id));
+                        }
+                        if (node.children && node.children.length) traverse(node.children, cur);
+                    }
+                };
+                traverse(categoryTree.value, []);
+                expandedSet.value = expanded;
+            }
+
+            function onNodeUpdated() {}
+
             watch(activeCategory, () => { clearExtForm(); refreshEditable(); });
             onMounted(() => {
-                initExpanded();
-                refreshEditable();
-                recalcAllDepths();
+                loadCategories();
                 modalVisible.value = false;
                 previewError.value = false;
             });
 
             return {
-                categories, filteredCategoryTree, flatCategoryList, activeCategory, editableCategory, activeExtList,
-                extForm, selectedExtId, selectedExtIdForSelect, expandedSet, toggleExpand, isModified,
-                searchKeyword, onSearchInput, selectCategory, restoreOriginal, updateCurrentCategory,
-                deleteCurrentCategory, showAddChildPrompt, addRootCategoryPrompt, deleteCategoryNode,
-                clearExtForm, onSelectExtFromDropdown, saveExtAttribute, deleteExtAttribute,
-                syncToSubClass, isSaveEnabled, hasSubCategories,
+                loading, errorMsg, categoryTree, filteredCategoryTree, expandedSet, toggleExpand,
+                searchKeyword, onSearchInput, selectCategory, loadCategories,
+                showAddChildPrompt, addRootCategoryPrompt, editCategoryPrompt, deleteCategoryNode, deleteCurrentCategory,
+                onNodeUpdated,
+                flatCategoryList, activeCategory, editableCategory, isModified, restoreOriginal,
+                updateCurrentCategory, hasSubCategories, isValidCategory, isSpecialUncategorized,
+                activeExtList, extForm, selectedExtId, selectedExtIdForSelect, isSaveEnabled,
+                clearExtForm, onSelectExtFromDropdown, saveExtAttribute, deleteExtAttribute, syncToSubClass,
                 fileInput, triggerFileUpload, handleFileUpload,
                 modalVisible, modalImageUrl, previewError, openModalPreview, onModalImageError
             };

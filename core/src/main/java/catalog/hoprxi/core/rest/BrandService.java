@@ -37,6 +37,8 @@ import com.linecorp.armeria.common.*;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.annotation.*;
 import io.netty.buffer.ByteBuf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -67,6 +69,7 @@ public class BrandService {
             .disable(JsonFactory.Feature.INTERN_FIELD_NAMES)
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
+    private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
 
     @Get("/brands/{id}")
     @Description("Retrieves the brand information by the given brand ID.")
@@ -163,6 +166,7 @@ public class BrandService {
             }
             try (JsonParser parser = JSON_FACTORY.createParser(content)) {
                 Brand brand = BrandService.createBrand(parser);
+                LOGGER.info("Brand created: {}", brand);
                 return HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
                         "{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand);
             } catch (JsonProcessingException e) {
@@ -170,6 +174,7 @@ public class BrandService {
                 return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
                         "{\"status\":400,\"message\":\"Invalid JSON format\"}");
             } catch (Exception e) {
+                LOGGER.error(e.getMessage(), e);
                 return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
                         "{\"status\":500,\"message\":\"Internal server error\"}");
             }
@@ -178,38 +183,15 @@ public class BrandService {
     }
 
     private static Brand createBrand(JsonParser parser) throws IOException, URISyntaxException {
-        String name = null, alias = null, story = null;
-        URL logo = null, homepage = null;
-        Year since = null;
-        if (parser.nextToken() != JsonToken.START_OBJECT) {
-            throw new IOException("Expected JSON object");
-        }
-        while (parser.nextToken() != null) {
-            if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                String fieldName = parser.currentName();
-                parser.nextToken();
-                switch (fieldName) {
-                    case "name" -> name = parser.getValueAsString();
-                    case "alias" -> alias = parser.getValueAsString();
-                    case "story" -> story = parser.getValueAsString();
-                    case "homepage" -> {
-                        String urlStr = parser.getValueAsString();
-                        if (urlStr != null) homepage = new URI(urlStr).toURL();
-                    }
-                    case "logo" -> {
-                        String urlStr = parser.getValueAsString();
-                        if (urlStr != null) logo = new URI(urlStr).toURL();
-                    }
-                    case "since" -> {
-                        if (parser.currentToken() == JsonToken.VALUE_NUMBER_INT) {
-                            since = Year.of(parser.getIntValue());
-                        }
-                    }
-                    //default -> parser.skipChildren();
-                }
-            }
-        }
-        BrandCreateCommand command = new BrandCreateCommand(name, alias, homepage, logo, since, story);
+        BrandFields fields = parseBrandFields(parser);
+        BrandCreateCommand command = new BrandCreateCommand(
+                fields.name,
+                fields.shortName,
+                fields.homepage,
+                fields.logo,
+                fields.since,
+                fields.story
+        );
         Handler<BrandCreateCommand, Brand> handler = new BrandCreateHandler();
         return handler.execute(command);
     }
@@ -231,7 +213,7 @@ public class BrandService {
                 try (JsonParser parser = JSON_FACTORY.createParser(inputStream)) {
                     Brand brand = BrandService.update(parser, id);
                     return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
-                            String.format("{\"status\":\"success\",\"code\":200,\"message\":\"A brand updated, it's %s\"}", brand));
+                            String.format("{\"status\":\"success\",\"code\":200,\"message\":\"A brand has updated, it's %s\"}", brand));
                 } catch (JsonProcessingException e) {
                     // 精细异常捕获：JSON 格式错误返回 400
                     return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
@@ -250,43 +232,18 @@ public class BrandService {
     }
 
     private static Brand update(JsonParser parser, long id) throws IOException, URISyntaxException {
-        String name = null, shortName = null, story = null;
-        URL logo = null, homepage = null;
-        Year since = null;
-        if (parser.nextToken() != JsonToken.START_OBJECT) {
-            throw new IOException("Expected JSON object");
-        }
-        while (parser.nextToken() != null) {
-            if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                String fieldName = parser.currentName();
-                parser.nextToken();
-                switch (fieldName) {
-                    case "name" -> name = parser.getValueAsString();
-                    case "shortName" -> shortName = parser.getValueAsString();
-                    case "story" -> story = parser.getValueAsString();
-                    case "homepage" -> {
-                        String urlStr = parser.getValueAsString();
-                        if (urlStr != null) homepage = new URI(urlStr).toURL();
-                    }
-                    case "logo" -> {
-                        String urlStr = parser.getValueAsString();
-                        if (urlStr != null) logo = new URI(urlStr).toURL();
-                    }
-                    case "since" -> {
-                        if (parser.currentToken() == JsonToken.VALUE_NUMBER_INT) {
-                            since = Year.of(parser.getIntValue());
-                        }
-                    }
-                    //default -> parser.skipChildren();
-                }
-            }
-        }
-        BrandUpdateCommand command = new BrandUpdateCommand(id);
-        if (name != null || shortName != null)
-            command.setName(name, shortName);
-        if (story != null || homepage != null || logo != null || since != null)
-            command.setAbout(logo, homepage, since, story);
-        //System.out.println(command);
+        BrandFields fields = parseBrandFields(parser);
+
+        BrandUpdateCommand command = new BrandUpdateCommand(
+                id,
+                fields.name,
+                fields.shortName,
+                fields.homepage,
+                fields.logo,
+                fields.since,
+                fields.story
+        );
+
         Handler<BrandUpdateCommand, Brand> handler = new BrandUpdateHandler();
         return handler.execute(command);
     }
@@ -313,5 +270,55 @@ public class BrandService {
                         "{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed due to internal error\"}");
             }
         }, VIRTUAL_EXECUTOR)); // 4. 推荐使用虚拟线程替代 blockingTaskExecutor
+    }
+
+    /**
+     * 内部辅助类，用于承载从 JSON 中解析出的公共字段
+     */
+    private static class BrandFields {
+        String name;
+        String shortName;
+        String story;
+        URL logo;
+        URL homepage;
+        Year since;
+    }
+
+    /**
+     * 提取的公共解析方法：专门负责将 JSON 流解析为字段集合
+     */
+    private static BrandFields parseBrandFields(JsonParser parser) throws IOException, URISyntaxException {
+        BrandFields fields = new BrandFields();
+
+        if (parser.nextToken() != JsonToken.START_OBJECT) {
+            throw new IOException("Expected JSON object");
+        }
+
+        while (parser.nextToken() != null) {
+            if (JsonToken.FIELD_NAME == parser.currentToken()) {
+                String fieldName = parser.currentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "name" -> fields.name = parser.getValueAsString();
+                    case "shortName" -> fields.shortName = parser.getValueAsString();
+                    case "story" -> fields.story = parser.getValueAsString();
+                    case "homepage" -> {
+                        String urlStr = parser.getValueAsString();
+                        if (urlStr != null) fields.homepage = new URI(urlStr).toURL();
+                    }
+                    case "logo" -> {
+                        String urlStr = parser.getValueAsString();
+                        if (urlStr != null) fields.logo = new URI(urlStr).toURL();
+                    }
+                    case "since" -> {
+                        if (parser.currentToken() == JsonToken.VALUE_NUMBER_INT) {
+                            fields.since = Year.of(parser.getIntValue());
+                        }
+                    }
+                    // default -> parser.skipChildren();
+                }
+            }
+        }
+        return fields;
     }
 }

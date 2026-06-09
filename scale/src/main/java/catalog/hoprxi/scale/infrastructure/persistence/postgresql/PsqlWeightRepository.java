@@ -116,7 +116,7 @@ public class PsqlWeightRepository implements WeightRepository {
                     if (val != null) {
                         switch (field) {
                             case "name" -> name = val;
-                            case "alias" -> alias = val;
+                            case "shortName" -> alias = val;
                         }
                     }
                 }
@@ -318,7 +318,7 @@ public class PsqlWeightRepository implements WeightRepository {
             generator.writeStartObject();
             generator.writeStringField("name", name.name());
             generator.writeStringField("mnemonic", name.mnemonic());
-            generator.writeStringField("alias", name.shortName());
+            generator.writeStringField("shortName", name.shortName());
             generator.writeEndObject();
         } catch (IOException e) {
             LOGGER.error("Not write name as json", e);

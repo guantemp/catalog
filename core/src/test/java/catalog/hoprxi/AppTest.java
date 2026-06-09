@@ -189,7 +189,7 @@ public class AppTest {
     @Test
     void testOther() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         StringBuilder insertSql = new StringBuilder("insert into category(id,parent_id,name,description,logo_uri,root_id,\"left\",\"right\") values(")
-                .append(-1).append(",").append(-1).append(",'").append("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"alias\":\"我想改变\"}").append("','")
+                .append(-1).append(",").append(-1).append(",'").append("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"shortName\":\"我想改变\"}").append("','")
                 .append("dxgdfger").append("','").append(URI.create("https://www.example.com:8081/?k1=1&k1=2&k2=3&%E5%90%8D%E5%AD%97=%E5%BC%A0%E4%B8%89").toASCIIString())
                 .append("',").append(-1).append(",").append(2).append(",").append(2 + 1).append(")");
         System.out.println("handle category set \"left\"=0-\"left\"-" + (5 - 4 - 1) + ",\"right\"=0-\"right\"-" + (5 - 4 - 1) + " where left<0");
@@ -234,7 +234,7 @@ public class AppTest {
             generator.writeStringField("query", "name");
             generator.writeArrayFieldStart("fields");
             generator.writeString("name.name");
-            generator.writeString("name.alias");
+            generator.writeString("name.shortName");
             generator.writeEndArray();
             generator.writeEndObject();
             generator.writeEndObject();
@@ -386,7 +386,7 @@ public class AppTest {
             generator.writeStringField("query", key);
             generator.writeArrayFieldStart("fields");
             generator.writeString("name.name");
-            generator.writeString("name.alias");
+            generator.writeString("name.shortName");
             generator.writeEndArray();
             generator.writeEndObject();
             generator.writeEndObject();
@@ -463,7 +463,7 @@ public class AppTest {
                 "        \"number\": 45.3,\n" +
                 "        \"currency\": \"CNY\"\n" +//USD
                 "    },\n" +
-                "    \"alias\": \"sut个好fsd\"\n" +
+                "    \"shortName\": \"sut个好fsd\"\n" +
                 "}");
         String name;
         Price price = null;
@@ -525,7 +525,7 @@ public class AppTest {
     @Test
     void testReadJson2() throws IOException {
         String name = null, alias = null, mnemonic = null;
-        JsonParser parser = jsonFactory.createParser("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"alias\":\"我想改变\"}".getBytes(StandardCharsets.UTF_8));
+        JsonParser parser = jsonFactory.createParser("{\"name\":\"undefined\",\"mnemonic\":\"undefined\",\"shortName\":\"我想改变\"}".getBytes(StandardCharsets.UTF_8));
         JsonToken jsonToken;
         while (!parser.isClosed()) {
             jsonToken = parser.nextToken();
@@ -536,7 +536,7 @@ public class AppTest {
                     case "name":
                         name = parser.getValueAsString();
                         break;
-                    case "alias":
+                    case "shortName":
                         alias = parser.getValueAsString();
                         break;
                     case "mnemonic":

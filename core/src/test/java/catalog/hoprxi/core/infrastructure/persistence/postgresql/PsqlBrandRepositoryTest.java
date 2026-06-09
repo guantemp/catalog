@@ -39,7 +39,7 @@ import static org.testng.Assert.*;
 public class PsqlBrandRepositoryTest {
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
-                new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "slave.tooo.top:5432:P$Qwe123465Pg"});
+                new String[]{"slave.tooo.top:6543:P$Qwe123465Pg"});
     }
 
     private static final BrandRepository repository = new PsqlBrandRepository();
@@ -52,7 +52,7 @@ public class PsqlBrandRepositoryTest {
         Brand hikvision = new Brand(495651176959596552L, new Name("海康威视", "HIKVISION"), ab);
         repository.save(hikvision);
 
-        logo =URI.create("https://www.dahuatech.com/bocweb/web/img/logo.png").toURL();
+        logo = URI.create("https://www.dahuatech.com/bocweb/web/img/logo.png").toURL();
         ab = new AboutBrand(URI.create("https://www.dahuatech.com/").toURL(), logo, Year.of(2005), "浙江大华技术股份有限公司是全球领先的以视频为核心的智慧物联解决方案提供商和运营服务商，" +
                 "以技术创新为基础，提供端到端的视频监控解决方案、系统及服务，为城市运营、企业管理、个人消费者生活创造价值。");
         Brand hua = new Brand(495651176959596578L, new Name("大华", "@hua"), ab);
@@ -84,9 +84,9 @@ public class PsqlBrandRepositoryTest {
     }
 */
 
-    @Test(invocationCount = 2)
+    @Test(invocationCount = 1)
     public void testFind() {
-        Brand brand = repository.find(495651176959596552L);
+        Brand brand = repository.find(495651176959596602L);
         System.out.println(brand);
         assertNotNull(brand);
         Brand undefined = repository.find(-1L);
@@ -98,9 +98,9 @@ public class PsqlBrandRepositoryTest {
     public void testSave() {
         Brand brand = repository.find(495651176959596602L);
         assertEquals(brand.name(), new Name("官的"));
-        brand.rename(new Name("官响环", "没情商"));
+        brand.rename(new Name("官响环", "哈哈额"));
         repository.save(brand);
         brand = repository.find(495651176959596602L);
-        assertEquals(brand.name(), new Name("官响环", "没情商"));
+        assertEquals(brand.name(), new Name("官响环", "哈哈额"));
     }
 }

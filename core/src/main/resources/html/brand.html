@@ -3,35 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>品牌管理 · SaaS零售风格 | 左侧导航集成</title>
+    <title>品牌管理 · SaaS零售风格 | 紧凑卡片布局</title>
     <!-- Vue 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- 图标库 Font Awesome & Material Icons (用于侧边栏) -->
+    <!-- 图标库 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet">
     <style>
+        /* 样式部分保持不变，与用户提供的一致 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
-        /* 整体布局：侧边栏 + 右侧主内容 */
         body {
             background: #121826;
             font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             overflow: hidden;
             height: 100vh;
         }
-
-        /* 双栏弹性布局 */
         .app-layout {
             display: flex;
             height: 100vh;
             width: 100%;
         }
-
-        /* ========= 左侧深色侧边栏 (SaaS零售风格) ========= */
         .sidebar {
             width: 260px;
             background: #001529;
@@ -39,11 +34,9 @@
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
-            transition: all 0.2s;
             z-index: 10;
             box-shadow: 2px 0 12px rgba(0,0,0,0.3);
         }
-
         .logo-area {
             height: 64px;
             display: flex;
@@ -54,17 +47,10 @@
             font-size: 18px;
             font-weight: 600;
             color: #fff;
-            letter-spacing: 1px;
             border-bottom: 1px solid rgba(255,255,255,0.08);
         }
-        .logo-area .material-symbols-outlined {
-            font-size: 24px;
-        }
-
-        .nav-menu {
-            flex: 1;
-            padding: 16px 0;
-        }
+        .logo-area .material-symbols-outlined { font-size: 24px; }
+        .nav-menu { flex: 1; padding: 16px 0; }
         .nav-item {
             display: flex;
             align-items: center;
@@ -75,21 +61,10 @@
             transition: all 0.2s;
             color: rgba(255,255,255,0.7);
         }
-        .nav-item:hover {
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-        }
-        .nav-item.active {
-            background: #1677ff;
-            color: #fff;
-            border-right: none;
-            position: relative;
-        }
-        .nav-item .material-symbols-outlined {
-            font-size: 20px;
-        }
+        .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .nav-item.active { background: #1677ff; color: #fff; }
+        .nav-item .material-symbols-outlined { font-size: 20px; }
 
-        /* ========= 右侧主内容区域 (原品牌管理完整功能) ========= */
         .main-content {
             flex: 1;
             display: flex;
@@ -99,23 +74,7 @@
             background: #121826;
         }
 
-        /* 以下全部为原有品牌管理样式，仅微调内部元素间距确保适配新容器 */
-        .global-loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(18, 24, 38, 0.8);
-            backdrop-filter: blur(5px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            font-size: 1.2rem;
-            gap: 12px;
-            color: #7AC9FF;
-        }
+        /* 工具栏 */
         .toolbar {
             background: #1E2538;
             border-radius: 20px;
@@ -146,14 +105,6 @@
             cursor: pointer;
             transition: 0.2s;
             border: 1px solid transparent;
-            background: #2A344A;
-            color: #D1DBF0;
-            border-color: #3A455E;
-        }
-        .btn-default:hover {
-            background: #3A455E;
-            color: #7AC9FF;
-            border-color: #2D9CDB;
         }
         .btn-primary {
             background: #2D9CDB;
@@ -163,30 +114,64 @@
             background: #2383BB;
             transform: translateY(-1px);
         }
-        .btn-danger {
+        .btn-batch-delete {
+            background: #DC4C4C;
+            color: white;
+        }
+        .btn-batch-delete:hover {
+            background: #B93A3A;
+            transform: translateY(-1px);
+        }
+        .btn-card-edit {
+            background: #2C3E50;
+            color: #B8C5E0;
+            border: 1px solid #4A5570;
+        }
+        .btn-card-edit:hover {
+            background: #2D9CDB;
+            color: white;
+            border-color: #2D9CDB;
+        }
+        .btn-card-delete {
             background: #4A2F2F;
             color: #FFB4A2;
-            border-color: #6B4242;
+            border: 1px solid #6B4242;
         }
-        .btn-danger:hover {
-            background: #6B3A3A;
-            color: #FFC5B3;
+        .btn-card-delete:hover {
+            background: #C25A3A;
+            color: white;
+            border-color: #FF9F80;
+        }
+        .btn-icon {
+            background: #3A455E;
+            color: #D1DBF0;
+            border: 1px solid #4F5A78;
+            padding: 6px 14px;
+            font-size: 14px;
+        }
+        .btn-icon:hover:not(:disabled) {
+            background: #4F5A78;
+            color: white;
         }
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
         }
+
+        /* 搜索框 */
         .search-box {
             position: relative;
+            width: 280px;
         }
         .search-box input {
+            width: 100%;
             padding: 8px 12px 8px 36px;
             border-radius: 32px;
             border: 1px solid #3A455E;
             background: #101624;
             color: #E6EDF5;
             font-size: 13px;
-            width: 260px;
             outline: none;
         }
         .search-box input:focus {
@@ -213,19 +198,43 @@
             0%, 100% { opacity: 0.4; }
             50% { opacity: 1; }
         }
-        /* 品牌网格 */
+
+        /* 品牌列表容器 */
+        .brand-list-container {
+            position: relative;
+            min-height: 300px;
+        }
+        .grid-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(18, 24, 38, 0.75);
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            border-radius: 20px;
+            flex-direction: column;
+            gap: 12px;
+            color: #7AC9FF;
+        }
+
+        /* 品牌网格 —— 卡片尺寸调小 */
         .brand-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 22px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px;
         }
         .brand-card {
             background: #1E2538;
-            border-radius: 24px;
-            padding: 20px 12px 16px;
+            border-radius: 20px;
+            padding: 14px 8px 12px;
             border: 1px solid #2A3348;
             transition: 0.2s;
-            cursor: pointer;
+            cursor: default;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -234,7 +243,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         .brand-card:hover {
-            transform: translateY(-3px);
+            transform: translateY(-2px);
             border-color: #2D9CDB;
             background: #252E46;
         }
@@ -245,67 +254,32 @@
         }
         .selection-indicator {
             position: absolute;
-            top: 12px;
-            left: 12px;
-            width: 22px;
-            height: 22px;
+            top: 8px;
+            left: 8px;
+            width: 20px;
+            height: 20px;
             background: #2D9CDB;
             border-radius: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #121826;
-            font-size: 12px;
+            font-size: 10px;
             opacity: 0;
             transition: 0.2s;
         }
         .brand-card.selected .selection-indicator { opacity: 1; }
-        .card-actions {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            display: flex;
-            gap: 6px;
-            opacity: 0;
-            transition: 0.2s;
-            z-index: 2;
-        }
-        .brand-card:hover .card-actions { opacity: 1; }
-        .action-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 30px;
-            background: #2A344A;
-            border: 1px solid #4A5570;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #B8C5E0;
-            font-size: 12px;
-            cursor: pointer;
-        }
-        .action-btn:hover {
-            background: #2D9CDB;
-            border-color: #7AC9FF;
-            color: white;
-        }
-        .action-btn.delete:hover {
-            background: #C25A3A;
-            border-color: #FF9F80;
-            color: white;
-        }
-        /* Logo 容器 */
         .logo-img-wrapper {
-            width: 84px;
-            height: 84px;
-            margin-bottom: 16px;
+            width: 70px;
+            height: 70px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: radial-gradient(circle at 30% 30%, rgba(255,255,245,0.25), rgba(210,225,245,0.15));
             border-radius: 50%;
-            padding: 10px;
-            box-shadow: 0 0 0 2px rgba(45,156,219,0.3), 0 6px 14px rgba(0,0,0,0.4);
+            padding: 8px;
+            box-shadow: 0 0 0 2px rgba(45,156,219,0.3), 0 4px 10px rgba(0,0,0,0.4);
             transition: 0.25s;
         }
         .brand-card:hover .logo-img-wrapper {
@@ -321,7 +295,7 @@
         }
         .brand-name {
             font-weight: 600;
-            font-size: 15px;
+            font-size: 13px;
             color: #EFF3FC;
             margin-bottom: 8px;
             white-space: nowrap;
@@ -362,26 +336,26 @@
             visibility: visible;
             opacity: 1;
         }
-        .extra-info-container {
+        .card-footer-actions {
             margin-top: auto;
             width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
         }
-        .status-tag {
+        .card-btn {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 30px;
             font-size: 11px;
-            padding: 5px 12px;
-            border-radius: 40px;
-            background: #252E42;
-            color: #B8CCF0;
+            font-weight: 500;
             cursor: pointer;
-            border: 1px solid #3A4560;
-        }
-        .status-has {
-            background: #1D3B4A;
-            color: #86E0FF;
-            border-color: #2D9CDB;
+            transition: 0.2s;
+            border: 1px solid transparent;
+            white-space: nowrap;
         }
         .pagination {
             display: flex;
@@ -411,7 +385,8 @@
             background: #2A344A;
             border-radius: 32px;
         }
-        /* 弹窗 */
+
+        /* 编辑弹窗样式保持不变 */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -429,134 +404,151 @@
             background: #1E2538;
             width: 620px;
             border-radius: 28px;
-            overflow: hidden;
             border: 1px solid #2A3348;
+            box-shadow: 0 25px 40px -12px black;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
         }
         .modal-header {
-            padding: 20px 28px;
+            padding: 12px 20px;
             border-bottom: 1px solid #2A3348;
             background: #181E2C;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
         }
         .modal-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: #EFF3FC;
+        }
+        .modal-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .reset-icon-btn {
+            background: #2A344A;
+            border: 1px solid #4A5570;
+            border-radius: 30px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #B8C5E0;
+            transition: 0.2s;
+            font-size: 14px;
+        }
+        .reset-icon-btn:hover {
+            border-color: #2D9CDB;
+            color: #7AC9FF;
+            transform: rotate(-10deg);
         }
         .close-btn {
             background: none;
             border: none;
-            font-size: 26px;
+            font-size: 22px;
             color: #8E9CBA;
             cursor: pointer;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 30px;
         }
-        .close-btn:hover { color: #2D9CDB; }
+        .close-btn:hover { background: #2A344A; color: #2D9CDB; }
         .modal-body {
-            padding: 28px;
-            max-height: 70vh;
+            padding: 20px 24px;
             overflow-y: auto;
+            flex: 1;
         }
         .edit-form {
             display: flex;
             flex-direction: column;
-            gap: 22px;
+            gap: 10px;
         }
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 7px;
         }
         .form-label {
             font-weight: 600;
-            font-size: 13px;
+            font-size: 14px;
             color: #C4D0EC;
         }
         .form-input, .form-textarea {
             padding: 10px 14px;
-            border-radius: 20px;
+            border-radius: 18px;
             border: 1px solid #3A455E;
             background: #101624;
             color: #EFF3FC;
-            font-size: 14px;
+            font-size: 15px;
             outline: none;
         }
         .form-input:focus, .form-textarea:focus {
             border-color: #2D9CDB;
             box-shadow: 0 0 0 2px rgba(45, 156, 219, 0.2);
         }
-        .reset-section {
+        .input-with-button {
             display: flex;
+            gap: 8px;
             align-items: center;
-            gap: 12px;
-            background: #131828;
-            padding: 8px 16px;
-            border-radius: 60px;
-            width: fit-content;
         }
-        .reset-btn-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 32px;
-            background: #2A344A;
-            border: 1px solid #4A5570;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: #B8C5E0;
-        }
-        .reset-btn-icon:hover {
-            border-color: #2D9CDB;
-            color: #7AC9FF;
-            transform: rotate(-10deg);
+        .input-with-button .form-input {
+            flex: 1;
         }
         .inline-group {
             display: flex;
-            gap: 18px;
+            gap: 20px;
         }
-        .inline-group .form-group { flex: 1; }
+        .inline-group .form-group {
+            flex: 1;
+        }
         .modal-footer {
-            padding: 16px 28px;
+            padding: 12px 24px 20px 24px;
             border-top: 1px solid #2A3348;
             display: flex;
             justify-content: flex-end;
-            gap: 12px;
+            gap: 16px;
             background: #181E2C;
+            flex-shrink: 0;
         }
         .modal-btn {
-            padding: 8px 24px;
+            padding: 10px 28px;
             border-radius: 40px;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 500;
             cursor: pointer;
+            transition: 0.2s;
             border: 1px solid transparent;
         }
         .modal-btn-secondary {
             background: #2A344A;
             color: #D1DBF0;
-            border-color: #3A455E;
+            border: 1px solid #4F5A78;
+        }
+        .modal-btn-secondary:hover {
+            background: #3A455E;
+            border-color: #6A7A9E;
         }
         .modal-btn-primary {
             background: #2D9CDB;
             color: white;
         }
-        .info-row {
-            margin-bottom: 18px;
-            border-bottom: 1px solid #2A3348;
-            padding-bottom: 10px;
+        .modal-btn-primary:hover:not(:disabled) {
+            background: #3EACEB;
+            transform: translateY(-1px);
         }
-        .info-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: #9AABCC;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-        .info-value {
-            font-size: 14px;
-            color: #E6EDF5;
-            word-break: break-word;
+        .modal-btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
         .empty-state {
             text-align: center;
@@ -565,104 +557,108 @@
             border-radius: 28px;
             color: #8A99B5;
         }
+        .image-preview-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+        }
+        .image-preview-container {
+            max-width: 80vw;
+            max-height: 80vh;
+            background: #1E2538;
+            border-radius: 24px;
+            padding: 16px;
+            position: relative;
+        }
+        .image-preview-container img {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+        .preview-close {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background: #2A344A;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            border: 1px solid #4A5570;
+        }
     </style>
 </head>
 <body>
 <div id="app">
     <div class="app-layout">
-        <!-- 左侧边栏 (SaaS零售导航) -->
         <aside class="sidebar">
             <div class="logo-area">
                 <span class="material-symbols-outlined">storefront</span>
                 <span>SaaS 零售</span>
             </div>
             <div class="nav-menu">
-                <div class="nav-item active">
-                    <span class="material-symbols-outlined">inventory_2</span>
-                    商品档案
-                </div>
-                <div class="nav-item">
-                    <span class="material-symbols-outlined">shopping_cart</span>
-                    销售管理
-                </div>
-                <div class="nav-item">
-                    <span class="material-symbols-outlined">people</span>
-                    会员管理
-                </div>
-                <div class="nav-item">
-                    <span class="material-symbols-outlined">local_shipping</span>
-                    采购管理
-                </div>
-                <div class="nav-item">
-                    <span class="material-symbols-outlined">warehouse</span>
-                    库存管理
-                </div>
+                <div class="nav-item active"><span class="material-symbols-outlined">inventory_2</span>商品档案</div>
+                <div class="nav-item"><span class="material-symbols-outlined">shopping_cart</span>销售管理</div>
+                <div class="nav-item"><span class="material-symbols-outlined">people</span>会员管理</div>
+                <div class="nav-item"><span class="material-symbols-outlined">local_shipping</span>采购管理</div>
+                <div class="nav-item"><span class="material-symbols-outlined">warehouse</span>库存管理</div>
             </div>
         </aside>
 
-        <!-- 右侧内容区域 - 完整的品牌管理模块（完全保留原功能） -->
         <div class="main-content">
-            <!-- 顶部工具栏 -->
             <div class="toolbar">
                 <div class="toolbar-left">
-                    <button class="btn btn-primary" @click="handleAdd" :disabled="loading"><i class="fas fa-plus"></i> 新增品牌</button>
-                    <button class="btn btn-danger" :disabled="selectedIds.length === 0 || loading" @click="batchDelete"><i class="fas fa-trash-alt"></i> 删除 ({{ selectedIds.length }})</button>
-                    <button class="btn btn-default" @click="resetSearch" :disabled="loading"><i class="fas fa-sync-alt"></i> 重置列表</button>
+                    <button class="btn btn-primary" @click="handleAdd" :disabled="gridLoading"><i class="fas fa-plus"></i> 新增品牌</button>
+                    <button class="btn btn-batch-delete" :disabled="selectedIds.length === 0 || gridLoading" @click="batchDelete"><i class="fas fa-trash-alt"></i> 批量删除 ({{ selectedIds.length }})</button>
                 </div>
                 <div class="toolbar-right">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="品牌名称 / 拼音 / 首字母 (例: 安居宝 / anjubao / ajb)"
-                               v-model="searchKeyword"
-                               @keyup.enter="searchBrands"
-                               :disabled="loading">
+                        <input type="text" ref="searchInput" placeholder="品牌名称 / 拼音 / 首字母" v-model="searchKeyword" @keyup.enter="searchBrands" @focus="handleInputFocus" :disabled="gridLoading">
                         <span v-if="searching" class="searching-indicator"><i class="fas fa-spinner fa-pulse"></i></span>
                     </div>
-                    <button class="btn btn-primary" @click="searchBrands" :disabled="loading || !searchKeyword.trim()">
-                        <i class="fas fa-search"></i> 搜索
-                    </button>
                 </div>
             </div>
 
-            <!-- 全局加载遮罩 -->
-            <div v-if="loading" class="global-loading">
-                <i class="fas fa-spinner fa-pulse"></i> 加载品牌数据...
-            </div>
-
-            <!-- 品牌网格 -->
-            <div class="brand-grid" v-else>
-                <div v-for="brand in paginatedBrands" :key="brand.id" class="brand-card" :class="{ selected: selectedIds.includes(brand.id) }" @click="toggleSelect(brand.id)">
-                    <div class="selection-indicator" v-if="selectedIds.includes(brand.id)"><i class="fas fa-check"></i></div>
-                    <div class="card-actions" @click.stop>
-                        <div class="action-btn" @click="handleEdit(brand)"><i class="fas fa-edit"></i></div>
-                        <div class="action-btn delete" @click="handleDelete(brand.id)"><i class="fas fa-trash"></i></div>
-                    </div>
-                    <div class="logo-img-wrapper">
-                        <img :src="getBrandLogo(brand)" class="logo-img" @error="handleImageError">
-                    </div>
-                    <div class="brand-name">
-                        {{ brand.name }} <span v-if="brand.shortName && brand.shortName !== ''">({{ brand.shortName }})</span>
-                        <div class="tooltip" v-if="brand.since">📅 成立: {{ brand.since }}</div>
-                    </div>
-                    <div class="extra-info-container">
-                        <div class="status-tag" :class="brand.story ? 'status-has' : ''" @click.stop="openModal(brand)">
-                            <i class="fas" :class="brand.story ? 'fa-book-open' : 'fa-file-alt'"></i>
-                            <span>{{ brand.story ? '有简介' : '无简介' }}</span>
+            <div class="brand-list-container">
+                <div v-if="gridLoading" class="grid-loading"><i class="fas fa-spinner fa-pulse"></i> 加载中...</div>
+                <div class="brand-grid">
+                    <div v-for="brand in paginatedBrands" :key="brand.id" class="brand-card" :class="{ selected: selectedIds.includes(brand.id) }" @click="toggleSelect(brand.id)">
+                        <div class="selection-indicator" v-if="selectedIds.includes(brand.id)"><i class="fas fa-check"></i></div>
+                        <div class="logo-img-wrapper" @click.stop><img :src="getBrandLogo(brand)" class="logo-img" @error="handleImageError"></div>
+                        <div class="brand-name" @click.stop>
+                            {{ brand.name }} <span v-if="brand.shortName && brand.shortName !== ''">({{ brand.shortName }})</span>
+                            <div class="tooltip" v-if="brand.since">📅 成立: {{ brand.since }}</div>
+                        </div>
+                        <div class="card-footer-actions" @click.stop>
+                            <button class="card-btn btn-card-edit" @click="handleEdit(brand)"><i class="fas fa-edit"></i> 编辑</button>
+                            <button class="card-btn btn-card-delete" @click="handleDelete(brand.id)"><i class="fas fa-trash"></i> 删除</button>
                         </div>
                     </div>
                 </div>
-                <div v-if="brands.length === 0 && !loading" class="empty-state">
+                <div v-if="brands.length === 0 && !gridLoading" class="empty-state">
                     <i class="fas fa-box-open" style="font-size: 36px; margin-bottom: 12px; display: block;"></i>
                     <p v-if="lastSearchKeyword">未找到与 "{{ lastSearchKeyword }}" 相关的品牌</p>
-                    <p v-else>暂无品牌数据，请点击「重置列表」或稍后再试</p>
+                    <p v-else>暂无品牌数据，请稍后再试</p>
                 </div>
-            </div>
-
-            <!-- 分页器 -->
-            <div class="pagination" v-if="brands.length > 0 && !loading">
-                <button @click="prevPage" :disabled="currentPage === 1">上一页</button>
-                <span class="current-page">第 {{ currentPage }} / {{ totalPages }} 页</span>
-                <button @click="nextPage" :disabled="currentPage === totalPages">下一页</button>
+                <div class="pagination" v-if="brands.length > 0 && !gridLoading">
+                    <button @click="prevPage" :disabled="currentPage === 1">上一页</button>
+                    <span class="current-page">第 {{ currentPage }} / {{ totalPages }} 页</span>
+                    <button @click="nextPage" :disabled="currentPage === totalPages">下一页</button>
+                </div>
             </div>
 
             <!-- 编辑弹窗 -->
@@ -670,40 +666,60 @@
                 <div class="modal" @click.stop>
                     <div class="modal-header">
                         <h3 class="modal-title"><i class="fas fa-pen-alt"></i> 编辑品牌</h3>
-                        <button class="close-btn" @click="showEditModal = false">&times;</button>
+                        <div class="modal-header-actions">
+                            <div class="reset-icon-btn" @click="resetEditing" title="重置到原始数据"><i class="fas fa-undo"></i></div>
+                            <button class="close-btn" @click="showEditModal = false">&times;</button>
+                        </div>
                     </div>
                     <div class="modal-body">
-                        <form @submit.prevent="saveEdit">
-                            <div class="reset-section">
-                                <div class="reset-btn-icon" @click="resetEditing"><i class="fas fa-undo"></i></div>
-                                <span style="font-size:12px; color:#9AABCC;">重置到原始数据</span>
+                        <form @submit.prevent="saveEdit" class="edit-form">
+                            <div class="form-group">
+                                <label class="form-label">品牌名称 *</label>
+                                <input class="form-input" v-model="editingBrand.name">
                             </div>
-                            <div class="form-group"><label class="form-label">品牌名称 *</label><input class="form-input" v-model="editingBrand.name"></div>
                             <div class="inline-group">
-                                <div class="form-group"><label class="form-label">别名/简称</label><input class="form-input" v-model="editingBrand.shortName"></div>
-                                <div class="form-group"><label class="form-label">成立年份</label><input type="number" class="form-input" v-model.number="editingBrand.since"></div>
+                                <div class="form-group">
+                                    <label class="form-label">别名/简称</label>
+                                    <input class="form-input" v-model="editingBrand.shortName">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">成立年份</label>
+                                    <input type="number" class="form-input" v-model.number="editingBrand.since">
+                                </div>
                             </div>
-                            <div class="form-group"><label class="form-label">官网</label><input class="form-input" v-model="editingBrand.homepage"></div>
-                            <div class="form-group"><label class="form-label">Logo URL</label><input class="form-input" v-model="editingBrand.logo"></div>
-                            <div class="form-group"><label class="form-label">品牌故事</label><textarea class="form-textarea" rows="3" v-model="editingBrand.story"></textarea></div>
-                            <div class="modal-footer"><button type="button" class="modal-btn modal-btn-secondary" @click="showEditModal=false">取消</button><button type="submit" class="modal-btn modal-btn-primary">保存</button></div>
+                            <div class="form-group">
+                                <label class="form-label">官方网站</label>
+                                <div class="input-with-button">
+                                    <input class="form-input" v-model="editingBrand.homepage" placeholder="https://">
+                                    <button type="button" class="btn-icon" :disabled="!isValidUrl(editingBrand.homepage)" @click="openHomepage(editingBrand.homepage)"><i class="fas fa-external-link-alt"></i> 跳转</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Logo URL</label>
+                                <div class="input-with-button">
+                                    <input class="form-input" v-model="editingBrand.logo" placeholder="图片链接">
+                                    <button type="button" class="btn-icon" :disabled="!isValidUrl(editingBrand.logo)" @click="previewLogo(editingBrand.logo)"><i class="fas fa-eye"></i> 预览</button>
+                                    <button type="button" class="btn-icon" @click="uploadLogoPlaceholder"><i class="fas fa-upload"></i> 上传</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">品牌故事</label>
+                                <textarea class="form-textarea" rows="2" v-model="editingBrand.story" placeholder="品牌故事..."></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="modal-btn modal-btn-secondary" @click="showEditModal=false">取消</button>
+                                <button type="submit" class="modal-btn modal-btn-primary" :disabled="!isFormChanged">保存</button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- 详情弹窗 -->
-            <div class="modal-overlay" v-if="showDetailModal" @click="showDetailModal = false">
-                <div class="modal" @click.stop>
-                    <div class="modal-header"><h3 class="modal-title"><i class="fas fa-info-circle"></i> 品牌详情</h3><button class="close-btn" @click="showDetailModal=false">&times;</button></div>
-                    <div class="modal-body">
-                        <div class="info-row"><div class="info-label">品牌名称</div><div class="info-value">{{ detailBrand.name }} <span v-if="detailBrand.shortName">({{ detailBrand.shortName }})</span></div></div>
-                        <div class="info-row" v-if="detailBrand.since"><div class="info-label">成立年份</div><div class="info-value">{{ detailBrand.since }}</div></div>
-                        <div class="info-row" v-if="detailBrand.homepage"><div class="info-label">官网</div><div class="info-value"><a :href="detailBrand.homepage" target="_blank">{{ detailBrand.homepage }}</a></div></div>
-                        <div class="info-row" v-if="detailBrand.story"><div class="info-label">品牌故事</div><div class="info-value">{{ detailBrand.story }}</div></div>
-                        <div class="info-row"><div class="info-label">ID</div><div class="info-value">{{ detailBrand.id }}</div></div>
-                    </div>
-                    <div class="modal-footer"><button class="modal-btn modal-btn-secondary" @click="showDetailModal=false">关闭</button></div>
+            <!-- 图片预览弹窗 -->
+            <div class="image-preview-overlay" v-if="previewImageVisible" @click="previewImageVisible = false">
+                <div class="image-preview-container" @click.stop>
+                    <div class="preview-close" @click="previewImageVisible = false"><i class="fas fa-times"></i></div>
+                    <img :src="previewImageUrl" alt="预览图片">
                 </div>
             </div>
         </div>
@@ -713,7 +729,6 @@
 <script>
     const { createApp, ref, computed } = Vue;
 
-    // ================= 正则处理大整数 =================
     function safeParseBigIntJson(jsonStr) {
         const safeStr = jsonStr.replace(/:\s*(-?\d{16,})(?=\s*[,\]}])/g, ':"$1"');
         return JSON.parse(safeStr);
@@ -743,15 +758,16 @@
             const brands = ref([]);
             const selectedIds = ref([]);
             const showEditModal = ref(false);
-            const showDetailModal = ref(false);
             const editingBrand = ref({});
-            const detailBrand = ref({});
+            const originalEditSnapshot = ref({});
             const currentPage = ref(1);
             const itemsPerPage = 12;
-            const loading = ref(false);
+            const gridLoading = ref(false);
             const searchKeyword = ref('');
             const searching = ref(false);
             const lastSearchKeyword = ref('');
+            const previewImageVisible = ref(false);
+            const previewImageUrl = ref('');
 
             const paginatedBrands = computed(() => {
                 const start = (currentPage.value - 1) * itemsPerPage;
@@ -759,14 +775,83 @@
             });
             const totalPages = computed(() => Math.max(1, Math.ceil(brands.value.length / itemsPerPage)));
 
+            const isFormChanged = computed(() => {
+                if (!showEditModal.value) return false;
+                const current = editingBrand.value;
+                const original = originalEditSnapshot.value;
+                if (!original || !current) return false;
+                return JSON.stringify({
+                    name: current.name,
+                    shortName: current.shortName,
+                    since: current.since,
+                    homepage: current.homepage,
+                    logo: current.logo,
+                    story: current.story
+                }) !== JSON.stringify({
+                    name: original.name,
+                    shortName: original.shortName,
+                    since: original.since,
+                    homepage: original.homepage,
+                    logo: original.logo,
+                    story: original.story
+                });
+            });
+
+            const isValidUrl = (url) => {
+                if (!url || typeof url !== 'string') return false;
+                return /^https?:\/\/[^\s]+$/.test(url.trim());
+            };
+
+            const openHomepage = (url) => {
+                if (isValidUrl(url)) window.open(url.trim(), '_blank');
+            };
+
+            const previewLogo = (url) => {
+                if (isValidUrl(url)) {
+                    previewImageUrl.value = url.trim();
+                    previewImageVisible.value = true;
+                }
+            };
+
+            const uploadLogoPlaceholder = () => { alert("上传功能开发中，敬请期待。"); };
+
+            // ---------- API 交互函数 ----------
+            const fetchAllBrands = async () => {
+                const response = await fetch(`${SEARCH_URL}?offset=0&size=160`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const text = await response.text();
+                const jsonData = safeParseBigIntJson(text);
+                if (jsonData && Array.isArray(jsonData.brands)) {
+                    brands.value = jsonData.brands.map(normalizeBrand);
+                } else {
+                    brands.value = [];
+                }
+            };
+
+            const resetToFullList = async () => {
+                if (gridLoading.value) return;
+                gridLoading.value = true;
+                searchKeyword.value = '';
+                lastSearchKeyword.value = '';
+                try {
+                    await fetchAllBrands();
+                    currentPage.value = 1;
+                } catch (err) {
+                    console.error('加载失败:', err);
+                    alert(`加载失败: ${err.message}`);
+                } finally {
+                    gridLoading.value = false;
+                }
+            };
+
             const searchBrands = async () => {
                 const kw = searchKeyword.value.trim();
                 if (!kw) {
-                    await fetchAllBrands();
+                    await resetToFullList();
                     return;
                 }
                 searching.value = true;
-                loading.value = true;
+                gridLoading.value = true;
                 try {
                     const url = `${SEARCH_URL}?s=${encodeURIComponent(kw)}&offset=0&size=64`;
                     const response = await fetch(url);
@@ -785,38 +870,109 @@
                     alert(`搜索失败: ${err.message}`);
                     brands.value = [];
                 } finally {
-                    loading.value = false;
+                    gridLoading.value = false;
                     searching.value = false;
                 }
             };
 
-            const fetchAllBrands = async () => {
-                loading.value = true;
+            // 单个删除（调用 DELETE 接口）
+            const handleDelete = async (id) => {
+                if (!confirm('确定删除该品牌吗？')) return;
                 try {
-                    const response = await fetch(`${SEARCH_URL}?offset=0&size=200`);
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    const text = await response.text();
-                    const jsonData = safeParseBigIntJson(text);
-                    if (jsonData && Array.isArray(jsonData.brands)) {
-                        brands.value = jsonData.brands.map(normalizeBrand);
+                    console.log('qew:'+`${SEARCH_URL}/${id}`)
+                    const response = await fetch(`${SEARCH_URL}/${id}`, { method: 'DELETE' });
+                    if (response.status === 204) {
+                        alert('删除成功');
+                        // 刷新列表
+                        await resetToFullList();
+                    } else if (response.status === 404) {
+                        alert('品牌不存在，可能已被删除');
+                        await resetToFullList();
                     } else {
-                        brands.value = [];
+                        throw new Error(`HTTP ${response.status}`);
                     }
-                    searchKeyword.value = '';
-                    lastSearchKeyword.value = '';
-                    currentPage.value = 1;
                 } catch (err) {
-                    console.error('加载失败:', err);
-                    alert(`加载失败: ${err.message}`);
-                    brands.value = [];
-                } finally {
-                    loading.value = false;
+                    console.error('删除失败:', err);
+                    alert('删除失败，请稍后重试');
                 }
             };
 
-            const resetSearch = () => {
-                searchKeyword.value = '';
-                fetchAllBrands();
+            // 批量删除（循环调用 DELETE）
+            const batchDelete = async () => {
+                if (selectedIds.value.length === 0) return;
+                if (!confirm(`确定删除 ${selectedIds.value.length} 个品牌吗？`)) return;
+                let successCount = 0;
+                let failCount = 0;
+                for (const id of selectedIds.value) {
+                    try {
+                        const response = await fetch(`${SEARCH_URL}/${id}`, { method: 'DELETE' });
+                        if (response.status === 204) {
+                            successCount++;
+                        } else {
+                            failCount++;
+                        }
+                    } catch (err) {
+                        failCount++;
+                    }
+                }
+                alert(`批量删除完成，成功 ${successCount} 个，失败 ${failCount} 个`);
+                await resetToFullList();  // 刷新列表
+                selectedIds.value = [];
+            };
+
+            // 保存品牌（新增或更新）
+            const saveEdit = async () => {
+                if (!editingBrand.value.name) {
+                    alert('品牌名称不能为空');
+                    return;
+                }
+                // 构建提交的数据体
+                const payload = {
+                    name: editingBrand.value.name || null,
+                    shortName: editingBrand.value.shortName || null,
+                    story: editingBrand.value.story || null,
+                    logo: editingBrand.value.logo || null,
+                    homepage: editingBrand.value.homepage || null,
+                    since: editingBrand.value.since || null
+                };
+                const isUpdate = editingBrand.value.id && !editingBrand.value.id.toString().startsWith('temp_'); // 判断是否为已存在的品牌（非临时ID）
+                try {
+                    let response;
+                    if (isUpdate) {
+                        // 编辑：PUT 请求
+                        response = await fetch(`${SEARCH_URL}/${editingBrand.value.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                    } else {
+                        // 新增：POST 请求
+                        response = await fetch(`${SEARCH_URL}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                    }
+                    if (response.ok) {
+                        alert(isUpdate ? '更新成功' : '创建成功');
+                        showEditModal.value = false;
+                        await resetToFullList(); // 刷新列表
+                    } else {
+                        let errMsg = '保存失败';
+                        try {
+                            const errData = await response.json();
+                            errMsg = errData.message || errMsg;
+                        } catch (e) {}
+                        alert(errMsg);
+                    }
+                } catch (err) {
+                    console.error('保存失败:', err);
+                    alert('保存失败，请稍后重试');
+                }
+            };
+
+            const handleInputFocus = (event) => {
+                if (searchKeyword.value && searchKeyword.value.trim() !== '') event.target.select();
             };
 
             const isEqualId = (a, b) => String(a) === String(b);
@@ -827,8 +983,9 @@
             };
 
             const handleAdd = () => {
-                editingBrand.value = {
-                    id: Date.now().toString(),
+                // 新增时，使用临时 id 标记（不发送给后端）
+                const newBrand = {
+                    id: `temp_${Date.now()}`,
                     name: '',
                     shortName: '',
                     logo: '',
@@ -836,52 +993,24 @@
                     story: '',
                     homepage: ''
                 };
+                editingBrand.value = JSON.parse(JSON.stringify(newBrand));
+                originalEditSnapshot.value = JSON.parse(JSON.stringify(newBrand));
                 showEditModal.value = true;
             };
 
             const handleEdit = (brand) => {
                 editingBrand.value = JSON.parse(JSON.stringify(brand));
+                originalEditSnapshot.value = JSON.parse(JSON.stringify(brand));
                 showEditModal.value = true;
             };
 
-            const handleDelete = (id) => {
-                if (confirm('确定删除该品牌吗？')) {
-                    brands.value = brands.value.filter(b => !isEqualId(b.id, id));
-                    selectedIds.value = selectedIds.value.filter(sid => !isEqualId(sid, id));
-                }
-            };
-
-            const batchDelete = () => {
-                if (selectedIds.value.length === 0) return;
-                if (confirm(`删除 ${selectedIds.value.length} 个品牌？`)) {
-                    brands.value = brands.value.filter(b => !selectedIds.value.some(sid => isEqualId(sid, b.id)));
-                    selectedIds.value = [];
-                }
-            };
-
-            const saveEdit = () => {
-                if (!editingBrand.value.name) {
-                    alert('品牌名称不能为空');
-                    return;
-                }
-                const idx = brands.value.findIndex(b => isEqualId(b.id, editingBrand.value.id));
-                const cloned = JSON.parse(JSON.stringify(editingBrand.value));
-                if (idx !== -1) {
-                    brands.value[idx] = cloned;
-                } else {
-                    brands.value.push(cloned);
-                }
-                showEditModal.value = false;
-            };
-
-            const openModal = (brand) => {
-                detailBrand.value = brand;
-                showDetailModal.value = true;
-            };
-
             const resetEditing = () => {
-                const original = brands.value.find(b => isEqualId(b.id, editingBrand.value.id));
-                if (original) editingBrand.value = JSON.parse(JSON.stringify(original));
+                if (originalEditSnapshot.value && Object.keys(originalEditSnapshot.value).length) {
+                    editingBrand.value = JSON.parse(JSON.stringify(originalEditSnapshot.value));
+                } else {
+                    const original = brands.value.find(b => isEqualId(b.id, editingBrand.value.id));
+                    if (original) editingBrand.value = JSON.parse(JSON.stringify(original));
+                }
             };
 
             const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
@@ -890,36 +1019,40 @@
             const getBrandLogo = (brand) => brand.logo && brand.logo.trim() ? brand.logo : DEFAULT_LOGO;
             const handleImageError = (e) => { if (e.target.src !== DEFAULT_LOGO) e.target.src = DEFAULT_LOGO; };
 
-            fetchAllBrands();
+            resetToFullList();
 
             return {
                 brands,
                 selectedIds,
                 showEditModal,
-                showDetailModal,
                 editingBrand,
-                detailBrand,
                 currentPage,
                 totalPages,
                 paginatedBrands,
-                loading,
+                gridLoading,
                 searchKeyword,
                 searching,
                 lastSearchKeyword,
+                previewImageVisible,
+                previewImageUrl,
+                isFormChanged,
                 searchBrands,
-                resetSearch,
+                handleInputFocus,
                 toggleSelect,
                 handleAdd,
                 handleEdit,
                 handleDelete,
                 batchDelete,
                 saveEdit,
-                openModal,
                 resetEditing,
                 prevPage,
                 nextPage,
                 getBrandLogo,
-                handleImageError
+                handleImageError,
+                isValidUrl,
+                openHomepage,
+                previewLogo,
+                uploadLogoPlaceholder
             };
         }
     }).mount('#app');

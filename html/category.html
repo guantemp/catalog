@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>分类管理器 - 深色渐变 | 毛玻璃树形</title>
+    <title>分类管理器 - 深色渐变 | 惰性加载树形</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -418,6 +418,12 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .tree-node .loading-placeholder {
+            padding: 4px 0 4px 32px;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -436,7 +442,8 @@
                 </div>
             </div>
             <div class="tree-scroll">
-                <ul class="tree-node">
+                <div v-if="treeLoading" class="loading-placeholder" style="text-align:center; padding:20px;">加载分类树...</div>
+                <ul v-else class="tree-node">
                     <tree-item
                             v-for="node in filteredCategoryTree"
                             :key="node.id"
@@ -448,9 +455,10 @@
                             @select="selectCategory"
                             @add-child="showAddChildPrompt"
                             @delete-cat="deleteCategoryNode"
+                            @lazy-load="lazyLoadChildren"
                     ></tree-item>
                 </ul>
-                <div v-if="filteredCategoryTree.length === 0" style="text-align:center; margin-top:20px; color:#64748b;">未找到或暂无分类</div>
+                <div v-if="!treeLoading && filteredCategoryTree.length === 0" style="text-align:center; margin-top:20px; color:#64748b;">未找到或暂无分类</div>
             </div>
         </div>
 
@@ -548,7 +556,7 @@
         </div>
     </div>
 
-    <!-- 预览模态框 - 确保页面加载时不显示 -->
+    <!-- 预览模态框 -->
     <div v-if="modalVisible" class="modal-mask" @click.self="modalVisible = false">
         <div class="modal-container">
             <div class="modal-header">
@@ -571,96 +579,64 @@
 <script>
     const { createApp, ref, computed, onMounted, watch } = Vue;
 
-    let nextId = 1000;
-    function genId() { return `cat_${Date.now()}_${nextId++}`; }
-    const buildInitialCategories = () => {
-        const list = [];
-        const roots = ["电视热销","潮人服饰","精品鞋包","潮流箱包","美容护肤","居家生活","家用电器","食品保健"];
-        const rootMap = {};
-        roots.forEach(name => {
-            const id = genId();
-            rootMap[name] = id;
-            list.push({ id, name: { name, shortName: name.slice(0,2) }, icon_url: null, parent_id: -1, description: `${name} 分类` });
-        });
-        const jingpinId = rootMap["精品鞋包"];
-        const nvxieId = genId();
-        const pinzhinanxieId = genId();
-        list.push({ id: nvxieId, name: { name: "潮流女鞋", shortName: "女鞋" }, icon_url: null, parent_id: jingpinId, description: "时尚女鞋" });
-        list.push({ id: pinzhinanxieId, name: { name: "品质男鞋", shortName: "男鞋" }, icon_url: null, parent_id: jingpinId, description: "高端男鞋" });
-        const shoesChildren = ["板鞋","休闲鞋","商务皮鞋","户外运动鞋","帆布鞋","篮球鞋","凉鞋/凉拖","跑步鞋","网球鞋","足球鞋","羽毛球鞋"];
-        shoesChildren.forEach(name => {
-            list.push({ id: genId(), name: { name, shortName: name.slice(0,2) }, icon_url: null, parent_id: pinzhinanxieId, description: `${name} 鞋类` });
-        });
-        return list;
-    };
-    let initialCategories = buildInitialCategories();
-    const qualityShoeId = initialCategories.find(c => c.name.name === "品质男鞋")?.id || null;
+    // API 基础 URL
+    const API_BASE = 'https://slave.tooo.top/catalog/v1';
 
-    let globalExtAttributes = [
-        { recordId: '1735cd95-5bcd-402e-81b5-9d9200ade675', classId: qualityShoeId, displayName: '颜色', fieldName: 'YanSe', defaultValue: '红色,橙色,黄色', isRequired: '必填', sortOrder: 2, autoId: 172 },
-        { recordId: 'dd09b32b-c14e-4d2c-97a4-9d7601a2b3c4', classId: qualityShoeId, displayName: '尺码', fieldName: 'ChiMa', defaultValue: 'S,M,L,XL', isRequired: '必填', sortOrder: 3, autoId: 173 }
-    ];
-
-    function buildTree(cats, parentId = -1) {
-        return cats.filter(c => c.parent_id === parentId).map(c => ({ ...c, children: buildTree(cats, c.id) }));
+    // 通用 fetch 封装
+    async function apiFetch(url) {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
     }
-    function deleteCategoryAndChildren(cats, targetId) {
-        const toDelete = new Set();
-        const collect = (id) => { toDelete.add(id); cats.filter(c => c.parent_id === id).forEach(child => collect(child.id)); };
-        collect(targetId);
-        return cats.filter(c => !toDelete.has(c.id));
-    }
-    function generateUUID() { return `${Date.now()}-${Math.random().toString(36).substr(2, 8)}`; }
-    let lastAutoId = 500;
-    function newAutoId() { return ++lastAutoId; }
 
-    function computeDepth(cats, parentId = -1, depth = 0) {
-        for (let cat of cats) {
-            if (cat.parent_id === parentId) {
-                cat.depth = depth;
-                computeDepth(cats, cat.id, depth + 1);
-            }
-        }
+    // 获取根分类
+    async function fetchRootCategories() {
+        const data = await apiFetch(`${API_BASE}/categories/root`);
+        return data.categories || [];
     }
-    computeDepth(initialCategories);
 
-    function filterTreeByKeyword(tree, keyword) {
-        if (!keyword.trim()) return tree;
-        const lower = keyword.toLowerCase();
-        const filter = (node) => {
-            const match = node.name.name.toLowerCase().includes(lower);
-            const children = node.children ? node.children.filter(child => filter(child)).map(child => filter(child)) : [];
-            if (match || children.length) return { ...node, children };
-            return null;
+    // 获取子分类
+    async function fetchChildrenCategories(parentId) {
+        const data = await apiFetch(`${API_BASE}/categories/${parentId}/children`);
+        return data.categories || [];
+    }
+
+    // 获取单个分类详情
+    async function fetchCategoryDetail(categoryId) {
+        return await apiFetch(`${API_BASE}/categories/${categoryId}`);
+    }
+
+    // 将API返回的分类数据转换为前端树节点格式
+    function convertApiCategoryToNode(apiCat) {
+        return {
+            id: apiCat.id,
+            name: apiCat.name,
+            icon_url: apiCat.icon_url,
+            parent_id: apiCat.parent_id,
+            description: apiCat.description,
+            left: apiCat.left,
+            right: apiCat.right,
+            family_id: apiCat.family_id,
+            depth: 0, // 深度在惰性加载时动态设置
+            children: [],          // 子节点数组
+            loaded: false,         // 是否已加载过子节点
+            hasChildren: !!(apiCat.right && apiCat.right > apiCat.left + 1)  // 根据左右值判断是否有子节点
         };
-        return tree.map(node => filter(node)).filter(v => v);
-    }
-    function getExpandedIdsFromFilteredTree(tree, keyword) {
-        if (!keyword.trim()) return new Set();
-        const lower = keyword.toLowerCase();
-        const expanded = new Set();
-        const traverse = (nodes, ancestors) => {
-            for (const node of nodes) {
-                const cur = [...ancestors, node.id];
-                if (node.name.name.toLowerCase().includes(lower)) cur.forEach(id => expanded.add(id));
-                if (node.children) traverse(node.children, cur);
-            }
-        };
-        traverse(tree, []);
-        return expanded;
     }
 
     const TreeItem = {
         name: 'TreeItem',
         props: ['node', 'activeId', 'expandedSet', 'searchKeyword'],
-        emits: ['toggle', 'select', 'add-child', 'delete-cat'],
+        emits: ['toggle', 'select', 'add-child', 'delete-cat', 'lazy-load'],
         template: `
           <li class="node-item">
             <div class="node-content" :class="{ 'active-cat': node.id === activeId }" @click="$emit('select', node.id)">
               <div class="node-name">
-                        <span v-if="hasChildren" class="toggle-box" @click.stop="$emit('toggle', node.id)">
-                            {{ isExpanded ? '−' : '+' }}
-                        </span>
+                <!-- 有子节点才显示 +/- 框 -->
+                <span v-if="hasChildren" class="toggle-box" @click.stop="handleToggle">
+                    {{ isExpanded ? '−' : '+' }}
+                </span>
+                <span v-else class="toggle-box" style="visibility: hidden;"></span>
                 <img v-if="node.icon_url" :src="node.icon_url" class="node-icon-img" @error="e => e.target.style.display='none'">
                 <span v-html="highlightName"></span>
               </div>
@@ -670,16 +646,29 @@
               </div>
             </div>
             <ul class="children" v-if="hasChildren && isExpanded">
-              <tree-item v-for="child in node.children" :key="child.id" :node="child" :active-id="activeId"
-                         :expanded-set="expandedSet" :search-keyword="searchKeyword"
-                         @toggle="$emit('toggle', $event)" @select="$emit('select', $event)"
-                         @add-child="$emit('add-child', $event[0], $event[1])"
-                         @delete-cat="$emit('delete-cat', $event)"></tree-item>
+              <!-- 懒加载占位 -->
+              <div v-if="loadingChildren" class="loading-placeholder">加载中...</div>
+              <template v-else>
+                <tree-item v-for="child in node.children" :key="child.id" :node="child" :active-id="activeId"
+                           :expanded-set="expandedSet" :search-keyword="searchKeyword"
+                           @toggle="$emit('toggle', $event)" @select="$emit('select', $event)"
+                           @add-child="$emit('add-child', $event[0], $event[1])"
+                           @delete-cat="$emit('delete-cat', $event)"
+                           @lazy-load="$emit('lazy-load', $event)"></tree-item>
+              </template>
             </ul>
           </li>
         `,
+        data() {
+            return {
+                loadingChildren: false
+            };
+        },
         computed: {
-            hasChildren() { return this.node.children?.length > 0; },
+            hasChildren() {
+                // 优先使用后端返回的 hasChildren 标志，如果已经加载过则用 children 长度判断
+                return this.node.hasChildren === true || (this.node.children && this.node.children.length > 0);
+            },
             isExpanded() { return this.expandedSet.has(this.node.id); },
             highlightName() {
                 const name = this.node.name.name;
@@ -689,118 +678,326 @@
                 if (idx === -1) return name;
                 return name.slice(0, idx) + '<span class="search-highlight">' + name.slice(idx, idx+kw.length) + '</span>' + name.slice(idx+kw.length);
             }
+        },
+        methods: {
+            async handleToggle() {
+                // 先展开/收缩 UI
+                this.$emit('toggle', this.node.id);
+                // 如果节点有子节点且未加载过，则触发懒加载
+                if (this.node.hasChildren && !this.node.loaded && !this.isExpanded) {
+                    this.loadingChildren = true;
+                    try {
+                        await this.$emit('lazy-load', this.node.id);
+                    } finally {
+                        this.loadingChildren = false;
+                    }
+                }
+            }
         }
     };
 
     createApp({
         components: { TreeItem },
         setup() {
-            const categories = ref([...initialCategories]);
-            const defaultActive = categories.value.find(c => c.name.name === "品质男鞋") || categories.value[0];
-            const activeCategory = ref(JSON.parse(JSON.stringify(defaultActive)));
-            const originalCategoryBackup = ref(JSON.parse(JSON.stringify(defaultActive)));
-            const editableCategory = ref(JSON.parse(JSON.stringify(defaultActive)));
-            const allExtAttrs = ref([...globalExtAttributes]);
-
+            // ---------- 状态定义 ----------
+            const categories = ref([]);           // 扁平分类列表（用于上级下拉等）
+            const categoryTree = ref([]);          // 树形结构根节点列表
+            const activeCategory = ref(null);
+            const originalCategoryBackup = ref(null);
+            const editableCategory = ref({ name: { name: '', shortName: '' }, icon_url: null, description: '', parent_id: -1 });
+            const allExtAttrs = ref([]);            // 扩展属性（此处保留静态演示数据，实际可从 API 加载）
             const searchKeyword = ref('');
-            const rawTree = computed(() => buildTree(categories.value, -1));
-            const filteredCategoryTree = computed(() => filterTreeByKeyword(rawTree.value, searchKeyword.value));
-            const activeExtList = computed(() => allExtAttrs.value.filter(a => a.classId === activeCategory.value.id));
-            const flatCategoryList = computed(() => categories.value.filter(c => c.id !== editableCategory.value.id));
-            const isModified = computed(() => {
-                const c = editableCategory.value, o = originalCategoryBackup.value;
-                return c.name.name !== o.name.name || c.name.shortName !== o.name.shortName || c.icon_url !== o.icon_url || c.description !== o.description || c.parent_id !== o.parent_id;
-            });
-            const hasSubCategories = computed(() => categories.value.some(c => c.parent_id === activeCategory.value.id));
-
+            const treeLoading = ref(true);
             const expandedSet = ref(new Set());
-            const initExpanded = () => {
-                const set = new Set();
-                rawTree.value.forEach(r => set.add(r.id));
-                const jingpin = categories.value.find(c => c.name.name === "精品鞋包");
-                const quality = categories.value.find(c => c.name.name === "品质男鞋");
-                if (jingpin) set.add(jingpin.id);
-                if (quality) set.add(quality.id);
-                expandedSet.value = set;
-            };
-            const toggleExpand = (id) => {
-                const set = new Set(expandedSet.value);
-                if (set.has(id)) set.delete(id); else set.add(id);
-                expandedSet.value = set;
-            };
-            const onSearchInput = () => {
-                const tree = filteredCategoryTree.value;
-                const ids = getExpandedIdsFromFilteredTree(tree, searchKeyword.value);
-                if (ids.size) {
-                    const newSet = new Set(expandedSet.value);
-                    ids.forEach(id => newSet.add(id));
-                    expandedSet.value = newSet;
-                } else if (!searchKeyword.value) initExpanded();
-            };
 
-            function recalcAllDepths() { computeDepth(categories.value); }
-            function refreshEditable() {
-                editableCategory.value = JSON.parse(JSON.stringify(activeCategory.value));
-                originalCategoryBackup.value = JSON.parse(JSON.stringify(activeCategory.value));
+            // ---------- 辅助函数 ----------
+            function setDepthForTree(nodes, currentDepth) {
+                for (const node of nodes) {
+                    node.depth = currentDepth;
+                    if (node.children && node.children.length) {
+                        setDepthForTree(node.children, currentDepth + 1);
+                    }
+                }
             }
-            function selectCategory(id) {
-                const found = categories.value.find(c => c.id === id);
-                if (found) { activeCategory.value = JSON.parse(JSON.stringify(found)); refreshEditable(); clearExtForm(); }
+
+            // 递归设置 hasChildren 标志（基于左右值）
+            function updateHasChildrenFlag(nodes) {
+                for (const node of nodes) {
+                    // 根据左右值差值判断是否有子节点
+                    node.hasChildren = (node.right && node.right > node.left + 1);
+                    if (node.children && node.children.length) {
+                        updateHasChildrenFlag(node.children);
+                    }
+                }
             }
-            function restoreOriginal() { if (isModified.value) editableCategory.value = JSON.parse(JSON.stringify(originalCategoryBackup.value)); }
-            function updateCurrentCategory() {
+
+            // 构建树形结构（从根列表）
+            function buildTreeFromRoots(roots) {
+                // 由于后端数据已经是完整的树形，children 需要单独加载，所以根节点 children 置空
+                return roots.map(root => {
+                    const node = convertApiCategoryToNode(root);
+                    node.children = [];
+                    node.loaded = false;
+                    return node;
+                });
+            }
+
+            // 扁平化树（用于上级分类下拉）
+            function flattenTree(nodes, arr = []) {
+                for (const node of nodes) {
+                    arr.push(node);
+                    if (node.children && node.children.length) {
+                        flattenTree(node.children, arr);
+                    }
+                }
+                return arr;
+            }
+
+            // 根据 ID 查找节点
+            function findNodeById(nodes, id) {
+                for (const node of nodes) {
+                    if (node.id == id) return node;
+                    if (node.children) {
+                        const found = findNodeById(node.children, id);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            }
+
+            // 刷新扁平分类列表和树深度
+            function refreshCategoriesAndDepth() {
+                const flattened = flattenTree(categoryTree.value);
+                categories.value = flattened;
+                setDepthForTree(categoryTree.value, 0);
+                updateHasChildrenFlag(categoryTree.value);
+            }
+
+            // 懒加载子节点
+            async function lazyLoadChildren(parentId) {
+                const parentNode = findNodeById(categoryTree.value, parentId);
+                if (!parentNode || parentNode.loaded) return;
+                try {
+                    const childrenData = await fetchChildrenCategories(parentId);
+                    const childrenNodes = childrenData.map(child => {
+                        const node = convertApiCategoryToNode(child);
+                        node.parent_id = parentId;
+                        node.depth = parentNode.depth + 1;
+                        node.children = [];
+                        node.loaded = false;
+                        return node;
+                    });
+                    parentNode.children = childrenNodes;
+                    parentNode.loaded = true;
+                    // 更新父节点的 hasChildren 标志
+                    parentNode.hasChildren = childrenNodes.length > 0;
+                    refreshCategoriesAndDepth();
+                } catch (err) {
+                    console.error(`加载子分类 ${parentId} 失败:`, err);
+                    alert(`加载子分类失败: ${err.message}`);
+                }
+            }
+
+            // 初始化加载根分类
+            async function loadRootCategories() {
+                treeLoading.value = true;
+                try {
+                    const roots = await fetchRootCategories();
+                    console.log(roots)
+                    categoryTree.value = buildTreeFromRoots(roots);
+                    // 展开所有根节点以便显示
+                    const rootIds = categoryTree.value.map(r => r.id);
+                    rootIds.forEach(id => expandedSet.value.add(id));
+                    refreshCategoriesAndDepth();
+                    // 默认选中第一个根分类
+                    if (categoryTree.value.length > 0) {
+                        selectCategory(categoryTree.value[0].id);
+                    }
+                } catch (err) {
+                    console.error('加载根分类失败:', err);
+                    alert(`加载分类树失败: ${err.message}`);
+                } finally {
+                    treeLoading.value = false;
+                }
+            }
+
+            // 重新加载整个树（刷新）
+            async function reloadTree() {
+                await loadRootCategories();
+                // 保持当前选中
+                if (activeCategory.value && activeCategory.value.id) {
+                    const found = findNodeById(categoryTree.value, activeCategory.value.id);
+                    if (found) selectCategory(activeCategory.value.id);
+                }
+            }
+
+            // 选中分类
+            async function selectCategory(id) {
+                try {
+                    // 优先从本地数据找，如果找不到再从 API 拉取详情
+                    let found = findNodeById(categoryTree.value, id);
+                    if (!found) {
+                        // 当从上级下拉选择了一个未加载的节点时，尝试拉取详情
+                        const detail = await fetchCategoryDetail(id);
+                        found = convertApiCategoryToNode(detail);
+                        // 将临时节点加入 categories 以便展示
+                        categories.value.push(found);
+                    }
+                    if (found) {
+                        activeCategory.value = JSON.parse(JSON.stringify(found));
+                        editableCategory.value = JSON.parse(JSON.stringify(found));
+                        originalCategoryBackup.value = JSON.parse(JSON.stringify(found));
+                    }
+                } catch (err) {
+                    console.error('加载分类详情失败:', err);
+                }
+            }
+
+            // 更新当前分类（调用 API 更新）
+            async function updateCurrentCategory() {
                 if (!editableCategory.value.name.name || !editableCategory.value.name.name.trim()) {
                     alert("分类名称不能为空");
                     return;
                 }
-                if (!isModified.value) { alert("无修改"); return; }
-                const idx = categories.value.findIndex(c => c.id === activeCategory.value.id);
-                if (idx !== -1) {
-                    const updated = { ...categories.value[idx], ...editableCategory.value, name: { ...editableCategory.value.name } };
-                    categories.value[idx] = updated;
-                    recalcAllDepths();
-                    activeCategory.value = JSON.parse(JSON.stringify(updated));
-                    refreshEditable();
-                    alert("更新成功");
+                if (!isModified.value) {
+                    alert("无修改");
+                    return;
                 }
-            }
-            function deleteCategoryNode(id) {
-                const cat = categories.value.find(c => c.id === id);
-                if (!cat) return;
-                if (cat.parent_id === -1 && categories.value.filter(c => c.parent_id === -1).length <= 1) { alert("至少保留一个顶级分类"); return; }
-                if (confirm(`删除分类“${cat.name.name}”及其所有子类？`)) {
-                    const allIds = [];
-                    const gather = (pid) => { allIds.push(pid); categories.value.filter(c => c.parent_id === pid).forEach(ch => gather(ch.id)); };
-                    gather(id);
-                    allExtAttrs.value = allExtAttrs.value.filter(a => !allIds.includes(a.classId));
-                    categories.value = deleteCategoryAndChildren(categories.value, id);
-                    recalcAllDepths();
-                    initExpanded();
-                    if (allIds.includes(activeCategory.value.id)) {
-                        const newActive = categories.value[0];
-                        if (newActive) { activeCategory.value = JSON.parse(JSON.stringify(newActive)); refreshEditable(); }
+                // 构建请求体
+                const payload = {
+                    id: activeCategory.value.id,
+                    name: editableCategory.value.name,
+                    icon_url: editableCategory.value.icon_url,
+                    description: editableCategory.value.description,
+                    parent_id: editableCategory.value.parent_id
+                };
+                // 这里模拟 PUT 请求，实际可改为真实接口
+                try {
+                    // 假设更新接口为 PUT /categories/{id}
+                    const response = await fetch(`${API_BASE}/categories/${activeCategory.value.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error('更新失败');
+                    // 更新本地树中的数据
+                    const target = findNodeById(categoryTree.value, activeCategory.value.id);
+                    if (target) {
+                        target.name = editableCategory.value.name;
+                        target.icon_url = editableCategory.value.icon_url;
+                        target.description = editableCategory.value.description;
+                        target.parent_id = editableCategory.value.parent_id;
                     }
+                    // 刷新扁平列表和深度
+                    refreshCategoriesAndDepth();
+                    // 重新选中以刷新界面
+                    await selectCategory(activeCategory.value.id);
+                    alert("更新成功");
+                } catch (err) {
+                    console.error(err);
+                    alert(`更新失败: ${err.message}`);
                 }
             }
-            function deleteCurrentCategory() { if (activeCategory.value.id) deleteCategoryNode(activeCategory.value.id); }
-            function showAddChildPrompt(parentId, parentName) {
+
+            // 删除分类
+            async function deleteCategoryNode(id) {
+                const cat = findNodeById(categoryTree.value, id);
+                if (!cat) return;
+                if (cat.parent_id === -1 && categoryTree.value.length <= 1) {
+                    alert("至少保留一个顶级分类，不可删除");
+                    return;
+                }
+                if (!confirm(`永久删除分类“${cat.name.name}”及其所有子类？`)) return;
+                try {
+                    const response = await fetch(`${API_BASE}/categories/${id}`, { method: 'DELETE' });
+                    if (!response.ok) throw new Error('删除失败');
+                    // 删除成功，重新加载整个树
+                    await reloadTree();
+                } catch (err) {
+                    console.error(err);
+                    alert(`删除失败: ${err.message}`);
+                }
+            }
+            function deleteCurrentCategory() { if (activeCategory.value && activeCategory.value.id) deleteCategoryNode(activeCategory.value.id); }
+
+            // 添加子分类
+            async function showAddChildPrompt(parentId, parentName) {
                 const newName = prompt(`在“${parentName}”下新增子分类`, "新分类");
                 if (!newName) return;
-                const newId = genId();
-                const newCat = { id: newId, name: { name: newName, shortName: newName.slice(0,2) }, icon_url: null, parent_id: parentId, description: `新建分类` };
-                categories.value.push(newCat);
-                recalcAllDepths();
-                initExpanded();
-                selectCategory(newId);
+                const newCat = {
+                    name: { name: newName, shortName: newName.slice(0, 2) },
+                    icon_url: null,
+                    parent_id: parentId,
+                    description: `新建分类 ${newName}`
+                };
+                try {
+                    const response = await fetch(`${API_BASE}/categories`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newCat)
+                    });
+                    if (!response.ok) throw new Error('创建失败');
+                    const created = await response.json();
+                    await reloadTree();
+                    if (created.id) selectCategory(created.id);
+                } catch (err) {
+                    console.error(err);
+                    alert(`添加失败: ${err.message}`);
+                }
             }
-            function addRootCategoryPrompt() {
+
+            // 添加根分类
+            async function addRootCategoryPrompt() {
                 const name = prompt("新建根分类");
-                if (name) {
-                    const newRoot = { id: genId(), name: { name, shortName: name.slice(0,2) }, icon_url: null, parent_id: -1, description: `顶级分类` };
-                    categories.value.push(newRoot);
-                    recalcAllDepths();
-                    initExpanded();
-                    selectCategory(newRoot.id);
+                if (!name) return;
+                const newRoot = {
+                    name: { name, shortName: name.slice(0, 2) },
+                    icon_url: null,
+                    parent_id: -1,
+                    description: `顶级分类 ${name}`
+                };
+                try {
+                    const response = await fetch(`${API_BASE}/categories`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newRoot)
+                    });
+                    if (!response.ok) throw new Error('创建失败');
+                    await reloadTree();
+                } catch (err) {
+                    console.error(err);
+                    alert(`添加失败: ${err.message}`);
+                }
+            }
+
+            // 编辑名称（快捷编辑）
+            async function editCategoryPrompt(catId) {
+                const cat = findNodeById(categoryTree.value, catId);
+                if (!cat) return;
+                const newName = prompt("编辑分类名称", cat.name.name);
+                if (newName && newName.trim()) {
+                    const payload = {
+                        id: cat.id,
+                        name: { name: newName.trim(), shortName: cat.name.shortName },
+                        icon_url: cat.icon_url,
+                        description: cat.description,
+                        parent_id: cat.parent_id
+                    };
+                    try {
+                        const response = await fetch(`${API_BASE}/categories/${cat.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        if (!response.ok) throw new Error('更新失败');
+                        await reloadTree();
+                        if (activeCategory.value && activeCategory.value.id === cat.id) {
+                            selectCategory(cat.id);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert(`编辑失败: ${err.message}`);
+                    }
                 }
             }
 
@@ -829,11 +1026,12 @@
             };
             const onModalImageError = () => { previewError.value = true; };
 
-            // 扩展属性模块
+            // 扩展属性模块（静态演示，保留原有逻辑）
             const extForm = ref({ displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0 });
             const extBackup = ref({ displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0 });
             const selectedExtId = ref(null);
             const selectedExtIdForSelect = ref('');
+            const activeExtList = ref([]);   // 扩展属性暂不接入 API
             const isSaveEnabled = computed(() => {
                 const hasContent = extForm.value.displayName || extForm.value.fieldName;
                 if (!hasContent) return false;
@@ -925,22 +1123,93 @@
             }
             function syncToSubClass() { alert("演示: 扩展属性同步子类完成"); }
 
-            watch(activeCategory, () => { clearExtForm(); refreshEditable(); });
-            onMounted(() => {
-                initExpanded();
-                refreshEditable();
-                recalcAllDepths();
-                modalVisible.value = false;
-                previewError.value = false;
+            // 生成唯一ID（用于扩展属性）
+            function generateUUID() { return `${Date.now()}-${Math.random().toString(36).substr(2, 8)}`; }
+            let lastAutoId = 500;
+            function newAutoId() { return ++lastAutoId; }
+
+            // 计算属性
+            const flatCategoryList = computed(() => categories.value.filter(c => c.id !== (activeCategory.value?.id)));
+            const isModified = computed(() => {
+                const c = editableCategory.value, o = originalCategoryBackup.value;
+                if (!c || !o) return false;
+                return c.name?.name !== o.name?.name || c.name?.shortName !== o.name?.shortName ||
+                    c.icon_url !== o.icon_url || c.description !== o.description || c.parent_id !== o.parent_id;
+            });
+            const hasSubCategories = computed(() => {
+                return categories.value.some(c => c.parent_id === activeCategory.value?.id);
+            });
+            const filteredCategoryTree = computed(() => {
+                // 简单客户端搜索（仅匹配名称，不处理惰性加载节点的未加载子节点）
+                if (!searchKeyword.value) return categoryTree.value;
+                const lower = searchKeyword.value.toLowerCase();
+                const filter = (nodes) => {
+                    return nodes.filter(node => {
+                        const match = node.name.name.toLowerCase().includes(lower);
+                        if (match) return true;
+                        if (node.children && node.children.length) {
+                            node.children = filter(node.children);
+                            return node.children.length > 0;
+                        }
+                        return false;
+                    });
+                };
+                return filter(JSON.parse(JSON.stringify(categoryTree.value)));
+            });
+
+            // 恢复原始值
+            function restoreOriginal() {
+                if (isModified.value) editableCategory.value = JSON.parse(JSON.stringify(originalCategoryBackup.value));
+            }
+
+            // 展开/收缩
+            function toggleExpand(id) {
+                const set = new Set(expandedSet.value);
+                if (set.has(id)) set.delete(id); else set.add(id);
+                expandedSet.value = set;
+            }
+
+            // 搜索时自动展开匹配节点
+            function onSearchInput() {
+                if (!searchKeyword.value) {
+                    // 清空搜索时恢复默认展开（所有根节点）
+                    const rootIds = categoryTree.value.map(r => r.id);
+                    rootIds.forEach(id => expandedSet.value.add(id));
+                } else {
+                    // 简单展开所有匹配节点的父级
+                    const expanded = new Set(expandedSet.value);
+                    const traverse = (nodes, ancestors) => {
+                        for (const node of nodes) {
+                            const curAnc = [...ancestors, node.id];
+                            if (node.name.name.toLowerCase().includes(searchKeyword.value.toLowerCase())) {
+                                curAnc.forEach(id => expanded.add(id));
+                            }
+                            if (node.children && node.children.length) traverse(node.children, curAnc);
+                        }
+                    };
+                    traverse(categoryTree.value, []);
+                    expandedSet.value = expanded;
+                }
+            }
+
+            onMounted(async () => {
+                await loadRootCategories();
             });
 
             return {
-                categories, filteredCategoryTree, flatCategoryList, activeCategory, editableCategory, activeExtList,
-                extForm, selectedExtId, selectedExtIdForSelect, expandedSet, toggleExpand, isModified,
-                searchKeyword, onSearchInput, selectCategory, restoreOriginal, updateCurrentCategory,
-                deleteCurrentCategory, showAddChildPrompt, addRootCategoryPrompt, deleteCategoryNode,
+                // 树相关
+                categoryTree, filteredCategoryTree, expandedSet, toggleExpand, treeLoading,
+                searchKeyword, onSearchInput, selectCategory, lazyLoadChildren,
+                showAddChildPrompt, addRootCategoryPrompt, editCategoryPrompt,
+                deleteCategoryNode, deleteCurrentCategory,
+                // 表单相关
+                activeCategory, editableCategory, flatCategoryList, isModified, restoreOriginal,
+                updateCurrentCategory, hasSubCategories,
+                // 扩展属性
+                activeExtList, extForm, selectedExtId, selectedExtIdForSelect, isSaveEnabled,
                 clearExtForm, onSelectExtFromDropdown, saveExtAttribute, deleteExtAttribute,
-                syncToSubClass, isSaveEnabled, hasSubCategories,
+                syncToSubClass,
+                // 图标上传预览
                 fileInput, triggerFileUpload, handleFileUpload,
                 modalVisible, modalImageUrl, previewError, openModalPreview, onModalImageError
             };

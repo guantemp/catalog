@@ -82,7 +82,7 @@ public class PsqlCategoryQueryTest {
         repository.save(soap);
         Category washing_liquid = new Category(496796322118291482l, 496796322118291484l, new Name("洗衣液", "washing_liquid"), "多采用非离子型表面活性剂，PH接近中性，对皮肤温和，并且排入自然界后，降解较洗衣粉快");
         repository.save(washing_liquid);
-        //one error alias chemicals
+        //one error shortName chemicals
         Category beer = new Category(496796322118291482l, 496796322118291488l, new Name("      个人保健用卫生制剂", "beer"));
         repository.save(beer);
         //粮油

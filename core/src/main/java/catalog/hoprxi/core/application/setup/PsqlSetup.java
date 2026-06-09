@@ -31,7 +31,7 @@ public final class PsqlSetup {
             "about jsonb NULL,\n" +
             "CONSTRAINT brand_pkey PRIMARY KEY (id));" +
             "CREATE INDEX brand_name_index ON brand USING gin (((name ->> 'name'::text)) gin_trgm_ops);" +
-            "insert into brand (id, name, about) values (-1, '{\"name\": \"undefined\", \"mnemonic\": \"undefined\",\"alias\": \"未定义\"}', null);";
+            "insert into brand (id, name, about) values (-1, '{\"name\": \"undefined\", \"mnemonic\": \"undefined\",\"shortName\": \"未定义\"}', null);";
     private static final String DDL_CATEGORY = "CREATE table if not exists category (\n" +
             "id int8 NOT NULL,\n" +
             "\"name\" jsonb NULL,\n" +

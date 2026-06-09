@@ -104,7 +104,6 @@ catalog\hoprxi\core\infrastructure\batch\GrandHandler.class
 catalog\hoprxi\core\domain\model\shelfLife\StorageCondition.class
 catalog\hoprxi\core\infrastructure\ESUtil$1.class
 catalog\hoprxi\core\application\command\ItemDeleteCommand.class
-catalog\hoprxi\core\domain\model\Name$1.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$34.class
 catalog\hoprxi\core\application\query\ItemQuery.class
 catalog\hoprxi\core\domain\model\barcode\ISSN.class

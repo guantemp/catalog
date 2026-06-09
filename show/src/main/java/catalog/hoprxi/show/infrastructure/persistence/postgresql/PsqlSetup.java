@@ -32,7 +32,7 @@ import java.sql.Statement;
 public class PsqlSetup {
     private static final String CREATE_BRAND_SQL = "create table if not exists brand ( id bigint not null primary key,name  jsonb, about jsonb );\n" +
             "create index if not exists brand_name_index on brand USING gin (name);\n" +
-            "insert into brand (id, name, about) values (-1, '{\"name\": \"undefined\", \"mnemonic\": \"undefined\",\"alias\": \"未定义\"}', null);";
+            "insert into brand (id, name, about) values (-1, '{\"name\": \"undefined\", \"mnemonic\": \"undefined\",\"shortName\": \"未定义\"}', null);";
     private static final String CREATE_CATEGORY_SQL = "create table if not exists category\n" +
             "(\n" +
             "    id          bigint  not null\n" +

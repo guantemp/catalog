@@ -33,7 +33,6 @@ public class BrandDeleteHandler implements Handler<BrandDeleteCommand, Boolean> 
     @Override
     public Boolean execute(BrandDeleteCommand command) {
         repository.remove(command.id());
-
         return true;
     }
 }

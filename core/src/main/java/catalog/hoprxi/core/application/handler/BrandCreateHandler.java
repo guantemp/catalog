@@ -38,7 +38,7 @@ public class BrandCreateHandler implements Handler<BrandCreateCommand, Brand> {
 
     @Override
     public Brand execute(BrandCreateCommand command) {
-        Name name = new Name(command.name(), command.alias());
+        Name name = new Name(command.name(), command.shortName());
         AboutBrand about = new AboutBrand(command.homepage(),command.logo(),  command.since(), command.story());
         Brand brand = new Brand(repository.nextIdentity(), name, about);
 

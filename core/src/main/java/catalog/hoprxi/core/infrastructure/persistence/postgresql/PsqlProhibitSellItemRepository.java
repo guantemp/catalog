@@ -125,7 +125,7 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
                     if (val != null) {
                         switch (field) {
                             case "name" -> name = val;
-                            case "alias" -> alias = val;
+                            case "shortName" -> alias = val;
                         }
                     }
                 }

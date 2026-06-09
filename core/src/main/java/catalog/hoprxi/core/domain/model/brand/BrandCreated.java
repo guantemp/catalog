@@ -111,7 +111,7 @@ public class BrandCreated implements DomainEvent {
                 .add("story='" + story + "'")
                 .add("homePage=" + homePage)
                 .add("name='" + name + "'")
-                .add("alias='" + alias + "'")
+                .add("shortName='" + alias + "'")
                 .add("id=" + id)
                 .add("occurredOn=" + occurredOn)
                 .add("version=" + version)
