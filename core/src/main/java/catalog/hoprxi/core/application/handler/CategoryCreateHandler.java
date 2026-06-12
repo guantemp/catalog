@@ -34,7 +34,7 @@ public class CategoryCreateHandler implements Handler<CategoryCreateCommand, Cat
 
     @Override
     public Category execute(CategoryCreateCommand command) {
-        Name name = new Name(command.name(), command.alias());
+        Name name = new Name(command.name(), command.shortName());
         Category category = new Category(command.parentId(), repository.nextIdentity(), name, command.description(), command.icon());
         repository.save(category);
         //领域事件

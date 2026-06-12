@@ -16,16 +16,12 @@
 
 package catalog.hoprxi.core.application.command;
 
-import catalog.hoprxi.core.domain.model.category.Category;
-
-import java.util.Objects;
-
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK8.0
  * @version 0.0.1 builder 2022-07-04
  */
-public record CategoryRenameCommand(long id, String name, String alias) implements Command {
+public record CategoryRenameCommand(long id, String name, String shortName) implements Command {
 
     @Override
     public boolean equals(Object o) {

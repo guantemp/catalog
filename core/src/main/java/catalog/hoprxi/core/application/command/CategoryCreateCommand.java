@@ -16,16 +16,13 @@
 
 package catalog.hoprxi.core.application.command;
 
-import catalog.hoprxi.core.domain.model.category.Category;
-
 import java.net.URL;
-import java.util.Objects;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
  * @since JDK21
  * @version 0.0.2 builder 2025-11-05
  */
-public record CategoryCreateCommand(long parentId, String name, String alias, String description,
+public record CategoryCreateCommand(long parentId, String name, String shortName, String description,
                                     URL icon) implements Command{
 }

@@ -31,7 +31,6 @@ import salt.hoprxi.id.LongId;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -62,7 +61,7 @@ public class PsqlBrandRepository implements BrandRepository {
         } catch (SQLException e) {
             LOGGER.error("Database query failed for brand id={}", id, e);
             throw new SearchException("Database error when querying brand", e);
-        } catch (IOException  e) {
+        } catch (IOException e) {
             LOGGER.error("Failed to rebuild brand with id={}", id, e);
             // 4. 反序列化失败不返回 null，直接抛异常，避免上游空指针
             throw new SearchException("Failed to parse brand data from JSON", e);
@@ -102,7 +101,7 @@ public class PsqlBrandRepository implements BrandRepository {
     }
 
     private static AboutBrand toAboutBrand(String json) throws IOException {
-        if (json == null||json.isBlank())
+        if (json == null || json.isBlank())
             return null;
         String story = null;
         Year since = null;
@@ -191,7 +190,8 @@ public class PsqlBrandRepository implements BrandRepository {
         try (ByteArrayOutputStream output = new ByteArrayOutputStream();
              JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
             generator.writeStartObject();
-            generator.writeNumberField("since", about.since().getValue());
+            if (about.since() != null)
+                generator.writeNumberField("since", about.since().getValue());
             if (about.story() != null)
                 generator.writeStringField("story", about.story());
             if (about.logo() != null)

@@ -184,6 +184,7 @@ public class BrandService {
 
     private static Brand createBrand(JsonParser parser) throws IOException, URISyntaxException {
         BrandFields fields = parseBrandFields(parser);
+
         BrandCreateCommand command = new BrandCreateCommand(
                 fields.name,
                 fields.shortName,

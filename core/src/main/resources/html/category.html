@@ -104,7 +104,7 @@
         }
 
         .tree-panel {
-            flex: 0 0 460px;
+            flex: 0 0 350px;
             background: rgba(15, 23, 42, 0.75);
             backdrop-filter: blur(16px);
             border-radius: 28px;
@@ -210,6 +210,15 @@
             outline: none;
             box-shadow: 0 0 0 3px rgba(129,140,248,0.2);
         }
+        .search-loading {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #818cf8;
+            font-size: 0.8rem;
+            pointer-events: none;
+        }
         .error-banner {
             background: rgba(220, 38, 38, 0.8);
             backdrop-filter: blur(8px);
@@ -262,6 +271,33 @@
             border-left: 3px solid #818cf8;
             font-weight: 500;
         }
+        /* 高亮样式：仅高亮文字和图标，无背景 */
+        .node-content.search-match-node {
+            background: transparent !important;
+            border-left: none !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+        }
+        .node-content.search-match-node .node-name span {
+            color: #fbbf24 !important;
+            font-weight: 700 !important;
+            text-shadow: 0 0 4px rgba(251, 191, 36, 0.6);
+            transition: all 0.15s ease;
+        }
+        .node-content.search-match-node .node-icon-img {
+            box-shadow: 0 0 10px #fbbf24, 0 0 4px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            transform: scale(1.1);
+            transition: all 0.15s ease;
+        }
+        .node-content.search-match-node:hover .node-name span {
+            color: #fcd34d !important;
+            text-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+        }
+        .node-content.search-match-node:hover .node-icon-img {
+            box-shadow: 0 0 14px #fbbf24;
+            transform: scale(1.12);
+        }
         .node-name {
             display: flex;
             align-items: center;
@@ -298,8 +334,8 @@
             object-fit: cover;
             background: #1e293b;
             flex-shrink: 0;
+            transition: all 0.15s ease;
         }
-        /* 操作按钮悬浮显示 - 特殊分类不显示 */
         .node-actions { display: none; gap: 6px; margin-left: 8px; }
         .node-content:hover .node-actions { display: flex; }
         .node-actions i {
@@ -312,13 +348,6 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
         .node-actions i:hover { background: #1e293b; color: #818cf8; }
-        .search-highlight {
-            background-color: #fef9c3;
-            color: #0f172a;
-            border-radius: 4px;
-            padding: 0 2px;
-            font-weight: 600;
-        }
         .card-header {
             padding: 20px 28px;
             border-bottom: 1px solid rgba(129, 140, 248, 0.2);
@@ -538,7 +567,7 @@
         ::-webkit-scrollbar-track { background: #0f172a; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         @media (max-width: 1000px) {
-            .tree-panel { flex: 0 0 360px; }
+            .tree-panel { flex: 0 0 350px; }
         }
         .loading-placeholder {
             text-align: center;
@@ -599,7 +628,8 @@
                         </div>
                         <div class="search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" v-model="searchKeyword" placeholder="搜索分类..." @input="onSearchInput">
+                            <input type="text" v-model="searchKeyword" placeholder="搜索分类..." @input="onSearchInput" @keydown.enter="onSearchEnter">
+                            <i v-if="searchLoading" class="fas fa-spinner fa-pulse search-loading"></i>
                         </div>
                     </div>
                     <div v-if="errorMsg" class="error-banner">
@@ -610,14 +640,14 @@
                         <div v-if="loading" class="loading-placeholder">
                             <i class="fas fa-spinner fa-pulse"></i> 加载分类中...
                         </div>
-                        <ul class="tree-node" v-else-if="!loading && filteredCategoryTree.length > 0">
+                        <ul class="tree-node" v-else-if="!loading && categoryTree.length > 0">
                             <tree-item
-                                    v-for="node in filteredCategoryTree"
+                                    v-for="node in categoryTree"
                                     :key="node.id"
                                     :node="node"
                                     :active-id="activeCategory.id"
                                     :expanded-set="expandedSet"
-                                    :search-keyword="searchKeyword"
+                                    :search-match-set="searchMatchSet"
                                     @toggle="toggleExpand"
                                     @select="selectCategory"
                                     @add-child="showAddChildPrompt"
@@ -625,7 +655,7 @@
                                     @node-updated="onNodeUpdated"
                             ></tree-item>
                         </ul>
-                        <div v-else-if="!loading && filteredCategoryTree.length === 0" class="empty-placeholder">
+                        <div v-else-if="!loading && categoryTree.length === 0" class="empty-placeholder">
                             <i class="fas fa-folder-open"></i> 暂无分类数据
                         </div>
                     </div>
@@ -639,9 +669,12 @@
                             <div class="form-grid">
                                 <div class="field-group">
                                     <label><i class="fas fa-level-up-alt"></i> 上级分类 <span class="required-star">*</span></label>
-                                    <select v-model="editableCategory.parent_id" :disabled="!isValidCategory || isSpecialUncategorized">
+                                    <select v-if="!isRootCategory && isValidCategory" v-model="editableCategory.parent_id" :disabled="!isValidCategory || isSpecialUncategorized">
                                         <option value="-1">无（顶级分类）</option>
                                         <option v-for="cat in flatCategoryList" :value="cat.id" :disabled="cat.id === editableCategory.id">{{ cat.name.name }}</option>
+                                    </select>
+                                    <select v-else :disabled="true">
+                                        <option value="">请先选择一个分类</option>
                                     </select>
                                 </div>
                                 <div class="field-group">
@@ -777,6 +810,13 @@
         return data.categories || [];
     }
 
+    async function searchRemote(keyword) {
+        const encoded = encodeURIComponent(keyword);
+        const url = `${API_BASE}?s=${encoded}&offset=0&limit=64`;
+        const data = await apiFetch(url);
+        return data.categories || [];
+    }
+
     async function createCategory(payload) {
         const response = await fetch(API_BASE, {
             method: 'POST',
@@ -812,7 +852,7 @@
             this.id = apiNode.id;
             this.name = apiNode.name;
             this.icon_url = apiNode.icon_url;
-            this.parent_id = apiNode.parent_id ?? -1;
+            this.parent_id = (apiNode.parent_id === -1) ? apiNode.id : apiNode.parent_id;
             this.description = apiNode.description;
             this.left = apiNode.left;
             this.right = apiNode.right;
@@ -826,7 +866,7 @@
     // ===================== 树组件 =====================
     const TreeItem = {
         name: 'TreeItem',
-        props: ['node', 'activeId', 'expandedSet', 'searchKeyword'],
+        props: ['node', 'activeId', 'expandedSet', 'searchMatchSet'],
         emits: ['toggle', 'select', 'add-child', 'delete-cat', 'node-updated'],
         data() {
             return {
@@ -835,16 +875,15 @@
         },
         template: `
           <li class="node-item">
-            <div class="node-content" :class="{ 'active-cat': node.id === activeId }" @click="$emit('select', node.id)">
+            <div class="node-content" :class="{ 'active-cat': node.id === activeId, 'search-match-node': isSearchMatch }" @click="$emit('select', node.id)">
               <div class="node-name">
                 <span v-if="node.hasChildren" class="toggle-box" @click.stop="handleToggle">
                   {{ isExpanded ? '−' : '+' }}
                 </span>
                 <span v-else class="toggle-box" style="visibility: hidden;"></span>
                 <img v-if="node.icon_url" :src="node.icon_url" class="node-icon-img" @error="e => e.target.style.display='none'">
-                <span v-html="highlightName"></span>
+                <span>{{ node.name.name }}</span>
               </div>
-              <!-- 特殊分类（id=-1且名为“未分类”）不显示操作按钮 -->
               <div class="node-actions" v-if="!isSpecialNode">
                 <i class="fas fa-plus-circle" title="添加子分类" @click.stop="$emit('add-child', node.id, node.name.name)"></i>
                 <i class="fas fa-trash" title="删除分类" @click.stop="$emit('delete-cat', node.id)"></i>
@@ -854,7 +893,7 @@
               <div v-if="loadingChildren" class="loading-placeholder">加载中...</div>
               <template v-else>
                 <tree-item v-for="child in node.children" :key="child.id" :node="child" :active-id="activeId"
-                           :expanded-set="expandedSet" :search-keyword="searchKeyword"
+                           :expanded-set="expandedSet" :search-match-set="searchMatchSet"
                            @toggle="$emit('toggle', $event)" @select="$emit('select', $event)"
                            @add-child="$emit('add-child', $event[0], $event[1])"
                            @delete-cat="$emit('delete-cat', $event)"
@@ -865,15 +904,9 @@
         `,
         computed: {
             isExpanded() { return this.expandedSet.has(this.node.id); },
-            highlightName() {
-                const name = this.node.name.name;
-                const kw = this.searchKeyword;
-                if (!kw) return name;
-                const idx = name.toLowerCase().indexOf(kw.toLowerCase());
-                if (idx === -1) return name;
-                return name.slice(0, idx) + '<span class="search-highlight">' + name.slice(idx, idx+kw.length) + '</span>' + name.slice(idx+kw.length);
+            isSearchMatch() {
+                return this.searchMatchSet && this.searchMatchSet.has(this.node.id);
             },
-            // 判断当前节点是否为特殊分类（id = -1 且 名称 = "未分类"）
             isSpecialNode() {
                 return this.node.id == -1 && this.node.name && this.node.name.name === '未分类';
             }
@@ -918,32 +951,27 @@
             const allExtAttrs = ref([]);
             const searchKeyword = ref('');
             const expandedSet = ref(new Set());
+            const searchLoading = ref(false);
 
-            // 当前选中分类是否为有效分类（存在 id 且名称有效）
+            // 缓存上次搜索的关键字和结果
+            const lastSearchKeyword = ref('');
+            const lastSearchResults = ref([]);
+            // 当前高亮匹配的ID集合
+            const searchMatchSet = computed(() => {
+                const ids = lastSearchResults.value.map(r => r.id);
+                return new Set(ids);
+            });
+
+            const isRootCategory = computed(() => {
+                return activeCategory.value.id && activeCategory.value.parent_id === activeCategory.value.id;
+            });
+
             const isValidCategory = computed(() => {
                 return activeCategory.value.id && activeCategory.value.name && activeCategory.value.name.name && activeCategory.value.name.name !== 'undefined';
             });
 
-            // 当前选中分类是否为特殊保留分类（id = -1 且名称 = "未分类"）
             const isSpecialUncategorized = computed(() => {
                 return activeCategory.value.id == -1 && activeCategory.value.name && activeCategory.value.name.name === '未分类';
-            });
-
-            const filteredCategoryTree = computed(() => {
-                if (!searchKeyword.value) return categoryTree.value;
-                const lower = searchKeyword.value.toLowerCase();
-                const filter = (nodes) => {
-                    return nodes.filter(node => {
-                        const match = node.name.name.toLowerCase().includes(lower);
-                        if (match) return true;
-                        if (node.children && node.children.length) {
-                            node.children = filter(node.children);
-                            return node.children.length > 0;
-                        }
-                        return false;
-                    });
-                };
-                return filter(JSON.parse(JSON.stringify(categoryTree.value)));
             });
 
             const flatCategoryList = computed(() => {
@@ -967,13 +995,115 @@
             });
             const hasSubCategories = computed(() => flatCategoryList.value.some(c => c.parent_id === activeCategory.value.id));
 
-            function resetExpanded() {
-                expandedSet.value = new Set();
+            // 在树中查找节点并返回从根到该节点的路径ID数组（包含自身）
+            function findNodePath(nodeList, targetId, currentPath = []) {
+                for (const node of nodeList) {
+                    const newPath = [...currentPath, node.id];
+                    if (node.id == targetId) {
+                        return newPath;
+                    }
+                    if (node.children && node.children.length) {
+                        const childResult = findNodePath(node.children, targetId, newPath);
+                        if (childResult) return childResult;
+                    }
+                }
+                return null;
             }
 
-            function updateTreeAndFlatten(newTree) {
-                categoryTree.value = newTree;
-                resetExpanded();
+            // 辅助函数：根据ID在树中查找节点
+            function findNodeById(nodeList, id) {
+                for (const node of nodeList) {
+                    if (node.id == id) return node;
+                    if (node.children && node.children.length) {
+                        const found = findNodeById(node.children, id);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            }
+
+            // 根据搜索结果列表执行展开（公共逻辑）
+            // 规则：只展开那些已经加载过子节点的节点（即 node.loaded === true 或 node.children.length > 0）
+            // 以及它们的祖先（祖先必然已经加载过，因为子节点存在表示父节点已展开过或者至少父节点已知）
+            function applyExpansionFromResults(results) {
+                if (!results || results.length === 0) return;
+                const toExpandSet = new Set();
+                for (const result of results) {
+                    const path = findNodePath(categoryTree.value, result.id);
+                    if (path) {
+                        // 路径上的所有节点都加入展开集（祖先节点必然已经加载过，因为它们有子节点存在）
+                        // 但为了安全，我们仍然只展开那些“已加载子节点”的节点？实际上祖先节点如果之前未展开，其children可能为空，但搜索命中它的后代，说明祖先应该展开。
+                        // 这里直接展开路径上的所有节点，因为用户搜索后希望看到匹配项，祖先应该展开。
+                        // 但根据用户要求：对于“没有点击过+”的节点（即未加载子节点），如果它是匹配节点本身，则不展开它，只展开它的祖先。
+                        // 所以需要判断：当前节点是否是匹配节点本身，如果是且该节点的子节点从未加载过（loaded === false 且 children为空），则不将该节点加入展开集。
+                        // 但祖先节点不需要此限制，因为祖先节点能匹配到后代，说明祖先已经存在，且用户可能希望看到祖先展开。
+                        for (let i = 0; i < path.length; i++) {
+                            const nodeId = path[i];
+                            // 如果是最后一个节点（即匹配节点本身），需要检查它是否已经加载过子节点
+                            if (i === path.length - 1) {
+                                // 找到这个节点
+                                const node = findNodeById(categoryTree.value, nodeId);
+                                if (node && (node.loaded === true || node.children.length > 0)) {
+                                    toExpandSet.add(nodeId);
+                                }
+                                // 如果节点从未加载过子节点，则不添加自身（但祖先仍会添加）
+                            } else {
+                                // 祖先节点无条件添加
+                                toExpandSet.add(nodeId);
+                            }
+                        }
+                    }
+                }
+                if (toExpandSet.size > 0) {
+                    const newExpanded = new Set(expandedSet.value);
+                    toExpandSet.forEach(id => newExpanded.add(id));
+                    expandedSet.value = newExpanded;
+                }
+            }
+
+            async function performRemoteSearch(keyword, forceRequest = false) {
+                if (!keyword || keyword.trim() === '') {
+                    lastSearchResults.value = [];
+                    return;
+                }
+
+                if (keyword === lastSearchKeyword.value && !forceRequest) {
+                    // 相同关键字且不是强制请求，不请求后端，但重新执行展开逻辑（基于缓存结果）
+                    if (lastSearchResults.value.length > 0) {
+                        applyExpansionFromResults(lastSearchResults.value);
+                    }
+                    return;
+                }
+
+                searchLoading.value = true;
+                try {
+                    const results = await searchRemote(keyword);
+                    lastSearchKeyword.value = keyword;
+                    lastSearchResults.value = results;
+                    applyExpansionFromResults(results);
+                } catch (err) {
+                    console.error('远程搜索失败:', err);
+                    alert('搜索失败: ' + (err.message || '网络错误'));
+                } finally {
+                    searchLoading.value = false;
+                }
+            }
+
+            let searchDebounceTimer = null;
+            function onSearchInput() {
+                if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+                const keyword = searchKeyword.value;
+                searchDebounceTimer = setTimeout(() => {
+                    performRemoteSearch(keyword, false);
+                }, 500);
+            }
+
+            function onSearchEnter() {
+                const keyword = searchKeyword.value;
+                if (keyword && keyword.trim() !== '') {
+                    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+                    performRemoteSearch(keyword, true);
+                }
             }
 
             async function loadCategories() {
@@ -982,13 +1112,11 @@
                 try {
                     const roots = await fetchRoots();
                     const tree = roots.map(root => new TreeNode(root));
-                    updateTreeAndFlatten(tree);
-                    if (categoryTree.value.length > 0) {
-                        selectCategory(categoryTree.value[0].id);
-                    } else {
-                        activeCategory.value = { ...emptyCategory };
-                        refreshEditable();
-                    }
+                    categoryTree.value = tree;
+                    activeCategory.value = { ...emptyCategory };
+                    refreshEditable();
+                    lastSearchResults.value = [];
+                    expandedSet.value.clear();
                 } catch (err) {
                     console.error(err);
                     errorMsg.value = '获取分类数据失败：' + (err.message || '网络错误');
@@ -1049,9 +1177,18 @@
                     alert("无修改");
                     return;
                 }
+                let payload = {
+                    id: activeCategory.value.id,
+                    name: editableCategory.value.name,
+                    icon_url: editableCategory.value.icon_url,
+                    description: editableCategory.value.description,
+                    parent_id: editableCategory.value.parent_id
+                };
+                if (isRootCategory.value) {
+                    payload.parent_id = activeCategory.value.id;
+                }
                 try {
-                    await updateCategory(activeCategory.value.id, editableCategory.value);
-                    // 更新本地树中的节点
+                    await updateCategory(activeCategory.value.id, payload);
                     const allNodes = [];
                     const collect = (nodes) => {
                         for (const node of nodes) {
@@ -1065,7 +1202,7 @@
                         target.name = editableCategory.value.name;
                         target.icon_url = editableCategory.value.icon_url;
                         target.description = editableCategory.value.description;
-                        target.parent_id = editableCategory.value.parent_id;
+                        target.parent_id = payload.parent_id;
                     }
                     selectCategory(activeCategory.value.id);
                     alert("更新成功");
@@ -1090,7 +1227,8 @@
                     alert("系统保留分类不可删除");
                     return;
                 }
-                if (cat.parent_id === -1 && categoryTree.value.length <= 1) {
+                const rootCount = categoryTree.value.filter(n => n.parent_id === n.id).length;
+                if (cat.parent_id === cat.id && rootCount <= 1) {
                     alert("至少保留一个顶级分类");
                     return;
                 }
@@ -1099,9 +1237,8 @@
                     await deleteCategory(id);
                     await loadCategories();
                     if (activeCategory.value.id == id) {
-                        const newActive = categoryTree.value[0];
-                        if (newActive) selectCategory(newActive.id);
-                        else activeCategory.value = { ...emptyCategory };
+                        activeCategory.value = { ...emptyCategory };
+                        refreshEditable();
                     }
                 } catch (err) {
                     console.error(err);
@@ -1318,26 +1455,6 @@
                 expandedSet.value = set;
             }
 
-            function onSearchInput() {
-                if (!searchKeyword.value) {
-                    resetExpanded();
-                    return;
-                }
-                const lower = searchKeyword.value.toLowerCase();
-                const expanded = new Set(expandedSet.value);
-                const traverse = (nodes, ancestors) => {
-                    for (const node of nodes) {
-                        const cur = [...ancestors, node.id];
-                        if (node.name.name.toLowerCase().includes(lower)) {
-                            cur.forEach(id => expanded.add(id));
-                        }
-                        if (node.children && node.children.length) traverse(node.children, cur);
-                    }
-                };
-                traverse(categoryTree.value, []);
-                expandedSet.value = expanded;
-            }
-
             function onNodeUpdated() {}
 
             watch(activeCategory, () => { clearExtForm(); refreshEditable(); });
@@ -1348,16 +1465,18 @@
             });
 
             return {
-                loading, errorMsg, categoryTree, filteredCategoryTree, expandedSet, toggleExpand,
-                searchKeyword, onSearchInput, selectCategory, loadCategories,
+                loading, errorMsg, categoryTree, expandedSet, toggleExpand,
+                searchKeyword, onSearchInput, onSearchEnter, searchLoading, selectCategory, loadCategories,
                 showAddChildPrompt, addRootCategoryPrompt, editCategoryPrompt, deleteCategoryNode, deleteCurrentCategory,
                 onNodeUpdated,
                 flatCategoryList, activeCategory, editableCategory, isModified, restoreOriginal,
                 updateCurrentCategory, hasSubCategories, isValidCategory, isSpecialUncategorized,
+                isRootCategory,
                 activeExtList, extForm, selectedExtId, selectedExtIdForSelect, isSaveEnabled,
                 clearExtForm, onSelectExtFromDropdown, saveExtAttribute, deleteExtAttribute, syncToSubClass,
                 fileInput, triggerFileUpload, handleFileUpload,
-                modalVisible, modalImageUrl, previewError, openModalPreview, onModalImageError
+                modalVisible, modalImageUrl, previewError, openModalPreview, onModalImageError,
+                searchMatchSet
             };
         }
     }).mount('#vueApp');

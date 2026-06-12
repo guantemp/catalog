@@ -26,6 +26,7 @@ import catalog.hoprxi.core.application.handler.CategoryDeleteHandler;
 import catalog.hoprxi.core.application.handler.Handler;
 import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.query.NotFoundException;
+import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESCategoryQuery;
 import com.fasterxml.jackson.core.*;
@@ -285,20 +286,31 @@ public class CategoryService {
     @Post("/categories")
     public HttpResponse create(ServiceRequestContext ctx, HttpData body) {
         RequestHeaders headers = ctx.request().headers();
-        if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) || MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
-            return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-                    MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
-        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
-        ctx.blockingTaskExecutor().execute(() -> {
-            try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
-                Category category = CategoryService.createCategory(parser);
-                future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
-                        String.format("{\"status\":\"success\",\"code\":201,\"message\":\"A category created,it's %s\"}", category)));
-            } catch (Exception e) {
-                future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                        String.format("{\"status\":500,\"code\":500,\"message\":\"Can't create a category,cause by %s\"}", e.getMessage())));
+        MediaType contentType = headers.contentType();
+        if (contentType == null || !(MediaType.JSON.is(contentType) || MediaType.JSON_UTF_8.is(contentType)))
+            return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE, MediaType.JSON_UTF_8,
+                    "{\"status\":415,\"code\":415,\"message\":\"Expected JSON content\"}");
+        CompletableFuture<HttpResponse> future = CompletableFuture.supplyAsync(() -> {
+            byte[] content = body.array();
+            if (content.length == 0) {
+                return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                        "{\"status\":400,\"code\":400,\"message\":\"Empty request body\"}");
             }
-        });
+            try (JsonParser parser = JSON_FACTORY.createParser(content)) {
+                Category category = CategoryService.createCategory(parser);
+                LOGGER.info("category created: {}", category);
+                return HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
+                        "{\"status\":\"success\",\"code\":201,\"message\":\"A category created,it's %s\"}", category);
+            } catch (JsonProcessingException e) {
+                // 5. 统一异常处理，避免泄露敏感信息
+                return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                        "{\"status\":400,\"message\":\"Invalid JSON format\"}");
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage(), e);
+                return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                        "{\"status\":500,\"message\":\"Internal server error\"}");
+            }
+        }, VIRTUAL_EXECUTOR);
         return HttpResponse.of(future);
     }
 
