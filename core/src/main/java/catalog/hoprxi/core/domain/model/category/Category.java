@@ -32,7 +32,7 @@ import java.util.StringJoiner;
 public class Category {
     public static final Category UNDEFINED = new Category(-1L, -1L, new Name(Label.CATEGORY_UNDEFINED, "undefined"), "undefined category") {
         @Override
-        public void rename(String newName, String newAlias) {
+        public void rename(String newName, String shortName) {
             throw new UnsupportedOperationException("");
         }
 
@@ -117,7 +117,9 @@ public class Category {
     }
 
     private void setDescription(String description) {
-        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH)
+        if (description == null)
+            description = "";
+        if (description.length() > DESCRIPTION_MAX_LENGTH)
             throw new IllegalArgumentException("description length rang is 0-" + DESCRIPTION_MAX_LENGTH);
         this.description = description;
     }
@@ -162,8 +164,8 @@ public class Category {
         return parentId == id;
     }
 
-    public void rename(String newName, String newAlias) {
-        Name temp = name.rename(newName, newAlias);
+    public void rename(String newName, String shortName) {
+        Name temp = name.rename(newName, shortName);
         if (temp != name) {
             name = temp;
             DomainRegistry.domainEventPublisher().publish(new CategoryRenamed(id, name));
@@ -171,9 +173,10 @@ public class Category {
     }
 
     public void changeDescription(String description) {
-        if (description != null && description.length() > DESCRIPTION_MAX_LENGTH)
-            throw new IllegalArgumentException("description length rang is 1-" + DESCRIPTION_MAX_LENGTH);
-        if ((description == null && this.description != null) || (description != null && !description.equals(this.description))) {
+        if (description == null) description = "";
+        if (description.length() > DESCRIPTION_MAX_LENGTH)
+            throw new IllegalArgumentException("description length max is " + DESCRIPTION_MAX_LENGTH);
+        if (!description.equals(this.description)) {
             this.description = description;
             DomainRegistry.domainEventPublisher().publish(new CategoryDescriptionChanged(id, description));
         }
@@ -192,20 +195,24 @@ public class Category {
     public void moveTo(long movedId) {
         if (movedId == UNDEFINED.id)
             throw new IllegalArgumentException("Undefined classes do not allow subcategories");
-        if (CategoryValidatorService.isCategoryExist(movedId))
-            throw new InvalidCategoryIdException("move to id not exist");
+        if (isRoot())
+            throw new UnsupportedOperationException("Root category cannot be moved");
+        if (id == movedId)
+            throw new IllegalArgumentException("Not moved to self");
+        if (!CategoryValidatorService.isCategoryExist(movedId))
+            throw new InvalidCategoryIdException("Move to id not exist");
         if (CategoryValidatorService.isCurrentCategoryDescendant(id, movedId))
             throw new InvalidCategoryIdException("Can’t move to its descendant node");
-        if (movedId != UNDEFINED.id && id != parentId && parentId != movedId) {
+        if (parentId != movedId) {
             this.parentId = movedId;
-            //DomainRegistry.domainEventPublisher().publish(new CategoryRenamed(id, description));
+            DomainRegistry.domainEventPublisher().publish(new CategoryNodeMoved(id, movedId));
         }
     }
 
     /**
      * @param name
      */
-    protected void setName(Name name) {
+    private void setName(Name name) {
         this.name = Objects.requireNonNull(name, "name required.");
     }
 

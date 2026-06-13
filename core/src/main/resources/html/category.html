@@ -10,7 +10,6 @@
     <style>
         [v-cloak] { display: none !important; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             background: radial-gradient(ellipse at 20% 30%, #0f172a, #070b14);
             font-family: 'Inter', system-ui, sans-serif;
@@ -18,48 +17,33 @@
             overflow: hidden;
             height: 100vh;
         }
-
-        .global-layout {
-            display: flex;
-            height: 100vh;
-            width: 100%;
-            overflow: hidden;
-        }
-
+        .global-layout { display: flex; height: 100vh; width: 100%; overflow: hidden; }
         .saas-sidebar {
             width: 260px;
-            background: rgba(8, 12, 24, 0.92);
+            background: rgba(8,12,24,0.92);
             backdrop-filter: blur(12px);
-            border-right: 1px solid rgba(129, 140, 248, 0.2);
-            color: rgba(255, 255, 255, 0.75);
+            border-right: 1px solid rgba(129,140,248,0.2);
+            color: rgba(255,255,255,0.75);
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
             z-index: 10;
-            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.4);
+            box-shadow: 2px 0 20px rgba(0,0,0,0.4);
         }
-
         .logo-area {
             height: 64px;
             display: flex;
             align-items: center;
             padding: 0 24px;
             gap: 10px;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0,0,0,0.3);
             font-size: 18px;
             font-weight: 600;
-            color: #ffffff;
-            border-bottom: 1px solid rgba(129, 140, 248, 0.25);
+            color: #fff;
+            border-bottom: 1px solid rgba(129,140,248,0.25);
         }
-        .logo-area .material-symbols-outlined {
-            font-size: 26px;
-            color: #818cf8;
-        }
-
-        .nav-menu {
-            flex: 1;
-            padding: 20px 0;
-        }
+        .logo-area .material-symbols-outlined { font-size: 26px; color: #818cf8; }
+        .nav-menu { flex: 1; padding: 20px 0; }
         .nav-item {
             display: flex;
             align-items: center;
@@ -69,46 +53,25 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
-            color: rgba(255, 255, 255, 0.65);
+            color: rgba(255,255,255,0.65);
             border-left: 3px solid transparent;
         }
-        .nav-item:hover {
-            background: rgba(129, 140, 248, 0.15);
-            color: #ffffff;
-            border-left-color: #818cf8;
-        }
+        .nav-item:hover { background: rgba(129,140,248,0.15); color: #fff; border-left-color: #818cf8; }
         .nav-item.active {
-            background: linear-gradient(90deg, rgba(129, 140, 248, 0.2), transparent);
-            color: #ffffff;
+            background: linear-gradient(90deg, rgba(129,140,248,0.2), transparent);
+            color: #fff;
             border-left-color: #818cf8;
             font-weight: 600;
         }
-        .nav-item .material-symbols-outlined {
-            font-size: 22px;
-        }
-
-        .main-content-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0;
-            background: transparent;
-        }
-
-        .app-layout {
-            display: flex;
-            gap: 20px;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
-
+        .nav-item .material-symbols-outlined { font-size: 22px; }
+        .main-content-area { flex: 1; overflow-y: auto; padding: 0; background: transparent; }
+        .app-layout { display: flex; gap: 20px; width: 100%; margin: 0; padding: 0; height: 100%; }
         .tree-panel {
             flex: 0 0 350px;
-            background: rgba(15, 23, 42, 0.75);
+            background: rgba(15,23,42,0.75);
             backdrop-filter: blur(16px);
             border-radius: 28px;
-            border: 1px solid rgba(129, 140, 248, 0.2);
+            border: 1px solid rgba(129,140,248,0.2);
             box-shadow: 0 25px 40px -12px rgba(0,0,0,0.5);
             overflow: hidden;
             height: calc(100vh - 32px);
@@ -116,37 +79,23 @@
             flex-direction: column;
             margin: 16px 0 16px 16px;
         }
-
-        .right-panel {
-            flex: 1;
-            min-width: 560px;
-            margin: 16px 16px 16px 0;
-            display: flex;
-            flex-direction: column;
-        }
-
+        .right-panel { flex: 1; min-width: 560px; margin: 16px 16px 16px 0; display: flex; flex-direction: column; }
         .card {
-            background: rgba(15, 23, 42, 0.75);
+            background: rgba(15,23,42,0.75);
             backdrop-filter: blur(16px);
             border-radius: 28px;
-            border: 1px solid rgba(129, 140, 248, 0.2);
+            border: 1px solid rgba(129,140,248,0.2);
             box-shadow: 0 25px 40px -12px rgba(0,0,0,0.4);
             overflow: hidden;
             flex: 1;
             display: flex;
             flex-direction: column;
         }
-
-        .card-body {
-            padding: 28px 32px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
+        .card-body { padding: 28px 32px; overflow-y: auto; flex: 1; }
         .tree-header {
             padding: 20px 24px 16px;
-            border-bottom: 1px solid rgba(129, 140, 248, 0.2);
-            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(129,140,248,0.2);
+            background: rgba(0,0,0,0.3);
         }
         .tree-header-top {
             display: flex;
@@ -154,18 +103,11 @@
             align-items: center;
             margin-bottom: 16px;
         }
-        .tree-title {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: #f1f5f9;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .tree-title { font-weight: 700; font-size: 1.1rem; color: #f1f5f9; display: flex; align-items: center; gap: 10px; }
         .tree-title i { color: #818cf8; }
         .add-root-btn {
-            background: rgba(129, 140, 248, 0.2);
-            border: 1px solid rgba(129, 140, 248, 0.5);
+            background: rgba(129,140,248,0.2);
+            border: 1px solid rgba(129,140,248,0.5);
             color: #cbd5ff;
             padding: 6px 14px;
             border-radius: 32px;
@@ -177,15 +119,8 @@
             align-items: center;
             gap: 6px;
         }
-        .add-root-btn:hover {
-            background: rgba(129, 140, 248, 0.4);
-            border-color: #a5b4fc;
-            color: white;
-        }
-        .search-box {
-            position: relative;
-            width: 100%;
-        }
+        .add-root-btn:hover { background: rgba(129,140,248,0.4); border-color: #a5b4fc; color: white; }
+        .search-box { position: relative; width: 100%; }
         .search-box i {
             position: absolute;
             left: 14px;
@@ -197,7 +132,7 @@
         .search-box input {
             width: 100%;
             padding: 10px 14px 10px 40px;
-            background: rgba(30, 41, 59, 0.8);
+            background: rgba(30,41,59,0.8);
             border: 1px solid #334155;
             border-radius: 40px;
             color: #f1f5f9;
@@ -205,11 +140,7 @@
             transition: 0.2s;
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        .search-box input:focus {
-            border-color: #818cf8;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(129,140,248,0.2);
-        }
+        .search-box input:focus { border-color: #818cf8; outline: none; box-shadow: 0 0 0 3px rgba(129,140,248,0.2); }
         .search-loading {
             position: absolute;
             right: 14px;
@@ -220,7 +151,7 @@
             pointer-events: none;
         }
         .error-banner {
-            background: rgba(220, 38, 38, 0.8);
+            background: rgba(220,38,38,0.8);
             backdrop-filter: blur(8px);
             margin: 12px 16px;
             padding: 10px 16px;
@@ -232,25 +163,9 @@
             color: #ffcdd2;
             border: 1px solid #ef4444;
         }
-        .error-banner button {
-            background: #7f1d1d;
-            border: none;
-            padding: 4px 12px;
-            border-radius: 30px;
-            color: white;
-            font-size: 0.7rem;
-            cursor: pointer;
-        }
-        .tree-scroll {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px 12px 20px 16px;
-        }
-        .tree-node, .tree-node ul, .node-item {
-            list-style: none !important;
-            margin: 0;
-            padding-left: 0;
-        }
+        .error-banner button { background: #7f1d1d; border: none; padding: 4px 12px; border-radius: 30px; color: white; font-size: 0.7rem; cursor: pointer; }
+        .tree-scroll { flex: 1; overflow-y: auto; padding: 12px 12px 20px 16px; }
+        .tree-node, .tree-node ul, .node-item { list-style: none !important; margin: 0; padding-left: 0; }
         .tree-node ul { padding-left: 28px; }
         .node-item { margin: 2px 0; }
         .node-content {
@@ -271,7 +186,6 @@
             border-left: 3px solid #818cf8;
             font-weight: 500;
         }
-        /* 高亮样式：仅高亮文字和图标，无背景 */
         .node-content.search-match-node {
             background: transparent !important;
             border-left: none !important;
@@ -281,7 +195,7 @@
         .node-content.search-match-node .node-name span {
             color: #fbbf24 !important;
             font-weight: 700 !important;
-            text-shadow: 0 0 4px rgba(251, 191, 36, 0.6);
+            text-shadow: 0 0 4px rgba(251,191,36,0.6);
             transition: all 0.15s ease;
         }
         .node-content.search-match-node .node-icon-img {
@@ -292,18 +206,13 @@
         }
         .node-content.search-match-node:hover .node-name span {
             color: #fcd34d !important;
-            text-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+            text-shadow: 0 0 8px rgba(251,191,36,0.8);
         }
         .node-content.search-match-node:hover .node-icon-img {
             box-shadow: 0 0 14px #fbbf24;
             transform: scale(1.12);
         }
-        .node-name {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-        }
+        .node-name { display: flex; align-items: center; gap: 8px; flex: 1; }
         .toggle-box {
             display: inline-flex;
             justify-content: center;
@@ -322,11 +231,7 @@
             flex-shrink: 0;
             box-shadow: 0 1px 1px rgba(0,0,0,0.2);
         }
-        .toggle-box:hover {
-            background: #334155;
-            border-color: #818cf8;
-            color: #818cf8;
-        }
+        .toggle-box:hover { background: #334155; border-color: #818cf8; color: #818cf8; }
         .node-icon-img {
             width: 20px;
             height: 20px;
@@ -350,43 +255,22 @@
         .node-actions i:hover { background: #1e293b; color: #818cf8; }
         .card-header {
             padding: 20px 28px;
-            border-bottom: 1px solid rgba(129, 140, 248, 0.2);
-            background: rgba(0, 0, 0, 0.25);
+            border-bottom: 1px solid rgba(129,140,248,0.2);
+            background: rgba(0,0,0,0.25);
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
         }
-        .card-header h2 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #f1f5f9;
-        }
+        .card-header h2 { font-size: 1.3rem; font-weight: 600; display: flex; align-items: center; gap: 10px; color: #f1f5f9; }
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 24px 32px;
         }
         .full-width { grid-column: 1 / -1; }
-        .field-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .field-group label {
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #a5b4fc;
-            letter-spacing: 0.3px;
-        }
-        .required-star {
-            color: #f87171;
-            margin-left: 4px;
-            font-size: 0.8rem;
-        }
+        .field-group { display: flex; flex-direction: column; gap: 8px; }
+        .field-group label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #a5b4fc; letter-spacing: 0.3px; }
+        .required-star { color: #f87171; margin-left: 4px; font-size: 0.8rem; }
         input, select, textarea {
             background: #1e293b;
             border: 1px solid #334155;
@@ -402,13 +286,7 @@
             box-shadow: 0 0 0 3px rgba(129,140,248,0.15);
             outline: none;
         }
-        .btn-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 24px;
-            justify-content: flex-end;
-        }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; justify-content: flex-end; }
         button {
             background: #1e293b;
             border: 1px solid #334155;
@@ -424,16 +302,8 @@
             color: #cbd5e1;
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        button.primary {
-            background: linear-gradient(135deg, #4f46e5, #6366f1);
-            border: none;
-            color: white;
-            box-shadow: 0 4px 8px rgba(79,70,229,0.3);
-        }
-        button.primary:hover {
-            background: linear-gradient(135deg, #4338ca, #4f46e5);
-            transform: translateY(-1px);
-        }
+        button.primary { background: linear-gradient(135deg, #4f46e5, #6366f1); border: none; color: white; box-shadow: 0 4px 8px rgba(79,70,229,0.3); }
+        button.primary:hover { background: linear-gradient(135deg, #4338ca, #4f46e5); transform: translateY(-1px); }
         button.danger { background: #7f1d1d; border-color: #b91c1c; color: #fecaca; }
         button.danger:hover { background: #991b1b; }
         button.warning { background: #b45309; border-color: #d97706; color: #fffbeb; }
@@ -441,8 +311,8 @@
         button.info { background: #065666; border-color: #0891b2; color: #cffafe; }
         button.info:hover { background: #0e7490; }
         button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        hr { margin: 28px 0 20px; border: none; border-top: 1px solid rgba(129, 140, 248, 0.2); }
-        .extended-section { background: rgba(0, 0, 0, 0.25); border-radius: 24px; padding: 16px 0 8px; margin-top: 12px; }
+        hr { margin: 28px 0 20px; border: none; border-top: 1px solid rgba(129,140,248,0.2); }
+        .extended-section { background: rgba(0,0,0,0.25); border-radius: 24px; padding: 16px 0 8px; margin-top: 12px; }
         .section-mini-title {
             font-weight: 600;
             margin: 12px 0 18px;
@@ -455,7 +325,7 @@
             color: #e2e8f0;
         }
         .attr-selector {
-            background: rgba(30, 41, 59, 0.6);
+            background: rgba(30,41,59,0.6);
             border-radius: 20px;
             padding: 12px 18px;
             margin-bottom: 24px;
@@ -466,38 +336,12 @@
             flex-wrap: wrap;
             gap: 14px;
         }
-        .attr-selector-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-        .badge-count {
-            background: #1e293b;
-            padding: 4px 12px;
-            border-radius: 40px;
-            font-size: 0.7rem;
-            color: #a5b4fc;
-            font-weight: 500;
-        }
-        .attr-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .icon-url-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
+        .attr-selector-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .badge-count { background: #1e293b; padding: 4px 12px; border-radius: 40px; font-size: 0.7rem; color: #a5b4fc; font-weight: 500; }
+        .attr-actions { display: flex; gap: 10px; align-items: center; }
+        .icon-url-wrapper { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .icon-url-wrapper input { flex: 1; min-width: 200px; }
-        .icon-actions button {
-            padding: 8px 16px;
-            background: #1e293b;
-            border: 1px solid #334155;
-            font-size: 0.75rem;
-        }
+        .icon-actions button { padding: 8px 16px; background: #1e293b; border: 1px solid #334155; font-size: 0.75rem; }
         .modal-mask {
             position: fixed;
             z-index: 2000;
@@ -505,7 +349,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0,0,0,0.7);
             backdrop-filter: blur(8px);
             display: flex;
             justify-content: center;
@@ -520,106 +364,39 @@
             max-width: 80vw;
             border: 1px solid #334155;
         }
-        .modal-header {
-            padding: 16px 24px;
-            background: #0f172a;
-            border-bottom: 1px solid #334155;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .modal-header { padding: 16px 24px; background: #0f172a; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
         .modal-header h3 { color: #f1f5f9; font-size: 1rem; font-weight: 600; }
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.8rem;
-            cursor: pointer;
-            color: #94a3b8;
-            line-height: 1;
-        }
+        .modal-close { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #94a3b8; line-height: 1; }
         .modal-close:hover { color: #f87171; }
-        .modal-body {
-            padding: 24px;
-            text-align: center;
-            min-width: 300px;
-            min-height: 200px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-body img {
-            max-width: 100%;
-            max-height: 60vh;
-            border-radius: 20px;
-            display: block;
-        }
-        .preview-error {
-            color: #f87171;
-            font-size: 0.9rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-        }
+        .modal-body { padding: 24px; text-align: center; min-width: 300px; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .modal-body img { max-width: 100%; max-height: 60vh; border-radius: 20px; display: block; }
+        .preview-error { color: #f87171; font-size: 0.9rem; display: flex; flex-direction: column; align-items: center; gap: 12px; }
         .preview-error i { font-size: 3rem; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        @media (max-width: 1000px) {
-            .tree-panel { flex: 0 0 350px; }
-        }
-        .loading-placeholder {
-            text-align: center;
-            padding: 40px;
-            color: #94a3b8;
-        }
-        .empty-placeholder {
-            text-align: center;
-            padding: 40px;
-            color: #64748b;
-        }
+        @media (max-width: 1000px) { .tree-panel { flex: 0 0 350px; } }
+        .loading-placeholder { text-align: center; padding: 40px; color: #94a3b8; }
+        .empty-placeholder { text-align: center; padding: 40px; color: #64748b; }
+        .add-mode-badge { background: rgba(56,189,248,0.2); border-radius: 20px; padding: 4px 12px; font-size: 0.75rem; color: #7dd3fc; margin-left: 12px; }
     </style>
 </head>
 <body>
 <div id="vueApp" v-cloak>
     <div class="global-layout">
         <aside class="saas-sidebar">
-            <div class="logo-area">
-                <span class="material-symbols-outlined">storefront</span>
-                <span>SaaS 零售</span>
-            </div>
+            <div class="logo-area"><span class="material-symbols-outlined">storefront</span><span>SaaS 零售</span></div>
             <div class="nav-menu">
-                <div class="nav-item active">
-                    <span class="material-symbols-outlined">category</span>
-                    分类管理
-                </div>
-                <div class="nav-item">
-                    <span class="material-symbols-outlined">inventory_2</span>
-                    商品档案
-                </div>
-                <div class="nav-item">
-                    <span class="material-symbols-outlined">shopping_cart</span>
-                    销售管理
-                </div>
-                <div class="nav-item">
-                    <span class="material-symbols-outlined">people</span>
-                    会员管理
-                </div>
-                <div class="nav-item">
-                    <span class="material-symbols-outlined">local_shipping</span>
-                    采购管理
-                </div>
-                <div class="nav-item">
-                    <span class="material-symbols-outlined">warehouse</span>
-                    库存管理
-                </div>
+                <div class="nav-item active"><span class="material-symbols-outlined">category</span>分类管理</div>
+                <div class="nav-item"><span class="material-symbols-outlined">inventory_2</span>商品档案</div>
+                <div class="nav-item"><span class="material-symbols-outlined">shopping_cart</span>销售管理</div>
+                <div class="nav-item"><span class="material-symbols-outlined">people</span>会员管理</div>
+                <div class="nav-item"><span class="material-symbols-outlined">local_shipping</span>采购管理</div>
+                <div class="nav-item"><span class="material-symbols-outlined">warehouse</span>库存管理</div>
             </div>
         </aside>
-
         <div class="main-content-area">
             <div class="app-layout">
-                <!-- 左侧树形面板 -->
                 <div class="tree-panel">
                     <div class="tree-header">
                         <div class="tree-header-top">
@@ -637,9 +414,7 @@
                         <button @click="loadCategories"><i class="fas fa-sync-alt"></i> 重试</button>
                     </div>
                     <div class="tree-scroll">
-                        <div v-if="loading" class="loading-placeholder">
-                            <i class="fas fa-spinner fa-pulse"></i> 加载分类中...
-                        </div>
+                        <div v-if="loading" class="loading-placeholder"><i class="fas fa-spinner fa-pulse"></i> 加载分类中...</div>
                         <ul class="tree-node" v-else-if="!loading && categoryTree.length > 0">
                             <tree-item
                                     v-for="node in categoryTree"
@@ -650,61 +425,71 @@
                                     :search-match-set="searchMatchSet"
                                     @toggle="toggleExpand"
                                     @select="selectCategory"
-                                    @add-child="showAddChildPrompt"
+                                    @add-child="addChild"
                                     @delete-cat="deleteCategoryNode"
                                     @node-updated="onNodeUpdated"
                             ></tree-item>
                         </ul>
-                        <div v-else-if="!loading && categoryTree.length === 0" class="empty-placeholder">
-                            <i class="fas fa-folder-open"></i> 暂无分类数据
-                        </div>
+                        <div v-else-if="!loading && categoryTree.length === 0" class="empty-placeholder"><i class="fas fa-folder-open"></i> 暂无分类数据</div>
                     </div>
                 </div>
-
-                <!-- 右侧属性区域 -->
                 <div class="right-panel">
                     <div class="card">
-                        <div class="card-header"><h2><i class="fas fa-info-circle"></i> 基本属性</h2></div>
+                        <div class="card-header">
+                            <h2><i class="fas fa-info-circle"></i> 基本属性<span v-if="isAddMode" class="add-mode-badge"><i class="fas fa-plus-circle"></i> 添加子分类模式</span></h2>
+                        </div>
                         <div class="card-body">
                             <div class="form-grid">
                                 <div class="field-group">
                                     <label><i class="fas fa-level-up-alt"></i> 上级分类 <span class="required-star">*</span></label>
-                                    <select v-if="!isRootCategory && isValidCategory" v-model="editableCategory.parent_id" :disabled="!isValidCategory || isSpecialUncategorized">
-                                        <option value="-1">无（顶级分类）</option>
-                                        <option v-for="cat in flatCategoryList" :value="cat.id" :disabled="cat.id === editableCategory.id">{{ cat.name.name }}</option>
-                                    </select>
-                                    <select v-else :disabled="true">
-                                        <option value="">请先选择一个分类</option>
-                                    </select>
+                                    <div v-if="isAddMode && parentForAdd">
+                                        <select :disabled="true" class="disabled-select">
+                                            <option :value="parentForAdd.id">{{ parentForAdd.name }}（上级分类固定）</option>
+                                        </select>
+                                    </div>
+                                    <div v-else-if="activeCategory.id && !isAddMode">
+                                        <select v-if="isRootCategory" :disabled="true">
+                                            <option :value="activeCategory.id">{{ activeCategory.name.name }}（顶级分类）</option>
+                                        </select>
+                                        <select v-else v-model="editableCategory.parent_id" :disabled="isSpecialUncategorized">
+                                            <option value="-1">无（顶级分类）</option>
+                                            <option v-for="cat in flatCategoryList" :value="cat.id" :disabled="cat.id === editableCategory.id">{{ cat.name.name }}</option>
+                                        </select>
+                                    </div>
+                                    <select v-else :disabled="true"><option value="">请先选择一个分类</option></select>
                                 </div>
                                 <div class="field-group">
                                     <label>分类名称 <span class="required-star">*</span></label>
-                                    <input v-model="editableCategory.name.name" placeholder="例：品质男鞋" :disabled="!isValidCategory || isSpecialUncategorized">
+                                    <input ref="categoryNameInput" v-model="editableCategory.name.name" placeholder="例：品质男鞋" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
                                 </div>
                                 <div class="field-group">
                                     <label>简称</label>
-                                    <input v-model="editableCategory.name.shortName" placeholder="简称" :disabled="!isValidCategory || isSpecialUncategorized">
+                                    <input v-model="editableCategory.name.shortName" placeholder="简称" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
                                 </div>
                                 <div class="field-group full-width">
                                     <label>图标URL</label>
                                     <div class="icon-url-wrapper">
-                                        <input v-model="editableCategory.icon_url" placeholder="https://... 或上传图片" :disabled="!isValidCategory || isSpecialUncategorized">
+                                        <input v-model="editableCategory.icon_url" placeholder="https://... 或上传图片" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
                                         <div class="icon-actions">
-                                            <button type="button" @click="triggerFileUpload" :disabled="!isValidCategory || isSpecialUncategorized"><i class="fas fa-cloud-upload-alt"></i> 上传</button>
-                                            <button type="button" @click="openModalPreview" :disabled="!editableCategory.icon_url || !isValidCategory || isSpecialUncategorized"><i class="fas fa-eye"></i> 预览</button>
+                                            <button type="button" @click="triggerFileUpload" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"><i class="fas fa-cloud-upload-alt"></i> 上传</button>
+                                            <button type="button" @click="openModalPreview" :disabled="!editableCategory.icon_url || ((!isValidCategory && !isAddMode) || isSpecialUncategorized)"><i class="fas fa-eye"></i> 预览</button>
                                         </div>
                                     </div>
                                     <input type="file" ref="fileInput" style="display:none" accept="image/*" @change="handleFileUpload">
                                 </div>
                                 <div class="field-group full-width">
                                     <label>描述</label>
-                                    <textarea rows="2" v-model="editableCategory.description" :disabled="!isValidCategory || isSpecialUncategorized"></textarea>
+                                    <textarea rows="2" v-model="editableCategory.description" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></textarea>
                                 </div>
                             </div>
-                            <div class="btn-group">
+                            <div class="btn-group" v-if="!isAddMode">
                                 <button @click="restoreOriginal" :disabled="!isModified || !isValidCategory || isSpecialUncategorized" class="info"><i class="fas fa-undo-alt"></i> 恢复</button>
                                 <button @click="updateCurrentCategory" :disabled="!isModified || !isValidCategory || isSpecialUncategorized" class="warning"><i class="fas fa-save"></i> 修改</button>
                                 <button @click="deleteCurrentCategory" :disabled="!isValidCategory || isSpecialUncategorized" class="danger"><i class="fas fa-trash"></i> 删除</button>
+                            </div>
+                            <div class="btn-group" v-else>
+                                <button @click="cancelAddMode" class="info"><i class="fas fa-times"></i> 取消</button>
+                                <button @click="saveNewCategory" class="primary"><i class="fas fa-save"></i> 保存</button>
                             </div>
                             <hr />
                             <div class="extended-section">
@@ -712,7 +497,7 @@
                                 <div class="attr-selector">
                                     <div class="attr-selector-left">
                                         <label>属性名：</label>
-                                        <select v-model="selectedExtIdForSelect" @change="onSelectExtFromDropdown" :disabled="!isValidCategory || isSpecialUncategorized">
+                                        <select v-model="selectedExtIdForSelect" @change="onSelectExtFromDropdown" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
                                             <option value="">-- 选择属性 --</option>
                                             <option v-for="attr in activeExtList" :value="attr.recordId">{{ attr.displayName }} ({{ attr.fieldName }})</option>
                                         </select>
@@ -720,38 +505,20 @@
                                         <span v-else class="badge-count">暂无扩展属性</span>
                                     </div>
                                     <div class="attr-actions">
-                                        <button @click="saveExtAttribute" :disabled="!isSaveEnabled || !isValidCategory || isSpecialUncategorized" class="warning"><i class="fas fa-save"></i> 保存</button>
-                                        <button @click="deleteExtAttribute" :disabled="!selectedExtId || !isValidCategory || isSpecialUncategorized" class="danger"><i class="fas fa-trash"></i> 删除</button>
+                                        <button @click="saveExtAttribute" :disabled="!isSaveEnabled || (!isValidCategory && !isAddMode) || isSpecialUncategorized" class="warning"><i class="fas fa-save"></i> 保存</button>
+                                        <button @click="deleteExtAttribute" :disabled="!selectedExtId || (!isValidCategory && !isAddMode) || isSpecialUncategorized" class="danger"><i class="fas fa-trash"></i> 删除</button>
                                         <button @click="clearExtForm" class="info"><i class="fas fa-eraser"></i> 清空</button>
                                     </div>
                                 </div>
                                 <div class="form-grid">
-                                    <div class="field-group">
-                                        <label>显示名称 <span class="required-star">*</span></label>
-                                        <input v-model="extForm.displayName" placeholder="例：颜色" :disabled="!isValidCategory || isSpecialUncategorized">
-                                    </div>
-                                    <div class="field-group">
-                                        <label>别名 <span class="required-star">*</span></label>
-                                        <input v-model="extForm.fieldName" placeholder="例：YanSe" :disabled="!isValidCategory || isSpecialUncategorized">
-                                    </div>
-                                    <div class="field-group">
-                                        <label>默认值</label>
-                                        <input v-model="extForm.defaultValue" placeholder="红色、橙色、绿色" :disabled="!isValidCategory || isSpecialUncategorized">
-                                    </div>
-                                    <div class="field-group">
-                                        <label>是否必填</label>
-                                        <select v-model="extForm.isRequired" :disabled="!isValidCategory || isSpecialUncategorized">
-                                            <option>必填</option>
-                                            <option>可选</option>
-                                        </select>
-                                    </div>
-                                    <div class="field-group">
-                                        <label>排序号</label>
-                                        <input type="number" v-model="extForm.sortOrder" :disabled="!isValidCategory || isSpecialUncategorized">
-                                    </div>
+                                    <div class="field-group"><label>显示名称 <span class="required-star">*</span></label><input v-model="extForm.displayName" placeholder="例：颜色" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
+                                    <div class="field-group"><label>别名 <span class="required-star">*</span></label><input v-model="extForm.fieldName" placeholder="例：YanSe" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
+                                    <div class="field-group"><label>默认值</label><input v-model="extForm.defaultValue" placeholder="红色、橙色、绿色" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
+                                    <div class="field-group"><label>是否必填</label><select v-model="extForm.isRequired" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"><option>必填</option><option>可选</option></select></div>
+                                    <div class="field-group"><label>排序号</label><input type="number" v-model="extForm.sortOrder" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
                                 </div>
                                 <div class="btn-group" style="justify-content: flex-start; margin-top: 16px;">
-                                    <button @click="syncToSubClass" :disabled="!hasSubCategories || !isValidCategory || isSpecialUncategorized" class="warning"><i class="fas fa-share-alt"></i> 同步应用到子类</button>
+                                    <button @click="syncToSubClass" :disabled="!hasSubCategories || (!isValidCategory && !isAddMode) || isSpecialUncategorized" class="warning"><i class="fas fa-share-alt"></i> 同步应用到子类</button>
                                 </div>
                             </div>
                         </div>
@@ -760,93 +527,52 @@
             </div>
         </div>
     </div>
-
-    <!-- 预览模态框 -->
     <div v-if="modalVisible" class="modal-mask" @click.self="modalVisible = false">
         <div class="modal-container">
-            <div class="modal-header">
-                <h3><i class="fas fa-image"></i> 图标预览</h3>
-                <button class="modal-close" @click="modalVisible = false">&times;</button>
-            </div>
+            <div class="modal-header"><h3><i class="fas fa-image"></i> 图标预览</h3><button class="modal-close" @click="modalVisible = false">&times;</button></div>
             <div class="modal-body">
                 <img v-if="!previewError" :src="modalImageUrl" @error="onModalImageError" style="max-width:100%; max-height:60vh; border-radius:20px;">
-                <div v-else class="preview-error">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>图片加载失败，请检查URL地址是否有效</span>
-                    <span style="font-size:0.7rem; color:#94a3b8;">{{ modalImageUrl }}</span>
-                </div>
+                <div v-else class="preview-error"><i class="fas fa-exclamation-triangle"></i><span>图片加载失败，请检查URL地址是否有效</span><span style="font-size:0.7rem; color:#94a3b8;">{{ modalImageUrl }}</span></div>
             </div>
         </div>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
 <script>
-    const { createApp, ref, computed, onMounted, watch } = Vue;
+    const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
-    // ===================== 大整数保护解析 =====================
     function safeParseBigIntJson(jsonStr) {
         const safeStr = jsonStr.replace(/:\s*(-?\d{16,})(?=\s*[,\]}])/g, ':"$1"');
         return JSON.parse(safeStr);
     }
-
-    // ===================== API 工具函数 =====================
     const API_BASE = 'https://slave.tooo.top/catalog/v1/categories';
-
     async function apiFetch(url, options = {}) {
         const response = await fetch(url, options);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const text = await response.text();
         return safeParseBigIntJson(text);
     }
-
-    async function fetchChildren(id) {
-        const data = await apiFetch(`${API_BASE}/${id}/children`);
-        return data.categories || [];
-    }
-
-    async function fetchRoots() {
-        const data = await apiFetch(`${API_BASE}/root`);
-        return data.categories || [];
-    }
-
-    async function searchRemote(keyword) {
-        const encoded = encodeURIComponent(keyword);
-        const url = `${API_BASE}?s=${encoded}&offset=0&limit=64`;
-        const data = await apiFetch(url);
-        return data.categories || [];
-    }
-
+    async function fetchChildren(id) { const data = await apiFetch(`${API_BASE}/${id}/children`); return data.categories || []; }
+    async function fetchRoots() { const data = await apiFetch(`${API_BASE}/root`); return data.categories || []; }
+    async function searchRemote(keyword) { const encoded = encodeURIComponent(keyword); const url = `${API_BASE}?s=${encoded}&offset=0&limit=64`; const data = await apiFetch(url); return data.categories || []; }
     async function createCategory(payload) {
-        const response = await fetch(API_BASE, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+        const response = await fetch(API_BASE, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!response.ok) throw new Error('创建失败');
         const text = await response.text();
         return safeParseBigIntJson(text);
     }
-
     async function updateCategory(id, payload) {
-        const response = await fetch(`${API_BASE}/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+        const response = await fetch(`${API_BASE}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!response.ok) throw new Error('更新失败');
         const text = await response.text();
         return safeParseBigIntJson(text);
     }
-
     async function deleteCategory(id) {
         const response = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
         if (!response.ok) throw new Error('删除失败');
         const text = await response.text();
         return text ? safeParseBigIntJson(text) : {};
     }
-
-    // ===================== 树节点模型 =====================
     class TreeNode {
         constructor(apiNode) {
             this.id = apiNode.id;
@@ -862,61 +588,41 @@
             this.depth = 0;
         }
     }
-
-    // ===================== 树组件 =====================
     const TreeItem = {
         name: 'TreeItem',
         props: ['node', 'activeId', 'expandedSet', 'searchMatchSet'],
         emits: ['toggle', 'select', 'add-child', 'delete-cat', 'node-updated'],
-        data() {
-            return {
-                loadingChildren: false
-            };
-        },
+        data() { return { loadingChildren: false }; },
         template: `
           <li class="node-item">
             <div class="node-content" :class="{ 'active-cat': node.id === activeId, 'search-match-node': isSearchMatch }" @click="$emit('select', node.id)">
               <div class="node-name">
-                <span v-if="node.hasChildren" class="toggle-box" @click.stop="handleToggle">
-                  {{ isExpanded ? '−' : '+' }}
-                </span>
+                <span v-if="node.hasChildren" class="toggle-box" @click.stop="handleToggle">{{ isExpanded ? '−' : '+' }}</span>
                 <span v-else class="toggle-box" style="visibility: hidden;"></span>
                 <img v-if="node.icon_url" :src="node.icon_url" class="node-icon-img" @error="e => e.target.style.display='none'">
                 <span>{{ node.name.name }}</span>
               </div>
               <div class="node-actions" v-if="!isSpecialNode">
-                <i class="fas fa-plus-circle" title="添加子分类" @click.stop="$emit('add-child', node.id, node.name.name)"></i>
-                <i class="fas fa-trash" title="删除分类" @click.stop="$emit('delete-cat', node.id)"></i>
+                <i class="fas fa-plus-circle" title="添加子分类" @click.stop="$emit('add-child', node)"></i>
+                <i class="fas fa-trash" title="删除分类" @click.stop="$emit('delete-cat', node)"></i>
               </div>
             </div>
             <ul class="children" v-if="node.hasChildren && isExpanded">
               <div v-if="loadingChildren" class="loading-placeholder">加载中...</div>
               <template v-else>
-                <tree-item v-for="child in node.children" :key="child.id" :node="child" :active-id="activeId"
-                           :expanded-set="expandedSet" :search-match-set="searchMatchSet"
-                           @toggle="$emit('toggle', $event)" @select="$emit('select', $event)"
-                           @add-child="$emit('add-child', $event[0], $event[1])"
-                           @delete-cat="$emit('delete-cat', $event)"
-                           @node-updated="$emit('node-updated', $event)"></tree-item>
+                <tree-item v-for="child in node.children" :key="child.id" :node="child" :active-id="activeId" :expanded-set="expandedSet" :search-match-set="searchMatchSet" @toggle="$emit('toggle', $event)" @select="$emit('select', $event)" @add-child="$emit('add-child', $event)" @delete-cat="$emit('delete-cat', $event)" @node-updated="$emit('node-updated', $event)"></tree-item>
               </template>
             </ul>
           </li>
         `,
         computed: {
             isExpanded() { return this.expandedSet.has(this.node.id); },
-            isSearchMatch() {
-                return this.searchMatchSet && this.searchMatchSet.has(this.node.id);
-            },
-            isSpecialNode() {
-                return this.node.id == -1 && this.node.name && this.node.name.name === '未分类';
-            }
+            isSearchMatch() { return this.searchMatchSet && this.searchMatchSet.has(this.node.id); },
+            isSpecialNode() { return this.node.id == -1 && this.node.name && this.node.name.name === '未分类'; }
         },
         methods: {
             async handleToggle() {
-                if (this.isExpanded) {
-                    this.$emit('toggle', this.node.id);
-                    return;
-                }
+                if (this.isExpanded) { this.$emit('toggle', this.node.id); return; }
                 if (this.node.hasChildren && !this.node.loaded) {
                     this.loadingChildren = true;
                     try {
@@ -925,22 +631,16 @@
                         this.node.children = newChildren;
                         this.node.loaded = true;
                         this.$emit('node-updated', this.node.id);
-                    } catch (err) {
-                        console.error(`Failed to load children for node ${this.node.id}`, err);
-                        alert(`加载子分类失败: ${err.message}`);
-                    } finally {
-                        this.loadingChildren = false;
-                    }
+                    } catch(err) { console.error(err); alert(`加载子分类失败: ${err.message}`); }
+                    finally { this.loadingChildren = false; }
                 }
                 this.$emit('toggle', this.node.id);
             }
         }
     };
-
     createApp({
         components: { TreeItem },
         setup() {
-            // 数据状态
             const categoryTree = ref([]);
             const loading = ref(true);
             const errorMsg = ref('');
@@ -952,56 +652,33 @@
             const searchKeyword = ref('');
             const expandedSet = ref(new Set());
             const searchLoading = ref(false);
+            const isAddMode = ref(false);
+            const parentForAdd = ref(null);
 
-            // 缓存上次搜索的关键字和结果
             const lastSearchKeyword = ref('');
             const lastSearchResults = ref([]);
-            // 当前高亮匹配的ID集合
-            const searchMatchSet = computed(() => {
-                const ids = lastSearchResults.value.map(r => r.id);
-                return new Set(ids);
-            });
-
-            const isRootCategory = computed(() => {
-                return activeCategory.value.id && activeCategory.value.parent_id === activeCategory.value.id;
-            });
-
-            const isValidCategory = computed(() => {
-                return activeCategory.value.id && activeCategory.value.name && activeCategory.value.name.name && activeCategory.value.name.name !== 'undefined';
-            });
-
-            const isSpecialUncategorized = computed(() => {
-                return activeCategory.value.id == -1 && activeCategory.value.name && activeCategory.value.name.name === '未分类';
-            });
-
+            const searchMatchSet = computed(() => new Set(lastSearchResults.value.map(r => r.id)));
+            const isRootCategory = computed(() => activeCategory.value.id && activeCategory.value.parent_id === activeCategory.value.id);
+            const isValidCategory = computed(() => activeCategory.value.id && activeCategory.value.name && activeCategory.value.name.name && activeCategory.value.name.name !== 'undefined');
+            const isSpecialUncategorized = computed(() => activeCategory.value.id == -1 && activeCategory.value.name && activeCategory.value.name.name === '未分类');
             const flatCategoryList = computed(() => {
                 const all = [];
-                const collect = (nodes) => {
-                    for (const node of nodes) {
-                        all.push(node);
-                        if (node.children) collect(node.children);
-                    }
-                };
+                const collect = (nodes) => { for (const node of nodes) { all.push(node); if (node.children) collect(node.children); } };
                 collect(categoryTree.value);
                 return all.filter(c => c.id !== editableCategory.value.id);
             });
-
             const activeExtList = computed(() => allExtAttrs.value.filter(a => a.classId === activeCategory.value.id));
             const isModified = computed(() => {
                 if (!isValidCategory.value) return false;
                 const c = editableCategory.value, o = originalCategoryBackup.value;
-                return c.name?.name !== o.name?.name || c.name?.shortName !== o.name?.shortName ||
-                    c.icon_url !== o.icon_url || c.description !== o.description || c.parent_id !== o.parent_id;
+                return c.name?.name !== o.name?.name || c.name?.shortName !== o.name?.shortName || c.icon_url !== o.icon_url || c.description !== o.description || c.parent_id !== o.parent_id;
             });
             const hasSubCategories = computed(() => flatCategoryList.value.some(c => c.parent_id === activeCategory.value.id));
 
-            // 在树中查找节点并返回从根到该节点的路径ID数组（包含自身）
             function findNodePath(nodeList, targetId, currentPath = []) {
                 for (const node of nodeList) {
                     const newPath = [...currentPath, node.id];
-                    if (node.id == targetId) {
-                        return newPath;
-                    }
+                    if (node.id == targetId) return newPath;
                     if (node.children && node.children.length) {
                         const childResult = findNodePath(node.children, targetId, newPath);
                         if (childResult) return childResult;
@@ -1009,133 +686,111 @@
                 }
                 return null;
             }
-
-            // 辅助函数：根据ID在树中查找节点
-            function findNodeById(nodeList, id) {
-                for (const node of nodeList) {
-                    if (node.id == id) return node;
-                    if (node.children && node.children.length) {
-                        const found = findNodeById(node.children, id);
-                        if (found) return found;
-                    }
-                }
-                return null;
-            }
-
-            // 根据搜索结果列表执行展开（公共逻辑）
-            // 规则：只展开那些已经加载过子节点的节点（即 node.loaded === true 或 node.children.length > 0）
-            // 以及它们的祖先（祖先必然已经加载过，因为子节点存在表示父节点已展开过或者至少父节点已知）
             function applyExpansionFromResults(results) {
                 if (!results || results.length === 0) return;
                 const toExpandSet = new Set();
                 for (const result of results) {
                     const path = findNodePath(categoryTree.value, result.id);
-                    if (path) {
-                        // 路径上的所有节点都加入展开集（祖先节点必然已经加载过，因为它们有子节点存在）
-                        // 但为了安全，我们仍然只展开那些“已加载子节点”的节点？实际上祖先节点如果之前未展开，其children可能为空，但搜索命中它的后代，说明祖先应该展开。
-                        // 这里直接展开路径上的所有节点，因为用户搜索后希望看到匹配项，祖先应该展开。
-                        // 但根据用户要求：对于“没有点击过+”的节点（即未加载子节点），如果它是匹配节点本身，则不展开它，只展开它的祖先。
-                        // 所以需要判断：当前节点是否是匹配节点本身，如果是且该节点的子节点从未加载过（loaded === false 且 children为空），则不将该节点加入展开集。
-                        // 但祖先节点不需要此限制，因为祖先节点能匹配到后代，说明祖先已经存在，且用户可能希望看到祖先展开。
-                        for (let i = 0; i < path.length; i++) {
-                            const nodeId = path[i];
-                            // 如果是最后一个节点（即匹配节点本身），需要检查它是否已经加载过子节点
-                            if (i === path.length - 1) {
-                                // 找到这个节点
-                                const node = findNodeById(categoryTree.value, nodeId);
-                                if (node && (node.loaded === true || node.children.length > 0)) {
-                                    toExpandSet.add(nodeId);
-                                }
-                                // 如果节点从未加载过子节点，则不添加自身（但祖先仍会添加）
-                            } else {
-                                // 祖先节点无条件添加
-                                toExpandSet.add(nodeId);
-                            }
-                        }
+                    if (path && path.length > 1) {
+                        for (let i = 0; i < path.length - 1; i++) toExpandSet.add(path[i]);
                     }
                 }
-                if (toExpandSet.size > 0) {
+                if (toExpandSet.size) {
                     const newExpanded = new Set(expandedSet.value);
                     toExpandSet.forEach(id => newExpanded.add(id));
                     expandedSet.value = newExpanded;
                 }
             }
-
             async function performRemoteSearch(keyword, forceRequest = false) {
-                if (!keyword || keyword.trim() === '') {
-                    lastSearchResults.value = [];
-                    return;
-                }
-
+                if (!keyword || keyword.trim() === '') { lastSearchResults.value = []; return; }
                 if (keyword === lastSearchKeyword.value && !forceRequest) {
-                    // 相同关键字且不是强制请求，不请求后端，但重新执行展开逻辑（基于缓存结果）
-                    if (lastSearchResults.value.length > 0) {
-                        applyExpansionFromResults(lastSearchResults.value);
-                    }
+                    if (lastSearchResults.value.length) applyExpansionFromResults(lastSearchResults.value);
                     return;
                 }
-
                 searchLoading.value = true;
                 try {
                     const results = await searchRemote(keyword);
                     lastSearchKeyword.value = keyword;
                     lastSearchResults.value = results;
                     applyExpansionFromResults(results);
-                } catch (err) {
-                    console.error('远程搜索失败:', err);
-                    alert('搜索失败: ' + (err.message || '网络错误'));
-                } finally {
-                    searchLoading.value = false;
-                }
+                } catch(err) { console.error(err); alert('搜索失败: '+err.message); }
+                finally { searchLoading.value = false; }
             }
-
-            let searchDebounceTimer = null;
+            let debounceTimer = null;
             function onSearchInput() {
-                if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+                if (debounceTimer) clearTimeout(debounceTimer);
                 const keyword = searchKeyword.value;
-                searchDebounceTimer = setTimeout(() => {
-                    performRemoteSearch(keyword, false);
-                }, 500);
+                debounceTimer = setTimeout(() => performRemoteSearch(keyword, false), 500);
             }
-
             function onSearchEnter() {
                 const keyword = searchKeyword.value;
-                if (keyword && keyword.trim() !== '') {
-                    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+                if (keyword && keyword.trim()) {
+                    if (debounceTimer) clearTimeout(debounceTimer);
                     performRemoteSearch(keyword, true);
                 }
             }
-
             async function loadCategories() {
                 loading.value = true;
                 errorMsg.value = '';
                 try {
                     const roots = await fetchRoots();
-                    const tree = roots.map(root => new TreeNode(root));
-                    categoryTree.value = tree;
+                    categoryTree.value = roots.map(root => new TreeNode(root));
                     activeCategory.value = { ...emptyCategory };
                     refreshEditable();
                     lastSearchResults.value = [];
                     expandedSet.value.clear();
-                } catch (err) {
-                    console.error(err);
-                    errorMsg.value = '获取分类数据失败：' + (err.message || '网络错误');
-                    categoryTree.value = [];
-                    activeCategory.value = { ...emptyCategory };
-                    refreshEditable();
-                } finally {
-                    loading.value = false;
-                }
+                    if (isAddMode.value) exitAddMode();
+                } catch(err) { console.error(err); errorMsg.value = '获取分类数据失败：'+err.message; categoryTree.value = []; activeCategory.value = {...emptyCategory}; refreshEditable(); }
+                finally { loading.value = false; }
             }
-
-            function selectCategory(id) {
-                const allNodes = [];
-                const collect = (nodes) => {
-                    for (const node of nodes) {
-                        allNodes.push(node);
-                        if (node.children) collect(node.children);
-                    }
+            function addChild(parentNode) {
+                if (!parentNode) return;
+                const parentId = parentNode.id;
+                const parentName = parentNode.name.name;
+                if (parentId == -1 && parentName === '未分类') { alert("系统保留分类不可添加子分类"); return; }
+                if (isAddMode.value) exitAddMode();
+                isAddMode.value = true;
+                parentForAdd.value = { id: parentId, name: parentName };
+                editableCategory.value = {
+                    id: null,
+                    name: { name: '', shortName: '' },
+                    icon_url: null,
+                    parent_id: parentId,
+                    description: ''
                 };
+                activeCategory.value = { ...emptyCategory };
+                nextTick(() => {
+                    const input = document.querySelector('.field-group input[placeholder="例：品质男鞋"]');
+                    if (input) input.focus();
+                });
+            }
+            function exitAddMode() {
+                isAddMode.value = false;
+                parentForAdd.value = null;
+                refreshEditable();
+            }
+            function cancelAddMode() { exitAddMode(); }
+            async function saveNewCategory() {
+                if (!isAddMode.value || !parentForAdd.value) return;
+                const newName = editableCategory.value.name.name.trim();
+                if (!newName) { alert("分类名称不能为空"); nextTick(() => { const inp = document.querySelector('.field-group input[placeholder="例：品质男鞋"]'); if(inp) inp.focus(); }); return; }
+                const payload = {
+                    name: { name: newName, shortName: editableCategory.value.name.shortName || newName.slice(0,2) },
+                    icon_url: editableCategory.value.icon_url,
+                    parent_id: parentForAdd.value.id,
+                    description: editableCategory.value.description || `新建分类 ${newName}`
+                };
+                try {
+                    await createCategory(payload);
+                    await loadCategories();
+                    exitAddMode();
+                    alert("添加成功");
+                } catch(err) { console.error(err); alert(`添加失败: ${err.message}`); }
+            }
+            function selectCategory(id) {
+                if (isAddMode.value) exitAddMode();
+                const allNodes = [];
+                const collect = (nodes) => { for (const node of nodes) { allNodes.push(node); if (node.children) collect(node.children); } };
                 collect(categoryTree.value);
                 const found = allNodes.find(n => n.id == id);
                 if (found && found.name && found.name.name && found.name.name !== 'undefined') {
@@ -1147,8 +802,8 @@
                     refreshEditable();
                 }
             }
-
             function refreshEditable() {
+                if (isAddMode.value) return;
                 if (!isValidCategory.value || isSpecialUncategorized.value) {
                     editableCategory.value = { ...emptyCategory };
                     originalCategoryBackup.value = { ...emptyCategory };
@@ -1157,326 +812,196 @@
                     originalCategoryBackup.value = JSON.parse(JSON.stringify(activeCategory.value));
                 }
             }
-
-            function restoreOriginal() {
-                if (isModified.value && isValidCategory.value && !isSpecialUncategorized.value) {
-                    editableCategory.value = JSON.parse(JSON.stringify(originalCategoryBackup.value));
-                }
-            }
-
+            function restoreOriginal() { if (isModified.value && isValidCategory.value && !isSpecialUncategorized.value && !isAddMode.value) editableCategory.value = JSON.parse(JSON.stringify(originalCategoryBackup.value)); }
             async function updateCurrentCategory() {
-                if (!isValidCategory.value || isSpecialUncategorized.value) {
-                    alert("无法修改系统保留分类");
-                    return;
-                }
-                if (!editableCategory.value.name?.name || !editableCategory.value.name.name.trim()) {
-                    alert("分类名称不能为空");
-                    return;
-                }
-                if (!isModified.value) {
-                    alert("无修改");
-                    return;
-                }
-                let payload = {
-                    id: activeCategory.value.id,
-                    name: editableCategory.value.name,
-                    icon_url: editableCategory.value.icon_url,
-                    description: editableCategory.value.description,
-                    parent_id: editableCategory.value.parent_id
-                };
-                if (isRootCategory.value) {
-                    payload.parent_id = activeCategory.value.id;
-                }
+                if (isAddMode.value) return;
+                if (!isValidCategory.value || isSpecialUncategorized.value) { alert("无法修改系统保留分类"); return; }
+                if (!editableCategory.value.name?.name || !editableCategory.value.name.name.trim()) { alert("分类名称不能为空"); return; }
+                if (!isModified.value) { alert("无修改"); return; }
+                let payload = { id: activeCategory.value.id, name: editableCategory.value.name, icon_url: editableCategory.value.icon_url, description: editableCategory.value.description, parent_id: editableCategory.value.parent_id };
+                if (isRootCategory.value) payload.parent_id = activeCategory.value.id;
                 try {
                     await updateCategory(activeCategory.value.id, payload);
                     const allNodes = [];
-                    const collect = (nodes) => {
-                        for (const node of nodes) {
-                            allNodes.push(node);
-                            if (node.children) collect(node.children);
-                        }
-                    };
+                    const collect = (nodes) => { for (const node of nodes) { allNodes.push(node); if (node.children) collect(node.children); } };
                     collect(categoryTree.value);
                     const target = allNodes.find(n => n.id == activeCategory.value.id);
-                    if (target) {
-                        target.name = editableCategory.value.name;
-                        target.icon_url = editableCategory.value.icon_url;
-                        target.description = editableCategory.value.description;
-                        target.parent_id = payload.parent_id;
-                    }
+                    if (target) { target.name = editableCategory.value.name; target.icon_url = editableCategory.value.icon_url; target.description = editableCategory.value.description; target.parent_id = payload.parent_id; }
                     selectCategory(activeCategory.value.id);
                     alert("更新成功");
-                } catch (err) {
-                    console.error(err);
-                    alert(`更新失败: ${err.message}`);
-                }
+                } catch(err) { console.error(err); alert(`更新失败: ${err.message}`); }
             }
 
-            async function deleteCategoryNode(id) {
-                const allNodes = [];
-                const collect = (nodes) => {
-                    for (const node of nodes) {
-                        allNodes.push(node);
-                        if (node.children) collect(node.children);
+            // 辅助函数：递归收集节点及其所有后代的 ID
+            function collectAllDescendantIds(node, ids = new Set()) {
+                ids.add(node.id);
+                if (node.children) {
+                    for (const child of node.children) {
+                        collectAllDescendantIds(child, ids);
                     }
-                };
-                collect(categoryTree.value);
-                const cat = allNodes.find(n => n.id == id);
-                if (!cat) return;
-                if (cat.id == -1) {
-                    alert("系统保留分类不可删除");
-                    return;
                 }
+                return ids;
+            }
+            // 从树中删除节点（就地修改）
+            function removeNodeFromTree(nodes, targetId) {
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i];
+                    if (node.id === targetId) {
+                        nodes.splice(i, 1);
+                        return true;
+                    }
+                    if (node.children && node.children.length) {
+                        if (removeNodeFromTree(node.children, targetId)) {
+                            node.hasChildren = node.children.length > 0;
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            async function deleteCategoryNode(node) {
+                if (!node) return;
+                const id = node.id;
+                if (isAddMode.value) exitAddMode();
+                if (id === -1) { alert("系统保留分类不可删除"); return; }
                 const rootCount = categoryTree.value.filter(n => n.parent_id === n.id).length;
-                if (cat.parent_id === cat.id && rootCount <= 1) {
-                    alert("至少保留一个顶级分类");
-                    return;
-                }
-                if (!confirm(`永久删除分类“${cat.name.name}”及其所有子类？`)) return;
+                if (node.parent_id === id && rootCount <= 1) { alert("至少保留一个顶级分类"); return; }
+                if (!confirm(`永久删除分类“${node.name.name}”及其所有子类？`)) return;
+
                 try {
+                    // 调用后端删除接口
                     await deleteCategory(id);
-                    await loadCategories();
-                    if (activeCategory.value.id == id) {
+
+                    // 收集将要被删除的所有节点 ID（包括后代），用于清理 expandedSet
+                    let toDeleteIds = new Set();
+                    const findNodeAndCollect = (nodes) => {
+                        for (const n of nodes) {
+                            if (n.id === id) {
+                                collectAllDescendantIds(n, toDeleteIds);
+                                return true;
+                            }
+                            if (n.children && findNodeAndCollect(n.children)) return true;
+                        }
+                        return false;
+                    };
+                    findNodeAndCollect(categoryTree.value);
+
+                    // 从 expandedSet 中删除这些 ID
+                    if (toDeleteIds.size) {
+                        const newExpanded = new Set(expandedSet.value);
+                        toDeleteIds.forEach(delId => newExpanded.delete(delId));
+                        expandedSet.value = newExpanded;
+                    }
+
+                    // 本地删除节点
+                    const success = removeNodeFromTree(categoryTree.value, id);
+                    if (!success) {
+                        console.warn('本地删除失败，节点不存在');
+                        return;
+                    }
+
+                    // 如果当前选中的分类是被删除的节点，清空选中
+                    if (activeCategory.value.id === id) {
                         activeCategory.value = { ...emptyCategory };
                         refreshEditable();
                     }
-                } catch (err) {
+                } catch(err) {
                     console.error(err);
                     alert(`删除失败: ${err.message}`);
                 }
             }
             function deleteCurrentCategory() {
-                if (isValidCategory.value && !isSpecialUncategorized.value) deleteCategoryNode(activeCategory.value.id);
-            }
-
-            async function showAddChildPrompt(parentId, parentName) {
-                if (!parentId || parentId == -1) {
-                    alert("无法为系统保留分类添加子分类");
-                    return;
-                }
-                const newName = prompt(`在“${parentName}”下新增子分类`, "新分类");
-                if (!newName) return;
-                const payload = {
-                    name: { name: newName, shortName: newName.slice(0, 2) },
-                    icon_url: null,
-                    parent_id: parentId,
-                    description: `新建分类 ${newName}`
-                };
-                try {
-                    await createCategory(payload);
-                    await loadCategories();
-                } catch (err) {
-                    console.error(err);
-                    alert(`添加失败: ${err.message}`);
+                if (isValidCategory.value && !isSpecialUncategorized.value && !isAddMode.value) {
+                    deleteCategoryNode(activeCategory.value);
                 }
             }
-
             async function addRootCategoryPrompt() {
                 const name = prompt("新建根分类");
                 if (!name) return;
-                const payload = {
-                    name: { name, shortName: name.slice(0, 2) },
-                    icon_url: null,
-                    parent_id: -1,
-                    description: `顶级分类 ${name}`
-                };
-                try {
-                    await createCategory(payload);
-                    await loadCategories();
-                } catch (err) {
-                    console.error(err);
-                    alert(`添加失败: ${err.message}`);
-                }
+                const payload = { name: { name, shortName: name.slice(0,2) }, icon_url: null, parent_id: -1, description: `顶级分类 ${name}` };
+                try { await createCategory(payload); await loadCategories(); } catch(err) { console.error(err); alert(`添加失败: ${err.message}`); }
             }
-
             async function editCategoryPrompt(catId) {
-                const allNodes = [];
-                const collect = (nodes) => {
-                    for (const node of nodes) {
-                        allNodes.push(node);
-                        if (node.children) collect(node.children);
-                    }
-                };
-                collect(categoryTree.value);
+                const allNodes = []; const collect = (nodes) => { for (const node of nodes) { allNodes.push(node); if (node.children) collect(node.children); } }; collect(categoryTree.value);
                 const cat = allNodes.find(n => n.id == catId);
                 if (!cat) return;
-                if (cat.id == -1) {
-                    alert("系统保留分类不可编辑");
-                    return;
-                }
+                if (cat.id == -1) { alert("系统保留分类不可编辑"); return; }
                 const newName = prompt("编辑分类名称", cat.name.name);
                 if (newName && newName.trim()) {
-                    const payload = {
-                        ...cat,
-                        name: { name: newName.trim(), shortName: cat.name.shortName }
-                    };
-                    try {
-                        await updateCategory(cat.id, payload);
-                        await loadCategories();
-                        if (activeCategory.value.id == cat.id) selectCategory(cat.id);
-                    } catch (err) {
-                        console.error(err);
-                        alert(`编辑失败: ${err.message}`);
-                    }
+                    const payload = { ...cat, name: { name: newName.trim(), shortName: cat.name.shortName } };
+                    try { await updateCategory(cat.id, payload); await loadCategories(); if (activeCategory.value.id == cat.id) selectCategory(cat.id); } catch(err) { console.error(err); alert(`编辑失败: ${err.message}`); }
                 }
             }
-
-            // 图标上传与预览
             const fileInput = ref(null);
-            const triggerFileUpload = () => { if (isValidCategory.value && !isSpecialUncategorized.value) fileInput.value.click(); else alert("无法修改系统保留分类"); };
-            const handleFileUpload = (e) => {
-                const file = e.target.files[0];
-                if (file && file.type.startsWith('image/')) {
-                    editableCategory.value.icon_url = URL.createObjectURL(file);
-                    e.target.value = '';
-                } else alert("请选择图片");
-            };
+            const triggerFileUpload = () => { if ((isValidCategory.value || isAddMode.value) && !isSpecialUncategorized.value) fileInput.value.click(); else alert("无法修改系统保留分类"); };
+            const handleFileUpload = (e) => { const file = e.target.files[0]; if (file && file.type.startsWith('image/')) { editableCategory.value.icon_url = URL.createObjectURL(file); e.target.value = ''; } else alert("请选择图片"); };
             const modalVisible = ref(false);
             const modalImageUrl = ref('');
             const previewError = ref(false);
-            const openModalPreview = () => {
-                const url = editableCategory.value.icon_url;
-                if (url && url.trim() !== '') {
-                    modalImageUrl.value = url;
-                    previewError.value = false;
-                    modalVisible.value = true;
-                } else {
-                    alert("无图标URL或URL为空");
-                }
-            };
+            const openModalPreview = () => { const url = editableCategory.value.icon_url; if (url && url.trim()) { modalImageUrl.value = url; previewError.value = false; modalVisible.value = true; } else alert("无图标URL或URL为空"); };
             const onModalImageError = () => { previewError.value = true; };
-
-            // 扩展属性模块（静态演示）
             const extForm = ref({ displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0 });
             const extBackup = ref({ displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0 });
             const selectedExtId = ref(null);
             const selectedExtIdForSelect = ref('');
             const isSaveEnabled = computed(() => {
-                if (!isValidCategory.value || isSpecialUncategorized.value) return false;
+                if ((!isValidCategory.value && !isAddMode.value) || isSpecialUncategorized.value) return false;
                 const hasContent = extForm.value.displayName || extForm.value.fieldName;
                 if (!hasContent) return false;
                 if (selectedExtId.value) {
-                    return extForm.value.displayName !== extBackup.value.displayName ||
-                        extForm.value.fieldName !== extBackup.value.fieldName ||
-                        extForm.value.defaultValue !== extBackup.value.defaultValue ||
-                        extForm.value.isRequired !== extBackup.value.isRequired ||
-                        extForm.value.sortOrder !== extBackup.value.sortOrder;
-                } else {
-                    return true;
-                }
+                    return extForm.value.displayName !== extBackup.value.displayName || extForm.value.fieldName !== extBackup.value.fieldName || extForm.value.defaultValue !== extBackup.value.defaultValue || extForm.value.isRequired !== extBackup.value.isRequired || extForm.value.sortOrder !== extBackup.value.sortOrder;
+                } else return true;
             });
-            function clearExtForm() {
-                extForm.value = { displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0 };
-                extBackup.value = { displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0 };
-                selectedExtId.value = null;
-                selectedExtIdForSelect.value = '';
-            }
+            function clearExtForm() { extForm.value = { displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0 }; extBackup.value = { ...extForm.value }; selectedExtId.value = null; selectedExtIdForSelect.value = ''; }
             function onSelectExtFromDropdown() {
-                if (!isValidCategory.value || isSpecialUncategorized.value) return;
+                if ((!isValidCategory.value && !isAddMode.value) || isSpecialUncategorized.value) return;
                 const rid = selectedExtIdForSelect.value;
                 if (rid) {
                     const attr = allExtAttrs.value.find(a => a.recordId === rid);
                     if (attr && attr.classId === activeCategory.value.id) {
-                        const newForm = {
-                            displayName: attr.displayName,
-                            fieldName: attr.fieldName,
-                            defaultValue: attr.defaultValue || '',
-                            isRequired: attr.isRequired,
-                            sortOrder: attr.sortOrder
-                        };
-                        extForm.value = { ...newForm };
-                        extBackup.value = { ...newForm };
-                        selectedExtId.value = attr.recordId;
-                    } else {
-                        selectedExtIdForSelect.value = '';
-                    }
-                } else {
-                    clearExtForm();
-                }
+                        const newForm = { displayName: attr.displayName, fieldName: attr.fieldName, defaultValue: attr.defaultValue || '', isRequired: attr.isRequired, sortOrder: attr.sortOrder };
+                        extForm.value = { ...newForm }; extBackup.value = { ...newForm }; selectedExtId.value = attr.recordId;
+                    } else selectedExtIdForSelect.value = '';
+                } else clearExtForm();
             }
             function saveExtAttribute() {
-                if (!isValidCategory.value || isSpecialUncategorized.value) { alert("无法修改系统保留分类的扩展属性"); return; }
+                if ((!isValidCategory.value && !isAddMode.value) || isSpecialUncategorized.value) { alert("无法修改系统保留分类的扩展属性"); return; }
                 if (!extForm.value.displayName || !extForm.value.displayName.trim()) { alert("显示名称不能为空"); return; }
                 if (!extForm.value.fieldName || !extForm.value.fieldName.trim()) { alert("别名不能为空"); return; }
                 const currentAlias = extForm.value.fieldName.trim();
                 let duplicate = false;
-                if (selectedExtId.value) {
-                    duplicate = activeExtList.value.some(a => a.fieldName === currentAlias && a.recordId !== selectedExtId.value);
-                } else {
-                    duplicate = activeExtList.value.some(a => a.fieldName === currentAlias);
-                }
+                if (selectedExtId.value) duplicate = activeExtList.value.some(a => a.fieldName === currentAlias && a.recordId !== selectedExtId.value);
+                else duplicate = activeExtList.value.some(a => a.fieldName === currentAlias);
                 if (duplicate) { alert("别名已存在，请使用其他别名"); return; }
                 if (selectedExtId.value) {
                     const idx = allExtAttrs.value.findIndex(a => a.recordId === selectedExtId.value);
                     if (idx !== -1) {
-                        allExtAttrs.value[idx] = {
-                            ...allExtAttrs.value[idx],
-                            displayName: extForm.value.displayName,
-                            fieldName: extForm.value.fieldName,
-                            defaultValue: extForm.value.defaultValue,
-                            isRequired: extForm.value.isRequired,
-                            sortOrder: extForm.value.sortOrder
-                        };
+                        allExtAttrs.value[idx] = { ...allExtAttrs.value[idx], displayName: extForm.value.displayName, fieldName: extForm.value.fieldName, defaultValue: extForm.value.defaultValue, isRequired: extForm.value.isRequired, sortOrder: extForm.value.sortOrder };
                         extBackup.value = { ...extForm.value };
                         alert("属性更新成功");
                     }
                 } else {
-                    const newAttr = {
-                        recordId: generateUUID(),
-                        classId: activeCategory.value.id,
-                        displayName: extForm.value.displayName,
-                        fieldName: extForm.value.fieldName,
-                        defaultValue: extForm.value.defaultValue,
-                        isRequired: extForm.value.isRequired,
-                        sortOrder: extForm.value.sortOrder || (activeExtList.value.length + 1),
-                        autoId: newAutoId()
-                    };
+                    const newAttr = { recordId: `${Date.now()}-${Math.random().toString(36).substr(2,8)}`, classId: activeCategory.value.id, displayName: extForm.value.displayName, fieldName: extForm.value.fieldName, defaultValue: extForm.value.defaultValue, isRequired: extForm.value.isRequired, sortOrder: extForm.value.sortOrder || (activeExtList.value.length + 1), autoId: ++lastAutoId };
                     allExtAttrs.value.push(newAttr);
                     clearExtForm();
                     alert(`属性 "${newAttr.displayName}" 添加成功`);
                 }
             }
-            function deleteExtAttribute() {
-                if (!selectedExtId.value) { alert("请选择要删除的属性"); return; }
-                if (confirm("永久删除此扩展属性？")) {
-                    allExtAttrs.value = allExtAttrs.value.filter(a => a.recordId !== selectedExtId.value);
-                    clearExtForm();
-                }
-            }
+            function deleteExtAttribute() { if (!selectedExtId.value) { alert("请选择要删除的属性"); return; } if (confirm("永久删除此扩展属性？")) { allExtAttrs.value = allExtAttrs.value.filter(a => a.recordId !== selectedExtId.value); clearExtForm(); } }
             function syncToSubClass() { alert("演示: 扩展属性同步子类完成"); }
-
-            function generateUUID() { return `${Date.now()}-${Math.random().toString(36).substr(2, 8)}`; }
             let lastAutoId = 500;
-            function newAutoId() { return ++lastAutoId; }
-
-            function toggleExpand(id) {
-                const set = new Set(expandedSet.value);
-                if (set.has(id)) set.delete(id); else set.add(id);
-                expandedSet.value = set;
-            }
-
+            function toggleExpand(id) { const set = new Set(expandedSet.value); if (set.has(id)) set.delete(id); else set.add(id); expandedSet.value = set; }
             function onNodeUpdated() {}
-
-            watch(activeCategory, () => { clearExtForm(); refreshEditable(); });
-            onMounted(() => {
-                loadCategories();
-                modalVisible.value = false;
-                previewError.value = false;
-            });
-
+            watch(activeCategory, () => { if (!isAddMode.value) { clearExtForm(); refreshEditable(); } });
+            onMounted(() => { loadCategories(); modalVisible.value = false; previewError.value = false; });
             return {
-                loading, errorMsg, categoryTree, expandedSet, toggleExpand,
-                searchKeyword, onSearchInput, onSearchEnter, searchLoading, selectCategory, loadCategories,
-                showAddChildPrompt, addRootCategoryPrompt, editCategoryPrompt, deleteCategoryNode, deleteCurrentCategory,
-                onNodeUpdated,
-                flatCategoryList, activeCategory, editableCategory, isModified, restoreOriginal,
-                updateCurrentCategory, hasSubCategories, isValidCategory, isSpecialUncategorized,
-                isRootCategory,
-                activeExtList, extForm, selectedExtId, selectedExtIdForSelect, isSaveEnabled,
-                clearExtForm, onSelectExtFromDropdown, saveExtAttribute, deleteExtAttribute, syncToSubClass,
-                fileInput, triggerFileUpload, handleFileUpload,
-                modalVisible, modalImageUrl, previewError, openModalPreview, onModalImageError,
-                searchMatchSet
+                loading, errorMsg, categoryTree, expandedSet, toggleExpand, searchKeyword, onSearchInput, onSearchEnter, searchLoading, selectCategory, loadCategories,
+                addChild, addRootCategoryPrompt, editCategoryPrompt, deleteCategoryNode, deleteCurrentCategory, onNodeUpdated,
+                flatCategoryList, activeCategory, editableCategory, isModified, restoreOriginal, updateCurrentCategory, hasSubCategories, isValidCategory, isSpecialUncategorized, isRootCategory,
+                activeExtList, extForm, selectedExtId, selectedExtIdForSelect, isSaveEnabled, clearExtForm, onSelectExtFromDropdown, saveExtAttribute, deleteExtAttribute, syncToSubClass,
+                fileInput, triggerFileUpload, handleFileUpload, modalVisible, modalImageUrl, previewError, openModalPreview, onModalImageError, searchMatchSet,
+                isAddMode, parentForAdd, cancelAddMode, saveNewCategory
             };
         }
     }).mount('#vueApp');

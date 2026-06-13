@@ -404,7 +404,7 @@ public class PsqlCategoryRepositoryTest {
         //System.out.println(leisure_food);
         repository.save(leisure_food);
         leisure_food = repository.find(111);
-        Assert.assertNull(leisure_food.description());
+        Assert.assertTrue(leisure_food.description().isBlank());
 
         Category flavoring = repository.find(1514);//调味料
         flavoring.moveTo(151);//调味汁

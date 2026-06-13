@@ -26,7 +26,6 @@ import catalog.hoprxi.core.application.handler.CategoryDeleteHandler;
 import catalog.hoprxi.core.application.handler.Handler;
 import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.query.NotFoundException;
-import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESCategoryQuery;
 import com.fasterxml.jackson.core.*;
@@ -43,7 +42,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -246,11 +244,8 @@ public class CategoryService {
         String search = params.get("s", "");
         int offset = params.getInt("offset", OFFSET);
         int size = params.getInt("size", SIZE);
-
         Flux<ByteBuf> dataFlux = QUERY.searchAsync(search, offset, size);
-
         //dataFlux.count().subscribe(count -> System.out.println("总共收到 " + count + " 个 ByteBuf"));
-
         // 使用 switchMap：一旦有第一个元素，就前置 headers
         Flux<HttpObject> stream = dataFlux
                 .map(HttpData::wrap)
@@ -436,16 +431,14 @@ public class CategoryService {
     }
 
     @Delete("/categories/{id}")
-    public HttpResponse delete(ServiceRequestContext ctx, @Param("id") long id) {
+    public HttpResponse delete(@Param("id") long id) {
         return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
             try {
                 CategoryDeleteCommand delete = new CategoryDeleteCommand(id);
                 Handler<CategoryDeleteCommand, Boolean> handler = new CategoryDeleteHandler();
                 handler.execute(delete);
-
                 // 1. 删除成功，推荐使用 204 No Content
                 return HttpResponse.of(HttpStatus.NO_CONTENT);
-
             } catch (NotFoundException e) {
                 // 2. 精细化异常处理：资源不存在返回 404
                 return HttpResponse.of(HttpStatus.NOT_FOUND, MediaType.JSON_UTF_8,

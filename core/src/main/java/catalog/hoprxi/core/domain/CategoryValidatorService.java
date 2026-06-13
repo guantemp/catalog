@@ -50,7 +50,6 @@ public final class CategoryValidatorService {
     public static boolean isCategoryExist(long categoryId) {
         if (categoryId == Category.UNDEFINED.id()) return true;
         Category category = repository.find(categoryId);
-        //System.out.println(category);
         return category != null;
     }
 
