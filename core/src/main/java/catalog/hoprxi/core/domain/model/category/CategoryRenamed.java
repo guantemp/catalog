@@ -47,24 +47,13 @@ public class CategoryRenamed implements DomainEvent {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CategoryRenamed)) return false;
-
-        CategoryRenamed that = (CategoryRenamed) o;
-
-        if (id != that.id) return false;
-        if (version != that.version) return false;
-        if (!Objects.equals(name, that.name)) return false;
-        return Objects.equals(occurredOn, that.occurredOn);
+        if (!(o instanceof CategoryRenamed that)) return false;
+        return id == that.id && version == that.version && Objects.equals(name, that.name) && Objects.equals(occurredOn, that.occurredOn);
     }
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (occurredOn != null ? occurredOn.hashCode() : 0);
-        result = 31 * result + (int) (id ^ (id >>> 32));
-        result = 31 * result + version;
-        return result;
+        return Objects.hash(name, occurredOn, id, version);
     }
 
     /**

@@ -332,7 +332,7 @@ public class CategoryService {
     }
 
     @Put("/categories/{id}")
-    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id, @Param("pretty") @Default("false") boolean pretty) {
+    public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id) {
         RequestHeaders headers = ctx.request().headers();
         MediaType contentType = headers.contentType();
         if (contentType == null || !(MediaType.JSON.is(contentType) || MediaType.JSON_UTF_8.is(contentType)))
@@ -379,7 +379,7 @@ public class CategoryService {
                     case "name" -> name = parser.getValueAsString();
                     case "shortName" -> shortName = parser.getValueAsString();
                     case "description" -> description = parser.getValueAsString();
-                    case "icon" -> icon = URI.create(parser.getValueAsString()).toURL();
+                    case "icon_url" -> icon = URI.create(parser.getValueAsString()).toURL();
                 }
             }
         }
@@ -392,7 +392,7 @@ public class CategoryService {
             if (description != null)
                 commands.add(new CategoryChangeDescriptionCommand(id, description));
             if (icon != null)
-                commands.add(new CategoryChangeIconCommand(id, URI.create(icon).toURL()));
+                commands.add(new CategoryChangeIconCommand(id, icon_url));
              */
         return null;
     }

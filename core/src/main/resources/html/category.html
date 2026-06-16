@@ -286,7 +286,17 @@
             box-shadow: 0 0 0 3px rgba(129,140,248,0.15);
             outline: none;
         }
-        .btn-group { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; justify-content: flex-end; }
+        /* 上级分类下拉框与输入框宽度一致 */
+        .field-group select {
+            width: 100%;
+        }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+            justify-content: flex-end;
+        }
         button {
             background: #1e293b;
             border: 1px solid #334155;
@@ -401,7 +411,8 @@
                     <div class="tree-header">
                         <div class="tree-header-top">
                             <div class="tree-title"><i class="fas fa-folder-tree"></i> 类别</div>
-                            <button class="add-root-btn" @click="addRootCategoryPrompt"><i class="fas fa-plus"></i> 根类</button>
+                            <!-- 修改：点击根类按钮时调用 addChild(null) -->
+                            <button class="add-root-btn" @click="addChild(null)"><i class="fas fa-plus"></i> 根类</button>
                         </div>
                         <div class="search-box">
                             <i class="fas fa-search"></i>
@@ -436,7 +447,7 @@
                 <div class="right-panel">
                     <div class="card">
                         <div class="card-header">
-                            <h2><i class="fas fa-info-circle"></i> 基本属性<span v-if="isAddMode" class="add-mode-badge"><i class="fas fa-plus-circle"></i> 添加子分类模式</span></h2>
+                            <h2><i class="fas fa-info-circle"></i> 基本属性</h2>
                         </div>
                         <div class="card-body">
                             <div class="form-grid">
@@ -444,7 +455,7 @@
                                     <label><i class="fas fa-level-up-alt"></i> 上级分类 <span class="required-star">*</span></label>
                                     <div v-if="isAddMode && parentForAdd">
                                         <select :disabled="true" class="disabled-select">
-                                            <option :value="parentForAdd.id">{{ parentForAdd.name }}（上级分类固定）</option>
+                                            <option :value="parentForAdd.id">{{ parentForAdd.name }}</option>
                                         </select>
                                     </div>
                                     <div v-else-if="activeCategory.id && !isAddMode">
@@ -562,6 +573,7 @@
         return safeParseBigIntJson(text);
     }
     async function updateCategory(id, payload) {
+        console.log(JSON.stringify(payload))
         const response = await fetch(`${API_BASE}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!response.ok) throw new Error('更新失败');
         const text = await response.text();
@@ -618,7 +630,7 @@
         computed: {
             isExpanded() { return this.expandedSet.has(this.node.id); },
             isSearchMatch() { return this.searchMatchSet && this.searchMatchSet.has(this.node.id); },
-            isSpecialNode() { return this.node.id == -1 && this.node.name && this.node.name.name === '未分类'; }
+            isSpecialNode() { return this.node.id === -1 && this.node.name && this.node.name.name === '未分类'; }
         },
         methods: {
             async handleToggle() {
@@ -678,7 +690,7 @@
             function findNodePath(nodeList, targetId, currentPath = []) {
                 for (const node of nodeList) {
                     const newPath = [...currentPath, node.id];
-                    if (node.id == targetId) return newPath;
+                    if (node.id === targetId) return newPath;
                     if (node.children && node.children.length) {
                         const childResult = findNodePath(node.children, targetId, newPath);
                         if (childResult) return childResult;
@@ -743,21 +755,52 @@
                 } catch(err) { console.error(err); errorMsg.value = '获取分类数据失败：'+err.message; categoryTree.value = []; activeCategory.value = {...emptyCategory}; refreshEditable(); }
                 finally { loading.value = false; }
             }
+            // 统一添加子分类方法：parentNode 可为 null（表示添加根分类）
             function addChild(parentNode) {
-                if (!parentNode) return;
-                const parentId = parentNode.id;
-                const parentName = parentNode.name.name;
-                if (parentId == -1 && parentName === '未分类') { alert("系统保留分类不可添加子分类"); return; }
                 if (isAddMode.value) exitAddMode();
                 isAddMode.value = true;
-                parentForAdd.value = { id: parentId, name: parentName };
-                editableCategory.value = {
-                    id: null,
-                    name: { name: '', shortName: '' },
-                    icon_url: null,
-                    parent_id: parentId,
-                    description: ''
-                };
+                if (!parentNode) {
+                    // 添加根分类（顶级分类）
+                    parentForAdd.value = { id: -1, name: "无（顶级分类）" };
+                    editableCategory.value = {
+                        id: null,
+                        name: { name: '', shortName: '' },
+                        icon_url: null,
+                        parent_id: -1,
+                        description: ''
+                    };
+                } else {
+                    const parentId = parentNode.id;
+                    const parentName = parentNode.name.name;
+                    // 特殊：如果点击的是“未分类”节点，禁止添加
+                    if (parentId === -1 && parentName === '未分类') {
+                        alert("系统保留分类不可添加子分类");
+                        exitAddMode();
+                        return;
+                    }
+                    // 判断是否是根节点（parent_id === id）
+                    if (parentNode.parent_id === parentId) {
+                        // 根节点：上级分类为“无（顶级分类）”，parent_id 设为 -1
+                        parentForAdd.value = { id: -1, name: "无（顶级分类）" };
+                        editableCategory.value = {
+                            id: null,
+                            name: { name: '', shortName: '' },
+                            icon_url: null,
+                            parent_id: -1,
+                            description: ''
+                        };
+                    } else {
+                        // 非根节点：正常处理
+                        parentForAdd.value = { id: parentId, name: parentName };
+                        editableCategory.value = {
+                            id: null,
+                            name: { name: '', shortName: '' },
+                            icon_url: null,
+                            parent_id: parentId,
+                            description: ''
+                        };
+                    }
+                }
                 activeCategory.value = { ...emptyCategory };
                 nextTick(() => {
                     const input = document.querySelector('.field-group input[placeholder="例：品质男鞋"]');
@@ -815,23 +858,84 @@
             function restoreOriginal() { if (isModified.value && isValidCategory.value && !isSpecialUncategorized.value && !isAddMode.value) editableCategory.value = JSON.parse(JSON.stringify(originalCategoryBackup.value)); }
             async function updateCurrentCategory() {
                 if (isAddMode.value) return;
-                if (!isValidCategory.value || isSpecialUncategorized.value) { alert("无法修改系统保留分类"); return; }
-                if (!editableCategory.value.name?.name || !editableCategory.value.name.name.trim()) { alert("分类名称不能为空"); return; }
-                if (!isModified.value) { alert("无修改"); return; }
-                let payload = { id: activeCategory.value.id, name: editableCategory.value.name, icon_url: editableCategory.value.icon_url, description: editableCategory.value.description, parent_id: editableCategory.value.parent_id };
-                if (isRootCategory.value) payload.parent_id = activeCategory.value.id;
+                if (!isValidCategory.value || isSpecialUncategorized.value) {
+                    alert("无法修改系统保留分类");
+                    return;
+                }
+                if (!editableCategory.value.name?.name || !editableCategory.value.name.name.trim()) {
+                    alert("分类名称不能为空");
+                    return;
+                }
+                if (!isModified.value) {
+                    alert("无修改");
+                    return;
+                }
+
+                // 构建仅包含变化字段的 payload
+                const payload = { id: activeCategory.value.id };
+                const orig = originalCategoryBackup.value;
+                const curr = editableCategory.value;
+
+                // 处理 name 和 shortName
+                let nameChanged = false;
+                let nameObj = {};
+                if (curr.name.name !== orig.name.name) {
+                    nameObj.name = curr.name.name;
+                    nameChanged = true;
+                }
+                if (curr.name.shortName !== orig.name.shortName) {
+                    nameObj.shortName = curr.name.shortName;
+                    nameChanged = true;
+                }
+                if (nameChanged) {
+                    payload.name = nameObj;
+                }
+                // icon_url
+                if (curr.icon_url !== orig.icon_url) {
+                    payload.icon_url = curr.icon_url;
+                }
+                // description
+                if (curr.description !== orig.description) {
+                    payload.description = curr.description;
+                }
+                // parent_id
+                let newParentId = curr.parent_id;
+                if (isRootCategory.value) {
+                    newParentId = activeCategory.value.id;
+                }
+                if (newParentId !== orig.parent_id) {
+                    payload.parent_id = newParentId;
+                }
+
                 try {
                     await updateCategory(activeCategory.value.id, payload);
+                    // 更新本地树中的节点数据
                     const allNodes = [];
-                    const collect = (nodes) => { for (const node of nodes) { allNodes.push(node); if (node.children) collect(node.children); } };
+                    const collect = (nodes) => {
+                        for (const node of nodes) {
+                            allNodes.push(node);
+                            if (node.children) collect(node.children);
+                        }
+                    };
                     collect(categoryTree.value);
                     const target = allNodes.find(n => n.id == activeCategory.value.id);
-                    if (target) { target.name = editableCategory.value.name; target.icon_url = editableCategory.value.icon_url; target.description = editableCategory.value.description; target.parent_id = payload.parent_id; }
+                    if (target) {
+                        // 合并变化
+                        if (payload.name) {
+                            if (payload.name.name !== undefined) target.name.name = payload.name.name;
+                            if (payload.name.shortName !== undefined) target.name.shortName = payload.name.shortName;
+                        }
+                        if (payload.icon_url !== undefined) target.icon_url = payload.icon_url;
+                        if (payload.description !== undefined) target.description = payload.description;
+                        if (payload.parent_id !== undefined) target.parent_id = payload.parent_id;
+                    }
                     selectCategory(activeCategory.value.id);
                     alert("更新成功");
-                } catch(err) { console.error(err); alert(`更新失败: ${err.message}`); }
+                } catch(err) {
+                    console.error(err);
+                    alert(`更新失败: ${err.message}`);
+                }
             }
-
             // 辅助函数：递归收集节点及其所有后代的 ID
             function collectAllDescendantIds(node, ids = new Set()) {
                 ids.add(node.id);
@@ -859,7 +963,6 @@
                 }
                 return false;
             }
-
             async function deleteCategoryNode(node) {
                 if (!node) return;
                 const id = node.id;
@@ -868,12 +971,8 @@
                 const rootCount = categoryTree.value.filter(n => n.parent_id === n.id).length;
                 if (node.parent_id === id && rootCount <= 1) { alert("至少保留一个顶级分类"); return; }
                 if (!confirm(`永久删除分类“${node.name.name}”及其所有子类？`)) return;
-
                 try {
-                    // 调用后端删除接口
                     await deleteCategory(id);
-
-                    // 收集将要被删除的所有节点 ID（包括后代），用于清理 expandedSet
                     let toDeleteIds = new Set();
                     const findNodeAndCollect = (nodes) => {
                         for (const n of nodes) {
@@ -886,22 +985,13 @@
                         return false;
                     };
                     findNodeAndCollect(categoryTree.value);
-
-                    // 从 expandedSet 中删除这些 ID
                     if (toDeleteIds.size) {
                         const newExpanded = new Set(expandedSet.value);
                         toDeleteIds.forEach(delId => newExpanded.delete(delId));
                         expandedSet.value = newExpanded;
                     }
-
-                    // 本地删除节点
                     const success = removeNodeFromTree(categoryTree.value, id);
-                    if (!success) {
-                        console.warn('本地删除失败，节点不存在');
-                        return;
-                    }
-
-                    // 如果当前选中的分类是被删除的节点，清空选中
+                    if (!success) { console.warn('本地删除失败，节点不存在'); return; }
                     if (activeCategory.value.id === id) {
                         activeCategory.value = { ...emptyCategory };
                         refreshEditable();
@@ -916,21 +1006,16 @@
                     deleteCategoryNode(activeCategory.value);
                 }
             }
-            async function addRootCategoryPrompt() {
-                const name = prompt("新建根分类");
-                if (!name) return;
-                const payload = { name: { name, shortName: name.slice(0,2) }, icon_url: null, parent_id: -1, description: `顶级分类 ${name}` };
-                try { await createCategory(payload); await loadCategories(); } catch(err) { console.error(err); alert(`添加失败: ${err.message}`); }
-            }
+            // 注意：原有的 addRootCategoryPrompt 已不再使用，根类添加通过 addChild(null) 实现
             async function editCategoryPrompt(catId) {
                 const allNodes = []; const collect = (nodes) => { for (const node of nodes) { allNodes.push(node); if (node.children) collect(node.children); } }; collect(categoryTree.value);
-                const cat = allNodes.find(n => n.id == catId);
+                const cat = allNodes.find(n => n.id === catId);
                 if (!cat) return;
-                if (cat.id == -1) { alert("系统保留分类不可编辑"); return; }
+                if (cat.id === -1) { alert("系统保留分类不可编辑"); return; }
                 const newName = prompt("编辑分类名称", cat.name.name);
                 if (newName && newName.trim()) {
                     const payload = { ...cat, name: { name: newName.trim(), shortName: cat.name.shortName } };
-                    try { await updateCategory(cat.id, payload); await loadCategories(); if (activeCategory.value.id == cat.id) selectCategory(cat.id); } catch(err) { console.error(err); alert(`编辑失败: ${err.message}`); }
+                    try { await updateCategory(cat.id, payload); await loadCategories(); if (activeCategory.value.id === cat.id) selectCategory(cat.id); } catch(err) { console.error(err); alert(`编辑失败: ${err.message}`); }
                 }
             }
             const fileInput = ref(null);
@@ -997,7 +1082,7 @@
             onMounted(() => { loadCategories(); modalVisible.value = false; previewError.value = false; });
             return {
                 loading, errorMsg, categoryTree, expandedSet, toggleExpand, searchKeyword, onSearchInput, onSearchEnter, searchLoading, selectCategory, loadCategories,
-                addChild, addRootCategoryPrompt, editCategoryPrompt, deleteCategoryNode, deleteCurrentCategory, onNodeUpdated,
+                addChild, editCategoryPrompt, deleteCategoryNode, deleteCurrentCategory, onNodeUpdated,
                 flatCategoryList, activeCategory, editableCategory, isModified, restoreOriginal, updateCurrentCategory, hasSubCategories, isValidCategory, isSpecialUncategorized, isRootCategory,
                 activeExtList, extForm, selectedExtId, selectedExtIdForSelect, isSaveEnabled, clearExtForm, onSelectExtFromDropdown, saveExtAttribute, deleteExtAttribute, syncToSubClass,
                 fileInput, triggerFileUpload, handleFileUpload, modalVisible, modalImageUrl, previewError, openModalPreview, onModalImageError, searchMatchSet,

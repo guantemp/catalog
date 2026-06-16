@@ -33,6 +33,7 @@ import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 
@@ -51,6 +52,7 @@ public class App {
                 System.out.println(args[i + 1]);
             }
         }
+        System.out.println(URI.create(null));
         String esQuery = """
                 {
                     "query": { "match_all": {} },
