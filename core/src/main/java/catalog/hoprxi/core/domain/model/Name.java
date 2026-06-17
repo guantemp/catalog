@@ -17,6 +17,7 @@
 package catalog.hoprxi.core.domain.model;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.StringJoiner;
 
 /***
@@ -41,8 +42,17 @@ public final class Name {
      * @param shortName 简称，不能为 null，长度不超过 256
      */
     public Name(String name, String shortName) {
-        setName(name);
-        setShortName(shortName);
+        if (name == null && shortName == null) {
+            throw new IllegalArgumentException("name and shortName cannot be null at the same time. At least one must be provided.");
+        }
+        this.name = (name != null) ? name.trim() : "";
+        this.shortName = (shortName != null) ? shortName.trim() : "";
+
+        if (this.name.length() > MAX_LENGTH || this.shortName.length() > MAX_LENGTH) {
+            throw new IllegalArgumentException(
+                    String.format("name or shortName length range is 0-%d", MAX_LENGTH)
+            );
+        }
     }
 
     public Name(String name) {
@@ -63,23 +73,8 @@ public final class Name {
         return shortName;
     }
 
-    private void setShortName(String shortName) {
-        if (null == shortName)
-            shortName = "";
-        if (shortName.length() > MAX_LENGTH)
-            throw new IllegalArgumentException(String.format("shortName length rang is 0-%d", MAX_LENGTH));
-        this.shortName = shortName.trim();
-    }
-
     public String name() {
         return name;
-    }
-
-    private void setName(String name) {
-        name = Objects.requireNonNull(name, "name required").trim();
-        if (name.length() > MAX_LENGTH)
-            throw new IllegalArgumentException(String.format("name length rang is 0-%d", MAX_LENGTH));
-        this.name = name;
     }
 
     /**
@@ -91,31 +86,26 @@ public final class Name {
      * @return 新的 Name 实例（或自身，若未变化）
      */
     public Name rename(String name, String shortName) {
-        if (this == EMPTY && "".equals(name) && "".equals(shortName)) {
+        // 1. 快速拦截：EMPTY 是不可变的，直接返回自身，避免任何无效计算和对象创建
+        if (this == EMPTY) {
             return this;
         }
-        if (this.name.equals(name) && this.shortName.equals(shortName)) {
-            return this;
-        }
-        return new Name(name, shortName);
-    }
 
-    public Name rename(String name) {
-        if (this == EMPTY && "".equals(name) && "".equals(shortName)) {
-            return this;
-        }
-        if (this.name.equals(name))
-            return this;
-        return new Name(name, this.shortName);
-    }
+        // 2. 优雅处理 null 与相等回退逻辑
+        String newName = Optional.ofNullable(name)
+                .filter(n -> !this.name.equals(n))
+                .orElse(this.name);
 
-    public Name reShortName(String shortName) {
-        if (this == EMPTY && "".equals(name) && "".equals(shortName)) {
+        String newShortName = Optional.ofNullable(shortName)
+                .filter(s -> !this.shortName.equals(s))
+                .orElse(this.shortName);
+
+        // 3. 引用比较：只要有任何一个属性发生了变化，就返回新实例
+        if (Objects.equals(newName, this.name) && Objects.equals(newShortName, this.shortName)) {
             return this;
         }
-        if (this.shortName.equals(shortName))
-            return this;
-        return new Name(this.name, shortName);
+System.out.println(String.format("rename %s to %s", newName, newShortName));
+        return new Name(newName, newShortName);
     }
 
     @Override

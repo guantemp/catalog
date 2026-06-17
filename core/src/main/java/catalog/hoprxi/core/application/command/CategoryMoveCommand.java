@@ -16,34 +16,46 @@
 
 package catalog.hoprxi.core.application.command;
 
-
-import catalog.hoprxi.core.domain.model.category.Category;
-
-import java.net.URL;
+import java.util.Objects;
 
 /***
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK21
- * @version 0.0.1 builder 2025/9/25
+ * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
+ * @since JDK8.0
+ * @version 0.0.1 builder 2025-07-04
  */
+public class CategoryMoveCommand implements Command {
+    private long id;
+    private long movedId;
 
-public record CategoryUpdateCommand(long id, String description, URL icon) implements Command {
+    public CategoryMoveCommand(long id, long movedId) {
+        setId(id);
+        setMovedId(movedId);
+    }
 
-    public CategoryUpdateCommand {
-        if (description == null && icon == null)
-            throw new IllegalArgumentException("description,icon all not is null ");
+    private void setId(long id) {
+        this.id = id;
+    }
+
+    private void setMovedId(long movedId) {
+        this.movedId = movedId;
+    }
+
+    public long id() {
+        return id;
+    }
+
+    public long movedId() {
+        return movedId;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-
-        CategoryUpdateCommand that = (CategoryUpdateCommand) o;
-        return id == that.id;
+        if (!(o instanceof CategoryMoveCommand that)) return false;
+        return id == that.id && movedId == that.movedId;
     }
 
     @Override
     public int hashCode() {
-        return Long.hashCode(id);
+        return Objects.hash(id, movedId);
     }
 }

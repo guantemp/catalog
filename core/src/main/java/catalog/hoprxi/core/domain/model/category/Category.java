@@ -135,23 +135,14 @@ public class Category {
         return parentId;
     }
 
-    /**
-     * @return the description
-     */
     public String description() {
         return description;
     }
 
-    /**
-     * @return the id
-     */
     public long id() {
         return id;
     }
 
-    /**
-     * @return the value
-     */
     public Name name() {
         return name;
     }

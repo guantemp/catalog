@@ -35,7 +35,6 @@ import java.util.function.Consumer;
 public class UnitOfWork<T> {
     // 强类型追踪实体
     private T dirtyEntity;
-
     // 【终极优化】严格限定为 DomainEvent 类型，并利用 HashSet 天然去重
     private final Set<DomainEvent> pendingDomainEvents = new HashSet<>();
 

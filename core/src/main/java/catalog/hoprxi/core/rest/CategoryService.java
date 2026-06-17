@@ -17,16 +17,13 @@
 package catalog.hoprxi.core.rest;
 
 
-import catalog.hoprxi.core.application.command.CategoryCreateCommand;
-import catalog.hoprxi.core.application.command.CategoryDeleteCommand;
-import catalog.hoprxi.core.application.command.CategoryMoveNodeCommand;
-import catalog.hoprxi.core.application.command.CategoryRenameCommand;
-import catalog.hoprxi.core.application.handler.CategoryCreateHandler;
-import catalog.hoprxi.core.application.handler.CategoryDeleteHandler;
-import catalog.hoprxi.core.application.handler.Handler;
+import catalog.hoprxi.core.application.command.*;
+import catalog.hoprxi.core.application.handler.*;
 import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.query.NotFoundException;
 import catalog.hoprxi.core.domain.model.category.Category;
+import catalog.hoprxi.core.domain.model.category.CategoryRepository;
+import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
 import catalog.hoprxi.core.infrastructure.query.elasticsearch.ESCategoryQuery;
 import com.fasterxml.jackson.core.*;
 import com.linecorp.armeria.common.*;
@@ -58,9 +55,10 @@ public class CategoryService {
     private static final int OFFSET = 0;
     private static final int SIZE = 64;
     private static final Pattern URI_REGEX = Pattern.compile("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
+    private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
     private static final ExecutorService VIRTUAL_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
     private static final CategoryQuery QUERY = new ESCategoryQuery();
-    private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
+    private static final CategoryRepository REPOSITORY = new PsqlCategoryRepository();
 
     @Get("/categories/{id}")
     @Description("Retrieves the category information by the given category ID.")
@@ -354,12 +352,14 @@ public class CategoryService {
                     return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
                             "{\"status\":400,\"message\":\"Invalid JSON format\"}");
                 } catch (Exception e) {
+                    System.out.println(e);
                     // 其他业务或系统异常返回 500
                     return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
                             "{\"status\":500,\"message\":\"Internal server error\"}");
                 }
             }, VIRTUAL_EXECUTOR));
         } catch (IOException e) {
+
             // 处理获取流本身的异常
             return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
                     "{\"status\":500,\"message\":\"Failed to read request body\"}");
@@ -367,34 +367,35 @@ public class CategoryService {
     }
 
     private static Category update(JsonParser parser, long id) throws IOException {
-        String name = null, shortName = null, description = null;
+        Category category = REPOSITORY.find(id);
+        if (category == null) {
+            return null;
+        }
+        UnitOfWork<Category> uow = new UnitOfWork<>();
+        MacroInvoker<Category> invoker = new MacroInvoker<>(uow);
+        String name = null, shortName = null;
         URL icon = null;
-        long parentId = -1L;
         while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.FIELD_NAME) {
                 String fieldName = parser.currentName();
                 parser.nextToken();
                 switch (fieldName) {
-                    case "parent_id" -> parentId = parser.getValueAsLong();
+                    case "parent_id" ->
+                            invoker.addCommand(new CategoryMoveCommand(id, parser.getValueAsLong())).bind(new CategoryMoveHandler(uow));
                     case "name" -> name = parser.getValueAsString();
                     case "shortName" -> shortName = parser.getValueAsString();
-                    case "description" -> description = parser.getValueAsString();
-                    case "icon_url" -> icon = URI.create(parser.getValueAsString()).toURL();
+                    case "description" ->
+                            invoker.addCommand(new CategoryChangDescriptionCommand(id,parser.getValueAsString())).bind(new CategoryDescriptionHandler(uow));
+                    case "icon_url" ->  URI.create(parser.getValueAsString()).toURL();
                 }
             }
         }
         if (name != null || shortName != null) {
-            CategoryRenameCommand renameComm = new CategoryRenameCommand(id, name, shortName);
+            invoker.addCommand(new CategoryRenameCommand(id, name, shortName)).bind(new CategoryRenameHandler(uow));
         }
-        if (parentId != Long.MIN_VALUE)
-            new CategoryMoveNodeCommand(id, parentId);
-         /*
-            if (description != null)
-                commands.add(new CategoryChangeDescriptionCommand(id, description));
-            if (icon != null)
-                commands.add(new CategoryChangeIconCommand(id, icon_url));
-             */
-        return null;
+        category = invoker.execute(category, REPOSITORY::save);
+        System.out.println(category);
+        return category;
     }
 
     private boolean validate(JsonGenerator generator, boolean root, String parentId, String name, String shortName, String description, String uri) throws IOException {

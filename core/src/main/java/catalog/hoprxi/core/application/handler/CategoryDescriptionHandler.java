@@ -16,31 +16,31 @@
 
 package catalog.hoprxi.core.application.handler;
 
-import catalog.hoprxi.core.application.command.CategoryRenameCommand;
-import catalog.hoprxi.core.domain.model.Name;
+import catalog.hoprxi.core.application.command.CategoryChangDescriptionCommand;
 import catalog.hoprxi.core.domain.model.category.Category;
-import catalog.hoprxi.core.domain.model.category.CategoryRenamed;
-
-import java.util.Objects;
 
 /**
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @version 0.1 2026/6/16
+ * @version 0.1 2026/6/17
  * @since JDK 21
  */
 
-public class CategoryRenameHandler implements AggregateHandler<CategoryRenameCommand, Category> {
+public class CategoryDescriptionHandler implements AggregateHandler<CategoryChangDescriptionCommand, Category>{
     private final UnitOfWork<Category> uow;
 
-    public CategoryRenameHandler(UnitOfWork<Category> uow) {
-        this.uow = Objects.requireNonNull(uow);
+    public CategoryDescriptionHandler(UnitOfWork<Category> uow) {
+        this.uow = uow;
     }
 
+    /**
+     * @param entity  内存中的领域对象
+     * @param command 具体的命令
+     * @return
+     */
     @Override
-    public Category execute(Category category, CategoryRenameCommand command) {
-        category.rename(command.name(), command.shortName());
-        // 直接使用注入的 uow 注册事件
-        uow.addEvent(new CategoryRenamed(category.id(), new Name(command.name(), command.shortName())));
-        return category;
+    public Category execute(Category entity, CategoryChangDescriptionCommand command) {
+        entity.changeDescription(command.description());
+        //uow.addEvent(new CategoryNodeMoved(command.id(), command.movedId()));
+        return entity;
     }
 }

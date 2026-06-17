@@ -19,10 +19,10 @@ package catalog.hoprxi.core.application.command;
 import java.net.URL;
 import java.time.Year;
 
-/***
+/**
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 2019-05-14
+ * @version 0.1 2026/6/17
+ * @since JDK 21
  */
 public record BrandCreateCommand(String name, String shortName, URL homepage, URL logo, Year since,
                                  String story) implements Command {

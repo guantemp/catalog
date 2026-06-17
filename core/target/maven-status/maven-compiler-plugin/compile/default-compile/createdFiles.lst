@@ -22,7 +22,6 @@ catalog\hoprxi\core\domain\model\ItemMemberPriceAdjusted.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$5.class
 catalog\hoprxi\core\domain\model\barcode\Barcode.class
 catalog\hoprxi\core\infrastructure\query\elasticsearch\spec\KeywordSpec.class
-catalog\hoprxi\core\application\command\CategoryMoveNodeCommand.class
 catalog\hoprxi\core\domain\model\barcode\UPC_A.class
 catalog\hoprxi\core\domain\BrandValidatorService.class
 catalog\hoprxi\core\infrastructure\batch\AssembleHandler.class
@@ -181,7 +180,6 @@ catalog\hoprxi\core\application\handler\CategoryDeleteHandler.class
 catalog\hoprxi\core\infrastructure\batch\PsqlItemImportWithDisruptor.class
 catalog\hoprxi\core\domain\model\category\CategoryRenamed.class
 catalog\hoprxi\core\application\handler\ItemMemberPriceAdjustedAggHandler.class
-catalog\hoprxi\core\application\command\CategoryUpdateCommand.class
 catalog\hoprxi\core\util\DomainRegistry.class
 catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlBrandRepository.class
 catalog\hoprxi\core\infrastructure\batch\FailedValidationHandler$1.class

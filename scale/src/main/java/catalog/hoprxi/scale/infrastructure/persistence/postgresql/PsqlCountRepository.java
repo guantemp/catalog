@@ -322,7 +322,6 @@ public class PsqlCountRepository implements CountRepository {
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
             generator.writeStringField("name", name.name());
-            generator.writeStringField("mnemonic", name.mnemonic());
             generator.writeStringField("shortName", name.shortName());
             generator.writeEndObject();
         } catch (IOException e) {

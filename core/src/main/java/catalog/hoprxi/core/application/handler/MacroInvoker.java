@@ -1,39 +1,17 @@
-/*
- * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 package catalog.hoprxi.core.application.handler;
-
-/**
- * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @version 0.1 2026/6/16
- * @since JDK 21
- */
-
 
 import catalog.hoprxi.core.application.command.Command;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
-/**
- * @param <T> 当前操作的领域对象类型（如 Category, Order）
- */
 public class MacroInvoker<T> {
+    // 【保留 List】命令必须保留顺序，且允许同一命令出现多次（如批量加购）
     private final List<Command> commands = new ArrayList<>();
+
+    // 【改为 Map】Key: 命令的 Class, Value: 对应的 Handler。天然去重 + O(1) 查找
+    private final Map<Class<? extends Command>, AggregateHandler<? extends Command, T>> handlerMap = new LinkedHashMap<>();
+
     private final UnitOfWork<T> uow;
 
     public MacroInvoker(UnitOfWork<T> uow) {
@@ -42,29 +20,61 @@ public class MacroInvoker<T> {
 
     public MacroInvoker<T> addCommand(Command command) {
         this.commands.add(command);
+
         return this;
     }
 
     /**
-     * 批量绑定 Handler 并执行
+     * 【核心优化】绑定 Handler 时，自动提取其泛型绑定的 Command 类型作为 Key
+     * 使用 LinkedHashMap 保证绑定的顺序
      */
-    public <C extends Command> MacroInvoker<T> bind(Class<C> cmdType, Consumer<C> handlerAction) {
-        for (Command cmd : commands) {
-            if (cmdType.isInstance(cmd)) {
-                handlerAction.accept(cmdType.cast(cmd));
+    @SuppressWarnings("unchecked")
+    public MacroInvoker<T> bind(AggregateHandler<? extends Command, T> handler) {
+        // 获取当前 Handler 实现的所有接口
+        Class<?>[] interfaces = handler.getClass().getInterfaces();
+
+        for (Class<?> iface : interfaces) {
+            // 只要找到了 AggregateHandler 接口
+            if (iface == AggregateHandler.class) {
+                // 【核心修复】直接从 iface (即 AggregateHandler) 上提取泛型参数
+                // 因为 iface 本身就是 ParameterizedType (带有 <RenameCategoryCommand, Category>)
+                java.lang.reflect.Type genericType = handler.getClass().getGenericInterfaces()[0];
+
+                if (genericType instanceof java.lang.reflect.ParameterizedType) {
+                    java.lang.reflect.Type[] typeArgs = ((java.lang.reflect.ParameterizedType) genericType).getActualTypeArguments();
+                    Class<? extends Command> cmdType = (Class<? extends Command>) typeArgs[0];
+
+                    handlerMap.put(cmdType, handler);
+                    //System.out.println("成功绑定: " + cmdType.getSimpleName() + " -> " + handler.getClass().getSimpleName());
+                    return this;
+                }
             }
         }
-        return this;
+
+        throw new IllegalArgumentException("无法解析 Handler 绑定的 Command 类型: " + handler.getClass().getName());
     }
 
     /**
-     * 【终极收口】完全不认识 Repository！
-     * 外部传入已经加载好的实体，以及一个用于落库的 Runnable
+     * 【终极收口】O(1) 极速匹配，统一落库
      */
-    public void execute(T loadedEntity, Consumer<T> persistAction) {
-        // 1. 向 UoW 登记最终的内存对象
+    @SuppressWarnings("unchecked")
+    public T execute(T loadedEntity, Consumer<T> persistAction) {
+        // 1. 遍历命令，O(1) 匹配 Handler 并执行
+        for (Command cmd : commands) {
+            System.out.println("loadedEntity: " + loadedEntity);
+            AggregateHandler<? extends Command, T> handler = handlerMap.get(cmd.getClass());
+            if (handler == null) {
+                throw new IllegalStateException("未找到处理该命令的 Handler: " + cmd.getClass().getSimpleName());
+            }
+            // 强转并执行
+            ((AggregateHandler<Command, T>) handler).execute(loadedEntity, cmd);
+        }
+        // 2. 向 UoW 登记最终的内存对象
         uow.trackDirty(loadedEntity);
-        // 2. 统一提交事务并发布事件
+        System.out.println("loadedEntity: " + loadedEntity);
+        // 3. 统一提交事务并发布事件
         uow.commit(persistAction);
+
+        return loadedEntity;
     }
 }

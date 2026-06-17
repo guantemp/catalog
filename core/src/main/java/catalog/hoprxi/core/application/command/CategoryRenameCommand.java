@@ -22,17 +22,4 @@ package catalog.hoprxi.core.application.command;
  * @version 0.0.1 builder 2022-07-04
  */
 public record CategoryRenameCommand(long id, String name, String shortName) implements Command {
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-
-        CategoryRenameCommand that = (CategoryRenameCommand) o;
-        return id == that.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return Long.hashCode(id);
-    }
 }
