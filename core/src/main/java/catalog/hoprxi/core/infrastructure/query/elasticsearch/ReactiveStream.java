@@ -76,7 +76,7 @@ public final class ReactiveStream {
             .build();
 
     @FunctionalInterface
-    private interface ExtractFunction {
+    public interface ExtractFunction {
         void extract(JsonParser parser, JsonGenerator generator) throws IOException;
     }
 
@@ -141,7 +141,7 @@ public final class ReactiveStream {
         return ReactiveStream.toMonoByteBufInternal(request, new String[0], Extract::extractSuggest);
     }
 
-   private static Mono<ByteBuf> toMonoByteBufInternal(Request request, String[] tips, ExtractFunction extractor) {
+    private static Mono<ByteBuf> toMonoByteBufInternal(Request request, String[] tips, ExtractFunction extractor) {
         return Mono.create((MonoSink<ByteBuf> sink) -> {
                     final AtomicBoolean isCancelled = new AtomicBoolean(false);
                     // 取消监听
@@ -219,38 +219,23 @@ public final class ReactiveStream {
      * @param tips       日志记录的上下文信息（如搜索关键词、操作标识），用于问题追踪
      * @return 包含解析后数据的 {@link ByteBufInputStream}，调用方负责关闭流以释放内存
      * @throws SearchException 当 ES 请求执行失败、响应解析错误或发生 I/O 异常时抛出
-     *
      * @see Extract#extract(JsonParser, JsonGenerator, String)
-     * @see ReactiveStream#toByteBufInputStreamInternal(Request, String, ExtractFunction)
+     * @see ReactiveStream#toByteBufInputStream(Request, String, ExtractFunction)
      */
     public static ByteBufInputStream toByteBufInputStream(Request request, String objectName, String tips) {
-        return ReactiveStream.toByteBufInputStreamInternal(request, tips,
+        return ReactiveStream.toByteBufInputStream(request, tips,
                 (parser, generator) -> Extract.extract(parser, generator, objectName));
     }
 
     /**
-     * 同步执行 Elasticsearch 请求，并将响应结果以树形结构转换为 {@link ByteBufInputStream}，
-     * 使用 {@link Extract#extractAsTree(JsonParser, JsonGenerator, String)} 进行解析。
+     * 执行 ES 请求并将响应内容提取为 ByteBufInputStream。
      *
-     * <p>该方法适用于处理包含复杂嵌套聚合（如聚合桶层级树）的响应，输出格式为以 {@code title} 为根键的树状 JSON。
-     * 内存分配使用 Netty 的 {@code PooledByteBufAllocator}，并在异常时自动释放资源。
-     *
-     * @param request Elasticsearch 请求对象
-     * @param title   树形输出的根字段名称（例如 {@code "aggregations"}、{@code "categories"}），
-     *                该名称会传递给 {@link Extract#extractAsTree(JsonParser, JsonGenerator, String)}
-     * @param tips    日志记录的上下文信息（如搜索关键词、操作标识），用于问题追踪
-     * @return 包含树形解析数据的 {@link ByteBufInputStream}，调用方负责关闭流以释放内存
-     * @throws SearchException 当 ES 请求执行失败、响应解析错误或发生 I/O 异常时抛出
-     *
-     * @see Extract#extractAsTree(JsonParser, JsonGenerator, String)
-     * @see ReactiveStream#toByteBufInputStreamInternal(Request, String, ExtractFunction)
+     * @param request   ES 请求对象
+     * @param tips      发生异常时的自定义提示信息
+     * @param extractor 用于从 Response 中提取目标数据的函数
+     * @return 包含提取数据的 ByteBufInputStream
      */
-    public static ByteBufInputStream toTreeByteBufInputStream(Request request, String title, String tips) {
-        return ReactiveStream.toByteBufInputStreamInternal(request, tips,
-                (parser, generator) -> Extract.extractAsTree(parser, generator, title));
-    }
-
-   private static ByteBufInputStream toByteBufInputStreamInternal(Request request, String tips, ExtractFunction extractor) {
+    public static ByteBufInputStream toByteBufInputStream(Request request, String tips, ExtractFunction extractor) {
         Response response;
         try {
             response = ESUtil.restClient().performRequest(request);
@@ -294,29 +279,19 @@ public final class ReactiveStream {
      * @return 包含 ByteBuf 数据块的 Flux 流
      */
     public static Flux<ByteBuf> toFluxByteBuf(Request request, String objectsName, String tips) {
-        return ReactiveStream.toFluxByteBufInternal(request, tips,
+        return ReactiveStream.toFluxByteBuf(request, tips,
                 (parser, generator) -> Extract.extract(parser, generator, objectsName));
     }
 
     /**
-     * 将 Elasticsearch 请求转换为 Flux&lt;ByteBuf&gt;，并将结果解析为树形结构（基于 left/right 嵌套集模型）。
-     * <p>
-     * 此方法专门用于处理带有 left/right 闭区间字段的 ES 数据（如目录树、组织架构等）。
-     * 它会将扁平的结果集动态重组为带有 "children" 数组的嵌套 JSON 树，并通过 Flux 流式输出。
-     * 内部使用 {@link Extract#extractAsTree(JsonParser, JsonGenerator, String)} 完成树形转换。
-     * </p>
+     * 异步执行 ES 请求并将响应内容提取为 Flux<ByteBuf> 数据流。
      *
-     * @param request Elasticsearch 的请求对象
-     * @param title   输出树形结构的根字段名称，该字段的值即为整个树对象；不可为 {@code null} 或空白
-     * @param tips    用于日志记录或异常信息的上下文标识
-     * @return 包含树形 JSON 数据块（ByteBuf）的 Flux 流
+     * @param request   ES 请求对象
+     * @param tips      发生异常时的自定义提示信息
+     * @param extractor 用于从 Response 中提取目标数据的函数
+     * @return 包含提取数据的异步响应式流
      */
-    public static Flux<ByteBuf> toTreeFluxByteBuf(Request request, String title, String tips) {
-        return ReactiveStream.toFluxByteBufInternal(request, tips,
-                (parser, generator) -> Extract.extractAsTree(parser, generator, title));
-    }
-
-    private static Flux<ByteBuf> toFluxByteBufInternal(Request request, String tips, ExtractFunction extractor) {
+    public static Flux<ByteBuf> toFluxByteBuf(Request request, String tips, ExtractFunction extractor) {
         AtomicBoolean isCancelled = new AtomicBoolean(false);
         Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
         ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
