@@ -104,7 +104,7 @@ public final class Name {
         if (Objects.equals(newName, this.name) && Objects.equals(newShortName, this.shortName)) {
             return this;
         }
-System.out.println(String.format("rename %s to %s", newName, newShortName));
+        //System.out.println(String.format("rename %s to %s", newName, newShortName));
         return new Name(newName, newShortName);
     }
 

@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -289,11 +290,14 @@ public class CategoryService {
                 return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
                         "{\"status\":400,\"code\":400,\"message\":\"Empty request body\"}");
             }
-            try (JsonParser parser = JSON_FACTORY.createParser(content)) {
+            try (JsonParser parser = JSON_FACTORY.createParser(content);
+                 ByteArrayOutputStream baos = new ByteArrayOutputStream(); JsonGenerator generator = JSON_FACTORY.createGenerator(baos, JsonEncoding.UTF8)) {
                 Category category = CategoryService.createCategory(parser);
+                CategoryService.writeCategoryResponse(generator, category);
+
                 LOGGER.info("category created: {}", category);
                 return HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
-                        "{\"status\":\"success\",\"code\":201,\"message\":\"A category created,it's %s\"}", category);
+                        HttpData.wrap(baos.toByteArray()));
             } catch (JsonProcessingException e) {
                 // 5. 统一异常处理，避免泄露敏感信息
                 return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
@@ -307,10 +311,39 @@ public class CategoryService {
         return HttpResponse.of(future);
     }
 
+    private static void writeCategoryResponse(JsonGenerator generator, Category category) throws IOException {
+        generator.writeStartObject();
+        generator.writeStringField("status", "success");
+        generator.writeNumberField("code", 201);
+        generator.writeStringField("message", "A category created, it's " + category.name().name());
+
+        generator.writeObjectFieldStart("category");
+        generator.writeNumberField("parentId", category.parentId());
+        generator.writeNumberField("id", category.id());
+
+        generator.writeObjectFieldStart("name");
+        generator.writeStringField("name", category.name().name());
+        generator.writeStringField("shortName", category.name().shortName());
+        generator.writeEndObject();
+        // 优化 null 值处理，语义更清晰
+        if (category.icon() != null) {
+            generator.writeStringField("icon", category.icon().toExternalForm());
+        } else {
+            generator.writeNullField("icon");
+        }
+
+        generator.writeStringField("description", category.description());
+        generator.writeEndObject();
+
+        generator.writeEndObject();
+        generator.flush();
+    }
+
+
     private static Category createCategory(JsonParser parser) throws IOException {
         String name = null, shortName = null, description = null;
         URL icon = null;
-        long parentId = 0;
+        long parentId = 0L;
         while (parser.nextToken() != null) {
             if (parser.currentToken() == JsonToken.FIELD_NAME) {
                 String fieldName = parser.currentName();
@@ -359,7 +392,6 @@ public class CategoryService {
                 }
             }, VIRTUAL_EXECUTOR));
         } catch (IOException e) {
-
             // 处理获取流本身的异常
             return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
                     "{\"status\":500,\"message\":\"Failed to read request body\"}");
@@ -381,20 +413,20 @@ public class CategoryService {
                 parser.nextToken();
                 switch (fieldName) {
                     case "parent_id" ->
-                            invoker.addCommand(new CategoryMoveCommand(id, parser.getValueAsLong())).bind(new CategoryMoveHandler(uow));
+                            invoker.addCommand(new CategoryMoveCommand(id, parser.getValueAsLong())).bind(CategoryMoveCommand.class, new CategoryMoveHandler(uow));
                     case "name" -> name = parser.getValueAsString();
                     case "shortName" -> shortName = parser.getValueAsString();
                     case "description" ->
-                            invoker.addCommand(new CategoryChangDescriptionCommand(id,parser.getValueAsString())).bind(new CategoryDescriptionHandler(uow));
-                    case "icon_url" ->  URI.create(parser.getValueAsString()).toURL();
+                            invoker.addCommand(new CategoryChangDescriptionCommand(id, parser.getValueAsString())).bind(CategoryChangDescriptionCommand.class, new CategoryDescriptionHandler(uow));
+                    case "icon_url" -> URI.create(parser.getValueAsString()).toURL();
                 }
             }
         }
         if (name != null || shortName != null) {
-            invoker.addCommand(new CategoryRenameCommand(id, name, shortName)).bind(new CategoryRenameHandler(uow));
+            invoker.addCommand(new CategoryRenameCommand(id, name, shortName)).bind(CategoryRenameCommand.class,new CategoryRenameHandler(uow));
         }
         category = invoker.execute(category, REPOSITORY::save);
-        System.out.println(category);
+        //System.out.println(category);
         return category;
     }
 

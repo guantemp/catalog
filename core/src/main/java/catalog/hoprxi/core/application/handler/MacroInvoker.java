@@ -29,29 +29,9 @@ public class MacroInvoker<T> {
      * 使用 LinkedHashMap 保证绑定的顺序
      */
     @SuppressWarnings("unchecked")
-    public MacroInvoker<T> bind(AggregateHandler<? extends Command, T> handler) {
-        // 获取当前 Handler 实现的所有接口
-        Class<?>[] interfaces = handler.getClass().getInterfaces();
-
-        for (Class<?> iface : interfaces) {
-            // 只要找到了 AggregateHandler 接口
-            if (iface == AggregateHandler.class) {
-                // 【核心修复】直接从 iface (即 AggregateHandler) 上提取泛型参数
-                // 因为 iface 本身就是 ParameterizedType (带有 <RenameCategoryCommand, Category>)
-                java.lang.reflect.Type genericType = handler.getClass().getGenericInterfaces()[0];
-
-                if (genericType instanceof java.lang.reflect.ParameterizedType) {
-                    java.lang.reflect.Type[] typeArgs = ((java.lang.reflect.ParameterizedType) genericType).getActualTypeArguments();
-                    Class<? extends Command> cmdType = (Class<? extends Command>) typeArgs[0];
-
-                    handlerMap.put(cmdType, handler);
-                    //System.out.println("成功绑定: " + cmdType.getSimpleName() + " -> " + handler.getClass().getSimpleName());
-                    return this;
-                }
-            }
-        }
-
-        throw new IllegalArgumentException("无法解析 Handler 绑定的 Command 类型: " + handler.getClass().getName());
+    public <C extends Command> MacroInvoker<T> bind(Class<C> cmdType, AggregateHandler<C, T> handler) {
+        handlerMap.put(cmdType, handler);
+        return this;
     }
 
     /**

@@ -344,7 +344,6 @@ public class PsqlCategoryRepositoryTest {
 
         repository.remove(Category.UNDEFINED.id());
     }
-
  */
 
     @Test
