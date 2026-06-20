@@ -249,7 +249,6 @@ public class BrandService {
         return handler.execute(command);
     }
 
-    @StatusCode(204)
     @Delete("/brands/:id")
     public HttpResponse delete(@Param("id") long id) {
         return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
