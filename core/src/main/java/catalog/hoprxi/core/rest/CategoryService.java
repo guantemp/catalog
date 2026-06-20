@@ -21,6 +21,7 @@ import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.handler.*;
 import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.query.NotFoundException;
+import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
@@ -283,18 +284,15 @@ public class CategoryService {
         MediaType contentType = headers.contentType();
         if (contentType == null || !(MediaType.JSON.is(contentType) || MediaType.JSON_UTF_8.is(contentType)))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE, MediaType.JSON_UTF_8,
-                    "{\"status\":415,\"code\":415,\"message\":\"Expected JSON content\"}");
+                    "{\"status\":415,\"message\":\"Expected JSON content\"}");
+        if (body.isEmpty())
+            return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                    "{\"status\":400,\"message\":\"Empty request body\"}");
         CompletableFuture<HttpResponse> future = CompletableFuture.supplyAsync(() -> {
-            byte[] content = body.array();
-            if (content.length == 0) {
-                return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
-                        "{\"status\":400,\"code\":400,\"message\":\"Empty request body\"}");
-            }
-            try (JsonParser parser = JSON_FACTORY.createParser(content);
+            try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream());
                  ByteArrayOutputStream baos = new ByteArrayOutputStream(); JsonGenerator generator = JSON_FACTORY.createGenerator(baos, JsonEncoding.UTF8)) {
                 Category category = CategoryService.createCategory(parser);
                 CategoryService.writeCategoryResponse(generator, category);
-
                 LOGGER.info("category created: {}", category);
                 return HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
                         HttpData.wrap(baos.toByteArray()));
@@ -308,7 +306,11 @@ public class CategoryService {
                         "{\"status\":500,\"message\":\"Internal server error\"}");
             }
         }, VIRTUAL_EXECUTOR);
-        return HttpResponse.of(future);
+        return HttpResponse.of(future.exceptionally(throwable -> {
+            LOGGER.error("Unexpected error in async task", throwable);
+            return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                    "{\"status\":500,\"message\":\"Unexpected error\"}");
+        }));
     }
 
     private static void writeCategoryResponse(JsonGenerator generator, Category category) throws IOException {
@@ -369,33 +371,29 @@ public class CategoryService {
         if (contentType == null || !(MediaType.JSON.is(contentType) || MediaType.JSON_UTF_8.is(contentType)))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE, MediaType.JSON_UTF_8,
                     "{\"status\":415,\"code\":415,\"message\":\"Expected JSON content\"}");
-        // 1. 内存安全：使用 InputStream 进行流式解析，避免大文件 OOM
-        try (InputStream inputStream = body.toInputStream()) {
-            if (inputStream.available() == 0) {
+        if (body.isEmpty())
+            return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                    "{\"status\":400,\"code\":400,\"message\":\"Empty request body\"}");
+        CompletableFuture<HttpResponse> future = CompletableFuture.supplyAsync(() -> {
+            try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
+                Category category = CategoryService.update(parser, id);
+                return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
+                        String.format("{\"status\":\"success\",\"code\":200,\"message\":\"A category has updated, it's %s\"}", category));
+            } catch (JsonProcessingException e) {
+                // 精细异常捕获：JSON 格式错误返回 400
                 return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
-                        "{\"status\":400,\"code\":400,\"message\":\"Empty request body\"}");
+                        "{\"status\":400,\"message\":\"Invalid JSON format\"}");
+            } catch (Exception e) {
+                // 其他业务或系统异常返回 500
+                return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                        "{\"status\":500,\"message\":\"Internal server error\"}");
             }
-            return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
-                try (JsonParser parser = JSON_FACTORY.createParser(inputStream)) {
-                    Category category = CategoryService.update(parser, id);
-                    return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
-                            String.format("{\"status\":\"success\",\"code\":200,\"message\":\"A brand updated, it's %s\"}", category));
-                } catch (JsonProcessingException e) {
-                    // 精细异常捕获：JSON 格式错误返回 400
-                    return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
-                            "{\"status\":400,\"message\":\"Invalid JSON format\"}");
-                } catch (Exception e) {
-                    System.out.println(e);
-                    // 其他业务或系统异常返回 500
-                    return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                            "{\"status\":500,\"message\":\"Internal server error\"}");
-                }
-            }, VIRTUAL_EXECUTOR));
-        } catch (IOException e) {
-            // 处理获取流本身的异常
+        }, VIRTUAL_EXECUTOR);
+        return HttpResponse.of(future.exceptionally(throwable -> {
+            LOGGER.error("Unexpected error in async task", throwable);
             return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                    "{\"status\":500,\"message\":\"Failed to read request body\"}");
-        }
+                    "{\"status\":500,\"message\":\"Unexpected error\"}");
+        }));
     }
 
     private static Category update(JsonParser parser, long id) throws IOException {

@@ -43,7 +43,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -158,33 +157,35 @@ public class BrandService {
         if (contentType == null || !(MediaType.JSON.is(contentType) || MediaType.JSON_UTF_8.is(contentType)))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE, MediaType.JSON_UTF_8,
                     "{\"status\":415,\"code\":415,\"message\":\"Expected JSON content\"}");
+        // 2. 空体检查（安全，不依赖流）
+        if (body.isEmpty()) {
+            return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                    "{\"status\":400,\"message\":\"Empty request body\"}");
+        }
         CompletableFuture<HttpResponse> future = CompletableFuture.supplyAsync(() -> {
-            byte[] content = body.array();
-            if (content.length == 0) {
-                return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
-                        "{\"status\":400,\"code\":400,\"message\":\"Empty request body\"}");
-            }
-            try (JsonParser parser = JSON_FACTORY.createParser(content)) {
+            try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
                 Brand brand = BrandService.createBrand(parser);
-                LOGGER.info("Brand created: {}", brand);
                 return HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
-                        "{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand);
+                        String.format("{\"status\":\"success\",\"code\":201,\"message\":\"A brand created,it's %s\"}", brand));
             } catch (JsonProcessingException e) {
-                // 5. 统一异常处理，避免泄露敏感信息
+                // 精细异常捕获：JSON 格式错误返回 400
                 return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
                         "{\"status\":400,\"message\":\"Invalid JSON format\"}");
             } catch (Exception e) {
-                LOGGER.error(e.getMessage(), e);
+                // 其他业务或系统异常返回 500
                 return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
                         "{\"status\":500,\"message\":\"Internal server error\"}");
             }
         }, VIRTUAL_EXECUTOR);
-        return HttpResponse.of(future);
+        return HttpResponse.of(future.exceptionally(throwable -> {
+            LOGGER.error("Unexpected error in async task", throwable);
+            return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                    "{\"status\":500,\"message\":\"Unexpected error\"}");
+        }));
     }
 
     private static Brand createBrand(JsonParser parser) throws IOException, URISyntaxException {
-        BrandFields fields = parseBrandFields(parser);
-
+        BrandFields fields = BrandService.parseBrandFields(parser);
         BrandCreateCommand command = new BrandCreateCommand(
                 fields.name,
                 fields.shortName,
@@ -204,36 +205,35 @@ public class BrandService {
         if (contentType == null || !(MediaType.JSON.is(contentType) || MediaType.JSON_UTF_8.is(contentType)))
             return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE, MediaType.JSON_UTF_8,
                     "{\"status\":415,\"code\":415,\"message\":\"Expected JSON content\"}");
-        // 1. 内存安全：使用 InputStream 进行流式解析，避免大文件 OOM
-        try (InputStream inputStream = body.toInputStream()) {
-            if (inputStream.available() == 0) {
-                return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
-                        "{\"status\":400,\"code\":400,\"message\":\"Empty request body\"}");
-            }
-            return HttpResponse.of(CompletableFuture.supplyAsync(() -> {
-                try (JsonParser parser = JSON_FACTORY.createParser(inputStream)) {
-                    Brand brand = BrandService.update(parser, id);
-                    return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
-                            String.format("{\"status\":\"success\",\"code\":200,\"message\":\"A brand has updated, it's %s\"}", brand));
-                } catch (JsonProcessingException e) {
-                    // 精细异常捕获：JSON 格式错误返回 400
-                    return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
-                            "{\"status\":400,\"message\":\"Invalid JSON format\"}");
-                } catch (Exception e) {
-                    // 其他业务或系统异常返回 500
-                    return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                            "{\"status\":500,\"message\":\"Internal server error\"}");
-                }
-            }, VIRTUAL_EXECUTOR));
-        } catch (IOException e) {
-            // 处理获取流本身的异常
-            return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                    "{\"status\":500,\"message\":\"Failed to read request body\"}");
+        // 2. 空体检查（安全，不依赖流）
+        if (body.isEmpty()) {
+            return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                    "{\"status\":400,\"code\":400,\"message\":\"Empty request body\"}");
         }
+        CompletableFuture<HttpResponse> future = CompletableFuture.supplyAsync(() -> {
+            try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
+                Brand brand = BrandService.update(parser, id);
+                return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8,
+                        String.format("{\"status\":\"success\",\"code\":200,\"message\":\"A brand has updated, it's %s\"}", brand));
+            } catch (JsonProcessingException e) {
+                // 精细异常捕获：JSON 格式错误返回 400
+                return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                        "{\"status\":400,\"message\":\"Invalid JSON format\"}");
+            } catch (Exception e) {
+                // 其他业务或系统异常返回 500
+                return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                        "{\"status\":500,\"message\":\"Internal server error\"}");
+            }
+        }, VIRTUAL_EXECUTOR);
+        return HttpResponse.of(future.exceptionally(throwable -> {
+            LOGGER.error("Unexpected error in async task", throwable);
+            return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                    "{\"status\":500,\"message\":\"Unexpected error\"}");
+        }));
     }
 
     private static Brand update(JsonParser parser, long id) throws IOException, URISyntaxException {
-        BrandFields fields = parseBrandFields(parser);
+        BrandFields fields = BrandService.parseBrandFields(parser);
 
         BrandUpdateCommand command = new BrandUpdateCommand(
                 id,
