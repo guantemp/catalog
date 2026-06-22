@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>品牌管理 · SaaS零售风格 | 紧凑卡片布局</title>
-    <!-- Vue 3 -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- 图标库 -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>品牌管理 · SaaS零售风格 | 宽度缩减·字体不变</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js">
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet" />
     <style>
-        /* 样式部分保持不变，与用户提供的一致 */
+        /* ===== 全局重置 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -22,61 +21,439 @@
             overflow: hidden;
             height: 100vh;
         }
-        .app-layout {
-            display: flex;
-            height: 100vh;
-            width: 100%;
-        }
-        .sidebar {
-            width: 260px;
-            background: #001529;
-            color: rgba(255,255,255,0.7);
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            z-index: 10;
-            box-shadow: 2px 0 12px rgba(0,0,0,0.3);
-        }
-        .logo-area {
-            height: 64px;
+
+        /* ===== 顶部导航 ===== */
+        .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: #0F1A24;
+            border-bottom: 2px solid #1F3A4A;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 0 24px;
-            gap: 10px;
-            background: rgba(0,0,0,0.2);
-            font-size: 18px;
-            font-weight: 600;
-            color: #fff;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
         }
-        .logo-area .material-symbols-outlined { font-size: 24px; }
-        .nav-menu { flex: 1; padding: 16px 0; }
-        .nav-item {
+        .header-left {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 24px;
+            color: #EFF3FC;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .header-left .material-symbols-outlined {
+            font-size: 28px;
+            color: #3ECF8E;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: #C8DCF0;
+            font-size: 14px;
+            position: relative;
+        }
+
+        /* ---- 顶部栏搜索框 ---- */
+        .top-search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0 12px;
+            height: 34px;
+            width: 200px;
+            transition: border-color 0.2s, width 0.25s ease;
+        }
+        .top-search-box:focus-within {
+            border-color: #2D9CDB;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 2px rgba(45, 156, 219, 0.15);
+        }
+        .top-search-box .search-icon {
+            color: #7F8AA8;
+            font-size: 13px;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+        .top-search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #E6EDF5;
+            font-size: 13px;
+            width: 100%;
+            padding: 4px 0;
+        }
+        .top-search-box input::placeholder {
+            color: #5A6A7A;
+            font-size: 12px;
+        }
+        .top-search-box .searching-indicator-top {
+            font-size: 12px;
+            color: #2D9CDB;
+            margin-left: 6px;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* ---- 通知图标 ---- */
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            color: #C8DCF0;
+            font-size: 18px;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .notification-icon:hover {
+            color: #7AC9FF;
+            background: rgba(45, 156, 219, 0.10);
+            border-color: rgba(45, 156, 219, 0.20);
+        }
+        .notification-icon .badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            transform: translate(25%, -25%);
+            background: #DC4C4C;
+            color: #fff;
+            font-size: 9px;
+            font-weight: 600;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            border: 2px solid #0F1A24;
+            line-height: 1;
+        }
+
+        /* ---- 用户下拉（悬停触发） ---- */
+        .user-dropdown {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: default;
+            padding: 4px 10px 4px 6px;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+            user-select: none;
+            height: 34px;
+        }
+        .user-dropdown:hover {
+            background: rgba(45, 156, 219, 0.08);
+            border-color: rgba(45, 156, 219, 0.15);
+        }
+        .user-dropdown .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2D9CDB, #00E5FF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            flex-shrink: 0;
+            box-shadow: 0 0 0 2px rgba(45, 156, 219, 0.25);
+        }
+        .user-dropdown .username {
+            font-size: 13px;
+            font-weight: 500;
+            color: #E6EDF5;
+            white-space: nowrap;
+        }
+        .user-dropdown .chevron {
+            font-size: 11px;
+            color: #7F8AA8;
+            transition: transform 0.25s ease;
+            margin-left: 2px;
+        }
+        .user-dropdown .chevron.open {
+            transform: rotate(180deg);
+        }
+
+        /* ---- 下拉菜单（悬停触发） ---- */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: #1A2434;
+            border: 1px solid #2A3A4A;
+            border-radius: 16px;
+            min-width: 180px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            z-index: 200;
+            padding: 6px 0;
+            transform-origin: top right;
+            animation: dropdownFadeIn 0.2s ease;
+        }
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .dropdown-menu .dropdown-item {
+            padding: 10px 18px;
+            color: #C8DCF0;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+        .dropdown-menu .dropdown-item:hover {
+            background: rgba(45, 156, 219, 0.12);
+            color: #fff;
+        }
+        .dropdown-menu .dropdown-item i {
+            width: 18px;
+            font-size: 14px;
+            color: #7F8AA8;
+            transition: color 0.15s;
+        }
+        .dropdown-menu .dropdown-item:hover i {
+            color: #7AC9FF;
+        }
+        .dropdown-menu .dropdown-divider {
+            height: 1px;
+            background: #2A3A4A;
+            margin: 4px 12px;
+        }
+        .dropdown-menu .dropdown-item.danger {
+            color: #FFB4A2;
+        }
+        .dropdown-menu .dropdown-item.danger i {
+            color: #DC4C4C;
+        }
+        .dropdown-menu .dropdown-item.danger:hover {
+            background: rgba(220, 76, 76, 0.12);
+            color: #FFB4A2;
+        }
+        .dropdown-menu .dropdown-item.danger:hover i {
+            color: #FF6B6B;
+        }
+
+        /* ---- 帮助图标 ---- */
+        .help-icon {
+            cursor: pointer;
+            color: #7F8AA8;
+            font-size: 18px;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .help-icon:hover {
+            color: #7AC9FF;
+            background: rgba(45, 156, 219, 0.10);
+            border-color: rgba(45, 156, 219, 0.20);
+        }
+
+        /* ===== 整体布局 ===== */
+        .app-layout {
+            display: flex;
+            height: calc(100vh - 56px);
+            margin-top: 56px;
+            width: 100%;
+        }
+
+        /* ============================================================
+                   侧边栏 ———— 宽度 200px，字体图标大小不变
+                   ============================================================ */
+        .saas-sidebar {
+            width: 168px;
+            background: #0C1729;
+            color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: width 0.25s ease;
+            overflow: hidden;
+            z-index: 10;
+            box-shadow: 2px 0 16px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
+        .saas-sidebar.collapsed {
+            width: 64px;
+        }
+        .saas-sidebar.collapsed .logo-area span:last-child {
+            display: none;
+        }
+        .saas-sidebar.collapsed .nav-item span:last-child {
+            display: none;
+        }
+        .saas-sidebar.collapsed .collapse-btn span {
+            display: none;
+        }
+        .saas-sidebar.collapsed .collapse-btn i {
+            transform: rotate(180deg);
+        }
+
+        /* ---- Logo 区域 ---- */
+        .logo-area {
+            height: 44px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.35);
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+        }
+        .logo-area .material-symbols-outlined {
+            font-size: 26px;
+            color: #3ECF8E;
+        }
+        .logo-area span:last-child {
+            display: none;
+        }
+
+        /* ---- 导航菜单 ---- */
+        .nav-menu {
+            flex: 1;
+            padding: 0 0 8px 0;
+            overflow-y: auto;
+        }
+
+        /* ---- 导航项（字体恢复 14px，图标 20px） ---- */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.2s;
-            color: rgba(255,255,255,0.7);
+            transition: all 0.2s ease;
+            color: rgba(255, 255, 255, 0.65);
+            white-space: nowrap;
+            border-radius: 0 10px 10px 0;
+            position: relative;
+            margin: 1px 4px 2px 0;
         }
-        .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
-        .nav-item.active { background: #1677ff; color: #fff; }
-        .nav-item .material-symbols-outlined { font-size: 20px; }
+        .nav-item:hover {
+            background: rgba(45, 156, 219, 0.08);
+            color: #fff;
+        }
 
+        /* ---- 选中效果（保留加粗指示条、新配色） ---- */
+        .nav-item.active {
+            background: rgba(0, 229, 255, 0.10);
+            color: #E6F7FF;
+        }
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 16%;
+            height: 72%;
+            width: 4px;
+            background: linear-gradient(180deg, #00E5FF, #2D9CDB);
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 14px rgba(0, 229, 255, 0.5);
+        }
+        .nav-item.active .material-symbols-outlined {
+            color: #00E5FF;
+        }
+        .nav-item.active span:last-child {
+            color: #FFFFFF;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+
+        /* ★ 图标尺寸恢复为 20px */
+        .nav-item .material-symbols-outlined {
+            font-size: 20px;
+            flex-shrink: 0;
+            transition: color 0.2s ease;
+        }
+
+        /* ---- 折叠按钮 ---- */
+        .collapse-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.3);
+            transition: all 0.2s;
+            flex-shrink: 0;
+            font-size: 13px;
+        }
+        .collapse-btn:hover {
+            color: #00E5FF;
+            background: rgba(0, 229, 255, 0.05);
+        }
+        .collapse-btn i {
+            transition: transform 0.25s ease;
+            font-size: 14px;
+        }
+
+        /* ===== 右侧主内容（全新深色配色） ===== */
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
             padding: 24px 28px 28px 28px;
-            background: #121826;
+            background: #0F1A24;
         }
 
-        /* 工具栏 */
         .toolbar {
-            background: #1E2538;
+            background: #1A2A3A;
             border-radius: 20px;
             padding: 12px 24px;
             margin-bottom: 28px;
@@ -85,10 +462,11 @@
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            border: 1px solid #2A3348;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            border: 1px solid #2A3A4A;
         }
-        .toolbar-left, .toolbar-right {
+        .toolbar-left,
+        .toolbar-right {
             display: flex;
             gap: 12px;
             align-items: center;
@@ -111,7 +489,7 @@
             color: white;
         }
         .btn-primary:hover {
-            background: #2383BB;
+            background: #3EACEB;
             transform: translateY(-1px);
         }
         .btn-batch-delete {
@@ -119,13 +497,13 @@
             color: white;
         }
         .btn-batch-delete:hover {
-            background: #B93A3A;
+            background: #E85A5A;
             transform: translateY(-1px);
         }
         .btn-card-edit {
-            background: #2C3E50;
-            color: #B8C5E0;
-            border: 1px solid #4A5570;
+            background: #3A4A5A;
+            color: #C8DCF0;
+            border: 1px solid #4A5A6A;
         }
         .btn-card-edit:hover {
             background: #2D9CDB;
@@ -159,7 +537,6 @@
             transform: none;
         }
 
-        /* 搜索框 */
         .search-box {
             position: relative;
             width: 280px;
@@ -168,8 +545,8 @@
             width: 100%;
             padding: 8px 12px 8px 36px;
             border-radius: 32px;
-            border: 1px solid #3A455E;
-            background: #101624;
+            border: 1px solid #3A4A5A;
+            background: #0E1A24;
             color: #E6EDF5;
             font-size: 13px;
             outline: none;
@@ -195,11 +572,15 @@
             animation: pulse 1s infinite;
         }
         @keyframes pulse {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 1; }
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+            50% {
+                opacity: 1;
+            }
         }
 
-        /* 品牌列表容器 */
         .brand-list-container {
             position: relative;
             min-height: 300px;
@@ -210,7 +591,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(18, 24, 38, 0.75);
+            background: rgba(15, 26, 36, 0.92);
             backdrop-filter: blur(2px);
             display: flex;
             align-items: center;
@@ -222,17 +603,16 @@
             color: #7AC9FF;
         }
 
-        /* 品牌网格 —— 卡片尺寸调小 */
         .brand-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 20px;
         }
         .brand-card {
-            background: #1E2538;
+            background: #1E2A3A;
             border-radius: 20px;
             padding: 14px 8px 12px;
-            border: 1px solid #2A3348;
+            border: 1px solid #2A3A4A;
             transition: 0.2s;
             cursor: default;
             position: relative;
@@ -240,17 +620,18 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
         .brand-card:hover {
-            transform: translateY(-2px);
-            border-color: #2D9CDB;
-            background: #252E46;
+            transform: translateY(-3px);
+            border-color: #4A6A8A;
+            background: #2A3A4A;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
         }
         .brand-card.selected {
             border-color: #2D9CDB;
-            background: #1D2B42;
-            box-shadow: 0 0 0 1px #2D9CDB;
+            background: #1A2A3A;
+            box-shadow: 0 0 0 2px #2D9CDB;
         }
         .selection-indicator {
             position: absolute;
@@ -268,7 +649,9 @@
             opacity: 0;
             transition: 0.2s;
         }
-        .brand-card.selected .selection-indicator { opacity: 1; }
+        .brand-card.selected .selection-indicator {
+            opacity: 1;
+        }
         .logo-img-wrapper {
             width: 70px;
             height: 70px;
@@ -276,22 +659,22 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: radial-gradient(circle at 30% 30%, rgba(255,255,245,0.25), rgba(210,225,245,0.15));
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 245, 0.12), rgba(210, 225, 245, 0.03));
             border-radius: 50%;
             padding: 8px;
-            box-shadow: 0 0 0 2px rgba(45,156,219,0.3), 0 4px 10px rgba(0,0,0,0.4);
+            box-shadow: 0 0 0 2px rgba(45, 156, 219, 0.2), 0 4px 10px rgba(0, 0, 0, 0.4);
             transition: 0.25s;
         }
         .brand-card:hover .logo-img-wrapper {
             transform: scale(1.02);
-            background: radial-gradient(circle at 30% 30%, rgba(255,255,245,0.35), rgba(210,225,245,0.25));
-            box-shadow: 0 0 0 3px rgba(45,156,219,0.5);
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 245, 0.18), rgba(210, 225, 245, 0.08));
+            box-shadow: 0 0 0 3px rgba(45, 156, 219, 0.4);
         }
         .logo-img {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            filter: brightness(1.12) contrast(1.1);
+            filter: brightness(1.15) contrast(1.05);
         }
         .brand-name {
             font-weight: 600;
@@ -357,6 +740,7 @@
             border: 1px solid transparent;
             white-space: nowrap;
         }
+
         .pagination {
             display: flex;
             justify-content: center;
@@ -367,8 +751,8 @@
         .pagination button {
             padding: 6px 18px;
             border-radius: 32px;
-            border: 1px solid #3A455E;
-            background: #1E2538;
+            border: 1px solid #3A4A5A;
+            background: #2A3A4A;
             color: #D1DBF0;
             cursor: pointer;
         }
@@ -382,11 +766,10 @@
         }
         .pagination .current-page {
             padding: 6px 18px;
-            background: #2A344A;
+            background: #3A4A5A;
             border-radius: 32px;
         }
 
-        /* 编辑弹窗样式保持不变 */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -401,10 +784,10 @@
             z-index: 1000;
         }
         .modal {
-            background: #1E2538;
+            background: #2A3A4A;
             width: 620px;
             border-radius: 28px;
-            border: 1px solid #2A3348;
+            border: 1px solid #3A4A5A;
             box-shadow: 0 25px 40px -12px black;
             max-height: 85vh;
             display: flex;
@@ -412,8 +795,8 @@
         }
         .modal-header {
             padding: 12px 20px;
-            border-bottom: 1px solid #2A3348;
-            background: #181E2C;
+            border-bottom: 1px solid #3A4A5A;
+            background: #1A2434;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -461,7 +844,10 @@
             justify-content: center;
             border-radius: 30px;
         }
-        .close-btn:hover { background: #2A344A; color: #2D9CDB; }
+        .close-btn:hover {
+            background: #2A344A;
+            color: #2D9CDB;
+        }
         .modal-body {
             padding: 20px 24px;
             overflow-y: auto;
@@ -482,16 +868,18 @@
             font-size: 14px;
             color: #C4D0EC;
         }
-        .form-input, .form-textarea {
+        .form-input,
+        .form-textarea {
             padding: 10px 14px;
             border-radius: 18px;
-            border: 1px solid #3A455E;
-            background: #101624;
+            border: 1px solid #3A4A5A;
+            background: #0E1A24;
             color: #EFF3FC;
             font-size: 15px;
             outline: none;
         }
-        .form-input:focus, .form-textarea:focus {
+        .form-input:focus,
+        .form-textarea:focus {
             border-color: #2D9CDB;
             box-shadow: 0 0 0 2px rgba(45, 156, 219, 0.2);
         }
@@ -510,14 +898,15 @@
         .inline-group .form-group {
             flex: 1;
         }
+        /* ===== 去掉底部按钮背景框 ===== */
         .modal-footer {
             padding: 12px 24px 20px 24px;
-            border-top: 1px solid #2A3348;
             display: flex;
             justify-content: flex-end;
             gap: 16px;
-            background: #181E2C;
             flex-shrink: 0;
+            background: transparent;
+            border-top: none;
         }
         .modal-btn {
             padding: 10px 28px;
@@ -550,13 +939,65 @@
             cursor: not-allowed;
             transform: none;
         }
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            background: #1E2538;
+            background: #2A3A4A;
             border-radius: 28px;
-            color: #8A99B5;
+            color: #A0B0C0;
         }
+        .empty-state .empty-icon {
+            font-size: 42px;
+            color: #4A5A6A;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .empty-state .empty-icon.error {
+            color: #E67E22;
+        }
+        .empty-state .empty-title {
+            font-size: 15px;
+            color: #E6EDF5;
+            margin-bottom: 6px;
+        }
+        .empty-state .empty-desc {
+            font-size: 13px;
+            color: #A0B0C0;
+            margin-bottom: 16px;
+        }
+        .empty-state .empty-desc.error {
+            color: #E67E22;
+        }
+        .btn-reset {
+            margin-top: 4px;
+            background: #2D9CDB;
+            color: white;
+            border: none;
+            padding: 8px 28px;
+            border-radius: 40px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-reset:hover {
+            background: #3EACEB;
+            transform: translateY(-1px);
+        }
+        .btn-reset:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-reset.error {
+            background: #E67E22;
+        }
+        .btn-reset.error:hover {
+            background: #D35400;
+        }
+
         .image-preview-overlay {
             position: fixed;
             top: 0;
@@ -573,7 +1014,7 @@
         .image-preview-container {
             max-width: 80vw;
             max-height: 80vh;
-            background: #1E2538;
+            background: #2A3A4A;
             border-radius: 24px;
             padding: 16px;
             position: relative;
@@ -599,35 +1040,149 @@
             color: white;
             border: 1px solid #4A5570;
         }
+
+        /* ---- 顶部栏搜索框响应式微调 ---- */
+        @media (max-width: 1024px) {
+            .top-search-box {
+                width: 150px;
+            }
+            .user-dropdown .username {
+                font-size: 12px;
+            }
+        }
+        @media (max-width: 768px) {
+            .top-search-box {
+                width: 120px;
+            }
+            .top-search-box input::placeholder {
+                font-size: 11px;
+            }
+            .user-dropdown .username {
+                display: none;
+            }
+            .user-dropdown {
+                padding: 4px 6px;
+            }
+            .header-right {
+                gap: 8px;
+            }
+        }
+        @media (max-width: 600px) {
+            .top-search-box {
+                width: 90px;
+            }
+            .top-search-box input {
+                font-size: 11px;
+            }
+            .notification-icon,
+            .help-icon {
+                width: 30px;
+                height: 30px;
+                font-size: 15px;
+            }
+            .user-dropdown .user-avatar {
+                width: 24px;
+                height: 24px;
+                font-size: 11px;
+            }
+        }
     </style>
 </head>
 <body>
 <div id="app">
-    <div class="app-layout">
-        <aside class="sidebar">
-            <div class="logo-area">
-                <span class="material-symbols-outlined">storefront</span>
-                <span>SaaS 零售</span>
+    <!-- 顶部导航 -->
+    <header class="app-header">
+        <div class="header-left">
+            <span class="material-symbols-outlined">storefront</span>
+            <span>SaaS 零售 · 重庆夏至店</span>
+        </div>
+        <div class="header-right">
+            <!-- 搜索框 -->
+            <div class="top-search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" placeholder="全局搜索..." v-model="topSearchKeyword" @keyup.enter="topSearch" @focus="topSearchFocused = true" @blur="topSearchFocused = false" />
+                <span v-if="topSearching" class="searching-indicator-top"><i class="fas fa-spinner fa-pulse"></i></span>
             </div>
+
+            <!-- 通知图标 -->
+            <div class="notification-icon" @click="handleNotification">
+                <i class="fas fa-bell"></i>
+                <span class="badge" v-if="notificationCount > 0">{{ notificationCount }}</span>
+            </div>
+
+            <!-- ===== 用户下拉 — 悬停触发（优化延迟关闭） ===== -->
+            <div class="user-dropdown"
+                 @mouseenter="openDropdown"
+                 @mouseleave="scheduleClose">
+                <div class="user-avatar">张</div>
+                <span class="username">张经理</span>
+                <i class="fas fa-chevron-down chevron" :class="{ open: dropdownVisible }"></i>
+                <!-- 下拉菜单 -->
+                <div class="dropdown-menu"
+                     v-if="dropdownVisible"
+                     @mouseenter="cancelClose"
+                     @mouseleave="scheduleClose"
+                     @click.stop>
+                    <button class="dropdown-item" @click="goToSettings">
+                        <i class="fas fa-user-cog"></i> 用户设置
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item danger" @click="handleLogout">
+                        <i class="fas fa-sign-out-alt"></i> 退出登录
+                    </button>
+                </div>
+            </div>
+
+            <!-- 帮助图标 -->
+            <div class="help-icon" @click="handleHelp">
+                <i class="fas fa-question-circle"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主体 -->
+    <div class="app-layout">
+        <!-- 侧边栏（宽度 200px，字体图标正常） -->
+        <aside class="saas-sidebar" :class="{ collapsed: isCollapsed }">
             <div class="nav-menu">
-                <div class="nav-item active"><span class="material-symbols-outlined">inventory_2</span>商品档案</div>
-                <div class="nav-item"><span class="material-symbols-outlined">shopping_cart</span>销售管理</div>
-                <div class="nav-item"><span class="material-symbols-outlined">people</span>会员管理</div>
-                <div class="nav-item"><span class="material-symbols-outlined">local_shipping</span>采购管理</div>
-                <div class="nav-item"><span class="material-symbols-outlined">warehouse</span>库存管理</div>
+                <div class="nav-item active" style="margin-top: 28px">
+                    <span class="material-symbols-outlined" :title="isCollapsed ? '商品档案' : ''">inventory_2</span>
+                    <span v-show="!isCollapsed">商品档案</span>
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined" :title="isCollapsed ? '销售管理' : ''">shopping_cart</span>
+                    <span v-show="!isCollapsed">销售管理</span>
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined" :title="isCollapsed ? '会员管理' : ''">people</span>
+                    <span v-show="!isCollapsed">会员管理</span>
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined" :title="isCollapsed ? '采购管理' : ''">local_shipping</span>
+                    <span v-show="!isCollapsed">采购管理</span>
+                </div>
+                <div class="nav-item">
+                    <span class="material-symbols-outlined" :title="isCollapsed ? '库存管理' : ''">warehouse</span>
+                    <span v-show="!isCollapsed">库存管理</span>
+                </div>
+            </div>
+            <div class="collapse-btn" @click="toggleSidebar">
+                <i class="fas fa-chevron-left"></i>
+                <span v-show="!isCollapsed">折叠菜单</span>
             </div>
         </aside>
 
+        <!-- 右侧主内容 -->
         <div class="main-content">
             <div class="toolbar">
                 <div class="toolbar-left">
-                    <button class="btn btn-primary" @click="handleAdd" :disabled="gridLoading"><i class="fas fa-plus"></i> 新增品牌</button>
-                    <button class="btn btn-batch-delete" :disabled="selectedIds.length === 0 || gridLoading" @click="batchDelete"><i class="fas fa-trash-alt"></i> 批量删除 ({{ selectedIds.length }})</button>
+                    <button class="btn btn-primary" @click="handleAdd"><i class="fas fa-plus"></i> 新增品牌</button>
+                    <button class="btn btn-batch-delete" :disabled="selectedIds.length === 0" @click="batchDelete"><i class="fas fa-trash-alt"></i> 批量删除 ({{ selectedIds.length }})</button>
                 </div>
                 <div class="toolbar-right">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" ref="searchInput" placeholder="品牌名称 / 拼音 / 首字母" v-model="searchKeyword" @keyup.enter="searchBrands" @focus="handleInputFocus" :disabled="gridLoading">
+                        <input type="text" ref="searchInput" placeholder="品牌名称 / 拼音 / 首字母" v-model="searchKeyword" @keyup.enter="searchBrands" @focus="handleInputFocus" />
                         <span v-if="searching" class="searching-indicator"><i class="fas fa-spinner fa-pulse"></i></span>
                     </div>
                 </div>
@@ -638,7 +1193,7 @@
                 <div class="brand-grid">
                     <div v-for="brand in paginatedBrands" :key="brand.id" class="brand-card" :class="{ selected: selectedIds.includes(brand.id) }" @click="toggleSelect(brand.id)">
                         <div class="selection-indicator" v-if="selectedIds.includes(brand.id)"><i class="fas fa-check"></i></div>
-                        <div class="logo-img-wrapper" @click.stop><img :src="getBrandLogo(brand)" class="logo-img" @error="handleImageError"></div>
+                        <div class="logo-img-wrapper" @click.stop><img :src="getBrandLogo(brand)" class="logo-img" @error="handleImageError" /></div>
                         <div class="brand-name" @click.stop>
                             {{ brand.name }} <span v-if="brand.shortName && brand.shortName !== ''">({{ brand.shortName }})</span>
                             <div class="tooltip" v-if="brand.since">📅 成立: {{ brand.since }}</div>
@@ -649,11 +1204,31 @@
                         </div>
                     </div>
                 </div>
+
                 <div v-if="brands.length === 0 && !gridLoading" class="empty-state">
-                    <i class="fas fa-box-open" style="font-size: 36px; margin-bottom: 12px; display: block;"></i>
-                    <p v-if="lastSearchKeyword">未找到与 "{{ lastSearchKeyword }}" 相关的品牌</p>
-                    <p v-else>暂无品牌数据，请稍后再试</p>
+                    <template v-if="lastSearchKeyword && !fetchError">
+                        <span class="empty-icon"><i class="fas fa-search"></i></span>
+                        <div class="empty-title">未找到与 "{{ lastSearchKeyword }}" 相关的品牌</div>
+                        <div class="empty-desc">请尝试其他关键词</div>
+                    </template>
+                    <template v-else-if="fetchError">
+                        <span class="empty-icon error"><i class="fas fa-exclamation-triangle"></i></span>
+                        <div class="empty-title">获取数据失败</div>
+                        <div class="empty-desc error">{{ fetchError }}</div>
+                        <button class="btn-reset error" @click="refreshBrands" :disabled="refreshDisabled">
+                            <i class="fas fa-sync-alt"></i> 重新加载
+                        </button>
+                    </template>
+                    <template v-else>
+                        <span class="empty-icon"><i class="fas fa-box-open"></i></span>
+                        <div class="empty-title">无品牌数据</div>
+                        <div class="empty-desc">请稍后再试</div>
+                        <button class="btn-reset" @click="refreshBrands" :disabled="refreshDisabled">
+                            <i class="fas fa-sync-alt"></i> 重新加载
+                        </button>
+                    </template>
                 </div>
+
                 <div class="pagination" v-if="brands.length > 0 && !gridLoading">
                     <button @click="prevPage" :disabled="currentPage === 1">上一页</button>
                     <span class="current-page">第 {{ currentPage }} / {{ totalPages }} 页</span>
@@ -665,7 +1240,10 @@
             <div class="modal-overlay" v-if="showEditModal" @click="showEditModal = false">
                 <div class="modal" @click.stop>
                     <div class="modal-header">
-                        <h3 class="modal-title"><i class="fas fa-pen-alt"></i> 编辑品牌</h3>
+                        <h3 class="modal-title">
+                            <i class="fas fa-pen-alt"></i>
+                            {{ editingBrand.id && !editingBrand.id.toString().startsWith('temp_') ? '编辑品牌' : '新增品牌' }}
+                        </h3>
                         <div class="modal-header-actions">
                             <div class="reset-icon-btn" @click="resetEditing" title="重置到原始数据"><i class="fas fa-undo"></i></div>
                             <button class="close-btn" @click="showEditModal = false">&times;</button>
@@ -674,30 +1252,30 @@
                     <div class="modal-body">
                         <form @submit.prevent="saveEdit" class="edit-form">
                             <div class="form-group">
-                                <label class="form-label">品牌名称 *</label>
-                                <input class="form-input" v-model="editingBrand.name">
+                                <label class="form-label">品牌名称 <span style="color: #DC4C4C;">*</span></label>
+                                <input class="form-input" v-model="editingBrand.name" />
                             </div>
                             <div class="inline-group">
                                 <div class="form-group">
                                     <label class="form-label">别名/简称</label>
-                                    <input class="form-input" v-model="editingBrand.shortName">
+                                    <input class="form-input" v-model="editingBrand.shortName" />
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">成立年份</label>
-                                    <input type="number" class="form-input" v-model.number="editingBrand.since">
+                                    <input type="number" class="form-input" v-model.number="editingBrand.since" />
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">官方网站</label>
                                 <div class="input-with-button">
-                                    <input class="form-input" v-model="editingBrand.homepage" placeholder="https://">
+                                    <input class="form-input" v-model="editingBrand.homepage" placeholder="https://" />
                                     <button type="button" class="btn-icon" :disabled="!isValidUrl(editingBrand.homepage)" @click="openHomepage(editingBrand.homepage)"><i class="fas fa-external-link-alt"></i> 跳转</button>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Logo URL</label>
                                 <div class="input-with-button">
-                                    <input class="form-input" v-model="editingBrand.logo" placeholder="图片链接">
+                                    <input class="form-input" v-model="editingBrand.logo" placeholder="图片链接" />
                                     <button type="button" class="btn-icon" :disabled="!isValidUrl(editingBrand.logo)" @click="previewLogo(editingBrand.logo)"><i class="fas fa-eye"></i> 预览</button>
                                     <button type="button" class="btn-icon" @click="uploadLogoPlaceholder"><i class="fas fa-upload"></i> 上传</button>
                                 </div>
@@ -706,7 +1284,8 @@
                                 <label class="form-label">品牌故事</label>
                                 <textarea class="form-textarea" rows="2" v-model="editingBrand.story" placeholder="品牌故事..."></textarea>
                             </div>
-                            <div class="modal-footer">
+                            <!-- 按钮放在 modal-body 内部，紧贴内容，无背景框 -->
+                            <div style="display: flex; justify-content: flex-end; gap: 16px; padding-top: 12px;">
                                 <button type="button" class="modal-btn modal-btn-secondary" @click="showEditModal=false">取消</button>
                                 <button type="submit" class="modal-btn modal-btn-primary" :disabled="!isFormChanged">保存</button>
                             </div>
@@ -715,11 +1294,11 @@
                 </div>
             </div>
 
-            <!-- 图片预览弹窗 -->
+            <!-- 图片预览 -->
             <div class="image-preview-overlay" v-if="previewImageVisible" @click="previewImageVisible = false">
                 <div class="image-preview-container" @click.stop>
                     <div class="preview-close" @click="previewImageVisible = false"><i class="fas fa-times"></i></div>
-                    <img :src="previewImageUrl" alt="预览图片">
+                    <img :src="previewImageUrl" alt="预览图片" />
                 </div>
             </div>
         </div>
@@ -727,7 +1306,7 @@
 </div>
 
 <script>
-    const { createApp, ref, computed } = Vue;
+    const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
 
     function safeParseBigIntJson(jsonStr) {
         const safeStr = jsonStr.replace(/:\s*(-?\d{16,})(?=\s*[,\]}])/g, ':"$1"');
@@ -755,6 +1334,10 @@
 
     createApp({
         setup() {
+            // ---- 原有状态 ----
+            const isCollapsed = ref(false);
+            const toggleSidebar = () => { isCollapsed.value = !isCollapsed.value; };
+
             const brands = ref([]);
             const selectedIds = ref([]);
             const showEditModal = ref(false);
@@ -768,7 +1351,48 @@
             const lastSearchKeyword = ref('');
             const previewImageVisible = ref(false);
             const previewImageUrl = ref('');
+            const fetchError = ref('');
+            const refreshDisabled = ref(false);
+            let lastRefreshTime = 0;
+            const REFRESH_INTERVAL = 1000;
 
+            // ---- 顶部栏新增状态 ----
+            const topSearchKeyword = ref('');
+            const topSearching = ref(false);
+            const topSearchFocused = ref(false);
+            const dropdownVisible = ref(false);
+            const notificationCount = ref(3);
+            const userDropdownRef = ref(null);
+
+            // ---- 下拉菜单延迟关闭逻辑 ----
+            let closeTimer = null;
+            const closeDelay = 200; // 毫秒
+
+            const openDropdown = () => {
+                if (closeTimer) {
+                    clearTimeout(closeTimer);
+                    closeTimer = null;
+                }
+                dropdownVisible.value = true;
+            };
+
+            const scheduleClose = () => {
+                if (closeTimer) clearTimeout(closeTimer);
+                closeTimer = setTimeout(() => {
+                    dropdownVisible.value = false;
+                    closeTimer = null;
+                }, closeDelay);
+            };
+
+            const cancelClose = () => {
+                if (closeTimer) {
+                    clearTimeout(closeTimer);
+                    closeTimer = null;
+                }
+                dropdownVisible.value = true;
+            };
+
+            // ---- 计算属性 ----
             const paginatedBrands = computed(() => {
                 const start = (currentPage.value - 1) * itemsPerPage;
                 return brands.value.slice(start, start + itemsPerPage);
@@ -780,82 +1404,98 @@
                 const current = editingBrand.value;
                 const original = originalEditSnapshot.value;
                 if (!original || !current) return false;
-                return JSON.stringify({
-                    name: current.name,
-                    shortName: current.shortName,
-                    since: current.since,
-                    homepage: current.homepage,
-                    logo: current.logo,
-                    story: current.story
-                }) !== JSON.stringify({
-                    name: original.name,
-                    shortName: original.shortName,
-                    since: original.since,
-                    homepage: original.homepage,
-                    logo: original.logo,
-                    story: original.story
-                });
+                const fields = ['name', 'shortName', 'since', 'homepage', 'logo', 'story'];
+                for (const f of fields) {
+                    if (current[f] !== original[f]) return true;
+                }
+                return false;
             });
 
+            // ---- 工具函数 ----
             const isValidUrl = (url) => {
                 if (!url || typeof url !== 'string') return false;
                 return /^https?:\/\/[^\s]+$/.test(url.trim());
             };
-
-            const openHomepage = (url) => {
-                if (isValidUrl(url)) window.open(url.trim(), '_blank');
-            };
-
+            const openHomepage = (url) => { if (isValidUrl(url)) window.open(url.trim(), '_blank'); };
             const previewLogo = (url) => {
                 if (isValidUrl(url)) {
                     previewImageUrl.value = url.trim();
                     previewImageVisible.value = true;
                 }
             };
-
             const uploadLogoPlaceholder = () => { alert("上传功能开发中，敬请期待。"); };
+            const handleInputFocus = (event) => {
+                if (searchKeyword.value && searchKeyword.value.trim() !== '') event.target.select();
+            };
+            const isEqualId = (a, b) => String(a) === String(b);
+            const getBrandLogo = (brand) => brand.logo && brand.logo.trim() ? brand.logo : DEFAULT_LOGO;
+            const handleImageError = (e) => { if (e.target.src !== DEFAULT_LOGO) e.target.src = DEFAULT_LOGO; };
 
-            // ---------- API 交互函数 ----------
-            const fetchAllBrands = async () => {
-                const response = await fetch(`${SEARCH_URL}?offset=0&size=160`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const text = await response.text();
-                const jsonData = safeParseBigIntJson(text);
-                if (jsonData && Array.isArray(jsonData.brands)) {
-                    brands.value = jsonData.brands.map(normalizeBrand);
-                } else {
+            // ---- 数据加载 ----
+            const doFetchBrands = async () => {
+                searchKeyword.value = '';
+                lastSearchKeyword.value = '';
+                fetchError.value = '';
+                try {
+                    const response = await fetch(`${SEARCH_URL}?offset=0&size=200`);
+                    if (!response.ok) {
+                        fetchError.value = `HTTP ${response.status}`;
+                        brands.value = [];
+                        return;
+                    }
+                    const text = await response.text();
+                    const jsonData = safeParseBigIntJson(text);
+                    if (jsonData && Array.isArray(jsonData.brands)) {
+                        brands.value = jsonData.brands.map(normalizeBrand);
+                    } else {
+                        brands.value = [];
+                    }
+                    currentPage.value = 1;
+                } catch (err) {
+                    console.error('加载失败:', err);
+                    fetchError.value = err.message || '网络异常，请稍后重试';
                     brands.value = [];
                 }
             };
 
-            const resetToFullList = async () => {
-                if (gridLoading.value) return;
+            const refreshBrands = async () => {
+                const now = Date.now();
+                if (now - lastRefreshTime < REFRESH_INTERVAL) {
+                    if (!refreshDisabled.value) {
+                        refreshDisabled.value = true;
+                        const remaining = REFRESH_INTERVAL - (now - lastRefreshTime);
+                        setTimeout(() => { refreshDisabled.value = false; }, remaining);
+                    }
+                    return;
+                }
+                lastRefreshTime = now;
+                refreshDisabled.value = true;
                 gridLoading.value = true;
-                searchKeyword.value = '';
-                lastSearchKeyword.value = '';
                 try {
-                    await fetchAllBrands();
-                    currentPage.value = 1;
-                } catch (err) {
-                    console.error('加载失败:', err);
-                    alert(`加载失败: ${err.message}`);
+                    await doFetchBrands();
                 } finally {
                     gridLoading.value = false;
+                    setTimeout(() => { refreshDisabled.value = false; }, 100);
                 }
             };
 
             const searchBrands = async () => {
                 const kw = searchKeyword.value.trim();
                 if (!kw) {
-                    await resetToFullList();
+                    await refreshBrands();
                     return;
                 }
                 searching.value = true;
                 gridLoading.value = true;
+                fetchError.value = '';
                 try {
                     const url = `${SEARCH_URL}?s=${encodeURIComponent(kw)}&offset=0&size=64`;
                     const response = await fetch(url);
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    if (!response.ok) {
+                        fetchError.value = `HTTP ${response.status}`;
+                        brands.value = [];
+                        return;
+                    }
                     const text = await response.text();
                     const jsonData = safeParseBigIntJson(text);
                     if (jsonData && Array.isArray(jsonData.brands)) {
@@ -867,7 +1507,7 @@
                     }
                 } catch (err) {
                     console.error('搜索失败:', err);
-                    alert(`搜索失败: ${err.message}`);
+                    fetchError.value = err.message || '网络异常，请稍后重试';
                     brands.value = [];
                 } finally {
                     gridLoading.value = false;
@@ -875,19 +1515,53 @@
                 }
             };
 
-            // 单个删除（调用 DELETE 接口）
+            // ---- 顶部栏搜索 ----
+            const topSearch = async () => {
+                const kw = topSearchKeyword.value.trim();
+                if (!kw) {
+                    await refreshBrands();
+                    return;
+                }
+                topSearching.value = true;
+                searchKeyword.value = kw;
+                await searchBrands();
+                topSearching.value = false;
+            };
+
+            // ---- 菜单操作 ----
+            const goToSettings = () => {
+                dropdownVisible.value = false;
+                alert('跳转到用户设置页面');
+            };
+
+            const handleLogout = () => {
+                dropdownVisible.value = false;
+                if (confirm('确定要退出登录吗？')) {
+                    alert('已退出登录');
+                }
+            };
+
+            // ---- 通知 ----
+            const handleNotification = () => {
+                alert('你有 ' + notificationCount.value + ' 条未读通知');
+            };
+
+            // ---- 帮助 ----
+            const handleHelp = () => {
+                alert('帮助中心\n如需帮助，请联系技术支持。');
+            };
+
+            // ---- 品牌操作 ----
             const handleDelete = async (id) => {
                 if (!confirm('确定删除该品牌吗？')) return;
                 try {
-                    console.log('qew:'+`${SEARCH_URL}/${id}`)
                     const response = await fetch(`${SEARCH_URL}/${id}`, { method: 'DELETE' });
                     if (response.status === 204) {
                         alert('删除成功');
-                        // 刷新列表
-                        await resetToFullList();
+                        await refreshBrands();
                     } else if (response.status === 404) {
                         alert('品牌不存在，可能已被删除');
-                        await resetToFullList();
+                        await refreshBrands();
                     } else {
                         throw new Error(`HTTP ${response.status}`);
                     }
@@ -897,36 +1571,28 @@
                 }
             };
 
-            // 批量删除（循环调用 DELETE）
             const batchDelete = async () => {
                 if (selectedIds.value.length === 0) return;
                 if (!confirm(`确定删除 ${selectedIds.value.length} 个品牌吗？`)) return;
-                let successCount = 0;
-                let failCount = 0;
+                let successCount = 0,
+                    failCount = 0;
                 for (const id of selectedIds.value) {
                     try {
                         const response = await fetch(`${SEARCH_URL}/${id}`, { method: 'DELETE' });
-                        if (response.status === 204) {
-                            successCount++;
-                        } else {
-                            failCount++;
-                        }
-                    } catch (err) {
-                        failCount++;
-                    }
+                        if (response.status === 204) successCount++;
+                        else failCount++;
+                    } catch (err) { failCount++; }
                 }
                 alert(`批量删除完成，成功 ${successCount} 个，失败 ${failCount} 个`);
-                await resetToFullList();  // 刷新列表
+                await refreshBrands();
                 selectedIds.value = [];
             };
 
-            // 保存品牌（新增或更新）
             const saveEdit = async () => {
                 if (!editingBrand.value.name) {
                     alert('品牌名称不能为空');
                     return;
                 }
-                // 构建提交的数据体
                 const payload = {
                     name: editingBrand.value.name || null,
                     shortName: editingBrand.value.shortName || null,
@@ -935,19 +1601,17 @@
                     homepage: editingBrand.value.homepage || null,
                     since: editingBrand.value.since || null
                 };
-                const isUpdate = editingBrand.value.id && !editingBrand.value.id.toString().startsWith('temp_'); // 判断是否为已存在的品牌（非临时ID）
+                const isUpdate = editingBrand.value.id && !editingBrand.value.id.toString().startsWith('temp_');
                 try {
                     let response;
                     if (isUpdate) {
-                        // 编辑：PUT 请求
                         response = await fetch(`${SEARCH_URL}/${editingBrand.value.id}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
                         });
                     } else {
-                        // 新增：POST 请求
-                        response = await fetch(`${SEARCH_URL}`, {
+                        response = await fetch(SEARCH_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
@@ -956,7 +1620,7 @@
                     if (response.ok) {
                         alert(isUpdate ? '更新成功' : '创建成功');
                         showEditModal.value = false;
-                        await resetToFullList(); // 刷新列表
+                        await refreshBrands();
                     } else {
                         let errMsg = '保存失败';
                         try {
@@ -971,19 +1635,12 @@
                 }
             };
 
-            const handleInputFocus = (event) => {
-                if (searchKeyword.value && searchKeyword.value.trim() !== '') event.target.select();
-            };
-
-            const isEqualId = (a, b) => String(a) === String(b);
-
             const toggleSelect = (id) => {
                 const idx = selectedIds.value.findIndex(sid => isEqualId(sid, id));
                 idx === -1 ? selectedIds.value.push(id) : selectedIds.value.splice(idx, 1);
             };
 
             const handleAdd = () => {
-                // 新增时，使用临时 id 标记（不发送给后端）
                 const newBrand = {
                     id: `temp_${Date.now()}`,
                     name: '',
@@ -1016,12 +1673,12 @@
             const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
             const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
 
-            const getBrandLogo = (brand) => brand.logo && brand.logo.trim() ? brand.logo : DEFAULT_LOGO;
-            const handleImageError = (e) => { if (e.target.src !== DEFAULT_LOGO) e.target.src = DEFAULT_LOGO; };
-
-            resetToFullList();
+            refreshBrands();
 
             return {
+                // 原有
+                isCollapsed,
+                toggleSidebar,
                 brands,
                 selectedIds,
                 showEditModal,
@@ -1036,7 +1693,10 @@
                 previewImageVisible,
                 previewImageUrl,
                 isFormChanged,
+                refreshDisabled,
+                fetchError,
                 searchBrands,
+                refreshBrands,
                 handleInputFocus,
                 toggleSelect,
                 handleAdd,
@@ -1052,7 +1712,23 @@
                 isValidUrl,
                 openHomepage,
                 previewLogo,
-                uploadLogoPlaceholder
+                uploadLogoPlaceholder,
+                // 新增顶部栏
+                topSearchKeyword,
+                topSearching,
+                topSearchFocused,
+                dropdownVisible,
+                notificationCount,
+                userDropdownRef,
+                topSearch,
+                goToSettings,
+                handleLogout,
+                handleNotification,
+                handleHelp,
+                // 下拉菜单交互方法
+                openDropdown,
+                scheduleClose,
+                cancelClose,
             };
         }
     }).mount('#app');

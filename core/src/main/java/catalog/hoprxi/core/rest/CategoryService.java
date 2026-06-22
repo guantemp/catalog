@@ -316,8 +316,7 @@ public class CategoryService {
     private static void writeCategoryResponse(JsonGenerator generator, Category category) throws IOException {
         generator.writeStartObject();
         generator.writeStringField("status", "success");
-        generator.writeNumberField("code", 201);
-        generator.writeStringField("message", "A category created, it's " + category.name().name());
+        generator.writeStringField("message", "A category created or update, it's " + category.name().name());
 
         generator.writeObjectFieldStart("category");
         generator.writeNumberField("parentId", category.parentId());
