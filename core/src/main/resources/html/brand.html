@@ -1277,7 +1277,8 @@
                                 <div class="input-with-button">
                                     <input class="form-input" v-model="editingBrand.logo" placeholder="图片链接" />
                                     <button type="button" class="btn-icon" :disabled="!isValidUrl(editingBrand.logo)" @click="previewLogo(editingBrand.logo)"><i class="fas fa-eye"></i> 预览</button>
-                                    <button type="button" class="btn-icon" @click="uploadLogoPlaceholder"><i class="fas fa-upload"></i> 上传</button>
+                                    <!-- ===== 改动：上传按钮新增功能 ===== -->
+                                    <button type="button" class="btn-icon" @click="triggerFileUpload"><i class="fas fa-upload"></i> 上传</button>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -1291,6 +1292,8 @@
                             </div>
                         </form>
                     </div>
+                    <!-- 隐藏的文件输入 -->
+                    <input type="file" ref="fileInput" accept=".png,.jpg,.jpeg,.ico,.gif,.bmp,.webp,.svg" style="display:none" @change="handleFileChange" />
                 </div>
             </div>
 
@@ -1331,6 +1334,7 @@
     }
 
     const SEARCH_URL = 'https://slave.tooo.top/catalog/v1/brands';
+    const UPLOAD_URL = 'https://slave.tooo.top/catalog/v1/upload';
 
     createApp({
         setup() {
@@ -1366,7 +1370,7 @@
 
             // ---- 下拉菜单延迟关闭逻辑 ----
             let closeTimer = null;
-            const closeDelay = 200; // 毫秒
+            const closeDelay = 200;
 
             const openDropdown = () => {
                 if (closeTimer) {
@@ -1390,6 +1394,68 @@
                     closeTimer = null;
                 }
                 dropdownVisible.value = true;
+            };
+
+            // ---- 新增：文件上传相关 ----
+            const fileInput = ref(null);
+
+            const triggerFileUpload = () => {
+                if (fileInput.value) {
+                    fileInput.value.click();
+                }
+            };
+
+            const handleFileChange = async (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                // 验证文件类型（通过扩展名）
+                const allowedExtensions = ['png', 'jpg', 'jpeg', 'ico', 'gif', 'bmp', 'webp', 'svg'];
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (!allowedExtensions.includes(ext)) {
+                    alert('仅支持以下图片格式：' + allowedExtensions.join(', '));
+                    event.target.value = ''; // 清空
+                    return;
+                }
+
+                // 构建 FormData
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    // 构造上传 URL，附加参数
+                    const params = new URLSearchParams({
+                        rename: 'false',
+                        separateByDate: 'false',
+                        directory: 'logo'
+                    });
+                    const uploadUrl = `${UPLOAD_URL}?${params.toString()}`;
+
+                    const response = await fetch(uploadUrl, {
+                        method: 'POST',
+                        body: formData,
+                        // 注意：不要设置 Content-Type，让浏览器自动设置 multipart/form-data 边界
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`上传失败 (HTTP ${response.status})`);
+                    }
+
+                    const result = await response.json();
+                    if (result.code === 200 && result.url) {
+                        // 将返回的 URL 填入 Logo URL 输入框
+                        editingBrand.value.logo = result.url;
+                        alert('上传成功！');
+                    } else {
+                        throw new Error(result.message || '上传失败');
+                    }
+                } catch (error) {
+                    console.error('上传出错:', error);
+                    alert('上传失败：' + error.message);
+                } finally {
+                    // 清空 input，以便重复选择同一文件
+                    event.target.value = '';
+                }
             };
 
             // ---- 计算属性 ----
@@ -1423,7 +1489,8 @@
                     previewImageVisible.value = true;
                 }
             };
-            const uploadLogoPlaceholder = () => { alert("上传功能开发中，敬请期待。"); };
+            // 原 uploadLogoPlaceholder 已被替换，不再使用
+            const uploadLogoPlaceholder = () => {}; // 保留占位，避免引用错误
             const handleInputFocus = (event) => {
                 if (searchKeyword.value && searchKeyword.value.trim() !== '') event.target.select();
             };
@@ -1712,7 +1779,7 @@
                 isValidUrl,
                 openHomepage,
                 previewLogo,
-                uploadLogoPlaceholder,
+                uploadLogoPlaceholder, // 保留，但实际被替换
                 // 新增顶部栏
                 topSearchKeyword,
                 topSearching,
@@ -1729,6 +1796,10 @@
                 openDropdown,
                 scheduleClose,
                 cancelClose,
+                // 新增上传相关
+                fileInput,
+                triggerFileUpload,
+                handleFileChange,
             };
         }
     }).mount('#app');

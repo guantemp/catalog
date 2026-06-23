@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多文件上传 · 自适应路径</title>
+    <title>多文件上传 · 单/多接口自适应</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, sans-serif; }
         body { background: #eef2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
@@ -11,12 +11,29 @@
         .card-inner { padding: 28px 32px 36px; }
         h2 { font-size: 26px; font-weight: 600; color: #1e3a5f; text-align: center; margin-bottom: 6px; }
         .sub { text-align: center; font-size: 13px; color: #6c7a8e; border-bottom: 1px solid #eef2f7; padding-bottom: 14px; margin-bottom: 20px; }
-        .options { display: flex; justify-content: center; gap: 32px; background: #f8fafc; padding: 10px 20px; border-radius: 60px; margin-bottom: 24px; }
+        .options { display: flex; justify-content: center; gap: 32px; background: #f8fafc; padding: 10px 20px; border-radius: 60px; margin-bottom: 16px; flex-wrap: wrap; }
         .option { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+        .directory-input-wrap { margin-bottom: 18px; }
+        .directory-input-wrap input {
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: 30px;
+            border: 1px solid #d0dbe8;
+            background: #fafcfe;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+        .directory-input-wrap input:focus {
+            border-color: #2c7da0;
+            box-shadow: 0 0 0 3px rgba(44,125,160,0.15);
+        }
+        .directory-input-wrap input::placeholder { color: #aab7c9; }
         .upload-area { border: 2px dashed #9bb7d4; border-radius: 24px; padding: 36px 20px; text-align: center; cursor: pointer; transition: 0.2s; margin-bottom: 24px; background: #fff; }
         .upload-area.drag-over { background: #eef5fc; border-color: #2c7da0; transform: scale(0.99); }
         .upload-icon { font-size: 48px; margin-bottom: 10px; }
         .upload-tip { font-weight: 500; color: #2c5a7a; }
+        .upload-hint { font-size: 13px; color: #6c7a8e; margin-top: 4px; }
         .file-list-container { border: 1px solid #e2e9f0; border-radius: 20px; margin-bottom: 20px; display: none; max-height: 260px; overflow-y: auto; }
         .file-list-container.has-files { display: block; }
         .file-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #f0f2f5; }
@@ -37,23 +54,28 @@
         .result-area { margin-top: 20px; background: #f8fafc; border-radius: 18px; padding: 14px 18px; border-left: 4px solid #2c7da0; display: none; max-height: 240px; overflow-y: auto; font-size: 13px; }
         .result-area.show { display: block; }
         .result-area a { color: #2c7da0; word-break: break-all; }
+        .summary { font-weight: 600; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 <div class="card">
     <div class="card-inner">
-        <h2>📎 多文件上传（逐个上传）</h2>
-        <div class="sub">单文件接口: <code>/v1/upload</code> 或 <code>/catalog/v1/upload</code> | 字段名 <code>file</code></div>
+        <h2>📎 多文件上传（单/多接口自适应）</h2>
+        <div class="sub">单文件 → <code>/v1/upload</code>（字段 <code>file</code>）｜多文件 → <code>/v1/uploads</code>（字段 <code>files</code>）</div>
 
         <div class="options">
             <label class="option"><input type="checkbox" id="renameCheckbox" checked> 自动重命名</label>
             <label class="option"><input type="checkbox" id="separateCheckbox" checked> 按日分目录存储</label>
         </div>
 
+        <div class="directory-input-wrap">
+            <input type="text" id="directoryInput" placeholder="可选：子目录名（如 images / avatar / 2026）" />
+        </div>
+
         <div class="upload-area" id="dropZone">
             <div class="upload-icon">📂✨</div>
             <div class="upload-tip">点击选择文件 或 拖拽文件到此处</div>
-            <div class="upload-hint">支持多文件，逐个上传，每个文件独立显示地址</div>
+            <div class="upload-hint">支持多文件，根据数量自动切换接口</div>
             <input type="file" id="fileInput" multiple style="display: none;">
         </div>
 
@@ -64,7 +86,7 @@
         <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
         <div class="progress-text" id="progressText"></div>
 
-        <button class="upload-btn" id="uploadBtn" disabled>🚀 开始上传（逐个）</button>
+        <button class="upload-btn" id="uploadBtn" disabled>🚀 开始上传</button>
         <div class="result-area" id="resultArea"></div>
     </div>
 </div>
@@ -73,7 +95,6 @@
     (function() {
         // 自动检测是否需要添加 /catalog 前缀
         function getBasePath() {
-            // 如果当前页面路径包含 /catalog/（例如 http://xxx/catalog/upload.html），则加上 /catalog
             if (window.location.pathname.includes('/catalog/')) {
                 return '/catalog';
             }
@@ -87,6 +108,7 @@
         const fileListDiv = document.getElementById('fileList');
         const renameCheckbox = document.getElementById('renameCheckbox');
         const separateCheckbox = document.getElementById('separateCheckbox');
+        const directoryInput = document.getElementById('directoryInput');
         const progressBar = document.getElementById('progressBar');
         const progressFill = document.getElementById('progressFill');
         const progressTextSpan = document.getElementById('progressText');
@@ -95,7 +117,7 @@
         let selectedFiles = [];
         let isUploading = false;
 
-        // 辅助
+        // 辅助函数
         function formatSize(bytes) {
             if (bytes === 0) return '0 B';
             const k = 1024;
@@ -178,26 +200,17 @@
             resultArea.classList.remove('show');
         }
 
-        function showResult(successList, failList) {
-            let html = '';
-            if (successList.length) {
-                html += `<div style="margin-bottom:12px;"><strong>✅ 成功上传 ${successList.length} 个文件：</strong></div>`;
-                successList.forEach(item => {
-                    html += `<div style="margin-bottom:12px; padding-left:10px;">
-                                📄 <strong>${escapeHtml(item.name)}</strong><br>
-                                🔗 地址：<a href="${escapeHtml(item.url)}" target="_blank">${escapeHtml(item.url)}</a>
-                            </div>`;
-                });
-            }
-            if (failList.length) {
-                if (successList.length) html += '<hr>';
-                html += `<div style="margin-bottom:6px;"><strong>❌ 失败 ${failList.length} 个：</strong></div>`;
-                failList.forEach(item => {
-                    html += `<div style="color:#c23d3d; margin-bottom:6px; padding-left:10px;">
-                                ❌ ${escapeHtml(item.name)} — ${escapeHtml(item.error)}
-                            </div>`;
-                });
-            }
+        function showSummary(message, results) {
+            let html = `<div class="summary">${escapeHtml(message)}</div>`;
+            results.forEach(item => {
+                const statusClass = item.status === 'success' ? 'success' : 'error';
+                html += `<div style="margin-bottom:8px; padding-left:10px; border-left: 3px solid ${item.status === 'success' ? '#1f7b4d' : '#c23d3d'};">
+                            <span style="font-weight:500;">${escapeHtml(item.filename)}</span>
+                            <span style="color:${item.status === 'success' ? '#1f7b4d' : '#c23d3d'}; margin-left:8px;">[${item.status}]</span>
+                            ${item.url ? `<br>🔗 <a href="${escapeHtml(item.url)}" target="_blank">${escapeHtml(item.url)}</a>` : ''}
+                            ${item.error ? `<br>❌ ${escapeHtml(item.error)}` : ''}
+                        </div>`;
+            });
             resultArea.innerHTML = html;
             resultArea.classList.add('show');
         }
@@ -205,51 +218,95 @@
         function buildQueryParams() {
             const rename = renameCheckbox.checked;
             const separate = separateCheckbox.checked;
-            return `?rename=${rename}&separateByDate=${separate}`;
+            let params = `?rename=${rename}&separateByDate=${separate}`;
+            const dir = directoryInput.value.trim();
+            if (dir) {
+                params += `&directory=${encodeURIComponent(dir)}`;
+            }
+            return params;
         }
 
-        // 获取完整的上传 URL（自动适配 /catalog 前缀）
-        function getUploadUrl() {
+        // 获取单文件上传 URL
+        function getSingleUploadUrl() {
             const base = getBasePath();
             return `${base}/v1/upload${buildQueryParams()}`;
         }
 
-        // 逐个上传（串行）
-        async function uploadSequentially() {
-            const total = selectedFiles.length;
-            const successList = [];
-            const failList = [];
-
-            for (let i = 0; i < total; i++) {
-                const file = selectedFiles[i];
-                updateFileStatus(i, 'uploading');
-                const percent = Math.floor((i / total) * 100);
-                setProgress(percent, `正在上传 ${i+1}/${total} : ${file.name}`);
-
-                const formData = new FormData();
-                formData.append('file', file);
-                const url = getUploadUrl();
-
-                try {
-                    const response = await fetch(url, { method: 'POST', body: formData });
-                    const text = await response.text();
-                    let json;
-                    try { json = JSON.parse(text); } catch(e) { throw new Error('响应解析失败'); }
-                    if (response.ok && json.code === 200 && json.url) {
-                        updateFileStatus(i, 'success');
-                        successList.push({ name: file.name, url: json.url });
-                    } else {
-                        throw new Error(json.message || `HTTP ${response.status}`);
-                    }
-                } catch (err) {
-                    updateFileStatus(i, 'error', err.message);
-                    failList.push({ name: file.name, error: err.message });
-                }
-            }
-            setProgress(100, `上传完成 · 成功 ${successList.length} / 失败 ${failList.length}`);
-            showResult(successList, failList);
+        // 获取多文件上传 URL
+        function getMultipleUploadUrl() {
+            const base = getBasePath();
+            return `${base}/v1/uploads${buildQueryParams()}`;
         }
 
+        // 单文件上传逻辑
+        async function uploadSingleFile(file, index) {
+            updateFileStatus(index, 'uploading');
+            const formData = new FormData();
+            formData.append('file', file);
+            const url = getSingleUploadUrl();
+            try {
+                const response = await fetch(url, { method: 'POST', body: formData });
+                const text = await response.text();
+                let json;
+                try { json = JSON.parse(text); } catch(e) { throw new Error('响应解析失败'); }
+                if (response.ok && json.code === 200 && json.url) {
+                    updateFileStatus(index, 'success');
+                    return { status: 'success', filename: file.name, url: json.url };
+                } else {
+                    throw new Error(json.message || `HTTP ${response.status}`);
+                }
+            } catch (err) {
+                updateFileStatus(index, 'error', err.message);
+                return { status: 'error', filename: file.name, error: err.message };
+            }
+        }
+
+        // 多文件上传逻辑（一次性提交所有文件）
+        async function uploadMultipleFiles(files) {
+            // 先将所有文件状态设为上传中
+            for (let i = 0; i < files.length; i++) {
+                updateFileStatus(i, 'uploading');
+            }
+
+            const formData = new FormData();
+            files.forEach(file => {
+                formData.append('files', file);   // 字段名必须是 'files'
+            });
+            const url = getMultipleUploadUrl();
+
+            try {
+                const response = await fetch(url, { method: 'POST', body: formData });
+                const text = await response.text();
+                let json;
+                try { json = JSON.parse(text); } catch(e) { throw new Error('响应解析失败'); }
+
+                if (response.ok && json.code === 200) {
+                    // 解析 results 数组，更新每个文件状态
+                    if (Array.isArray(json.results)) {
+                        json.results.forEach((result, idx) => {
+                            if (idx < files.length) {
+                                if (result.status === 'success') {
+                                    updateFileStatus(idx, 'success');
+                                } else {
+                                    updateFileStatus(idx, 'error', result.error || '上传失败');
+                                }
+                            }
+                        });
+                    }
+                    return { success: true, message: json.message, results: json.results || [] };
+                } else {
+                    throw new Error(json.message || `HTTP ${response.status}`);
+                }
+            } catch (err) {
+                // 整体失败：将所有文件标记为错误
+                for (let i = 0; i < files.length; i++) {
+                    updateFileStatus(i, 'error', err.message);
+                }
+                return { success: false, error: err.message };
+            }
+        }
+
+        // 主上传流程
         async function startUpload() {
             if (selectedFiles.length === 0) {
                 alert('请先选择文件');
@@ -260,16 +317,59 @@
             uploadBtn.disabled = true;
             clearResult();
             showProgress();
-            setProgress(0, `准备上传 ${selectedFiles.length} 个文件...`);
-            for (let i = 0; i < selectedFiles.length; i++) updateFileStatus(i, 'waiting');
+            setProgress(0, '准备上传...');
 
-            await uploadSequentially();
-
-            isUploading = false;
-            uploadBtn.disabled = (selectedFiles.length === 0);
-            if (selectedFiles.length === 0) setTimeout(() => hideProgress(), 2000);
+            try {
+                const count = selectedFiles.length;
+                if (count === 1) {
+                    // 单文件：使用单文件接口
+                    setProgress(20, '上传单个文件...');
+                    const result = await uploadSingleFile(selectedFiles[0], 0);
+                    setProgress(100, '上传完成');
+                    // 显示结果（单文件也按统一格式展示）
+                    const results = [result];
+                    const successCount = result.status === 'success' ? 1 : 0;
+                    const failCount = count - successCount;
+                    const message = `上传完成，成功 ${successCount} 个，失败 ${failCount} 个`;
+                    showSummary(message, results);
+                } else {
+                    // 多文件：使用多文件接口
+                    setProgress(20, `正在上传 ${count} 个文件...`);
+                    const response = await uploadMultipleFiles(selectedFiles);
+                    if (response.success) {
+                        setProgress(100, '上传完成');
+                        showSummary(response.message, response.results);
+                    } else {
+                        setProgress(100, '上传失败');
+                        // 所有文件已标记为错误，显示整体错误
+                        const failResults = selectedFiles.map((f, i) => ({
+                            filename: f.name,
+                            status: 'error',
+                            error: response.error
+                        }));
+                        showSummary(`上传失败：${response.error}`, failResults);
+                    }
+                }
+            } catch (err) {
+                setProgress(100, '发生错误');
+                const results = selectedFiles.map(f => ({
+                    filename: f.name,
+                    status: 'error',
+                    error: err.message
+                }));
+                showSummary(`上传失败：${err.message}`, results);
+                // 将所有文件标记为错误
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    updateFileStatus(i, 'error', err.message);
+                }
+            } finally {
+                isUploading = false;
+                uploadBtn.disabled = (selectedFiles.length === 0);
+                if (selectedFiles.length === 0) setTimeout(() => hideProgress(), 2000);
+            }
         }
 
+        // ---- 事件绑定 ----
         function addFiles(files) {
             if (isUploading) { alert('上传中，请等待'); return; }
             const valid = Array.from(files).filter(f => f instanceof File && f.size > 0);
@@ -316,11 +416,7 @@
             fileInput.value = '';
         });
 
-        uploadBtn.addEventListener('click', () => {
-            if (isUploading) { alert('正在上传中'); return; }
-            if (selectedFiles.length === 0) { alert('请先添加文件'); return; }
-            startUpload();
-        });
+        uploadBtn.addEventListener('click', startUpload);
 
         hideProgress();
         renderFileList();

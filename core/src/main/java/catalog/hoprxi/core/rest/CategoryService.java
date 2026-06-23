@@ -21,7 +21,6 @@ import catalog.hoprxi.core.application.command.*;
 import catalog.hoprxi.core.application.handler.*;
 import catalog.hoprxi.core.application.query.CategoryQuery;
 import catalog.hoprxi.core.application.query.NotFoundException;
-import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
@@ -38,7 +37,6 @@ import reactor.core.publisher.Mono;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
