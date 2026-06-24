@@ -299,9 +299,11 @@ public class FileUploadService {
             if (readLen < 4) return false;
 
             String hex = ByteToHex.toHexStr(header).toUpperCase();
-            for (String head : heads)
-                if (head.equals(hex))
+            for (String head : heads) {
+                if (hex.startsWith(head)) {  // 改为前缀匹配
                     return true;
+                }
+            }
             return false;
         } catch (IOException e) {
             throw new RuntimeException("读取文件头失败", e);
