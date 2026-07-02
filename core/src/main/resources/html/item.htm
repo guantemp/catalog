@@ -1,444 +1,551 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>SaaS零售 | 商品档案管理</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>商品档案管理</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js">
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* ===== 全局样式 ===== */
+        :root {
+            --primary: #2D9CDB;
+            --primary-hover: #4DB8F0;
+            --primary-light: #1a2a3a;
+            --primary-border: #3e5566;
+            --bg-body: #1e2a36;
+            --bg-card: #2a3a48;
+            --bg-hover: #344a5a;
+            --bg-input: #15222e;
+            --text-main: #e8edf4;
+            --text-secondary: #c8d8e8;
+            --text-muted: #8fa8b8;
+            --border-light: #3e5566;
+            --border-medium: #3e5566;
+            --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.5);
+            --radius: 12px;
+            --profit-color: #6ee7b7;
+            --retail-color: #f87171;
+            --danger: #DC4C4C;
+            --page-padding: 8px 12px 12px 12px;
+            --toolbar-padding: 6px 12px;
+            --pagination-padding: 6px 12px;
+            --cell-padding: 6px 10px;
+            --panel-gap: 8px;
+            --stripe-color: rgba(255, 255, 255, 0.04);
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            background: #f0f2f6;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-body);
             height: 100vh;
             overflow: hidden;
-            color: #1f2937;
-        }
-
-        /* 全局滚动条 */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-        }
-
-        /* --- 布局 --- */
-        .app-layout {
-            display: flex;
-            height: 100vh;
-            width: 100%;
-        }
-
-        /* 侧边栏 (深色) */
-        .sidebar {
-            width: 260px;
-            background: #001529;
-            color: rgba(255,255,255,0.7);
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            transition: all 0.2s;
-            box-shadow: 2px 0 8px rgba(0,0,0,0.05);
-            z-index: 10;
-        }
-
-        .logo-area {
-            height: 64px;
-            display: flex;
-            align-items: center;
-            padding: 0 24px;
-            gap: 10px;
-            background: rgba(0,0,0,0.2);
-            font-size: 18px;
-            font-weight: 600;
-            color: #fff;
-            letter-spacing: 1px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
-        .logo-area span:first-child {
-            font-size: 24px;
-        }
-
-        .nav-menu {
-            flex: 1;
-            padding: 16px 0;
-        }
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 24px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: rgba(255,255,255,0.7);
-        }
-        .nav-item:hover {
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-        }
-        .nav-item.active {
-            background: #1677ff;
-            color: #fff;
-            border-right: none;
-            position: relative;
-        }
-        .nav-item .material-symbols-outlined {
-            font-size: 20px;
-        }
-
-        /* 右侧主区域 */
-        .main-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background: #f0f2f6;
-        }
-
-        /* 头部 Header */
-        .top-header {
-            height: 64px;
-            background: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding: 0 28px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-            z-index: 9;
-        }
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        .notify-icon {
-            cursor: pointer;
-            color: #5b6876;
-        }
-        .admin-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            color: var(--text-main);
             font-size: 14px;
         }
-        .avatar-circle {
-            width: 34px;
-            height: 34px;
-            background: #e6f4ff;
-            color: #1677ff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            cursor: pointer;
-        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1e2a36; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #3e5566; border-radius: 4px; }
 
-        /* 滚动区域 */
-        .scroll-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px 24px 24px 24px;
-        }
+        .app-layout { display: flex; height: 100vh; width: 100%; }
+        .main-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-body); }
+        .scroll-content { flex: 1; overflow-y: auto; padding: var(--page-padding); display: flex; flex-direction: column; }
 
-        /* 面包屑 */
-        .breadcrumb {
-            font-size: 13px;
-            color: #8c8f92;
-            margin-bottom: 20px;
-        }
-        .breadcrumb a {
-            color: #8c8f92;
-            text-decoration: none;
-        }
-        .breadcrumb span {
-            margin: 0 6px;
-        }
-
-        /* 主卡片: 左侧树+右侧表格 */
         .card-panel {
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            flex: 1;
             display: flex;
+            gap: var(--panel-gap);
             overflow: hidden;
-            height: calc(100vh - 148px);
-            transition: all 0.2s;
+            min-height: 0;
+            border-radius: var(--radius);
         }
 
-        /* 左侧分类区 */
+        /* ===== 左侧分类树 ===== */
         .category-side {
-            width: 260px;
-            background: #ffffff;
-            border-right: 1px solid #edf2f7;
+            width: 320px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-card);
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
+            overflow: hidden;
         }
-        .cat-header {
-            padding: 18px 16px 12px 16px;
-            font-weight: 600;
-            border-bottom: 1px solid #edf2f7;
+        .tree-header {
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-card);
+            flex-shrink: 0;
+        }
+        .tree-header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 12px;
         }
-        .cat-header span:first-child {
-            font-size: 15px;
-        }
-        .cat-search {
-            padding: 12px 16px;
-            border-bottom: 1px solid #f0f2f5;
-        }
-        .cat-search input {
-            width: 100%;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            font-size: 13px;
-            background: #fafbfc;
-            outline: none;
-            transition: 0.2s;
-        }
-        .cat-search input:focus {
-            border-color: #1677ff;
-            box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
-        }
-        .tree-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px 0;
-        }
-        .tree-node {
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 14px;
+        .tree-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-main);
             display: flex;
             align-items: center;
             gap: 10px;
-            transition: all 0.2s;
-            color: #2c3e4f;
         }
-        .tree-node:hover {
-            background: #f0f7ff;
-            color: #1677ff;
+        .tree-title i { color: var(--primary); }
+        .search-box {
+            position: relative;
+            width: 100%;
         }
-        .tree-node.active {
-            background: #e6f4ff;
-            color: #1677ff;
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 8px 14px 8px 40px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-medium);
+            border-radius: 40px;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+        .search-box input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(45,156,219,0.25);
+        }
+        .search-loading {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+            font-size: 0.8rem;
+        }
+        .tree-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 12px 20px 16px;
+            background: var(--bg-body);
+        }
+        .tree-node, .tree-node ul, .node-item {
+            list-style: none !important;
+            margin: 0;
+            padding-left: 0;
+        }
+        .tree-node ul { padding-left: 28px; }
+        .node-item { margin: 2px 0; }
+        .node-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 12px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .node-content:hover {
+            background: rgba(45,156,219,0.12);
+            color: var(--text-main);
+        }
+        .active-cat {
+            background: linear-gradient(135deg, #1a2a3a, #233544);
+            color: #e0ecf5 !important;
+            border-left: 3px solid var(--primary);
             font-weight: 500;
-            border-right: 3px solid #1677ff;
+        }
+        .node-content.search-match-node .node-name span { color: #fbbf24 !important; font-weight: 700 !important; }
+        .node-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+        .toggle-box {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 22px;
+            height: 22px;
+            border: 1px solid var(--border-medium);
+            border-radius: 6px;
+            background: var(--bg-input);
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            color: var(--text-muted);
+            transition: 0.1s;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .toggle-box:hover {
+            background: var(--bg-hover);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .node-icon-img {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            object-fit: cover;
+            background: var(--bg-input);
+            flex-shrink: 0;
+        }
+        .loading-placeholder, .empty-placeholder {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--text-muted);
+        }
+        .error-banner {
+            background: var(--bg-card);
+            border-radius: 40px;
+            padding: 6px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #fca5a5;
+            font-size: 0.7rem;
+            width: 100%;
+        }
+        .error-banner .retry-btn {
+            background: #dc2626;
+            border: none;
+            padding: 2px 14px;
+            border-radius: 30px;
+            color: white;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-weight: 500;
+            line-height: 1.8;
+        }
+        .error-banner .retry-btn:hover { background: #b91c1c; }
+        @keyframes highlight-flash {
+            0% { background: rgba(251,191,36,0.5); border-left-color: #fbbf24; }
+            100% { background: transparent; border-left-color: transparent; }
+        }
+        .node-content.highlight-new {
+            animation: highlight-flash 1.8s ease-out forwards;
+            border-left: 3px solid #fbbf24 !important;
         }
 
-        /* 右侧表格主区 */
+        /* ===== 右侧表格 ===== */
         .table-main {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            background: #fff;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-card);
         }
-
-        /* 筛选栏 - 修复右对齐，与 saas 零售视觉边缘齐平 */
-        .filter-bar {
-            padding: 20px 0 16px 24px;
-            border-bottom: 1px solid #f0f2f5;
-            background: #fff;
-        }
-        /* 关键修复: 右侧零内边距，让按钮组紧贴卡片右边界，达成与顶端saas零售视觉齐平 */
-        .filter-row {
+        .top-toolbar {
+            padding: var(--toolbar-padding);
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-card);
+            flex-shrink: 0;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 16px;
-            padding-right: 0;
-            margin-right: 0;
+            gap: 8px 16px;
         }
-        .filter-field {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #fff;
-        }
-        .filter-field label {
-            font-size: 13px;
-            color: #4b5565;
-            font-weight: 500;
-            width: auto;
-        }
-        .filter-field input, .filter-field select {
-            height: 34px;
-            padding: 0 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 13px;
-            background: #fff;
-            transition: 0.2s;
-            outline: none;
-        }
-        .filter-field input:focus, .filter-field select:focus {
-            border-color: #1677ff;
-            box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
-        }
-        .date-range {
+        .toolbar-left {
             display: flex;
             align-items: center;
             gap: 6px;
+            flex-wrap: wrap;
         }
-        .date-range input {
-            width: 130px;
-        }
-
-        /* 右侧按钮组 - 强制紧贴父容器右边界，无多余间距 */
-        .right-btns {
-            margin-left: auto;
+        .toolbar-right {
             display: flex;
-            gap: 12px;
             align-items: center;
-            padding-right: 24px;   /* 和左边内距视觉平衡，但按钮边缘实际与卡片内容右侧边界对齐 */
+            gap: 8px;
+            margin-left: auto;
+            flex-wrap: wrap;
         }
-        .btn {
-            padding: 6px 16px;
-            border-radius: 8px;
-            font-size: 13px;
+        .toolbar-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             border: 1px solid transparent;
             transition: 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            background: #fff;
+            gap: 4px;
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            height: 34px;
+            white-space: nowrap;
         }
-        .btn-primary {
-            background: #1677ff;
-            color: white;
-            border-color: #1677ff;
+        .toolbar-btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
         }
-        .btn-primary:hover {
-            background: #4096ff;
+        .toolbar-btn-primary:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
         }
-        .btn-default {
-            border-color: #d0d5dd;
-            color: #1f2937;
+        .toolbar-btn-default {
+            border-color: var(--border-medium);
+            color: var(--text-secondary);
         }
-        .btn-default:hover {
-            border-color: #1677ff;
-            color: #1677ff;
+        .toolbar-btn-default:hover {
+            border-color: var(--primary);
+            color: var(--primary);
         }
-        /* 第二行工具栏（新增导入导出） */
-        .action-toolbar {
-            margin-top: 16px;
+        .toolbar-btn .material-symbols-outlined {
+            color: inherit;
+            font-size: 18px;
+        }
+        .search-input-wrapper {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding-right: 24px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-medium);
+            border-radius: 6px;
+            padding: 0 10px;
+            height: 34px;
+            min-width: 280px;
         }
-        .tool-spacer {
-            flex: 1;
-        }
-        .icon-btn {
+        .search-input-wrapper input {
             background: transparent;
             border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 6px;
-            border-radius: 6px;
-            color: #5f6c7a;
+            outline: none;
+            color: var(--text-main);
+            font-size: 14px;
+            width: 100%;
+            padding: 0;
         }
-        .icon-btn:hover {
-            background: #f2f4f8;
+        .search-input-wrapper input::placeholder { color: var(--text-muted); }
+        .search-input-wrapper .material-symbols-outlined {
+            color: var(--text-muted);
+            font-size: 20px;
+            margin-right: 6px;
         }
 
-        /* 表格容器 */
         .data-table-wrapper {
             flex: 1;
             overflow: auto;
             margin: 0;
+            position: relative;
         }
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1100px;
-        }
-        .data-table th {
-            background: #fafcff;
-            padding: 14px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #334155;
-            border-bottom: 1px solid #edf2f7;
-            text-align: left;
-            position: sticky;
-            top: 0;
-            background-color: #fff;
-            z-index: 5;
-        }
-        .data-table td {
-            padding: 14px 16px;
-            font-size: 13px;
-            border-bottom: 1px solid #f1f5f9;
-            color: #1e293b;
-        }
-        .data-table tr:hover td {
-            background-color: #f8fafc;
-        }
-        .text-right {
-            text-align: right;
-        }
-        .text-center {
-            text-align: center;
-        }
-        .profit-rate {
-            color: #16a34a;
-            font-weight: 500;
-        }
-        .link-action {
-            color: #1677ff;
-            cursor: pointer;
-            margin-right: 12px;
-            font-size: 12px;
-        }
-        .link-action.danger {
-            color: #f43f5e;
-        }
-        .empty-row td {
-            text-align: center;
-            padding: 60px 0;
-            color: #94a3b8;
+            table-layout: fixed;
+            min-width: 1600px;
         }
 
-        /* 分页区域 - 同样右边界紧凑对齐 */
+        /* ===== 表格样式（合并后的 .data-table th 定义） ===== */
+        .data-table th,
+        .data-table td {
+            border: 1px solid var(--border-light);
+            padding: var(--cell-padding);
+            vertical-align: middle;
+        }
+        .data-table th {
+            background: #1a2632;
+            color: var(--text-secondary);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            font-size: 14px;
+            white-space: nowrap;
+            user-select: none;
+            /* 排序图标绝对定位所需 */
+            position: relative;
+            padding: 0 !important;
+            text-align: center;
+        }
+        .data-table td {
+            font-size: 13px;
+            color: var(--text-main);
+            text-align: left;
+        }
+        .data-table td.col-price,
+        .data-table td.col-profit {
+            text-align: right;
+        }
+        .data-table td.col-seq,
+        .data-table td.col-check {
+            text-align: center;
+        }
+        .data-table tbody tr:hover td {
+            background-color: var(--bg-hover);
+        }
+        .data-table tbody tr:nth-child(odd) {
+            background-color: var(--stripe-color);
+        }
+        .profit-rate {
+            color: var(--profit-color);
+            font-weight: 500;
+        }
+        .empty-row td {
+            border: none !important;
+            padding: 0 !important;
+            height: 0 !important;
+            background: transparent !important;
+        }
+
+        /* ===== 表头文字居中 + 排序图标绝对定位靠右 ===== */
+        .th-inner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 4px 28px 4px 4px;   /* 右侧留出图标空间 */
+            box-sizing: border-box;
+            cursor: default;
+            min-height: 34px;
+            position: relative;
+        }
+        .th-label {
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            flex: 0 1 auto;
+            max-width: 100%;
+        }
+        .sort-icon {
+            position: absolute;
+            right: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            font-size: 20px;
+            color: var(--text-muted);
+            transition: color 0.2s, background 0.2s;
+            cursor: pointer;
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+            border-radius: 4px;
+            padding: 0;
+            user-select: none;
+            background: transparent;
+        }
+        .sort-icon:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .sort-icon.active {
+            color: #fff;
+            background: var(--primary);
+            box-shadow: 0 0 8px rgba(45, 156, 219, 0.6);
+            font-weight: 700;
+        }
+
+        /* ===== 列拖拽手柄 ===== */
+        .col-resize-handle {
+            position: absolute;
+            right: -2px;
+            top: 0;
+            width: 6px;
+            height: 100%;
+            cursor: col-resize;
+            z-index: 10;
+            background: transparent;
+            transition: background 0.1s;
+        }
+        .col-resize-handle:hover,
+        .col-resize-handle.active {
+            background: rgba(45, 156, 219, 0.4);
+        }
+
+        /* ===== 列宽定义 ===== */
+        .data-table .col-check   { width: 36px; min-width: 36px; max-width: 36px; }
+        .data-table .col-seq     { width: 50px; min-width: 50px; max-width: 50px; }
+        .data-table .col-name    { width: 220px; min-width: 100px; max-width: 400px; }
+        .data-table .col-name .name-wrap {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .data-table .col-barcode { width: 120px; min-width: 80px; max-width: 200px; }
+        .data-table .col-spec    { width: 80px; min-width: 60px; max-width: 150px; }
+        .data-table .col-grade   { width: 80px; min-width: 60px; max-width: 150px; }
+        .data-table .col-brand   { width: 80px; min-width: 60px; max-width: 150px; }
+        .data-table .col-madein  { width: 80px; min-width: 60px; max-width: 150px; }
+        .data-table .col-price   { width: 100px; min-width: 70px; max-width: 160px; }
+        .data-table .col-category{ width: 90px; min-width: 60px; max-width: 160px; }
+        .data-table .col-shelf   { width: 70px; min-width: 50px; max-width: 120px; text-align: center; }
+        .data-table .col-profit  { width: 80px; min-width: 60px; max-width: 130px; }
+
+        .table-loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .table-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            filter: drop-shadow(0 0 8px rgba(0,0,0,0.8));
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         .pagination-area {
-            padding: 16px 24px 16px 24px;
-            border-top: 1px solid #edf2f7;
+            padding: var(--pagination-padding);
+            border-top: 1px solid var(--border-light);
             display: flex;
             justify-content: flex-end;
             align-items: center;
             gap: 12px;
-            background: #fff;
+            background: var(--bg-card);
             flex-wrap: wrap;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+        .pagination-area>div:first-child {
+            color: var(--text-muted);
+            font-size: 14px;
         }
         .page-control {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
         .page-item {
             min-width: 32px;
@@ -448,263 +555,462 @@
             justify-content: center;
             border-radius: 6px;
             cursor: pointer;
-            border: 1px solid #e2e8f0;
-            background: #fff;
-            font-size: 13px;
+            border: 1px solid var(--border-medium);
+            background: var(--bg-input);
+            font-size: 14px;
             transition: all 0.2s;
+            color: var(--text-secondary);
         }
         .page-item.active {
-            background: #1677ff;
-            border-color: #1677ff;
-            color: white;
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
         }
-        .page-item:hover:not(.disabled) {
-            border-color: #1677ff;
-            color: #1677ff;
+        .page-item:hover:not(.disabled):not(.active) {
+            border-color: var(--primary);
+            color: var(--primary);
         }
         .page-item.disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
+        }
+        .page-item.ellipsis {
+            border: none;
+            background: transparent;
+            cursor: default;
+            color: var(--text-muted);
+        }
+        .page-item.ellipsis:hover {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+        }
+        .page-item .material-symbols-outlined {
+            color: inherit;
+            font-size: 20px;
         }
         .jump-box {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 13px;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--text-secondary);
         }
         .jump-box input {
-            width: 54px;
-            padding: 5px;
-            border: 1px solid #e2e8f0;
+            width: 50px;
+            padding: 4px 6px;
+            border: 1px solid var(--border-medium);
             border-radius: 6px;
             text-align: center;
+            background: var(--bg-input);
+            color: var(--text-main);
+            height: 32px;
+            font-size: 14px;
+        }
+        .jump-box input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(45, 156, 219, 0.2);
+        }
+        .page-size-select {
+            height: 32px;
+            padding: 0 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-medium);
+            background: var(--bg-input);
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+        }
+        .page-size-select:focus {
+            border-color: var(--primary);
         }
 
-        .loading-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(255,255,255,0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 20;
-            backdrop-filter: blur(1px);
+        @media (max-width: 1200px) {
+            .search-input-wrapper { min-width: 200px; }
+            .data-table { min-width: 1450px; }
+            .category-side { width: 280px; }
         }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #e2e8f0;
-            border-top-color: #1677ff;
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
+        @media (max-width: 1024px) {
+            .category-side { width: 240px; }
+            .top-toolbar { padding: 6px 10px; gap: 6px 10px; }
+            .toolbar-right {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-end;
+            }
+            .search-input-wrapper { flex: 1; min-width: 150px; }
+            .data-table .col-name { width: 180px; min-width: 80px; max-width: 300px; }
+            .data-table .col-barcode { width: 100px; min-width: 70px; max-width: 180px; }
+            .data-table .col-spec { width: 70px; min-width: 50px; max-width: 120px; }
+            .data-table .col-grade { width: 70px; min-width: 50px; max-width: 120px; }
+            .data-table .col-brand { width: 70px; min-width: 50px; max-width: 120px; }
+            .data-table .col-madein { width: 70px; min-width: 50px; max-width: 120px; }
+            .data-table .col-price { width: 90px; min-width: 60px; max-width: 130px; }
+            .data-table .col-category { width: 80px; min-width: 50px; max-width: 130px; }
+            .data-table .col-shelf { width: 60px; min-width: 40px; max-width: 100px; }
+            .data-table .col-profit { width: 70px; min-width: 50px; max-width: 110px; }
+            .data-table { min-width: 1300px; }
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        @media (max-width: 768px) {
+            .card-panel { flex-direction: column; gap: 8px; }
+            .category-side { width: 100%; max-height: 220px; }
+            .scroll-content { padding: 6px 8px 8px 8px; }
+            .top-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 6px 8px;
+                gap: 6px;
+            }
+            .toolbar-left { flex-wrap: wrap; }
+            .toolbar-right {
+                margin-left: 0;
+                width: 100%;
+                justify-content: stretch;
+            }
+            .search-input-wrapper { min-width: 100px; }
+            .pagination-area { padding: 6px 8px; justify-content: center; }
+            .data-table { min-width: 1150px; }
+            .data-table .col-name { width: 150px; min-width: 60px; max-width: 250px; }
+            .data-table .col-barcode { width: 90px; min-width: 60px; max-width: 150px; }
+            .data-table .col-spec { width: 60px; min-width: 40px; max-width: 100px; }
+            .data-table .col-grade { width: 60px; min-width: 40px; max-width: 100px; }
+            .data-table .col-brand { width: 60px; min-width: 40px; max-width: 100px; }
+            .data-table .col-madein { width: 60px; min-width: 40px; max-width: 100px; }
+            .data-table .col-price { width: 85px; min-width: 55px; max-width: 120px; }
+            .data-table .col-category { width: 70px; min-width: 40px; max-width: 110px; }
+            .data-table .col-shelf { width: 55px; min-width: 35px; max-width: 90px; }
+            .data-table .col-profit { width: 60px; min-width: 40px; max-width: 100px; }
+            .data-table .col-seq { width: 44px; min-width: 32px; max-width: 60px; }
         }
-        .relative {
-            position: relative;
+        @media (max-width: 480px) {
+            .top-toolbar .toolbar-btn { font-size: 13px; padding: 4px 10px; height: 30px; }
+            .top-toolbar .toolbar-btn .material-symbols-outlined { font-size: 16px; }
+            .search-input-wrapper { height: 30px; min-width: 80px; }
+            .search-input-wrapper input { font-size: 13px; }
+            .data-table th, .data-table td { padding: 4px 6px; }
+            .data-table th { font-size: 13px; }
+            .data-table td { font-size: 12px; }
+            .data-table .col-name { width: 120px; min-width: 50px; max-width: 200px; }
+            .data-table .col-barcode { width: 80px; min-width: 50px; max-width: 130px; }
+            .data-table .col-spec { width: 50px; min-width: 30px; max-width: 80px; }
+            .data-table .col-grade { width: 50px; min-width: 30px; max-width: 80px; }
+            .data-table .col-brand { width: 50px; min-width: 30px; max-width: 80px; }
+            .data-table .col-madein { width: 50px; min-width: 30px; max-width: 80px; }
+            .data-table .col-price { width: 75px; min-width: 45px; max-width: 110px; }
+            .data-table .col-category { width: 60px; min-width: 30px; max-width: 90px; }
+            .data-table .col-shelf { width: 45px; min-width: 30px; max-width: 70px; }
+            .data-table .col-profit { width: 55px; min-width: 35px; max-width: 90px; }
+            .data-table .col-seq { width: 38px; min-width: 28px; max-width: 50px; }
+            .data-table .col-check { width: 30px; min-width: 24px; max-width: 40px; }
+            .pagination-area { flex-direction: column; align-items: center; gap: 6px; }
+            .page-item { min-width: 28px; height: 28px; font-size: 13px; }
+            .jump-box input { width: 40px; height: 28px; font-size: 13px; }
+            .page-size-select { height: 28px; font-size: 13px; }
         }
     </style>
 </head>
 <body>
-<div id="app">
+<div id="app" v-cloak>
     <div class="app-layout">
-        <!-- 侧边栏 SaaS 零售区域 -->
-        <aside class="sidebar">
-            <div class="logo-area">
-                <span class="material-symbols-outlined">storefront</span>
-                <span>SaaS 零售</span>
-            </div>
-            <div class="nav-menu">
-                <div class="nav-item active">
-                    <span class="material-symbols-outlined">inventory_2</span>
-                    商品档案
-                </div>
-                <div class="nav-item">
-                    <span class="material-symbols-outlined">shopping_cart</span>
-                    销售管理
-                </div>
-                <div class="nav-item">
-                    <span class="material-symbols-outlined">group</span>
-                    会员管理
-                </div>
-                <div class="nav-item">
-                    <span class="material-symbols-outlined">local_shipping</span>
-                    采购管理
-                </div>
-                <div class="nav-item">
-                    <span class="material-symbols-outlined">inventory</span>
-                    库存管理
-                </div>
-            </div>
-        </aside>
-
-        <!-- 右侧主体 -->
         <main class="main-container">
-            <header class="top-header">
-                <div class="header-actions">
-                    <span class="material-symbols-outlined notify-icon">notifications</span>
-                    <div class="admin-info">
-                        <span>管理员</span>
-                        <div class="avatar-circle">A</div>
-                    </div>
-                </div>
-            </header>
-
             <div class="scroll-content">
-                <!-- 面包屑导航 -->
-                <div class="breadcrumb">
-                    首页 <span>/</span> 商品管理 <span>/</span> 商品档案列表
-                </div>
-
-                <!-- 卡片区域: 左侧分类树 + 右侧表格 (已经修复右侧筛选区与界面齐平) -->
                 <div class="card-panel">
                     <!-- 左侧分类树 -->
                     <div class="category-side">
-                        <div class="cat-header">
-                            <span>商品分类</span>
-                            <span class="material-symbols-outlined" style="font-size: 18px; cursor: pointer;">add</span>
+                        <div class="tree-header">
+                            <div class="tree-header-top">
+                                <div class="tree-title"><i class="fas fa-folder-tree"></i> 类别</div>
+                            </div>
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" v-model="searchKeyword" placeholder="搜索分类..." @input="onSearchInput" @keydown.enter="onSearchEnter">
+                                <i v-if="searchLoading" class="fas fa-spinner fa-pulse search-loading"></i>
+                            </div>
                         </div>
-                        <div class="cat-search">
-                            <input type="text" placeholder="搜索分类" v-model="searchCategoryText">
-                        </div>
-                        <div class="tree-list">
-                            <div v-for="cat in filteredCategoryList" :key="cat.id"
-                                 class="tree-node"
-                                 :class="{ active: selectedCategoryId === cat.id }"
-                                 @click="changeCategory(cat.id)">
-                                <span class="material-symbols-outlined" style="font-size: 18px;">folder</span>
-                                {{ cat.name }}
+                        <div class="tree-scroll">
+                            <div v-if="loading" class="loading-placeholder"><i class="fas fa-spinner fa-pulse"></i> 加载分类中...</div>
+                            <div v-else-if="errorMsg" class="error-banner">
+                                <span><i class="fas fa-exclamation-triangle"></i> {{ errorMsg }}</span>
+                                <button class="retry-btn" @click="loadCategories"><i class="fas fa-sync-alt"></i> 重试</button>
+                            </div>
+                            <ul class="tree-node" v-else-if="!loading && categoryTree.length > 0">
+                                <tree-item
+                                        v-for="node in categoryTree"
+                                        :key="node.id"
+                                        :node="node"
+                                        :active-id="activeCategoryId"
+                                        :expanded-set="expandedSet"
+                                        :search-match-set="searchMatchSet"
+                                        :highlight-id="highlightNodeId"
+                                        @toggle="toggleExpand"
+                                        @select="selectCategory"
+                                        @node-updated="onNodeUpdated"
+                                ></tree-item>
+                            </ul>
+                            <div v-else-if="!loading && categoryTree.length === 0" class="empty-placeholder">
+                                <i class="fas fa-folder-open"></i> 暂无分类数据
                             </div>
                         </div>
                     </div>
 
-                    <!-- 右侧表格区 (修复右侧边缘与SaaS零售视觉对齐) -->
-                    <div class="table-main relative">
-                        <!-- 筛选栏 - 修复按钮靠右不留白 -->
-                        <div class="filter-bar">
-                            <div class="filter-row">
-                                <div class="filter-field">
-                                    <label>商品名称/编码</label>
-                                    <input type="text" placeholder="请输入" v-model="filters.keyword">
-                                </div>
-                                <div class="filter-field">
-                                    <label>创建日期</label>
-                                    <div class="date-range">
-                                        <input type="date" v-model="filters.dateFrom">
-                                        <span>-</span>
-                                        <input type="date" v-model="filters.dateTo">
-                                    </div>
-                                </div>
-                                <div class="filter-field">
-                                    <label>状态</label>
-                                    <select v-model="filters.status">
-                                        <option value="">全部</option>
-                                        <option value="1">上架</option>
-                                        <option value="0">下架</option>
-                                    </select>
-                                </div>
-                                <!-- 右侧按钮组 (无右侧内边距，完全贴边符合“与 sass 零售齐平”) -->
-                                <div class="right-btns">
-                                    <button class="btn btn-primary" @click="handleSearch">
-                                        <span class="material-symbols-outlined" style="font-size: 16px;">search</span> 查询
-                                    </button>
-                                    <button class="btn btn-default" @click="resetAllFilters">
-                                        <span class="material-symbols-outlined" style="font-size: 16px;">refresh</span> 重置
-                                    </button>
-                                </div>
-                            </div>
-                            <!-- 第二行新增导入导出 -->
-                            <div class="action-toolbar">
-                                <button class="btn btn-primary">
+                    <!-- 右侧表格区 -->
+                    <div class="table-main">
+                        <div class="top-toolbar">
+                            <div class="toolbar-left">
+                                <button class="toolbar-btn toolbar-btn-primary" @click="handleAdd">
                                     <span class="material-symbols-outlined">add</span> 新增
                                 </button>
-                                <button class="btn btn-default">
-                                    <span class="material-symbols-outlined">upload</span> 导入
+                                <button class="toolbar-btn toolbar-btn-default" @click="handleEdit">
+                                    <span class="material-symbols-outlined">edit</span> 修改
                                 </button>
-                                <button class="btn btn-default">
-                                    <span class="material-symbols-outlined">download</span> 导出
+                                <button class="toolbar-btn toolbar-btn-default" @click="handleDelete">
+                                    <span class="material-symbols-outlined">delete</span> 删除
                                 </button>
-                                <div class="tool-spacer"></div>
-                                <button class="icon-btn">
-                                    <span class="material-symbols-outlined">settings</span>
+                                <button class="toolbar-btn toolbar-btn-default" @click="handleRefresh">
+                                    <span class="material-symbols-outlined">refresh</span> 刷新
                                 </button>
+                                <button class="toolbar-btn toolbar-btn-default" @click="handleSettings">
+                                    <span class="material-symbols-outlined">settings</span> 设置
+                                </button>
+                                <button class="toolbar-btn toolbar-btn-default" @click="handleMore">
+                                    <span class="material-symbols-outlined">more_horiz</span> 更多
+                                </button>
+                            </div>
+                            <div class="toolbar-right">
+                                <div class="search-input-wrapper">
+                                    <span class="material-symbols-outlined">search</span>
+                                    <input type="text" v-model="filters.keyword" placeholder="可输入货号/品名/助记码/自编码/附加条码进行查询" @keyup.enter="handleSearch" />
+                                </div>
+                                <button class="toolbar-btn toolbar-btn-primary" @click="handleSearch">查询</button>
+                                <button class="toolbar-btn toolbar-btn-default" @click="handleAdvancedSearch">高级查询</button>
                             </div>
                         </div>
 
-                        <!-- 表格 -->
                         <div class="data-table-wrapper">
-                            <table class="data-table">
+                            <table class="data-table" ref="dataTable">
+                                <colgroup>
+                                    <col class="col-check" />
+                                    <col class="col-seq" />
+                                    <col class="col-name" />
+                                    <col class="col-barcode" />
+                                    <col class="col-spec" />
+                                    <col class="col-grade" />
+                                    <col class="col-brand" />
+                                    <col class="col-madein" />
+                                    <col class="col-price" />
+                                    <col class="col-price" />
+                                    <col class="col-price" />
+                                    <col class="col-price" />
+                                    <col class="col-category" />
+                                    <col class="col-shelf" />
+                                    <col class="col-profit" />
+                                </colgroup>
                                 <thead>
                                 <tr>
-                                    <th width="40" class="text-center"><input type="checkbox"></th>
-                                    <th width="55" class="text-center">序号</th>
-                                    <th>商品名称</th>
-                                    <th>编码</th>
-                                    <th>条码</th>
-                                    <th>规格</th>
-                                    <th>单位</th>
-                                    <th class="text-right">进货价</th>
-                                    <th class="text-right">扣率(%)</th>
-                                    <th class="text-right">零售价</th>
-                                    <th class="text-right">毛利率</th>
-                                    <th width="130" class="text-center">操作</th>
+                                    <th class="col-check"><input type="checkbox" v-model="allChecked" /></th>
+                                    <th class="col-seq">序号</th>
+                                    <!-- 商品名称 -->
+                                    <th class="col-name">
+                                        <div class="th-inner">
+                                            <span class="th-label">商品名称</span>
+                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'name' }" @click.stop="handleSort('name')">
+                                                        {{ getSortIcon('name') }}
+                                                    </span>
+                                        </div>
+                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 2)"></div>
+                                    </th>
+                                    <!-- 条码 -->
+                                    <th class="col-barcode">
+                                        <div class="th-inner">
+                                            <span class="th-label">条码</span>
+                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'barcode' }" @click.stop="handleSort('barcode')">
+                                                        {{ getSortIcon('barcode') }}
+                                                    </span>
+                                        </div>
+                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 3)"></div>
+                                    </th>
+                                    <!-- 规格 -->
+                                    <th class="col-spec">
+                                        <div class="th-inner">
+                                            <span class="th-label">规格</span>
+                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'spec' }" @click.stop="handleSort('spec')">
+                                                        {{ getSortIcon('spec') }}
+                                                    </span>
+                                        </div>
+                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 4)"></div>
+                                    </th>
+                                    <!-- 等级 -->
+                                    <th class="col-grade">
+                                        <div class="th-inner">
+                                            <span class="th-label">等级</span>
+                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'grade' }" @click.stop="handleSort('grade')">
+                                                        {{ getSortIcon('grade') }}
+                                                    </span>
+                                        </div>
+                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 5)"></div>
+                                    </th>
+                                    <!-- 品牌 -->
+                                    <th class="col-brand">
+                                        <div class="th-inner">
+                                            <span class="th-label">品牌</span>
+                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'brand' }" @click.stop="handleSort('brand')">
+                                                        {{ getSortIcon('brand') }}
+                                                    </span>
+                                        </div>
+                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 6)"></div>
+                                    </th>
+                                    <!-- 产地 -->
+                                    <th class="col-madein">
+                                        <div class="th-inner">
+                                            <span class="th-label">产地</span>
+                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'made_in' }" @click.stop="handleSort('made_in')">
+                                                        {{ getSortIcon('made_in') }}
+                                                    </span>
+                                        </div>
+                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 7)"></div>
+                                    </th>
+                                    <!-- 进货价 -->
+                                    <th class="col-price">
+                                        <div class="th-inner">
+                                            <span class="th-label">进货价</span>
+                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'last_receipt_price' }" @click.stop="handleSort('last_receipt_price')">
+                                                        {{ getSortIcon('last_receipt_price') }}
+                                                    </span>
+                                        </div>
+                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 8)"></div>
+                                    </th>
+                                    <!-- 零售价 -->
+                                    <th class="col-price">
+                                        <div class="th-inner">
+                                            <span class="th-label">零售价</span>
+                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'retail_price' }" @click.stop="handleSort('retail_price')">
+                                                        {{ getSortIcon('retail_price') }}
+                                                    </span>
+                                        </div>
+                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 9)"></div>
+                                    </th>
+                                    <!-- 会员价 -->
+                                    <th class="col-price">
+                                        <div class="th-inner">
+                                            <span class="th-label">会员价</span>
+                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'member_price' }" @click.stop="handleSort('member_price')">
+                                                        {{ getSortIcon('member_price') }}
+                                                    </span>
+                                        </div>
+                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 10)"></div>
+                                    </th>
+                                    <!-- VIP价 -->
+                                    <th class="col-price">
+                                        <div class="th-inner">
+                                            <span class="th-label">VIP价</span>
+                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'vip_price' }" @click.stop="handleSort('vip_price')">
+                                                        {{ getSortIcon('vip_price') }}
+                                                    </span>
+                                        </div>
+                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 11)"></div>
+                                    </th>
+                                    <!-- 分类 -->
+                                    <th class="col-category">
+                                        <div class="th-inner">
+                                            <span class="th-label">分类</span>
+                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'category' }" @click.stop="handleSort('category')">
+                                                        {{ getSortIcon('category') }}
+                                                    </span>
+                                        </div>
+                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 12)"></div>
+                                    </th>
+                                    <!-- 保质期 -->
+                                    <th class="col-shelf">
+                                        <div class="th-inner">
+                                            <span class="th-label">保质期(天)</span>
+                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'shelf_life' }" @click.stop="handleSort('shelf_life')">
+                                                        {{ getSortIcon('shelf_life') }}
+                                                    </span>
+                                        </div>
+                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 13)"></div>
+                                    </th>
+                                    <!-- 毛利率 -->
+                                    <th class="col-profit">
+                                        <div class="th-inner">
+                                            <span class="th-label">毛利率</span>
+                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'profit_margin' }" @click.stop="handleSort('profit_margin')">
+                                                        {{ getSortIcon('profit_margin') }}
+                                                    </span>
+                                        </div>
+                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 14)"></div>
+                                    </th>
                                 </tr>
                                 </thead>
-                                <tbody>
+                                <tbody v-if="productList.length > 0">
                                 <tr v-for="(item, idx) in productList" :key="item.id">
-                                    <td class="text-center"><input type="checkbox"></td>
-                                    <td class="text-center">{{ (pagination.current - 1) * pagination.size + idx + 1 }}</td>
-                                    <td><strong>{{ item.name }}</strong></td>
-                                    <td>{{ item.code }}</td>
-                                    <td>{{ item.barcode }}</td>
-                                    <td>{{ item.spec }}</td>
-                                    <td>{{ item.unit }}</td>
-                                    <td class="text-right">¥{{ item.purchasePrice }}</td>
-                                    <td class="text-right">{{ item.discountRate }}%</td>
-                                    <td class="text-right" style="color:#f43f5e; font-weight:600;">¥{{ item.retailPrice }}</td>
-                                    <td class="text-right profit-rate">{{ item.profitMargin }}%</td>
-                                    <td class="text-center">
-                                        <span class="link-action">修改</span>
-                                        <span class="link-action">复制</span>
-                                        <span class="link-action danger">删除</span>
+                                    <td class="col-check"><input type="checkbox" v-model="item.checked" /></td>
+                                    <td class="col-seq">{{ (pagination.current - 1) * pagination.size + idx + 1 }}</td>
+                                    <td class="col-name">
+                                        <span class="name-wrap" :title="item.shortName || item.name">{{ item.name }}</span>
                                     </td>
+                                    <td class="col-barcode">{{ item.barcode || '-' }}</td>
+                                    <td class="col-spec">{{ item.spec || '-' }}</td>
+                                    <td class="col-grade">{{ item.grade || '-' }}</td>
+                                    <td class="col-brand">{{ item.brandName || '-' }}</td>
+                                    <td class="col-madein">{{ item.madeIn || '-' }}</td>
+                                    <td class="col-price">{{ formatPrice(item.purchasePrice, item.unit) }}</td>
+                                    <td class="col-price" style="color:var(--retail-color); font-weight:600;">{{ formatPrice(item.retailPrice, item.unit) }}</td>
+                                    <td class="col-price">{{ formatPrice(item.memberPrice, item.unit) }}</td>
+                                    <td class="col-price">{{ formatPrice(item.vipPrice, item.unit) }}</td>
+                                    <td class="col-category">{{ item.categoryName || '-' }}</td>
+                                    <td class="col-shelf">{{ item.shelf_life !== undefined && item.shelf_life !== null ? item.shelf_life : '-' }}</td>
+                                    <td class="col-profit profit-rate">{{ item.profitMargin !== null && item.profitMargin !== undefined ? item.profitMargin.toFixed(2) + '%' : '-' }}</td>
                                 </tr>
-                                <tr v-if="productList.length === 0">
-                                    <td colspan="12" class="empty-row">
-                                        <span class="material-symbols-outlined" style="font-size: 42px;">inbox</span><br>
-                                        暂无数据
-                                    </td>
+                                </tbody>
+                                <tbody v-else>
+                                <tr class="empty-row">
+                                    <td colspan="15"></td>
                                 </tr>
                                 </tbody>
                             </table>
+
+                            <div v-if="loadingProducts" class="table-loading-overlay">
+                                <div class="table-spinner"></div>
+                            </div>
                         </div>
 
-                        <!-- 分页区域 同样右边缘整洁 -->
                         <div class="pagination-area">
-                            <div style="color:#5f6c7a; font-size:13px;">共 {{ pagination.total }} 条</div>
+                            <div>共 {{ pagination.total }} 条</div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <label style="font-size:14px;color:var(--text-muted);">每页</label>
+                                <select class="page-size-select" v-model="pagination.size" @change="onPageSizeChange">
+                                    <option :value="15">15</option>
+                                    <option :value="20">20</option>
+                                    <option :value="30" selected>30</option>
+                                    <option :value="50">50</option>
+                                    <option :value="80">80</option>
+                                    <option :value="150">150</option>
+                                    <option :value="200">200</option>
+                                    <option :value="300">300</option>
+                                    <option :value="500">500</option>
+                                </select>
+                                <label style="font-size:14px;color:var(--text-muted);">条</label>
+                            </div>
                             <div class="page-control">
                                 <div class="page-item" :class="{ disabled: pagination.current === 1 }" @click="prevPage">
-                                    <span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span>
+                                    <span class="material-symbols-outlined">chevron_left</span>
                                 </div>
-                                <div v-for="pg in pageNumbers" :key="pg"
-                                     class="page-item" :class="{ active: pg === pagination.current }"
-                                     @click="goPage(pg)">
+                                <div v-for="pg in pageNumbers" :key="pg" class="page-item" :class="{
+                                        active: pg === pagination.current,
+                                        ellipsis: pg === '…'
+                                    }" @click="pg !== '…' && goPage(pg)">
                                     {{ pg }}
                                 </div>
                                 <div class="page-item" :class="{ disabled: pagination.current === pagination.totalPages }" @click="nextPage">
-                                    <span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span>
+                                    <span class="material-symbols-outlined">chevron_right</span>
                                 </div>
                             </div>
                             <div class="jump-box">
                                 跳至
-                                <input type="number" v-model.number="jumpPageNum" min="1">
-                                <button class="btn btn-default" style="padding: 2px 12px;" @click="jumpToPage">确定</button>
+                                <input type="number" v-model.number="jumpPageNum" min="1" />
+                                <button class="toolbar-btn toolbar-btn-default" style="padding:2px 12px;height:32px;" @click="jumpToPage">确定</button>
                             </div>
-                        </div>
-
-                        <div class="loading-overlay" v-if="loading">
-                            <div class="spinner"></div>
                         </div>
                     </div>
                 </div>
@@ -714,146 +1020,680 @@
 </div>
 
 <script>
-    const { createApp, ref, computed, onMounted } = Vue;
+    const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+
+    // ---------- 精确的大数字安全判断 ----------
+    function isUnsafeNumberStr(numStr) {
+        const MAX_SAFE_POS = "9007199254740992";
+        const MAX_SAFE_NEG = "-9007199254740992";
+        const absStr = numStr.startsWith("-") ? numStr.slice(1) : numStr;
+
+        if (absStr.length > MAX_SAFE_POS.length) return true;
+        if (absStr.length < MAX_SAFE_POS.length) return false;
+
+        if (numStr.startsWith("-")) {
+            return numStr < MAX_SAFE_NEG;
+        } else {
+            return numStr > MAX_SAFE_POS;
+        }
+    }
+
+    // ---------- 安全解析 JSON（保留大整数为字符串） ----------
+    function safeParseBigIntJson(jsonStr) {
+        const reg = /("[\w\-_]+"):\s*(-?\d{16,})|([\[,]\s*)(-?\d{16,})(\s*[,\]])/g;
+        const safeText = jsonStr.replace(reg, (...args) => {
+            const [, keyMatch, numObj, arrPrefix, numArr, arrSuffix] = args;
+            if (keyMatch) {
+                return isUnsafeNumberStr(numObj)
+                    ? `${keyMatch}:"${numObj}"`
+                    : `${keyMatch}:${numObj}`;
+            } else {
+                return isUnsafeNumberStr(numArr)
+                    ? `${arrPrefix}"${numArr}"${arrSuffix}`
+                    : `${arrPrefix}${numArr}${arrSuffix}`;
+            }
+        });
+        return JSON.parse(safeText);
+    }
+
+    // ---------- 通用 API 请求 ----------
+    async function apiFetch(url, options = {}) {
+        const response = await fetch(url, options);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const text = await response.text();
+        return safeParseBigIntJson(text);
+    }
+
+    const CAT_API_BASE = 'https://slave.tooo.top/catalog/v1/categories';
+
+    // ---------- 分类 API 工具 ----------
+    async function fetchChildren(id) { const data = await apiFetch(`${CAT_API_BASE}/${id}/children`); return data.categories || []; }
+    async function fetchRoots() { const data = await apiFetch(`${CAT_API_BASE}/root`); return data.categories || []; }
+    async function fetchDescendants(id) { const data = await apiFetch(`${CAT_API_BASE}/${id}/desc.`); return data.category; }
+    async function searchRemote(keyword) { const encoded = encodeURIComponent(keyword); const url = `${CAT_API_BASE}?s=${encoded}&offset=0&limit=64`; const data = await apiFetch(url); return data.categories || []; }
+
+    // ---------- 单位映射 ----------
+    const unitMap = ref({});
+    async function loadUnits() {
+        try {
+            const response = await fetch('https://slave.tooo.top/catalog/v1/units');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            const map = {};
+            if (data.units && Array.isArray(data.units)) {
+                for (const u of data.units) {
+                    if (u.key && u.i18n) map[u.key] = u.i18n;
+                }
+            }
+            unitMap.value = map;
+        } catch (err) { console.error('加载单位映射失败:', err); }
+    }
+
+    // ---------- TreeNode ----------
+    class TreeNode {
+        constructor(apiNode) {
+            if (!apiNode || apiNode.id === undefined || apiNode.id === null) throw new Error('节点缺少 id 字段');
+            this.id = apiNode.id;
+            this.name = apiNode.name || { name: '', shortName: '' };
+            this.icon_url = apiNode.icon_url || null;
+            let parentId = apiNode.parent_id;
+            if (apiNode.parentId !== undefined && parentId === undefined) parentId = apiNode.parentId;
+            this.parent_id = (parentId === -1) ? this.id : (parentId || -1);
+            this.description = apiNode.description || '';
+            this.left = apiNode.left || 0;
+            this.right = apiNode.right || 0;
+            this.hasChildren = (this.right - this.left) > 1;
+            this.children = [];
+            this.loaded = false;
+            this.depth = 0;
+        }
+    }
+
+    // ---------- TreeItem 组件 ----------
+    const TreeItem = {
+        name: 'TreeItem',
+        props: ['node', 'activeId', 'expandedSet', 'searchMatchSet', 'highlightId'],
+        emits: ['toggle', 'select', 'node-updated'],
+        data() { return { loadingChildren: false }; },
+        template: `
+          <li class="node-item">
+            <div class="node-content"
+                 :data-id="node.id"
+                 :class="{
+                       'active-cat': node.id === activeId,
+                       'search-match-node': isSearchMatch,
+                       'highlight-new': node.id === highlightId
+                     }"
+                 @click="$emit('select', node.id)">
+              <div class="node-name">
+                <span v-if="node.hasChildren" class="toggle-box" @click.stop="handleToggle">{{ isExpanded ? '−' : '+' }}</span>
+                <span v-else class="toggle-box" style="visibility: hidden;"></span>
+                <img v-if="node.icon_url" :src="node.icon_url" class="node-icon-img" @error="e => e.target.style.display='none'">
+                <span>{{ node.name.name }}</span>
+              </div>
+            </div>
+            <ul class="children" v-if="node.hasChildren && isExpanded">
+              <div v-if="loadingChildren" class="loading-placeholder" style="padding:8px;">加载中...</div>
+              <template v-else>
+                <tree-item v-for="child in node.children"
+                           :key="child.id"
+                           :node="child"
+                           :active-id="activeId"
+                           :expanded-set="expandedSet"
+                           :search-match-set="searchMatchSet"
+                           :highlight-id="highlightId"
+                           @toggle="$emit('toggle', $event)"
+                           @select="$emit('select', $event)"
+                           @node-updated="$emit('node-updated', $event)"></tree-item>
+              </template>
+            </ul>
+          </li>
+        `,
+        computed: {
+            isExpanded() { return this.expandedSet.has(this.node.id); },
+            isSearchMatch() { return this.searchMatchSet && this.searchMatchSet.has(this.node.id); },
+            isSpecialNode() { return this.node.id === -1 && this.node.name && this.node.name.name === '未分类'; }
+        },
+        methods: {
+            async handleToggle() {
+                if (this.isExpanded) { this.$emit('toggle', this.node.id); return; }
+                if (this.node.hasChildren && !this.node.loaded) {
+                    this.loadingChildren = true;
+                    try {
+                        const apiChildren = await fetchChildren(this.node.id);
+                        this.node.children = apiChildren.map(apiChild => new TreeNode(apiChild));
+                        this.node.loaded = true;
+                        this.$emit('node-updated', this.node.id);
+                    } catch (err) { console.error(err);
+                        alert(`加载子分类失败: ${err.message}`); } finally { this.loadingChildren = false; }
+                }
+                this.$emit('toggle', this.node.id);
+            }
+        }
+    };
+
+    // ---------- 主应用 ----------
+    const API_BASE = 'https://slave.tooo.top/catalog/v1/items';
 
     createApp({
+        components: { TreeItem },
         setup() {
-            // 加载状态
-            const loading = ref(false);
+            const loadingProducts = ref(false);
             const productList = ref([]);
-            // 分类数据
-            const categories = ref([
-                { id: null, name: '所有分类' },
-                { id: 1, name: '新鲜果蔬' },
-                { id: 2, name: '肉禽蛋类' },
-                { id: 3, name: '海鲜水产' },
-                { id: 4, name: '熟食烘焙' },
-                { id: 5, name: '乳品烘焙' },
-                { id: 6, name: '酒水饮料' },
-                { id: 7, name: '休闲零食' },
-                { id: 8, name: '粮油调味' },
-                { id: 9, name: '日用百货' }
-            ]);
-            const selectedCategoryId = ref(null);
-            const searchCategoryText = ref('');
-
-            // 过滤后的分类
-            const filteredCategoryList = computed(() => {
-                if (!searchCategoryText.value) return categories.value;
-                return categories.value.filter(c => c.name.includes(searchCategoryText.value));
-            });
-
-            // 筛选条件
-            const filters = ref({
-                keyword: '',
-                dateFrom: '',
-                dateTo: '',
-                status: ''
-            });
-
-            // 分页数据
-            const pagination = ref({
-                current: 1,
-                size: 10,
-                total: 0,
-                totalPages: 1
-            });
+            const filters = ref({ keyword: '', dateFrom: '', dateTo: '', status: '' });
+            const pagination = ref({ current: 1, size: 30, total: 0, totalPages: 1 });
             const jumpPageNum = ref(1);
+            const allChecked = computed({
+                get: () => { if (productList.value.length === 0) return false; return productList.value.every(item => item.checked); },
+                set: (val) => { productList.value.forEach(item => item.checked = val); }
+            });
 
-            // 模拟数据生成（满足美观展示、对齐商品档案范例）
-            const generateMockData = (page, pageSize, catId, filterKeyword) => {
-                const totalMock = 86;  // 模拟总数
-                const start = (page - 1) * pageSize;
-                let items = [];
-                for (let i = 1; i <= pageSize; i++) {
-                    const idx = start + i;
-                    if (idx > totalMock) break;
-                    const randPrice = (Math.random() * 70 + 10).toFixed(2);
-                    const randRetail = (parseFloat(randPrice) + (Math.random() * 25 + 5)).toFixed(2);
-                    const profit = ((randRetail - randPrice) / randRetail * 100).toFixed(1);
-                    items.push({
-                        id: idx,
-                        name: filterKeyword ? `相关商品-${idx}` : `测试商品${idx}`,
-                        code: `P${10000 + idx}`,
-                        barcode: `690000000${String(idx).padStart(3,'0')}`,
-                        spec: '标准包装',
-                        unit: 'kg',
-                        purchasePrice: randPrice,
-                        discountRate: '100',
-                        retailPrice: randRetail,
-                        profitMargin: profit,
-                        categoryId: (idx % 9) + 1,
-                    });
-                }
-                // 若按分类筛选（模拟）
-                if (catId !== null && catId !== undefined) {
-                    items = items.filter(it => it.categoryId === catId);
-                }
-                if (filterKeyword) {
-                    items = items.filter(it => it.name.includes(filterKeyword) || it.code.includes(filterKeyword));
-                }
-                return { list: items, total: totalMock };
+            // 排序状态
+            const sort = ref({ field: null, order: null });
+
+            // 字段映射到后端参数（全大写，降序加下划线前缀）
+            const sortFieldMap = {
+                name: 'NAME',
+                barcode: 'BARCODE',
+                spec: 'SPEC',
+                grade: 'GRADE',
+                brand: 'BRAND',
+                made_in: 'MADE_IN',
+                last_receipt_price: 'LAST_RECEIPT_PRICE',
+                retail_price: 'RETAIL_PRICE',
+                member_price: 'MEMBER_PRICE',
+                vip_price: 'VIP_PRICE',
+                category: 'CATEGORY',
+                shelf_life: 'SHELF_LIFE',
+                profit_margin: 'PROFIT_MARGIN'
             };
 
-            // 获取数据（带延迟）
-            const fetchProductList = async () => {
-                loading.value = true;
-                try {
-                    await new Promise(resolve => setTimeout(resolve, 400));
-                    const { list, total } = generateMockData(
-                        pagination.value.current,
-                        pagination.value.size,
-                        selectedCategoryId.value,
-                        filters.value.keyword
-                    );
-                    productList.value = list;
-                    pagination.value.total = total;
-                    pagination.value.totalPages = Math.ceil(total / pagination.value.size);
-                    if (pagination.value.current > pagination.value.totalPages) {
-                        pagination.value.current = 1;
+            // 请求序列号
+            let requestSeq = 0;
+
+            // 分类树
+            const categoryTree = ref([]);
+            const loading = ref(true);
+            const errorMsg = ref('');
+            const searchKeyword = ref('');
+            const expandedSet = ref(new Set());
+            const searchLoading = ref(false);
+            const highlightNodeId = ref(null);
+            const activeCategoryId = ref(null);
+
+            const lastSearchResults = ref([]);
+            const searchMatchSet = computed(() => new Set(lastSearchResults.value.map(r => r.id)));
+
+            // 列拖拽状态
+            const colResize = ref({
+                active: false,
+                colIndex: -1,
+                startX: 0,
+                startWidth: 0
+            });
+
+            function findNodeInTree(nodes, id) {
+                for (const node of nodes) {
+                    if (node.id === id) return node;
+                    if (node.children && node.children.length) {
+                        const found = findNodeInTree(node.children, id);
+                        if (found) return found;
                     }
+                }
+                return null;
+            }
+
+            function findNodePath(nodeList, targetId, currentPath = []) {
+                for (const node of nodeList) {
+                    const newPath = [...currentPath, node.id];
+                    if (node.id === targetId) return newPath;
+                    if (node.children && node.children.length) {
+                        const childResult = findNodePath(node.children, targetId, newPath);
+                        if (childResult) return childResult;
+                    }
+                }
+                return null;
+            }
+
+            function applyExpansionFromResults(results) {
+                if (!results || results.length === 0) return;
+                const toExpandSet = new Set();
+                for (const result of results) {
+                    const path = findNodePath(categoryTree.value, result.id);
+                    if (path && path.length > 1) {
+                        for (let i = 0; i < path.length - 1; i++) toExpandSet.add(path[i]);
+                    }
+                }
+                if (toExpandSet.size) {
+                    const newExpanded = new Set(expandedSet.value);
+                    toExpandSet.forEach(id => newExpanded.add(id));
+                    expandedSet.value = newExpanded;
+                }
+            }
+
+            async function performRemoteSearch(keyword, forceRequest = false) {
+                if (!keyword || keyword.trim() === '') { lastSearchResults.value = []; return; }
+                if (keyword === lastSearchKeyword.value && !forceRequest) {
+                    if (lastSearchResults.value.length) applyExpansionFromResults(lastSearchResults.value);
+                    return;
+                }
+                searchLoading.value = true;
+                try {
+                    const results = await searchRemote(keyword);
+                    lastSearchKeyword.value = keyword;
+                    lastSearchResults.value = results;
+                    applyExpansionFromResults(results);
+                } catch (err) { console.error(err);
+                    alert('搜索失败: ' + err.message); } finally { searchLoading.value = false; }
+            }
+
+            let debounceTimer = null;
+            const lastSearchKeyword = ref('');
+
+            function onSearchInput() {
+                if (debounceTimer) clearTimeout(debounceTimer);
+                const keyword = searchKeyword.value;
+                debounceTimer = setTimeout(() => performRemoteSearch(keyword, false), 500);
+            }
+
+            function onSearchEnter() {
+                const keyword = searchKeyword.value;
+                if (keyword && keyword.trim()) {
+                    if (debounceTimer) clearTimeout(debounceTimer);
+                    performRemoteSearch(keyword, true);
+                }
+            }
+
+            function buildTree(apiNode) {
+                const node = new TreeNode(apiNode);
+                if (apiNode.children && apiNode.children.length) {
+                    node.children = apiNode.children.map(child => buildTree(child));
+                    node.hasChildren = true;
+                    node.loaded = true;
+                } else {
+                    node.children = [];
+                    node.hasChildren = false;
+                    node.loaded = true;
+                }
+                return node;
+            }
+
+            async function loadCategories() {
+                loading.value = true;
+                errorMsg.value = '';
+                try {
+                    const roots = await fetchRoots();
+                    let trees = [];
+                    if (roots.length === 0) {
+                        const uncatNode = new TreeNode({ id: -1, name: { name: '未分类', shortName: '' }, parent_id: -1, left: 0, right: 0 });
+                        trees = [uncatNode];
+                    } else {
+                        const treePromises = roots.map(async (root) => {
+                            if (root.right / 2 < 500) {
+                                try {
+                                    const fullCategory = await fetchDescendants(root.id);
+                                    return buildTree(fullCategory);
+                                } catch (err) {
+                                    console.warn(`加载根 ${root.id} 的后代失败，使用根节点本身`, err);
+                                    return new TreeNode(root);
+                                }
+                            } else {
+                                return new TreeNode(root);
+                            }
+                        });
+                        trees = await Promise.all(treePromises);
+                    }
+
+                    let hasUncat = trees.some(n => n.id === -1);
+                    if (!hasUncat) {
+                        const uncatNode = new TreeNode({ id: -1, name: { name: '未分类', shortName: '' }, parent_id: -1, left: 0, right: 0 });
+                        trees.unshift(uncatNode);
+                    }
+
+                    categoryTree.value = trees;
+                    lastSearchResults.value = [];
+                    expandedSet.value.clear();
+
+                    requestSeq++;
+                    fetchProductList(requestSeq);
                 } catch (err) {
                     console.error(err);
+                    errorMsg.value = '获取分类数据失败：' + err.message;
+                    categoryTree.value = [];
+                    activeCategoryId.value = null;
+                    requestSeq++;
+                    fetchProductList(requestSeq);
                 } finally {
                     loading.value = false;
                 }
-            };
+            }
 
-            // 监听分类切换
-            const changeCategory = (id) => {
-                selectedCategoryId.value = id;
+            function selectCategory(id) {
+                activeCategoryId.value = id;
                 pagination.value.current = 1;
-                fetchProductList();
+                // 切换分类时重置排序
+                sort.value = { field: null, order: null };
+                requestSeq++;
+                fetchProductList(requestSeq);
+            }
+
+            function toggleExpand(id) {
+                const set = new Set(expandedSet.value);
+                if (set.has(id)) set.delete(id);
+                else set.add(id);
+                expandedSet.value = set;
+            }
+
+            function onNodeUpdated() {}
+
+            // ---------- 排序处理（三态：升序 → 降序 → 取消） ----------
+            function handleSort(field) {
+                if (!sortFieldMap[field]) return;
+                if (sort.value.field === field) {
+                    // 当前字段已激活
+                    if (sort.value.order === 'asc') {
+                        sort.value.order = 'desc';
+                    } else if (sort.value.order === 'desc') {
+                        // 取消排序
+                        sort.value.field = null;
+                        sort.value.order = null;
+                    }
+                } else {
+                    sort.value.field = field;
+                    sort.value.order = 'asc';
+                }
+                pagination.value.current = 1;
+                requestSeq++;
+                fetchProductList(requestSeq);
+            }
+
+            function getSortIcon(field) {
+                if (sort.value.field !== field) {
+                    return 'unfold_more';
+                }
+                return sort.value.order === 'asc' ? 'expand_less' : 'expand_more';
+            }
+
+            // ---------- 列宽拖拽 ----------
+            function startResize(e, colIndex) {
+                const th = e.target.closest('th');
+                if (!th) return;
+                const col = document.querySelector(`.data-table col:nth-child(${colIndex + 1})`);
+                if (!col) return;
+                const startX = e.clientX;
+                const startWidth = col.offsetWidth || 100;
+                colResize.value = { active: true, colIndex, startX, startWidth };
+                document.addEventListener('mousemove', onResize);
+                document.addEventListener('mouseup', stopResize);
+                e.preventDefault();
+            }
+
+            function onResize(e) {
+                if (!colResize.value.active) return;
+                const { colIndex, startX, startWidth } = colResize.value;
+                const delta = e.clientX - startX;
+                const newWidth = Math.max(30, startWidth + delta);
+                const col = document.querySelector(`.data-table col:nth-child(${colIndex + 1})`);
+                if (col) {
+                    col.style.width = newWidth + 'px';
+                    col.style.minWidth = newWidth + 'px';
+                    col.style.maxWidth = newWidth + 'px';
+                    const cells = document.querySelectorAll(`.data-table th:nth-child(${colIndex + 1}), .data-table td:nth-child(${colIndex + 1})`);
+                    cells.forEach(cell => {
+                        cell.style.width = newWidth + 'px';
+                        cell.style.minWidth = newWidth + 'px';
+                        cell.style.maxWidth = newWidth + 'px';
+                    });
+                }
+            }
+
+            function stopResize() {
+                colResize.value.active = false;
+                document.removeEventListener('mousemove', onResize);
+                document.removeEventListener('mouseup', stopResize);
+            }
+
+            // ---------- 格式化价格 ----------
+            const formatPrice = (price, unitKey) => {
+                if (price === null || price === undefined || isNaN(price)) return '-';
+                const formatted = Number(price).toFixed(2);
+                let unitDisplay = '';
+                if (unitKey) {
+                    const i18n = unitMap.value[unitKey];
+                    unitDisplay = i18n ? '/' + i18n : (unitKey ? '/' + unitKey : '');
+                }
+                return `¥${formatted}${unitDisplay}`;
             };
 
-            // 查询与重置
+            // ---------- 生成页码数组 ----------
+            function generatePageNumbers(totalPages, currentPage) {
+                if (totalPages <= 1) return [1];
+                const pages = [];
+                const delta = 2;
+                const range = [];
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+                        range.push(i);
+                    }
+                }
+                let last = 0;
+                for (const i of range) {
+                    if (i - last > 1) pages.push('…');
+                    pages.push(i);
+                    last = i;
+                }
+                return pages;
+            }
+
+            // ---------- 去重辅助 ----------
+            function deduplicateItems(arr) {
+                const seen = new Set();
+                const result = [];
+                for (const item of arr) {
+                    const key = String(item.id);
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        result.push(item);
+                    }
+                }
+                return result;
+            }
+
+            // ---------- 商品列表 ----------
+            const MAX_OFFSET_SIZE = 10000;
+
+            const fetchProductList = async (seq) => {
+                if (seq === undefined) {
+                    seq = ++requestSeq;
+                }
+
+                loadingProducts.value = true;
+                try {
+                    const defaultSize = pagination.value.size;
+                    const currentPage = pagination.value.current;
+                    const offset = (currentPage - 1) * defaultSize;
+
+                    if (offset >= MAX_OFFSET_SIZE) {
+                        productList.value = [];
+                        pagination.value.total = 0;
+                        pagination.value.totalPages = 1;
+                        pagination.value.current = 1;
+                        loadingProducts.value = false;
+                        return;
+                    }
+
+                    const requestSize = Math.min(defaultSize, MAX_OFFSET_SIZE - offset);
+
+                    let url = `${API_BASE}?offset=${offset}&size=${requestSize}`;
+                    if (activeCategoryId.value !== null && activeCategoryId.value !== undefined) {
+                        url += `&cid=${activeCategoryId.value}`;
+                    }
+                    if (sort.value.field && sortFieldMap[sort.value.field]) {
+                        const field = sortFieldMap[sort.value.field];
+                        const order = sort.value.order === 'asc' ? '' : '_';
+                        url += `&sort=${order}${field}`;
+                    }
+                    if (filters.value.keyword && filters.value.keyword.trim()) {
+                        url += `&keyword=${encodeURIComponent(filters.value.keyword.trim())}`;
+                    }
+                    if (filters.value.dateFrom) {
+                        url += `&dateFrom=${filters.value.dateFrom}`;
+                    }
+                    if (filters.value.dateTo) {
+                        url += `&dateTo=${filters.value.dateTo}`;
+                    }
+                    if (filters.value.status !== '') {
+                        url += `&show=${filters.value.status}`;
+                    }
+                    console.log("url:"+url)
+                    const data = await apiFetch(url);
+
+                    if (seq !== requestSeq) {
+                        console.log(`忽略过时请求 #${seq}，当前最新 #${requestSeq}`);
+                        loadingProducts.value = false;
+                        return;
+                    }
+
+                    const total = data.total || 0;
+                    const items = data.items || [];
+
+                    const mappedItems = items.map(item => {
+                        const retailPrice = item.retail_price?.number ?? null;
+                        const purchasePrice = item.last_receipt_price?.price?.number ?? null;
+                        const memberPrice = item.member_price?.price?.number ?? null;
+                        const vipPrice = item.vip_price?.price?.number ?? null;
+                        const unit = item.retail_price?.unit || item.last_receipt_price?.price?.unit || null;
+                        let brandName = null;
+                        if (item.brand && typeof item.brand === 'object' && item.brand.name) brandName = item.brand.name;
+                        else if (typeof item.brand === 'string') brandName = item.brand;
+                        const madeIn = item.madeIn?.madeIn || null;
+                        const name = item.name?.name || '未命名';
+                        const shortName = item.name?.shortName || null;
+                        const categoryName = item.category?.name || '未分类';
+                        const shelf_life = item.shelf_life !== undefined && item.shelf_life !== null ? item.shelf_life : null;
+                        const grade = item.grade || null;
+                        let profitMargin = null;
+                        if (retailPrice !== null && retailPrice !== 0 && purchasePrice !== null) {
+                            profitMargin = ((retailPrice - purchasePrice) / retailPrice * 100);
+                            profitMargin = Math.round(profitMargin * 100) / 100;
+                        }
+                        return {
+                            id: String(item.id),
+                            name,
+                            shortName,
+                            barcode: item.barcode || null,
+                            spec: item.spec || null,
+                            shelf_life: shelf_life,
+                            unit,
+                            brandName,
+                            madeIn,
+                            categoryName,
+                            grade,
+                            purchasePrice,
+                            retailPrice,
+                            memberPrice,
+                            vipPrice,
+                            profitMargin,
+                            checked: false,
+                            categoryId: item.category?.id ?? null,
+                            timestamp: item['@timestamp'] || null,
+                            show: item.show
+                        };
+                    });
+
+                    let filtered = mappedItems;
+                    if (activeCategoryId.value !== null && activeCategoryId.value !== undefined && activeCategoryId.value !== -1) {
+                        filtered = filtered.filter(it => it.categoryId === activeCategoryId.value);
+                    }
+                    if (filters.value.keyword && filters.value.keyword.trim()) {
+                        const kw = filters.value.keyword.trim().toLowerCase();
+                        filtered = filtered.filter(it =>
+                            it.name.toLowerCase().includes(kw) ||
+                            (it.barcode && it.barcode.toLowerCase().includes(kw))
+                        );
+                    }
+
+                    filtered = deduplicateItems(filtered);
+
+                    if (seq !== requestSeq) {
+                        console.log(`忽略过时请求 #${seq}（处理后），当前最新 #${requestSeq}`);
+                        loadingProducts.value = false;
+                        return;
+                    }
+
+                    productList.value = filtered;
+                    pagination.value.total = total;
+                    pagination.value.totalPages = Math.ceil(total / defaultSize);
+                    if (pagination.value.totalPages === 0) pagination.value.totalPages = 1;
+                    if (pagination.value.current > pagination.value.totalPages) {
+                        pagination.value.current = pagination.value.totalPages;
+                    }
+                } catch (err) {
+                    console.error(err);
+                    if (seq !== requestSeq) {
+                        loadingProducts.value = false;
+                        return;
+                    }
+                    productList.value = [];
+                    pagination.value.total = 0;
+                    pagination.value.totalPages = 1;
+                    alert('加载商品数据失败: ' + err.message);
+                } finally {
+                    loadingProducts.value = false;
+                }
+            };
+
+            // ---------- 工具栏事件 ----------
             const handleSearch = () => {
                 pagination.value.current = 1;
-                fetchProductList();
+                requestSeq++;
+                fetchProductList(requestSeq);
             };
-            const resetAllFilters = () => {
-                filters.value = { keyword: '', dateFrom: '', dateTo: '', status: '' };
-                pagination.value.current = 1;
-                fetchProductList();
+            const handleAdvancedSearch = () => {
+                alert('高级查询功能：可在此展开更多筛选条件（日期、状态等）');
             };
+            const handleAdd = () => { alert('新增商品'); };
+            const handleEdit = () => {
+                const checked = productList.value.filter(item => item.checked);
+                if (checked.length === 0) { alert('请先选择要修改的商品'); return; }
+                alert('修改商品：' + checked.map(i => i.name).join(', '));
+            };
+            const handleDelete = () => {
+                const checked = productList.value.filter(item => item.checked);
+                if (checked.length === 0) { alert('请先选择要删除的商品'); return; }
+                if (confirm('确定删除选中的 ' + checked.length + ' 个商品吗？')) {
+                    alert('删除成功（模拟）');
+                    requestSeq++;
+                    fetchProductList(requestSeq);
+                }
+            };
+            const handleRefresh = () => {
+                requestSeq++;
+                fetchProductList(requestSeq);
+            };
+            const handleSettings = () => { alert('设置面板'); };
+            const handleMore = () => { alert('更多操作（如导入导出等）'); };
 
-            // 分页逻辑
+            // ---------- 分页操作 ----------
             const prevPage = () => {
                 if (pagination.value.current > 1) {
                     pagination.value.current--;
-                    fetchProductList();
+                    requestSeq++;
+                    fetchProductList(requestSeq);
                 }
             };
             const nextPage = () => {
                 if (pagination.value.current < pagination.value.totalPages) {
                     pagination.value.current++;
-                    fetchProductList();
+                    requestSeq++;
+                    fetchProductList(requestSeq);
                 }
             };
             const goPage = (page) => {
                 if (page >= 1 && page <= pagination.value.totalPages) {
                     pagination.value.current = page;
-                    fetchProductList();
+                    requestSeq++;
+                    fetchProductList(requestSeq);
                 }
             };
             const jumpToPage = () => {
@@ -862,58 +1702,67 @@
                 p = Math.min(Math.max(p, 1), pagination.value.totalPages);
                 if (p !== pagination.value.current) {
                     pagination.value.current = p;
-                    fetchProductList();
+                    requestSeq++;
+                    fetchProductList(requestSeq);
                 }
                 jumpPageNum.value = p;
             };
+            const onPageSizeChange = () => {
+                pagination.value.current = 1;
+                requestSeq++;
+                fetchProductList(requestSeq);
+            };
 
-            // 计算页码数组
             const pageNumbers = computed(() => {
-                const total = pagination.value.totalPages;
-                const current = pagination.value.current;
-                let delta = 2;
-                let left = current - delta;
-                let right = current + delta;
-                let range = [];
-                for (let i = 1; i <= total; i++) {
-                    if (i === 1 || i === total || (i >= left && i <= right)) {
-                        range.push(i);
-                    }
-                }
-                let result = [];
-                let last = 0;
-                for (let i of range) {
-                    if (i - last > 1) result.push(-1);
-                    result.push(i);
-                    last = i;
-                }
-                return result.filter(v => v !== -1);
+                return generatePageNumbers(pagination.value.totalPages, pagination.value.current);
             });
 
             onMounted(() => {
-                selectedCategoryId.value = null;
-                fetchProductList();
+                loadUnits().then(() => loadCategories()).catch(() => loadCategories());
             });
 
             return {
-                loading,
+                loadingProducts,
                 productList,
-                categories,
-                filteredCategoryList,
-                selectedCategoryId,
-                searchCategoryText,
                 filters,
                 pagination,
                 jumpPageNum,
-                pageNumbers,
-                changeCategory,
+                allChecked,
+                sort,
+                formatPrice,
+                fetchProductList,
+                handleSort,
+                getSortIcon,
+                startResize,
                 handleSearch,
-                resetAllFilters,
+                handleAdvancedSearch,
+                handleAdd,
+                handleEdit,
+                handleDelete,
+                handleRefresh,
+                handleSettings,
+                handleMore,
                 prevPage,
                 nextPage,
                 goPage,
                 jumpToPage,
-                fetchProductList
+                onPageSizeChange,
+                pageNumbers,
+                loading,
+                errorMsg,
+                categoryTree,
+                expandedSet,
+                searchKeyword,
+                onSearchInput,
+                onSearchEnter,
+                searchLoading,
+                searchMatchSet,
+                activeCategoryId,
+                highlightNodeId,
+                loadCategories,
+                selectCategory,
+                toggleExpand,
+                onNodeUpdated,
             };
         }
     }).mount('#app');

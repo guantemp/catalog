@@ -3,425 +3,664 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>SaaS零售 · 分类管理器 | 品牌深色优化</title>
+    <title>分类管理 · 内嵌版</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet">
     <style>
-        /* 样式与之前完全一致，此处省略（已在前面给出完整样式） */
-        /* 为节省篇幅，使用与上一版本完全相同的样式 */
+        /* ===== 保留全部原有样式，仅调整配色 ===== */
         [v-cloak] { display: none !important; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: radial-gradient(ellipse at 20% 30%, #0f172a, #070b14); font-family: 'Inter', system-ui, sans-serif; color: #e2e8f0; overflow: hidden; height: 100vh; }
-        .global-layout { display: flex; flex-direction: column; height: 100vh; width: 100%; overflow: hidden; }
-        /* ... 其余样式与之前完全一致，此处省略以保持简洁，实际部署请使用完整样式 ... */
-        /* 由于篇幅限制，此处使用与上一版相同的样式，可复制之前全部样式 */
-        .app-header { flex-shrink: 0; height: 64px; background: rgba(8,12,24,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(129,140,248,0.2); display: flex; align-items: center; justify-content: space-between; padding: 0 24px 0 20px; z-index: 20; box-shadow: 0 2px 20px rgba(0,0,0,0.3); color: #e2e8f0; }
-        .header-left { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; color: #f1f5f9; user-select: none; }
-        .header-left .material-symbols-outlined { font-size: 28px; color: #818cf8; }
-        .header-right { display: flex; align-items: center; gap: 18px; }
-        .top-search-box { position: relative; display: flex; align-items: center; background: rgba(30,41,59,0.8); border: 1px solid #334155; border-radius: 40px; padding: 0 16px 0 38px; height: 38px; transition: 0.25s; min-width: 180px; }
-        .top-search-box:focus-within { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129,140,248,0.15); background: rgba(15,23,42,0.95); }
-        .top-search-box .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 14px; pointer-events: none; }
-        .top-search-box input { background: transparent; border: none; outline: none; color: #f1f5f9; font-size: 0.85rem; width: 140px; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
-        .top-search-box input::placeholder { color: #94a3b8; }
-        .searching-indicator-top { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #818cf8; font-size: 14px; }
-        .notification-icon { position: relative; cursor: pointer; color: #94a3b8; font-size: 20px; transition: 0.2s; padding: 4px; }
-        .notification-icon:hover { color: #f1f5f9; }
-        .notification-icon .badge { position: absolute; top: -4px; right: -6px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 600; border-radius: 50%; min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; padding: 0 5px; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
-        .user-dropdown { position: relative; display: flex; align-items: center; gap: 8px; cursor: default; padding: 4px 8px 4px 4px; border-radius: 40px; transition: background 0.15s; user-select: none; }
-        .user-dropdown:hover { background: rgba(129,140,248,0.08); }
-        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#4f46e5,#818cf8); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: #fff; flex-shrink: 0; }
-        .username { font-size: 14px; font-weight: 500; color: #e2e8f0; }
-        .chevron { font-size: 12px; color: #64748b; transition: transform 0.25s; }
-        .chevron.open { transform: rotate(180deg); }
-        /* ---- 下拉菜单（悬停触发） ---- */
-        .dropdown-menu {
-            position: absolute;
-            top: calc(100% + 8px);
-            right: 0;
-            background: #1A2434;
-            border: 1px solid #2A3A4A;
-            border-radius: 16px;
-            min-width: 180px;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+        body {
+            background: #1e2a36;
+            font-family: 'Inter', system-ui, sans-serif;
+            color: #e8edf4;
             overflow: hidden;
-            z-index: 200;
-            padding: 6px 0;
-            transform-origin: top right;
-            animation: dropdownFadeIn 0.2s ease;
+            height: 100vh;
         }
-        @keyframes dropdownFadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.96) translateY(-6px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
+
+        .app-layout {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            height: 100vh;
+            padding: 10px;
+            min-height: 0;
+            background: transparent;
         }
-        .dropdown-menu .dropdown-item {
-            padding: 10px 18px;
-            color: #C8DCF0;
-            font-size: 13px;
+
+        /* ----- 以下样式仅调整颜色值，结构与类名未变 ----- */
+        .tree-panel {
+            flex: 0 0 350px;
+            background: #2a3a48;
+            border-radius: 28px;
+            border: 1px solid #3e5566;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .right-panel {
+            flex: 1;
+            min-width: 560px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .card {
+            background: #2a3a48;
+            border-radius: 28px;
+            border: 1px solid #3e5566;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .card-body {
+            padding: 28px 32px;
+            overflow-y: auto;
+            flex: 1;
+            background: #1e2a36;
+        }
+        .tree-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid #3e5566;
+            background: #2a3a48;
+            flex-shrink: 0;
+        }
+        .tree-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .tree-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #e8edf4;
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+        .tree-title i { color: #2D9CDB; }
+        .add-root-btn {
+            background: rgba(45,156,219,0.2);
+            border: 1px solid #2D9CDB;
+            color: #b8d8f0;
+            padding: 6px 14px;
+            border-radius: 32px;
+            font-size: 0.75rem;
+            font-weight: 500;
             cursor: pointer;
-            transition: background 0.15s;
-            border: none;
-            background: transparent;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .add-root-btn:hover {
+            background: rgba(45,156,219,0.35);
+            border-color: #4DB8F0;
+            color: white;
+        }
+        .search-box {
+            position: relative;
             width: 100%;
-            text-align: left;
-            font-family: inherit;
         }
-        .dropdown-menu .dropdown-item:hover {
-            background: rgba(45, 156, 219, 0.12);
-            color: #fff;
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8fa8b8;
+            font-size: 0.9rem;
         }
-        .dropdown-menu .dropdown-item i {
-            width: 18px;
-            font-size: 14px;
-            color: #7F8AA8;
-            transition: color 0.15s;
+        .search-box input {
+            width: 100%;
+            padding: 10px 14px 10px 40px;
+            background: #15222e;
+            border: 1px solid #3e5566;
+            border-radius: 40px;
+            color: #e8edf4;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        .dropdown-menu .dropdown-item:hover i {
-            color: #7AC9FF;
+        .search-box input:focus {
+            border-color: #2D9CDB;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(45,156,219,0.25);
         }
-        .dropdown-menu .dropdown-divider {
-            height: 1px;
-            background: #2A3A4A;
-            margin: 4px 12px;
+        .search-loading {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #2D9CDB;
+            font-size: 0.8rem;
+            pointer-events: none;
         }
-        .dropdown-menu .dropdown-item.danger {
-            color: #FFB4A2;
+        .tree-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 12px 20px 16px;
+            background: #1e2a36;
+            display: flex;
+            flex-direction: column;
         }
-        .dropdown-menu .dropdown-item.danger i {
-            color: #DC4C4C;
+        .tree-node, .tree-node ul, .node-item {
+            list-style: none !important;
+            margin: 0;
+            padding-left: 0;
         }
-        .dropdown-menu .dropdown-item.danger:hover {
-            background: rgba(220, 76, 76, 0.12);
-            color: #FFB4A2;
-        }
-        .dropdown-menu .dropdown-item.danger:hover i {
-            color: #FF6B6B;
-        }
-        .dropdown-divider { height: 1px; background: #334155; margin: 4px 12px; }
-        .help-icon { cursor: pointer; color: #94a3b8; font-size: 20px; transition: 0.2s; padding: 4px; }
-        .help-icon:hover { color: #f1f5f9; }
-        .main-body { display: flex; flex: 1; overflow: hidden; }
-        .saas-sidebar { width: 200px; flex-shrink: 0; background: rgba(8,12,24,0.92); backdrop-filter: blur(12px); border-right: 1px solid rgba(129,140,248,0.2); color: rgba(255,255,255,0.75); display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 20px rgba(0,0,0,0.3); transition: width 0.3s ease; overflow: hidden; position: relative; }
-        .saas-sidebar.collapsed { width: 64px; }
-        .saas-sidebar.collapsed .nav-item span:last-child { display: none; }
-        .saas-sidebar.collapsed .nav-item { justify-content: center; padding: 12px 8px; border-left: 3px solid transparent; }
-        .saas-sidebar.collapsed .nav-item .material-symbols-outlined { font-size: 24px; }
-        .saas-sidebar.collapsed .collapse-btn span { display: none; }
-        .saas-sidebar.collapsed .collapse-btn i { transform: rotate(180deg); }
-        .saas-sidebar.collapsed .collapse-btn { justify-content: center; padding: 16px 0; }
-        .nav-menu { flex: 1; padding: 0 0 20px 0; overflow-y: auto; }
-        .nav-item { display: flex; align-items: center; gap: 14px; padding: 12px 20px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; color: rgba(255,255,255,0.65); border-left: 3px solid transparent; white-space: nowrap; }
-        .nav-item:hover { background: rgba(129,140,248,0.12); color: #ffffff; border-left-color: #818cf8; }
-        .nav-item.active { background: linear-gradient(90deg, rgba(129,140,248,0.18), transparent); color: #ffffff; border-left-color: #818cf8; font-weight: 600; }
-        .nav-item .material-symbols-outlined { font-size: 22px; flex-shrink: 0; }
-        .collapse-btn { margin-top: auto; padding: 16px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-top: 1px solid rgba(129,140,248,0.2); color: rgba(255,255,255,0.5); transition: background 0.2s; font-size: 0.85rem; user-select: none; }
-        .collapse-btn:hover { background: rgba(129,140,248,0.15); color: #fff; }
-        .collapse-btn i { font-size: 1.1rem; transition: transform 0.3s ease; }
-        .main-content-area { flex: 1; overflow-y: auto; padding: 0; background: transparent; }
-        .app-layout { display: flex; gap: 20px; width: 100%; margin: 0; padding: 16px; height: 100%; min-height: 0; }
-        .tree-panel { flex: 0 0 350px; background: #2A3A4A; border-radius: 28px; border: 1px solid #3A4A5A; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; height: 100%; display: flex; flex-direction: column; }
-        .right-panel { flex: 1; min-width: 560px; display: flex; flex-direction: column; height: 100%; }
-        .card { background: #2A3A4A; border-radius: 28px; border: 1px solid #3A4A5A; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; flex: 1; display: flex; flex-direction: column; height: 100%; }
-        .card-body { padding: 28px 32px; overflow-y: auto; flex: 1; background: #1A2434; }
-        .tree-header { padding: 20px 24px 16px; border-bottom: 1px solid #3A4A5A; background: #2A3A4A; flex-shrink: 0; }
-        .tree-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .tree-title { font-weight: 700; font-size: 1.1rem; color: #f1f5f9; display: flex; align-items: center; gap: 10px; }
-        .tree-title i { color: #818cf8; }
-        .add-root-btn { background: rgba(129,140,248,0.2); border: 1px solid #818cf8; color: #cbd5ff; padding: 6px 14px; border-radius: 32px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
-        .add-root-btn:hover { background: rgba(129,140,248,0.35); border-color: #a5b4fc; color: white; }
-        .search-box { position: relative; width: 100%; }
-        .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.9rem; }
-        .search-box input { width: 100%; padding: 10px 14px 10px 40px; background: #1A2434; border: 1px solid #3A4A5A; border-radius: 40px; color: #f1f5f9; font-size: 0.85rem; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-        .search-box input:focus { border-color: #818cf8; outline: none; box-shadow: 0 0 0 3px rgba(129,140,248,0.2); }
-        .search-loading { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #818cf8; font-size: 0.8rem; pointer-events: none; }
-        .tree-scroll { flex: 1; overflow-y: auto; padding: 12px 12px 20px 16px; background: #1A2434; display: flex; flex-direction: column; }
-        .tree-node, .tree-node ul, .node-item { list-style: none !important; margin: 0; padding-left: 0; }
         .tree-node ul { padding-left: 28px; }
         .node-item { margin: 2px 0; }
-        .node-content { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 14px; cursor: pointer; transition: 0.15s; font-size: 0.9rem; color: #cbd5e1; }
-        .node-content:hover { background: rgba(129,140,248,0.12); color: #f1f5f9; }
-        .active-cat { background: linear-gradient(135deg,#1e1b4b,#2e1065); color: #e0e7ff !important; border-left: 3px solid #818cf8; font-weight: 500; }
+        .node-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 0.9rem;
+            color: #c8d8e8;
+        }
+        .node-content:hover {
+            background: rgba(45,156,219,0.12);
+            color: #e8edf4;
+        }
+        .active-cat {
+            background: linear-gradient(135deg, #1a2a3a, #233544);
+            color: #e0ecf5 !important;
+            border-left: 3px solid #2D9CDB;
+            font-weight: 500;
+        }
         .node-content.search-match-node { background: transparent !important; border-left: none !important; box-shadow: none !important; }
         .node-content.search-match-node .node-name span { color: #fbbf24 !important; font-weight: 700 !important; text-shadow: 0 0 4px rgba(251,191,36,0.6); }
         .node-content.search-match-node .node-icon-img { box-shadow: 0 0 10px #fbbf24, 0 0 4px rgba(0,0,0,0.5); border-radius: 8px; transform: scale(1.1); }
         .node-content.search-match-node:hover .node-name span { color: #fcd34d !important; }
-        .node-name { display: flex; align-items: center; gap: 8px; flex: 1; }
-        .toggle-box { display: inline-flex; justify-content: center; align-items: center; width: 22px; height: 22px; border: 1px solid #3A4A5A; border-radius: 6px; background: #1A2434; cursor: pointer; font-weight: bold; font-size: 1rem; color: #94a3b8; transition: 0.1s; user-select: none; flex-shrink: 0; box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
-        .toggle-box:hover { background: #2A3A4A; border-color: #818cf8; color: #818cf8; }
-        .node-icon-img { width: 20px; height: 20px; border-radius: 6px; object-fit: cover; background: #1A2434; flex-shrink: 0; transition: all 0.15s ease; }
-        .node-actions { display: none; gap: 6px; margin-left: 8px; }
+        .node-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+        .toggle-box {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 22px;
+            height: 22px;
+            border: 1px solid #3e5566;
+            border-radius: 6px;
+            background: #15222e;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #8fa8b8;
+            transition: 0.1s;
+            user-select: none;
+            flex-shrink: 0;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+        }
+        .toggle-box:hover {
+            background: #2a3a48;
+            border-color: #2D9CDB;
+            color: #2D9CDB;
+        }
+        .node-icon-img {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            object-fit: cover;
+            background: #15222e;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .node-actions {
+            display: none;
+            gap: 6px;
+            margin-left: 8px;
+        }
         .node-content:hover .node-actions { display: flex; }
-        .node-actions i { font-size: 0.7rem; padding: 5px; border-radius: 8px; background: #1A2434; color: #94a3b8; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-        .node-actions i:hover { background: #2A3A4A; color: #818cf8; }
-        .card-header { padding: 20px 28px; border-bottom: 1px solid #3A4A5A; background: #2A3A4A; display: flex; justify-content: space-between; flex-wrap: wrap; flex-shrink: 0; }
-        .card-header h2 { font-size: 1.3rem; font-weight: 600; display: flex; align-items: center; gap: 10px; color: #f1f5f9; }
-        .add-mode-badge { background: rgba(56,189,248,0.2); border-radius: 20px; padding: 4px 12px; font-size: 0.75rem; color: #7dd3fc; margin-left: 12px; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px 32px; }
+        .node-actions i {
+            font-size: 0.7rem;
+            padding: 5px;
+            border-radius: 8px;
+            background: #15222e;
+            color: #8fa8b8;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .node-actions i:hover {
+            background: #2a3a48;
+            color: #2D9CDB;
+        }
+        .card-header {
+            padding: 20px 28px;
+            border-bottom: 1px solid #3e5566;
+            background: #2a3a48;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        .card-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #e8edf4;
+        }
+        .add-mode-badge {
+            background: rgba(45,156,219,0.2);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            color: #7AC9FF;
+            margin-left: 12px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px 32px;
+        }
         .full-width { grid-column: 1 / -1; }
-        .field-group { display: flex; flex-direction: column; gap: 8px; }
-        .field-group label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #a5b4fc; letter-spacing: 0.3px; }
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .field-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #7AC9FF;
+            letter-spacing: 0.3px;
+        }
         .required-star { color: #f87171; margin-left: 4px; font-size: 0.8rem; }
-        input, select, textarea { background: #1A2434; border: 1px solid #3A4A5A; border-radius: 16px; padding: 11px 16px; font-size: 0.9rem; transition: 0.2s; color: #f1f5f9; font-family: 'Inter', monospace; }
-        input:focus, select:focus, textarea:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129,140,248,0.15); outline: none; }
+        input, select, textarea {
+            background: #15222e;
+            border: 1px solid #3e5566;
+            border-radius: 16px;
+            padding: 11px 16px;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            color: #e8edf4;
+            font-family: 'Inter', monospace;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #2D9CDB;
+            box-shadow: 0 0 0 3px rgba(45,156,219,0.2);
+            outline: none;
+        }
         .field-group select { width: 100%; }
-        .btn-group { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; justify-content: flex-end; }
-        button { background: #2A3A4A; border: 1px solid #3A4A5A; padding: 8px 22px; border-radius: 40px; font-weight: 500; font-size: 0.8rem; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; color: #cbd5e1; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-        button.primary { background: linear-gradient(135deg,#4f46e5,#6366f1); border: none; color: white; box-shadow: 0 4px 8px rgba(79,70,229,0.3); }
-        button.primary:hover { background: linear-gradient(135deg,#4338ca,#4f46e5); transform: translateY(-1px); }
-        button.danger { background: #7f1d1d; border-color: #b91c1c; color: #fecaca; }
-        button.danger:hover { background: #991b1b; }
-        button.warning { background: #b45309; border-color: #d97706; color: #fffbeb; }
-        button.warning:hover { background: #92400e; }
-        button.info { background: #065666; border-color: #0891b2; color: #cffafe; }
-        button.info:hover { background: #0e7490; }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+            justify-content: flex-end;
+        }
+        button {
+            background: #2a3a48;
+            border: 1px solid #3e5566;
+            padding: 8px 22px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #c8d8e8;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        button.primary {
+            background: linear-gradient(135deg, #2D9CDB, #4DB8F0);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 8px rgba(45,156,219,0.3);
+        }
+        button.primary:hover { background: linear-gradient(135deg, #1a8bc8, #3EACEB); transform: translateY(-1px); }
+        button.danger { background: #4d2e2e; border-color: #6a4242; color: #f5c8b8; }
+        button.danger:hover { background: #6a3a3a; }
+        button.warning { background: #8a4a1a; border-color: #b86a2a; color: #fffbeb; }
+        button.warning:hover { background: #7a3a10; }
+        button.info { background: #1a4a5a; border-color: #2a6a7a; color: #cffafe; }
+        button.info:hover { background: #1a5a6a; }
         button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        hr { margin: 28px 0 20px; border: none; border-top: 1px solid #3A4A5A; }
-        .extended-section { background: #1A2434; border-radius: 24px; padding: 16px 0 8px; margin-top: 12px; }
-        .section-mini-title { font-weight: 600; margin: 12px 0 18px; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; border-left: 3px solid #818cf8; padding-left: 16px; color: #e2e8f0; }
-        .attr-selector { background: #2A3A4A; border-radius: 20px; padding: 12px 18px; margin-bottom: 24px; border: 1px solid #3A4A5A; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
-        .attr-selector-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-        .badge-count { background: #1A2434; padding: 4px 12px; border-radius: 40px; font-size: 0.7rem; color: #a5b4fc; font-weight: 500; }
-        .attr-actions { display: flex; gap: 10px; align-items: center; }
-        .icon-url-wrapper { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        hr { margin: 28px 0 20px; border: none; border-top: 1px solid #3e5566; }
+        .extended-section {
+            background: #1e2a36;
+            border-radius: 24px;
+            padding: 16px 0 8px;
+            margin-top: 12px;
+        }
+        .section-mini-title {
+            font-weight: 600;
+            margin: 12px 0 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            border-left: 3px solid #2D9CDB;
+            padding-left: 16px;
+            color: #e8edf4;
+        }
+        .attr-selector {
+            background: #2a3a48;
+            border-radius: 20px;
+            padding: 12px 18px;
+            margin-bottom: 24px;
+            border: 1px solid #3e5566;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+        .attr-selector-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .badge-count {
+            background: #15222e;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            color: #7AC9FF;
+            font-weight: 500;
+        }
+        .attr-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .icon-url-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
         .icon-url-wrapper input { flex: 1; min-width: 200px; }
-        .icon-actions button { padding: 8px 16px; background: #2A3A4A; border: 1px solid #3A4A5A; font-size: 0.75rem; }
-        .modal-mask { position: fixed; z-index: 2000; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; }
-        .modal-container { background: #2A3A4A; border-radius: 32px; box-shadow: 0 25px 40px -12px rgba(0,0,0,0.5); overflow: hidden; width: auto; max-width: 80vw; border: 1px solid #3A4A5A; }
-        .modal-header { padding: 16px 24px; background: #1A2434; border-bottom: 1px solid #3A4A5A; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h3 { color: #f1f5f9; font-size: 1rem; font-weight: 600; }
-        .modal-close { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #94a3b8; line-height: 1; }
+        .icon-actions button {
+            padding: 8px 16px;
+            background: #2a3a48;
+            border: 1px solid #3e5566;
+            font-size: 0.75rem;
+        }
+        .modal-mask {
+            position: fixed;
+            z-index: 2000;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-container {
+            background: #2a3a48;
+            border-radius: 32px;
+            box-shadow: 0 25px 40px -12px rgba(0,0,0,0.5);
+            overflow: hidden;
+            width: auto;
+            max-width: 80vw;
+            border: 1px solid #3e5566;
+        }
+        .modal-header {
+            padding: 16px 24px;
+            background: #1e2a36;
+            border-bottom: 1px solid #3e5566;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 { color: #e8edf4; font-size: 1rem; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #8fa8b8; line-height: 1; }
         .modal-close:hover { color: #f87171; }
-        .modal-body { padding: 24px; text-align: center; min-width: 300px; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1A2434; }
-        .modal-body img { max-width: 100%; max-height: 60vh; border-radius: 20px; display: block; }
-        .preview-error { color: #f87171; font-size: 0.9rem; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .modal-body {
+            padding: 24px;
+            text-align: center;
+            min-width: 300px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #1e2a36;
+        }
+        .modal-body img {
+            max-width: 100%;
+            max-height: 60vh;
+            border-radius: 20px;
+            display: block;
+        }
+        .preview-error {
+            color: #f87171;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
         .preview-error i { font-size: 3rem; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #1A2434; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #3A4A5A; border-radius: 10px; }
-        .loading-placeholder { text-align: center; padding: 40px; color: #94a3b8; }
-        .empty-placeholder { text-align: center; padding: 40px; color: #94a3b8; }
-        .error-banner { background: #2A3A4A; border: none; border-radius: 40px; padding: 6px 16px; margin: 8px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: nowrap; gap: 8px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); color: #fca5a5; font-size: 0.7rem; width: 100%; }
-        .error-banner .retry-btn { background: #dc2626; border: none; padding: 2px 14px; border-radius: 30px; color: white; font-size: 0.7rem; cursor: pointer; transition: 0.15s; font-weight: 500; line-height: 1.8; white-space: nowrap; flex-shrink: 0; }
+        ::-webkit-scrollbar-track { background: #1e2a36; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #3e5566; border-radius: 10px; }
+        .loading-placeholder { text-align: center; padding: 40px; color: #8fa8b8; }
+        .empty-placeholder { text-align: center; padding: 40px; color: #8fa8b8; }
+        .error-banner {
+            background: #2a3a48;
+            border: none;
+            border-radius: 40px;
+            padding: 6px 16px;
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: nowrap;
+            gap: 8px 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            color: #fca5a5;
+            font-size: 0.7rem;
+            width: 100%;
+        }
+        .error-banner .retry-btn {
+            background: #dc2626;
+            border: none;
+            padding: 2px 14px;
+            border-radius: 30px;
+            color: white;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.15s;
+            font-weight: 500;
+            line-height: 1.8;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
         .error-banner .retry-btn:hover { background: #b91c1c; }
         .error-banner .retry-btn:active { transform: scale(0.96); }
         .error-banner i { margin-right: 4px; }
-        @keyframes highlight-flash { 0% { background: rgba(251,191,36,0.5); border-left-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.3); } 70% { background: rgba(251,191,36,0.15); border-left-color: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.1); } 100% { background: transparent; border-left-color: transparent; box-shadow: none; } }
-        .node-content.highlight-new { animation: highlight-flash 1.8s ease-out forwards; border-left: 3px solid #fbbf24 !important; }
+        @keyframes highlight-flash {
+            0% { background: rgba(251,191,36,0.5); border-left-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.3); }
+            70% { background: rgba(251,191,36,0.15); border-left-color: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.1); }
+            100% { background: transparent; border-left-color: transparent; box-shadow: none; }
+        }
+        .node-content.highlight-new {
+            animation: highlight-flash 1.8s ease-out forwards;
+            border-left: 3px solid #fbbf24 !important;
+        }
         .disabled-select { opacity: 0.7; cursor: not-allowed; }
-        @media (max-width: 1000px) { .tree-panel { flex: 0 0 300px; } .right-panel { min-width: 300px; } }
-        @media (max-width: 760px) { .app-header { padding: 0 12px; flex-wrap: wrap; height: auto; min-height: 56px; } .header-left { font-size: 14px; } .top-search-box input { width: 100px; } .username { display: none; } .app-layout { flex-direction: column; padding: 12px; gap: 12px; height: auto; overflow-y: auto; } .tree-panel { flex: none; height: 50vh; min-height: 300px; width: 100%; } .right-panel { min-width: unset; height: 50vh; min-height: 300px; } .saas-sidebar { width: 56px; } .saas-sidebar.collapsed { width: 56px; } .saas-sidebar .nav-item span:last-child { display: none !important; } .saas-sidebar .nav-item { justify-content: center; padding: 12px 8px; } .saas-sidebar .collapse-btn span { display: none !important; } .saas-sidebar .collapse-btn { justify-content: center; padding: 12px 0; } .saas-sidebar .collapse-btn i { transform: rotate(180deg); } .form-grid { grid-template-columns: 1fr; } }
-        @media (max-width: 600px) { .top-search-box { min-width: 40px; padding: 0 10px 0 34px; } .top-search-box input { width: 60px; } .top-search-box input::placeholder { font-size: 0; } .top-search-box input:focus { width: 120px; } .top-search-box input:focus::placeholder { font-size: 0.75rem; } .header-right { gap: 10px; } }
+
+        /* 响应式保留（原样） */
+        @media (max-width: 1000px) {
+            .tree-panel { flex: 0 0 300px; }
+            .right-panel { min-width: 300px; }
+        }
+        @media (max-width: 760px) {
+            .app-layout {
+                flex-direction: column;
+                padding: 12px;
+                gap: 12px;
+                height: auto;
+                overflow-y: auto;
+            }
+            .tree-panel {
+                flex: none;
+                height: 50vh;
+                min-height: 300px;
+                width: 100%;
+            }
+            .right-panel {
+                min-width: unset;
+                height: 50vh;
+                min-height: 300px;
+            }
+            .form-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 <div id="vueApp" v-cloak>
-    <div class="global-layout">
-        <!-- 顶部导航 -->
-        <header class="app-header">
-            <div class="header-left">
-                <span class="material-symbols-outlined">storefront</span>
-                <span>SaaS 零售 · 重庆夏至店</span>
+    <div class="app-layout">
+        <!-- 左侧树 -->
+        <div class="tree-panel">
+            <div class="tree-header">
+                <div class="tree-header-top">
+                    <div class="tree-title"><i class="fas fa-folder-tree"></i> 类别</div>
+                    <button class="add-root-btn" @click="addChild(null)"><i class="fas fa-plus"></i> 根类</button>
+                </div>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" v-model="searchKeyword" placeholder="搜索分类..." @input="onSearchInput" @keydown.enter="onSearchEnter">
+                    <i v-if="searchLoading" class="fas fa-spinner fa-pulse search-loading"></i>
+                </div>
             </div>
-            <div class="header-right">
-                <div class="top-search-box">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" placeholder="全局搜索..." v-model="topSearchKeyword" @keyup.enter="topSearch" @focus="topSearchFocused = true" @blur="topSearchFocused = false" />
-                    <span v-if="topSearching" class="searching-indicator-top"><i class="fas fa-spinner fa-pulse"></i></span>
+            <div class="tree-scroll">
+                <div v-if="loading" class="loading-placeholder"><i class="fas fa-spinner fa-pulse"></i> 加载分类中...</div>
+                <div v-else-if="errorMsg" class="error-banner">
+                    <span><i class="fas fa-exclamation-triangle"></i> {{ errorMsg }}</span>
+                    <button class="retry-btn" @click="loadCategories"><i class="fas fa-sync-alt"></i> 重试</button>
                 </div>
-                <div class="notification-icon" @click="handleNotification">
-                    <i class="fas fa-bell"></i>
-                    <span class="badge" v-if="notificationCount > 0">{{ notificationCount }}</span>
+                <ul class="tree-node" v-else-if="!loading && categoryTree.length > 0">
+                    <tree-item
+                            v-for="node in categoryTree"
+                            :key="node.id"
+                            :node="node"
+                            :active-id="activeCategory.id"
+                            :expanded-set="expandedSet"
+                            :search-match-set="searchMatchSet"
+                            :highlight-id="highlightNodeId"
+                            @toggle="toggleExpand"
+                            @select="selectCategory"
+                            @add-child="addChild"
+                            @delete-cat="deleteCategoryNode"
+                            @node-updated="onNodeUpdated"
+                    ></tree-item>
+                </ul>
+                <div v-else-if="!loading && categoryTree.length === 0" class="empty-placeholder">
+                    <i class="fas fa-folder-open"></i> 暂无分类数据
                 </div>
-                <div class="user-dropdown" @mouseenter="openDropdown" @mouseleave="scheduleClose" ref="userDropdownRef">
-                    <div class="user-avatar">张</div>
-                    <span class="username">张经理</span>
-                    <i class="fas fa-chevron-down chevron" :class="{ open: dropdownVisible }"></i>
-                    <div class="dropdown-menu" v-if="dropdownVisible" @mouseenter="cancelClose" @mouseleave="scheduleClose" @click.stop>
-                        <button class="dropdown-item" @click="goToSettings"><i class="fas fa-user-cog"></i> 用户设置</button>
-                        <div class="dropdown-divider"></div>
-                        <button class="dropdown-item danger" @click="handleLogout"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
-                    </div>
-                </div>
-                <div class="help-icon" @click="handleHelp"><i class="fas fa-question-circle"></i></div>
             </div>
-        </header>
+        </div>
 
-        <!-- 主体 -->
-        <div class="main-body">
-            <!-- 侧边栏 -->
-            <aside class="saas-sidebar" :class="{ collapsed: isCollapsed }">
-                <div class="nav-menu">
-                    <div class="nav-item active" style="margin-top: 28px">
-                        <span class="material-symbols-outlined" :title="isCollapsed ? '商品档案' : ''">inventory_2</span>
-                        <span v-show="!isCollapsed">商品档案</span>
-                    </div>
-                    <div class="nav-item" @click="handleMenuClick('销售管理')">
-                        <span class="material-symbols-outlined" :title="isCollapsed ? '销售管理' : ''">shopping_cart</span>
-                        <span v-show="!isCollapsed">销售管理</span>
-                    </div>
-                    <div class="nav-item" @click="handleMenuClick('会员管理')">
-                        <span class="material-symbols-outlined" :title="isCollapsed ? '会员管理' : ''">people</span>
-                        <span v-show="!isCollapsed">会员管理</span>
-                    </div>
-                    <div class="nav-item" @click="handleMenuClick('采购管理')">
-                        <span class="material-symbols-outlined" :title="isCollapsed ? '采购管理' : ''">local_shipping</span>
-                        <span v-show="!isCollapsed">采购管理</span>
-                    </div>
-                    <div class="nav-item" @click="handleMenuClick('库存管理')">
-                        <span class="material-symbols-outlined" :title="isCollapsed ? '库存管理' : ''">warehouse</span>
-                        <span v-show="!isCollapsed">库存管理</span>
-                    </div>
+        <!-- 右侧属性 -->
+        <div class="right-panel">
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-info-circle"></i> 属性<span v-if="isAddMode" class="add-mode-badge"><i class="fas fa-plus-circle"></i> 添加子分类模式</span></h2>
                 </div>
-                <div class="collapse-btn" @click="toggleSidebar">
-                    <i class="fas fa-chevron-left"></i>
-                    <span v-show="!isCollapsed">折叠菜单</span>
-                </div>
-            </aside>
-
-            <!-- 主内容区 -->
-            <div class="main-content-area">
-                <div class="app-layout">
-                    <!-- 左侧树 -->
-                    <div class="tree-panel">
-                        <div class="tree-header">
-                            <div class="tree-header-top">
-                                <div class="tree-title"><i class="fas fa-folder-tree"></i> 类别</div>
-                                <button class="add-root-btn" @click="addChild(null)"><i class="fas fa-plus"></i> 根类</button>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="field-group">
+                            <label><i class="fas fa-level-up-alt"></i> 上级分类 <span class="required-star">*</span></label>
+                            <div v-if="isAddMode && parentForAdd">
+                                <select :disabled="true" class="disabled-select">
+                                    <option :value="parentForAdd.id">{{ parentForAdd.name }}</option>
+                                </select>
                             </div>
-                            <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input type="text" v-model="searchKeyword" placeholder="搜索分类..." @input="onSearchInput" @keydown.enter="onSearchEnter">
-                                <i v-if="searchLoading" class="fas fa-spinner fa-pulse search-loading"></i>
+                            <div v-else-if="activeCategory.id && !isAddMode">
+                                <select v-if="isRootCategory" :disabled="true">
+                                    <option :value="activeCategory.id">{{ activeCategory.name.name }}（顶级分类）</option>
+                                </select>
+                                <select v-else v-model="editableCategory.parent_id" :disabled="isSpecialUncategorized">
+                                    <option value="-1">无（顶级分类）</option>
+                                    <option v-for="cat in flatCategoryList" :value="cat.id" :disabled="cat.id === editableCategory.id">{{ cat.name.name }}</option>
+                                </select>
                             </div>
+                            <select v-else :disabled="true"><option value="">请先选择一个分类</option></select>
                         </div>
-                        <div class="tree-scroll">
-                            <div v-if="loading" class="loading-placeholder"><i class="fas fa-spinner fa-pulse"></i> 加载分类中...</div>
-                            <div v-else-if="errorMsg" class="error-banner">
-                                <span><i class="fas fa-exclamation-triangle"></i> {{ errorMsg }}</span>
-                                <button class="retry-btn" @click="loadCategories"><i class="fas fa-sync-alt"></i> 重试</button>
+                        <div class="field-group">
+                            <label>分类名称 <span class="required-star">*</span></label>
+                            <input ref="categoryNameInput" v-model="editableCategory.name.name" placeholder="例：品质男鞋" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
+                        </div>
+                        <div class="field-group">
+                            <label>简称</label>
+                            <input v-model="editableCategory.name.shortName" placeholder="简称" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
+                        </div>
+                        <div class="field-group full-width">
+                            <label>图标URL</label>
+                            <div class="icon-url-wrapper">
+                                <input v-model="editableCategory.icon_url" placeholder="https://... 或上传图片" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
+                                <div class="icon-actions">
+                                    <button type="button" @click="triggerFileUpload" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"><i class="fas fa-cloud-upload-alt"></i> 上传</button>
+                                    <button type="button" @click="openModalPreview" :disabled="!editableCategory.icon_url || ((!isValidCategory && !isAddMode) || isSpecialUncategorized)"><i class="fas fa-eye"></i> 预览</button>
+                                </div>
                             </div>
-                            <ul class="tree-node" v-else-if="!loading && categoryTree.length > 0">
-                                <tree-item
-                                        v-for="node in categoryTree"
-                                        :key="node.id"
-                                        :node="node"
-                                        :active-id="activeCategory.id"
-                                        :expanded-set="expandedSet"
-                                        :search-match-set="searchMatchSet"
-                                        :highlight-id="highlightNodeId"
-                                        @toggle="toggleExpand"
-                                        @select="selectCategory"
-                                        @add-child="addChild"
-                                        @delete-cat="deleteCategoryNode"
-                                        @node-updated="onNodeUpdated"
-                                ></tree-item>
-                            </ul>
-                            <div v-else-if="!loading && categoryTree.length === 0" class="empty-placeholder">
-                                <i class="fas fa-folder-open"></i> 暂无分类数据
-                            </div>
+                            <input type="file" ref="fileInput" style="display:none" accept="image/*" @change="handleFileUpload">
+                        </div>
+                        <div class="field-group full-width">
+                            <label>描述</label>
+                            <textarea rows="2" v-model="editableCategory.description" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></textarea>
                         </div>
                     </div>
-
-                    <!-- 右侧属性 -->
-                    <div class="right-panel">
-                        <div class="card">
-                            <div class="card-header">
-                                <h2><i class="fas fa-info-circle"></i> 属性<span v-if="isAddMode" class="add-mode-badge"><i class="fas fa-plus-circle"></i> 添加子分类模式</span></h2>
+                    <div class="btn-group" v-if="!isAddMode">
+                        <button @click="restoreOriginal" :disabled="!isModified || !isValidCategory || isSpecialUncategorized" class="info"><i class="fas fa-undo-alt"></i> 恢复</button>
+                        <button @click="updateCurrentCategory" :disabled="!isModified || !isValidCategory || isSpecialUncategorized" class="warning"><i class="fas fa-save"></i> 修改</button>
+                        <button @click="deleteCurrentCategory" :disabled="!isValidCategory || isSpecialUncategorized" class="danger"><i class="fas fa-trash"></i> 删除</button>
+                    </div>
+                    <div class="btn-group" v-else>
+                        <button @click="cancelAddMode" class="info"><i class="fas fa-times"></i> 取消</button>
+                        <button @click="saveNewCategory" class="primary"><i class="fas fa-save"></i> 保存</button>
+                    </div>
+                    <hr />
+                    <div class="extended-section">
+                        <div class="section-mini-title"><i class="fas fa-cog"></i> 扩展属性</div>
+                        <div class="attr-selector">
+                            <div class="attr-selector-left">
+                                <label>属性名：</label>
+                                <select v-model="selectedExtIdForSelect" @change="onSelectExtFromDropdown" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
+                                    <option value="">-- 选择属性 --</option>
+                                    <option v-for="attr in activeExtList" :value="attr.recordId">{{ attr.displayName }} ({{ attr.fieldName }})</option>
+                                </select>
+                                <span class="badge-count" v-if="activeExtList.length">共 {{ activeExtList.length }} 个字段</span>
+                                <span v-else class="badge-count">暂无扩展属性</span>
                             </div>
-                            <div class="card-body">
-                                <div class="form-grid">
-                                    <div class="field-group">
-                                        <label><i class="fas fa-level-up-alt"></i> 上级分类 <span class="required-star">*</span></label>
-                                        <div v-if="isAddMode && parentForAdd">
-                                            <select :disabled="true" class="disabled-select">
-                                                <option :value="parentForAdd.id">{{ parentForAdd.name }}</option>
-                                            </select>
-                                        </div>
-                                        <div v-else-if="activeCategory.id && !isAddMode">
-                                            <select v-if="isRootCategory" :disabled="true">
-                                                <option :value="activeCategory.id">{{ activeCategory.name.name }}（顶级分类）</option>
-                                            </select>
-                                            <select v-else v-model="editableCategory.parent_id" :disabled="isSpecialUncategorized">
-                                                <option value="-1">无（顶级分类）</option>
-                                                <option v-for="cat in flatCategoryList" :value="cat.id" :disabled="cat.id === editableCategory.id">{{ cat.name.name }}</option>
-                                            </select>
-                                        </div>
-                                        <select v-else :disabled="true"><option value="">请先选择一个分类</option></select>
-                                    </div>
-                                    <div class="field-group">
-                                        <label>分类名称 <span class="required-star">*</span></label>
-                                        <input ref="categoryNameInput" v-model="editableCategory.name.name" placeholder="例：品质男鞋" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
-                                    </div>
-                                    <div class="field-group">
-                                        <label>简称</label>
-                                        <input v-model="editableCategory.name.shortName" placeholder="简称" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
-                                    </div>
-                                    <div class="field-group full-width">
-                                        <label>图标URL</label>
-                                        <div class="icon-url-wrapper">
-                                            <input v-model="editableCategory.icon_url" placeholder="https://... 或上传图片" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
-                                            <div class="icon-actions">
-                                                <button type="button" @click="triggerFileUpload" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"><i class="fas fa-cloud-upload-alt"></i> 上传</button>
-                                                <button type="button" @click="openModalPreview" :disabled="!editableCategory.icon_url || ((!isValidCategory && !isAddMode) || isSpecialUncategorized)"><i class="fas fa-eye"></i> 预览</button>
-                                            </div>
-                                        </div>
-                                        <input type="file" ref="fileInput" style="display:none" accept="image/*" @change="handleFileUpload">
-                                    </div>
-                                    <div class="field-group full-width">
-                                        <label>描述</label>
-                                        <textarea rows="2" v-model="editableCategory.description" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></textarea>
-                                    </div>
-                                </div>
-                                <div class="btn-group" v-if="!isAddMode">
-                                    <button @click="restoreOriginal" :disabled="!isModified || !isValidCategory || isSpecialUncategorized" class="info"><i class="fas fa-undo-alt"></i> 恢复</button>
-                                    <button @click="updateCurrentCategory" :disabled="!isModified || !isValidCategory || isSpecialUncategorized" class="warning"><i class="fas fa-save"></i> 修改</button>
-                                    <button @click="deleteCurrentCategory" :disabled="!isValidCategory || isSpecialUncategorized" class="danger"><i class="fas fa-trash"></i> 删除</button>
-                                </div>
-                                <div class="btn-group" v-else>
-                                    <button @click="cancelAddMode" class="info"><i class="fas fa-times"></i> 取消</button>
-                                    <button @click="saveNewCategory" class="primary"><i class="fas fa-save"></i> 保存</button>
-                                </div>
-                                <hr />
-                                <div class="extended-section">
-                                    <div class="section-mini-title"><i class="fas fa-cog"></i> 扩展属性</div>
-                                    <div class="attr-selector">
-                                        <div class="attr-selector-left">
-                                            <label>属性名：</label>
-                                            <select v-model="selectedExtIdForSelect" @change="onSelectExtFromDropdown" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
-                                                <option value="">-- 选择属性 --</option>
-                                                <option v-for="attr in activeExtList" :value="attr.recordId">{{ attr.displayName }} ({{ attr.fieldName }})</option>
-                                            </select>
-                                            <span class="badge-count" v-if="activeExtList.length">共 {{ activeExtList.length }} 个字段</span>
-                                            <span v-else class="badge-count">暂无扩展属性</span>
-                                        </div>
-                                        <div class="attr-actions">
-                                            <button @click="saveExtAttribute" :disabled="!isSaveEnabled || (!isValidCategory && !isAddMode) || isSpecialUncategorized" class="warning"><i class="fas fa-save"></i> 保存</button>
-                                            <button @click="deleteExtAttribute" :disabled="!selectedExtId || (!isValidCategory && !isAddMode) || isSpecialUncategorized" class="danger"><i class="fas fa-trash"></i> 删除</button>
-                                            <button @click="clearExtForm" class="info"><i class="fas fa-eraser"></i> 清空</button>
-                                        </div>
-                                    </div>
-                                    <div class="form-grid">
-                                        <div class="field-group"><label>显示名称 <span class="required-star">*</span></label><input v-model="extForm.displayName" placeholder="例：颜色" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
-                                        <div class="field-group"><label>别名 <span class="required-star">*</span></label><input v-model="extForm.fieldName" placeholder="例：YanSe" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
-                                        <div class="field-group"><label>默认值</label><input v-model="extForm.defaultValue" placeholder="红色、橙色、绿色" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
-                                        <div class="field-group"><label>是否必填</label><select v-model="extForm.isRequired" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"><option>必填</option><option>可选</option></select></div>
-                                        <div class="field-group"><label>排序号</label><input type="number" v-model="extForm.sortOrder" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
-                                    </div>
-                                    <div class="btn-group" style="justify-content: flex-start; margin-top: 16px;">
-                                        <button @click="syncToSubClass" :disabled="!hasSubCategories || (!isValidCategory && !isAddMode) || isSpecialUncategorized" class="warning"><i class="fas fa-share-alt"></i> 同步应用到子类</button>
-                                    </div>
-                                </div>
+                            <div class="attr-actions">
+                                <button @click="saveExtAttribute" :disabled="!isSaveEnabled || (!isValidCategory && !isAddMode) || isSpecialUncategorized" class="warning"><i class="fas fa-save"></i> 保存</button>
+                                <button @click="deleteExtAttribute" :disabled="!selectedExtId || (!isValidCategory && !isAddMode) || isSpecialUncategorized" class="danger"><i class="fas fa-trash"></i> 删除</button>
+                                <button @click="clearExtForm" class="info"><i class="fas fa-eraser"></i> 清空</button>
                             </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field-group"><label>显示名称 <span class="required-star">*</span></label><input v-model="extForm.displayName" placeholder="例：颜色" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
+                            <div class="field-group"><label>别名 <span class="required-star">*</span></label><input v-model="extForm.fieldName" placeholder="例：YanSe" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
+                            <div class="field-group"><label>默认值</label><input v-model="extForm.defaultValue" placeholder="红色、橙色、绿色" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
+                            <div class="field-group"><label>是否必填</label><select v-model="extForm.isRequired" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"><option>必填</option><option>可选</option></select></div>
+                            <div class="field-group"><label>排序号</label><input type="number" v-model="extForm.sortOrder" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
+                        </div>
+                        <div class="btn-group" style="justify-content: flex-start; margin-top: 16px;">
+                            <button @click="syncToSubClass" :disabled="!hasSubCategories || (!isValidCategory && !isAddMode) || isSpecialUncategorized" class="warning"><i class="fas fa-share-alt"></i> 同步应用到子类</button>
                         </div>
                     </div>
                 </div>
@@ -435,14 +674,13 @@
             <div class="modal-header"><h3><i class="fas fa-image"></i> 图标预览</h3><button class="modal-close" @click="modalVisible = false">&times;</button></div>
             <div class="modal-body">
                 <img v-if="!previewError" :src="modalImageUrl" @error="onModalImageError" style="max-width:100%; max-height:60vh; border-radius:20px;">
-                <div v-else class="preview-error"><i class="fas fa-exclamation-triangle"></i><span>图片加载失败，请检查URL地址是否有效</span><span style="font-size:0.7rem; color:#94a3b8;">{{ modalImageUrl }}</span></div>
+                <div v-else class="preview-error"><i class="fas fa-exclamation-triangle"></i><span>图片加载失败，请检查URL地址是否有效</span><span style="font-size:0.7rem; color:#8fa8b8;">{{ modalImageUrl }}</span></div>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js">
-</script>
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
 <script>
     const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
@@ -460,7 +698,6 @@
     }
     async function fetchChildren(id) { const data = await apiFetch(`${API_BASE}/${id}/children`); return data.categories || []; }
     async function fetchRoots() { const data = await apiFetch(`${API_BASE}/root`); return data.categories || []; }
-    // 修正后的后代接口：末尾加 .
     async function fetchDescendants(id) { const data = await apiFetch(`${API_BASE}/${id}/desc.`); return data.category; }
     async function searchRemote(keyword) { const encoded = encodeURIComponent(keyword); const url = `${API_BASE}?s=${encoded}&offset=0&limit=64`; const data = await apiFetch(url); return data.categories || []; }
     async function createCategory(payload) {
@@ -518,10 +755,10 @@
             <div class="node-content"
                  :data-id="node.id"
                  :class="{
-                   'active-cat': node.id === activeId,
-                   'search-match-node': isSearchMatch,
-                   'highlight-new': node.id === highlightId
-                 }"
+                       'active-cat': node.id === activeId,
+                       'search-match-node': isSearchMatch,
+                       'highlight-new': node.id === highlightId
+                     }"
                  @click="$emit('select', node.id)">
               <div class="node-name">
                 <span v-if="node.hasChildren" class="toggle-box" @click.stop="handleToggle">{{ isExpanded ? '−' : '+' }}</span>
@@ -598,10 +835,10 @@
             const parentForAdd = ref(null);
             const highlightNodeId = ref(null);
 
-            // ===== 侧边栏折叠 =====
+            // ===== 侧边栏折叠（已移除，但保留变量以防意外） =====
             const isCollapsed = ref(false);
 
-            // ===== 顶部导航 =====
+            // ===== 顶部导航（已移除，但保留变量以防意外） =====
             const topSearchKeyword = ref('');
             const topSearchFocused = ref(false);
             const topSearching = ref(false);
@@ -730,7 +967,7 @@
                 }
             }
 
-            // ===== 顶部搜索联动 =====
+            // ===== 顶部搜索联动（已移除，但保留函数以防调用） =====
             function topSearch() {
                 const kw = topSearchKeyword.value.trim();
                 if (kw) {
@@ -739,12 +976,12 @@
                 }
             }
 
-            // ===== 菜单点击 =====
+            // ===== 菜单点击（已移除，但保留函数） =====
             function handleMenuClick(name) {
                 alert(`「${name}」功能开发中，当前为分类管理模块`);
             }
 
-            // ===== 顶部导航交互 =====
+            // ===== 顶部导航交互（已移除，但保留函数） =====
             function handleNotification() {
                 alert(`您有 ${notificationCount.value} 条通知`);
             }
@@ -789,23 +1026,18 @@
                         return;
                     }
                     const treePromises = roots.map(async (root) => {
-                        // 判断条件：right/2 < 500
                         if (root.right / 2 < 500) {
                             try {
                                 const fullCategory = await fetchDescendants(root.id);
-                                // 直接构建完整树
                                 return buildTree(fullCategory);
                             } catch (err) {
                                 console.warn(`加载根 ${root.id} 的后代失败，使用根节点本身`, err);
-                                // 降级：只使用根节点
                                 return new TreeNode(root);
                             }
                         } else {
-                            // 懒加载模式：只创建根节点
                             return new TreeNode(root);
                         }
                     });
-                    // 等待所有根处理完成
                     const trees = await Promise.all(treePromises);
                     categoryTree.value = trees;
                     activeCategory.value = { ...emptyCategory };
@@ -1247,38 +1479,17 @@
 
             function onNodeUpdated() {}
 
-            // ===== 侧边栏折叠切换 =====
+            // ===== 侧边栏折叠切换（已移除，但保留函数） =====
             function toggleSidebar() {
-                isCollapsed.value = !isCollapsed.value;
+                // 无侧边栏，此函数保留但无效果
             }
-            // 新增变量
+
+            // 下拉菜单相关（已移除，但保留函数）
             let closeTimer = null;
-            const closeDelay = 200; // 延迟时间（毫秒）
-
-// 新增方法
-            const openDropdown = () => {
-                if (closeTimer) {
-                    clearTimeout(closeTimer);
-                    closeTimer = null;
-                }
-                dropdownVisible.value = true;
-            };
-
-            const scheduleClose = () => {
-                if (closeTimer) clearTimeout(closeTimer);
-                closeTimer = setTimeout(() => {
-                    dropdownVisible.value = false;
-                    closeTimer = null;
-                }, closeDelay);
-            };
-
-            const cancelClose = () => {
-                if (closeTimer) {
-                    clearTimeout(closeTimer);
-                    closeTimer = null;
-                }
-                dropdownVisible.value = true;
-            };
+            const closeDelay = 200;
+            const openDropdown = () => {};
+            const scheduleClose = () => {};
+            const cancelClose = () => {};
 
             watch(activeCategory, () => { if (!isAddMode.value) { clearExtForm();
                 refreshEditable(); } });

@@ -54,7 +54,6 @@ public class ESCategoryQuery implements CategoryQuery {
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
     private static final int MAX_SIZE = 999;
-    private static final int BATCH_BUFFER_SIZE = 16 * 1024;// 16KB缓冲区
 
     @Override
     public InputStream root() {
@@ -83,11 +82,17 @@ public class ESCategoryQuery implements CategoryQuery {
             generator.writeStringField("script", "emit(doc['id'].value == doc['parent_id'].value)");
             generator.writeEndObject();//is_self_parent
             generator.writeEndObject();//end runtime
+
             generator.writeObjectFieldStart("query");
             generator.writeObjectFieldStart("term");
             generator.writeBooleanField("is_self_parent", true);
             generator.writeEndObject();//term
             generator.writeEndObject();//end query
+
+            generator.writeObjectFieldStart("sort");
+            generator.writeStringField("id", "asc");
+            generator.writeEndObject();
+
             generator.writeEndObject();//end root
             generator.close();
             return writer.toString();
@@ -272,7 +277,7 @@ public class ESCategoryQuery implements CategoryQuery {
             request.setJsonEntity(ESCategoryQuery.buildDescendantRequest(familyId, left, right));
 
             return ReactiveStream.toFluxByteBuf(request, String.valueOf(id),
-                    (parser, generator) ->ESCategoryQuery.extractAsTree(parser, generator,"category"));
+                    (parser, generator) -> ESCategoryQuery.extractAsTree(parser, generator, "category"));
         });
     }
 
@@ -411,6 +416,7 @@ public class ESCategoryQuery implements CategoryQuery {
         gen.writeEndObject();//end
         gen.close();
     }
+
     private static String buildDescendantRequest(long familyId, int left, int right) {
         try (StringWriter writer = new StringWriter(256); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();

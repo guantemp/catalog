@@ -47,9 +47,13 @@ public class UnitService {
             gen.writeNumberField("total", UnitEnum.values().length);
             gen.writeArrayFieldStart("units");
             for (UnitEnum unit : UnitEnum.values()) {
-                gen.writeString(unit.toString());
+                gen.writeStartObject();
+                gen.writeStringField("key", unit.name());
+                gen.writeStringField("i18n", unit.toString());
+                gen.writeEndObject();
             }
             gen.writeEndArray();
+            gen.writeEndObject();
             gen.flush();
             stream.write(ResponseHeaders.of(HttpStatus.OK, HttpHeaderNames.CONTENT_TYPE, MediaType.JSON_UTF_8));
             stream.write(HttpData.wrap(os.toByteArray()));

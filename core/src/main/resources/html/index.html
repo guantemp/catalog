@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Catalog 后台管理 · 一体化工作台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet" />
+    <style>
+        /* ===== 全局样式 ===== */
+        [v-cloak] {
+            display: none !important;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: radial-gradient(ellipse at 20% 30%, #0f172a, #070b14);
+            font-family: 'Inter', system-ui, sans-serif;
+            color: #e2e8f0;
+            overflow: hidden;
+            height: 100vh;
+        }
+        .global-layout {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* ===== 顶部导航（饱满样式） ===== */
+        .app-header {
+            flex-shrink: 0;
+            height: 64px;
+            background: rgba(8, 12, 24, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(129, 140, 248, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px 0 20px;
+            z-index: 20;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+            color: #e2e8f0;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            color: #f1f5f9;
+            user-select: none;
+        }
+        .header-left .material-symbols-outlined {
+            font-size: 28px;
+            color: #818cf8;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .top-search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 40px;
+            padding: 0 16px 0 38px;
+            height: 38px;
+            transition: 0.25s;
+            min-width: 180px;
+        }
+        .top-search-box:focus-within {
+            border-color: #818cf8;
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+            background: rgba(15, 23, 42, 0.95);
+        }
+        .top-search-box .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 14px;
+            pointer-events: none;
+        }
+        .top-search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #f1f5f9;
+            font-size: 0.85rem;
+            width: 140px;
+            padding: 0;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .top-search-box input::placeholder {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+        .searching-indicator-top {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #818cf8;
+            font-size: 14px;
+        }
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 20px;
+            transition: 0.2s;
+            padding: 4px;
+        }
+        .notification-icon:hover {
+            color: #f1f5f9;
+        }
+        .notification-icon .badge {
+            position: absolute;
+            top: -4px;
+            right: -6px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        }
+        .user-dropdown {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: default;
+            padding: 4px 8px 4px 4px;
+            border-radius: 40px;
+            transition: background 0.15s;
+            user-select: none;
+        }
+        .user-dropdown:hover {
+            background: rgba(129, 140, 248, 0.08);
+        }
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #818cf8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .username {
+            font-size: 14px;
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+        .chevron {
+            font-size: 12px;
+            color: #64748b;
+            transition: transform 0.25s;
+        }
+        .chevron.open {
+            transform: rotate(180deg);
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: #1A2434;
+            border: 1px solid #2A3A4A;
+            border-radius: 16px;
+            min-width: 180px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            z-index: 200;
+            padding: 6px 0;
+            transform-origin: top right;
+            animation: dropdownFadeIn 0.2s ease;
+            display: none;
+        }
+        .dropdown-menu.open {
+            display: block;
+        }
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .dropdown-menu .dropdown-item {
+            padding: 10px 18px;
+            color: #C8DCF0;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+        .dropdown-menu .dropdown-item:hover {
+            background: rgba(45, 156, 219, 0.12);
+            color: #fff;
+        }
+        .dropdown-menu .dropdown-item i {
+            width: 18px;
+            font-size: 14px;
+            color: #7F8AA8;
+            transition: color 0.15s;
+        }
+        .dropdown-menu .dropdown-item:hover i {
+            color: #7AC9FF;
+        }
+        .dropdown-menu .dropdown-divider {
+            height: 1px;
+            background: #2A3A4A;
+            margin: 4px 12px;
+        }
+        .dropdown-menu .dropdown-item.danger {
+            color: #FFB4A2;
+        }
+        .dropdown-menu .dropdown-item.danger i {
+            color: #DC4C4C;
+        }
+        .dropdown-menu .dropdown-item.danger:hover {
+            background: rgba(220, 76, 76, 0.12);
+            color: #FFB4A2;
+        }
+        .dropdown-menu .dropdown-item.danger:hover i {
+            color: #FF6B6B;
+        }
+        .help-icon {
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 20px;
+            transition: 0.2s;
+            padding: 4px;
+        }
+        .help-icon:hover {
+            color: #f1f5f9;
+        }
+
+        /* ===== 主体 ===== */
+        .main-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ===== 侧边栏 ———— 140px ===== */
+        .saas-sidebar {
+            width: 140px;
+            flex-shrink: 0;
+            background: rgba(8, 12, 24, 0.92);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(129, 140, 248, 0.12);
+            color: rgba(255, 255, 255, 0.75);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            box-shadow: 2px 0 16px rgba(0, 0, 0, 0.3);
+            transition: width 0.25s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        .saas-sidebar.collapsed {
+            width: 56px;
+        }
+        .saas-sidebar.collapsed .nav-item span:last-child {
+            display: none;
+        }
+        .saas-sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding: 10px 4px;
+        }
+        .saas-sidebar.collapsed .nav-item .material-symbols-outlined {
+            font-size: 22px;
+        }
+        .saas-sidebar.collapsed .collapse-btn span {
+            display: none;
+        }
+        .saas-sidebar.collapsed .collapse-btn i {
+            transform: rotate(180deg);
+        }
+        .saas-sidebar.collapsed .collapse-btn {
+            justify-content: center;
+            padding: 14px 0;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 8px 0 12px 0;
+            overflow-y: auto;
+        }
+        .nav-menu::-webkit-scrollbar {
+            width: 3px;
+        }
+        .nav-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .nav-menu::-webkit-scrollbar-thumb {
+            background: #2d3a4a;
+            border-radius: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: rgba(255, 255, 255, 0.55);
+            border-left: 3px solid transparent;
+            white-space: nowrap;
+            margin: 1px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .nav-item:hover {
+            background: rgba(129, 140, 248, 0.08);
+            color: #ffffff;
+            border-left-color: #818cf8;
+        }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(129, 140, 248, 0.12), transparent);
+            color: #ffffff;
+            border-left-color: #818cf8;
+            font-weight: 600;
+        }
+        .nav-item .material-symbols-outlined {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        .nav-item span:last-child {
+            font-size: 14px;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: rgba(129, 140, 248, 0.06);
+            margin: 4px 12px;
+        }
+
+        .collapse-btn {
+            margin-top: auto;
+            padding: 12px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-top: 1px solid rgba(129, 140, 248, 0.08);
+            color: rgba(255, 255, 255, 0.35);
+            transition: background 0.2s;
+            font-size: 13px;
+            user-select: none;
+        }
+        .collapse-btn:hover {
+            background: rgba(129, 140, 248, 0.08);
+            color: #fff;
+        }
+        .collapse-btn i {
+            font-size: 14px;
+            transition: transform 0.25s ease;
+        }
+
+        /* ===== 主内容区（含 Tab 栏和 iframe） ===== */
+        .main-content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        /* Tab 栏 */
+        .tab-bar {
+            flex-shrink: 0;
+            height: 40px;
+            background: rgba(8, 12, 24, 0.85);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(129, 140, 248, 0.08);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            overflow-x: auto;
+            gap: 2px;
+            user-select: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .tab-bar::-webkit-scrollbar {
+            height: 3px;
+        }
+        .tab-bar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .tab-bar::-webkit-scrollbar-thumb {
+            background: #3A4A5A;
+            border-radius: 4px;
+        }
+
+        .tab-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px 4px 12px;
+            border-radius: 16px 16px 0 0;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            position: relative;
+            height: 32px;
+            border: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-item:hover {
+            background: rgba(129, 140, 248, 0.06);
+            color: #e2e8f0;
+        }
+        .tab-item.active {
+            background: rgba(129, 140, 248, 0.10);
+            color: #f1f5f9;
+            border-bottom: 2px solid #818cf8;
+        }
+
+        .tab-item .tab-close {
+            font-size: 13px;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 0 4px;
+            border-radius: 50%;
+            transition: 0.2s;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .tab-item .tab-close:hover {
+            background: rgba(239, 68, 68, 0.25);
+            color: #f87171;
+            border-color: #f87171;
+            transform: scale(1.1);
+        }
+
+        .tab-item .tab-icon {
+            font-size: 15px;
+            color: #818cf8;
+        }
+        .tab-item.dashboard-tab .tab-close {
+            display: none;
+        }
+        .tab-item.dashboard-tab {
+            padding-right: 12px;
+        }
+
+        /* ===== iframe 容器 ———— 零内边距，完全填充 ===== */
+        .iframe-wrapper {
+            flex: 1;
+            padding: 0;
+            overflow: hidden;
+        }
+        .iframe-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 0;
+            background: #0f172a;
+            display: block;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 768px) {
+            .app-header {
+                padding: 0 12px;
+                height: 56px;
+            }
+            .header-left {
+                font-size: 14px;
+            }
+            .header-left .material-symbols-outlined {
+                font-size: 24px;
+            }
+            .top-search-box {
+                min-width: 40px;
+                padding: 0 10px 0 34px;
+            }
+            .top-search-box input {
+                width: 80px;
+                font-size: 0.75rem;
+            }
+            .top-search-box input::placeholder {
+                font-size: 0;
+            }
+            .top-search-box input:focus {
+                width: 120px;
+            }
+            .top-search-box input:focus::placeholder {
+                font-size: 0.7rem;
+            }
+            .username {
+                display: none;
+            }
+            .saas-sidebar {
+                width: 56px;
+            }
+            .saas-sidebar.collapsed {
+                width: 56px;
+            }
+            .saas-sidebar .nav-item span:last-child {
+                display: none !important;
+            }
+            .saas-sidebar .nav-item {
+                justify-content: center;
+                padding: 10px 4px;
+            }
+            .saas-sidebar .collapse-btn span {
+                display: none !important;
+            }
+            .saas-sidebar .collapse-btn {
+                justify-content: center;
+                padding: 12px 0;
+            }
+            .saas-sidebar .collapse-btn i {
+                transform: rotate(180deg);
+            }
+            .tab-bar {
+                padding: 0 8px;
+                height: 34px;
+            }
+            .tab-item {
+                font-size: 11px;
+                padding: 3px 8px 3px 10px;
+                height: 28px;
+            }
+            .tab-item .tab-close {
+                width: 18px;
+                height: 18px;
+                font-size: 11px;
+            }
+            .iframe-wrapper {
+                padding: 0;
+            }
+        }
+        @media (max-width: 480px) {
+            .app-header .header-left span:last-child {
+                display: none;
+            }
+            .header-right {
+                gap: 8px;
+            }
+            .notification-icon,
+            .help-icon {
+                font-size: 17px;
+                padding: 2px;
+            }
+            .user-avatar {
+                width: 26px;
+                height: 26px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="global-layout">
+    <!-- ===== 顶部导航 ===== -->
+    <header class="app-header">
+        <div class="header-left">
+            <span class="material-symbols-outlined">storefront</span>
+            <span>SaaS 零售 · 重庆夏至店</span>
+        </div>
+        <div class="header-right">
+            <div class="top-search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" placeholder="搜索菜单..." id="globalSearchInput" />
+                <span id="globalSearchIndicator" class="searching-indicator-top" style="display:none;"><i class="fas fa-spinner fa-pulse"></i></span>
+            </div>
+            <div class="notification-icon" id="notificationIcon">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notificationBadge">3</span>
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+                <div class="user-avatar">张</div>
+                <span class="username">张经理</span>
+                <i class="fas fa-chevron-down chevron" id="dropdownChevron"></i>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <button class="dropdown-item" id="settingsBtn"><i class="fas fa-user-cog"></i> 用户设置</button>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item danger" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
+                </div>
+            </div>
+            <div class="help-icon" id="helpIcon"><i class="fas fa-question-circle"></i></div>
+        </div>
+    </header>
+
+    <!-- ===== 主体 ===== -->
+    <div class="main-body">
+        <!-- 侧边栏 —— 140px 宽，14px 字体 -->
+        <aside class="saas-sidebar" id="sidebar">
+            <div class="nav-menu">
+                <!-- 桌面 -->
+                <div class="nav-item active" data-view="dashboard" style="margin-top: 6px;" title="桌面">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span>桌面</span>
+                </div>
+                <!-- 品牌管理 -->
+                <div class="nav-item" data-view="brand" title="品牌管理">
+                    <span class="material-symbols-outlined">branding_watermark</span>
+                    <span>品牌管理</span>
+                </div>
+                <!-- 分类管理 -->
+                <div class="nav-item" data-view="category" title="分类管理">
+                    <span class="material-symbols-outlined">folder</span>
+                    <span>分类管理</span>
+                </div>
+                <!-- 商品管理 -->
+                <div class="nav-item" data-view="item" title="商品管理">
+                    <span class="material-symbols-outlined">inventory_2</span>
+                    <span>商品管理</span>
+                </div>
+                <!-- 文件上传 -->
+                <div class="nav-item" data-view="upload" title="文件上传">
+                    <span class="material-symbols-outlined">cloud_upload</span>
+                    <span>文件上传</span>
+                </div>
+                <div class="nav-divider"></div>
+                <!-- 零售管理 -->
+                <div class="nav-item" onclick="alert('零售管理模块开发中')" title="零售管理">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    <span>零售管理</span>
+                </div>
+                <!-- 采购管理 -->
+                <div class="nav-item" onclick="alert('采购管理模块开发中')" title="采购管理">
+                    <span class="material-symbols-outlined">local_shipping</span>
+                    <span>采购管理</span>
+                </div>
+                <!-- 库存管理 -->
+                <div class="nav-item" onclick="alert('库存管理模块开发中')" title="库存管理">
+                    <span class="material-symbols-outlined">warehouse</span>
+                    <span>库存管理</span>
+                </div>
+                <!-- 连锁配送 -->
+                <div class="nav-item" onclick="alert('连锁配送模块开发中')" title="连锁配送">
+                    <span class="material-symbols-outlined">route</span>
+                    <span>连锁配送</span>
+                </div>
+                <!-- 批发管理 -->
+                <div class="nav-item" onclick="alert('批发管理模块开发中')" title="批发管理">
+                    <span class="material-symbols-outlined">sell</span>
+                    <span>批发管理</span>
+                </div>
+                <!-- 会员管理 -->
+                <div class="nav-item" onclick="alert('会员管理模块开发中')" title="会员管理">
+                    <span class="material-symbols-outlined">people</span>
+                    <span>会员管理</span>
+                </div>
+                <!-- 结算管理 -->
+                <div class="nav-item" onclick="alert('结算管理模块开发中')" title="结算管理">
+                    <span class="material-symbols-outlined">payments</span>
+                    <span>结算管理</span>
+                </div>
+                <!-- 决策分析 -->
+                <div class="nav-item" onclick="alert('决策分析模块开发中')" title="决策分析">
+                    <span class="material-symbols-outlined">analytics</span>
+                    <span>决策分析</span>
+                </div>
+                <!-- 系统管理 -->
+                <div class="nav-item" onclick="alert('系统管理模块开发中')" title="系统管理">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span>系统管理</span>
+                </div>
+            </div>
+            <div class="collapse-btn" id="collapseBtn">
+                <i class="fas fa-chevron-left"></i>
+                <span>折叠</span>
+            </div>
+        </aside>
+
+        <!-- ===== 主内容区 ===== -->
+        <div class="main-content-area">
+            <div class="tab-bar" id="tabBar"></div>
+            <div class="iframe-wrapper">
+                <iframe id="contentFrame" src="about:blank"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===== 侧边栏折叠 =====
+    const sidebar = document.getElementById('sidebar');
+    const collapseBtn = document.getElementById('collapseBtn');
+    collapseBtn.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+    });
+
+    // ===== 用户下拉菜单 =====
+    const userDropdown = document.getElementById('userDropdown');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+    const chevron = document.getElementById('dropdownChevron');
+    let closeTimer = null;
+    const closeDelay = 200;
+
+    function openDropdown() {
+        if (closeTimer) { clearTimeout(closeTimer);
+            closeTimer = null; }
+        dropdownMenu.classList.add('open');
+        chevron.classList.add('open');
+    }
+
+    function scheduleClose() {
+        if (closeTimer) clearTimeout(closeTimer);
+        closeTimer = setTimeout(() => {
+            dropdownMenu.classList.remove('open');
+            chevron.classList.remove('open');
+            closeTimer = null;
+        }, closeDelay);
+    }
+
+    function cancelClose() {
+        if (closeTimer) { clearTimeout(closeTimer);
+            closeTimer = null; }
+        dropdownMenu.classList.add('open');
+        chevron.classList.add('open');
+    }
+
+    userDropdown.addEventListener('mouseenter', openDropdown);
+    userDropdown.addEventListener('mouseleave', scheduleClose);
+    dropdownMenu.addEventListener('mouseenter', cancelClose);
+    dropdownMenu.addEventListener('mouseleave', scheduleClose);
+
+    document.getElementById('settingsBtn').addEventListener('click', function() {
+        alert('⚙️ 跳转到用户设置页面');
+        dropdownMenu.classList.remove('open');
+        chevron.classList.remove('open');
+    });
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        if (confirm('确认退出登录吗？')) {
+            alert('您已退出登录');
+            dropdownMenu.classList.remove('open');
+            chevron.classList.remove('open');
+        }
+    });
+
+    // ===== 通知和帮助 =====
+    document.getElementById('notificationIcon').addEventListener('click', function() {
+        alert('您有 3 条未读通知');
+    });
+    document.getElementById('helpIcon').addEventListener('click', function() {
+        alert('📖 帮助中心\n如需帮助，请联系技术支持。');
+    });
+
+    // ===== 顶部搜索 =====
+    const searchInput = document.getElementById('globalSearchInput');
+    const searchIndicator = document.getElementById('globalSearchIndicator');
+    searchInput.addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') {
+            const keyword = this.value.trim();
+            if (keyword) {
+                searchIndicator.style.display = 'inline';
+                setTimeout(() => {
+                    searchIndicator.style.display = 'none';
+                    alert('搜索：' + keyword);
+                }, 600);
+            }
+        }
+    });
+
+    // ============================================================
+    // ===== Tab 管理核心逻辑 =====
+    // ============================================================
+
+    const pageMap = {
+        'dashboard': {
+            title: '桌面',
+            url: 'dashboard.html',
+            icon: 'dashboard',
+            closable: false
+        },
+        'brand': {
+            title: '品牌管理',
+            url: 'brand.html',
+            icon: 'branding_watermark',
+            closable: true
+        },
+        'category': {
+            title: '分类管理',
+            url: 'category.html',
+            icon: 'folder',
+            closable: true
+        },
+        'item': {
+            title: '商品管理',
+            url: 'item.htm',
+            icon: 'inventory_2',
+            closable: true
+        },
+        'upload': {
+            title: '文件上传',
+            url: 'upload.html',
+            icon: 'cloud_upload',
+            closable: true
+        }
+    };
+
+    let tabs = [];
+    let activeView = 'dashboard';
+
+    const tabBar = document.getElementById('tabBar');
+    const contentFrame = document.getElementById('contentFrame');
+
+    function initTabs() {
+        tabs = [];
+        addTab('dashboard', true);
+        renderTabs();
+    }
+
+    function addTab(view, activate = false) {
+        const existing = tabs.find(t => t.view === view);
+        if (existing) {
+            if (activate) {
+                activeView = view;
+                renderTabs();
+                switchIframe(view);
+            }
+            return;
+        }
+        const page = pageMap[view];
+        if (!page) return;
+        tabs.push({
+            view: view,
+            title: page.title,
+            url: page.url,
+            icon: page.icon,
+            closable: page.closable !== undefined ? page.closable : true
+        });
+        if (activate) {
+            activeView = view;
+        } else if (!activeView) {
+            activeView = view;
+        }
+        renderTabs();
+        if (activate) switchIframe(view);
+        updateMenuActive(view);
+    }
+
+    function closeTab(view) {
+        const idx = tabs.findIndex(t => t.view === view);
+        if (idx === -1) return;
+        const tab = tabs[idx];
+        if (!tab.closable) return;
+        tabs.splice(idx, 1);
+
+        if (activeView === view) {
+            if (tabs.length > 0) {
+                const nextIdx = idx < tabs.length ? idx : idx - 1;
+                const nextTab = tabs[nextIdx] || tabs[0];
+                activeView = nextTab.view;
+                switchIframe(activeView);
+            } else {
+                activeView = 'dashboard';
+                addTab('dashboard', true);
+            }
+        }
+        renderTabs();
+        updateMenuActive(activeView);
+    }
+
+    function switchToTab(view) {
+        const tab = tabs.find(t => t.view === view);
+        if (!tab) {
+            addTab(view, true);
+            return;
+        }
+        if (activeView !== view) {
+            activeView = view;
+            renderTabs();
+            switchIframe(view);
+            updateMenuActive(view);
+        }
+    }
+
+    function switchIframe(view) {
+        const page = pageMap[view];
+        if (page) {
+            contentFrame.src = page.url;
+        } else {
+            contentFrame.src = 'about:blank';
+        }
+    }
+
+    function renderTabs() {
+        tabBar.innerHTML = '';
+        tabs.forEach(tab => {
+            const btn = document.createElement('button');
+            btn.className = 'tab-item';
+            if (tab.view === activeView) btn.classList.add('active');
+            if (!tab.closable) btn.classList.add('dashboard-tab');
+
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'material-symbols-outlined tab-icon';
+            iconSpan.textContent = tab.icon;
+            btn.appendChild(iconSpan);
+
+            const titleSpan = document.createElement('span');
+            titleSpan.textContent = tab.title;
+            btn.appendChild(titleSpan);
+
+            if (tab.closable) {
+                const closeSpan = document.createElement('span');
+                closeSpan.className = 'tab-close';
+                closeSpan.innerHTML = '&times;';
+                closeSpan.title = '关闭标签';
+                closeSpan.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    closeTab(tab.view);
+                });
+                btn.appendChild(closeSpan);
+            }
+
+            btn.addEventListener('click', function() {
+                switchToTab(tab.view);
+            });
+
+            tabBar.appendChild(btn);
+        });
+        const activeEl = tabBar.querySelector('.tab-item.active');
+        if (activeEl) {
+            activeEl.scrollIntoView({ block: 'nearest', inline: 'center' });
+        }
+    }
+
+    function updateMenuActive(view) {
+        const navItems = document.querySelectorAll('.nav-item[data-view]');
+        navItems.forEach(item => {
+            item.classList.remove('active');
+            if (item.dataset.view === view) {
+                item.classList.add('active');
+            }
+        });
+    }
+
+    window.switchView = function(view) {
+        if (view === 'unit') {
+            alert('单位管理仅提供 API 接口，无独立管理界面。');
+            return;
+        }
+        switchToTab(view);
+    };
+
+    // ===== 左侧菜单点击 =====
+    const navItems = document.querySelectorAll('.nav-item[data-view]');
+    navItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            const view = this.dataset.view;
+            if (!view) return;
+            window.switchView(view);
+        });
+    });
+
+    // ===== 初始化 =====
+    initTabs();
+    switchIframe('dashboard');
+    updateMenuActive('dashboard');
+
+    console.log('一体化工作台已启动。');
+</script>
+</body>
+</html>

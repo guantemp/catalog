@@ -116,15 +116,16 @@ public final class ItemService {
     public HttpResponse search(QueryParams params) {
         //ServiceRequestContext.current().setRequestTimeoutMillis(60_000);
         String search = params.get("s", "");
-        String filter = params.get("filter", "");
+        String filters = params.get("filters", "");
         int offset = params.getInt("offset", OFFSET);
         int size = params.getInt("size", SIZE);
+
         String cursor = params.get("cursor", "");
         SortFieldEnum sortField = SortFieldEnum.of(params.get("sort", "_ID"));
 
         Flux<ByteBuf> dataFlux = cursor.isBlank()
-                ? QUERY.searchAsync(ItemService.parseFilter(search, filter), offset, size, sortField)
-                : QUERY.searchAsync(ItemService.parseFilter(search, filter), size, cursor, sortField);
+                ? QUERY.searchAsync(ItemService.parseFilter(search, filters), offset, size, sortField)
+                : QUERY.searchAsync(ItemService.parseFilter(search, filters), size, cursor, sortField);
 
         // 使用 switchMap：一旦有第一个元素，就前置 headers
         Flux<HttpObject> responseStream = dataFlux
@@ -200,13 +201,14 @@ public final class ItemService {
          */
     }
 
-    private static ItemQuerySpec[] parseFilter(String query, String filter) {
+    private static ItemQuerySpec[] parseFilter(String query, String filters) {
         List<ItemQuerySpec> filterList = new ArrayList<>();
         if (!query.isBlank())
             filterList.add(new KeywordSpec(query));
-        String[] filters = filter.split(";");//Project separation
-        for (String s : filters) {
-            String[] con = s.split(":");//Project name : Project value
+        System.out.println("filters:"+filters);
+        String[] filter = filters.split(";");//Project separation
+        for (String s : filter) {
+            String[] con = s.split(",");//Project name : Project value
             if (con.length == 2) {
                 switch (con[0]) {
                     case "cid", "categoryId" -> ItemService.parseCid(filterList, con[1]);

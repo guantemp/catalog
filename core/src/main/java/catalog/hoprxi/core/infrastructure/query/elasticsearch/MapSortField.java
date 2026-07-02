@@ -31,9 +31,9 @@ public final class MapSortField {
             case ID, _ID -> "id";
             case NAME, _NAME -> "name.name.raw";
             case BARCODE, _BARCODE -> "barcode.raw";
-            case MADE_IN, _MADE_IN -> "made_in";
+            case MADE_IN, _MADE_IN -> "madeIn.madeIn.raw";
             case GRADE, _GRADE -> "grade";
-            case SPEC, _SPEC -> "spec";
+            case SPEC, _SPEC -> "spec.raw";
             case CATEGORY, _CATEGORY -> "category.name";
             case BRAND, _BRAND -> "brand.name";
             case LAST_RECEIPT_PRICE, _LAST_RECEIPT_PRICE -> "last_receipt_price.price.number";

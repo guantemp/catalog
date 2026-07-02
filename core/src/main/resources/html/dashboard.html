@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仪表板 · Catalog 后台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1e2a36;
+            font-family: 'Inter', system-ui, sans-serif;
+            color: #e8edf4;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 12px 20px 20px;  /* 适中外边距 */
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1e2a36; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #3e5566; border-radius: 10px; }
+
+        .dashboard-wrapper {
+            max-width: 1600px;        /* 折中宽度，介于1440与全宽之间 */
+            margin: 0 auto;
+            padding: 0 12px;          /* 内部微距，避免内容贴边 */
+        }
+
+        /* 欢迎区域 */
+        .welcome-section {
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(45,156,219,0.12);
+        }
+        .welcome-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .welcome-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #e8edf4;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .welcome-title .material-symbols-outlined {
+            font-size: 34px;
+            color: #2D9CDB;
+        }
+        .welcome-sub {
+            color: #8fa8b8;
+            font-size: 0.95rem;
+            margin-top: 2px;
+            margin-left: 46px;
+        }
+        .welcome-time {
+            background: #15222e;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            border: 1px solid #3e5566;
+            color: #c8d8e8;
+            white-space: nowrap;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: #2a3a48;
+            border-radius: 20px;
+            border: 1px solid #3e5566;
+            padding: 16px 20px 18px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            transition: 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card:hover {
+            border-color: #2D9CDB;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        }
+        .stat-card .stat-icon {
+            font-size: 26px;
+            color: #2D9CDB;
+            float: right;
+            opacity: 0.8;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #e8edf4;
+            letter-spacing: -0.02em;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: #8fa8b8;
+            margin-top: 2px;
+        }
+        .stat-card .trend {
+            font-size: 0.7rem;
+            color: #22c55e;
+            margin-left: 6px;
+        }
+
+        /* 双栏布局 */
+        .two-col {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 900px) {
+            .two-col { grid-template-columns: 1fr; }
+        }
+
+        /* 系统状态卡片 */
+        .status-card {
+            background: #2a3a48;
+            border-radius: 20px;
+            border: 1px solid #3e5566;
+            padding: 20px 24px 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        .status-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e8edf4;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-card h3 .material-symbols-outlined {
+            color: #2D9CDB;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #1e2a36;
+            font-size: 0.9rem;
+        }
+        .status-item:last-child { border-bottom: none; }
+        .status-item .label { color: #8fa8b8; }
+        .status-item .value { color: #e8edf4; }
+        .status-item .badge {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .badge.green { background: #065f46; color: #6ee7b7; }
+        .badge.blue { background: #2D9CDB; color: #ffffff; }
+        .badge.yellow { background: #b45309; color: #fffbeb; }
+
+        /* 快速操作 */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 4px;
+        }
+        .quick-btn {
+            background: #2a3a48;
+            border: 1px solid #3e5566;
+            border-radius: 16px;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #c8d8e8;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .quick-btn:hover {
+            background: #344a5a;
+            border-color: #2D9CDB;
+            color: #e8edf4;
+            transform: translateY(-2px);
+        }
+        .quick-btn .material-symbols-outlined {
+            font-size: 28px;
+            color: #2D9CDB;
+        }
+
+        /* 最近活动 */
+        .activity-list {
+            list-style: none;
+            padding: 0;
+        }
+        .activity-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #1e2a36;
+            font-size: 0.9rem;
+        }
+        .activity-list li:last-child { border-bottom: none; }
+        .activity-list .time {
+            color: #8fa8b8;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+            width: 48px;
+        }
+        .activity-list .desc {
+            color: #e8edf4;
+        }
+        .activity-list .desc strong {
+            color: #ffffff;
+        }
+
+        /* API 概览（缩减版） */
+        .api-mini {
+            background: #2a3a48;
+            border-radius: 20px;
+            border: 1px solid #3e5566;
+            padding: 18px 24px 20px;
+            margin-top: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        .api-mini h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e8edf4;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .api-mini h3 .material-symbols-outlined {
+            color: #2D9CDB;
+        }
+        .api-tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+        .api-tag.get { background: #22c55e; color: #0f172a; }
+        .api-tag.post { background: #2D9CDB; color: #fff; }
+        .api-tag.put { background: #b45309; color: #fffbeb; }
+        .api-tag.delete { background: #DC4C4C; color: #fff; }
+        .api-endpoint {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #c8d8e8;
+            padding: 4px 0;
+        }
+
+        /* 页脚 */
+        .footer {
+            margin-top: 36px;
+            padding-top: 16px;
+            border-top: 1px solid #2a3a48;
+            font-size: 12px;
+            color: #8fa8b8;
+            text-align: center;
+        }
+        .footer a { color: #2D9CDB; text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        /* 响应式 */
+        @media (max-width: 600px) {
+            body { padding: 12px 12px 20px; }
+            .welcome-title { font-size: 1.4rem; }
+            .welcome-sub { margin-left: 0; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .quick-actions { grid-template-columns: 1fr; }
+            .dashboard-wrapper { padding: 0 4px; }
+        }
+        @media (min-width: 1400px) {
+            .dashboard-wrapper { padding: 0 20px; }  /* 大屏时稍宽一些 */
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-wrapper">
+
+    <!-- 欢迎区域 -->
+    <div class="welcome-section">
+        <div class="welcome-row">
+            <div>
+                <div class="welcome-title">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    欢迎回来，管理员
+                </div>
+                <div class="welcome-sub">
+                    商品 后台管理系统 · 一体化零售解决方案
+                </div>
+            </div>
+            <div class="welcome-time">
+                <i class="far fa-calendar-alt"></i> <span id="currentTime"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-icon material-symbols-outlined">category</span>
+            <div class="stat-number">8</div>
+            <div class="stat-label">商品分类</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon material-symbols-outlined">branding_watermark</span>
+            <div class="stat-number">24</div>
+            <div class="stat-label">合作品牌</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon material-symbols-outlined">inventory_2</span>
+            <div class="stat-number">1,286</div>
+            <div class="stat-label">商品总数</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon material-symbols-outlined">cloud_upload</span>
+            <div class="stat-number">342</div>
+            <div class="stat-label">已上传文件</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon material-symbols-outlined">api</span>
+            <div class="stat-number">12</div>
+            <div class="stat-label">API 端点</div>
+        </div>
+    </div>
+
+    <!-- 双栏：系统状态 + 快速操作 -->
+    <div class="two-col">
+        <!-- 系统状态 -->
+        <div class="status-card">
+            <h3><span class="material-symbols-outlined">memory</span> 系统状态</h3>
+            <div class="status-item">
+                <span class="label">服务状态</span>
+                <span class="value"><span class="badge green">● 运行中</span></span>
+            </div>
+            <div class="status-item">
+                <span class="label">API 版本</span>
+                <span class="value">v1.0.2</span>
+            </div>
+            <div class="status-item">
+                <span class="label">数据库</span>
+                <span class="value"><span class="badge blue">连接正常</span></span>
+            </div>
+            <div class="status-item">
+                <span class="label">Elasticsearch</span>
+                <span class="value"><span class="badge green">可用</span></span>
+            </div>
+            <div class="status-item">
+                <span class="label">上传存储</span>
+                <span class="value"><span class="badge yellow">已用 43%</span></span>
+            </div>
+        </div>
+
+        <!-- 快速操作 -->
+        <div class="status-card">
+            <h3><span class="material-symbols-outlined">bolt</span> 快速操作</h3>
+            <div class="quick-actions">
+                <div class="quick-btn" data-view="brand" onclick="parent.switchView('brand')">
+                    <span class="material-symbols-outlined">branding_watermark</span>
+                    品牌管理
+                </div>
+                <div class="quick-btn" data-view="category" onclick="parent.switchView('category')">
+                    <span class="material-symbols-outlined">folder</span>
+                    分类管理
+                </div>
+                <div class="quick-btn" data-view="item" onclick="parent.switchView('item')">
+                    <span class="material-symbols-outlined">inventory_2</span>
+                    商品管理
+                </div>
+                <div class="quick-btn" data-view="upload" onclick="parent.switchView('upload')">
+                    <span class="material-symbols-outlined">cloud_upload</span>
+                    文件上传
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近活动 -->
+    <div class="status-card" style="margin-bottom: 20px;">
+        <h3><span class="material-symbols-outlined">history</span> 最近动态</h3>
+        <ul class="activity-list">
+            <li>
+                <span class="time">10:32</span>
+                <span class="desc">管理员 <strong>添加</strong> 了分类 “智能穿戴”</span>
+            </li>
+            <li>
+                <span class="time">09:15</span>
+                <span class="desc">管理员 <strong>更新</strong> 了品牌 “小米” 信息</span>
+            </li>
+            <li>
+                <span class="time">昨天</span>
+                <span class="desc">批量 <strong>导入</strong> 了 156 件商品</span>
+            </li>
+            <li>
+                <span class="time">昨天</span>
+                <span class="desc">上传了 12 个 <strong>产品图片</strong></span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- API 概览（精简） -->
+    <div class="api-mini">
+        <h3><span class="material-symbols-outlined">code</span> 核心 API 端点</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px;">
+            <div><span class="api-tag get">GET</span><span class="api-endpoint">/brands</span></div>
+            <div><span class="api-tag post">POST</span><span class="api-endpoint">/brands</span></div>
+            <div><span class="api-tag get">GET</span><span class="api-endpoint">/categories/root</span></div>
+            <div><span class="api-tag get">GET</span><span class="api-endpoint">/categories/{id}/children</span></div>
+            <div><span class="api-tag post">POST</span><span class="api-endpoint">/categories</span></div>
+            <div><span class="api-tag get">GET</span><span class="api-endpoint">/items</span></div>
+            <div><span class="api-tag post">POST</span><span class="api-endpoint">/items</span></div>
+            <div><span class="api-tag post">POST</span><span class="api-endpoint">/upload</span></div>
+            <div><span class="api-tag post">POST</span><span class="api-endpoint">/uploads</span></div>
+            <div><span class="api-tag get">GET</span><span class="api-endpoint">/units</span></div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <div class="footer">
+        <span>© 2026 <a href="https://www.hoprxi.com" target="_blank">hoprxi.com</a> &nbsp;·&nbsp; 基于 Armeria 框架 &nbsp;·&nbsp; 虚拟线程 &nbsp;·&nbsp; 响应式流</span>
+    </div>
+</div>
+
+<script>
+    // 显示当前时间
+    function updateTime() {
+        const now = new Date();
+        const str = now.getFullYear() + '-' +
+            String(now.getMonth()+1).padStart(2,'0') + '-' +
+            String(now.getDate()).padStart(2,'0') + ' ' +
+            String(now.getHours()).padStart(2,'0') + ':' +
+            String(now.getMinutes()).padStart(2,'0');
+        document.getElementById('currentTime').textContent = str;
+    }
+    updateTime();
+    setInterval(updateTime, 30000);
+
+    // 快速操作按钮点击时调用父窗口的 switchView（如果存在）
+    document.querySelectorAll('.quick-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            try {
+                if (window.parent && typeof window.parent.switchView === 'function') {
+                    const view = this.getAttribute('data-view');
+                    if (view) window.parent.switchView(view);
+                } else {
+                    const view = this.getAttribute('data-view');
+                    if (view) window.parent.location.hash = view;
+                }
+            } catch (err) {
+                console.warn('无法调用父窗口切换', err);
+            }
+        });
+    });
+</script>
+</body>
+</html>
