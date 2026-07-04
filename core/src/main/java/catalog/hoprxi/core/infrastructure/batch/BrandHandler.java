@@ -54,13 +54,13 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         String brand = itemImportEvent.map.get(ItemMapping.BRAND);
-        if (brand == null || brand.isBlank() || brand.equalsIgnoreCase("undefined") || brand.equalsIgnoreCase(Label.BRAND_UNDEFINED)) {
-            itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(Brand.UNDEFINED.id()));
+        if (brand == null || brand.isBlank() || brand.equalsIgnoreCase("undefined") || brand.equalsIgnoreCase(Label.BRAND_UNBRANDED)) {
+            itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(Brand.UNBRANDED.id()));
             return;
         }
         if (ID_PATTERN.matcher(brand).matches()) {//数字，可能是id
             if (!BrandHandler.find(Long.parseLong(brand)))//没有查到该id,错误的id
-                itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(Brand.UNDEFINED.id()));
+                itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(Brand.UNBRANDED.id()));
             return;
         }
 
@@ -71,7 +71,7 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
 
         long id = BrandHandler.findIdByName(query);
         //System.out.println("brand:"+id);
-        if (id != Brand.UNDEFINED.id()) {//has find id
+        if (id != Brand.UNBRANDED.id()) {//has find id
             itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(id));
         } else {//新建
             Brand temp = ss.length > 1 ? new Brand(repository.nextIdentity(), new Name(ss[0], ss[1])) : new Brand(repository.nextIdentity(), ss[0]);
@@ -94,7 +94,7 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
             log.error("e: ", e);
             //LOGGER.error("Can't rebuild brand with (name = {})", name, e);
         }
-        return Brand.UNDEFINED.id();
+        return Brand.UNBRANDED.id();
     }
 
     private static boolean find(long id) {

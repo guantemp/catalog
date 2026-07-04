@@ -69,7 +69,7 @@ public class PsqlBrandRepositoryTest {
         Brand chenguang = new Brand(495651176959596634L, new Name("晨光", "M&G"));
         repository.save(chenguang);
 
-        repository.save(Brand.UNDEFINED);
+        repository.save(Brand.UNBRANDED);
     }
 
 /*
@@ -90,7 +90,7 @@ public class PsqlBrandRepositoryTest {
         System.out.println(brand);
         assertNotNull(brand);
         Brand undefined = repository.find(-1L);
-        assertSame(undefined, Brand.UNDEFINED);
+        assertSame(undefined, Brand.UNBRANDED);
     }
 
 

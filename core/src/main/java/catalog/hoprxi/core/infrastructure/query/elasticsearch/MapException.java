@@ -41,7 +41,6 @@ public final class MapException {
      * 将通用 Exception 映射为业务自定义异常
      * <p>主要处理 HTTP 调用异常、IO 异常及未知异常，统一转换为服务内部可识别的异常类型</p>
      *
-     * @param e          原始异常（如 HTTP 调用异常、IO 异常、运行时异常）
      * @param identifier 异常关联的资源标识（ID / 关键字），用于日志与错误提示
      * @return 转换后的业务异常（NotFoundException / SearchException）
      */

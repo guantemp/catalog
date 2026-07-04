@@ -58,7 +58,7 @@ public class PsqlItemRepositoryTest {
 
     @BeforeTest
     public void setUp() {
-        brandRepository.save(Brand.UNDEFINED);
+        brandRepository.save(Brand.UNBRANDED);
         Brand caihong = new Brand(52495569395175425L, new Name("彩虹"));
         brandRepository.save(caihong);
         Brand tianyou = new Brand(52495569395175426L, new Name("天友"));
@@ -135,15 +135,15 @@ public class PsqlItemRepositoryTest {
         itemRepository.save(six_2);
 
         retailPrice = new RetailPrice(new Price(Money.of(2.5, currency), UnitEnum.DAI));
-        Item seven = new Item(52496321492179002L, new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), Domestic.TIAN_JIN, new Specification("25g"), GradeEnum.QUALIFIED, new ShelfLife(180), LastReceiptPrice.ZERO_RMB_PCS, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, food.id(), Brand.UNDEFINED.id());
+        Item seven = new Item(52496321492179002L, new EAN_8("21091346"), new Name("麻辣味甘源青豆", "麻辣味甘源青豆"), Domestic.TIAN_JIN, new Specification("25g"), GradeEnum.QUALIFIED, new ShelfLife(180), LastReceiptPrice.ZERO_RMB_PCS, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, food.id(), Brand.UNBRANDED.id());
         itemRepository.save(seven);
 
         retailPrice = new RetailPrice(new Price(Money.of(4.80, currency), UnitEnum.DAI));
-        Item eight = new Item(52496321492179003L, new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), Domestic.TIAN_JIN, new Specification("50g"), GradeEnum.QUALIFIED, new ShelfLife(180), LastReceiptPrice.ZERO_RMB_PCS, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, vegetable_products.id(), Brand.UNDEFINED.id());
+        Item eight = new Item(52496321492179003L, new EAN_8("21091353"), new Name("甘源青豆牛肉味", "甘源青豆"), Domestic.TIAN_JIN, new Specification("50g"), GradeEnum.QUALIFIED, new ShelfLife(180), LastReceiptPrice.ZERO_RMB_PCS, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, vegetable_products.id(), Brand.UNBRANDED.id());
         itemRepository.save(eight);
 
         retailPrice = new RetailPrice(new Price(Money.of(6.90, currency), UnitEnum.DAI));
-        Item nine = new Item(52496321492179004L, new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), Domestic.TIAN_JIN, new Specification("75g"), GradeEnum.QUALIFIED, new ShelfLife(180), LastReceiptPrice.ZERO_RMB_PCS, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, vegetable_products.id(), Brand.UNDEFINED.id());
+        Item nine = new Item(52496321492179004L, new EAN_8("21091346"), new Name("鸡肉味甘源青豆", "青豆"), Domestic.TIAN_JIN, new Specification("75g"), GradeEnum.QUALIFIED, new ShelfLife(180), LastReceiptPrice.ZERO_RMB_PCS, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, vegetable_products.id(), Brand.UNBRANDED.id());
         itemRepository.save(nine);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(3.5, currency), UnitEnum.DUI));
@@ -154,12 +154,12 @@ public class PsqlItemRepositoryTest {
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(2.5, currency), UnitEnum.BEN));
         retailPrice = new RetailPrice(new Price(Money.of(5, currency), UnitEnum.BEN));
-        Item twelve = new Item(52496321492179006L, new EAN_13("6925834037159"), new Name("车线本"), new Domestic("330500", "湖州市"), Specification.UNDEFINED, GradeEnum.QUALIFIED, lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+        Item twelve = new Item(52496321492179006L, new EAN_13("6925834037159"), new Name("车线本"), new Domestic("330500", "湖州市"), Specification.UNDEFINED, GradeEnum.QUALIFIED, lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNDEFINED.id(), Brand.UNBRANDED.id());
         itemRepository.save(twelve);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(8.9, currency), UnitEnum.HE));
         retailPrice = new RetailPrice(new Price(Money.of(32.00, currency), UnitEnum.HE));
-        Item thirteen = new Item(52496321492179007L, new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("764", "泰国"), new Specification("10片装"), GradeEnum.QUALIFIED, new ShelfLife(360 * 3), lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+        Item thirteen = new Item(52496321492179007L, new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("764", "泰国"), new Specification("10片装"), GradeEnum.QUALIFIED, new ShelfLife(360 * 3), lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNDEFINED.id(), Brand.UNBRANDED.id());
         itemRepository.save(thirteen);
     }
 

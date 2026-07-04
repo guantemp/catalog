@@ -50,7 +50,7 @@ public class PsqlCountRepositoryTest {
         RetailPrice retailPrice = new RetailPrice(new Price(Money.of(1.99, currency), UnitEnum.BA));
         VipPrice vipPrice = new VipPrice("plus会员价", new Price(Money.of(1.29, currency), UnitEnum.BA));
         Count spinach = new Count(new Plu(45), new Name("菠菜", "秋波"), new Domestic("510502", "江阳区"), new Specification("275±5克"), GradeEnum.QUALIFIED, ShelfLife.SAME_DAY,
-                lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, vipPrice, 1421, Brand.UNDEFINED.id());
+                lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, vipPrice, 1421, Brand.UNBRANDED.id());
         System.out.println(spinach);
         repository.save(spinach);
 
@@ -58,28 +58,28 @@ public class PsqlCountRepositoryTest {
         retailPrice = new RetailPrice(new Price(Money.of(0.99, currency), UnitEnum.GENG));
         MemberPrice memberPrice = new MemberPrice("会员", new Price(Money.of(0.88, currency), UnitEnum.GENG));
         Count cucumber = new Count(new Plu(46), new Name("青黄瓜"), new Domestic("510522", "合江县"), Specification.of("鲜切"), GradeEnum.QUALIFIED, ShelfLife.SAME_DAY,
-                lastReceiptPrice, retailPrice, memberPrice, VipPrice.ZERO_RMB_PCS, 1421, Brand.UNDEFINED.id());
+                lastReceiptPrice, retailPrice, memberPrice, VipPrice.ZERO_RMB_PCS, 1421, Brand.UNBRANDED.id());
         repository.save(cucumber);
 
         retailPrice = new RetailPrice(new Price(Money.of(11.99, currency), UnitEnum.GE));
         memberPrice = new MemberPrice("白银会员", new Price(Money.of(10.59, currency), UnitEnum.GE));
         vipPrice = new VipPrice("plus会员价", new Price(Money.of(9.29, currency), UnitEnum.GE));
         Count pumpkin = new Count(new Plu(55), new Name("南瓜", "美国南瓜"), new Domestic("510504", "龙马潭区"), Specification.of("鲜切"), GradeEnum.QUALIFIED, ShelfLife.SAME_DAY,
-                LastReceiptPrice.ZERO_RMB_PCS, retailPrice, memberPrice, vipPrice, 1351, Brand.UNDEFINED.id());
+                LastReceiptPrice.ZERO_RMB_PCS, retailPrice, memberPrice, vipPrice, 1351, Brand.UNBRANDED.id());
         repository.save(pumpkin);
 
         retailPrice = new RetailPrice(new Price(Money.of(2.99, currency), UnitEnum.TIAO));
         memberPrice = new MemberPrice(new Price(Money.of(1.59, currency), UnitEnum.TIAO));
         vipPrice = new VipPrice("白金价", new Price(Money.of(1.29, currency), UnitEnum.TIAO));
         Count lettuce = new Count(new Plu(75), new Name("莴笋"), new Domestic("510502", "江阳区"), Specification.of("鲜切"), GradeEnum.QUALIFIED, ShelfLife.SAME_DAY,
-                lastReceiptPrice, retailPrice, memberPrice, vipPrice, 496796322118291493L, Brand.UNDEFINED.id());
+                lastReceiptPrice, retailPrice, memberPrice, vipPrice, 496796322118291493L, Brand.UNBRANDED.id());
         repository.save(lettuce);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(0.246, currency), UnitEnum.KUN));
         retailPrice = new RetailPrice(new Price(Money.of(0.69, currency), UnitEnum.KUN));
         vipPrice = new VipPrice("plus会员价", new Price(Money.of(0.49, currency), UnitEnum.KUN));
         Count radish = new Count(new Plu(76), new Name("长白萝卜","长条不是圆的"), new Domestic("510502", "江阳区"), Specification.of("1.5Kg±25g"), GradeEnum.QUALIFIED, ShelfLife.SAME_DAY,
-                lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, vipPrice, 49581450261846042L, Brand.UNDEFINED.id());
+                lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, vipPrice, 49581450261846042L, Brand.UNBRANDED.id());
         repository.save(radish);
     }
 

@@ -93,11 +93,11 @@ public class Item {
     }
 
     public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
-        this(id, barcode, name, madeIn, spec, grade, lastReceiptPrice, retailPrice, memberPrice, vipPrice, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+        this(id, barcode, name, madeIn, spec, grade, lastReceiptPrice, retailPrice, memberPrice, vipPrice, Category.UNDEFINED.id(), Brand.UNBRANDED.id());
     }
 
     public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, RetailPrice retailPrice) {
-        this(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.ZERO_RMB_PCS, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNDEFINED.id(), Brand.UNDEFINED.id());
+        this(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.ZERO_RMB_PCS, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNDEFINED.id(), Brand.UNBRANDED.id());
     }
 
     private void setCategoryId(long categoryId) {

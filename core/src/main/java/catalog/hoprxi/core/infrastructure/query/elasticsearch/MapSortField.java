@@ -38,8 +38,8 @@ public final class MapSortField {
             case BRAND, _BRAND -> "brand.name";
             case LAST_RECEIPT_PRICE, _LAST_RECEIPT_PRICE -> "last_receipt_price.price.number";
             case RETAIL_PRICE, _RETAIL_PRICE -> "retail_price.number";
-            case MEMBER_PRICE, _MEMBER_PRICE -> "member_price.number";
-            case VIP_PRICE, _VIP_PRICE -> "vip_price.number";
+            case MEMBER_PRICE, _MEMBER_PRICE -> "member_price.price.number";
+            case VIP_PRICE, _VIP_PRICE -> "vip_price.price.number";
         };
     }
 }

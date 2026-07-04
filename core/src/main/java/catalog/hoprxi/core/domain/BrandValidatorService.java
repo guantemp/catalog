@@ -19,10 +19,6 @@ package catalog.hoprxi.core.domain;
 import catalog.hoprxi.core.domain.model.brand.Brand;
 import catalog.hoprxi.core.domain.model.brand.BrandRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
-import java.util.List;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -49,7 +45,7 @@ public class BrandValidatorService {
  */
 
     public static boolean isBrandExist(long id) {
-        if (Brand.UNDEFINED.id() == id)
+        if (Brand.UNBRANDED.id() == id)
             return true;
         Brand brand = repository.find(id);
         return brand != null;

@@ -30,12 +30,13 @@
             --profit-color: #6ee7b7;
             --retail-color: #f87171;
             --danger: #DC4C4C;
-            --page-padding: 8px 12px 12px 12px;
+            --page-padding: 8px 8px 8px 8px;
             --toolbar-padding: 6px 12px;
             --pagination-padding: 6px 12px;
             --cell-padding: 6px 10px;
             --panel-gap: 8px;
             --stripe-color: rgba(255, 255, 255, 0.04);
+            --filter-panel-bg: #1e2a36;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -311,15 +312,31 @@
             color: inherit;
             font-size: 18px;
         }
+        /* 筛选按钮特殊样式 */
+        .filter-toggle-btn {
+            color: var(--primary);
+            border-color: var(--primary);
+            background: rgba(45, 156, 219, 0.1);
+        }
+        .filter-toggle-btn:hover {
+            background: rgba(45, 156, 219, 0.2);
+            color: var(--primary-hover);
+        }
+        .filter-toggle-btn .material-symbols-outlined {
+            font-size: 18px;
+        }
+
         .search-input-wrapper {
             display: flex;
             align-items: center;
             background: var(--bg-input);
             border: 1px solid var(--border-medium);
             border-radius: 6px;
-            padding: 0 10px;
+            padding: 0 14px;
             height: 34px;
-            min-width: 280px;
+            min-width: 420px;
+            flex: 1;
+            max-width: 600px;
         }
         .search-input-wrapper input {
             background: transparent;
@@ -334,7 +351,70 @@
         .search-input-wrapper .material-symbols-outlined {
             color: var(--text-muted);
             font-size: 20px;
-            margin-right: 6px;
+            margin-right: 8px;
+        }
+
+        /* ===== 筛选面板 ===== */
+        .filter-panel {
+            background: var(--filter-panel-bg);
+            border-bottom: 1px solid var(--border-light);
+            padding: 16px 20px;
+            display: none;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 16px 24px;
+            align-items: flex-end;
+        }
+        .filter-panel.open {
+            display: flex;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 140px;
+            flex: 0 1 auto;
+        }
+        .filter-group label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .filter-group input,
+        .filter-group select {
+            padding: 6px 10px;
+            border: 1px solid var(--border-medium);
+            border-radius: 6px;
+            background: var(--bg-input);
+            color: var(--text-main);
+            font-size: 13px;
+            outline: none;
+            transition: 0.2s;
+            height: 32px;
+            min-width: 120px;
+        }
+        .filter-group input:focus,
+        .filter-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(45, 156, 219, 0.2);
+        }
+        .filter-group input::placeholder { color: var(--text-muted); }
+        .filter-group select option {
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding-bottom: 2px;
+        }
+        .filter-actions .btn {
+            padding: 6px 18px;
+            height: 32px;
+            font-size: 13px;
         }
 
         .data-table-wrapper {
@@ -345,16 +425,15 @@
         }
         .data-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             table-layout: fixed;
             min-width: 1600px;
         }
 
-        /* ===== 表格样式（合并后的 .data-table th 定义） ===== */
         .data-table th,
         .data-table td {
             border: 1px solid var(--border-light);
-            padding: var(--cell-padding);
             vertical-align: middle;
         }
         .data-table th {
@@ -363,19 +442,22 @@
             font-weight: 600;
             position: sticky;
             top: 0;
-            z-index: 5;
+            z-index: 30;
             font-size: 14px;
             white-space: nowrap;
             user-select: none;
-            /* 排序图标绝对定位所需 */
-            position: relative;
             padding: 0 !important;
             text-align: center;
+            box-shadow: 0 1px 0 0 var(--border-light);
+            background-clip: padding-box;
+            opacity: 1;
         }
         .data-table td {
             font-size: 13px;
             color: var(--text-main);
             text-align: left;
+            padding: var(--cell-padding);
+            background-color: var(--bg-card);
         }
         .data-table td.col-price,
         .data-table td.col-profit {
@@ -388,7 +470,7 @@
         .data-table tbody tr:hover td {
             background-color: var(--bg-hover);
         }
-        .data-table tbody tr:nth-child(odd) {
+        .data-table tbody tr:nth-child(odd) td {
             background-color: var(--stripe-color);
         }
         .profit-rate {
@@ -402,14 +484,13 @@
             background: transparent !important;
         }
 
-        /* ===== 表头文字居中 + 排序图标绝对定位靠右 ===== */
         .th-inner {
             display: flex;
             align-items: center;
             justify-content: center;
             width: 100%;
             height: 100%;
-            padding: 4px 28px 4px 4px;   /* 右侧留出图标空间 */
+            padding: 4px 28px 4px 4px;
             box-sizing: border-box;
             cursor: default;
             min-height: 34px;
@@ -467,7 +548,6 @@
             font-weight: 700;
         }
 
-        /* ===== 列拖拽手柄 ===== */
         .col-resize-handle {
             position: absolute;
             right: -2px;
@@ -484,7 +564,6 @@
             background: rgba(45, 156, 219, 0.4);
         }
 
-        /* ===== 列宽定义 ===== */
         .data-table .col-check   { width: 36px; min-width: 36px; max-width: 36px; }
         .data-table .col-seq     { width: 50px; min-width: 50px; max-width: 50px; }
         .data-table .col-name    { width: 220px; min-width: 100px; max-width: 400px; }
@@ -627,7 +706,7 @@
         }
 
         @media (max-width: 1200px) {
-            .search-input-wrapper { min-width: 200px; }
+            .search-input-wrapper { min-width: 300px; }
             .data-table { min-width: 1450px; }
             .category-side { width: 280px; }
         }
@@ -639,7 +718,9 @@
                 width: 100%;
                 justify-content: flex-end;
             }
-            .search-input-wrapper { flex: 1; min-width: 150px; }
+            .search-input-wrapper { flex: 1; min-width: 200px; max-width: none; }
+            .filter-panel { padding: 12px 16px; gap: 12px 16px; }
+            .filter-group { min-width: 100px; }
             .data-table .col-name { width: 180px; min-width: 80px; max-width: 300px; }
             .data-table .col-barcode { width: 100px; min-width: 70px; max-width: 180px; }
             .data-table .col-spec { width: 70px; min-width: 50px; max-width: 120px; }
@@ -668,7 +749,10 @@
                 width: 100%;
                 justify-content: stretch;
             }
-            .search-input-wrapper { min-width: 100px; }
+            .search-input-wrapper { min-width: 100px; max-width: none; }
+            .filter-panel { flex-direction: column; padding: 10px 12px; }
+            .filter-group { min-width: 100%; }
+            .filter-actions { width: 100%; justify-content: flex-end; }
             .pagination-area { padding: 6px 8px; justify-content: center; }
             .data-table { min-width: 1150px; }
             .data-table .col-name { width: 150px; min-width: 60px; max-width: 250px; }
@@ -756,6 +840,7 @@
 
                     <!-- 右侧表格区 -->
                     <div class="table-main">
+                        <!-- 顶部工具栏 -->
                         <div class="top-toolbar">
                             <div class="toolbar-left">
                                 <button class="toolbar-btn toolbar-btn-primary" @click="handleAdd">
@@ -780,13 +865,64 @@
                             <div class="toolbar-right">
                                 <div class="search-input-wrapper">
                                     <span class="material-symbols-outlined">search</span>
-                                    <input type="text" v-model="filters.keyword" placeholder="可输入货号/品名/助记码/自编码/附加条码进行查询" @keyup.enter="handleSearch" />
+                                    <input type="text" v-model="filters.keyword" placeholder="可输入品名/拼音/拼音首拼/条码/产地进行查询" @keyup.enter="handleSearch" />
                                 </div>
-                                <button class="toolbar-btn toolbar-btn-primary" @click="handleSearch">查询</button>
-                                <button class="toolbar-btn toolbar-btn-default" @click="handleAdvancedSearch">高级查询</button>
+                                <!-- 筛选按钮移到这里 -->
+                                <button class="toolbar-btn toolbar-btn-default filter-toggle-btn" @click="toggleFilterPanel">
+                                    <span class="material-symbols-outlined">filter_list</span> 筛选...
+                                    <span class="material-symbols-outlined" style="font-size:16px;">{{ filterPanelOpen ? 'expand_less' : 'expand_more' }}</span>
+                                </button>
                             </div>
                         </div>
 
+                        <!-- 筛选面板 -->
+                        <div class="filter-panel" :class="{ open: filterPanelOpen }">
+                            <div class="filter-group">
+                                <label>商品名称</label>
+                                <input type="text" v-model="filterForm.name" placeholder="请输入商品名称" />
+                            </div>
+                            <div class="filter-group">
+                                <label>条码</label>
+                                <input type="text" v-model="filterForm.barcode" placeholder="请输入条码" />
+                            </div>
+                            <div class="filter-group">
+                                <label>品牌</label>
+                                <input type="text" v-model="filterForm.brand" placeholder="请输入品牌" />
+                            </div>
+                            <div class="filter-group">
+                                <label>产地</label>
+                                <input type="text" v-model="filterForm.madeIn" placeholder="请输入产地" />
+                            </div>
+                            <div class="filter-group">
+                                <label>分类</label>
+                                <select v-model="filterForm.categoryId">
+                                    <option value="">全部分类</option>
+                                    <option v-for="cat in flatCategoryList" :key="cat.id" :value="cat.id">{{ cat.name.name }}</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>状态</label>
+                                <select v-model="filterForm.status">
+                                    <option value="">全部</option>
+                                    <option value="1">上架</option>
+                                    <option value="0">下架</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>创建日期</label>
+                                <input type="date" v-model="filterForm.dateFrom" style="min-width:100px;" />
+                            </div>
+                            <div class="filter-group">
+                                <label>至</label>
+                                <input type="date" v-model="filterForm.dateTo" style="min-width:100px;" />
+                            </div>
+                            <div class="filter-actions">
+                                <button class="toolbar-btn toolbar-btn-primary" @click="applyFilters">查询</button>
+                                <button class="toolbar-btn toolbar-btn-default" @click="resetFilters">重置</button>
+                            </div>
+                        </div>
+
+                        <!-- 表格 -->
                         <div class="data-table-wrapper">
                             <table class="data-table" ref="dataTable">
                                 <colgroup>
@@ -810,7 +946,6 @@
                                 <tr>
                                     <th class="col-check"><input type="checkbox" v-model="allChecked" /></th>
                                     <th class="col-seq">序号</th>
-                                    <!-- 商品名称 -->
                                     <th class="col-name">
                                         <div class="th-inner">
                                             <span class="th-label">商品名称</span>
@@ -820,7 +955,6 @@
                                         </div>
                                         <div class="col-resize-handle" @mousedown.prevent="startResize($event, 2)"></div>
                                     </th>
-                                    <!-- 条码 -->
                                     <th class="col-barcode">
                                         <div class="th-inner">
                                             <span class="th-label">条码</span>
@@ -830,7 +964,6 @@
                                         </div>
                                         <div class="col-resize-handle" @mousedown.prevent="startResize($event, 3)"></div>
                                     </th>
-                                    <!-- 规格 -->
                                     <th class="col-spec">
                                         <div class="th-inner">
                                             <span class="th-label">规格</span>
@@ -840,7 +973,6 @@
                                         </div>
                                         <div class="col-resize-handle" @mousedown.prevent="startResize($event, 4)"></div>
                                     </th>
-                                    <!-- 等级 -->
                                     <th class="col-grade">
                                         <div class="th-inner">
                                             <span class="th-label">等级</span>
@@ -850,7 +982,6 @@
                                         </div>
                                         <div class="col-resize-handle" @mousedown.prevent="startResize($event, 5)"></div>
                                     </th>
-                                    <!-- 品牌 -->
                                     <th class="col-brand">
                                         <div class="th-inner">
                                             <span class="th-label">品牌</span>
@@ -860,7 +991,6 @@
                                         </div>
                                         <div class="col-resize-handle" @mousedown.prevent="startResize($event, 6)"></div>
                                     </th>
-                                    <!-- 产地 -->
                                     <th class="col-madein">
                                         <div class="th-inner">
                                             <span class="th-label">产地</span>
@@ -870,7 +1000,6 @@
                                         </div>
                                         <div class="col-resize-handle" @mousedown.prevent="startResize($event, 7)"></div>
                                     </th>
-                                    <!-- 进货价 -->
                                     <th class="col-price">
                                         <div class="th-inner">
                                             <span class="th-label">进货价</span>
@@ -880,7 +1009,6 @@
                                         </div>
                                         <div class="col-resize-handle" @mousedown.prevent="startResize($event, 8)"></div>
                                     </th>
-                                    <!-- 零售价 -->
                                     <th class="col-price">
                                         <div class="th-inner">
                                             <span class="th-label">零售价</span>
@@ -890,7 +1018,6 @@
                                         </div>
                                         <div class="col-resize-handle" @mousedown.prevent="startResize($event, 9)"></div>
                                     </th>
-                                    <!-- 会员价 -->
                                     <th class="col-price">
                                         <div class="th-inner">
                                             <span class="th-label">会员价</span>
@@ -900,7 +1027,6 @@
                                         </div>
                                         <div class="col-resize-handle" @mousedown.prevent="startResize($event, 10)"></div>
                                     </th>
-                                    <!-- VIP价 -->
                                     <th class="col-price">
                                         <div class="th-inner">
                                             <span class="th-label">VIP价</span>
@@ -910,7 +1036,6 @@
                                         </div>
                                         <div class="col-resize-handle" @mousedown.prevent="startResize($event, 11)"></div>
                                     </th>
-                                    <!-- 分类 -->
                                     <th class="col-category">
                                         <div class="th-inner">
                                             <span class="th-label">分类</span>
@@ -920,7 +1045,6 @@
                                         </div>
                                         <div class="col-resize-handle" @mousedown.prevent="startResize($event, 12)"></div>
                                     </th>
-                                    <!-- 保质期 -->
                                     <th class="col-shelf">
                                         <div class="th-inner">
                                             <span class="th-label">保质期(天)</span>
@@ -930,7 +1054,6 @@
                                         </div>
                                         <div class="col-resize-handle" @mousedown.prevent="startResize($event, 13)"></div>
                                     </th>
-                                    <!-- 毛利率 -->
                                     <th class="col-profit">
                                         <div class="th-inner">
                                             <span class="th-label">毛利率</span>
@@ -975,6 +1098,7 @@
                             </div>
                         </div>
 
+                        <!-- 分页 -->
                         <div class="pagination-area">
                             <div>共 {{ pagination.total }} 条</div>
                             <div style="display:flex;align-items:center;gap:6px;">
@@ -985,10 +1109,10 @@
                                     <option :value="30" selected>30</option>
                                     <option :value="50">50</option>
                                     <option :value="80">80</option>
+                                    <option :value="100">100</option>
                                     <option :value="150">150</option>
                                     <option :value="200">200</option>
                                     <option :value="300">300</option>
-                                    <option :value="500">500</option>
                                 </select>
                                 <label style="font-size:14px;color:var(--text-muted);">条</label>
                             </div>
@@ -1188,10 +1312,23 @@
                 set: (val) => { productList.value.forEach(item => item.checked = val); }
             });
 
+            // 筛选面板状态
+            const filterPanelOpen = ref(false);
+            const filterForm = ref({
+                name: '',
+                barcode: '',
+                brand: '',
+                madeIn: '',
+                categoryId: '',
+                status: '',
+                dateFrom: '',
+                dateTo: ''
+            });
+
             // 排序状态
             const sort = ref({ field: null, order: null });
 
-            // 字段映射到后端参数（全大写，降序加下划线前缀）
+            // 字段映射到后端参数
             const sortFieldMap = {
                 name: 'NAME',
                 barcode: 'BARCODE',
@@ -1224,6 +1361,21 @@
             const lastSearchResults = ref([]);
             const searchMatchSet = computed(() => new Set(lastSearchResults.value.map(r => r.id)));
 
+            // 扁平分类列表（用于筛选下拉）
+            const flatCategoryList = computed(() => {
+                const result = [];
+                const traverse = (nodes) => {
+                    for (const node of nodes) {
+                        result.push(node);
+                        if (node.children && node.children.length) {
+                            traverse(node.children);
+                        }
+                    }
+                };
+                traverse(categoryTree.value);
+                return result;
+            });
+
             // 列拖拽状态
             const colResize = ref({
                 active: false,
@@ -1231,6 +1383,22 @@
                 startX: 0,
                 startWidth: 0
             });
+
+            // 获取选中分类及其所有后代 ID
+            function getAllDescendantIds(nodes, targetId) {
+                const result = [];
+                function traverse(node) {
+                    result.push(String(node.id));
+                    if (node.children && node.children.length) {
+                        node.children.forEach(child => traverse(child));
+                    }
+                }
+                const target = findNodeInTree(nodes, targetId);
+                if (target) {
+                    traverse(target);
+                }
+                return result;
+            }
 
             function findNodeInTree(nodes, id) {
                 for (const node of nodes) {
@@ -1371,7 +1539,6 @@
             function selectCategory(id) {
                 activeCategoryId.value = id;
                 pagination.value.current = 1;
-                // 切换分类时重置排序
                 sort.value = { field: null, order: null };
                 requestSeq++;
                 fetchProductList(requestSeq);
@@ -1386,15 +1553,58 @@
 
             function onNodeUpdated() {}
 
-            // ---------- 排序处理（三态：升序 → 降序 → 取消） ----------
+            // ---------- 筛选面板控制 ----------
+            function toggleFilterPanel() {
+                filterPanelOpen.value = !filterPanelOpen.value;
+            }
+
+            function applyFilters() {
+                // 将筛选表单数据合并到 filters
+                filters.value.keyword = filterForm.value.name || filterForm.value.barcode || '';
+                filters.value.dateFrom = filterForm.value.dateFrom;
+                filters.value.dateTo = filterForm.value.dateTo;
+                filters.value.status = filterForm.value.status;
+                // 如果有分类筛选，应用到 activeCategoryId
+                if (filterForm.value.categoryId) {
+                    activeCategoryId.value = parseInt(filterForm.value.categoryId);
+                } else if (filterForm.value.categoryId === '') {
+                    activeCategoryId.value = null;
+                }
+                pagination.value.current = 1;
+                requestSeq++;
+                fetchProductList(requestSeq);
+                // 可选：折叠面板
+                // filterPanelOpen.value = false;
+            }
+
+            function resetFilters() {
+                filterForm.value = {
+                    name: '',
+                    barcode: '',
+                    brand: '',
+                    madeIn: '',
+                    categoryId: '',
+                    status: '',
+                    dateFrom: '',
+                    dateTo: ''
+                };
+                filters.value.keyword = '';
+                filters.value.dateFrom = '';
+                filters.value.dateTo = '';
+                filters.value.status = '';
+                activeCategoryId.value = null;
+                pagination.value.current = 1;
+                requestSeq++;
+                fetchProductList(requestSeq);
+            }
+
+            // ---------- 排序处理 ----------
             function handleSort(field) {
                 if (!sortFieldMap[field]) return;
                 if (sort.value.field === field) {
-                    // 当前字段已激活
                     if (sort.value.order === 'asc') {
                         sort.value.order = 'desc';
                     } else if (sort.value.order === 'desc') {
-                        // 取消排序
                         sort.value.field = null;
                         sort.value.order = null;
                     }
@@ -1525,17 +1735,28 @@
                     const requestSize = Math.min(defaultSize, MAX_OFFSET_SIZE - offset);
 
                     let url = `${API_BASE}?offset=${offset}&size=${requestSize}`;
+
+                    // ---- 分类 CID ----
                     if (activeCategoryId.value !== null && activeCategoryId.value !== undefined) {
-                        url += `&cid=${activeCategoryId.value}`;
+                        const cids = getAllDescendantIds(categoryTree.value, activeCategoryId.value);
+                        if (cids.length > 0) {
+                            url += `&cid=${cids.join(',')}`;
+                        }
                     }
+
+                    // ---- 搜索关键词 q ----
+                    if (filters.value.keyword && filters.value.keyword.trim()) {
+                        url += `&q=${encodeURIComponent(filters.value.keyword.trim())}`;
+                    }
+
+                    // ---- 排序 ----
                     if (sort.value.field && sortFieldMap[sort.value.field]) {
                         const field = sortFieldMap[sort.value.field];
                         const order = sort.value.order === 'asc' ? '' : '_';
                         url += `&sort=${order}${field}`;
                     }
-                    if (filters.value.keyword && filters.value.keyword.trim()) {
-                        url += `&keyword=${encodeURIComponent(filters.value.keyword.trim())}`;
-                    }
+
+                    // ---- 日期过滤 ----
                     if (filters.value.dateFrom) {
                         url += `&dateFrom=${filters.value.dateFrom}`;
                     }
@@ -1545,7 +1766,7 @@
                     if (filters.value.status !== '') {
                         url += `&show=${filters.value.status}`;
                     }
-                    console.log("url:"+url)
+
                     const data = await apiFetch(url);
 
                     if (seq !== requestSeq) {
@@ -1645,12 +1866,14 @@
 
             // ---------- 工具栏事件 ----------
             const handleSearch = () => {
+                // 搜索时使用主搜索框的关键词
                 pagination.value.current = 1;
                 requestSeq++;
                 fetchProductList(requestSeq);
             };
             const handleAdvancedSearch = () => {
-                alert('高级查询功能：可在此展开更多筛选条件（日期、状态等）');
+                // 打开筛选面板
+                filterPanelOpen.value = true;
             };
             const handleAdd = () => { alert('新增商品'); };
             const handleEdit = () => {
@@ -1751,6 +1974,7 @@
                 loading,
                 errorMsg,
                 categoryTree,
+                flatCategoryList,
                 expandedSet,
                 searchKeyword,
                 onSearchInput,
@@ -1763,6 +1987,12 @@
                 selectCategory,
                 toggleExpand,
                 onNodeUpdated,
+                // 筛选面板
+                filterPanelOpen,
+                filterForm,
+                toggleFilterPanel,
+                applyFilters,
+                resetFilters
             };
         }
     }).mount('#app');

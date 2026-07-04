@@ -561,6 +561,7 @@
                             :expanded-set="expandedSet"
                             :search-match-set="searchMatchSet"
                             :highlight-id="highlightNodeId"
+                            :depth="1"
                             @toggle="toggleExpand"
                             @select="selectCategory"
                             @add-child="addChild"
@@ -747,7 +748,14 @@
     // ---------- TreeItem 组件 ----------
     const TreeItem = {
         name: 'TreeItem',
-        props: ['node', 'activeId', 'expandedSet', 'searchMatchSet', 'highlightId'],
+        props: {
+            node: Object,
+            activeId: [Number, String],
+            expandedSet: Set,
+            searchMatchSet: Set,
+            highlightId: [Number, String, null],
+            depth: { type: Number, default: 1 }
+        },
         emits: ['toggle', 'select', 'add-child', 'delete-cat', 'node-updated'],
         data() { return { loadingChildren: false }; },
         template: `
@@ -767,7 +775,7 @@
                 <span>{{ node.name.name }}</span>
               </div>
               <div class="node-actions" v-if="!isSpecialNode">
-                <i class="fas fa-plus-circle" title="添加子分类" @click.stop="$emit('add-child', node)"></i>
+                <i v-if="depth < 4" class="fas fa-plus-circle" title="添加子分类" @click.stop="$emit('add-child', node)"></i>
                 <i class="fas fa-trash" title="删除分类" @click.stop="$emit('delete-cat', node)"></i>
               </div>
             </div>
@@ -781,6 +789,7 @@
                            :expanded-set="expandedSet"
                            :search-match-set="searchMatchSet"
                            :highlight-id="highlightId"
+                           :depth="depth + 1"
                            @toggle="$emit('toggle', $event)"
                            @select="$emit('select', $event)"
                            @add-child="$emit('add-child', $event)"

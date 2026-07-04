@@ -133,8 +133,8 @@ public class PsqlBrandQuery implements BrandQuery {
 
     private Brand rebuild(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException, URISyntaxException {
         long id = rs.getLong("id");
-        if (Brand.UNDEFINED.id() == id)
-            return Brand.UNDEFINED;
+        if (Brand.UNBRANDED.id() == id)
+            return Brand.UNBRANDED;
         Name name = nameConstructor.newInstance(rs.getString("name"), rs.getString("mnemonic"), rs.getString("shortName"));
         AboutBrand about = null;
         URL homepage = rs.getString("homepage") == null ? null : URI.create(rs.getString("homepage")).toURL();

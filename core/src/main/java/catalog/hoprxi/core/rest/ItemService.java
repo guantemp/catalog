@@ -57,10 +57,7 @@ import reactor.core.publisher.Mono;
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -115,18 +112,15 @@ public final class ItemService {
     @Get("/items")
     public HttpResponse search(QueryParams params) {
         //ServiceRequestContext.current().setRequestTimeoutMillis(60_000);
-        String search = params.get("s", "");
-        String filters = params.get("filters", "");
         int offset = params.getInt("offset", OFFSET);
         int size = params.getInt("size", SIZE);
-
         String cursor = params.get("cursor", "");
         SortFieldEnum sortField = SortFieldEnum.of(params.get("sort", "_ID"));
-
+        // 解析查询 specs（key,cid,bid,filters 价格等）
+        ItemQuerySpec[] querySpecs = ItemService.parseQuerySpecs(params);
         Flux<ByteBuf> dataFlux = cursor.isBlank()
-                ? QUERY.searchAsync(ItemService.parseFilter(search, filters), offset, size, sortField)
-                : QUERY.searchAsync(ItemService.parseFilter(search, filters), size, cursor, sortField);
-
+                ? QUERY.searchAsync(querySpecs, offset, size, sortField)
+                : QUERY.searchAsync(querySpecs, size, cursor, sortField);
         // 使用 switchMap：一旦有第一个元素，就前置 headers
         Flux<HttpObject> responseStream = dataFlux
                 .map(HttpData::wrap)
@@ -147,7 +141,7 @@ public final class ItemService {
                 })
                 .switchIfEmpty(Flux.just(
                         ResponseHeaders.of(HttpStatus.NOT_FOUND),
-                        HttpData.ofUtf8(String.format("{\"Warn\":\"No items found for search keyword: %s\"}", search))
+                        HttpData.ofUtf8(String.format("{\"Warn\":\"No items found for search keyword: %s\"}", "query"))
                 ))
                 .onErrorResume(throwable -> {
                     if (throwable instanceof IllegalArgumentException) {
@@ -156,129 +150,121 @@ public final class ItemService {
                                 HttpData.ofUtf8(String.format("{\"error\":\"Invalid parameter: %s\"}", throwable.getMessage()))
                         );
                     }
-                    //log.error("Data stream error", throwable);
+                    LOGGER.error("Data stream error", throwable);
                     return Flux.just(
                             ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
                             HttpData.ofUtf8("{\"error\":\"Internal server error\"}")
                     );
                 });
         return HttpResponse.of(responseStream);
-        /* ===================== 这个也可以，不能测试除者个性能核心：拼成一个ByteBuf，但事实是全内存，关闭chunked =====================
-        Mono<ByteBuf> fullMono = dataFlux
-                .subscribeOn(VIRTUAL_THREAD)
-                .collect(
-                        PooledByteBufAllocator.DEFAULT::heapBuffer,
-                        (buffer, buf) -> {
-                            buffer.writeBytes(buf);
-                            ReferenceCountUtil.release(buf);
-                        }
-                );
-
-        // 错误处理
-        Mono<ByteBuf> safeMono = fullMono.onErrorResume(e -> {
-            String msg;
-            if (e instanceof IllegalArgumentException) {
-                msg = "Invalid parameter";
-            } else if (e instanceof NotFoundException) {
-                msg = "Data not found";
-            } else {
-                msg = "Server error";
-            }
-            byte[] errorBytes = ("{\"error\":\"%s\"}".formatted(msg.replace("\"", "\\\"")))
-                    .getBytes(StandardCharsets.UTF_8);
-            ByteBuf buf = PooledByteBufAllocator.DEFAULT.heapBuffer(errorBytes.length);
-            buf.writeBytes(errorBytes);
-            return Mono.just(buf);
-        });
-
-        // ===================== 标准API，100%可编译 =====================
-        return HttpResponse.of(
-                ResponseHeaders.builder(200)
-                        .contentType(MediaType.JSON_UTF_8)
-                        .build(),
-                Flux.from(safeMono).map(HttpData::wrap)
-        );
-         */
     }
 
-    private static ItemQuerySpec[] parseFilter(String query, String filters) {
+    private static ItemQuerySpec[] parseQuerySpecs(QueryParams params) {
         List<ItemQuerySpec> filterList = new ArrayList<>();
-        if (!query.isBlank())
-            filterList.add(new KeywordSpec(query));
-        System.out.println("filters:"+filters);
-        String[] filter = filters.split(";");//Project separation
-        for (String s : filter) {
-            String[] con = s.split(",");//Project name : Project value
-            if (con.length == 2) {
-                switch (con[0]) {
-                    case "cid", "categoryId" -> ItemService.parseCid(filterList, con[1]);
-                    case "bid", "brandId" -> ItemService.parseBid(filterList, con[1]);
-                    case "retail_price", "r_price" -> ItemService.parseRetailPrice(filterList, con[1]);
-                    case "last_receipt_price", "l_r_price" -> ItemService.parseLastReceiptPrice(filterList, con[1]);
-                    case "member_price", "m_price" -> ItemService.parseMemberPrice(filterList, con[1]);
-                    case "vip_price", "v_price" -> ItemService.parseVipPrice(filterList, con[1]);
+        Optional.ofNullable(params.get("q"))
+                .filter(s -> !s.isBlank())
+                .ifPresent(query -> filterList.add(new KeywordSpec(query)));
+        ItemService.parseIdArray(params.get("cid"))
+                .ifPresent(cids -> filterList.add(new CategorySpec(cids)));
+        parseIdArray(params.get("bid"))
+                .ifPresent(bids -> filterList.add(new BrandSpec(bids)));
+        // filters 中的条件
+        String filters = params.get("filters", "");
+        if (!filters.isBlank()) {
+            for (String condition : filters.split(";")) {
+                String[] keyValue = condition.split(MINI_SEPARATION);
+                if (keyValue.length == 2) {
+                    String key = keyValue[0].trim();
+                    String value = keyValue[1].trim();
+                    switch (key) {
+                        case "retail_price", "r_price" -> ItemService.parsePriceSpec(filterList, value, RetailPriceSpec::new);
+                        case "last_receipt_price", "l_r_price" -> ItemService.parsePriceSpec(filterList, value, LastReceiptPriceSpec::new);
+                        case "member_price", "m_price" -> ItemService.parsePriceSpec(filterList, value, MemberPriceSpec::new);
+                        case "vip_price", "v_price" -> ItemService.parsePriceSpec(filterList, value, VipPriceSpec::new);
+                        default -> { /* 未知条件忽略，可记录日志 */ }
+                    }
                 }
             }
         }
         return filterList.toArray(new ItemQuerySpec[0]);
     }
 
-    private static void parseCid(List<ItemQuerySpec> filterList, String cids) {
-        if (!cids.isBlank()) {
-            String[] ss = cids.split(MINI_SEPARATION);
-            long[] categoryIds = new long[ss.length];
-            for (int i = 0; i < ss.length; i++) {
-                categoryIds[i] = Long.parseLong(ss[i]);
+    private static Optional<long[]> parseIdArray(String value) {
+        if (value == null || value.isBlank()) {
+            return Optional.empty();
+        }
+        long[] ids = Arrays.stream(value.split(MINI_SEPARATION))
+                //.limit(10)  // 只取前 10 个
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(s -> {
+                    try {
+                        return Long.parseLong(s); // 保留 -1，不特殊处理
+                    } catch (NumberFormatException e) {
+                        LOGGER.warn("Invalid ID format: '{}', ignoring", s);
+                        return null; // 用 null 标记解析失败
+                    }
+                })
+                .filter(Objects::nonNull) // 丢弃解析失败的
+                .mapToLong(Long::longValue)
+                .toArray();
+        return ids.length > 0 ? Optional.of(ids) : Optional.empty();
+    }
+
+
+    @FunctionalInterface
+    private interface PriceSpecFactory {
+        ItemQuerySpec create(Double min, Double max); // 允许 null
+    }
+
+    // ---------- 解析价格区间（支持部分有效） ----------
+    private static void parsePriceSpec(List<ItemQuerySpec> filterList, String priceStr, PriceSpecFactory factory) {
+        if (priceStr == null || priceStr.isBlank()) {
+            return;
+        }
+        String[] parts = priceStr.split(MINI_SEPARATION, -1); // 保留空字符串
+        if (parts.length != 2) {
+            LOGGER.warn("Invalid price format (expected min,max): '{}'", priceStr);
+            return;
+        }
+        Double min = null;
+        Double max = null;
+        boolean hasValid = false;
+        // 解析 min
+        String minStr = parts[0].trim();
+        if (!minStr.isEmpty()) {
+            try {
+                min = Double.parseDouble(minStr);
+                hasValid = true;
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Invalid min price number: '{}', ignoring", minStr);
             }
-            filterList.add(new CategorySpec(categoryIds));
+        }
+        // 解析 max
+        String maxStr = parts[1].trim();
+        if (!maxStr.isEmpty()) {
+            try {
+                max = Double.parseDouble(maxStr);
+                hasValid = true;
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Invalid max price number: '{}', ignoring", maxStr);
+            }
+        }
+        // 至少有一个有效值才继续
+        if (!hasValid) {
+            LOGGER.warn("Both min and max are invalid for price condition: '{}', ignoring", priceStr);
+            return;
+        }
+
+        try {
+            filterList.add(factory.create(min, max)); // 工厂创建，可能会校验 min < max
+        } catch (IllegalArgumentException e) {
+            LOGGER.warn("Invalid price range (min={}, max={}), ignoring: {}", min, max, e.getMessage());
         }
     }
 
-    private static void parseBid(List<ItemQuerySpec> filterList, String bids) {
-        if (!bids.isBlank()) {
-            String[] ss = bids.split(MINI_SEPARATION);
-            long[] brandIds = new long[ss.length];
-            for (int i = 0; i < ss.length; i++) {
-                brandIds[i] = Long.parseLong(ss[i]);
-            }
-            filterList.add(new BrandSpec(brandIds));
-        }
-    }
-
-    private static void parseRetailPrice(List<ItemQuerySpec> filterList, String retail_price) {
-        if (!retail_price.isBlank()) {
-            String[] ss = retail_price.split(MINI_SEPARATION);
-            if (ss.length == 2) {
-                filterList.add(new RetailPriceSpec(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
-            }
-        }
-    }
-
-    private static void parseMemberPrice(List<ItemQuerySpec> filterList, String member_price) {
-        if (!member_price.isBlank()) {
-            String[] ss = member_price.split(MINI_SEPARATION);
-            if (ss.length == 2) {
-                filterList.add(new MemberPriceSpec(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
-            }
-        }
-    }
-
-    private static void parseVipPrice(List<ItemQuerySpec> filterList, String vip_price) {
-        if (!vip_price.isBlank()) {
-            String[] ss = vip_price.split(MINI_SEPARATION);
-            if (ss.length == 2) {
-                filterList.add(new VipPriceSpec(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
-            }
-        }
-    }
-
-    private static void parseLastReceiptPrice(List<ItemQuerySpec> filterList, String last_receipt_price) {
-        if (!last_receipt_price.isBlank()) {
-            String[] ss = last_receipt_price.split(MINI_SEPARATION);
-            if (ss.length == 2) {
-                filterList.add(new LastReceiptPriceSpec(Double.valueOf(ss[0]), Double.valueOf(ss[1])));
-            }
-        }
+    private static  String mapQuerySpec(ItemQuerySpec[] specs){
+        return "query";
     }
 
     @Get("/items/suggest")
@@ -329,7 +315,7 @@ public final class ItemService {
         MadeIn madeIn = MadeIn.UNKNOWN;
         GradeEnum grade = GradeEnum.QUALIFIED;
         Specification spec = Specification.UNDEFINED;
-        long brandId = Brand.UNDEFINED.id();
+        long brandId = Brand.UNBRANDED.id();
         long categoryId = Category.UNDEFINED.id();
         Barcode barcode = null;
         LastReceiptPrice lastReceiptPrice = LastReceiptPrice.ZERO_RMB_PCS;

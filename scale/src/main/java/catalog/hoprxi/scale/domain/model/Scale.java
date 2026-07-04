@@ -96,7 +96,7 @@ public abstract class Scale {
     }
 
     protected void setBrandId(long brandId) {
-        if (Brand.UNDEFINED.id() != brandId && !BrandValidatorService.isBrandExist(brandId))
+        if (Brand.UNBRANDED.id() != brandId && !BrandValidatorService.isBrandExist(brandId))
             throw new IllegalArgumentException("brandId isn't effective");
         this.brandId = brandId;
     }

@@ -193,8 +193,7 @@ public class ESItemQuery implements ItemQuery {
         Request request = new Request("GET", SEARCH_ENDPOINT);
         request.setOptions(ESUtil.requestOptions());
         request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
-
-        System.out.println(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
+        //System.out.println(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
 
         return ReactiveStream.toFluxByteBuf(request, "items", ESItemQuery.extractIdentifier(specs));
     }
@@ -223,7 +222,7 @@ public class ESItemQuery implements ItemQuery {
             generator.writeEndObject();//match_all
         } else {
             generator.writeObjectFieldStart("bool");
-            System.out.println(specs.length);
+            //System.out.println(specs.length);
             ItemQuerySpec[] filterSpecs = Arrays.stream(specs)
                     .filter(spec -> {
                         if (spec instanceof KeywordSpec) {
@@ -237,7 +236,7 @@ public class ESItemQuery implements ItemQuery {
                         return true;
                     })
                     .toArray(ItemQuerySpec[]::new);
-            System.out.println(filterSpecs.length);
+            //System.out.println(filterSpecs.length);
             // 然后直接遍历数组
             if (filterSpecs.length > 0) {
                 generator.writeArrayFieldStart("filter");

@@ -71,8 +71,8 @@ public class PsqlBrandRepository implements BrandRepository {
     private Brand rebuild(ResultSet rs) throws SQLException, IOException {
         if (rs.next()) {
             long id = rs.getLong("id");
-            if (Brand.UNDEFINED.id() == id)
-                return Brand.UNDEFINED;
+            if (Brand.UNBRANDED.id() == id)
+                return Brand.UNBRANDED;
             Name name = PsqlBrandRepository.toName(rs.getString("name"));
             AboutBrand about = PsqlBrandRepository.toAboutBrand(rs.getString("about"));
             return new Brand(id, name, about);
