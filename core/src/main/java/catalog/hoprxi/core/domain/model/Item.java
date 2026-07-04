@@ -93,15 +93,15 @@ public class Item {
     }
 
     public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, LastReceiptPrice lastReceiptPrice, RetailPrice retailPrice, MemberPrice memberPrice, VipPrice vipPrice) {
-        this(id, barcode, name, madeIn, spec, grade, lastReceiptPrice, retailPrice, memberPrice, vipPrice, Category.UNDEFINED.id(), Brand.UNBRANDED.id());
+        this(id, barcode, name, madeIn, spec, grade, lastReceiptPrice, retailPrice, memberPrice, vipPrice, Category.UNCATEGORIZED.id(), Brand.UNBRANDED.id());
     }
 
     public Item(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, RetailPrice retailPrice) {
-        this(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.ZERO_RMB_PCS, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNDEFINED.id(), Brand.UNBRANDED.id());
+        this(id, barcode, name, madeIn, spec, grade, LastReceiptPrice.ZERO_RMB_PCS, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNCATEGORIZED.id(), Brand.UNBRANDED.id());
     }
 
     private void setCategoryId(long categoryId) {
-        if (categoryId != Category.UNDEFINED.id() && !CategoryValidatorService.isCategoryExist(categoryId))
+        if (categoryId != Category.UNCATEGORIZED.id() && !CategoryValidatorService.isCategoryExist(categoryId))
             throw new IllegalArgumentException("categoryId isn't effective");
         this.categoryId = categoryId;
     }

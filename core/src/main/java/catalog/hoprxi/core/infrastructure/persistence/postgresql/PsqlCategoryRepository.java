@@ -67,7 +67,7 @@ public class PsqlCategoryRepository implements CategoryRepository {
     private static Category rebuild(ResultSet rs) throws SQLException, InvocationTargetException, InstantiationException, IllegalAccessException, IOException {
         if (rs.next()) {
             long id = rs.getLong("id");
-            if (id == Category.UNDEFINED.id()) return Category.UNDEFINED;
+            if (id == Category.UNCATEGORIZED.id()) return Category.UNCATEGORIZED;
             long parent_id = rs.getLong("parent_id");
             Name name = PsqlCategoryRepository.buildName(rs.getString("name"));
             String description = rs.getString("description");
@@ -142,8 +142,8 @@ public class PsqlCategoryRepository implements CategoryRepository {
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()) {
                 long id = rs.getLong("id");
-                if (id == Category.UNDEFINED.id()) {
-                    categoryList.add(Category.UNDEFINED);
+                if (id == Category.UNCATEGORIZED.id()) {
+                    categoryList.add(Category.UNCATEGORIZED);
                     continue;
                 }
                 long parent_id = rs.getLong("parent_id");

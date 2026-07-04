@@ -44,7 +44,7 @@ public class PsqlCategoryRepositoryTest {
 
     @BeforeClass
     public void beforeClass() throws MalformedURLException {
-        repository.save(Category.UNDEFINED);
+        repository.save(Category.UNCATEGORIZED);
         Category root = Category.root(1, new Name("商品类别", "root"), "我的测试分类");
         repository.save(root);
         //食品

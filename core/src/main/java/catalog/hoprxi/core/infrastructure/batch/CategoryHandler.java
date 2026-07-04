@@ -65,7 +65,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
     public CategoryHandler() {
         Category[] roots = root();
         if (roots.length == 0)
-            repository.save(Category.UNDEFINED);
+            repository.save(Category.UNCATEGORIZED);
         for (Category v : roots) {
             Name temp = v.name();
             if (temp.name().equals(name) || temp.shortName().equals(shortName)) {
@@ -84,15 +84,15 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         String category = itemImportEvent.map.get(ItemMapping.CATEGORY);
-        if (category == null || category.isBlank() || category.equalsIgnoreCase("undefined") || category.equalsIgnoreCase(Label.CATEGORY_UNDEFINED)) {
-            itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNDEFINED.id()));
+        if (category == null || category.isBlank() || category.equalsIgnoreCase("undefined") || category.equalsIgnoreCase(Label.UNCATEGORIZED)) {
+            itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
             return;
         }
         if (ID_PATTERN.matcher(category).matches()) {//valid category id
-            if (Category.UNDEFINED.id() == Long.parseLong(category))//UNDEFINED
+            if (Category.UNCATEGORIZED.id() == Long.parseLong(category))//UNDEFINED
                 return;
             if (!CategoryHandler.find(Long.parseLong(category)))//没有查到该id
-                itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNDEFINED.id()));
+                itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
             return;
         }
 
@@ -101,13 +101,13 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
         int position = 0;
         for (int i = ss.length - 1; i >= 0; i--) {
             long id = findIdByName(ss[i]);
-            if (id != Category.UNDEFINED.id() && i == ss.length - 1) {//最后一个就找到
+            if (id != Category.UNCATEGORIZED.id() && i == ss.length - 1) {//最后一个就找到
                 itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(id));
                 return;
             }
             //向上循环查找，找到就终止，直到最顶层那个
             position = i;
-            if (id != Category.UNDEFINED.id()) {
+            if (id != Category.UNCATEGORIZED.id()) {
                 parentId = id;
                 break;
             }
@@ -146,11 +146,11 @@ public class CategoryHandler implements EventHandler<ItemImportEvent> {
             LOGGER.error("e: ", e);
             //LOGGER.error("Can't rebuild brand with (name = {})", name, e);
         }
-        return Category.UNDEFINED.id();
+        return Category.UNCATEGORIZED.id();
     }
 
     private static boolean find(long id) {
-        if (id == Category.UNDEFINED.id())
+        if (id == Category.UNCATEGORIZED.id())
             return true;
         final String query = "select id from category where id = ?";
         try (Connection connection = PsqlUtil.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {

@@ -42,7 +42,7 @@ public class PsqlCategoryQueryTest {
 
     @BeforeClass
     public void beforeClass() throws MalformedURLException {
-        repository.save(Category.UNDEFINED);
+        repository.save(Category.UNCATEGORIZED);
         Category root = Category.root(496796322118291457l, new Name("商品分类", "root"));
         repository.save(root);
         //食品
@@ -186,7 +186,7 @@ public class PsqlCategoryQueryTest {
         repository.remove(496796322118291460l);
 
         repository.remove(496796322118291457l);
-        repository.remove(Category.UNDEFINED.id());
+        repository.remove(Category.UNCATEGORIZED.id());
     }
 
 /*

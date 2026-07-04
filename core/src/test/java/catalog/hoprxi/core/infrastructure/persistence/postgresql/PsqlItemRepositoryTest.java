@@ -66,7 +66,7 @@ public class PsqlItemRepositoryTest {
         Brand changhong = new Brand(52495569395175427L, new Name("长虹"));
         brandRepository.save(changhong);
 
-        categoryRepository.save((Category.UNDEFINED));
+        categoryRepository.save((Category.UNCATEGORIZED));
         Category root = Category.root(52495569397272599L, new Name("item测试分类", "root"));
         categoryRepository.save(root);
         Category food = new Category(52495569397272599L, 52495569397272598L, new Name("食品", "food"), "可供人类食用或饮用的物质，包括加工食品，半成品和未加工食品，不包括烟草或只作药品用的物质");
@@ -149,17 +149,17 @@ public class PsqlItemRepositoryTest {
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(3.5, currency), UnitEnum.DUI));
         retailPrice = new RetailPrice(new Price(Money.of(5.00, currency), UnitEnum.DUI));
         //memberPrice=new MemberPrice(new Price(Money.of(4.5, currency), UnitEnum.DUI));
-        Item ten = new Item(52496321492179005L, new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic("510700", "绵阳市"), new Specification("10粒缩卡装"), GradeEnum.QUALIFIED, new ShelfLife(360 * 3), lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNDEFINED.id(), changhong.id());
+        Item ten = new Item(52496321492179005L, new EAN_13("6954695180551"), new Name("长虹5号碱性电池", "长虹电池"), new Domestic("510700", "绵阳市"), new Specification("10粒缩卡装"), GradeEnum.QUALIFIED, new ShelfLife(360 * 3), lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNCATEGORIZED.id(), changhong.id());
         itemRepository.save(ten);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(2.5, currency), UnitEnum.BEN));
         retailPrice = new RetailPrice(new Price(Money.of(5, currency), UnitEnum.BEN));
-        Item twelve = new Item(52496321492179006L, new EAN_13("6925834037159"), new Name("车线本"), new Domestic("330500", "湖州市"), Specification.UNDEFINED, GradeEnum.QUALIFIED, lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNDEFINED.id(), Brand.UNBRANDED.id());
+        Item twelve = new Item(52496321492179006L, new EAN_13("6925834037159"), new Name("车线本"), new Domestic("330500", "湖州市"), Specification.UNDEFINED, GradeEnum.QUALIFIED, lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNCATEGORIZED.id(), Brand.UNBRANDED.id());
         itemRepository.save(twelve);
 
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(8.9, currency), UnitEnum.HE));
         retailPrice = new RetailPrice(new Price(Money.of(32.00, currency), UnitEnum.HE));
-        Item thirteen = new Item(52496321492179007L, new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("764", "泰国"), new Specification("10片装"), GradeEnum.QUALIFIED, new ShelfLife(360 * 3), lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNDEFINED.id(), Brand.UNBRANDED.id());
+        Item thirteen = new Item(52496321492179007L, new EAN_13("4547691239136"), new Name("冈本天然乳胶橡胶避孕套", "冈本避孕套"), new Imported("764", "泰国"), new Specification("10片装"), GradeEnum.QUALIFIED, new ShelfLife(360 * 3), lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, VipPrice.ZERO_RMB_PCS, Category.UNCATEGORIZED.id(), Brand.UNBRANDED.id());
         itemRepository.save(thirteen);
     }
 

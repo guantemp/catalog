@@ -316,7 +316,7 @@ public final class ItemService {
         GradeEnum grade = GradeEnum.QUALIFIED;
         Specification spec = Specification.UNDEFINED;
         long brandId = Brand.UNBRANDED.id();
-        long categoryId = Category.UNDEFINED.id();
+        long categoryId = Category.UNCATEGORIZED.id();
         Barcode barcode = null;
         LastReceiptPrice lastReceiptPrice = LastReceiptPrice.ZERO_RMB_PCS;
         RetailPrice retailPrice = RetailPrice.ZERO_RMB_PCS;

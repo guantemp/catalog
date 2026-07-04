@@ -90,7 +90,7 @@ public abstract class Scale {
     }
 
     protected void setCategoryId(long categoryId) {
-        if (Category.UNDEFINED.id() != categoryId && !CategoryValidatorService.isCategoryExist(categoryId))
+        if (Category.UNCATEGORIZED.id() != categoryId && !CategoryValidatorService.isCategoryExist(categoryId))
             throw new IllegalArgumentException("categoryId isn't effective");
         this.categoryId = categoryId;
     }

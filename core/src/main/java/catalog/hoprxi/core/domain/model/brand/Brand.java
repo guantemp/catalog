@@ -29,7 +29,7 @@ import java.util.StringJoiner;
  * @version 0.0.3 builder 2019-10-07
  */
 public class Brand {
-    public static final Brand UNBRANDED = new Brand(-1L, new Name(Label.BRAND_UNBRANDED, "Unbranded")) {
+    public static final Brand UNBRANDED = new Brand(-1L, new Name(Label.UNBRANDED, "Unbranded")) {
         @Override
         public void rename(Name newName) {
         }

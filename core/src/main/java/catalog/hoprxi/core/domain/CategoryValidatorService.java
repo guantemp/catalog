@@ -20,8 +20,6 @@ package catalog.hoprxi.core.domain;
 import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.category.CategoryRepository;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -48,7 +46,7 @@ public final class CategoryValidatorService {
  */
 
     public static boolean isCategoryExist(long categoryId) {
-        if (categoryId == Category.UNDEFINED.id()) return true;
+        if (categoryId == Category.UNCATEGORIZED.id()) return true;
         Category category = repository.find(categoryId);
         return category != null;
     }

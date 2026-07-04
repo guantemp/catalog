@@ -54,7 +54,7 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         String brand = itemImportEvent.map.get(ItemMapping.BRAND);
-        if (brand == null || brand.isBlank() || brand.equalsIgnoreCase("undefined") || brand.equalsIgnoreCase(Label.BRAND_UNBRANDED)) {
+        if (brand == null || brand.isBlank() || brand.equalsIgnoreCase("undefined") || brand.equalsIgnoreCase(Label.UNBRANDED)) {
             itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(Brand.UNBRANDED.id()));
             return;
         }

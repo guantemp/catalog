@@ -30,7 +30,7 @@ import java.util.StringJoiner;
  * @version 0.0.3 builder 2022-08-09
  */
 public class Category {
-    public static final Category UNDEFINED = new Category(-1L, -1L, new Name(Label.CATEGORY_UNDEFINED, "undefined"), "undefined category") {
+    public static final Category UNCATEGORIZED = new Category(-1L, -1L, new Name(Label.UNCATEGORIZED, "Uncategorized"), "undefined category") {
         @Override
         public void rename(String newName, String shortName) {
             throw new UnsupportedOperationException("");
@@ -184,7 +184,7 @@ public class Category {
     }
 
     public void moveTo(long movedId) {
-        if (movedId == UNDEFINED.id)
+        if (movedId == UNCATEGORIZED.id)
             throw new IllegalArgumentException("Undefined classes do not allow subcategories");
         if (isRoot())
             throw new UnsupportedOperationException("Root category cannot be moved");

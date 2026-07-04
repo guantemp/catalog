@@ -251,7 +251,7 @@ public class PsqlItemExport implements ItemExportService {
             cell7.setCellValue("类别");
             comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 6, 1, 10, 11));
             comment.setString(new XSSFRichTextString("类别规则：\n\n 1、查询并填入(https://hoprxi.tooo.top/catalog/core/v1/categories)ID值（白酒id:496796322118291471）\n2、使用如下格式：日化/洗涤用品/洗衣液、洗涤用品/洗衣液，不存在的类别将会新建（类如：日化、洗涤用品如不存在将被将新建在首层）,请特别注意名字（前后空格会自动删除）必须完全一致，防止建立过多的新类\n" +
-                    "3、留空或使用'undefined',‘未定义’，'" + Label.CATEGORY_UNDEFINED + "'字符的导入为缺省未分类"));
+                                                     "3、留空或使用'undefined',‘未定义’，'" + Label.UNCATEGORIZED + "'字符的导入为缺省未分类"));
             cell7.setCellComment(comment);
             // 创建列
             SXSSFCell cell8 = firstrow.createCell(7);
@@ -291,7 +291,7 @@ public class PsqlItemExport implements ItemExportService {
             cell14.setCellStyle(topStyle);
             cell14.setCellValue("品牌");
             comment = (XSSFComment) p.createCellComment(new XSSFClientAnchor(0, 0, 0, 0, 13, 1, 15, 9));
-            comment.setString(new XSSFRichTextString("品牌规则：\n\n 1、留空或使用'undefined',‘未定义’，'" + Label.BRAND_UNBRANDED + "'字符的导入为未定义品牌\n2、允许2个名称，如'好来/黑人','好来'是主名称,'黑人'是别名"));
+            comment.setString(new XSSFRichTextString("品牌规则：\n\n 1、留空或使用'undefined',‘未定义’，'" + Label.UNBRANDED + "'字符的导入为未定义品牌\n2、允许2个名称，如'好来/黑人','好来'是主名称,'黑人'是别名"));
             comment.setAuthor("guan-xianghuang");
             cell14.setCellComment(comment);
 
