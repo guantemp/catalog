@@ -148,12 +148,13 @@ public class FileUploadService {
     @Post("/uploads")
     @Consumes("multipart/form-data")
     public HttpResponse upload(ServiceRequestContext ctx,
-                               @Param("files") MultipartFile[] multipartFiles,
+                               @Param("files") @Nullable List<MultipartFile> multipartFiles,
                                @Param(value = "rename") @Nullable Boolean renameParam,
                                @Param(value = "separateByDate") @Nullable Boolean separateByDateParam,
-                               @Param(value = "directory") @Nullable String directoryParam) throws IOException {
-        // 1. 校验文件数组
-        if (multipartFiles == null || multipartFiles.length == 0) {
+                               @Param(value = "directory") @Nullable String directoryParam) {
+
+        // 1. 校验文件列表
+        if (multipartFiles == null || multipartFiles.isEmpty()) {
             return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
                     "{\"code\":400,\"message\":\"请选择要上传的文件\"}");
         }
@@ -161,7 +162,7 @@ public class FileUploadService {
         boolean rename = (renameParam != null) ? renameParam : true;
         boolean separateByDate = (separateByDateParam != null) ? separateByDateParam : true;
 
-        // 2. 预构建基础路径（共享）
+        // 2. 构建基础路径
         String date = separateByDate ? LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : "";
         Path basePath = Paths.get(UPLOAD_DIRECTORIES);
         if (directoryParam != null && !directoryParam.trim().isEmpty()) {
@@ -176,25 +177,24 @@ public class FileUploadService {
             basePath = basePath.resolve(date);
         }
 
-        // 3. 获取协议和主机（仅一次）
+        // 3. 获取协议和主机
         String scheme = ctx.request().headers().get("X-Forwarded-Proto");
         if (scheme == null || scheme.isEmpty()) {
             scheme = ctx.sessionProtocol().isTls() ? "https" : "http";
         }
         String host = ctx.request().authority();
 
-        // 4. 结果收集器
         List<Map<String, Object>> results = new ArrayList<>();
-        int successCount = 0;
-        int failCount = 0;
+        int successCount = 0, failCount = 0;
 
-        // 5. 逐个处理文件
+        // 4. 逐个处理文件
         for (MultipartFile multipartFile : multipartFiles) {
             Map<String, Object> result = new LinkedHashMap<>();
-            result.put("filename", multipartFile.filename());
+            String originalFilename = multipartFile.filename();
+            result.put("filename", originalFilename);
 
-            // 跳过空文件，视为失败
-            if (multipartFile.file().length() == 0) {
+            // 检查文件是否为空
+            if (multipartFile.file() == null || multipartFile.file().length() == 0) {
                 result.put("status", "failed");
                 result.put("error", "文件为空");
                 results.add(result);
@@ -202,19 +202,27 @@ public class FileUploadService {
                 continue;
             }
 
+            // ★ 关键：文件格式验证
+            if (!validFormat(multipartFile.file())) {
+                result.put("status", "failed");
+                result.put("error", "不支持的文件格式，允许的格式：JPEG, PNG, GIF, PDF, DOC, DOCX, BMP, WEBP, ICO, TIFF");
+                results.add(result);
+                failCount++;
+                continue;
+            }
+
             try {
                 // 处理文件名
-                String filename = Paths.get(multipartFile.filename()).getFileName().toString();
+                String filename = Paths.get(originalFilename).getFileName().toString();
                 if (rename) {
                     String suffix = "";
-                    int dotIndex = filename.lastIndexOf(".");
+                    int dotIndex = filename.lastIndexOf('.');
                     if (dotIndex > 0) {
                         suffix = filename.substring(dotIndex);
                     }
                     filename = UUID.randomUUID().toString().replace("-", "") + suffix;
                 }
 
-                // 目标路径
                 Path target = basePath.resolve(filename);
                 Files.createDirectories(target.getParent());
                 Files.move(multipartFile.file().toPath(), target);
@@ -244,18 +252,18 @@ public class FileUploadService {
                 result.put("error", "未知错误: " + e.getMessage());
                 failCount++;
             }
-
             results.add(result);
         }
+
+        // 5. 构建 JSON 响应
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (JsonGenerator gen = JSON_FACTORY.createGenerator(baos)) {
-            gen.writeStartObject();                       // {
-            gen.writeNumberField("code", 200);            // "code":200
+            gen.writeStartObject();
+            gen.writeNumberField("code", 200);
             gen.writeStringField("message", "上传完成，成功 " + successCount + " 个，失败 " + failCount + " 个");
-            gen.writeArrayFieldStart("results");          // "results":[
-
+            gen.writeArrayFieldStart("results");
             for (Map<String, Object> res : results) {
-                gen.writeStartObject();                   // {
+                gen.writeStartObject();
                 gen.writeStringField("filename", res.get("filename").toString());
                 gen.writeStringField("status", res.get("status").toString());
                 if (res.containsKey("url")) {
@@ -264,14 +272,12 @@ public class FileUploadService {
                 if (res.containsKey("error")) {
                     gen.writeStringField("error", res.get("error").toString());
                 }
-                gen.writeEndObject();                     // }
+                gen.writeEndObject();
             }
-
-            gen.writeEndArray();                          // ]
-            gen.writeEndObject();                         // }
-            gen.flush();                                  // 确保所有数据写入流
+            gen.writeEndArray();
+            gen.writeEndObject();
+            gen.flush();
         } catch (IOException e) {
-            // 处理 JSON 生成异常（实际上极少发生，且 baos 是内存流，但需捕获）
             LOGGER.error("生成响应 JSON 失败", e);
             return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
                     "{\"code\":500,\"message\":\"响应生成失败\"}");
@@ -279,6 +285,7 @@ public class FileUploadService {
 
         return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, baos.toString(StandardCharsets.UTF_8));
     }
+
 
     private static boolean validFormat(File file) {
         String[] heads = new String[]{"FFD8FF",      // JPEG

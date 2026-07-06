@@ -232,6 +232,162 @@ public enum UnitEnum {
         public String toString() {
             return Label.UNIT_LIANG;
         }
+    },
+    JIA {
+        @Override
+        public String toString() {
+            return Label.UNIT_JIA;
+        }
+    },
+    ZHA {
+        @Override
+        public String toString() {
+            return Label.UNIT_ZHA;
+        }
+    },
+    SHU {
+        @Override
+        public String toString() {
+            return Label.UNIT_SHU;
+        }
+    },
+    FU_PAIR {
+        @Override
+        public String toString() {
+            return Label.UNIT_FU_PAIR;
+        }
+    },
+    DING {
+        @Override
+        public String toString() {
+            return Label.UNIT_DING;
+        }
+    },
+    PI_CLOTH {
+        @Override
+        public String toString() {
+            return Label.UNIT_PI_CLOTH;
+        }
+    },
+    TOU {
+        @Override
+        public String toString() {
+            return Label.UNIT_TOU;
+        }
+    },
+    WEI {
+        @Override
+        public String toString() {
+            return Label.UNIT_WEI;
+        }
+    },
+    KE_TREE {
+        @Override
+        public String toString() {
+            return Label.UNIT_KE_TREE;
+        }
+    },
+    ZHU_PLANT {
+        @Override
+        public String toString() {
+            return Label.UNIT_ZHU_PLANT;
+        }
+    },
+    DUO {
+        @Override
+        public String toString() {
+            return Label.UNIT_DUO;
+        }
+    },
+    KE_PARTICLE {
+        @Override
+        public String toString() {
+            return Label.UNIT_KE_PARTICLE;
+        }
+    },
+    DUAN {
+        @Override
+        public String toString() {
+            return Label.UNIT_DUAN;
+        }
+    },
+    JIE {
+        @Override
+        public String toString() {
+            return Label.UNIT_JIE;
+        }
+    },
+    CENG {
+        @Override
+        public String toString() {
+            return Label.UNIT_CENG;
+        }
+    },
+    ZUO {
+        @Override
+        public String toString() {
+            return Label.UNIT_ZUO;
+        }
+    },
+    DONG {
+        @Override
+        public String toString() {
+            return Label.UNIT_DONG;
+        }
+    },
+    ZHUANG {
+        @Override
+        public String toString() {
+            return Label.UNIT_ZHUANG;
+        }
+    },
+    JIAN_ROOM {
+        @Override
+        public String toString() {
+            return Label.UNIT_JIAN_ROOM;
+        }
+    },
+    SUO {
+        @Override
+        public String toString() {
+            return Label.UNIT_SUO;
+        }
+    },
+    JIA_HOME {
+        @Override
+        public String toString() {
+            return Label.UNIT_JIA_HOME;
+        }
+    },
+    SOU {
+        @Override
+        public String toString() {
+            return Label.UNIT_SOU;
+        }
+    },
+    BU {
+        @Override
+        public String toString() {
+            return Label.UNIT_BU;
+        }
+    },
+    LIE {
+        @Override
+        public String toString() {
+            return Label.UNIT_LIE;
+        }
+    },
+    ZHOU {
+        @Override
+        public String toString() {
+            return Label.UNIT_ZHOU;
+        }
+    },
+    FU_SHEET {
+        @Override
+        public String toString() {
+            return Label.UNIT_FU_SHEET;
+        }
     };
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemRepository.class);

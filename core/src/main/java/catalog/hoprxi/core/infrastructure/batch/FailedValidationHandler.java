@@ -27,17 +27,21 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 0.0.1 builder 2023-05-10
  */
 public class FailedValidationHandler implements EventHandler<ItemImportEvent> {
-    private static AtomicInteger number = new AtomicInteger(0);
+    private static final AtomicInteger number = new AtomicInteger(0);
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        switch (itemImportEvent.verify) {
-            case BARCODE_EXIST:
-            case BARCODE_REPEAT:
-            case BARCODE_CHECK_SUM_ERROR:
-                number.incrementAndGet();
-                System.out.println(itemImportEvent.verify + ":" + itemImportEvent.map.get(ItemMapping.BARCODE));
-                break;
+        if (itemImportEvent.hasWrong()) {
+            for (Verify verify : itemImportEvent.wrong){
+                switch (verify) {
+                    case BARCODE_EXIST:
+                    case BARCODE_REPEAT:
+                    case BARCODE_CHECK_SUM_ERROR:
+                        number.incrementAndGet();
+                        System.out.println(verify + ":" + itemImportEvent.map.get(ItemMapping.BARCODE));
+                        break;
+                }
+            }
         }
         if (itemImportEvent.map.get(ItemMapping.LAST_ROW) != null) {
             System.out.println("Fail:" + number);

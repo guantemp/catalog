@@ -62,15 +62,33 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
         EnumMap<ItemMapping, String> map = itemImportEvent.map;
-        if (itemImportEvent.verify == Verify.OK) {
-            StringJoiner joiner = new StringJoiner(",", "(", ")");
-            joiner.add(map.get(ItemMapping.ID)).add(map.get(ItemMapping.NAME)).add(map.get(ItemMapping.BARCODE)).add(map.get(ItemMapping.CATEGORY))
-                    .add(map.get(ItemMapping.BRAND)).add(map.get(ItemMapping.GRADE)).add(map.get(ItemMapping.MADE_IN)).add(map.get(ItemMapping.SPEC))
-                    .add(map.get(ItemMapping.SHELF_LIFE)).add(map.get(ItemMapping.LAST_RECEIPT_PRICE)).add(map.get(ItemMapping.RETAIL_PRICE))
-                    .add(map.get(ItemMapping.MEMBER_PRICE)).add(map.get(ItemMapping.VIP_PRICE)).add(map.get(ItemMapping.SHOW));
-            //System.out.println(number.incrementAndGet());
-            ringBuffer.publishEvent(TRANSLATOR, joiner.toString());
+
+        // 1. 如果前面（如校验和错误、后续重复）已经报错了，直接跳过组装 SQL
+        if (itemImportEvent.hasWrong()) {
+            // 注意：如果有错，也要判断是不是最后一行，如果是，依然要发 LAST_ROW 触发关闭
+            if (map.get(ItemMapping.LAST_ROW) != null) {
+                ringBuffer.publishEvent(TRANSLATOR, "LAST_ROW");
+                executeDisruptor.shutdown();
+            }
+            return;
         }
+        // 2. 【全局清算】：检查当前条码是否在“重复黑名单”里
+        // 注意：此时 map 中的 barcode 带有单引号，需要去掉再比对
+        String cleanBarcode = map.get(ItemMapping.BARCODE).replace("'", "");
+        if (BarcodeHandler.REPEAT_BARCODE_BLACKLIST.contains(cleanBarcode)) {
+            // 说明它是第一条，但后面有重复的！在这里把它也变成错误！
+            itemImportEvent.addWrong(Verify.BARCODE_REPEAT);
+            return; // 不组装 SQL
+        }
+
+        StringJoiner joiner = new StringJoiner(",", "(", ")");
+        joiner.add(map.get(ItemMapping.ID)).add(map.get(ItemMapping.NAME)).add(map.get(ItemMapping.BARCODE)).add(map.get(ItemMapping.CATEGORY))
+                .add(map.get(ItemMapping.BRAND)).add(map.get(ItemMapping.GRADE)).add(map.get(ItemMapping.MADE_IN)).add(map.get(ItemMapping.SPEC))
+                .add(map.get(ItemMapping.SHELF_LIFE)).add(map.get(ItemMapping.LAST_RECEIPT_PRICE)).add(map.get(ItemMapping.RETAIL_PRICE))
+                .add(map.get(ItemMapping.MEMBER_PRICE)).add(map.get(ItemMapping.VIP_PRICE)).add(map.get(ItemMapping.SHOW));
+        //System.out.println(number.incrementAndGet());
+        ringBuffer.publishEvent(TRANSLATOR, joiner.toString());
+
         if (map.get(ItemMapping.LAST_ROW) != null) {//最后一行
             ringBuffer.publishEvent(TRANSLATOR, "LAST_ROW");
             executeDisruptor.shutdown();

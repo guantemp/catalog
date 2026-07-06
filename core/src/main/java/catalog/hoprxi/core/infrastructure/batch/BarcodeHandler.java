@@ -29,8 +29,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /***
@@ -39,7 +39,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 0.0.1 builder 2023-05-08
  */
 public class BarcodeHandler implements EventHandler<ItemImportEvent> {
-    private static final Map<String, Barcode> BARCODE_CACHE = new HashMap<>(2480);
+    private static final Set<String> BARCODE_CACHE = ConcurrentHashMap.newKeySet(2480);
+    // 2. 记录所有发生过重复的条码（黑名单）
+    static final Set<String> REPEAT_BARCODE_BLACKLIST = ConcurrentHashMap.newKeySet();
     private static final AtomicInteger START;
     private static final String PREFIX;
     private static final String BARCODE_TYPE;
@@ -52,18 +54,32 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
     }
 
     @Override
-    public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
-        String barcode = itemImportEvent.map.get(ItemMapping.BARCODE);
-        itemImportEvent.verify = Verify.OK;
-        if (barcode == null || barcode.isBlank()) {
-            switch (BARCODE_TYPE) {    //根据设置规则生成店内码
-                case "ean_8" ->
-                        itemImportEvent.map.put(ItemMapping.BARCODE, BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString());
-                case "ean_13" ->
-                        itemImportEvent.map.put(ItemMapping.BARCODE, BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString());
+    public void onEvent(ItemImportEvent event, long l, boolean b) {
+        String barcode = event.map.get(ItemMapping.BARCODE);
+        if (barcode == null || barcode.isBlank()) {//根据设置规则生成店内码
+            if (BARCODE_TYPE.equals("ean_13")) {
+                barcode = BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString();
+                event.map.put(ItemMapping.BARCODE, barcode);
+            } else {
+                barcode = BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString();
+                event.map.put(ItemMapping.BARCODE, barcode);
             }
+            if (!BARCODE_CACHE.add(barcode)) {
+                event.addWrong(Verify.BARCODE_REPEAT);
+                REPEAT_BARCODE_BLACKLIST.add(barcode);
+                return;
+            }
+            // 3. 【新增】数据库级防重（防止生成的条码与数据库历史数据冲突）
+            if (BarcodeHandler.find(barcode)) {
+                event.addWrong(Verify.BARCODE_EXIST);
+                REPEAT_BARCODE_BLACKLIST.add(barcode);
+                return;
+            }
+            // 生成成功且无重复，加上单引号放入 map
+            event.map.put(ItemMapping.BARCODE, "'" + barcode + "'");
             return;
         }
+        //检测正确吗？没有校验码的计算校验码
         Barcode bar;
         try {
             bar = BarcodeGenerateServices.createBarcode(barcode);
@@ -71,23 +87,26 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
             try {//缺少效验和的计算生成
                 bar = BarcodeGenerateServices.createBarcodeCompleteChecksum(barcode);
             } catch (IllegalArgumentException f) {
-                itemImportEvent.verify = Verify.BARCODE_CHECK_SUM_ERROR;
+                event.addWrong(Verify.BARCODE_CHECK_SUM_ERROR);
                 return;
             }
         }
-
-        if (BARCODE_CACHE.containsValue(bar)) {
-            itemImportEvent.verify = Verify.BARCODE_REPEAT;
-            return;
-        }
-        BARCODE_CACHE.put(barcode, bar);
-
-        if (BarcodeHandler.find(bar.toPlanString())) {
-            itemImportEvent.verify = Verify.BARCODE_EXIST;
+        // 原始数据中是否有重复barcode,有可能已经被提交到数据库，有这能是统一批次还未提交
+        barcode = bar.toPlanString();
+        // 使用 add() 的返回值进行原子性的重复判断，彻底解决并发漏洞
+        if (!BARCODE_CACHE.add(barcode)) {
+            event.addWrong(Verify.BARCODE_REPEAT);
+            REPEAT_BARCODE_BLACKLIST.add(barcode);
             return;
         }
 
-        itemImportEvent.map.put(ItemMapping.BARCODE, "'" + bar.toPlanString() + "'");
+        if (BarcodeHandler.find(barcode)) {
+            event.addWrong(Verify.BARCODE_EXIST);
+            REPEAT_BARCODE_BLACKLIST.add(barcode);
+            return;
+        }
+//加单引号是因为barcode再psql中设置为varchar(14)
+        event.map.put(ItemMapping.BARCODE, "'" + barcode + "'");
         //System.out.println("barcode:"+itemImportEvent.map.get(Corresponding.BARCODE));
     }
 

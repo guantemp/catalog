@@ -105,7 +105,7 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
         EnumMap<ItemMapping, String> map = itemImportEvent.map;
-        if (itemImportEvent.verify == Verify.OK) {
+        if (!itemImportEvent.hasWrong()) {
             String barcode = map.get(ItemMapping.BARCODE);
             barcode = barcode.substring(1, barcode.length() - 1);
             File file = new File("F:\\developer\\catalog\\barcode\\" + barcode + ".jpg");

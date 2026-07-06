@@ -19,6 +19,7 @@ package catalog.hoprxi.core.infrastructure.batch;
 import catalog.hoprxi.core.application.batch.ItemMapping;
 
 import java.util.EnumMap;
+import java.util.EnumSet;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -27,7 +28,15 @@ import java.util.EnumMap;
  */
 public class ItemImportEvent {
     EnumMap<ItemMapping, String> map;
-    Verify verify = Verify.OK;
+    EnumSet<Verify> wrong = EnumSet.noneOf(Verify.class);  // 初始无错误
+
+    public void addWrong(Verify error) {
+        wrong.add(error);
+    }
+
+    public boolean hasWrong() {
+        return !wrong.isEmpty();
+    }
 
     public void setMap(EnumMap<ItemMapping, String> map) {
         this.map = map;

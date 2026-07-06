@@ -94,10 +94,12 @@
             <artifactId>HikariCP</artifactId>
             <version>4.0.3</version>
         </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/com.linecorp.armeria/armeria -->
         <dependency>
             <groupId>com.linecorp.armeria</groupId>
             <artifactId>armeria</artifactId>
-            <version>1.32.6</version>
+            <version>1.40.0</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
