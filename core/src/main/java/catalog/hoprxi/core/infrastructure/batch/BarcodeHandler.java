@@ -22,8 +22,11 @@ import catalog.hoprxi.core.domain.model.barcode.BarcodeGenerateServices;
 import catalog.hoprxi.core.domain.model.barcode.InvalidBarcodeException;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.WorkHandler;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -38,13 +41,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-05-08
  */
-public class BarcodeHandler implements EventHandler<ItemImportEvent> {
+public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandler<ItemImportEvent> {
     private static final Set<String> BARCODE_CACHE = ConcurrentHashMap.newKeySet(2480);
     // 2. 记录所有发生过重复的条码（黑名单）
     static final Set<String> REPEAT_BARCODE_BLACKLIST = ConcurrentHashMap.newKeySet();
     private static final AtomicInteger START;
     private static final String PREFIX;
     private static final String BARCODE_TYPE;
+    private static final Logger LOGGER = LoggerFactory.getLogger(BrandHandler.class);
 
     static {
         Config config = ConfigFactory.load("import");
@@ -54,28 +58,43 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
     }
 
     @Override
+    public void onEvent(ItemImportEvent event) throws Exception {
+        this.onEvent(event, 0, false);
+    }
+
+    @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) {
         String barcode = event.map.get(ItemMapping.BARCODE);
         if (barcode == null || barcode.isBlank()) {//根据设置规则生成店内码
             if (BARCODE_TYPE.equals("ean_13")) {
                 barcode = BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString();
-                event.map.put(ItemMapping.BARCODE, barcode);
             } else {
                 barcode = BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString();
-                event.map.put(ItemMapping.BARCODE, barcode);
             }
-            if (!BARCODE_CACHE.add(barcode)) {
+            // 【快速失败】先查缓存，如果命中说明本批次已存在（或已标记存在）
+            if (BARCODE_CACHE.contains(barcode)) {
                 event.addWrong(Verify.BARCODE_REPEAT);
                 REPEAT_BARCODE_BLACKLIST.add(barcode);
                 return;
             }
-            // 3. 【新增】数据库级防重（防止生成的条码与数据库历史数据冲突）
-            if (BarcodeHandler.find(barcode)) {
+
+            // 缓存未命中，查数据库
+            if (BarcodeHandler.isExist(barcode)) {
+                // 数据库存在，补入缓存（便于后续快速命中）
+                BARCODE_CACHE.add(barcode);
                 event.addWrong(Verify.BARCODE_EXIST);
                 REPEAT_BARCODE_BLACKLIST.add(barcode);
                 return;
             }
-            // 生成成功且无重复，加上单引号放入 map
+
+            // 数据库不存在，尝试原子性放入缓存
+            if (!BARCODE_CACHE.add(barcode)) {
+                // 其他线程并发插入了相同条码（极少发生，因为刚查过库）
+                event.addWrong(Verify.BARCODE_REPEAT);
+                REPEAT_BARCODE_BLACKLIST.add(barcode);
+                return;
+            }
+            // 生成成功且无重复，加上单引号放入 map,放入cache
             event.map.put(ItemMapping.BARCODE, "'" + barcode + "'");
             return;
         }
@@ -93,15 +112,27 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
         }
         // 原始数据中是否有重复barcode,有可能已经被提交到数据库，有这能是统一批次还未提交
         barcode = bar.toPlanString();
-        // 使用 add() 的返回值进行原子性的重复判断，彻底解决并发漏洞
-        if (!BARCODE_CACHE.add(barcode)) {
+
+        // 【快速失败】先查缓存，如果命中说明本批次已存在（或已标记存在）
+        if (BARCODE_CACHE.contains(barcode)) {
             event.addWrong(Verify.BARCODE_REPEAT);
             REPEAT_BARCODE_BLACKLIST.add(barcode);
             return;
         }
 
-        if (BarcodeHandler.find(barcode)) {
+        // 缓存未命中，查数据库
+        if (BarcodeHandler.isExist(barcode)) {
+            // 数据库存在，补入缓存（便于后续快速命中）
+            BARCODE_CACHE.add(barcode);
             event.addWrong(Verify.BARCODE_EXIST);
+            REPEAT_BARCODE_BLACKLIST.add(barcode);
+            return;
+        }
+
+        // 数据库不存在，尝试原子性放入缓存
+        if (!BARCODE_CACHE.add(barcode)) {
+            // 其他线程并发插入了相同条码（极少发生，因为刚查过库）
+            event.addWrong(Verify.BARCODE_REPEAT);
             REPEAT_BARCODE_BLACKLIST.add(barcode);
             return;
         }
@@ -110,18 +141,16 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent> {
         //System.out.println("barcode:"+itemImportEvent.map.get(Corresponding.BARCODE));
     }
 
-    private static boolean find(String barcode) {
+    private static boolean isExist(String barcode) {
         final String query = "select id from item where barcode = ?";
         try (Connection connection = PsqlUtil.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setString(1, barcode);
             try (ResultSet rs = preparedStatement.executeQuery()) {
-                if (rs.next())
-                    return true;
+                return rs.next();
             }
         } catch (SQLException e) {
-            // log.error("e: ", e);
-            //LOGGER.error("Can't rebuild brand with (name = {})", name, e);
+            LOGGER.error("Failed to check barcode", e);
+            return true; // 保守策略，认为已存在，阻止插入
         }
-        return false;
     }
 }

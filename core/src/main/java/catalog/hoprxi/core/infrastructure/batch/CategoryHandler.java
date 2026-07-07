@@ -24,6 +24,7 @@ import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRepository;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.WorkHandler;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
@@ -44,143 +45,144 @@ import java.util.regex.Pattern;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-05-08
  */
-public class CategoryHandler implements EventHandler<ItemImportEvent> {
+public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandler<ItemImportEvent> {
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{1,19}$");
-    private static volatile long family_id = 0L;
-    private static final String name;
-    private static final String shortName;
+    private static final long FAMILY_ID;
+    private static final String NAME;
+    private static final String SHORTNAME;
     private static final String DELIMITER;
     private static final Logger LOGGER = LoggerFactory.getLogger(CategoryHandler.class);
-    private final CategoryRepository repository = new PsqlCategoryRepository();
+    private static final CategoryRepository REPOSITORY = new PsqlCategoryRepository();
     private static final Map<String, Long> CATEGORY_CACHE = new ConcurrentHashMap<>(1024);
 
     static {
         Config config = ConfigFactory.load("import");
         config = config.getConfig("category");
         DELIMITER = config.hasPath("delimiter") ? config.getString("delimiter") : "/";
-        name = config.hasPath("name") ? config.getString("name") : "商品分类";
-        shortName = config.hasPath("shortName") ? config.getString("shortName") : "root of catalog category";
-    }
-
-    public CategoryHandler() {
+        NAME = config.hasPath("name") ? config.getString("name") : "商品分类";
+        SHORTNAME = config.hasPath("shortName") ? config.getString("shortName") : "root of catalog category";
         Category[] roots = CategoryHandler.root();
-        if (roots.length == 0)
-            repository.save(Category.UNCATEGORIZED);
-        //根据分类名称-》找到 family_id
+        long id = 0L;
         for (Category v : roots) {
             Name temp = v.name();
-            if (name.equals(temp.name()) || shortName.equals(temp.shortName())) {
-                family_id = v.id();
+            if (NAME.equals(temp.name()) || SHORTNAME.equals(temp.shortName())) {
+                id = v.id();
                 break;
             }
         }
-        //还没有根，需要建一个
-        if (family_id == 0L) {
-            long rootId = repository.nextIdentity();
-            Category root = Category.root(rootId, new Name(name, shortName));
-            repository.save(root);
-            family_id = rootId;
+        if (id == 0L) {
+            id = REPOSITORY.nextIdentity();
+            Category root = Category.root(id, new Name(NAME, SHORTNAME));
+            REPOSITORY.save(root);
         }
+        FAMILY_ID = id;
     }
 
     @Override
-    public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        String category = itemImportEvent.map.get(ItemMapping.CATEGORY);
+    public void onEvent(ItemImportEvent event) throws Exception {
+        this.onEvent(event, 0, false);
+    }
+
+
+    @Override
+    public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        String category = event.map.get(ItemMapping.CATEGORY);
         if (category == null || category.isBlank()
             || category.equalsIgnoreCase(Category.UNCATEGORIZED.name().name())
             || category.equalsIgnoreCase(Category.UNCATEGORIZED.name().shortName())
             || category.equalsIgnoreCase(Label.UNCATEGORIZED)) {
-            itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
+            event.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
             return;
         }
         if (ID_PATTERN.matcher(category).matches()) {//valid category id
             if (Category.UNCATEGORIZED.id() == Long.parseLong(category))//UNDEFINED
                 return;
-            if (!CategoryHandler.find(Long.parseLong(category)))//是id值的形式，但是数据库不存在该id
-                itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
+            if (!CategoryHandler.isdExists(Long.parseLong(category)))//是id值的形式，但是数据库不存在该id
+                event.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
             return;
         }
 
-        String[] ss = category.split(DELIMITER);
-        long parentId = family_id;
-        int position = 0;
-        for (int i = ss.length - 1; i >= 0; i--) {
-            long id = CategoryHandler.findIdByName(ss[i]);
-            //最后一个在数据库找到了，a/b/c/d即d找到id了
-            if (id != Category.UNCATEGORIZED.id() && i == ss.length - 1) {
-                itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(id));
-                return;
-            }
-            //向上循环查找，找到就终止，直到最顶层那个
-            position = i;
-            if (id != Category.UNCATEGORIZED.id()) {
-                parentId = id;
-                break;
-            }
+        // ---------- 处理路径形式，例如 "电子/手机/苹果" ----------
+        String[] nodes = category.split(DELIMITER);
+        if (nodes.length == 0) {
+            event.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
+            return;
         }
-        for (int i = position + 1, j = ss.length; i < j; i++) {
-            String nodeName = ss[i];
+        long parentId = FAMILY_ID; // 从根开始
+        int i = 0;
+        // 逐级向下查找，直到第一个不存在的节点
+        for (; i < nodes.length; i++) {
+            String nodeName = nodes[i];
+            long id = CategoryHandler.findIdByParentAndName(parentId, nodeName);
+            if (id == Long.MIN_VALUE) {
+                break; // 该节点缺失，从这一级开始创建
+            }
+            parentId = id; // 继续向下
+        }
 
-            // 1. 创建前再次检查缓存，防止多线程并发创建同名父节点
-            Long cachedId = CATEGORY_CACHE.get(nodeName);
-            if (cachedId != null) {
-                parentId = cachedId;
-                continue;
-            }
-            Category temp = new Category(parentId, repository.nextIdentity(), nodeName);
-            repository.save(temp);
-            CATEGORY_CACHE.put(ss[i], temp.id());
-            parentId = temp.id();
+        // 从缺失的节点开始，依次创建
+        for (int j = i; j < nodes.length; j++) {
+            String nodeName = nodes[j];
+            long finalParentId = parentId;
+            String cacheKey = finalParentId + "_" + nodeName;
+            // 使用 computeIfAbsent 保证多线程下只创建一次
+            parentId = CATEGORY_CACHE.computeIfAbsent(cacheKey, k -> {
+                long newId = REPOSITORY.nextIdentity();
+                Category temp = new Category(finalParentId, newId, nodeName);
+                REPOSITORY.save(temp);
+                return newId;
+            });
         }
-        //最后一个parentId就是自己的id,不再循环了
-        itemImportEvent.map.put(ItemMapping.CATEGORY, String.valueOf(parentId));
+
+        // 最终 parentId 就是最后一级（叶子节点）的 ID
+        event.map.put(ItemMapping.CATEGORY, String.valueOf(parentId));
         //System.out.println("category:" +itemImportEvent.map.get(Corresponding.CATEGORY));
     }
 
-    private static long findIdByName(String nodeName) {
-        Long cachedId = CATEGORY_CACHE.get(nodeName);
-        if (cachedId != null) {
-            return cachedId;
+    private static long findIdByParentAndName(long parentId, String nodeName) {
+        String cacheKey = parentId + "_" + nodeName;
+        Long cached = CATEGORY_CACHE.get(cacheKey);
+        if (cached != null) {
+            return cached;
         }
-        final String query = """
+
+        String query = """
                 SELECT id FROM category
-                WHERE family_id = ?
-                 AND (name::jsonb->>'name' = ? OR name::jsonb->>'shortName' = ?)
-                ORDER BY (name::jsonb->>'name' = ?) DESC
-                LIMIT 1"""; // 找到第一个匹配项立即返回，减少扫描
-        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement ps = connection.prepareStatement(query)) {
-            ps.setLong(1, family_id);
+                WHERE parent_id = ?
+                  AND (name::jsonb->>'name' = ? OR name::jsonb->>'shortName' = ?)
+                LIMIT 1
+                """;
+        try (Connection conn = PsqlUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setLong(1, parentId);
             ps.setString(2, nodeName);
             ps.setString(3, nodeName);
-            ps.setString(4, nodeName);     // 参数 4 (对应 ORDER BY)
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    long id = rs.getLong("id");
-                    CATEGORY_CACHE.put(nodeName, id);
+                    long id = rs.getLong(1);
+                    CATEGORY_CACHE.put(cacheKey, id);
                     return id;
                 }
             }
         } catch (SQLException e) {
-            LOGGER.error("e: ", e);
-            //LOGGER.error("Can't rebuild brand with (name = {})", name, e);
+            LOGGER.error("Failed to find category by parentId={}, nodeName={}", parentId, nodeName, e);
         }
-        return Category.UNCATEGORIZED.id();
+        return Long.MIN_VALUE;
     }
 
-    private static boolean find(long id) {
-        if (id == Category.UNCATEGORIZED.id())
-            return true;
-        final String query = "select id from category where id = ?";
-        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setLong(1, id);
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                if (rs.next())
-                    return true;
+    private static boolean isdExists(long id) {
+        if (id == Category.UNCATEGORIZED.id()) return true;
+        String query = "SELECT 1 FROM category WHERE id = ?";
+        try (Connection conn = PsqlUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            LOGGER.error("Failed to check existence of category id={}", id, e);
+            return false;
         }
-        return false;
     }
 
     private static Category[] root() {

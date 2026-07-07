@@ -19,6 +19,7 @@ package catalog.hoprxi.core.infrastructure.batch;
 import catalog.hoprxi.core.application.batch.ItemMapping;
 import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.WorkHandler;
 import salt.hoprxi.id.LongId;
 
 import java.sql.Connection;
@@ -32,7 +33,7 @@ import java.util.regex.Pattern;
  * @since JDK21
  * @version 0.0.2 builder 2026-07-05
  */
-public class IdHandler implements EventHandler<ItemImportEvent> {
+public class IdHandler implements EventHandler<ItemImportEvent>, WorkHandler<ItemImportEvent> {
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{7,19}$");
 
     @Override
@@ -59,5 +60,10 @@ public class IdHandler implements EventHandler<ItemImportEvent> {
             //LOGGER.error("Can't rebuild brand with (name = {})", name, e);
         }
         return false;
+    }
+
+    @Override
+    public void onEvent(ItemImportEvent event) throws Exception {
+        this.onEvent(event, 0, false);
     }
 }

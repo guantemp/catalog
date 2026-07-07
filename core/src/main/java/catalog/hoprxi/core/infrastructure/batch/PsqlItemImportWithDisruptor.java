@@ -59,9 +59,18 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
                 //new YieldingWaitStrategy()
         );
 
-        disruptor.handleEventsWith(new IdHandler(), new NameHandler(), new BarcodeHandler(), new CategoryHandler(), new BrandHandler(),
-                new GrandHandler(), new MaidenHandler(), new SpecHandler(), new ShelfLifeHandler(), new LastReceiptPriceHandler(), new RetailPriceHandler(),
-                new MemeberPriceHandler(), new VipPriceHandler()).then(new AssembleHandler(), new FailedValidationHandler());
+
+        disruptor.handleEventsWith(new NameHandler(), new GrandHandler(), new MaidenHandler(), new SpecHandler(),
+                        new ShelfLifeHandler(), new LastReceiptPriceHandler(), new RetailPriceHandler(),
+                        new MemeberPriceHandler(), new VipPriceHandler())
+                // 2. 数据库 IO 操作，开启多线程（WorkerPool）并发处理！
+                // 注意：这里必须用 handleEventsWithWorkerPool，且 Handler 内部必须有你之前写的 ConcurrentHashMap 和 DCL 锁！
+                .thenHandleEventsWithWorkerPool(
+                        new IdHandler(), new IdHandler(),
+                        new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler(),
+                        new CategoryHandler(), new CategoryHandler(), new CategoryHandler(), new CategoryHandler(),
+                        new BrandHandler(), new BrandHandler()
+                ).then(new AssembleHandler(), new FailedValidationHandler());
         disruptor.start();
 
         RingBuffer<ItemImportEvent> ringBuffer = disruptor.getRingBuffer();

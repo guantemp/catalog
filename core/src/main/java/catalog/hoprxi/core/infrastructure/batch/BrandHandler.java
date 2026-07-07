@@ -24,6 +24,7 @@ import catalog.hoprxi.core.infrastructure.PsqlUtil;
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandRepository;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.WorkHandler;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
@@ -33,6 +34,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /***
@@ -40,11 +43,13 @@ import java.util.regex.Pattern;
  * @since JDK21
  * @version 0.0.2 builder 2025-10-02
  */
-public class BrandHandler implements EventHandler<ItemImportEvent> {
+public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<ItemImportEvent> {
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{1,19}$");
     private static final String DELIMITER;
     private static final BrandRepository repository = new PsqlBrandRepository();
-    private static final Logger log = LoggerFactory.getLogger(BrandHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BrandHandler.class);
+    // 【核心修复 1】：引入线程安全的内存缓存，彻底解放数据库
+    private static final Map<String, Long> BRAND_CACHE = new ConcurrentHashMap<>(1024);
 
     static {
         Config config = ConfigFactory.load("import");
@@ -52,63 +57,82 @@ public class BrandHandler implements EventHandler<ItemImportEvent> {
     }
 
     @Override
-    public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        String brand = itemImportEvent.map.get(ItemMapping.BRAND);
-        if (brand == null || brand.isBlank() || brand.equalsIgnoreCase("undefined") || brand.equalsIgnoreCase(Label.UNBRANDED)) {
-            itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(Brand.UNBRANDED.id()));
+    public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        String brand = event.map.get(ItemMapping.BRAND);
+        if (brand == null || brand.isBlank()
+            || brand.equalsIgnoreCase(Brand.UNBRANDED.name().name())
+            || brand.equalsIgnoreCase(Brand.UNBRANDED.name().shortName())
+            || brand.equalsIgnoreCase(Label.UNBRANDED)) {
+            event.map.put(ItemMapping.BRAND, String.valueOf(Brand.UNBRANDED.id()));
             return;
         }
         if (ID_PATTERN.matcher(brand).matches()) {//数字，可能是id
-            if (!BrandHandler.find(Long.parseLong(brand)))//没有查到该id,错误的id
-                itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(Brand.UNBRANDED.id()));
+            long id = Long.parseLong(brand);
+            if (id != Brand.UNBRANDED.id() && !BrandHandler.isExists(id))//没有查到该id,错误的id
+                event.map.put(ItemMapping.BRAND, String.valueOf(Brand.UNBRANDED.id()));
             return;
         }
 
+        // 3. 解析品牌名称（假设格式为 "Name/ShortName"）
         String[] ss = brand.split(DELIMITER);//name/name/name
-        String query = "^" + ss[0] + "$";
-        if (ss.length > 1)
-            query = query + "|^" + ss[1] + "$";
+        String name = ss[0].trim();
+        String shortName = ss.length > 1 ? ss[1].trim() : null;
 
-        long id = BrandHandler.findIdByName(query);
-        //System.out.println("brand:"+id);
-        if (id != Brand.UNBRANDED.id()) {//has find id
-            itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(id));
-        } else {//新建
-            Brand temp = ss.length > 1 ? new Brand(repository.nextIdentity(), new Name(ss[0], ss[1])) : new Brand(repository.nextIdentity(), ss[0]);
-            repository.save(temp);
-            itemImportEvent.map.put(ItemMapping.BRAND, String.valueOf(temp.id()));
+        Long brandId = BRAND_CACHE.computeIfAbsent(name, k -> {
+            // 先查数据库（带缓存）
+            long dbId = BrandHandler.findIdByName(name, shortName);
+            if (dbId != Long.MIN_VALUE) {
+                return dbId;
+            }
+            // 未找到，创建新品牌
+            Brand newBrand = (shortName != null)
+                    ? new Brand(repository.nextIdentity(), new Name(name, shortName))
+                    : new Brand(repository.nextIdentity(), name);
+            repository.save(newBrand);
+            return newBrand.id();
+        });
+
+        event.map.put(ItemMapping.BRAND, String.valueOf(brandId));
+    }
+
+    private static long findIdByName(String name, String shortName) {
+        final String query = """
+                SELECT id FROM brand 
+                WHERE name::jsonb->>'name' = ? OR name::jsonb->>'shortName' = ?
+                ORDER BY (name::jsonb->>'name' = ?) DESC 
+                LIMIT 1""";
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement ps = connection.prepareStatement(query)) {
+            ps.setString(1, name);
+            ps.setString(2, shortName != null ? shortName : name);
+            ps.setString(3, name); // 对应 ORDER BY
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getLong("id");
+            }
+        } catch (SQLException e) {
+            LOGGER.error("查询品牌失败: {}", name, e);
+        }
+        return Long.MAX_VALUE;
+    }
+
+    private static boolean isExists(long id) {
+        if (id == Brand.UNBRANDED.id()) return true;
+        String query = "SELECT 1 FROM brand WHERE id = ?";
+        try (Connection conn = PsqlUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Failed to check existence of brand id={}", id, e);
+            return false;
         }
     }
 
-    private static long findIdByName(String name) {
-        final String query = "select id from brand where name::jsonb->>'name' ~ ? " +
-                             "union select id from brand where name::jsonb->>'shortName' ~ ? ";
-        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setString(1, name);
-            preparedStatement.setString(2, name);
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                if (rs.next())
-                    return rs.getLong("id");
-            }
-        } catch (SQLException e) {
-            log.error("e: ", e);
-            //LOGGER.error("Can't rebuild brand with (name = {})", name, e);
-        }
-        return Brand.UNBRANDED.id();
-    }
 
-    private static boolean find(long id) {
-        final String query = "select id from brand where id = ?";
-        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setLong(1, id);
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                if (rs.next())
-                    return true;
-            }
-        } catch (SQLException e) {
-            log.error("e: ", e);
-            //LOGGER.error("Can't rebuild brand with (name = {})", name, e);
-        }
-        return false;
+    @Override
+    public void onEvent(ItemImportEvent event) throws Exception {
+        this.onEvent(event, 0, false);
     }
 }
