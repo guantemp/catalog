@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.WorkHandler;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -61,7 +62,7 @@ import java.util.List;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-05-09
  */
-public class MaidenHandler implements EventHandler<ItemImportEvent> {
+public class MaidenHandler implements EventHandler<ItemImportEvent>, WorkHandler<ItemImportEvent> {
     private static final String AREA_URL;
     private static final CloseableHttpClient httpClient;
 
@@ -93,6 +94,11 @@ public class MaidenHandler implements EventHandler<ItemImportEvent> {
     }
 
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
+
+    @Override
+    public void onEvent(ItemImportEvent event) throws Exception {
+        this.onEvent(event, 0, false);
+    }
 
     @Override
     public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {

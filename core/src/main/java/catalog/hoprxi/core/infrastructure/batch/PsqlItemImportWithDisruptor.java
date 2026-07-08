@@ -60,7 +60,7 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
         );
 
 
-        disruptor.handleEventsWith(new NameHandler(), new GrandHandler(), new MaidenHandler(), new SpecHandler(),
+        disruptor.handleEventsWith(new NameHandler(), new GrandHandler(), new SpecHandler(),
                         new ShelfLifeHandler(), new LastReceiptPriceHandler(), new RetailPriceHandler(),
                         new MemeberPriceHandler(), new VipPriceHandler())
                 // 2. 数据库 IO 操作，开启多线程（WorkerPool）并发处理！
@@ -69,6 +69,7 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
                         new IdHandler(), new IdHandler(),
                         new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler(),
                         new CategoryHandler(), new CategoryHandler(), new CategoryHandler(), new CategoryHandler(),
+                        new MaidenHandler(), new MaidenHandler(), new MaidenHandler(), new MaidenHandler(),
                         new BrandHandler(), new BrandHandler()
                 ).then(new AssembleHandler(), new FailedValidationHandler());
         disruptor.start();
