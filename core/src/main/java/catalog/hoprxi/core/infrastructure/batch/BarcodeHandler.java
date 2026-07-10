@@ -48,7 +48,7 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
     private static final AtomicInteger START;
     private static final String PREFIX;
     private static final String BARCODE_TYPE;
-    private static final Logger LOGGER = LoggerFactory.getLogger(BrandHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BarcodeHandler.class);
 
     static {
         Config config = ConfigFactory.load("import");

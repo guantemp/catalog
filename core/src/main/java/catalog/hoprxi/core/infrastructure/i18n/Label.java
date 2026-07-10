@@ -107,7 +107,7 @@ public class Label extends NLS {
     public static String PRICE_AGILE;
 
     public static String MADIN_SEPARATORS;
-    public static String MADIN_UNDEFINED;
+    public static String MADIN_UNORIGINATED;
     public static String SPEC_UNDEFINED;
 
     static {

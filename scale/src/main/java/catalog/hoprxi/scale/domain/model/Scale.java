@@ -58,7 +58,7 @@ public abstract class Scale {
 
     protected void setMadeIn(MadeIn madeIn) {
         if (madeIn == null) {
-            madeIn = MadeIn.UNKNOWN;
+            madeIn = MadeIn.UNORIGINATED;
         }
         this.madeIn = madeIn;
     }

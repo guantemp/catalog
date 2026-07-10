@@ -136,13 +136,13 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
 
     private static MadeIn buildMadeIn(String json) throws IOException {
         if (json == null || json.isEmpty()) {
-            return MadeIn.UNKNOWN;
+            return MadeIn.UNORIGINATED;
         }
         String _class = null;
         String madeIn = null;
         String code = "156";
         try (JsonParser parser = JSON_FACTORY.createParser(json)) {
-            if (parser.nextToken() != JsonToken.START_OBJECT) return MadeIn.UNKNOWN;
+            if (parser.nextToken() != JsonToken.START_OBJECT) return MadeIn.UNORIGINATED;
             while (parser.nextToken() != JsonToken.END_OBJECT) {
                 if (JsonToken.FIELD_NAME == parser.currentToken()) {
                     String fieldName = parser.currentName();
@@ -160,7 +160,7 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
         } else if (_class != null && _class.endsWith("Imported")) {
             return new Imported(code, madeIn);
         }
-        return MadeIn.UNKNOWN;
+        return MadeIn.UNORIGINATED;
     }
 
     private static LastReceiptPrice buildLastReceiptPricePrice(String json) throws IOException {

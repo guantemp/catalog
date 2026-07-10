@@ -76,7 +76,7 @@ public class PsqlWeightRepositoryTest {
 
         retailPrice = new WeightRetailPrice(new WeightPrice(Money.of(21.99, currency), WeightUnit.FIVE_HUNDRED_GRAM));
         memberPrice = new WeightMemberPrice(new WeightPrice(Money.of(39.98, currency), WeightUnit.KILOGRAM));
-        Weight tenderloin = new Weight(new Plu(102), new Name("猪大肠", "pig intestine"), MadeIn.UNKNOWN, new Specification("先切"), GradeEnum.ONE_LEVEL, ShelfLife.THREE_DAY,
+        Weight tenderloin = new Weight(new Plu(102), new Name("猪大肠", "pig intestine"), MadeIn.UNORIGINATED, new Specification("先切"), GradeEnum.ONE_LEVEL, ShelfLife.THREE_DAY,
                 WeightLastReceiptPrice.ZERO_KILOGRAM_RMB, retailPrice, memberPrice, WeightVipPrice.ZERO_KILOGRAM_RMB, 55307862716180229L, Brand.UNBRANDED.id());
         repository.save(tenderloin);
 
@@ -89,7 +89,7 @@ public class PsqlWeightRepositoryTest {
 
         retailPrice = new WeightRetailPrice(new WeightPrice(Money.of(24, currency), WeightUnit.KILOGRAM));
         lastReceiptPrice = new WeightLastReceiptPrice(new WeightPrice(Money.of(7.89, currency), WeightUnit.FIVE_HUNDRED_GRAM));
-        Weight grass_carp = new Weight(new Plu(411), new Name("草鱼", "grass carp"), MadeIn.UNKNOWN, new Specification("鲜活"), GradeEnum.QUALIFIED, ShelfLife.SAME_DAY,
+        Weight grass_carp = new Weight(new Plu(411), new Name("草鱼", "grass carp"), MadeIn.UNORIGINATED, new Specification("鲜活"), GradeEnum.QUALIFIED, ShelfLife.SAME_DAY,
                 lastReceiptPrice, retailPrice, WeightMemberPrice.ZERO_KILOGRAM_RMB, WeightVipPrice.ZERO_KILOGRAM_RMB, 55308663786302342L, Brand.UNBRANDED.id());
         repository.save(grass_carp);
     }

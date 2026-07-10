@@ -312,7 +312,7 @@ public final class ItemService {
 
     private static Item createItem(JsonParser parser) throws IOException {
         Name name = Name.EMPTY;
-        MadeIn madeIn = MadeIn.UNKNOWN;
+        MadeIn madeIn = MadeIn.UNORIGINATED;
         GradeEnum grade = GradeEnum.QUALIFIED;
         Specification spec = Specification.UNDEFINED;
         long brandId = Brand.UNBRANDED.id();

@@ -150,7 +150,7 @@ public class Item {
 
     private void setMadeIn(MadeIn madeIn) {
         if (madeIn == null)
-            madeIn = MadeIn.UNKNOWN;
+            madeIn = MadeIn.UNORIGINATED;
         this.madeIn = madeIn;
     }
 

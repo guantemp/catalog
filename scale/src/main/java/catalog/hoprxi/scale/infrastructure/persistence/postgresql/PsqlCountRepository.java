@@ -193,12 +193,12 @@ public class PsqlCountRepository implements CountRepository {
     }
 
     private static MadeIn buildMadeIn(String json) throws IOException {
-        if (json == null || json.isEmpty()) return MadeIn.UNKNOWN;
+        if (json == null || json.isEmpty()) return MadeIn.UNORIGINATED;
         String _class = null;
         String madeIn = null;
         String code = "156";
         try (JsonParser parser = JSON_FACTORY.createParser(json)) {
-            if (parser.nextToken() != JsonToken.START_OBJECT) return MadeIn.UNKNOWN;
+            if (parser.nextToken() != JsonToken.START_OBJECT) return MadeIn.UNORIGINATED;
             while (parser.nextToken() != JsonToken.END_OBJECT) {
                 if (JsonToken.FIELD_NAME == parser.currentToken()) {
                     String fieldName = parser.currentName();
@@ -211,14 +211,14 @@ public class PsqlCountRepository implements CountRepository {
                 }
             }
         }
-        if (Objects.equals(MadeIn.UNKNOWN.code(), code))
-            return MadeIn.UNKNOWN;
+        if (Objects.equals(MadeIn.UNORIGINATED.code(), code))
+            return MadeIn.UNORIGINATED;
         if (_class != null && _class.endsWith("Domestic")) {
             return new Domestic(code, madeIn);
         } else if (_class != null && _class.endsWith("Imported")) {
             return new Imported(code, madeIn);
         }
-        return MadeIn.UNKNOWN;
+        return MadeIn.UNORIGINATED;
     }
 
     private static Name buildName(String json) throws IOException {

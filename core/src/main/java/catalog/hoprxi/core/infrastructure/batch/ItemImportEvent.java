@@ -20,6 +20,7 @@ import catalog.hoprxi.core.application.batch.ItemMapping;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -40,5 +41,13 @@ public class ItemImportEvent {
 
     public void setMap(EnumMap<ItemMapping, String> map) {
         this.map = map;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", ItemImportEvent.class.getSimpleName() + "[", "]")
+                .add("map=" + map)
+                .add("wrong=" + wrong)
+                .toString();
     }
 }

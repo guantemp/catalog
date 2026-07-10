@@ -47,8 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
-import salt.hoprxi.cache.Cache;
-import salt.hoprxi.cache.CacheFactory;
 import salt.hoprxi.utils.NumberHelper;
 
 import javax.money.MonetaryAmount;
@@ -522,7 +520,7 @@ public class PsqlItemQuery {
     private static MadeIn toMadeIn(String json) throws IOException {
         String _class = null;
         String madeIn = null;
-        String code = MadeIn.UNKNOWN.code();
+        String code = MadeIn.UNORIGINATED.code();
         JsonParser parser = JSON_FACTORY.createParser(json.getBytes(StandardCharsets.UTF_8));
         while (!parser.isClosed()) {
             JsonToken jsonToken = parser.nextToken();
@@ -542,14 +540,14 @@ public class PsqlItemQuery {
                 }
             }
         }
-        if (MadeIn.UNKNOWN.code().equals(code)) {
-            return MadeIn.UNKNOWN;
+        if (MadeIn.UNORIGINATED.code().equals(code)) {
+            return MadeIn.UNORIGINATED;
         } else if (Domestic.class.getName().equals(_class)) {
             return new Domestic(code, madeIn);
         } else if (Imported.class.getName().equals(_class)) {
             return new Imported(code, madeIn);
         }
-        return MadeIn.UNKNOWN;
+        return MadeIn.UNORIGINATED;
     }
 
     private static URI[] toImages(InputStream is) throws IOException {

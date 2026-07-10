@@ -26,7 +26,7 @@ import java.util.StringJoiner;
  * @version 0.0.2 2023-03-01
  */
 public interface MadeIn {
-    MadeIn UNKNOWN = new MadeIn() {
+    MadeIn UNORIGINATED = new MadeIn() {
         @Override
         public String code() {
             return "-1";
@@ -34,7 +34,7 @@ public interface MadeIn {
 
         @Override
         public String madeIn() {
-            return Label.MADIN_UNDEFINED;
+            return Label.MADIN_UNORIGINATED;
         }
 
         @Override
@@ -60,7 +60,7 @@ public interface MadeIn {
         @Override
         public String toString() {
             return new StringJoiner(", ", "MadeIn[", "]")
-                    .add("madeIn='CHINA'")
+                    .add("madeIn='中国'")
                     .add("code='156'")
                     .toString();
         }
