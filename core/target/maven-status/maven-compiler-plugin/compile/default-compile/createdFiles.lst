@@ -71,7 +71,6 @@ catalog\hoprxi\core\infrastructure\query\postgresql\PsqlItemQuery.class
 catalog\hoprxi\core\domain\model\brand\Brand.class
 catalog\hoprxi\core\application\view\ItemView$CategoryView.class
 catalog\hoprxi\core\infrastructure\batch\RetailPriceHandler.class
-catalog\hoprxi\core\infrastructure\batch\MaidenHandler.class
 catalog\hoprxi\core\domain\model\barcode\BarcodeGenerateServices.class
 catalog\hoprxi\App.class
 catalog\hoprxi\core\domain\model\barcode\EAN_8.class
@@ -223,7 +222,6 @@ catalog\hoprxi\core\infrastructure\batch\DisruptorExceptionHandler.class
 catalog\hoprxi\core\domain\model\price\UnitEnum$3.class
 catalog\hoprxi\core\domain\model\ProhibitSellItemRepository.class
 catalog\hoprxi\core\infrastructure\query\elasticsearch\ESCategoryQuery$2.class
-catalog\hoprxi\core\infrastructure\batch\MaidenHandler$MdeInView.class
 catalog\hoprxi\core\infrastructure\query\elasticsearch\spec\VipPriceSpec.class
 catalog\hoprxi\core\infrastructure\batch\ExecuteSqlEvent.class
 catalog\hoprxi\core\infrastructure\query\postgresql\PsqlCategoryQuery.class

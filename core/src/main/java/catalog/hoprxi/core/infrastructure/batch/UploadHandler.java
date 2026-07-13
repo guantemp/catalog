@@ -18,9 +18,11 @@ package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.WorkHandler;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
@@ -44,6 +46,7 @@ import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
 
 import javax.net.ssl.SSLContext;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,7 +55,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /***
@@ -60,17 +66,24 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-07-08
  */
-public class UploadHandler implements EventHandler<ItemImportEvent> {
+public class UploadHandler implements EventHandler<ItemImportEvent>, WorkHandler<ItemImportEvent> {
+
     private static final String UPLOAD_URI;
-    private static final String UPLOAD_IMG_DIRECTORY;
-    private final URI uri;
-    private static final CloseableHttpClient httpClient;
+    private static final String LOCAL_IMG_DIR;          // 本地图片搜索目录
+    private static final String SERVER_BARCODE_DIR;        // 上传后服务器保存目录（相对路径）
+    private static final int MAX_SEQUENCE;
+    private static final String[] SUPPORTED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".ico", ".tiff"};
+    private static final CloseableHttpClient HTTP_CLIENT;
+    private static final JsonFactory JSON_FACTORY = new JsonFactory();
+    private static volatile boolean closed = false;
 
     static {
-        Config config = ConfigFactory.load("import");
-        config = config.getConfig("upload");
-        UPLOAD_URI = config.hasPath("uri") ? config.getString("uri") : "https://www.hoprxi.com/catalog/v1/upload";
-        UPLOAD_IMG_DIRECTORY = config.hasPath("img_directory") ? config.getString("img_directory") : "";
+        Config config = ConfigFactory.load("import").getConfig("upload");
+        UPLOAD_URI = config.hasPath("uri") ? config.getString("uri") : "https://www.hoprxi.com/catalog/v1/uploads";
+        LOCAL_IMG_DIR = config.hasPath("local_img_dir") ? config.getString("local_img_dir") : "";
+        SERVER_BARCODE_DIR = config.hasPath("server_barcode_dir") ? config.getString("server_barcode_dir") : "uploads/barcode";
+        MAX_SEQUENCE = config.hasPath("max_sequence") ? config.getInt("max_sequence") : 10;
+
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         SSLContext sslContext;
         try {
@@ -78,114 +91,183 @@ public class UploadHandler implements EventHandler<ItemImportEvent> {
         } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
             throw new RuntimeException(e);
         }
-        // Allow TLSv1.2 protocol only
         final SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
                 .setSslContext(sslContext).setTlsVersions(TLS.V_1_2).build();
         Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", PlainConnectionSocketFactory.INSTANCE)
                 .register("https", sslSocketFactory)
                 .build();
-        //适配http以及https请求 通过new创建PoolingHttpClientConnectionManager
         PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
-        httpClientBuilder.setConnectionManager(connManager).evictExpiredConnections().evictIdleConnections(TimeValue.ofSeconds(5)).disableAutomaticRetries();
+        httpClientBuilder.setConnectionManager(connManager)
+                .evictExpiredConnections()
+                .evictIdleConnections(TimeValue.ofSeconds(5))
+                .disableAutomaticRetries();
         httpClientBuilder.setDefaultRequestConfig(RequestConfig.custom()
                 .setConnectionRequestTimeout(Timeout.ofSeconds(10))
                 .build());
-
-        httpClient = httpClientBuilder.build();
+        HTTP_CLIENT = httpClientBuilder.build();
     }
+
+    private final URI uri;
+    private final AtomicInteger totalSuccessCount = new AtomicInteger(0);
 
     public UploadHandler() {
         this.uri = URI.create(UPLOAD_URI);
     }
 
-    private final JsonFactory jasonFactory = JsonFactory.builder().build();
-    private final AtomicInteger number = new AtomicInteger(0);
-
     @Override
-    public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        EnumMap<ItemMapping, String> map = itemImportEvent.map;
-        if (!itemImportEvent.hasWrong()) {
-            String barcode = map.get(ItemMapping.BARCODE);
-            barcode = barcode.substring(1, barcode.length() - 1);
-            File file = new File("F:\\developer\\catalog\\barcode\\" + barcode + ".jpg");
-            //System.out.println(barcode + ":" + file.getCanonicalPath() + ":" + file.exists());
-            if (file.exists()) {
-                number.incrementAndGet();
-                String show = uplaod(file);
-                map.put(ItemMapping.SHOW, show);
-            }
-        }
-        if (map.get(ItemMapping.LAST_ROW) != null) {
-            try {
-                httpClient.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            System.out.println("Exists:" + number);
-        }
-/*
-        File file = new File("F:\\developer\\catalog\\barcode\\6934665091254.jpg");
-        uplaod(file);
- */
-    }
-
-    private String uplaod(File file) throws IOException {
-        try {
-            // 创建httpPost.
-            HttpPost httpPost = new HttpPost(uri);
-
-            //setConnectTimeout：设置连接超时时间，单位毫秒。setConnectionRequestTimeout：设置从connect Manager获取Connection 超时时间，单位毫秒。这个属性是新加的属性，因为目前版本是可以共享连接池的。setSocketTimeout：请求获取数据的超时时间，单位毫秒。 如果访问一个接口，多少时间内无法返回数据，就直接放弃此次调用。
-            //RequestConfig defaultRequestConfig = RequestConfig.custom().setConnectionRequestTimeout(5, TimeUnit.SECONDS).build();
-            //httpPost.setConfig(defaultRequestConfig);
-
-            MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
-            multipartEntityBuilder.setCharset(StandardCharsets.UTF_8);
-            multipartEntityBuilder.addBinaryBody("file", file, ContentType.MULTIPART_FORM_DATA, file.getName());
-
-            //ContentType type = ContentType.create("text/plain", StandardCharsets.UTF_8);
-            //multipartEntityBuilder.addTextBody("randomFileName", "on", ContentType.TEXT_PLAIN);
-
-            HttpEntity httpEntity = multipartEntityBuilder.build();
-            httpPost.setEntity(httpEntity);
-
-            return httpClient.execute(httpPost, response -> {
-                //System.out.println(response.getCode() + " " + response.getReasonPhrase() + " " + response.getVersion());
-                final HttpEntity entity = response.getEntity();
-                if (HttpStatus.SC_OK == response.getCode())
-                    return processUploadResult(entity.getContent());
-                else
-                    return null;
-                // do something useful with the response body
-                // and ensure it is fully consumed
-                // System.out.println(EntityUtils.toString(entity));
-                // EntityUtils.consume(entity);
-            });
-        } catch (IOException e) {
-            System.out.println(file.getCanonicalPath());
-            throw new RuntimeException(e);
-        }
-    }
-
-    private String processUploadResult(InputStream inputStream) throws IOException {
-        String url = null;
-        JsonParser parser = jasonFactory.createParser(inputStream);
-        while (!parser.isClosed()) {
-            JsonToken jsonToken = parser.nextToken();
-            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
-                String fieldName = parser.getCurrentName();
-                parser.nextToken();
-                switch (fieldName) {
-                    case "status":
-                        break;
-                    case "url":
-                        url = parser.getValueAsString();
-                        break;
-                    default:
-                        break;
+    public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        EnumMap<ItemMapping, String> map = event.map;
+        if (!event.hasWrong()) {
+            String barcodeRaw = map.get(ItemMapping.BARCODE);
+            if (barcodeRaw != null && barcodeRaw.length() > 2) {
+                String barcode = barcodeRaw.substring(1, barcodeRaw.length() - 1); // 去掉引号
+                List<File> imageFiles = UploadHandler.findImageFiles(barcode);
+                if (!imageFiles.isEmpty()) {
+                    List<String> uploadedUrls = UploadHandler.uploadFiles(imageFiles);
+                    if (!uploadedUrls.isEmpty()) {
+                        // 使用 JsonGenerator 将 URL 列表序列化为 JSON 数组字符串
+                        String showJson = UploadHandler.serializeUrlsToJson(uploadedUrls);
+                        map.put(ItemMapping.SHOW, showJson);
+                        totalSuccessCount.addAndGet(uploadedUrls.size());
+                    }
+                    // 全部失败则 SHOW 保持 null
                 }
             }
         }
-        return "'{\"images\":[\"" + url + "\"]}'";
+
+        if (map.get(ItemMapping.LAST_ROW) != null) {
+            synchronized (UploadHandler.class) {
+                if (!closed) {
+                    try {
+                        HTTP_CLIENT.close();
+                        closed = true;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println("Total uploaded files: " + totalSuccessCount.get());
+                }
+            }
+        }
+    }
+
+    /**
+     * 查找条形码对应的所有图片文件（主文件 + 序号文件），支持多种后缀
+     */
+    private static List<File> findImageFiles(String barcode) {
+        if (LOCAL_IMG_DIR.isEmpty()) {
+            return Collections.emptyList();
+        }
+        File baseDir = new File(LOCAL_IMG_DIR);
+        if (!baseDir.exists() || !baseDir.isDirectory()) {
+            return Collections.emptyList();
+        }
+
+        List<File> found = new ArrayList<>();
+        // 主文件 (不带序号)
+        for (String ext : SUPPORTED_EXTENSIONS) {
+            File f = new File(baseDir, barcode + ext);
+            if (f.exists() && f.isFile()) {
+                found.add(f);
+                break;
+            }
+        }
+        // 带序号的 (1 ~ MAX_SEQUENCE)
+        for (int i = 1; i <= MAX_SEQUENCE; i++) {
+            String prefix = barcode + "_" + i;
+            for (String ext : SUPPORTED_EXTENSIONS) {
+                File f = new File(baseDir, prefix + ext);
+                if (f.exists() && f.isFile()) {
+                    found.add(f);
+                    break;
+                }
+            }
+        }
+        return found;
+    }
+
+    /**
+     * 上传文件列表到服务器，不重命名，不按日期分隔，保存到指定目录
+     */
+    private static List<String> uploadFiles(List<File> files) {
+        if (files.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        HttpPost httpPost = new HttpPost(UPLOAD_URI);
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setCharset(StandardCharsets.UTF_8);
+
+        // 添加文件部分，字段名 "files"
+        for (File file : files) {
+            builder.addBinaryBody("files", file, ContentType.APPLICATION_OCTET_STREAM, file.getName());
+        }
+
+        // 添加文本参数：rename=false（不重命名）, directory=配置的服务器保存目录
+        builder.addTextBody("rename", "false", ContentType.TEXT_PLAIN);
+        builder.addTextBody("separateByDate", "false", ContentType.TEXT_PLAIN);
+        builder.addTextBody("directory", SERVER_BARCODE_DIR, ContentType.TEXT_PLAIN);
+
+        httpPost.setEntity(builder.build());
+
+        try {
+            return HTTP_CLIENT.execute(httpPost, response -> {
+                final HttpEntity entity = response.getEntity();
+                if (HttpStatus.SC_OK == response.getCode() && entity != null) {
+                    return UploadHandler.parseUploadResponse(entity.getContent());
+                } else {
+                    return Collections.emptyList();
+                }
+            });
+        } catch (IOException e) {
+            System.err.println("Upload failed: " + e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    private static List<String> parseUploadResponse(InputStream content) throws IOException {
+        List<String> urls = new ArrayList<>();
+        try (JsonParser parser = JSON_FACTORY.createParser(content)) {
+            while (!parser.isClosed()) {
+                JsonToken token = parser.nextToken();
+                if (token == JsonToken.FIELD_NAME && "results".equals(parser.currentName())) {
+                    parser.nextToken(); // 进入数组
+                    while (parser.nextToken() != JsonToken.END_ARRAY) {
+                        while (parser.nextToken() != JsonToken.END_OBJECT) {
+                            String field = parser.currentName();
+                            parser.nextToken();
+                            if ("url".equals(field)) {
+                                String url = parser.getValueAsString();
+                                if (url != null && !url.isEmpty()) {
+                                    urls.add(url);
+                                }
+                            } else {
+                                // 跳过不需要的字段值（即使它是嵌套对象或数组）
+                                parser.skipChildren();
+                            }
+                        }
+                    }
+                }
+            }
+            return urls;
+        }
+    }
+
+    private static String serializeUrlsToJson(List<String> urls) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (JsonGenerator gen = JSON_FACTORY.createGenerator(baos)) {
+            gen.writeStartArray();
+            for (String url : urls) {
+                gen.writeString(url);
+            }
+            gen.writeEndArray();
+            gen.flush();
+        }
+        return baos.toString(StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public void onEvent(ItemImportEvent event) throws Exception {
+        this.onEvent(event, 0, false);
     }
 }

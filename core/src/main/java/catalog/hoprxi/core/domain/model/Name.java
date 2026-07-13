@@ -20,43 +20,56 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
 
-/***
+/**
+ * 值对象：名称（含全称和简称）。
+ * <p>该对象可被 Category、Item、Brand、MadeIn 等实体复用。</p>
+ * <ul>
+ *   <li>全称（name）允许为空字符串，表示“无名”状态，通常用于占位或根节点。</li>
+ *   <li>简称（shortName）为可选字段，若未提供或为空，统一存储为 null，避免数据库查询歧义。</li>
+ *   <li>提供 EMPTY 常量以支持空对象模式。</li>
+ * </ul>
+ *
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK21
- * @version 0.2 builder 2026-06-09
+ * @version 0.3 builder 2026-07-12
  */
 public final class Name {
     private static final int MAX_LENGTH = 256;
-    private String name;
-    private String shortName;
+    private final String name;
+    private final String shortName;
     /**
      * 空名称对象（空对象模式）
      * <p>调用 rename 仍返回自身，避免空指针</p>
      */
-    public static final Name EMPTY = new Name("", "");
+    public static final Name EMPTY = new Name("", null);
 
     /**
-     * 构造方法：传入正式名称与简称
+     * 构造方法。
      *
-     * @param name      正式名称，不能为 null，长度不超过 256
-     * @param shortName 简称，不能为 null，长度不超过 256
+     * @param name      正式名称，可为 {@code null}（自动转为空字符串），首尾空格会被修剪。
+     * @param shortName 简称，可为 {@code null} 或空字符串（统一转为 {@code null}），首尾空格会被修剪。
+     * @throws IllegalArgumentException 若任一名称长度超过 256。
      */
     public Name(String name, String shortName) {
-        if (name == null && shortName == null) {
-            throw new IllegalArgumentException("name and shortName cannot be null at the same time. At least one must be provided.");
-        }
-        this.name = (name != null) ? name.trim() : "";
-        this.shortName = (shortName != null) ? shortName.trim() : "";
+        // 1. 处理 name：null -> ""，并 trim
+        String trimmedName = (name == null) ? "" : name.trim();
+        // 2. 处理 shortName：null 或空字符串 -> null，并 trim（非空时）
+        String trimmedShort = (shortName == null) ? null : shortName.trim();
+        this.shortName = (trimmedShort == null || trimmedShort.isEmpty()) ? null : trimmedShort;
 
-        if (this.name.length() > MAX_LENGTH || this.shortName.length() > MAX_LENGTH) {
-            throw new IllegalArgumentException(
-                    String.format("name or shortName length range is 0-%d", MAX_LENGTH)
-            );
+        // 3. 长度校验
+        if (trimmedName.length() > MAX_LENGTH) {
+            throw new IllegalArgumentException("name length exceeds " + MAX_LENGTH);
         }
+        if (this.shortName != null && this.shortName.length() > MAX_LENGTH) {
+            throw new IllegalArgumentException("shortName length exceeds " + MAX_LENGTH);
+        }
+
+        this.name = trimmedName;
     }
 
     public Name(String name) {
-        this(name, "");
+        this(name, null);
     }
 
     /**
@@ -78,33 +91,44 @@ public final class Name {
     }
 
     /**
-     * 重命名，生成新的 Name 对象
-     * <p>值对象不可变，修改属性时返回新实例</p>
+     * 重命名，生成新的 {@code Name} 实例（不变性）。
+     * <p>
+     * 如果传入的 {@code name} 和 {@code shortName} 经过规范化后与当前对象完全相同，
+     * 则返回自身（避免创建不必要的对象）。
+     * </p>
+     * <p>
+     * 规范化规则：
+     * <ul>
+     *   <li>若 {@code name} 为 {@code null}，表示不修改；否则取其 {@code trim()} 结果。</li>
+     *   <li>若 {@code shortName} 为 {@code null}，表示不修改；否则取其 {@code trim()} 结果，
+     *       若为空字符串则转为 {@code null}。</li>
+     * </ul>
      *
-     * @param name      新正式名称
-     * @param shortName 新简称
-     * @return 新的 Name 实例（或自身，若未变化）
+     * @param name      新正式名称，若为 {@code null} 表示不修改；否则会用 {@code trim()} 后值。
+     * @param shortName 新简称，若为 {@code null} 表示不修改；否则会用 {@code trim()} 后值（空串则置 {@code null}）。
+     * @return 新的 {@code Name} 实例，如果与当前对象无变化则返回自身。
      */
     public Name rename(String name, String shortName) {
-        // 1. 快速拦截：EMPTY 是不可变的，直接返回自身，避免任何无效计算和对象创建
+        // EMPTY 是不可变的，直接返回自身
         if (this == EMPTY) {
             return this;
         }
 
-        // 2. 优雅处理 null 与相等回退逻辑
-        String newName = Optional.ofNullable(name)
-                .filter(n -> !this.name.equals(n))
-                .orElse(this.name);
+        // 规范化传入的参数
+        String newName = (name == null) ? this.name : name.trim();
+        // shortName：若传入null，保持原值；否则trim，若trim后为空则转为null
+        String newShortName = this.shortName; // 默认原值
+        if (shortName != null) {
+            String trimmed = shortName.trim();
+            newShortName = trimmed.isEmpty() ? null : trimmed;
+        }
 
-        String newShortName = Optional.ofNullable(shortName)
-                .filter(s -> !this.shortName.equals(s))
-                .orElse(this.shortName);
-
-        // 3. 引用比较：只要有任何一个属性发生了变化，就返回新实例
+        // 如果规范化后的值与当前值相同，返回自身
         if (Objects.equals(newName, this.name) && Objects.equals(newShortName, this.shortName)) {
             return this;
         }
-        //System.out.println(String.format("rename %s to %s", newName, newShortName));
+
+        // 否则创建新对象
         return new Name(newName, newShortName);
     }
 

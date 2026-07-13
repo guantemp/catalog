@@ -70,22 +70,53 @@ public class FileUploadService {
     @Consumes("multipart/form-data")
     public HttpResponse upload(ServiceRequestContext ctx, @Param("file") MultipartFile multipartFile,
                                @Param(value = "rename") @Nullable Boolean renameParam,
+                               @Param(value = "directory") @Nullable String directoryParam,
                                @Param("separateByDate") @Nullable Boolean separateByDateParam,
-                               @Param(value = "directory") @Nullable String directoryParam) {
+                               @Param(value = "validSpec") @Nullable String validSpecParam) {
         if (multipartFile == null || multipartFile.file().length() == 0) {
             //LOGGER.info("请选择要上传的文件");
             return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
                     "{\"code\":400,\"message\":\"请选择要上传的文件\"}");
         }
         // 验证文件格式（头信息）
+        EnumSet<FileValidSpec> specs = EnumSet.noneOf(FileValidSpec.class);
+        if (validSpecParam != null && !validSpecParam.trim().isEmpty()) {
+            try {
+                // 将传入的字符串转换为对应的枚举值
+                FileValidSpec spec = FileValidSpec.valueOf(validSpecParam.trim().toUpperCase());
+                specs.add(spec);
+            } catch (IllegalArgumentException e) {
+                // 如果传入的枚举名称无效，返回错误
+                return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                        "{\"code\":400,\"message\":\"无效的文件校验规格: " + validSpecParam + "\"}");
+            }
+        }
+        // 获取所有支持的后缀，用于错误提示
+        Set<String> allSupportedExtensions = new LinkedHashSet<>();
+        for (FileValidSpec spec : specs) {
+            allSupportedExtensions.addAll(Arrays.asList(spec.support()));
+        }
+        String supportedExtensions = String.join(", ", allSupportedExtensions);
+
         File tempFile = multipartFile.file();
-        if (!validFormat(tempFile)) {
+        // ★ 关键：任意一个验证器通过即可（OR 逻辑）
+        boolean isValid = true;
+        // 只有当存在验证器时，才进行校验
+        if (!specs.isEmpty()) {
+            isValid = false; // 只要有验证器，初始状态先设为 false
+            for (FileValidSpec spec : specs) {
+                if (spec.validFormat(tempFile)) {
+                    isValid = true;
+                    break; // 只要有一个通过，立即跳出循环，判定为合法
+                }
+            }
+        }
+        if (!isValid) {
             return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
-                    "{\"code\":400,\"message\":\"不支持的文件格式，允许的格式：JPEG, PNG, GIF, PDF, DOC, DOCX, BMP, WEBP, ICO, TIFF\"}");
+                    "{\"code\":400,\"message\":\"不支持的文件格式，允许的格式： " + supportedExtensions + "\"}");
         }
 
         boolean rename = (renameParam != null) ? renameParam : true;
-        boolean separateByDate = (separateByDateParam != null) ? separateByDateParam : true;
         try {
             String filename = Paths.get(multipartFile.filename()).getFileName().toString();
             if (rename) {
@@ -96,7 +127,6 @@ public class FileUploadService {
                 }
                 filename = UUID.randomUUID().toString().replace("-", "") + suffix;
             }
-            String date = separateByDate ? LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : "";
 
             Path basePath = Paths.get(UPLOAD_DIRECTORIES);
             if (directoryParam != null && !directoryParam.trim().isEmpty()) {
@@ -108,12 +138,14 @@ public class FileUploadService {
                     basePath = basePath.resolve(safeDir);
                 }
             }
+
+            boolean separateByDate = (separateByDateParam != null) ? separateByDateParam : true;
+            String date = separateByDate ? LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : "";
             if (separateByDate && !date.isEmpty()) {
                 basePath = basePath.resolve(date);
             }
             // 4. 创建目录并移动文件
             Path target = basePath.resolve(filename);
-
             Files.createDirectories(target.getParent());
             Files.move(multipartFile.file().toPath(), target, StandardCopyOption.REPLACE_EXISTING);
 
@@ -130,7 +162,6 @@ public class FileUploadService {
                 urlPathStr = "/" + urlPathStr;  // 确保以斜杠开头（若 UPLOAD_DIRECTORIES 不是以 / 开头）
             }
             String accessUrl = String.format("%s://%s%s", scheme, host, urlPathStr);
-            ;
 
             return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, String.format("""
                     {
@@ -151,8 +182,9 @@ public class FileUploadService {
                                @Param("files") @Nullable List<MultipartFile> multipartFiles,
                                @Param(value = "rename") @Nullable Boolean renameParam,
                                @Param(value = "separateByDate") @Nullable Boolean separateByDateParam,
-                               @Param(value = "directory") @Nullable String directoryParam) {
-
+                               @Param(value = "directory") @Nullable String directoryParam,
+                               @Param(value = "validSpec") @Nullable String validSpecParam) {
+        System.out.println("Armeria 收到的原始请求: " + ctx.request().path());
         // 1. 校验文件列表
         if (multipartFiles == null || multipartFiles.isEmpty()) {
             return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
@@ -161,7 +193,6 @@ public class FileUploadService {
 
         boolean rename = (renameParam != null) ? renameParam : true;
         boolean separateByDate = (separateByDateParam != null) ? separateByDateParam : true;
-
         // 2. 构建基础路径
         String date = separateByDate ? LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : "";
         Path basePath = Paths.get(UPLOAD_DIRECTORIES);
@@ -177,16 +208,35 @@ public class FileUploadService {
             basePath = basePath.resolve(date);
         }
 
+        EnumSet<FileValidSpec> specs = EnumSet.noneOf(FileValidSpec.class);
+        System.out.println("validSpecParam:"+validSpecParam);
+        if (validSpecParam != null && !validSpecParam.trim().isEmpty()) {
+            try {
+                // 将传入的字符串转换为对应的枚举值
+                FileValidSpec spec = FileValidSpec.valueOf(validSpecParam.trim().toUpperCase());
+                specs.add(spec);
+            } catch (IllegalArgumentException e) {
+                // 如果传入的枚举名称无效，返回错误
+                return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
+                        "{\"code\":400,\"message\":\"无效的文件校验规格: " + validSpecParam + "\"}");
+            }
+        }
+        // 动态获取所有支持的后缀，用于错误提示
+        Set<String> allSupportedExtensions = new LinkedHashSet<>();
+        for (FileValidSpec spec : specs) {
+            allSupportedExtensions.addAll(Arrays.asList(spec.support()));
+        }
+        String supportedExtensions = String.join(", ", allSupportedExtensions);
+        System.out.println(specs);
+
         // 3. 获取协议和主机
         String scheme = ctx.request().headers().get("X-Forwarded-Proto");
         if (scheme == null || scheme.isEmpty()) {
             scheme = ctx.sessionProtocol().isTls() ? "https" : "http";
         }
         String host = ctx.request().authority();
-
         List<Map<String, Object>> results = new ArrayList<>();
         int successCount = 0, failCount = 0;
-
         // 4. 逐个处理文件
         for (MultipartFile multipartFile : multipartFiles) {
             Map<String, Object> result = new LinkedHashMap<>();
@@ -194,7 +244,7 @@ public class FileUploadService {
             result.put("filename", originalFilename);
 
             // 检查文件是否为空
-            if (multipartFile.file() == null || multipartFile.file().length() == 0) {
+            if (multipartFile.file().length() == 0) {
                 result.put("status", "failed");
                 result.put("error", "文件为空");
                 results.add(result);
@@ -202,17 +252,27 @@ public class FileUploadService {
                 continue;
             }
 
-            // ★ 关键：文件格式验证
-            if (!validFormat(multipartFile.file())) {
+            // ★ 关键：任意一个验证器通过即可（OR 逻辑）
+            boolean isValid = true;
+            // 只有当存在验证器时，才进行校验
+            if (!specs.isEmpty()) {
+                isValid = false; // 只要有验证器，初始状态先设为 false
+                for (FileValidSpec spec : specs) {
+                    if (spec.validFormat(multipartFile.file())) {
+                        isValid = true;
+                        break; // 只要有一个通过，立即跳出循环，判定为合法
+                    }
+                }
+            }
+            if (!isValid) {
                 result.put("status", "failed");
-                result.put("error", "不支持的文件格式，允许的格式：JPEG, PNG, GIF, PDF, DOC, DOCX, BMP, WEBP, ICO, TIFF");
+                result.put("error", "不支持的文件格式，允许的格式：" + supportedExtensions);
                 results.add(result);
                 failCount++;
                 continue;
             }
 
-            try {
-                // 处理文件名
+            try { // 处理文件名
                 String filename = Paths.get(originalFilename).getFileName().toString();
                 if (rename) {
                     String suffix = "";
@@ -303,15 +363,15 @@ public class FileUploadService {
         try (FileInputStream fis = new FileInputStream(file)) {
             byte[] header = new byte[8];
             int readLen = fis.read(header);
-            if (readLen < 4) return false;
+            if (readLen < 4) return true;
 
             String hex = ByteToHex.toHexStr(header).toUpperCase();
             for (String head : heads) {
                 if (hex.startsWith(head)) {  // 改为前缀匹配
-                    return true;
+                    return false;
                 }
             }
-            return false;
+            return true;
         } catch (IOException e) {
             throw new RuntimeException("读取文件头失败", e);
         }

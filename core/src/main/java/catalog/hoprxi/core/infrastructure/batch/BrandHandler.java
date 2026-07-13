@@ -81,6 +81,7 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
         Long brandId = BRAND_CACHE.computeIfAbsent(name, k -> {
             // 先查数据库（带缓存）
             long dbId = BrandHandler.findIdByName(name, shortName);
+            //System.out.println("dbid:"+dbId);
             if (dbId != Long.MIN_VALUE) {
                 return dbId;
             }
@@ -88,6 +89,7 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
             Brand newBrand = (shortName != null)
                     ? new Brand(repository.nextIdentity(), new Name(name, shortName))
                     : new Brand(repository.nextIdentity(), name);
+            System.out.println(newBrand);
             repository.save(newBrand);
             return newBrand.id();
         });
@@ -112,12 +114,12 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
         } catch (SQLException e) {
             LOGGER.error("查询品牌失败: {}", name, e);
         }
-        return Long.MAX_VALUE;
+        return Long.MIN_VALUE;
     }
 
     private static boolean isExists(long id) {
         if (id == Brand.UNBRANDED.id()) return true;
-        String query = "SELECT 1 FROM brand WHERE id = ?";
+        String query = "SELECT id FROM brand WHERE id = ?";
         try (Connection conn = PsqlUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setLong(1, id);

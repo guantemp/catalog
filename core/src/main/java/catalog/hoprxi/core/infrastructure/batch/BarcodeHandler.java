@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandler<ItemImportEvent> {
     private static final Set<String> BARCODE_CACHE = ConcurrentHashMap.newKeySet(2480);
     // 2. 记录所有发生过重复的条码（黑名单）
-    static final Set<String> REPEAT_BARCODE_BLACKLIST = ConcurrentHashMap.newKeySet();
+    static final Set<String> BARCODE_BLACKLIST = ConcurrentHashMap.newKeySet();
     private static final AtomicInteger START;
     private static final String PREFIX;
     private static final String BARCODE_TYPE;
@@ -64,81 +64,89 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
 
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) {
+        // 1. 获取或生成标准条码（原始值，不带引号）
+        String rawBarcode = getOrGenerateBarcode(event);
+        if (rawBarcode == null) {
+            // 如果是无效条码且无法补全，已添加错误并放入原值，直接返回
+            return;
+        }
+
+        // 2. 检查重复和数据库存在性，并处理
+        boolean isDuplicateOrExist = checkAndHandleDuplicateOrExist(event, rawBarcode);
+        if (isDuplicateOrExist) {
+            // 已放入带引号的值并添加错误，直接返回
+            return;
+        }
+
+        // 3. 成功：加入缓存并放入带引号的值
+        BARCODE_CACHE.add(rawBarcode);
+        event.map.put(ItemMapping.BARCODE, "'" + rawBarcode + "'");
+    }
+
+    /**
+     * 获取或生成标准条码（原始字符串，不带引号）。
+     * 如果条码为空，则生成店内码；如果非空，则校验并补全。
+     * 若无法补全，会添加错误并放入原始输入值，返回 null。
+     */
+    private String getOrGenerateBarcode(ItemImportEvent event) {
         String barcode = event.map.get(ItemMapping.BARCODE);
-        if (barcode == null || barcode.isBlank()) {//根据设置规则生成店内码
-            if (BARCODE_TYPE.equals("ean_13")) {
-                barcode = BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString();
-            } else {
-                barcode = BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString();
-            }
-            // 【快速失败】先查缓存，如果命中说明本批次已存在（或已标记存在）
-            if (BARCODE_CACHE.contains(barcode)) {
-                event.addWrong(Verify.BARCODE_REPEAT);
-                REPEAT_BARCODE_BLACKLIST.add(barcode);
-                return;
-            }
-
-            // 缓存未命中，查数据库
-            if (BarcodeHandler.isExist(barcode)) {
-                // 数据库存在，补入缓存（便于后续快速命中）
-                BARCODE_CACHE.add(barcode);
-                event.addWrong(Verify.BARCODE_EXIST);
-                REPEAT_BARCODE_BLACKLIST.add(barcode);
-                return;
-            }
-
-            // 数据库不存在，尝试原子性放入缓存
-            if (!BARCODE_CACHE.add(barcode)) {
-                // 其他线程并发插入了相同条码（极少发生，因为刚查过库）
-                event.addWrong(Verify.BARCODE_REPEAT);
-                REPEAT_BARCODE_BLACKLIST.add(barcode);
-                return;
-            }
-            // 生成成功且无重复，加上单引号放入 map,放入cache
-            event.map.put(ItemMapping.BARCODE, "'" + barcode + "'");
-            return;
+        if (barcode == null || barcode.isBlank()) {
+            // 生成店内码
+            return BARCODE_TYPE.equals("ean_13")
+                    ? BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString()
+                    : BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString();
         }
-        //检测正确吗？没有校验码的计算校验码
-        Barcode bar;
+
+        // 非空条码：校验并补全
         try {
-            bar = BarcodeGenerateServices.createBarcode(barcode);
+            Barcode bar = BarcodeGenerateServices.createBarcode(barcode);
+            return bar.toPlanString();
         } catch (InvalidBarcodeException e) {
-            try {//缺少效验和的计算生成
-                bar = BarcodeGenerateServices.createBarcodeCompleteChecksum(barcode);
+            try {
+                Barcode bar = BarcodeGenerateServices.createBarcodeCompleteChecksum(barcode);
+                return bar.toPlanString();
             } catch (IllegalArgumentException f) {
+                // 无法补全，保留原始输入
                 event.addWrong(Verify.BARCODE_CHECK_SUM_ERROR);
-                return;
+                event.map.put(ItemMapping.BARCODE, "'" + barcode + "'");
+                return null;
             }
         }
-        // 原始数据中是否有重复barcode,有可能已经被提交到数据库，有这能是统一批次还未提交
-        barcode = bar.toPlanString();
+    }
 
-        // 【快速失败】先查缓存，如果命中说明本批次已存在（或已标记存在）
-        if (BARCODE_CACHE.contains(barcode)) {
+    /**
+     * 检查缓存和数据库，处理重复或已存在情况。
+     * 若命中，添加错误，加入黑名单，并放入带引号的值，返回 true。
+     * 否则返回 false。
+     */
+    private boolean checkAndHandleDuplicateOrExist(ItemImportEvent event, String rawBarcode) {
+        // 缓存命中 → 重复
+        if (BARCODE_CACHE.contains(rawBarcode)) {
             event.addWrong(Verify.BARCODE_REPEAT);
-            REPEAT_BARCODE_BLACKLIST.add(barcode);
-            return;
+            BARCODE_BLACKLIST.add(rawBarcode);
+            event.map.put(ItemMapping.BARCODE, "'" + rawBarcode + "'");
+            return true;
         }
 
-        // 缓存未命中，查数据库
-        if (BarcodeHandler.isExist(barcode)) {
-            // 数据库存在，补入缓存（便于后续快速命中）
-            BARCODE_CACHE.add(barcode);
+        // 数据库存在
+        if (BarcodeHandler.isExist(rawBarcode)) {
+            BARCODE_CACHE.add(rawBarcode);
             event.addWrong(Verify.BARCODE_EXIST);
-            REPEAT_BARCODE_BLACKLIST.add(barcode);
-            return;
+            BARCODE_BLACKLIST.add(rawBarcode);
+            event.map.put(ItemMapping.BARCODE, "'" + rawBarcode + "'");
+            return true;
         }
 
-        // 数据库不存在，尝试原子性放入缓存
-        if (!BARCODE_CACHE.add(barcode)) {
-            // 其他线程并发插入了相同条码（极少发生，因为刚查过库）
+        // 尝试原子性放入缓存（处理并发冲突）
+        if (!BARCODE_CACHE.add(rawBarcode)) {
+            // 其他线程已插入，视为重复
             event.addWrong(Verify.BARCODE_REPEAT);
-            REPEAT_BARCODE_BLACKLIST.add(barcode);
-            return;
+            BARCODE_BLACKLIST.add(rawBarcode);
+            event.map.put(ItemMapping.BARCODE, "'" + rawBarcode + "'");
+            return true;
         }
-//加单引号是因为barcode再psql中设置为varchar(14)
-        event.map.put(ItemMapping.BARCODE, "'" + barcode + "'");
-        //System.out.println("barcode:"+itemImportEvent.map.get(Corresponding.BARCODE));
+        // 没有命中任何错误
+        return false;
     }
 
     private static boolean isExist(String barcode) {

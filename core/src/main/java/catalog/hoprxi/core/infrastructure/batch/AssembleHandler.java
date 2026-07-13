@@ -75,7 +75,7 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
         // 2. 【全局清算】：检查当前条码是否在“重复黑名单”里
         // 注意：此时 map 中的 barcode 带有单引号，需要去掉再比对
         String cleanBarcode = map.get(ItemMapping.BARCODE).replace("'", "");
-        if (BarcodeHandler.REPEAT_BARCODE_BLACKLIST.contains(cleanBarcode)) {
+        if (BarcodeHandler.BARCODE_BLACKLIST.contains(cleanBarcode)) {
             // 说明它是第一条，但后面有重复的！在这里把它也变成错误！
             itemImportEvent.addWrong(Verify.BARCODE_REPEAT);
             return; // 不组装 SQL

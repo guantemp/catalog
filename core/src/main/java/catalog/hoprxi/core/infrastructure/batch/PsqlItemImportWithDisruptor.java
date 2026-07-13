@@ -70,8 +70,9 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
                         new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler(),
                         new CategoryHandler(), new CategoryHandler(), new CategoryHandler(), new CategoryHandler(),
                         new MadeInHandler(), new MadeInHandler(), new MadeInHandler(), new MadeInHandler(),
-                        new BrandHandler(), new BrandHandler()
-                ).then(new AssembleHandler(), new FailedValidationHandler());
+                        new BrandHandler(), new BrandHandler())
+                .thenHandleEventsWithWorkerPool(new UploadHandler(),new UploadHandler(),new UploadHandler(),new UploadHandler())
+                .then(new AssembleHandler(), new FailedValidationHandler());
         disruptor.start();
 
         RingBuffer<ItemImportEvent> ringBuffer = disruptor.getRingBuffer();

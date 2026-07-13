@@ -66,6 +66,9 @@ public class PsqlBrandRepositoryTest {
         Brand my = new Brand(495651176959596602L, new Name("官的"));
         repository.save(my);
 
+        Brand kong= new Brand(495651176959596603L, new Name("空的"));
+        repository.save(kong);
+
         Brand chenguang = new Brand(495651176959596634L, new Name("晨光", "M&G"));
         repository.save(chenguang);
 

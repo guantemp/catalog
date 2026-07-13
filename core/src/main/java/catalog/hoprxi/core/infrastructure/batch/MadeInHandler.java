@@ -70,8 +70,8 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
     private final Cache<String, String> madeInCache;
 
     static {
-        Config areaUrl = ConfigFactory.load("import");
-        MADE_IN_URL = areaUrl.hasPath("made_in_url") ? areaUrl.getString("made_in_url") : "https://www.hoprxi.com/v1/areas";
+        Config config = ConfigFactory.load("import").getConfig("madin_in");
+        MADE_IN_URL = config.hasPath("url") ? config.getString("url") : "https://www.hoprxi.com/v1/areas";
         SSLContext sslContext;
         try {
             sslContext = SSLContexts.custom().loadTrustMaterial(null, (x509Certificates, s) -> true).build();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,11 +43,11 @@ import java.util.regex.Pattern;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2023-05-08
+ * @since JDK21
+ * @version 0.0.1 builder 2026-07-12
  */
 public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandler<ItemImportEvent> {
-    private static final Pattern ID_PATTERN = Pattern.compile("^\\d{1,19}$");
+    private static final Pattern ID_PATTERN = Pattern.compile("^-?\\d{1,19}$");
     private static final long FAMILY_ID;
     private static final String NAME;
     private static final String SHORTNAME;
@@ -59,8 +60,8 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
         Config config = ConfigFactory.load("import");
         config = config.getConfig("category");
         DELIMITER = config.hasPath("delimiter") ? config.getString("delimiter") : "/";
-        NAME = config.hasPath("name") ? config.getString("name") : "商品分类";
-        SHORTNAME = config.hasPath("shortName") ? config.getString("shortName") : "root of catalog category";
+        NAME = config.hasPath("root_name") ? config.getString("root_name") : "商品分类";
+        SHORTNAME = config.hasPath("root_shortName") ? config.getString("root_shortName") : "root of catalog category";
         Category[] roots = CategoryHandler.root();
         long id = 0L;
         for (Category v : roots) {
@@ -73,6 +74,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
         if (id == 0L) {
             id = REPOSITORY.nextIdentity();
             Category root = Category.root(id, new Name(NAME, SHORTNAME));
+            //System.out.println(root);
             REPOSITORY.save(root);
         }
         FAMILY_ID = id;
@@ -95,7 +97,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
             return;
         }
         if (ID_PATTERN.matcher(category).matches()) {//valid category id
-            if (Category.UNCATEGORIZED.id() == Long.parseLong(category))//UNDEFINED
+            if (Category.UNCATEGORIZED.id() == Long.parseLong(category))//UNCATEGORIZED
                 return;
             if (!CategoryHandler.isdExists(Long.parseLong(category)))//是id值的形式，但是数据库不存在该id
                 event.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
@@ -108,6 +110,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
             event.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
             return;
         }
+        //System.out.println(Arrays.toString(nodes));
         long parentId = FAMILY_ID; // 从根开始
         int i = 0;
         // 逐级向下查找，直到第一个不存在的节点
@@ -120,15 +123,26 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
             parentId = id; // 继续向下
         }
 
+        // 如果缺失的节点名称为空白，直接归为 UNCATEGORIZED，不创建
+        if (i < nodes.length) {
+            String firstMissing = nodes[i];
+            if (firstMissing == null || firstMissing.isBlank()) {
+                event.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
+                return;
+            }
+        }
+
         // 从缺失的节点开始，依次创建
         for (int j = i; j < nodes.length; j++) {
             String nodeName = nodes[j];
+            //System.out.println("create:"+nodeName);
             long finalParentId = parentId;
             String cacheKey = finalParentId + "_" + nodeName;
             // 使用 computeIfAbsent 保证多线程下只创建一次
             parentId = CATEGORY_CACHE.computeIfAbsent(cacheKey, k -> {
                 long newId = REPOSITORY.nextIdentity();
                 Category temp = new Category(finalParentId, newId, nodeName);
+                System.out.println(temp);
                 REPOSITORY.save(temp);
                 return newId;
             });
@@ -149,7 +163,8 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
         String query = """
                 SELECT id FROM category
                 WHERE parent_id = ?
-                  AND (name::jsonb->>'name' = ? OR name::jsonb->>'shortName' = ?)
+                 AND (name::jsonb->>'name' = ?
+                 OR (LENGTH(?) > 0 AND name::jsonb->>'shortName' = ?))
                 LIMIT 1
                 """;
         try (Connection conn = PsqlUtil.getConnection();
@@ -157,6 +172,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
             ps.setLong(1, parentId);
             ps.setString(2, nodeName);
             ps.setString(3, nodeName);
+            ps.setString(4, nodeName);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     long id = rs.getLong(1);
