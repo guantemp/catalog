@@ -33,7 +33,7 @@ public class NameHandler implements EventHandler<ItemImportEvent> {
         name = name.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
         //没有简称置空
         String shortName = itemImportEvent.map.get(ItemMapping.SHORT_NAME);
-        shortName = shortName == null ? "" : shortName.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
+        shortName = shortName == null ? null : shortName.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
 
         StringJoiner joiner = new StringJoiner(",", "'{", "}'");
         joiner.add("\"name\":\"" + name + "\"");

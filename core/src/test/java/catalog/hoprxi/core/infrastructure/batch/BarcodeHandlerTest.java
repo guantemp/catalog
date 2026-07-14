@@ -8,6 +8,7 @@ import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.lang.reflect.Field;
 import java.util.EnumMap;
+import java.util.Map;
 import java.util.Set;
 
 import static org.testng.Assert.*;
@@ -41,7 +42,7 @@ public class BarcodeHandlerTest {
 
     private ItemImportEvent createEvent(String value) {
         ItemImportEvent event = new ItemImportEvent();
-        EnumMap<ItemMapping, String> map = new EnumMap<>(ItemMapping.class);
+        Map<ItemMapping, String> map = new EnumMap<>(ItemMapping.class);
         map.put(ItemMapping.BARCODE, value);
         event.map = map;
         return event;
@@ -69,7 +70,7 @@ public class BarcodeHandlerTest {
         ItemImportEvent event = createEvent(null);
         handler.onEvent(event);
 
-        String barcode = event.map.get(ItemMapping.BARCODE);
+        String barcode = event.barcode;
         assertNotNull(barcode);
         assertTrue(barcode.startsWith("'") && barcode.endsWith("'"));
         String raw = barcode.substring(1, barcode.length() - 1);
@@ -84,7 +85,7 @@ public class BarcodeHandlerTest {
         ItemImportEvent event = createEvent(NON_EXISTING_BARCODE);
         handler.onEvent(event);
 
-        String result = event.map.get(ItemMapping.BARCODE);
+        String result = event.barcode;
         assertNotNull(result);
         assertTrue(result.startsWith("'") && result.endsWith("'"));
         String raw = result.substring(1, result.length() - 1);
@@ -100,7 +101,7 @@ public class BarcodeHandlerTest {
         handler.onEvent(event);
 
         // 数据库存在时，map 中保留原值（带引号）
-        String result = event.map.get(ItemMapping.BARCODE);
+        String result = event.barcode;
         assertNotNull(result);
         assertTrue(result.startsWith("'") && result.endsWith("'"));
         assertEquals(result.substring(1, result.length() - 1), EXISTING_BARCODE);
@@ -114,7 +115,7 @@ public class BarcodeHandlerTest {
         ItemImportEvent event = createEvent(INVALID_CHECKSUM);
         handler.onEvent(event);
 
-        String result = event.map.get(ItemMapping.BARCODE);
+        String result = event.barcode;
         assertNotNull(result);
         assertTrue(result.startsWith("'") && result.endsWith("'"));
         String raw = result.substring(1, result.length() - 1);
@@ -141,7 +142,7 @@ public class BarcodeHandlerTest {
         // 第一次处理（应成功）
         ItemImportEvent event1 = createEvent(barcode);
         handler.onEvent(event1);
-        String result1 = event1.map.get(ItemMapping.BARCODE);
+        String result1 = event1.barcode;
         assertNotNull(result1);
         assertTrue(result1.startsWith("'") && result1.endsWith("'"));
         assertEquals(result1.substring(1, result1.length() - 1), barcode);
@@ -153,7 +154,7 @@ public class BarcodeHandlerTest {
         ItemImportEvent event2 = createEvent(barcode);
         handler.onEvent(event2);
         // map 中仍保留原值（带引号）
-        String result2 = event2.map.get(ItemMapping.BARCODE);
+        String result2 = event2.barcode;
         assertNotNull(result2);
         assertEquals(result2.substring(1, result2.length() - 1), barcode);
         assertTrue(event2.wrong.contains(Verify.BARCODE_REPEAT));

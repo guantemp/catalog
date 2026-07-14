@@ -27,8 +27,16 @@ import com.lmax.disruptor.EventHandler;
  */
 public class GrandHandler implements EventHandler<ItemImportEvent> {
     @Override
-    public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        GradeEnum g = GradeEnum.of(itemImportEvent.map.get(ItemMapping.GRADE));
-        itemImportEvent.map.put(ItemMapping.GRADE, "'" + g.name() + "'");
+    public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        String temp = event.map.get(ItemMapping.GRADE);
+        if (temp == null) temp = "";
+        String cleanS = temp.replace("\u3000", "").replace(" ", "").trim();
+
+        // 2. 【新增】如果清洗后为空，给予默认值（例如 "合格"）
+        if (cleanS.isEmpty()) {
+            cleanS = GradeEnum.QUALIFIED.name();
+        }
+        GradeEnum g = GradeEnum.of(cleanS);
+        event.map.put(ItemMapping.GRADE, "'" + g.name() + "'");
     }
 }

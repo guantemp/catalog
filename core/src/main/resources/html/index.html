@@ -9,14 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet" />
     <style>
         /* ===== 全局样式 ===== */
-        [v-cloak] {
-            display: none !important;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        [v-cloak] { display: none !important; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: radial-gradient(ellipse at 20% 30%, #0f172a, #070b14);
             font-family: 'Inter', system-ui, sans-serif;
@@ -32,251 +26,19 @@
             overflow: hidden;
         }
 
-        /* ===== 顶部导航（饱满样式） ===== */
-        .app-header {
-            flex-shrink: 0;
-            height: 64px;
-            background: rgba(8, 12, 24, 0.92);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(129, 140, 248, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 24px 0 20px;
-            z-index: 20;
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
-            color: #e2e8f0;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-            font-size: 16px;
-            color: #f1f5f9;
-            user-select: none;
-        }
-        .header-left .material-symbols-outlined {
-            font-size: 28px;
-            color: #818cf8;
-        }
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-        }
-        .top-search-box {
-            position: relative;
-            display: flex;
-            align-items: center;
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid #334155;
-            border-radius: 40px;
-            padding: 0 16px 0 38px;
-            height: 38px;
-            transition: 0.25s;
-            min-width: 180px;
-        }
-        .top-search-box:focus-within {
-            border-color: #818cf8;
-            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
-            background: rgba(15, 23, 42, 0.95);
-        }
-        .top-search-box .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #64748b;
-            font-size: 14px;
-            pointer-events: none;
-        }
-        .top-search-box input {
-            background: transparent;
-            border: none;
-            outline: none;
-            color: #f1f5f9;
-            font-size: 0.85rem;
-            width: 140px;
-            padding: 0;
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-        .top-search-box input::placeholder {
-            color: #94a3b8;
-            font-size: 0.8rem;
-        }
-        .searching-indicator-top {
-            position: absolute;
-            right: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #818cf8;
-            font-size: 14px;
-        }
-        .notification-icon {
-            position: relative;
-            cursor: pointer;
-            color: #94a3b8;
-            font-size: 20px;
-            transition: 0.2s;
-            padding: 4px;
-        }
-        .notification-icon:hover {
-            color: #f1f5f9;
-        }
-        .notification-icon .badge {
-            position: absolute;
-            top: -4px;
-            right: -6px;
-            background: #ef4444;
-            color: #fff;
-            font-size: 10px;
-            font-weight: 600;
-            border-radius: 50%;
-            min-width: 18px;
-            height: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 5px;
-            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-        }
-        .user-dropdown {
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: default;
-            padding: 4px 8px 4px 4px;
-            border-radius: 40px;
-            transition: background 0.15s;
-            user-select: none;
-        }
-        .user-dropdown:hover {
-            background: rgba(129, 140, 248, 0.08);
-        }
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #4f46e5, #818cf8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 14px;
-            color: #fff;
-            flex-shrink: 0;
-        }
-        .username {
-            font-size: 14px;
-            font-weight: 500;
-            color: #e2e8f0;
-        }
-        .chevron {
-            font-size: 12px;
-            color: #64748b;
-            transition: transform 0.25s;
-        }
-        .chevron.open {
-            transform: rotate(180deg);
-        }
-        .dropdown-menu {
-            position: absolute;
-            top: calc(100% + 8px);
-            right: 0;
-            background: #1A2434;
-            border: 1px solid #2A3A4A;
-            border-radius: 16px;
-            min-width: 180px;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
-            overflow: hidden;
-            z-index: 200;
-            padding: 6px 0;
-            transform-origin: top right;
-            animation: dropdownFadeIn 0.2s ease;
-            display: none;
-        }
-        .dropdown-menu.open {
-            display: block;
-        }
-        @keyframes dropdownFadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.96) translateY(-6px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-        .dropdown-menu .dropdown-item {
-            padding: 10px 18px;
-            color: #C8DCF0;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: background 0.15s;
-            border: none;
-            background: transparent;
-            width: 100%;
-            text-align: left;
-            font-family: inherit;
-        }
-        .dropdown-menu .dropdown-item:hover {
-            background: rgba(45, 156, 219, 0.12);
-            color: #fff;
-        }
-        .dropdown-menu .dropdown-item i {
-            width: 18px;
-            font-size: 14px;
-            color: #7F8AA8;
-            transition: color 0.15s;
-        }
-        .dropdown-menu .dropdown-item:hover i {
-            color: #7AC9FF;
-        }
-        .dropdown-menu .dropdown-divider {
-            height: 1px;
-            background: #2A3A4A;
-            margin: 4px 12px;
-        }
-        .dropdown-menu .dropdown-item.danger {
-            color: #FFB4A2;
-        }
-        .dropdown-menu .dropdown-item.danger i {
-            color: #DC4C4C;
-        }
-        .dropdown-menu .dropdown-item.danger:hover {
-            background: rgba(220, 76, 76, 0.12);
-            color: #FFB4A2;
-        }
-        .dropdown-menu .dropdown-item.danger:hover i {
-            color: #FF6B6B;
-        }
-        .help-icon {
-            cursor: pointer;
-            color: #94a3b8;
-            font-size: 20px;
-            transition: 0.2s;
-            padding: 4px;
-        }
-        .help-icon:hover {
-            color: #f1f5f9;
-        }
+        /* ===== 顶部导航已完全删除 ===== */
 
         /* ===== 主体 ===== */
         .main-body {
             display: flex;
             flex: 1;
             overflow: hidden;
+            padding-top: 0;
         }
 
-        /* ===== 侧边栏 ———— 140px ===== */
+        /* ===== 侧边栏 ———— 宽度 200px ===== */
         .saas-sidebar {
-            width: 140px;
+            width: 200px;
             flex-shrink: 0;
             background: rgba(8, 12, 24, 0.92);
             backdrop-filter: blur(12px);
@@ -293,48 +55,121 @@
         .saas-sidebar.collapsed {
             width: 56px;
         }
-        .saas-sidebar.collapsed .nav-item span:last-child {
-            display: none;
-        }
-        .saas-sidebar.collapsed .nav-item {
+        .saas-sidebar.collapsed .nav-item span:last-child { display: none; }
+        .saas-sidebar.collapsed .nav-item { justify-content: center; padding: 10px 4px; }
+        .saas-sidebar.collapsed .nav-item .material-symbols-outlined { font-size: 22px; }
+        .saas-sidebar.collapsed .collapse-btn span { display: none; }
+        .saas-sidebar.collapsed .collapse-btn i { transform: rotate(180deg); }
+        .saas-sidebar.collapsed .collapse-btn { justify-content: center; padding: 14px 0; }
+        .saas-sidebar.collapsed .sidebar-search-wrap { display: none; }
+        .saas-sidebar.collapsed .sidebar-brand .brand-text { display: none; }
+        .saas-sidebar.collapsed .sidebar-brand {
             justify-content: center;
-            padding: 10px 4px;
+            padding: 12px 0 8px 0;
         }
-        .saas-sidebar.collapsed .nav-item .material-symbols-outlined {
-            font-size: 22px;
-        }
-        .saas-sidebar.collapsed .collapse-btn span {
-            display: none;
-        }
-        .saas-sidebar.collapsed .collapse-btn i {
-            transform: rotate(180deg);
-        }
-        .saas-sidebar.collapsed .collapse-btn {
-            justify-content: center;
-            padding: 14px 0;
+        .saas-sidebar.collapsed .sidebar-brand .material-symbols-outlined {
+            font-size: 28px;
+            margin: 0;
         }
 
+        /* ===== 侧边栏顶部：logo + 店名 ===== */
+        .sidebar-brand {
+            padding: 14px 16px 8px 16px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            user-select: none;
+            border-bottom: 1px solid rgba(129, 140, 248, 0.08);
+            transition: all 0.25s ease;
+        }
+        .sidebar-brand .material-symbols-outlined {
+            font-size: 28px;
+            color: #818cf8;
+            flex-shrink: 0;
+        }
+        .sidebar-brand .brand-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            transition: opacity 0.2s;
+        }
+
+        /* ===== 侧边栏搜索框 ===== */
+        .sidebar-search-wrap {
+            padding: 8px 14px 12px 14px;
+            border-bottom: 1px solid rgba(129, 140, 248, 0.06);
+        }
+        .sidebar-search-wrap .search-box-inner {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 40px;
+            padding: 0 12px 0 34px;
+            height: 36px;
+            transition: 0.25s;
+        }
+        .sidebar-search-wrap .search-box-inner:focus-within {
+            border-color: #818cf8;
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+            background: rgba(15, 23, 42, 0.95);
+        }
+        .sidebar-search-wrap .search-box-inner .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 14px;
+            pointer-events: none;
+        }
+        .sidebar-search-wrap .search-box-inner input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #f1f5f9;
+            font-size: 0.85rem;
+            width: 100%;
+            padding: 0;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .sidebar-search-wrap .search-box-inner input::placeholder {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+        .sidebar-search-wrap .searching-indicator-side {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #818cf8;
+            font-size: 14px;
+        }
+
+        /* ===== 导航菜单 ===== */
         .nav-menu {
             flex: 1;
             padding: 8px 0 12px 0;
             overflow-y: auto;
         }
-        .nav-menu::-webkit-scrollbar {
-            width: 3px;
-        }
-        .nav-menu::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .nav-menu::-webkit-scrollbar-thumb {
-            background: #2d3a4a;
-            border-radius: 4px;
-        }
+        .nav-menu::-webkit-scrollbar { width: 3px; }
+        .nav-menu::-webkit-scrollbar-track { background: transparent; }
+        .nav-menu::-webkit-scrollbar-thumb { background: #2d3a4a; border-radius: 4px; }
 
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
+            gap: 12px;
+            padding: 8px 16px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
@@ -356,13 +191,8 @@
             border-left-color: #818cf8;
             font-weight: 600;
         }
-        .nav-item .material-symbols-outlined {
-            font-size: 22px;
-            flex-shrink: 0;
-        }
-        .nav-item span:last-child {
-            font-size: 14px;
-        }
+        .nav-item .material-symbols-outlined { font-size: 22px; flex-shrink: 0; }
+        .nav-item span:last-child { font-size: 14px; }
 
         .nav-divider {
             height: 1px;
@@ -372,11 +202,11 @@
 
         .collapse-btn {
             margin-top: auto;
-            padding: 12px 12px;
+            padding: 12px 16px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             border-top: 1px solid rgba(129, 140, 248, 0.08);
             color: rgba(255, 255, 255, 0.35);
             transition: background 0.2s;
@@ -392,58 +222,65 @@
             transition: transform 0.25s ease;
         }
 
-        /* ===== 主内容区（含 Tab 栏和 iframe） ===== */
+        /* ===== 主内容区（允许下拉溢出） ===== */
         .main-content-area {
             flex: 1;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow: visible !important;
             background: transparent;
         }
 
-        /* Tab 栏 */
+        /* ===== Tab 栏 ===== */
         .tab-bar {
             flex-shrink: 0;
-            height: 40px;
+            height: 44px;
             background: rgba(8, 12, 24, 0.85);
             backdrop-filter: blur(8px);
             border-bottom: 1px solid rgba(129, 140, 248, 0.08);
             display: flex;
             align-items: center;
             padding: 0 12px;
-            overflow-x: auto;
-            gap: 2px;
+            gap: 0;
             user-select: none;
+            overflow: visible !important;
+            position: relative;
+            z-index: 100;
+        }
+
+        .tab-list {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            overflow-x: auto;
+            height: 100%;
             -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            overflow-y: visible;
         }
-        .tab-bar::-webkit-scrollbar {
-            height: 3px;
-        }
-        .tab-bar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .tab-bar::-webkit-scrollbar-thumb {
-            background: #3A4A5A;
-            border-radius: 4px;
-        }
+        .tab-list::-webkit-scrollbar { height: 3px; }
+        .tab-list::-webkit-scrollbar-track { background: transparent; }
+        .tab-list::-webkit-scrollbar-thumb { background: #3A4A5A; border-radius: 4px; }
 
         .tab-item {
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            padding: 4px 10px 4px 12px;
+            padding: 4px 12px 4px 14px;
             border-radius: 16px 16px 0 0;
             background: transparent;
             color: #94a3b8;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
             white-space: nowrap;
             position: relative;
-            height: 32px;
+            height: 34px;
             border: none;
             font-family: 'Inter', sans-serif;
+            flex-shrink: 0;
         }
         .tab-item:hover {
             background: rgba(129, 140, 248, 0.06);
@@ -454,9 +291,8 @@
             color: #f1f5f9;
             border-bottom: 2px solid #818cf8;
         }
-
         .tab-item .tab-close {
-            font-size: 13px;
+            font-size: 14px;
             color: #94a3b8;
             cursor: pointer;
             padding: 0 4px;
@@ -477,19 +313,166 @@
             border-color: #f87171;
             transform: scale(1.1);
         }
-
         .tab-item .tab-icon {
-            font-size: 15px;
+            font-size: 16px;
             color: #818cf8;
         }
-        .tab-item.dashboard-tab .tab-close {
+        .tab-item.dashboard-tab .tab-close { display: none; }
+        .tab-item.dashboard-tab { padding-right: 14px; }
+
+        /* ===== 右侧操作区 ===== */
+        .tab-actions {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-left: 16px;
+            border-left: 1px solid rgba(129, 140, 248, 0.10);
+            height: 100%;
+            margin-left: 4px;
+            position: relative;
+            z-index: 200;
+        }
+        .tab-actions .notification-icon {
+            position: relative;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 20px;
+            transition: 0.2s;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tab-actions .notification-icon:hover { color: #f1f5f9; }
+        .tab-actions .notification-icon .badge {
+            position: absolute;
+            top: -2px;
+            right: -4px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        }
+        .tab-actions .user-dropdown {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 2px 8px 2px 2px;
+            border-radius: 40px;
+            transition: background 0.15s;
+            user-select: none;
+            height: 34px;
+        }
+        .tab-actions .user-dropdown:hover {
+            background: rgba(129, 140, 248, 0.08);
+        }
+        .tab-actions .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #818cf8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .tab-actions .username {
+            font-size: 13px;
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+        .tab-actions .chevron {
+            font-size: 12px;
+            color: #64748b;
+            transition: transform 0.25s;
+        }
+        .tab-actions .chevron.open { transform: rotate(180deg); }
+        .tab-actions .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background: #1A2434;
+            border: 1px solid #2A3A4A;
+            border-radius: 16px;
+            min-width: 180px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            z-index: 9999;
+            padding: 6px 0;
+            transform-origin: top right;
+            animation: dropdownFadeIn 0.2s ease;
             display: none;
         }
-        .tab-item.dashboard-tab {
-            padding-right: 12px;
+        .tab-actions .dropdown-menu.open { display: block; }
+        @keyframes dropdownFadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(-6px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
+        .tab-actions .dropdown-menu .dropdown-item {
+            padding: 10px 18px;
+            color: #C8DCF0;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+        .tab-actions .dropdown-menu .dropdown-item:hover {
+            background: rgba(45, 156, 219, 0.12);
+            color: #fff;
+        }
+        .tab-actions .dropdown-menu .dropdown-item i {
+            width: 18px;
+            font-size: 14px;
+            color: #7F8AA8;
+            transition: color 0.15s;
+        }
+        .tab-actions .dropdown-menu .dropdown-item:hover i { color: #7AC9FF; }
+        .tab-actions .dropdown-menu .dropdown-divider {
+            height: 1px;
+            background: #2A3A4A;
+            margin: 4px 12px;
+        }
+        .tab-actions .dropdown-menu .dropdown-item.danger { color: #FFB4A2; }
+        .tab-actions .dropdown-menu .dropdown-item.danger i { color: #DC4C4C; }
+        .tab-actions .dropdown-menu .dropdown-item.danger:hover {
+            background: rgba(220, 76, 76, 0.12);
+            color: #FFB4A2;
+        }
+        .tab-actions .dropdown-menu .dropdown-item.danger:hover i { color: #FF6B6B; }
+        .tab-actions .help-icon {
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 20px;
+            transition: 0.2s;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tab-actions .help-icon:hover { color: #f1f5f9; }
 
-        /* ===== iframe 容器 ———— 零内边距，完全填充 ===== */
+        /* ===== iframe 容器 ===== */
         .iframe-wrapper {
             flex: 1;
             padding: 0;
@@ -504,203 +487,204 @@
             display: block;
         }
 
+        /* =========================================================
+                   【新增】帮助模态框样式
+                   ========================================================= */
+        .help-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: modalFadeIn 0.25s ease;
+            padding: 20px;
+        }
+        .help-modal-overlay.active {
+            display: flex;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .help-modal-box {
+            background: #1A2434;
+            border: 1px solid rgba(129, 140, 248, 0.25);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 860px;
+            height: 90vh;
+            max-height: 700px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalSlideIn 0.3s ease;
+        }
+        @keyframes modalSlideIn {
+            from { transform: scale(0.95) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .help-modal-header {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(129, 140, 248, 0.10);
+            background: rgba(8, 12, 24, 0.5);
+        }
+        .help-modal-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .help-modal-header h3 i {
+            color: #818cf8;
+            font-size: 18px;
+        }
+        .help-modal-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: 0.2s;
+            line-height: 1;
+        }
+        .help-modal-close:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+        .help-modal-body {
+            flex: 1;
+            overflow: hidden;
+            padding: 0;
+            background: #0f172a;
+        }
+        .help-modal-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
         /* ===== 响应式 ===== */
         @media (max-width: 768px) {
-            .app-header {
-                padding: 0 12px;
-                height: 56px;
-            }
-            .header-left {
-                font-size: 14px;
-            }
-            .header-left .material-symbols-outlined {
-                font-size: 24px;
-            }
-            .top-search-box {
-                min-width: 40px;
-                padding: 0 10px 0 34px;
-            }
-            .top-search-box input {
-                width: 80px;
-                font-size: 0.75rem;
-            }
-            .top-search-box input::placeholder {
-                font-size: 0;
-            }
-            .top-search-box input:focus {
-                width: 120px;
-            }
-            .top-search-box input:focus::placeholder {
-                font-size: 0.7rem;
-            }
-            .username {
-                display: none;
-            }
-            .saas-sidebar {
-                width: 56px;
-            }
-            .saas-sidebar.collapsed {
-                width: 56px;
-            }
-            .saas-sidebar .nav-item span:last-child {
-                display: none !important;
-            }
-            .saas-sidebar .nav-item {
-                justify-content: center;
-                padding: 10px 4px;
-            }
-            .saas-sidebar .collapse-btn span {
-                display: none !important;
-            }
-            .saas-sidebar .collapse-btn {
-                justify-content: center;
-                padding: 12px 0;
-            }
-            .saas-sidebar .collapse-btn i {
-                transform: rotate(180deg);
-            }
-            .tab-bar {
-                padding: 0 8px;
-                height: 34px;
-            }
-            .tab-item {
-                font-size: 11px;
-                padding: 3px 8px 3px 10px;
-                height: 28px;
-            }
-            .tab-item .tab-close {
-                width: 18px;
-                height: 18px;
-                font-size: 11px;
-            }
-            .iframe-wrapper {
-                padding: 0;
+            .saas-sidebar { width: 56px; }
+            .saas-sidebar.collapsed { width: 56px; }
+            .saas-sidebar .nav-item span:last-child { display: none !important; }
+            .saas-sidebar .nav-item { justify-content: center; padding: 10px 4px; }
+            .saas-sidebar .collapse-btn span { display: none !important; }
+            .saas-sidebar .collapse-btn { justify-content: center; padding: 12px 0; }
+            .saas-sidebar .collapse-btn i { transform: rotate(180deg); }
+            .saas-sidebar .sidebar-brand .brand-text { display: none !important; }
+            .saas-sidebar .sidebar-brand { justify-content: center; padding: 12px 0 8px 0; }
+            .saas-sidebar .sidebar-search-wrap { display: none !important; }
+            .tab-bar { padding: 0 8px; height: 38px; }
+            .tab-item { font-size: 12px; padding: 3px 8px 3px 10px; height: 30px; }
+            .tab-item .tab-close { width: 18px; height: 18px; font-size: 12px; }
+            .tab-actions { gap: 8px; padding-left: 10px; }
+            .tab-actions .notification-icon { font-size: 17px; }
+            .tab-actions .help-icon { font-size: 17px; }
+            .tab-actions .username { display: none; }
+            .tab-actions .user-avatar { width: 24px; height: 24px; font-size: 11px; }
+            .tab-actions .user-dropdown { padding: 2px 4px 2px 2px; }
+            .iframe-wrapper { padding: 0; }
+            .help-modal-box {
+                max-width: 100%;
+                height: 95vh;
+                max-height: 95vh;
+                border-radius: 12px;
             }
         }
         @media (max-width: 480px) {
-            .app-header .header-left span:last-child {
-                display: none;
-            }
-            .header-right {
-                gap: 8px;
-            }
-            .notification-icon,
-            .help-icon {
-                font-size: 17px;
-                padding: 2px;
-            }
-            .user-avatar {
-                width: 26px;
-                height: 26px;
-                font-size: 11px;
-            }
+            .tab-actions .notification-icon .badge { font-size: 9px; min-width: 16px; height: 16px; }
         }
     </style>
 </head>
 <body>
 <div class="global-layout">
-    <!-- ===== 顶部导航 ===== -->
-    <header class="app-header">
-        <div class="header-left">
-            <span class="material-symbols-outlined">storefront</span>
-            <span>SaaS 零售 · 重庆夏至店</span>
-        </div>
-        <div class="header-right">
-            <div class="top-search-box">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" placeholder="搜索菜单..." id="globalSearchInput" />
-                <span id="globalSearchIndicator" class="searching-indicator-top" style="display:none;"><i class="fas fa-spinner fa-pulse"></i></span>
+    <!-- ===== 顶部导航已完全删除 ===== -->
+
+    <div class="main-body">
+        <!-- 侧边栏 -->
+        <aside class="saas-sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <span class="material-symbols-outlined" title="重庆夏至店">storefront</span>
+                <span class="brand-text">重庆夏至店</span>
             </div>
-            <div class="notification-icon" id="notificationIcon">
-                <i class="fas fa-bell"></i>
-                <span class="badge" id="notificationBadge">3</span>
-            </div>
-            <div class="user-dropdown" id="userDropdown">
-                <div class="user-avatar">张</div>
-                <span class="username">张经理</span>
-                <i class="fas fa-chevron-down chevron" id="dropdownChevron"></i>
-                <div class="dropdown-menu" id="dropdownMenu">
-                    <button class="dropdown-item" id="settingsBtn"><i class="fas fa-user-cog"></i> 用户设置</button>
-                    <div class="dropdown-divider"></div>
-                    <button class="dropdown-item danger" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
+            <div class="sidebar-search-wrap">
+                <div class="search-box-inner">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" placeholder="搜索菜单..." id="globalSearchInput" />
+                    <span id="globalSearchIndicator" class="searching-indicator-side" style="display:none;"><i class="fas fa-spinner fa-pulse"></i></span>
                 </div>
             </div>
-            <div class="help-icon" id="helpIcon"><i class="fas fa-question-circle"></i></div>
-        </div>
-    </header>
-
-    <!-- ===== 主体 ===== -->
-    <div class="main-body">
-        <!-- 侧边栏 —— 140px 宽，14px 字体 -->
-        <aside class="saas-sidebar" id="sidebar">
             <div class="nav-menu">
-                <!-- 桌面 -->
                 <div class="nav-item active" data-view="dashboard" style="margin-top: 6px;" title="桌面">
                     <span class="material-symbols-outlined">dashboard</span>
                     <span>桌面</span>
                 </div>
-                <!-- 品牌管理 -->
                 <div class="nav-item" data-view="brand" title="品牌管理">
                     <span class="material-symbols-outlined">branding_watermark</span>
                     <span>品牌管理</span>
                 </div>
-                <!-- 分类管理 -->
                 <div class="nav-item" data-view="category" title="分类管理">
                     <span class="material-symbols-outlined">folder</span>
                     <span>分类管理</span>
                 </div>
-                <!-- 商品管理 -->
                 <div class="nav-item" data-view="item" title="商品管理">
                     <span class="material-symbols-outlined">inventory_2</span>
                     <span>商品管理</span>
                 </div>
-                <!-- 文件上传 -->
                 <div class="nav-item" data-view="upload" title="文件上传">
                     <span class="material-symbols-outlined">cloud_upload</span>
                     <span>文件上传</span>
                 </div>
                 <div class="nav-divider"></div>
-                <!-- 零售管理 -->
                 <div class="nav-item" onclick="alert('零售管理模块开发中')" title="零售管理">
                     <span class="material-symbols-outlined">shopping_cart</span>
                     <span>零售管理</span>
                 </div>
-                <!-- 采购管理 -->
                 <div class="nav-item" onclick="alert('采购管理模块开发中')" title="采购管理">
                     <span class="material-symbols-outlined">local_shipping</span>
                     <span>采购管理</span>
                 </div>
-                <!-- 库存管理 -->
                 <div class="nav-item" onclick="alert('库存管理模块开发中')" title="库存管理">
                     <span class="material-symbols-outlined">warehouse</span>
                     <span>库存管理</span>
                 </div>
-                <!-- 连锁配送 -->
                 <div class="nav-item" onclick="alert('连锁配送模块开发中')" title="连锁配送">
                     <span class="material-symbols-outlined">route</span>
                     <span>连锁配送</span>
                 </div>
-                <!-- 批发管理 -->
                 <div class="nav-item" onclick="alert('批发管理模块开发中')" title="批发管理">
                     <span class="material-symbols-outlined">sell</span>
                     <span>批发管理</span>
                 </div>
-                <!-- 会员管理 -->
                 <div class="nav-item" onclick="alert('会员管理模块开发中')" title="会员管理">
                     <span class="material-symbols-outlined">people</span>
                     <span>会员管理</span>
                 </div>
-                <!-- 结算管理 -->
                 <div class="nav-item" onclick="alert('结算管理模块开发中')" title="结算管理">
                     <span class="material-symbols-outlined">payments</span>
                     <span>结算管理</span>
                 </div>
-                <!-- 决策分析 -->
                 <div class="nav-item" onclick="alert('决策分析模块开发中')" title="决策分析">
                     <span class="material-symbols-outlined">analytics</span>
                     <span>决策分析</span>
                 </div>
-                <!-- 系统管理 -->
                 <div class="nav-item" onclick="alert('系统管理模块开发中')" title="系统管理">
                     <span class="material-symbols-outlined">settings</span>
                     <span>系统管理</span>
@@ -712,9 +696,29 @@
             </div>
         </aside>
 
-        <!-- ===== 主内容区 ===== -->
+        <!-- 主内容 -->
         <div class="main-content-area">
-            <div class="tab-bar" id="tabBar"></div>
+            <div class="tab-bar" id="tabBar">
+                <div class="tab-list" id="tabList"></div>
+                <div class="tab-actions" id="tabActions">
+                    <div class="notification-icon" id="notificationIcon">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge" id="notificationBadge">3</span>
+                    </div>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="user-avatar">张</div>
+                        <span class="username">张经理</span>
+                        <i class="fas fa-chevron-down chevron" id="dropdownChevron"></i>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <button class="dropdown-item" id="settingsBtn"><i class="fas fa-user-cog"></i> 用户设置</button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item danger" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
+                        </div>
+                    </div>
+                    <!-- 帮助按钮 -->
+                    <div class="help-icon" id="helpIcon"><i class="fas fa-question-circle"></i></div>
+                </div>
+            </div>
             <div class="iframe-wrapper">
                 <iframe id="contentFrame" src="about:blank"></iframe>
             </div>
@@ -722,203 +726,65 @@
     </div>
 </div>
 
+<!-- =========================================================
+     【新增】帮助模态框（HTML结构）
+     ========================================================= -->
+<div class="help-modal-overlay" id="helpModalOverlay">
+    <div class="help-modal-box">
+        <div class="help-modal-header">
+            <h3><i class="fas fa-question-circle"></i> 帮助中心</h3>
+            <button class="help-modal-close" id="helpModalCloseBtn" title="关闭帮助">✕</button>
+        </div>
+        <div class="help-modal-body">
+            <iframe id="helpIframe" src="about:blank"></iframe>
+        </div>
+    </div>
+</div>
+
 <script>
+    // ============================================================
     // ===== 侧边栏折叠 =====
+    // ============================================================
     const sidebar = document.getElementById('sidebar');
     const collapseBtn = document.getElementById('collapseBtn');
 
-    // ============================================================
-    // 【新增】自动折叠侧边栏 —— 分辨率检测（1440×900 阈值）
-    // ============================================================
     (function() {
-        // 标记用户是否手动操作过折叠按钮（手动操作后不再自动干预）
         let userManuallyToggled = false;
-        const THRESHOLD_W = 1440;
-        const THRESHOLD_H = 900;
+        const THRESHOLD_W = 1440, THRESHOLD_H = 900;
         let resizeTimer = null;
-
-        // 核心：根据当前窗口尺寸调整侧边栏折叠状态
         function adjustSidebarByResolution() {
-            // 如果用户已手动操作，则不再自动调整
             if (userManuallyToggled) return;
-
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-
-            // 分辨率 < 1440×900（宽度或高度任一不达标即折叠）
+            const w = window.innerWidth, h = window.innerHeight;
             if (w < THRESHOLD_W || h < THRESHOLD_H) {
                 sidebar.classList.add('collapsed');
             } else {
                 sidebar.classList.remove('collapsed');
             }
         }
-
-        // ----- 页面加载时执行检测 -----
-        // 使用 DOMContentLoaded 确保 DOM 已就绪（脚本在底部，也可直接用）
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', adjustSidebarByResolution);
         } else {
             adjustSidebarByResolution();
         }
-
-        // ----- 窗口 resize 时执行检测（防抖） -----
         window.addEventListener('resize', function() {
             if (resizeTimer) clearTimeout(resizeTimer);
             resizeTimer = setTimeout(adjustSidebarByResolution, 150);
         });
-
-        // ----- 修改折叠按钮点击事件（保留切换功能，同时标记手动操作） -----
-        // 注意：原有 click 监听器会被替换，这里使用新监听器 + 移除旧监听器
-        // 由于原有监听器是匿名函数，无法直接 removeEventListener，我们用 cloneNode 替换来清除所有监听
-        const newCollapseBtn = collapseBtn.cloneNode(true);
-        collapseBtn.parentNode.replaceChild(newCollapseBtn, collapseBtn);
-
-        // 重新获取引用（替换后的新按钮）
-        const freshCollapseBtn = document.getElementById('collapseBtn');
+        const newBtn = collapseBtn.cloneNode(true);
+        collapseBtn.parentNode.replaceChild(newBtn, collapseBtn);
+        const freshBtn = document.getElementById('collapseBtn');
         const freshSidebar = document.getElementById('sidebar');
-
-        // 添加新的点击事件：切换折叠 + 标记手动操作
-        freshCollapseBtn.addEventListener('click', function(e) {
-            userManuallyToggled = true; // 用户手动操作，后续不再自动调整
+        freshBtn.addEventListener('click', function(e) {
+            userManuallyToggled = true;
             freshSidebar.classList.toggle('collapsed');
         });
-
-        // 将新引用暴露给后续代码使用（保持外部变量指向正确）
-        // 但 sidebar 和 collapseBtn 已用 var/let 声明，需要更新引用
-        // 由于 sidebar 和 collapseBtn 在外部作用域已声明，这里重新赋值
-        // 使用 window 或直接重新赋值
-        // 注意：外部代码中 sidebar 和 collapseBtn 被引用，我们需要确保它们指向新元素
-        // 但由于 var 和 let 的作用域，我们不能在 IIFE 内重新赋值外部变量
-        // 解决方案：直接修改外部变量指向
-        // 这里使用一个技巧：将新的引用赋给 window 上的同名变量，并在外部使用 window 引用
-        // 但更简单：将外部变量重新赋值
-        // 由于 sidebar 和 collapseBtn 是用 const 声明的，不能重新赋值
-        // 所以我们用 var 替换 const，或者直接使用新的变量
-        // 最简单的方式：在 IIFE 中直接操作 freshSidebar 和 freshCollapseBtn
-        // 但外部代码中还有其他地方使用了 sidebar 和 collapseBtn（如 Tab 管理）
-        // 所以我们需要确保外部代码使用的是更新后的元素
-
-        // 方案：不使用 cloneNode 替换，而是保留原有元素，但移除所有监听器
-        // 但无法移除匿名监听器，所以改用 cloneNode 方式
-        // 同时更新外部变量指向新元素
-
-        // 由于 const 不能重新赋值，我们改为 var 声明，并在 IIFE 中更新
-        // 但 var 有函数作用域，在 IIFE 外部无法访问内部变量
-        // 所以我们在 IIFE 内部直接修改 window 上的属性
-
-        // 更干净的方式：在 IIFE 中直接使用 freshSidebar 和 freshCollapseBtn
-        // 然后将它们赋值给 window 对象，供其他代码使用
-
-        // 但其他代码中使用了 sidebar 和 collapseBtn（const 声明），不能重新赋值
-        // 所以我们需要修改其他代码，使用新的引用
-
-        // 由于代码量较大，最稳妥的方式是：不替换元素，而是用新的事件监听器
-        // 但保留原有的监听器（虽然会执行两次切换，但可以用标志控制）
-
-        // 其实最简单：让新的监听器先执行，设置一个标志，阻止原有监听器执行
-        // 但无法阻止已添加的监听器
-
-        // 经过权衡，我决定使用最干净的方式：在 IIFE 中重新构建侧边栏和按钮
-        // 但为了不影响外部代码，我将在 IIFE 中重新获取元素，并直接操作
-
-        // 由于上述方式过于复杂，我改用另一种更简单的实现：
-        // 不替换元素，而是在原有基础上，添加一个新的监听器，
-        // 在用户点击时，除了切换状态，还要设置 manualOverride 标志
-        // 但原有监听器也会执行，导致切换两次（等于没切换）
-        // 所以，我使用一个标志来防止重复切换
-
-        // 最简单的最终方案：完全放弃 cloneNode，直接在原有元素上操作
-        // 使用一个标志来防止双重切换
-
-        // 重新获取原始按钮（未被替换）
-        // 但由于上面已经执行了 replaceChild，原始按钮已被替换
-        // 所以需要回退
-
-        // 算了，这个实现太绕了。让我换一种最简单的实现方式：
-        // 不替换任何元素，在原有基础上，用新的逻辑覆盖
-
-        // 直接使用新的点击事件，并移除原有的事件
-        // 由于原有事件是匿名函数，无法移除，所以用新的事件覆盖
-
-        // 最稳妥的方式：在页面加载完成后，用新的事件替换原有事件
-        // 但原有事件已经添加，无法移除
-
-        // 好吧，我使用一种 hack 方式：在点击时，先执行我们的逻辑，然后阻止其他监听器
-        // 但无法阻止已添加的监听器
-
-        // 最终决定：使用一个全局标志，在点击时检查，如果已经处理过，则跳过
-
-        // 由于代码已经变得复杂，我重新设计一个简单的方案：
-        // 1. 不使用 cloneNode
-        // 2. 在原有的 collapseBtn 上，使用 addEventListener 添加新的监听器
-        // 3. 在新的监听器中，使用一个标志来防止重复执行
-
-        // 但原有的监听器仍然会执行，导致切换两次
-        // 所以，我使用一个标志，在第一次切换后，第二次切换时检测到标志，不再切换
-
-        // 这种方法太 hacky，不推荐
-
-        // 重新思考：最好的方式是修改原有的代码，而不是在外部添加新代码
-        // 所以，我直接在原有的 collapseBtn 点击事件中修改
-
-        // 由于我提供的是完整的 HTML，我可以直接在原有代码中修改
-
-        // 好了，让我重新开始，采用最简单直接的方式：
-        // 在原有的 collapseBtn 点击事件中，添加 manualOverride 标志
-        // 并在页面加载时检测分辨率
-
-        // 但由于代码已经执行到这里，上面的 cloneNode 已经执行了
-        // 所以需要回退
-
-        // 好吧，让我重新写整个代码，从零开始
-
-        // 我放弃上面的所有实现，重新开始
-
-        // 最终实现：不替换任何元素，在原有基础上添加功能
-        // 但为了清晰，我将在页面加载后，使用 MutationObserver 或直接在 DOM 上操作
-
-        // 最干净的方式：在页面加载后，重新获取元素，并重置所有事件
-
-        // 好吧，我承认我搞复杂了。让我直接使用最简单的方式：
-        // 在页面加载后，检测分辨率，并设置侧边栏状态
-        // 然后修改原有的 collapseBtn 点击事件
-
-        // 由于无法移除原有的点击事件，我使用一个标志来控制
-
-        // 最终，我决定使用以下方案：
-        // 1. 在页面加载时检测分辨率，设置侧边栏状态
-        // 2. 添加 resize 监听
-        // 3. 用户点击折叠按钮时，切换状态，并标记用户已手动操作
-        // 4. 使用一个标志防止自动调整与用户操作冲突
-
-        // 为了处理原有的点击事件，我使用一个技巧：
-        // 在点击时，先执行我们的逻辑，然后使用一个标志，让原有的监听器不执行
-        // 但无法阻止
-
-        // 所以，我干脆不用原有的点击事件，而是用新的事件覆盖
-        // 使用 DOM 的 replaceChild 方法替换按钮
-
-        // 但由于上面的代码已经执行了 replaceChild，所以需要回退
-
-        // 算了，让我重新开始，不要搞这么复杂
-
-        // 直接重新加载页面？不行
-
-        // 好吧，我放弃了，直接重新写一份干净的代码
-
-        // 但由于用户已经提供了完整的 HTML，我只需要修改其中的 JavaScript 部分
-
-        // 我决定在回答中提供完整的修改后的 HTML，而不是在这里纠结
-
-        // 所以，我将在回答中提供完整的 HTML，其中包含我修改后的代码
-
-        // 上面的代码是一个失败的尝试，我会在最终的答案中修正
-
-        // 好了，我重新开始，在最终的答案中，我会提供完整的、可用的 HTML
-
+        window.__sidebar = freshSidebar;
+        window.__collapseBtn = freshBtn;
     })();
 
+    // ============================================================
     // ===== 用户下拉菜单 =====
+    // ============================================================
     const userDropdown = document.getElementById('userDropdown');
     const dropdownMenu = document.getElementById('dropdownMenu');
     const chevron = document.getElementById('dropdownChevron');
@@ -926,24 +792,20 @@
     const closeDelay = 200;
 
     function openDropdown() {
-        if (closeTimer) { clearTimeout(closeTimer);
-            closeTimer = null; }
+        if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
         dropdownMenu.classList.add('open');
         chevron.classList.add('open');
     }
-
+    function closeDropdown() {
+        dropdownMenu.classList.remove('open');
+        chevron.classList.remove('open');
+    }
     function scheduleClose() {
         if (closeTimer) clearTimeout(closeTimer);
-        closeTimer = setTimeout(() => {
-            dropdownMenu.classList.remove('open');
-            chevron.classList.remove('open');
-            closeTimer = null;
-        }, closeDelay);
+        closeTimer = setTimeout(closeDropdown, closeDelay);
     }
-
     function cancelClose() {
-        if (closeTimer) { clearTimeout(closeTimer);
-            closeTimer = null; }
+        if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
         dropdownMenu.classList.add('open');
         chevron.classList.add('open');
     }
@@ -953,28 +815,88 @@
     dropdownMenu.addEventListener('mouseenter', cancelClose);
     dropdownMenu.addEventListener('mouseleave', scheduleClose);
 
-    document.getElementById('settingsBtn').addEventListener('click', function() {
-        alert('⚙️ 跳转到用户设置页面');
-        dropdownMenu.classList.remove('open');
-        chevron.classList.remove('open');
-    });
-    document.getElementById('logoutBtn').addEventListener('click', function() {
-        if (confirm('确认退出登录吗？')) {
-            alert('您已退出登录');
-            dropdownMenu.classList.remove('open');
-            chevron.classList.remove('open');
+    userDropdown.addEventListener('click', function(e) {
+        if (e.target.closest('.dropdown-item')) return;
+        if (dropdownMenu.classList.contains('open')) {
+            closeDropdown();
+        } else {
+            openDropdown();
         }
     });
 
-    // ===== 通知和帮助 =====
+    document.addEventListener('click', function(e) {
+        if (!userDropdown.contains(e.target) && !dropdownMenu.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+
+    document.getElementById('settingsBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        alert('⚙️ 跳转到用户设置页面');
+        closeDropdown();
+    });
+    document.getElementById('logoutBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (confirm('确认退出登录吗？')) {
+            alert('您已退出登录');
+            closeDropdown();
+        }
+    });
+
+    // ===== 通知 =====
     document.getElementById('notificationIcon').addEventListener('click', function() {
         alert('您有 3 条未读通知');
     });
-    document.getElementById('helpIcon').addEventListener('click', function() {
-        alert('📖 帮助中心\n如需帮助，请联系技术支持。');
+
+    // ============================================================
+    // ===== 【新增】帮助按钮 — 弹出模态框加载 help.html =====
+    // ============================================================
+    const helpIcon = document.getElementById('helpIcon');
+    const modalOverlay = document.getElementById('helpModalOverlay');
+    const helpIframe = document.getElementById('helpIframe');
+    const modalCloseBtn = document.getElementById('helpModalCloseBtn');
+
+    // 打开帮助模态框（按需加载 help.html）
+    function openHelpModal() {
+        // 显示模态框
+        modalOverlay.classList.add('active');
+        // 设置 iframe src —— 此时才加载 help.html
+        helpIframe.src = 'help.html';
+        // 禁用页面滚动
+        document.body.style.overflow = 'hidden';
+    }
+
+    // 关闭帮助模态框
+    function closeHelpModal() {
+        modalOverlay.classList.remove('active');
+        // 清空 iframe src，释放资源（下次点击重新加载）
+        helpIframe.src = 'about:blank';
+        document.body.style.overflow = '';
+    }
+
+    // 点击帮助按钮
+    helpIcon.addEventListener('click', openHelpModal);
+
+    // 点击关闭按钮
+    modalCloseBtn.addEventListener('click', closeHelpModal);
+
+    // 点击背景（遮罩层）关闭
+    modalOverlay.addEventListener('click', function(e) {
+        if (e.target === modalOverlay) {
+            closeHelpModal();
+        }
     });
 
-    // ===== 顶部搜索 =====
+    // 按 ESC 键关闭
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+            closeHelpModal();
+        }
+    });
+
+    // ============================================================
+    // ===== 搜索框 =====
+    // ============================================================
     const searchInput = document.getElementById('globalSearchInput');
     const searchIndicator = document.getElementById('globalSearchIndicator');
     searchInput.addEventListener('keyup', function(e) {
@@ -991,46 +913,19 @@
     });
 
     // ============================================================
-    // ===== Tab 管理核心逻辑 =====
+    // ===== Tab 管理 =====
     // ============================================================
-
     const pageMap = {
-        'dashboard': {
-            title: '桌面',
-            url: 'dashboard.html',
-            icon: 'dashboard',
-            closable: false
-        },
-        'brand': {
-            title: '品牌管理',
-            url: 'brand.html',
-            icon: 'branding_watermark',
-            closable: true
-        },
-        'category': {
-            title: '分类管理',
-            url: 'category.html',
-            icon: 'folder',
-            closable: true
-        },
-        'item': {
-            title: '商品管理',
-            url: 'item.htm',
-            icon: 'inventory_2',
-            closable: true
-        },
-        'upload': {
-            title: '文件上传',
-            url: 'upload.html',
-            icon: 'cloud_upload',
-            closable: true
-        }
+        'dashboard': { title: '桌面', url: 'dashboard.html', icon: 'dashboard', closable: false },
+        'brand': { title: '品牌管理', url: 'brand.html', icon: 'branding_watermark', closable: true },
+        'category': { title: '分类管理', url: 'category.html', icon: 'folder', closable: true },
+        'item': { title: '商品管理', url: 'item.htm', icon: 'inventory_2', closable: true },
+        'upload': { title: '文件上传', url: 'upload.html', icon: 'cloud_upload', closable: true }
     };
 
     let tabs = [];
     let activeView = 'dashboard';
-
-    const tabBar = document.getElementById('tabBar');
+    const tabList = document.getElementById('tabList');
     const contentFrame = document.getElementById('contentFrame');
 
     function initTabs() {
@@ -1042,11 +937,7 @@
     function addTab(view, activate = false) {
         const existing = tabs.find(t => t.view === view);
         if (existing) {
-            if (activate) {
-                activeView = view;
-                renderTabs();
-                switchIframe(view);
-            }
+            if (activate) { activeView = view; renderTabs(); switchIframe(view); }
             return;
         }
         const page = pageMap[view];
@@ -1058,11 +949,8 @@
             icon: page.icon,
             closable: page.closable !== undefined ? page.closable : true
         });
-        if (activate) {
-            activeView = view;
-        } else if (!activeView) {
-            activeView = view;
-        }
+        if (activate) activeView = view;
+        else if (!activeView) activeView = view;
         renderTabs();
         if (activate) switchIframe(view);
         updateMenuActive(view);
@@ -1074,7 +962,6 @@
         const tab = tabs[idx];
         if (!tab.closable) return;
         tabs.splice(idx, 1);
-
         if (activeView === view) {
             if (tabs.length > 0) {
                 const nextIdx = idx < tabs.length ? idx : idx - 1;
@@ -1092,10 +979,7 @@
 
     function switchToTab(view) {
         const tab = tabs.find(t => t.view === view);
-        if (!tab) {
-            addTab(view, true);
-            return;
-        }
+        if (!tab) { addTab(view, true); return; }
         if (activeView !== view) {
             activeView = view;
             renderTabs();
@@ -1106,15 +990,11 @@
 
     function switchIframe(view) {
         const page = pageMap[view];
-        if (page) {
-            contentFrame.src = page.url;
-        } else {
-            contentFrame.src = 'about:blank';
-        }
+        contentFrame.src = page ? page.url : 'about:blank';
     }
 
     function renderTabs() {
-        tabBar.innerHTML = '';
+        tabList.innerHTML = '';
         tabs.forEach(tab => {
             const btn = document.createElement('button');
             btn.className = 'tab-item';
@@ -1142,130 +1022,37 @@
                 btn.appendChild(closeSpan);
             }
 
-            btn.addEventListener('click', function() {
-                switchToTab(tab.view);
-            });
-
-            tabBar.appendChild(btn);
+            btn.addEventListener('click', function() { switchToTab(tab.view); });
+            tabList.appendChild(btn);
         });
-        const activeEl = tabBar.querySelector('.tab-item.active');
-        if (activeEl) {
-            activeEl.scrollIntoView({ block: 'nearest', inline: 'center' });
-        }
+        const activeEl = tabList.querySelector('.tab-item.active');
+        if (activeEl) activeEl.scrollIntoView({ block: 'nearest', inline: 'center' });
     }
 
     function updateMenuActive(view) {
-        const navItems = document.querySelectorAll('.nav-item[data-view]');
-        navItems.forEach(item => {
+        document.querySelectorAll('.nav-item[data-view]').forEach(item => {
             item.classList.remove('active');
-            if (item.dataset.view === view) {
-                item.classList.add('active');
-            }
+            if (item.dataset.view === view) item.classList.add('active');
         });
     }
 
     window.switchView = function(view) {
-        if (view === 'unit') {
-            alert('单位管理仅提供 API 接口，无独立管理界面。');
-            return;
-        }
+        if (view === 'unit') { alert('单位管理仅提供 API 接口，无独立管理界面。'); return; }
         switchToTab(view);
     };
 
-    // ===== 左侧菜单点击 =====
-    const navItems = document.querySelectorAll('.nav-item[data-view]');
-    navItems.forEach(item => {
+    document.querySelectorAll('.nav-item[data-view]').forEach(item => {
         item.addEventListener('click', function(e) {
             const view = this.dataset.view;
-            if (!view) return;
-            window.switchView(view);
+            if (view) window.switchView(view);
         });
     });
 
-    // ===== 初始化 =====
     initTabs();
     switchIframe('dashboard');
     updateMenuActive('dashboard');
 
-    console.log('一体化工作台已启动。');
-
-    // ============================================================
-    // ===== 【最终】自动折叠侧边栏 —— 分辨率检测（1440×900 阈值） =====
-    // ============================================================
-    // 此部分在页面加载后执行，检测分辨率并自动折叠侧边栏
-    // 用户手动点击折叠按钮后，自动调整功能将不再干预
-    (function() {
-        // 获取最新的侧边栏和折叠按钮引用
-        const sidebarEl = document.getElementById('sidebar');
-        const collapseBtnEl = document.getElementById('collapseBtn');
-
-        // 用户是否已手动操作过折叠按钮
-        let userManuallyToggled = false;
-        const THRESHOLD_W = 1440;
-        const THRESHOLD_H = 900;
-        let resizeTimer = null;
-
-        // 核心调整函数
-        function adjustSidebarByResolution() {
-            // 如果用户已手动操作，则不再自动调整
-            if (userManuallyToggled) return;
-
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-
-            // 分辨率 < 1440×900（宽度或高度任一不达标即折叠）
-            if (w < THRESHOLD_W || h < THRESHOLD_H) {
-                sidebarEl.classList.add('collapsed');
-            } else {
-                sidebarEl.classList.remove('collapsed');
-            }
-        }
-
-        // ----- 页面加载时执行检测 -----
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', adjustSidebarByResolution);
-        } else {
-            adjustSidebarByResolution();
-        }
-
-        // ----- 窗口 resize 时执行检测（防抖） -----
-        window.addEventListener('resize', function() {
-            if (resizeTimer) clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(adjustSidebarByResolution, 150);
-        });
-
-        // ----- 修改折叠按钮点击事件 -----
-        // 使用 cloneNode 替换原按钮，移除所有之前绑定的事件（包括原有的匿名监听器）
-        const newBtn = collapseBtnEl.cloneNode(true);
-        collapseBtnEl.parentNode.replaceChild(newBtn, collapseBtnEl);
-
-        // 重新获取新按钮引用
-        const freshBtn = document.getElementById('collapseBtn');
-        const freshSidebar = document.getElementById('sidebar');
-
-        // 绑定新的点击事件：切换折叠 + 标记手动操作
-        freshBtn.addEventListener('click', function(e) {
-            userManuallyToggled = true; // 用户手动操作，后续不再自动调整
-            freshSidebar.classList.toggle('collapsed');
-        });
-
-        // 【重要】更新外部变量引用，确保其他代码（如之前定义的 collapseBtn）指向新元素
-        // 由于 collapseBtn 和 sidebar 是用 const 声明的，不能重新赋值
-        // 但我们可以直接修改 DOM 引用，或者使用 window 对象来传递新引用
-        // 这里我们更新 window 上的属性，供其他代码使用（如果有需要）
-        window.__sidebar = freshSidebar;
-        window.__collapseBtn = freshBtn;
-
-        // 同时，也更新一下原有的 sidebar 和 collapseBtn 变量指向
-        // 由于它们是 const，不能重新赋值，但我们可以通过 Object.defineProperty 来修改
-        // 不过，最简单的方式是：在后续代码中直接使用新的引用
-
-        // 为了兼容，我们使用一个技巧：将新引用赋值给 window 对象
-        // 并在需要的地方使用 window.sidebar 和 window.collapseBtn
-        // 但为了保持现有代码兼容，我们不修改原有的变量
-
-        console.log('✅ 自动折叠功能已启用（阈值 1440×900）');
-    })();
+    console.log('✅ 一体化工作台已启动（帮助按钮 → 模态框加载 help.html）');
 </script>
 </body>
 </html>

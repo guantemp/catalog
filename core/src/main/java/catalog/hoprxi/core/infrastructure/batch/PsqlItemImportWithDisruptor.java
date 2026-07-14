@@ -36,6 +36,8 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 /***
@@ -65,13 +67,12 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
                         new MemeberPriceHandler(), new VipPriceHandler())
                 // 2. 数据库 IO 操作，开启多线程（WorkerPool）并发处理！
                 // 注意：这里必须用 handleEventsWithWorkerPool，且 Handler 内部必须有你之前写的 ConcurrentHashMap 和 DCL 锁！
-                .thenHandleEventsWithWorkerPool(
-                        new IdHandler(), new IdHandler(),
-                        new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler(),
-                        new CategoryHandler(), new CategoryHandler(), new CategoryHandler(), new CategoryHandler(),
-                        new MadeInHandler(), new MadeInHandler(), new MadeInHandler(), new MadeInHandler(),
-                        new BrandHandler(), new BrandHandler())
-                .thenHandleEventsWithWorkerPool(new UploadHandler(),new UploadHandler(),new UploadHandler(),new UploadHandler())
+                .thenHandleEventsWithWorkerPool(new IdHandler(), new IdHandler(), new IdHandler(), new IdHandler())
+                .thenHandleEventsWithWorkerPool(new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler())
+                .thenHandleEventsWithWorkerPool(new CategoryHandler(), new CategoryHandler(), new CategoryHandler(), new CategoryHandler())
+                .thenHandleEventsWithWorkerPool(new MadeInHandler(), new MadeInHandler(), new MadeInHandler(), new MadeInHandler())
+                .thenHandleEventsWithWorkerPool(new BrandHandler(), new BrandHandler(), new BrandHandler(), new BrandHandler())
+                .thenHandleEventsWithWorkerPool(new UploadHandler(), new UploadHandler(), new UploadHandler(), new UploadHandler())
                 .then(new AssembleHandler(), new FailedValidationHandler());
         disruptor.start();
 
@@ -81,7 +82,7 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
 
         for (int i = 1, j = sheet.getLastRowNum(); i <= j; i++) {
             Row row = sheet.getRow(i);
-            EnumMap<ItemMapping, String> map = new EnumMap<>(ItemMapping.class);
+            Map<ItemMapping, String> map = new ConcurrentHashMap<>();
             for (int m = 0, n = itemMappings.length; m < n; m++) {
                 if (itemMappings[m] == ItemMapping.IGNORE || itemMappings[m] == ItemMapping.LAST_ROW)
                     continue;
@@ -99,9 +100,9 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
 
     private String readCellValue(Cell cell) {
         if (cell == null || cell.toString().trim().isEmpty()) {
-            return null;
+            return "";
         }
-        String result = null;
+        String result = "";
         switch (cell.getCellType()) {
             case NUMERIC:   //数字
                 if (DateUtil.isCellDateFormatted(cell)) {//注意：DateUtil.isCellDateFormatted()方法对“2019年1月18日"这种格式的日期，判断会出现问题，需要另行处理

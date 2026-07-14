@@ -17,7 +17,6 @@ package catalog.hoprxi.core.domain.model.price;
 
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
-import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlItemRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -390,7 +389,7 @@ public enum UnitEnum {
         }
     };
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PsqlItemRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UnitEnum.class);
 
     private static final Map<String, UnitEnum> LOOKUP = new HashMap<>();
 
@@ -412,11 +411,6 @@ public enum UnitEnum {
             throw new IllegalArgumentException("Unit string cannot be null or empty");
         }
         String cleanS = s.replace("\u3000", "").replace(" ", "").trim();
-        UnitEnum result = LOOKUP.get(cleanS);
-        if (result == null) {
-            LOGGER.warn("Unknown unit '{}' detected. Defaulting to PCS.", s);
-            return UnitEnum.PCS;
-        }
-        return result;
+        return LOOKUP.getOrDefault(cleanS, UnitEnum.PCS);
     }
 }

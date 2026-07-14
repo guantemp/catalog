@@ -76,45 +76,45 @@ public class CategoryHandlerTest {
     public void testCategoryNull() throws Exception {
         ItemImportEvent event = createEvent(null);
         handler.onEvent(event);
-        assertEquals(event.map.get(ItemMapping.CATEGORY), String.valueOf(Category.UNCATEGORIZED.id()));
+        assertEquals(event.categoryId, Category.UNCATEGORIZED.id());
         event = createEvent("   ");
         handler.onEvent(event);
-        assertEquals(event.map.get(ItemMapping.CATEGORY), String.valueOf(Category.UNCATEGORIZED.id()));
+        assertEquals(event.categoryId, Category.UNCATEGORIZED.id());
         event = createEvent(Label.UNCATEGORIZED);
         handler.onEvent(event);
-        assertEquals(event.map.get(ItemMapping.CATEGORY), String.valueOf(Category.UNCATEGORIZED.id()));
+        assertEquals(event.categoryId, Category.UNCATEGORIZED.id());
 
         ItemImportEvent event1 = createEvent(Category.UNCATEGORIZED.name().name());
         handler.onEvent(event1);
-        assertEquals(event1.map.get(ItemMapping.CATEGORY), String.valueOf(Category.UNCATEGORIZED.id()));
+        assertEquals(event1.categoryId, Category.UNCATEGORIZED.id());
 
         ItemImportEvent event2 = createEvent(Category.UNCATEGORIZED.name().shortName());
         handler.onEvent(event2);
-        assertEquals(event2.map.get(ItemMapping.CATEGORY), String.valueOf(Category.UNCATEGORIZED.id()));
+        assertEquals(event2.categoryId, Category.UNCATEGORIZED.id());
 
         event = createEvent(String.valueOf(INVALID_ID));
         handler.onEvent(event);
-        assertEquals(event.map.get(ItemMapping.CATEGORY), String.valueOf(Category.UNCATEGORIZED.id()));
+        assertEquals(event.categoryId, Category.UNCATEGORIZED.id());
 
         // 单个斜杠
         ItemImportEvent event3 = createEvent("/");
         handler.onEvent(event3);
-        assertEquals(event3.map.get(ItemMapping.CATEGORY), String.valueOf(Category.UNCATEGORIZED.id()));
+        assertEquals(event3.categoryId, Category.UNCATEGORIZED.id());
 
         // 多个斜杠
         ItemImportEvent event4 = createEvent("//");
         handler.onEvent(event4);
-        assertEquals(event4.map.get(ItemMapping.CATEGORY), String.valueOf(Category.UNCATEGORIZED.id()));
+        assertEquals(event4.categoryId, Category.UNCATEGORIZED.id());
 
         long uncatId = Category.UNCATEGORIZED.id();
         ItemImportEvent event6 = createEvent(String.valueOf(uncatId));
         handler.onEvent(event6);
-        assertEquals(event6.map.get(ItemMapping.CATEGORY), String.valueOf(uncatId));
+        assertEquals(event6.categoryId, uncatId);
 
         // 包含空格的斜杠
         ItemImportEvent event5 = createEvent("/ /");
         handler.onEvent(event5);
-        assertEquals(event5.map.get(ItemMapping.CATEGORY), String.valueOf(Category.UNCATEGORIZED.id()));
+        assertEquals(event5.categoryId, Category.UNCATEGORIZED.id());
     }
 
     // -------- 优先级 2：创建路径（会往缓存/数据库插入数据） --------
@@ -123,9 +123,9 @@ public class CategoryHandlerTest {
         String path = "全新/分类/层级";
         ItemImportEvent event = createEvent(path);
         handler.onEvent(event);
-        String leafId = event.map.get(ItemMapping.CATEGORY);
+        Long leafId = event.categoryId;
         assertNotNull(leafId);
-        assertNotEquals(leafId, String.valueOf(Category.UNCATEGORIZED.id()));
+        assertNotEquals(leafId, Category.UNCATEGORIZED.id());
     }
 
     @Test(priority = 2)
@@ -133,14 +133,16 @@ public class CategoryHandlerTest {
         // 先创建 "电子/手机"
         ItemImportEvent event1 = createEvent("电子/手机");
         handler.onEvent(event1);
-        String phoneId = event1.map.get(ItemMapping.CATEGORY);
+        Long phoneId = event1.categoryId;
+        System.out.println(phoneId);
 
         // 再创建 "电子/手机/苹果"，应生成新节点
         ItemImportEvent event2 = createEvent("电子/手机/苹果");
         handler.onEvent(event2);
-        String appleId = event2.map.get(ItemMapping.CATEGORY);
+        Long appleId = event2.categoryId;
+        System.out.println(appleId);
         assertNotEquals(appleId, phoneId);
-        assertNotEquals(appleId, String.valueOf(Category.UNCATEGORIZED.id()));
+        assertNotEquals(appleId, Category.UNCATEGORIZED.id());
     }
 
     @Test(priority = 2)
@@ -164,7 +166,7 @@ public class CategoryHandlerTest {
         ItemImportEvent event = createEvent(path);
         handler.onEvent(event);
         // 由于之前已经创建过，缓存应直接命中，不会查询数据库（但无法直接验证，只能确保返回正确）
-        String id = event.map.get(ItemMapping.CATEGORY);
+        Long id = event.categoryId;
         assertNotNull(id);
         // 验证缓存中存在该键
         ConcurrentHashMap<String, Long> cache = getCache();
@@ -178,15 +180,14 @@ public class CategoryHandlerTest {
         String path = "测试/有效ID";
         ItemImportEvent createEvent = createEvent(path);
         handler.onEvent(createEvent);
-        String createdId = createEvent.map.get(ItemMapping.CATEGORY);
+        Long createdId = createEvent.categoryId;
         assertNotNull(createdId);
 
         // 用该 ID 作为输入，应返回相同 ID
-        ItemImportEvent idEvent = createEvent(createdId);
+        ItemImportEvent idEvent = createEvent(String.valueOf(createdId));
         handler.onEvent(idEvent);
-        assertEquals(idEvent.map.get(ItemMapping.CATEGORY), createdId);
+        assertEquals(idEvent.categoryId, createdId);
     }
-
 
     // ===================== 所有测试完成后打印最终缓存状态 =====================
 

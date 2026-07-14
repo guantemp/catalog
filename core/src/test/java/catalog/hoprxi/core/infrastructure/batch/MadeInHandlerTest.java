@@ -48,7 +48,7 @@ public class MadeInHandlerTest {
         ItemImportEvent event = createEvent("北京");
         handler.onEvent(event);
 
-        String result = event.map.get(ItemMapping.MADE_IN);
+        String result = event.madeInJson;
         assertNotNull(result);
 
         assertTrue(result.contains("\"_class\":\"Domestic\""));
@@ -65,7 +65,7 @@ public class MadeInHandlerTest {
         ItemImportEvent event = createEvent("美国");
         handler.onEvent(event);
 
-        String result = event.map.get(ItemMapping.MADE_IN);
+        String result = event.madeInJson;
         assertNotNull(result);
         assertTrue(result.contains("\"_class\":\"Imported\""));
         assertTrue(result.contains("\"code\":"));
@@ -81,7 +81,7 @@ public class MadeInHandlerTest {
         ItemImportEvent event = createEvent("朝阳区");
         handler.onEvent(event);
 
-        String result = event.map.get(ItemMapping.MADE_IN);
+        String result = event.madeInJson;
 
         assertNotNull(result);
         // 朝阳区属于北京市，因此应返回 Domestic
@@ -99,7 +99,7 @@ public class MadeInHandlerTest {
         ItemImportEvent event = createEvent("不存在");
         handler.onEvent(event);
 
-        String result = event.map.get(ItemMapping.MADE_IN);
+        String result = event.madeInJson;
         assertNotNull(result);
         assertTrue(result.contains("\"_class\":\"UNORIGINATED\""));
         assertTrue(result.contains("\"code\":" + MadeIn.UNORIGINATED.code()));
@@ -116,7 +116,7 @@ public class MadeInHandlerTest {
         handler.onEvent(event);
         long cost = System.currentTimeMillis() - start;
 
-        String result = (String) event.map.get(ItemMapping.MADE_IN);
+        String result = event.madeInJson;
         assertTrue(result.contains("\"_class\":\"UNORIGINATED\""));
         // 空值不会调用网络，耗时应该极短（<50ms）
         assertTrue(cost < 100, "耗时 " + cost + "ms，应小于100ms");
@@ -150,8 +150,8 @@ public class MadeInHandlerTest {
         System.out.println("缓存命中应更快，但 cost2=" + cost2 + " >= cost1=" + cost1);
 
         // 验证两次结果一致
-        String result1 = event1.map.get(ItemMapping.MADE_IN);
-        String result2 = event2.map.get(ItemMapping.MADE_IN);
+        String result1 = event1.madeInJson;
+        String result2 = event2.madeInJson;
         assertEquals(result1, result2);
     }
 

@@ -2,8 +2,10 @@ E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\domain\model\barcode
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\domain\model\UnitEnumTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlItemRepositoryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\PsqlSetupTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\batch\BrandHandlerTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\elasticsearch\ESCategoryQueryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlBrandRepositoryTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\batch\MadeInHandlerTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\elasticsearch\ESBrandQueryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\postgresql\PsqlItemQueryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\AppTest.java
@@ -12,6 +14,8 @@ E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\elasticsearch\ESItemQueryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\i18n\LabelTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\query\elasticsearch\PrintUtil.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\batch\BarcodeHandlerTest.java
+E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\batch\CategoryHandlerTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\persistence\postgresql\PsqlCategoryRepositoryTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\domain\model\GradeEnumTest.java
 E:\workspace\catalog\core\src\test\java\catalog\hoprxi\core\infrastructure\batch\UploadHandlerTest.java

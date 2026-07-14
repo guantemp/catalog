@@ -29,8 +29,15 @@ import java.util.StringJoiner;
  */
 public class RetailPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
-    public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        String units = itemImportEvent.map.get(ItemMapping.UNIT);
+    public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        String retailPriceStr = event.map.get(ItemMapping.RETAIL_PRICE);
+
+        // 2. 校验零售价是否为零 (处理 null、空字符串或 "0" / "0.00" 的情况)
+        if (retailPriceStr == null || retailPriceStr.trim().isEmpty() || Double.parseDouble(retailPriceStr) == 0.0) {
+            event.addWrong(Verify.RETAIL_PRICE_ZERO); // 假设你的枚举里有这个值
+            return;
+        }
+        String units = event.map.get(ItemMapping.UNIT);
         if (units == null) units = "";
         String cleanS = units.replace("\u3000", "").replace(" ", "").trim();
 
@@ -41,9 +48,9 @@ public class RetailPriceHandler implements EventHandler<ItemImportEvent> {
         }
         UnitEnum unit = UnitEnum.of(cleanS);
         StringJoiner joiner = new StringJoiner(",", "'{", "}'");
-        joiner.add("\"number\":" + itemImportEvent.map.get(ItemMapping.RETAIL_PRICE));
+        joiner.add("\"number\":" + event.map.get(ItemMapping.RETAIL_PRICE));
         joiner.add("\"currencyCode\":\"CNY\"");
         joiner.add("\"unit\":\"" + unit.name() + "\"");
-        itemImportEvent.map.put(ItemMapping.RETAIL_PRICE, joiner.toString());
+        event.map.put(ItemMapping.RETAIL_PRICE, joiner.toString());
     }
 }

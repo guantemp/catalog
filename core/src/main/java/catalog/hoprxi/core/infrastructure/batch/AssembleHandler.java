@@ -25,7 +25,7 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 
 import java.sql.SQLException;
-import java.util.EnumMap;
+import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.Executors;
 
@@ -39,7 +39,6 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
             (event, sequence, sql) -> event.sql = sql;
     private static final Disruptor<ExecuteSqlEvent> executeDisruptor;
     private static final RingBuffer<ExecuteSqlEvent> ringBuffer;
-
 
     static {
         executeDisruptor = new Disruptor<>(
@@ -60,11 +59,11 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
     }
 
     @Override
-    public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
-        EnumMap<ItemMapping, String> map = itemImportEvent.map;
+    public void onEvent(ItemImportEvent event, long l, boolean b) {
+        Map<ItemMapping, String> map = event.map;
 
         // 1. 如果前面（如校验和错误、后续重复）已经报错了，直接跳过组装 SQL
-        if (itemImportEvent.hasWrong()) {
+        if (event.hasWrong()) {
             // 注意：如果有错，也要判断是不是最后一行，如果是，依然要发 LAST_ROW 触发关闭
             if (map.get(ItemMapping.LAST_ROW) != null) {
                 ringBuffer.publishEvent(TRANSLATOR, "LAST_ROW");
@@ -77,16 +76,16 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
         String cleanBarcode = map.get(ItemMapping.BARCODE).replace("'", "");
         if (BarcodeHandler.BARCODE_BLACKLIST.contains(cleanBarcode)) {
             // 说明它是第一条，但后面有重复的！在这里把它也变成错误！
-            itemImportEvent.addWrong(Verify.BARCODE_REPEAT);
+            event.addWrong(Verify.BARCODE_REPEAT);
             return; // 不组装 SQL
         }
 
         StringJoiner joiner = new StringJoiner(",", "(", ")");
-        joiner.add(map.get(ItemMapping.ID)).add(map.get(ItemMapping.NAME)).add(map.get(ItemMapping.BARCODE)).add(map.get(ItemMapping.CATEGORY))
-                .add(map.get(ItemMapping.BRAND)).add(map.get(ItemMapping.GRADE)).add(map.get(ItemMapping.MADE_IN)).add(map.get(ItemMapping.SPEC))
+        joiner.add(String.valueOf(event.generatedId)).add(map.get(ItemMapping.NAME)).add(event.barcode).add(String.valueOf(event.categoryId))
+                .add(String.valueOf(event.brandId)).add(map.get(ItemMapping.GRADE)).add(event.madeInJson).add(map.get(ItemMapping.SPEC))
                 .add(map.get(ItemMapping.SHELF_LIFE)).add(map.get(ItemMapping.LAST_RECEIPT_PRICE)).add(map.get(ItemMapping.RETAIL_PRICE))
-                .add(map.get(ItemMapping.MEMBER_PRICE)).add(map.get(ItemMapping.VIP_PRICE)).add(map.get(ItemMapping.SHOW));
-        //System.out.println(number.incrementAndGet());
+                .add(map.get(ItemMapping.MEMBER_PRICE)).add(map.get(ItemMapping.VIP_PRICE)).add(event.show);
+        //System.out.println(joiner.toString());
         ringBuffer.publishEvent(TRANSLATOR, joiner.toString());
 
         if (map.get(ItemMapping.LAST_ROW) != null) {//最后一行

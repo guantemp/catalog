@@ -22,5 +22,5 @@ package catalog.hoprxi.core.infrastructure.batch;
  * @version 0.0.1 builder 2023-05-08
  */
 public enum Verify {
-    BARCODE_CHECK_SUM_ERROR, REPEAT_ID,BARCODE_REPEAT, BARCODE_EXIST;
+    BARCODE_CHECK_SUM_ERROR, REPEAT_ID,BARCODE_REPEAT, BARCODE_EXIST,RETAIL_PRICE_ZERO,RETAIL_LARGER_RECEIPT;
 }

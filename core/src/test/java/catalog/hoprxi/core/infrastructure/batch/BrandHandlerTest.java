@@ -24,14 +24,10 @@ import org.testng.annotations.Test;
 import salt.hoprxi.crypto.util.StoreKeyLoad;
 
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
@@ -47,82 +43,60 @@ public class BrandHandlerTest {
     private static final long UNBRANDED_ID = Brand.UNBRANDED.id();
 
     // 执行处理并返回结果 map
-    private EnumMap<ItemMapping, String> processBrand(String value) throws Exception {
+    private ItemImportEvent processBrand(String value) throws Exception {
         EventHandler<ItemImportEvent> handler = new BrandHandler();
         ItemImportEvent event = new ItemImportEvent();
-        EnumMap<ItemMapping, String> map = new EnumMap<>(ItemMapping.class);
+        Map<ItemMapping, String> map = new ConcurrentHashMap<>();
         map.put(ItemMapping.BRAND, value);
         event.map = map;
         handler.onEvent(event, 0, false);
-        return event.map;
+        return event;
     }
 
     // ---- 测试用例 ----
 
     @Test
     void testNullBrand() throws Exception {
-        EnumMap<ItemMapping, String> result = processBrand(null);
-        assertEquals(String.valueOf(UNBRANDED_ID), result.get(ItemMapping.BRAND));
-        result = processBrand("");
-        assertEquals(String.valueOf(UNBRANDED_ID), result.get(ItemMapping.BRAND));
+        ItemImportEvent result = processBrand("");
+        assertEquals(result.brandId, UNBRANDED_ID);
         result = processBrand("   ");
-        assertEquals(String.valueOf(UNBRANDED_ID), result.get(ItemMapping.BRAND));
+        assertEquals(result.brandId, UNBRANDED_ID);
         result = processBrand(Label.UNBRANDED);
-        assertEquals(String.valueOf(UNBRANDED_ID), result.get(ItemMapping.BRAND));
-    }
-
-    @Test
-    void testNonExistingNumericId() throws Exception {
-        long fakeId = 999999999999999999L;
-        EnumMap<ItemMapping, String> result = processBrand(String.valueOf(fakeId));
-        assertEquals(String.valueOf(UNBRANDED_ID), result.get(ItemMapping.BRAND));
+        assertEquals(result.brandId, UNBRANDED_ID);
+        result = processBrand(String.valueOf(999999999999999999L));
+        assertEquals(result.brandId, UNBRANDED_ID);
     }
 
     @Test
     void testExistingNumericId() throws Exception {
         // 先创建一个品牌，获得其 ID，再用该 ID 测试数字 ID 场景
-        String uniqueName = "98684290385927371";
-        EnumMap<ItemMapping, String> createResult = processBrand(uniqueName);
-        String idStr = createResult.get(ItemMapping.BRAND);
-        assertNotNull(idStr);
+        String uniqueName = "495651176959596546";
+        ItemImportEvent result = processBrand(uniqueName);
+        assertEquals(result.brandId, 495651176959596546L);
     }
 
     @Test
     void testSingleNameNewBrand() throws Exception {
         String name = "海康威视";
-        EnumMap<ItemMapping, String> result = processBrand(name);
-        String idStr = result.get(ItemMapping.BRAND);
-        assertNotNull(idStr);
-    }
-
-    @Test
-    void testBrandWithShortName() throws Exception {
+        ItemImportEvent result = processBrand(name);
+        System.out.println(result.brandId);
         String input = "阿多/dsppa";
-        EnumMap<ItemMapping, String> result = processBrand(input);
-        String idStr = result.get(ItemMapping.BRAND);
-        assertNotNull(idStr);
-    }
-
-    @Test
-    void testNewBrandCache() throws Exception {
-        String input = "三峡牌/sanxian";
-        EnumMap<ItemMapping, String> result = processBrand(input);
-        String idStr = result.get(ItemMapping.BRAND);
-        assertNotNull(idStr);
+        result = processBrand(input);
+        System.out.println(result.brandId);
+        input = "三峡牌/sanxian";
+        result = processBrand(input);
+        System.out.println(result.brandId);
     }
 
     @Test
     void testCacheReuse() throws Exception {
         // 第一次调用，创建并缓存
-        EnumMap<ItemMapping, String> result1 = processBrand("官响环");
-        String idStr1 = result1.get(ItemMapping.BRAND);
-        long id1 = Long.parseLong(idStr1);
+        ItemImportEvent result1 = processBrand("官响环");
+        long id1 = result1.brandId;
 
         // 第二次调用，应命中缓存
-        EnumMap<ItemMapping, String> result2 = processBrand("官响环");
-        String idStr2 = result2.get(ItemMapping.BRAND);
-        long id2 = Long.parseLong(idStr2);
-
+        ItemImportEvent result2 = processBrand("官响环");
+        long id2 = result2.brandId;
         assertEquals(id1, id2, "缓存应返回相同 ID");
 
     }

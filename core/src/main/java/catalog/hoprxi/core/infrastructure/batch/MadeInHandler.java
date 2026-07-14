@@ -65,11 +65,11 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
     private static final String MADE_IN_URL;
     private static final CloseableHttpClient httpClient;
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-
-    // 缓存（实例级别，每个 Handler 独立缓存）
-    private final Cache<String, String> madeInCache;
+    // 缓存
+    private static final Cache<String, String> madeInCache;
 
     static {
+        madeInCache = CacheFactory.build("madeIn");
         Config config = ConfigFactory.load("import").getConfig("madin_in");
         MADE_IN_URL = config.hasPath("url") ? config.getString("url") : "https://www.hoprxi.com/v1/areas";
         SSLContext sslContext;
@@ -99,11 +99,6 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
                 .build();
     }
 
-    // 构造函数，缓存由 CacheFactory 创建
-    public MadeInHandler() {
-        this.madeInCache = CacheFactory.build("madeIn");
-    }
-
     @Override
     public void onEvent(ItemImportEvent event) throws Exception {
         this.onEvent(event, 0, false);
@@ -111,35 +106,33 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
 
     @Override
     public void onEvent(ItemImportEvent event, long sequence, boolean endOfBatch) throws Exception {
+        event.madeInJson = MadeInHandler.buildUnknownJson();
         String madeInText = event.map.get(ItemMapping.MADE_IN);
-        if (madeInText == null || madeInText.isBlank()) {
-            event.map.put(ItemMapping.MADE_IN, MadeInHandler.buildUnknownJson());
+        if (madeInText == null || madeInText.isBlank())
             return;
-        }
 
         String trimmed = madeInText.trim();
         // 尝试从缓存获取
         String cached = madeInCache.get(trimmed);
         if (cached != null) {
-            event.map.put(ItemMapping.MADE_IN, cached);
+            event.madeInJson = cached;
             return;
         }
 
         // 缓存未命中，发起网络请求
         try {
-            String result = fetchFromApi(trimmed);
+            String result = MadeInHandler.fetchFromApi(trimmed);
             madeInCache.put(trimmed, result);
-            event.map.put(ItemMapping.MADE_IN, result);
+            event.madeInJson = result;
         } catch (Exception e) {
             System.err.println("Failed to resolve madeIn: " + trimmed + ", error: " + e.getMessage());
-            event.map.put(ItemMapping.MADE_IN, buildUnknownJson());
         }
     }
 
     /**
      * 发起 HTTP 请求并解析返回结果
      */
-    private String fetchFromApi(String query) throws IOException {
+    private static String fetchFromApi(String query) throws IOException {
         List<NameValuePair> params = new ArrayList<>();
         params.add(new BasicNameValuePair("q", query));
         params.add(new BasicNameValuePair("filter", "city,country,county"));
@@ -167,7 +160,7 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
     /**
      * 手工解析 JSON 响应（使用 JsonParser）
      */
-    private String parseResponse(InputStream inputStream) throws IOException {
+    private static String parseResponse(InputStream inputStream) throws IOException {
         try (JsonParser parser = JSON_FACTORY.createParser(inputStream)) {
             // 跳过根对象，直到遇到 "areas" 数组
             while (parser.nextToken() != null) {
@@ -179,7 +172,7 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
                         }
                         if (parser.currentToken() == JsonToken.START_OBJECT) {
                             // 解析每个 area 对象
-                            AreaInfo area = parseArea(parser);
+                            AreaInfo area = MadeInHandler.parseArea(parser);
                             //System.out.println("area:"+area);
                             if (area == null) continue;
 
@@ -192,14 +185,14 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
                             }
                             if ("COUNTY".equals(level)) {
                                 // 向上查询父级
-                                AreaInfo parent = fetchParent(area.parentCode);
+                                AreaInfo parent = MadeInHandler.fetchParent(area.parentCode);
                                 if (parent != null) {
                                     String parentLevel = parent.level;
                                     if ("CITY".equals(parentLevel)) {
-                                        return buildDomesticJson(parent.code, parent.name);
+                                        return MadeInHandler.buildDomesticJson(parent.code, parent.name);
                                     }
                                     if ("COUNTRY".equals(parentLevel) && parent.code != 156) {
-                                        return buildImportedJson(parent.code, parent.name, parent.abbreviation);
+                                        return MadeInHandler.buildImportedJson(parent.code, parent.name, parent.abbreviation);
                                     }
                                 }
                             }
@@ -208,13 +201,13 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
                 }
             }
         }
-        return buildUnknownJson();
+        return MadeInHandler.buildUnknownJson();
     }
 
     /**
      * 解析单个 area 对象，返回 AreaInfo
      */
-    private AreaInfo parseArea(JsonParser parser) throws IOException {
+    private static AreaInfo parseArea(JsonParser parser) throws IOException {
         int parentCode = Integer.MIN_VALUE;
         int code = Integer.MIN_VALUE;
         String name = null;
@@ -287,7 +280,7 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
     /**
      * 根据 parentCode 查询父级地区（用于 COUNTY 追溯）
      */
-    private AreaInfo fetchParent(int parentCode) throws IOException {
+    private static AreaInfo fetchParent(int parentCode) throws IOException {
         String url = MADE_IN_URL + "/" + parentCode;
         ClassicHttpRequest httpGet = ClassicRequestBuilder.get(url).build();
         return httpClient.execute(httpGet, response -> {
@@ -297,7 +290,7 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
                 try (JsonParser parser = JSON_FACTORY.createParser(content)) {
                     // 直接解析根对象，无需查找 areas 数组
                     if (parser.nextToken() == JsonToken.START_OBJECT) {
-                        return parseArea(parser);
+                        return MadeInHandler.parseArea(parser);
                     }
                 }
                 return null;
@@ -307,7 +300,7 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
 
     // ---------- 辅助构造 JSON ----------
     private static String buildDomesticJson(int code, String name) {
-        return String.format("{\"_class\":\"Domestic\",\"code\":%d,\"madeIn\":\"%s\"}",
+        return String.format("'{\"_class\":\"Domestic\",\"code\":%d,\"madeIn\":\"%s\"}'",
                 code, escapeJson(name));
     }
 
@@ -315,12 +308,12 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
         if (name.length() > 4 && abbreviation != null && !abbreviation.isEmpty()) {
             name = abbreviation;
         }
-        return String.format("{\"_class\":\"Imported\",\"code\":%d,\"madeIn\":\"%s\"}",
+        return String.format("'{\"_class\":\"Imported\",\"code\":%d,\"madeIn\":\"%s\"}'",
                 code, escapeJson(name));
     }
 
     private static String buildUnknownJson() {
-        return String.format("{\"_class\":\"UNORIGINATED\",\"code\":%s,\"madeIn\":\"%s\"}",
+        return String.format("'{\"_class\":\"UNORIGINATED\",\"code\":%s,\"madeIn\":\"%s\"}'",
                 MadeIn.UNORIGINATED.code(), MadeIn.UNORIGINATED.madeIn());
     }
 

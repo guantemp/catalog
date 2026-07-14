@@ -18,8 +18,8 @@ package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
 
-import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.StringJoiner;
 
 /***
@@ -28,8 +28,14 @@ import java.util.StringJoiner;
  * @version 0.0.1 builder 2023-05-08
  */
 public class ItemImportEvent {
-    EnumMap<ItemMapping, String> map;
-    EnumSet<Verify> wrong = EnumSet.noneOf(Verify.class);  // 初始无错误
+    Map<ItemMapping, String> map;
+    EnumSet<Verify> wrong = EnumSet.noneOf(Verify.class);// 初始无错误
+    public volatile long generatedId;      // 由 IdHandler 写入
+    public volatile String barcode;      // 由 BarcodeHandler 写入
+    public volatile String madeInJson;       // 由 MadeInHandler 写入
+    public volatile long categoryId;     // 由 CategoryHandler 写入
+    public volatile long brandId;        // 由 BrandHandler 写入
+    public volatile String show;        // 由 UploadHandler 等写入
 
     public void addWrong(Verify error) {
         wrong.add(error);
@@ -39,7 +45,7 @@ public class ItemImportEvent {
         return !wrong.isEmpty();
     }
 
-    public void setMap(EnumMap<ItemMapping, String> map) {
+    public void setMap(Map<ItemMapping, String> map) {
         this.map = map;
     }
 

@@ -25,22 +25,19 @@ import com.linecorp.armeria.common.MediaType;
 import com.linecorp.armeria.common.annotation.Nullable;
 import com.linecorp.armeria.common.multipart.MultipartFile;
 import com.linecorp.armeria.server.ServiceRequestContext;
-import com.linecorp.armeria.server.annotation.Consumes;
-import com.linecorp.armeria.server.annotation.Delete;
-import com.linecorp.armeria.server.annotation.Param;
-import com.linecorp.armeria.server.annotation.Post;
+import com.linecorp.armeria.server.annotation.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import salt.hoprxi.to.ByteToHex;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -209,7 +206,7 @@ public class FileUploadService {
         }
 
         EnumSet<FileValidSpec> specs = EnumSet.noneOf(FileValidSpec.class);
-        System.out.println("validSpecParam:"+validSpecParam);
+        System.out.println("validSpecParam:" + validSpecParam);
         if (validSpecParam != null && !validSpecParam.trim().isEmpty()) {
             try {
                 // 将传入的字符串转换为对应的枚举值
@@ -347,36 +344,6 @@ public class FileUploadService {
     }
 
 
-    private static boolean validFormat(File file) {
-        String[] heads = new String[]{"FFD8FF",      // JPEG
-                "89504E47",    // PNG
-                "47494638",    // GIF
-                "25504446",    // PDF
-                "D0CF11E0",    // DOC, XLS, PPT (老版 Office)
-                "504B0304",    // DOCX, XLSX, PPTX (新版 Office)
-                "424D",        // BMP
-                "52494646",    // WEBP (RIFF 头，需再校验，但此处只做初筛)
-                "00000100",    // ICO
-                "49492A00",    // TIFF (小端)
-                "4D4D002A"     // TIFF (大端)};
-        };
-        try (FileInputStream fis = new FileInputStream(file)) {
-            byte[] header = new byte[8];
-            int readLen = fis.read(header);
-            if (readLen < 4) return true;
-
-            String hex = ByteToHex.toHexStr(header).toUpperCase();
-            for (String head : heads) {
-                if (hex.startsWith(head)) {  // 改为前缀匹配
-                    return false;
-                }
-            }
-            return true;
-        } catch (IOException e) {
-            throw new RuntimeException("读取文件头失败", e);
-        }
-    }
-
     @Delete("/upload")
     @Consumes("application/json")
     public HttpResponse deleteFile(@Param("url") String fileUrl) {
@@ -455,5 +422,41 @@ public class FileUploadService {
             return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
                     String.format("{\"code\":500,\"message\":\"删除失败: %s\"}", e.getMessage()));
         }
+    }
+
+    @Get("/upload/validSpec")
+    public HttpResponse fileValidSpec() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        try (JsonGenerator gen = JSON_FACTORY.createGenerator(baos)) {
+            gen.writeStartObject();
+
+            // 遍历所有枚举值
+            for (FileValidSpec spec : FileValidSpec.values()) {
+                // 写入枚举名称作为 key (如 "IMAGE", "DOCUMENT")
+                gen.writeFieldName(spec.name());
+
+                // 写入该枚举支持的后缀数组
+                gen.writeStartArray();
+                for (String ext : spec.support()) {
+                    gen.writeString(ext);
+                }
+                gen.writeEndArray();
+            }
+
+            gen.writeEndObject();
+            gen.flush();
+        } catch (IOException e) {
+            LOGGER.error("生成文件校验规格 JSON 失败", e);
+            return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                    "{\"code\":500,\"message\":\"响应生成失败\"}");
+        }
+
+        return HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, baos.toString(StandardCharsets.UTF_8));
+    }
+
+    @Get("/uploads/validSpec")
+    public HttpResponse specs() {
+        return fileValidSpec();
     }
 }

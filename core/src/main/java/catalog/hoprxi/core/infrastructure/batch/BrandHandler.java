@@ -58,18 +58,19 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
 
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        event.brandId = Brand.UNBRANDED.id();
         String brand = event.map.get(ItemMapping.BRAND);
         if (brand == null || brand.isBlank()
             || brand.equalsIgnoreCase(Brand.UNBRANDED.name().name())
             || brand.equalsIgnoreCase(Brand.UNBRANDED.name().shortName())
-            || brand.equalsIgnoreCase(Label.UNBRANDED)) {
-            event.map.put(ItemMapping.BRAND, String.valueOf(Brand.UNBRANDED.id()));
+            || brand.equalsIgnoreCase(Label.UNBRANDED))
             return;
-        }
         if (ID_PATTERN.matcher(brand).matches()) {//数字，可能是id
             long id = Long.parseLong(brand);
-            if (id != Brand.UNBRANDED.id() && !BrandHandler.isExists(id))//没有查到该id,错误的id
-                event.map.put(ItemMapping.BRAND, String.valueOf(Brand.UNBRANDED.id()));
+            if (id == Brand.UNBRANDED.id())
+                return;
+            if (BrandHandler.isExists(id))//没有查到该id,错误的id
+                event.brandId = id;
             return;
         }
 
@@ -78,7 +79,11 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
         String name = ss[0].trim();
         String shortName = ss.length > 1 ? ss[1].trim() : null;
 
-        Long brandId = BRAND_CACHE.computeIfAbsent(name, k -> {
+        // 先查数据库（带缓存）
+        //System.out.println("dbid:"+dbId);
+        // 未找到，创建新品牌
+
+        event.brandId = BRAND_CACHE.computeIfAbsent(name, k -> {
             // 先查数据库（带缓存）
             long dbId = BrandHandler.findIdByName(name, shortName);
             //System.out.println("dbid:"+dbId);
@@ -93,8 +98,6 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
             repository.save(newBrand);
             return newBrand.id();
         });
-
-        event.map.put(ItemMapping.BRAND, String.valueOf(brandId));
     }
 
     private static long findIdByName(String name, String shortName) {

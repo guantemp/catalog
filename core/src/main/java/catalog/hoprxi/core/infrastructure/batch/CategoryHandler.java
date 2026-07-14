@@ -35,7 +35,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -80,6 +79,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
         FAMILY_ID = id;
     }
 
+
     @Override
     public void onEvent(ItemImportEvent event) throws Exception {
         this.onEvent(event, 0, false);
@@ -88,26 +88,25 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
 
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        event.categoryId = Category.UNCATEGORIZED.id();
         String category = event.map.get(ItemMapping.CATEGORY);
         if (category == null || category.isBlank()
             || category.equalsIgnoreCase(Category.UNCATEGORIZED.name().name())
             || category.equalsIgnoreCase(Category.UNCATEGORIZED.name().shortName())
-            || category.equalsIgnoreCase(Label.UNCATEGORIZED)) {
-            event.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
+            || category.equalsIgnoreCase(Label.UNCATEGORIZED))
             return;
-        }
         if (ID_PATTERN.matcher(category).matches()) {//valid category id
-            if (Category.UNCATEGORIZED.id() == Long.parseLong(category))//UNCATEGORIZED
+            long id = Long.parseLong(category);
+            if (Category.UNCATEGORIZED.id() == id)//UNCATEGORIZED
                 return;
-            if (!CategoryHandler.isdExists(Long.parseLong(category)))//是id值的形式，但是数据库不存在该id
-                event.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
+            if (CategoryHandler.isExists(id))//是id值的形式，但是数据库不存在该id
+                event.categoryId = id;
             return;
         }
 
         // ---------- 处理路径形式，例如 "电子/手机/苹果" ----------
         String[] nodes = category.split(DELIMITER);
         if (nodes.length == 0) {
-            event.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
             return;
         }
         //System.out.println(Arrays.toString(nodes));
@@ -127,7 +126,6 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
         if (i < nodes.length) {
             String firstMissing = nodes[i];
             if (firstMissing == null || firstMissing.isBlank()) {
-                event.map.put(ItemMapping.CATEGORY, String.valueOf(Category.UNCATEGORIZED.id()));
                 return;
             }
         }
@@ -135,7 +133,6 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
         // 从缺失的节点开始，依次创建
         for (int j = i; j < nodes.length; j++) {
             String nodeName = nodes[j];
-            //System.out.println("create:"+nodeName);
             long finalParentId = parentId;
             String cacheKey = finalParentId + "_" + nodeName;
             // 使用 computeIfAbsent 保证多线程下只创建一次
@@ -147,9 +144,8 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
                 return newId;
             });
         }
-
         // 最终 parentId 就是最后一级（叶子节点）的 ID
-        event.map.put(ItemMapping.CATEGORY, String.valueOf(parentId));
+        event.categoryId = parentId;
         //System.out.println("category:" +itemImportEvent.map.get(Corresponding.CATEGORY));
     }
 
@@ -186,7 +182,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
         return Long.MIN_VALUE;
     }
 
-    private static boolean isdExists(long id) {
+    private static boolean isExists(long id) {
         if (id == Category.UNCATEGORIZED.id()) return true;
         String query = "SELECT 1 FROM category WHERE id = ?";
         try (Connection conn = PsqlUtil.getConnection();

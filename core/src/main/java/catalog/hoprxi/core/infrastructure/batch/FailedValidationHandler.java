@@ -30,20 +30,25 @@ public class FailedValidationHandler implements EventHandler<ItemImportEvent> {
     private static final AtomicInteger number = new AtomicInteger(0);
 
     @Override
-    public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        if (itemImportEvent.hasWrong()) {
-            for (Verify verify : itemImportEvent.wrong){
+    public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        if (event.hasWrong()) {
+            for (Verify verify : event.wrong){
                 switch (verify) {
                     case BARCODE_EXIST:
                     case BARCODE_REPEAT:
                     case BARCODE_CHECK_SUM_ERROR:
                         number.incrementAndGet();
-                        System.out.println(verify + ":" + itemImportEvent.map.get(ItemMapping.BARCODE));
+                        System.out.println(verify + ":" + event.map.get(ItemMapping.BARCODE));
+                        break;
+                    case RETAIL_PRICE_ZERO:
+                    case RETAIL_LARGER_RECEIPT:
+                        number.incrementAndGet();
+                        System.out.println(verify + ":" + event.map.get(ItemMapping.RETAIL_PRICE));
                         break;
                 }
             }
         }
-        if (itemImportEvent.map.get(ItemMapping.LAST_ROW) != null) {
+        if (event.map.get(ItemMapping.LAST_ROW) != null) {
             System.out.println("Fail:" + number);
         }
     }

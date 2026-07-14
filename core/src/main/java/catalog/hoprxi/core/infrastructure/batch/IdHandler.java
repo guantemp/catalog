@@ -37,14 +37,14 @@ public class IdHandler implements EventHandler<ItemImportEvent>, WorkHandler<Ite
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{7,19}$");
 
     @Override
-    public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) {
-        String id = itemImportEvent.map.get(ItemMapping.ID);
+    public void onEvent(ItemImportEvent event, long l, boolean b) {
+        String id = event.map.get(ItemMapping.ID);
         if (id == null || id.isBlank() || !ID_PATTERN.matcher(id).matches()) {
-            itemImportEvent.map.put(ItemMapping.ID, String.valueOf(LongId.generate()));
+            event.generatedId=LongId.generate();
             return;
         }
         if (ID_PATTERN.matcher(id).matches() && IdHandler.isExist(id))
-            itemImportEvent.addWrong(Verify.REPEAT_ID);
+            event.addWrong(Verify.REPEAT_ID);
     }
 
     private static boolean isExist(String id) {

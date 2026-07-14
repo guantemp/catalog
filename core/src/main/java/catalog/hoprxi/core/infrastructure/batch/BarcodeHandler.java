@@ -64,15 +64,15 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
 
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) {
-        // 1. 获取或生成标准条码（原始值，不带引号）
-        String rawBarcode = getOrGenerateBarcode(event);
+        // 1. 获取或生成标准条码或者原始值，不带引号
+        String rawBarcode = BarcodeHandler.getOrGenerateBarcode(event);
         if (rawBarcode == null) {
             // 如果是无效条码且无法补全，已添加错误并放入原值，直接返回
             return;
         }
 
         // 2. 检查重复和数据库存在性，并处理
-        boolean isDuplicateOrExist = checkAndHandleDuplicateOrExist(event, rawBarcode);
+        boolean isDuplicateOrExist = BarcodeHandler.checkAndHandleDuplicateOrExist(event, rawBarcode);
         if (isDuplicateOrExist) {
             // 已放入带引号的值并添加错误，直接返回
             return;
@@ -80,7 +80,8 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
 
         // 3. 成功：加入缓存并放入带引号的值
         BARCODE_CACHE.add(rawBarcode);
-        event.map.put(ItemMapping.BARCODE, "'" + rawBarcode + "'");
+        event.barcode="'" + rawBarcode + "'";
+        //System.out.println("barcode:"+event.barcode);
     }
 
     /**
@@ -88,7 +89,7 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
      * 如果条码为空，则生成店内码；如果非空，则校验并补全。
      * 若无法补全，会添加错误并放入原始输入值，返回 null。
      */
-    private String getOrGenerateBarcode(ItemImportEvent event) {
+    private static String getOrGenerateBarcode(ItemImportEvent event) {
         String barcode = event.map.get(ItemMapping.BARCODE);
         if (barcode == null || barcode.isBlank()) {
             // 生成店内码
@@ -96,7 +97,6 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
                     ? BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString()
                     : BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString();
         }
-
         // 非空条码：校验并补全
         try {
             Barcode bar = BarcodeGenerateServices.createBarcode(barcode);
@@ -108,7 +108,6 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
             } catch (IllegalArgumentException f) {
                 // 无法补全，保留原始输入
                 event.addWrong(Verify.BARCODE_CHECK_SUM_ERROR);
-                event.map.put(ItemMapping.BARCODE, "'" + barcode + "'");
                 return null;
             }
         }
@@ -119,12 +118,11 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
      * 若命中，添加错误，加入黑名单，并放入带引号的值，返回 true。
      * 否则返回 false。
      */
-    private boolean checkAndHandleDuplicateOrExist(ItemImportEvent event, String rawBarcode) {
+    private static boolean checkAndHandleDuplicateOrExist(ItemImportEvent event, String rawBarcode) {
         // 缓存命中 → 重复
         if (BARCODE_CACHE.contains(rawBarcode)) {
             event.addWrong(Verify.BARCODE_REPEAT);
             BARCODE_BLACKLIST.add(rawBarcode);
-            event.map.put(ItemMapping.BARCODE, "'" + rawBarcode + "'");
             return true;
         }
 
@@ -133,7 +131,6 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
             BARCODE_CACHE.add(rawBarcode);
             event.addWrong(Verify.BARCODE_EXIST);
             BARCODE_BLACKLIST.add(rawBarcode);
-            event.map.put(ItemMapping.BARCODE, "'" + rawBarcode + "'");
             return true;
         }
 
@@ -142,7 +139,6 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
             // 其他线程已插入，视为重复
             event.addWrong(Verify.BARCODE_REPEAT);
             BARCODE_BLACKLIST.add(rawBarcode);
-            event.map.put(ItemMapping.BARCODE, "'" + rawBarcode + "'");
             return true;
         }
         // 没有命中任何错误

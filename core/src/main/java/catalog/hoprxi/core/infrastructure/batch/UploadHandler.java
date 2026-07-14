@@ -57,7 +57,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -117,9 +116,8 @@ public class UploadHandler implements EventHandler<ItemImportEvent>, WorkHandler
 
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
-        EnumMap<ItemMapping, String> map = event.map;
         if (!event.hasWrong()) {
-            String barcodeRaw = map.get(ItemMapping.BARCODE);
+            String barcodeRaw = event.barcode;
             if (barcodeRaw != null && barcodeRaw.length() > 2) {
                 String barcode = barcodeRaw.substring(1, barcodeRaw.length() - 1); // 去掉引号
                 List<File> imageFiles = UploadHandler.findImageFiles(barcode);
@@ -127,8 +125,9 @@ public class UploadHandler implements EventHandler<ItemImportEvent>, WorkHandler
                     List<String> uploadedUrls = UploadHandler.uploadFiles(imageFiles);
                     if (!uploadedUrls.isEmpty()) {
                         // 使用 JsonGenerator 将 URL 列表序列化为 JSON 数组字符串
-                        String showJson = UploadHandler.serializeUrlsToJson(uploadedUrls);
-                        map.put(ItemMapping.SHOW, showJson);
+                        String json = UploadHandler.serializeUrlsToJson(uploadedUrls);
+                        if (json != null)
+                            event.show = "'" + json + "'";
                         totalSuccessCount.addAndGet(uploadedUrls.size());
                     }
                     // 全部失败则 SHOW 保持 null
@@ -136,7 +135,7 @@ public class UploadHandler implements EventHandler<ItemImportEvent>, WorkHandler
             }
         }
 
-        if (map.get(ItemMapping.LAST_ROW) != null) {
+        if (event.map.get(ItemMapping.LAST_ROW) != null) {
             synchronized (UploadHandler.class) {
                 if (!closed) {
                     try {
