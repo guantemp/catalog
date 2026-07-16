@@ -54,7 +54,7 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
             itemMappings = DEFAULT_CORR;
         Disruptor<ItemImportEvent> disruptor = new Disruptor<>(
                 ItemImportEvent::new,
-                512,
+                2048,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
                 new SleepingWaitStrategy()
@@ -82,7 +82,7 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
 
         for (int i = 1, j = sheet.getLastRowNum(); i <= j; i++) {
             Row row = sheet.getRow(i);
-            Map<ItemMapping, String> map = new ConcurrentHashMap<>();
+            Map<ItemMapping, String> map = new EnumMap<>(ItemMapping.class);
             for (int m = 0, n = itemMappings.length; m < n; m++) {
                 if (itemMappings[m] == ItemMapping.IGNORE || itemMappings[m] == ItemMapping.LAST_ROW)
                     continue;

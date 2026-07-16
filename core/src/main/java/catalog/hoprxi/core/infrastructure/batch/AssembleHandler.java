@@ -76,15 +76,15 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
         String cleanBarcode = map.get(ItemMapping.BARCODE).replace("'", "");
         if (BarcodeHandler.BARCODE_BLACKLIST.contains(cleanBarcode)) {
             // 说明它是第一条，但后面有重复的！在这里把它也变成错误！
-            event.addWrong(Verify.BARCODE_REPEAT);
+            event.addWrong(Verify.BARCODE_REPEAT,cleanBarcode);
             return; // 不组装 SQL
         }
 
         StringJoiner joiner = new StringJoiner(",", "(", ")");
         joiner.add(String.valueOf(event.generatedId)).add(map.get(ItemMapping.NAME)).add(event.barcode).add(String.valueOf(event.categoryId))
                 .add(String.valueOf(event.brandId)).add(map.get(ItemMapping.GRADE)).add(event.madeInJson).add(map.get(ItemMapping.SPEC))
-                .add(map.get(ItemMapping.SHELF_LIFE)).add(map.get(ItemMapping.LAST_RECEIPT_PRICE)).add(map.get(ItemMapping.RETAIL_PRICE))
-                .add(map.get(ItemMapping.MEMBER_PRICE)).add(map.get(ItemMapping.VIP_PRICE)).add(event.show);
+                .add(map.get(ItemMapping.SHELF_LIFE)).add(event.lastReceiptPriceJson).add(event.retailPriceJson)
+                .add(event.memberPriceJson).add(event.vipPriceJson).add(event.show);
         //System.out.println(joiner.toString());
         ringBuffer.publishEvent(TRANSLATOR, joiner.toString());
 

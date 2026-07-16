@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,46 +20,36 @@ import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.3 2025-4-21
+ * @since JDK21
+ * @version 0.4 2026-07-15
  */
 public abstract class Barcode {
-    protected CharSequence barcode;
+    protected String barcode;
 
-    public Barcode(CharSequence barcode) {
-        Objects.requireNonNull(barcode, "barcode is required");
-        if (!isCorrectChecksum(barcode))
-            throw new InvalidBarcodeException(String.format("The barcode(%s) checksum is invalid", barcode));
-        this.barcode = barcode;
+    public Barcode(String barcode) {
+        String trimmed = Objects.requireNonNull(barcode, "barcode is required").trim();
+        if (!isChecksumValid(trimmed)) {
+            throw new InvalidBarcodeException("Invalid checksum: " + trimmed);
+        }
+        this.barcode = trimmed;
     }
 
-    public CharSequence barcode() {
+    public String barcode() {
         return barcode;
     }
 
-    public String toPlanString() {
-        return barcode.toString();
-    }
-
-    public abstract boolean isCorrectChecksum(CharSequence barcode);
+    protected abstract boolean isChecksumValid(String candidate);
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Barcode barcode1)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
+        Barcode barcode1 = (Barcode) o;
         return Objects.equals(barcode, barcode1.barcode);
     }
 
     @Override
     public int hashCode() {
-        return barcode != null ? barcode.hashCode() : 0;
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", Barcode.class.getSimpleName() + "[", "]")
-                .add("barcode=" + barcode)
-                .toString();
+        return Objects.hashCode(barcode);
     }
 }

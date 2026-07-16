@@ -18,6 +18,7 @@ package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
 
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -29,16 +30,22 @@ import java.util.StringJoiner;
  */
 public class ItemImportEvent {
     Map<ItemMapping, String> map;
-    EnumSet<Verify> wrong = EnumSet.noneOf(Verify.class);// 初始无错误
+    // 改为 Map，存储错误类型及触发时的原始值（作为快照）
+   final Map<Verify, String> wrong = new EnumMap<>(Verify.class);
+
     public volatile long generatedId;      // 由 IdHandler 写入
     public volatile String barcode;      // 由 BarcodeHandler 写入
     public volatile String madeInJson;       // 由 MadeInHandler 写入
     public volatile long categoryId;     // 由 CategoryHandler 写入
     public volatile long brandId;        // 由 BrandHandler 写入
-    public volatile String show;        // 由 UploadHandler 等写入
+    public volatile String show;// 由 UploadHandler 等写入
+    public volatile String retailPriceJson;
+    public volatile String vipPriceJson;
+    public volatile String memberPriceJson;
+    public volatile String lastReceiptPriceJson;
 
-    public void addWrong(Verify error) {
-        wrong.add(error);
+    public void addWrong(Verify error, String snapshotValue) {
+        wrong.put(error, snapshotValue);
     }
 
     public boolean hasWrong() {

@@ -44,7 +44,7 @@ public class IdHandler implements EventHandler<ItemImportEvent>, WorkHandler<Ite
             return;
         }
         if (ID_PATTERN.matcher(id).matches() && IdHandler.isExist(id))
-            event.addWrong(Verify.REPEAT_ID);
+            event.addWrong(Verify.REPEAT_ID,id);
     }
 
     private static boolean isExist(String id) {

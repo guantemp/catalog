@@ -30,7 +30,7 @@ public class BarcodeHandlerTest {
     private static final String NON_EXISTING_BARCODE = "1234567890128"; // 数据库中不存在
     private static final String INVALID_CHECKSUM = "690123456789";      // 少一位，可补全
     private static final String COMPLETELY_INVALID = "abc123";
-    private static final String DUPLICATE_BARCODE = "9876543210128";    // 数据库中不存在
+    private static final String DUPLICATE_BARCODE = "6901028212281";    // 数据库中不存在
 
     @BeforeMethod
     public void setUp() {
@@ -105,7 +105,7 @@ public class BarcodeHandlerTest {
         assertNotNull(result);
         assertTrue(result.startsWith("'") && result.endsWith("'"));
         assertEquals(result.substring(1, result.length() - 1), EXISTING_BARCODE);
-        assertTrue(event.wrong.contains(Verify.BARCODE_EXIST));
+        assertTrue(event.wrong.containsKey(Verify.BARCODE_EXIST));
         assertTrue(getBlacklist().contains(EXISTING_BARCODE));
         assertTrue(getCache().contains(EXISTING_BARCODE));
     }
@@ -130,36 +130,37 @@ public class BarcodeHandlerTest {
         ItemImportEvent event = createEvent(COMPLETELY_INVALID);
         handler.onEvent(event);
 
-        assertTrue(event.wrong.contains(Verify.BARCODE_CHECK_SUM_ERROR));
+        assertTrue(event.wrong.containsKey(Verify.BARCODE_CHECK_SUM_ERROR));
         assertFalse(getCache().contains(COMPLETELY_INVALID));
         assertFalse(getBlacklist().contains(COMPLETELY_INVALID));
     }
 
     @Test(priority = 6)   // 也可以使用 dependsOnMethods = "testBarcode_NotExistInDb" 等
     public void testDuplicateBarcode_ShouldMarkRepeat() throws Exception {
-        String barcode = DUPLICATE_BARCODE;
+
 
         // 第一次处理（应成功）
-        ItemImportEvent event1 = createEvent(barcode);
+        ItemImportEvent event1 = createEvent(DUPLICATE_BARCODE);
         handler.onEvent(event1);
         String result1 = event1.barcode;
         assertNotNull(result1);
         assertTrue(result1.startsWith("'") && result1.endsWith("'"));
-        assertEquals(result1.substring(1, result1.length() - 1), barcode);
+        assertEquals(result1.substring(1, result1.length() - 1), DUPLICATE_BARCODE);
         assertTrue(event1.wrong.isEmpty());
-        assertTrue(getCache().contains(barcode));
-        assertFalse(getBlacklist().contains(barcode));
+        assertTrue(getCache().contains(DUPLICATE_BARCODE));
+        assertFalse(getBlacklist().contains(DUPLICATE_BARCODE));
 
         // 第二次处理相同条码（应报重复）
-        ItemImportEvent event2 = createEvent(barcode);
+        ItemImportEvent event2 = createEvent(DUPLICATE_BARCODE);
         handler.onEvent(event2);
         // map 中仍保留原值（带引号）
         String result2 = event2.barcode;
-        assertNotNull(result2);
-        assertEquals(result2.substring(1, result2.length() - 1), barcode);
-        assertTrue(event2.wrong.contains(Verify.BARCODE_REPEAT));
-        assertTrue(getBlacklist().contains(barcode));
-        assertTrue(getCache().contains(barcode));
+        assertTrue(event2.wrong.containsKey(Verify.BARCODE_REPEAT));
+        assertTrue(getBlacklist().contains(DUPLICATE_BARCODE));
+        assertTrue(getCache().contains(DUPLICATE_BARCODE));
+
+        assertNotNull(event2.map.get(ItemMapping.BARCODE));
+        assertEquals(result1.substring(1, result1.length() - 1), event2.map.get(ItemMapping.BARCODE));
     }
 
     // ===================== 所有测试完成后打印缓存和黑名单 =====================

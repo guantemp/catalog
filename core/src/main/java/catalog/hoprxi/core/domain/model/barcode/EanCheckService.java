@@ -28,12 +28,11 @@ public class EanCheckService {
     private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{7}$|^\\d{11,12}$");
 
     /**
-     * @param barcode
      * @return true if valid
      */
     public static boolean isChecksum(CharSequence barcode) {
         try {
-            int checksum = computeChecksum(barcode.subSequence(0, barcode.length() - 1));
+            int checksum = EanCheckService.computeChecksum(barcode.subSequence(0, barcode.length() - 1));
             //System.out.println(checksum == barcode.charAt(barcode.length() - 1) - '0');
             return checksum == barcode.charAt(barcode.length() - 1) - '0';
         } catch (IllegalArgumentException e) {

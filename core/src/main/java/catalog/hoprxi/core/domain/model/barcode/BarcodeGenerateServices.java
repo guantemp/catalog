@@ -61,7 +61,7 @@ public class BarcodeGenerateServices {
      * @return 返回对应的 Barcode 实现类实例
      * @throws InvalidBarcodeException 如果条形码长度不符合上述规范（非8、12、13位）则抛出异常
      */
-    public static Barcode createBarcode(CharSequence barcode) {
+    public static Barcode createBarcode(String barcode) {
         Objects.requireNonNull(barcode, "barcode must not be null");
         if (barcode.length() == 8)
             return new EAN_8(barcode);
@@ -117,7 +117,7 @@ public class BarcodeGenerateServices {
             for (int i = 0; i < amount; i++) {
                 StringBuilder sb = new StringBuilder(prefix).append(EAN_8_DECIMAL_FORMAT.format(start));
                 int checkSum = EanCheckService.computeChecksum(sb);
-                ean_8s[i] = new EAN_8(sb.append(checkSum));
+                ean_8s[i] = new EAN_8(sb.append(checkSum).toString());
                 start += 1;
             }
         } catch (InvalidBarcodeException e) {
@@ -143,7 +143,7 @@ public class BarcodeGenerateServices {
             throw new IllegalArgumentException("prefix required 20-24");
         StringBuilder sb = new StringBuilder(prefix).append(EAN_8_DECIMAL_FORMAT.format(start));
         int checkSum = EanCheckService.computeChecksum(sb);
-        return new EAN_8(sb.append(checkSum));
+        return new EAN_8(sb.append(checkSum).toString());
     }
 
     /**
@@ -173,7 +173,7 @@ public class BarcodeGenerateServices {
             for (int i = 0; i < amount; ) {
                 StringBuilder sb = new StringBuilder(prefix).append(EAN_8_DECIMAL_FORMAT.format(start));
                 int checkSum = EanCheckService.computeChecksum(sb);
-                EAN_8 barcode = new EAN_8(sb.append(checkSum));
+                EAN_8 barcode = new EAN_8(sb.append(checkSum).toString());
                 if (DigitPreferenceFilter.mantissaPreferenceFilter(barcode.barcode(), filter)) {
                     ean_8s[i] = barcode;
                     i++;
@@ -212,7 +212,7 @@ public class BarcodeGenerateServices {
             for (int i = 0; i < amount; i++) {
                 StringBuilder sb = new StringBuilder(prefix).append(EAN_13_DECIMAL_FORMAT.format(start));
                 int checkSum = EanCheckService.computeChecksum(sb);
-                ean_13s[i] = new EAN_13(sb.append(checkSum));
+                ean_13s[i] = new EAN_13(sb.append(checkSum).toString());
                 start += 1;
             }
         } catch (InvalidBarcodeException e) {
@@ -236,7 +236,7 @@ public class BarcodeGenerateServices {
             throw new IllegalArgumentException("prefix required 20-24");
         StringBuilder sb = new StringBuilder(prefix).append(EAN_13_DECIMAL_FORMAT.format(start));
         int checkSum = EanCheckService.computeChecksum(sb);
-        return new EAN_13(sb.append(checkSum));
+        return new EAN_13(sb.append(checkSum).toString());
     }
 
     /**
@@ -263,7 +263,7 @@ public class BarcodeGenerateServices {
             for (int i = 0; i < amount; ) {
                 StringBuilder sb = new StringBuilder(prefix).append(EAN_13_DECIMAL_FORMAT.format(start));
                 int checkSum = EanCheckService.computeChecksum(sb);
-                EAN_13 barcode = new EAN_13(sb.append(checkSum));
+                EAN_13 barcode = new EAN_13(sb.append(checkSum).toString());
                 if (DigitPreferenceFilter.mantissaPreferenceFilter(barcode.barcode(), filter)) {
                     ean_13s[i] = barcode;
                     i++;
@@ -301,7 +301,7 @@ public class BarcodeGenerateServices {
             for (int i = 0; i < amount; ) {
                 StringBuilder sb = new StringBuilder(prefix).append(EAN_13_DECIMAL_FORMAT.format(start));
                 int checkSum = EanCheckService.computeChecksum(sb);
-                EAN_13 barcode = new EAN_13(sb.append(checkSum));
+                EAN_13 barcode = new EAN_13(sb.append(checkSum).toString());
                 // 如果 filter 为 null，直接放入数组；如果 filter 不为 null，则进行过滤判断
                 if (filter == null || DigitPreferenceFilter.mantissaPreferenceFilter(barcode.barcode(), filter)) {
                     ean_13s[i] = barcode;

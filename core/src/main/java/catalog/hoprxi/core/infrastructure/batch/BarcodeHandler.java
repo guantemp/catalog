@@ -66,21 +66,13 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
     public void onEvent(ItemImportEvent event, long l, boolean b) {
         // 1. 获取或生成标准条码或者原始值，不带引号
         String rawBarcode = BarcodeHandler.getOrGenerateBarcode(event);
-        if (rawBarcode == null) {
-            // 如果是无效条码且无法补全，已添加错误并放入原值，直接返回
-            return;
-        }
+        if (rawBarcode == null) return;
 
         // 2. 检查重复和数据库存在性，并处理
         boolean isDuplicateOrExist = BarcodeHandler.checkAndHandleDuplicateOrExist(event, rawBarcode);
-        if (isDuplicateOrExist) {
-            // 已放入带引号的值并添加错误，直接返回
-            return;
-        }
+        if (isDuplicateOrExist) return;
 
-        // 3. 成功：加入缓存并放入带引号的值
-        BARCODE_CACHE.add(rawBarcode);
-        event.barcode="'" + rawBarcode + "'";
+        event.barcode = "'" + rawBarcode + "'";
         //System.out.println("barcode:"+event.barcode);
     }
 
@@ -94,20 +86,21 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
         if (barcode == null || barcode.isBlank()) {
             // 生成店内码
             return BARCODE_TYPE.equals("ean_13")
-                    ? BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString()
-                    : BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(START.getAndIncrement(), PREFIX).toPlanString();
+                    ? BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(START.getAndIncrement(), PREFIX).barcode()
+                    : BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(START.getAndIncrement(), PREFIX).barcode();
         }
-        // 非空条码：校验并补全
+        // 非空条码：校验并如果是7,11,12位补全
         try {
             Barcode bar = BarcodeGenerateServices.createBarcode(barcode);
-            return bar.toPlanString();
+            return bar.barcode();
         } catch (InvalidBarcodeException e) {
+            System.out.println("InvalidBarcode:" + barcode);
             try {
                 Barcode bar = BarcodeGenerateServices.createBarcodeCompleteChecksum(barcode);
-                return bar.toPlanString();
+                return bar.barcode();
             } catch (IllegalArgumentException f) {
-                // 无法补全，保留原始输入
-                event.addWrong(Verify.BARCODE_CHECK_SUM_ERROR);
+                // 无法补全
+                event.addWrong(Verify.BARCODE_CHECK_SUM_ERROR,barcode);
                 return null;
             }
         }
@@ -119,29 +112,25 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
      * 否则返回 false。
      */
     private static boolean checkAndHandleDuplicateOrExist(ItemImportEvent event, String rawBarcode) {
-        // 缓存命中 → 重复
-        if (BARCODE_CACHE.contains(rawBarcode)) {
-            event.addWrong(Verify.BARCODE_REPEAT);
-            BARCODE_BLACKLIST.add(rawBarcode);
-            return true;
-        }
-
-        // 数据库存在
-        if (BarcodeHandler.isExist(rawBarcode)) {
-            BARCODE_CACHE.add(rawBarcode);
-            event.addWrong(Verify.BARCODE_EXIST);
-            BARCODE_BLACKLIST.add(rawBarcode);
-            return true;
-        }
-
-        // 尝试原子性放入缓存（处理并发冲突）
+        // 尝试原子性地将条码加入缓存（表示该条码正在被处理）
+        // 若 add 返回 false，说明已有其他线程成功插入，当前线程应视为重复
         if (!BARCODE_CACHE.add(rawBarcode)) {
-            // 其他线程已插入，视为重复
-            event.addWrong(Verify.BARCODE_REPEAT);
+            event.addWrong(Verify.BARCODE_REPEAT,rawBarcode);
             BARCODE_BLACKLIST.add(rawBarcode);
+            //event.barcode = "'" + rawBarcode + "'";   // 确保导出时有值
             return true;
         }
-        // 没有命中任何错误
+
+        // 当前线程成功获得缓存标记，现在查询数据库
+        if (BarcodeHandler.isExist(rawBarcode)) {
+            // 数据库已存在，报告错误，保留缓存标记（后续线程会因缓存命中而报重复）
+            event.addWrong(Verify.BARCODE_EXIST,rawBarcode);
+            BARCODE_BLACKLIST.add(rawBarcode);
+            //event.barcode = "'" + rawBarcode + "'";
+            return true;
+        }
+
+        // 数据库不存在，缓存标记已保留，用于防重复，返回 false 表示成功
         return false;
     }
 

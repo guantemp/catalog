@@ -20,6 +20,7 @@ import catalog.hoprxi.core.application.batch.ItemMapping;
 import catalog.hoprxi.core.domain.model.price.UnitEnum;
 import com.lmax.disruptor.EventHandler;
 
+import java.math.BigDecimal;
 import java.util.StringJoiner;
 
 /***
@@ -29,8 +30,11 @@ import java.util.StringJoiner;
  */
 public class MemeberPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
-    public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        String units = itemImportEvent.map.get(ItemMapping.UNIT);
+    public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        String priceStr = event.map.get(ItemMapping.MEMBER_PRICE);
+        BigDecimal price = MemeberPriceHandler.parsePriceOrDefault(priceStr);
+
+        String units = event.map.get(ItemMapping.UNIT);
         if (units == null) units = "";
         String cleanS = units.replace("\u3000", "").replace(" ", "").trim();
 
@@ -42,11 +46,22 @@ public class MemeberPriceHandler implements EventHandler<ItemImportEvent> {
         UnitEnum unit = UnitEnum.of(cleanS);
         StringJoiner joiner = new StringJoiner(",", "'{\"name\":\"会员价\",\"price\": ", "}'");
         StringJoiner subJoiner = new StringJoiner(",", "{", "}");
-        subJoiner.add("\"number\":" + (itemImportEvent.map.get(ItemMapping.MEMBER_PRICE) == null ? "0" : itemImportEvent.map.get(ItemMapping.MEMBER_PRICE)));
+        subJoiner.add("\"number\":" + price);
         subJoiner.add("\"currencyCode\":\"CNY\"");
         subJoiner.add("\"unit\":\"" + unit.name() + "\"");
         joiner.add(subJoiner.toString());
-       //System.out.println(joiner.toString());
-        itemImportEvent.map.put(ItemMapping.MEMBER_PRICE, joiner.toString());
+        //System.out.println(joiner.toString());
+        event.memberPriceJson = joiner.toString();
+    }
+
+    private static BigDecimal parsePriceOrDefault(String priceStr) {
+        if (priceStr == null || priceStr.trim().isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        try {
+            return new BigDecimal(priceStr.trim());
+        } catch (NumberFormatException e) {
+            return BigDecimal.ZERO;
+        }
     }
 }

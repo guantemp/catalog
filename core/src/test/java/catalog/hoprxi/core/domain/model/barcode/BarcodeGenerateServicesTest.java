@@ -45,6 +45,12 @@ public class BarcodeGenerateServicesTest {
         System.out.println(barcode);
         barcode = BarcodeGenerateServices.createBarcodeCompleteChecksum("693023999160");
         System.out.println(barcode);
+        barcode = BarcodeGenerateServices.createBarcode("6901028037921");
+        System.out.println(barcode);
+        barcode = BarcodeGenerateServices.createBarcode("6901028212281");
+        System.out.println(barcode);
+        barcode = BarcodeGenerateServices.createBarcode("6900077001679");
+        System.out.println(barcode);
     }
 
     @Test

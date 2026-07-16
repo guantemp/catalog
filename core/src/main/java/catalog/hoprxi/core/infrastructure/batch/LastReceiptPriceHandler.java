@@ -20,6 +20,7 @@ import catalog.hoprxi.core.application.batch.ItemMapping;
 import catalog.hoprxi.core.domain.model.price.UnitEnum;
 import com.lmax.disruptor.EventHandler;
 
+import java.math.BigDecimal;
 import java.util.StringJoiner;
 
 /***
@@ -29,8 +30,31 @@ import java.util.StringJoiner;
  */
 public class LastReceiptPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
-    public void onEvent(ItemImportEvent itemImportEvent, long l, boolean b) throws Exception {
-        String units = itemImportEvent.map.get(ItemMapping.UNIT);
+    public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        String retailPriceStr = event.map.get(ItemMapping.LAST_RECEIPT_PRICE);
+
+        if (retailPriceStr == null || retailPriceStr.trim().isEmpty()) {
+            event.addWrong(Verify.LAST_RECEIPT_PRICE_ZERO,retailPriceStr);
+            return;
+        }
+
+        try {
+            // 使用 BigDecimal 解析，彻底杜绝精度丢失
+            BigDecimal price = new BigDecimal(retailPriceStr.trim());
+
+            // 判断是否为 0（compareTo 返回 0 表示相等）
+            if (price.compareTo(BigDecimal.ZERO) == 0) {
+                event.addWrong(Verify.LAST_RECEIPT_PRICE_ZERO,event.map.get(ItemMapping.BARCODE)+":"+retailPriceStr);
+                return;
+            }
+
+            // 解析成功且不为 0，继续后续逻辑...
+
+        } catch (NumberFormatException e) {
+            event.addWrong(Verify.LAST_RECEIPT_PRICE_ZERO,event.map.get(ItemMapping.BARCODE)+":"+retailPriceStr);
+            return;
+        }
+        String units = event.map.get(ItemMapping.UNIT);
         if (units == null) units = "";
         String cleanS = units.replace("\u3000", "").replace(" ", "").trim();
 
@@ -42,11 +66,11 @@ public class LastReceiptPriceHandler implements EventHandler<ItemImportEvent> {
         UnitEnum unit = UnitEnum.of(cleanS);
         StringJoiner joiner = new StringJoiner(",", "'{\"name\":\"最近入库价\",\"price\": ", "}'");
         StringJoiner subJoiner = new StringJoiner(",", "{", "}");
-        subJoiner.add("\"number\":" + (itemImportEvent.map.get(ItemMapping.LAST_RECEIPT_PRICE) == null ? "0" : itemImportEvent.map.get(ItemMapping.LAST_RECEIPT_PRICE)));
+        subJoiner.add("\"number\":" + event.map.get(ItemMapping.LAST_RECEIPT_PRICE));
         subJoiner.add("\"currencyCode\":\"CNY\"");
         subJoiner.add("\"unit\":\"" + unit.name() + "\"");
         joiner.add(subJoiner.toString());
         //System.out.println(joiner.toString());
-        itemImportEvent.map.put(ItemMapping.LAST_RECEIPT_PRICE, joiner.toString());
+        event.lastReceiptPriceJson= joiner.toString();
     }
 }

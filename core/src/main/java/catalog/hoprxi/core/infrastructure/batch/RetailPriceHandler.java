@@ -20,6 +20,7 @@ import catalog.hoprxi.core.application.batch.ItemMapping;
 import catalog.hoprxi.core.domain.model.price.UnitEnum;
 import com.lmax.disruptor.EventHandler;
 
+import java.math.BigDecimal;
 import java.util.StringJoiner;
 
 /***
@@ -31,12 +32,25 @@ public class RetailPriceHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
         String retailPriceStr = event.map.get(ItemMapping.RETAIL_PRICE);
-
-        // 2. 校验零售价是否为零 (处理 null、空字符串或 "0" / "0.00" 的情况)
-        if (retailPriceStr == null || retailPriceStr.trim().isEmpty() || Double.parseDouble(retailPriceStr) == 0.0) {
-            event.addWrong(Verify.RETAIL_PRICE_ZERO); // 假设你的枚举里有这个值
+        if (retailPriceStr == null || retailPriceStr.trim().isEmpty()) {
+            event.addWrong(Verify.RETAIL_PRICE_ZERO,retailPriceStr);
             return;
         }
+
+        try {
+            // 使用 BigDecimal 解析，彻底杜绝精度丢失
+            BigDecimal price = new BigDecimal(retailPriceStr.trim());
+            // 判断是否为 0（compareTo 返回 0 表示相等）
+            if (price.compareTo(BigDecimal.ZERO) == 0) {
+                event.addWrong(Verify.RETAIL_PRICE_ZERO,event.map.get(ItemMapping.BARCODE)+":"+retailPriceStr);
+                return;
+            }
+            // 解析成功且不为 0，继续后续逻辑...
+        } catch (NumberFormatException e) {
+            event.addWrong(Verify.RETAIL_PRICE_FORMAT_ERROR,event.map.get(ItemMapping.BARCODE)+":"+retailPriceStr);
+            return;
+        }
+
         String units = event.map.get(ItemMapping.UNIT);
         if (units == null) units = "";
         String cleanS = units.replace("\u3000", "").replace(" ", "").trim();
@@ -51,6 +65,6 @@ public class RetailPriceHandler implements EventHandler<ItemImportEvent> {
         joiner.add("\"number\":" + event.map.get(ItemMapping.RETAIL_PRICE));
         joiner.add("\"currencyCode\":\"CNY\"");
         joiner.add("\"unit\":\"" + unit.name() + "\"");
-        event.map.put(ItemMapping.RETAIL_PRICE, joiner.toString());
+        event.retailPriceJson = joiner.toString();
     }
 }

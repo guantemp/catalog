@@ -25,13 +25,13 @@ import java.util.StringJoiner;
  */
 public class EAN_13 extends Barcode {
 
-    public EAN_13(CharSequence barcode) {
+    public EAN_13(String barcode) {
         super(barcode);
     }
 
     @Override
-    public boolean isCorrectChecksum(CharSequence barcode) {
-        return EanCheckService.isChecksum(barcode);
+    protected boolean isChecksumValid(String candidate) {
+        return EanCheckService.isChecksum(candidate);
     }
 
     @Override

@@ -94,7 +94,7 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
             Brand newBrand = (shortName != null)
                     ? new Brand(repository.nextIdentity(), new Name(name, shortName))
                     : new Brand(repository.nextIdentity(), name);
-            System.out.println(newBrand);
+            //System.out.println(newBrand);
             repository.save(newBrand);
             return newBrand.id();
         });

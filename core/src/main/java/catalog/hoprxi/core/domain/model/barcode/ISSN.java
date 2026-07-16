@@ -27,16 +27,16 @@ import java.util.regex.Pattern;
 public class ISSN extends EAN_13 {
     private static final Pattern BARCODE_PATTERN = Pattern.compile("^977\\d{10}$");
 
-    public ISSN(CharSequence barcode) {
+    public ISSN(String barcode) {
         super(barcode);
     }
 
     @Override
-    public boolean isCorrectChecksum(CharSequence barcode) {
-        Matcher matcher = BARCODE_PATTERN.matcher(barcode);
+    protected boolean isChecksumValid(String candidate) {
+        Matcher matcher = BARCODE_PATTERN.matcher(candidate);
         if (!matcher.matches()) {
             throw new InvalidBarcodeException("error barcode format");
         }
-        return super.isCorrectChecksum(barcode);
+        return super.isChecksumValid(candidate);
     }
 }

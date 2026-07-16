@@ -27,16 +27,16 @@ import java.util.regex.Pattern;
 public class UPC_E extends Barcode {
     private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{6}$");
 
-    public UPC_E(CharSequence barcode) {
+    public UPC_E(String barcode) {
         super(barcode);
     }
 
     @Override
-    public boolean isCorrectChecksum(CharSequence barcode) {
+   protected boolean isChecksumValid(String candidate) {
         Matcher matcher = BARCODE_PATTERN.matcher(barcode);
         if (matcher.matches())
             return EanCheckService.isChecksum(barcode);
-        return true;
+        return false;
     }
 
     public UPC_A toUPC_A() {

@@ -23,13 +23,13 @@ package catalog.hoprxi.core.domain.model.barcode;
  */
 public class UPC_A extends Barcode {
 
-    public UPC_A(CharSequence barcode) {
+    public UPC_A(String barcode) {
         super(barcode);
     }
 
     @Override
-    public boolean isCorrectChecksum(CharSequence barcode) {
-        String tempBarcode = "0" + barcode;
+    protected boolean isChecksumValid(String candidate) {
+        String tempBarcode = "0" + candidate;
         return EanCheckService.isChecksum(tempBarcode);
     }
 
