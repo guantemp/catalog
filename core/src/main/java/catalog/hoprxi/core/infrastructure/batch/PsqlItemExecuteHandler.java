@@ -70,7 +70,7 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
                 statement.executeBatch();
                 connection.commit();
                 statement.clearBatch();
-                System.out.println("处理条数:" + i);
+                System.out.println("处理条数:处理条数:处理条数:处理条数:处理条数:处理条数:处理条数:处理条数:处理条数:处理条数:处理条数:" + i);
             }
         }
     }

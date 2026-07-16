@@ -45,10 +45,6 @@ public class FailedValidationHandler implements EventHandler<ItemImportEvent> {
                         number.incrementAndGet();
                         System.out.println(verify + ":" +event.wrong.get(verify));
                         break;
-                    case LAST_RECEIPT_PRICE_ZERO:
-                        number.incrementAndGet();
-                        System.out.println(verify + ":" + event.wrong.get(verify));
-                        break;
                 }
             }
         }

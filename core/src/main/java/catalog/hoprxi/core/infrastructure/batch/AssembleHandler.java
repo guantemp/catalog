@@ -76,15 +76,15 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
         String cleanBarcode = map.get(ItemMapping.BARCODE).replace("'", "");
         if (BarcodeHandler.BARCODE_BLACKLIST.contains(cleanBarcode)) {
             // 说明它是第一条，但后面有重复的！在这里把它也变成错误！
-            event.addWrong(Verify.BARCODE_REPEAT,cleanBarcode);
+            event.addWrong(Verify.BARCODE_REPEAT, cleanBarcode);
             return; // 不组装 SQL
         }
 
         StringJoiner joiner = new StringJoiner(",", "(", ")");
-        joiner.add(String.valueOf(event.generatedId)).add(map.get(ItemMapping.NAME)).add(event.barcode).add(String.valueOf(event.categoryId))
-                .add(String.valueOf(event.brandId)).add(map.get(ItemMapping.GRADE)).add(event.madeInJson).add(map.get(ItemMapping.SPEC))
-                .add(map.get(ItemMapping.SHELF_LIFE)).add(event.lastReceiptPriceJson).add(event.retailPriceJson)
-                .add(event.memberPriceJson).add(event.vipPriceJson).add(event.show);
+        joiner.add(String.valueOf(event.generatedId)).add(event.basicInfo.nameJson()).add(event.barcode).add(String.valueOf(event.categoryId))
+                .add(String.valueOf(event.brandId)).add("'" + event.basicInfo.grade().name() + "'").add(event.madeInJson).add(event.basicInfo.spec())
+                .add(String.valueOf(event.basicInfo.shelfLife())).add(event.basicInfo.lastReceiptPriceJson()).add(event.basicInfo.retailPriceJson())
+                .add(event.basicInfo.memberPriceJson()).add(event.basicInfo.vipPriceJson()).add(event.show);
         //System.out.println(joiner.toString());
         ringBuffer.publishEvent(TRANSLATOR, joiner.toString());
 

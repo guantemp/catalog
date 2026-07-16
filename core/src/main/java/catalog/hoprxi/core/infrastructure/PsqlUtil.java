@@ -56,6 +56,12 @@ public final class PsqlUtil {
                     props.setProperty("dataSource.password", DecryptUtil.decrypt(entry, database.getString("password")));
                     props.setProperty("dataSource.databaseName", database.getString("databaseName"));
                     props.put("maximumPoolSize", database.hasPath("hikari.maximumPoolSize") ? database.getInt("hikari.maximumPoolSize") : Runtime.getRuntime().availableProcessors() * 2 + 1);
+                    // 连接超时（单位：毫秒），默认 5000 ms
+                    props.put("connectionTimeout", database.hasPath("hikari.connectionTimeout") ? database.getLong("hikari.connectionTimeout") : 5000L);
+                    // 空闲超时（单位：毫秒），默认 300000 ms（5分钟）
+                    props.put("idleTimeout", database.hasPath("hikari.idleTimeout") ? database.getLong("hikari.idleTimeout") : 300000L);
+                    // 连接泄漏检测阈值（单位：毫秒），默认 10000 ms（10秒）
+                    props.put("leakDetectionThreshold", database.hasPath("hikari.leakDetectionThreshold") ? database.getLong("hikari.leakDetectionThreshold") : 10000L);
                     props.put("dataSource.logWriter", new PrintWriter(System.out));
                     break;
                 }

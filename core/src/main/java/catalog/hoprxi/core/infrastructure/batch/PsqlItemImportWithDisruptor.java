@@ -20,6 +20,7 @@ import catalog.hoprxi.core.application.batch.ItemImportService;
 import catalog.hoprxi.core.application.batch.ItemMapping;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.SleepingWaitStrategy;
+import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.commons.csv.CSVFormat;
@@ -37,7 +38,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 /***
@@ -54,24 +54,22 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
             itemMappings = DEFAULT_CORR;
         Disruptor<ItemImportEvent> disruptor = new Disruptor<>(
                 ItemImportEvent::new,
-                2048,
+                512,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
-                new SleepingWaitStrategy()
-                //new YieldingWaitStrategy()
+                new YieldingWaitStrategy()
+                //new SleepingWaitStrategy()
         );
 
 
-        disruptor.handleEventsWith(new NameHandler(), new GrandHandler(), new SpecHandler(),
-                        new ShelfLifeHandler(), new LastReceiptPriceHandler(), new RetailPriceHandler(),
-                        new MemeberPriceHandler(), new VipPriceHandler())
+        disruptor.handleEventsWith(new IdHandler(), new BasicInfoHandler(), new CategoryHandler(), new MadeInHandler(), new BrandHandler())
                 // 2. 数据库 IO 操作，开启多线程（WorkerPool）并发处理！
                 // 注意：这里必须用 handleEventsWithWorkerPool，且 Handler 内部必须有你之前写的 ConcurrentHashMap 和 DCL 锁！
-                .thenHandleEventsWithWorkerPool(new IdHandler(), new IdHandler(), new IdHandler(), new IdHandler())
+                //.thenHandleEventsWithWorkerPool(new IdHandler(), new IdHandler(), new IdHandler(), new IdHandler())
                 .thenHandleEventsWithWorkerPool(new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler())
-                .thenHandleEventsWithWorkerPool(new CategoryHandler(), new CategoryHandler(), new CategoryHandler(), new CategoryHandler())
-                .thenHandleEventsWithWorkerPool(new MadeInHandler(), new MadeInHandler(), new MadeInHandler(), new MadeInHandler())
-                .thenHandleEventsWithWorkerPool(new BrandHandler(), new BrandHandler(), new BrandHandler(), new BrandHandler())
+                //.thenHandleEventsWithWorkerPool(new CategoryHandler(), new CategoryHandler(), new CategoryHandler(), new CategoryHandler())
+                //.thenHandleEventsWithWorkerPool(new MadeInHandler(), new MadeInHandler(), new MadeInHandler(), new MadeInHandler())
+                //.thenHandleEventsWithWorkerPool(new BrandHandler(), new BrandHandler(), new BrandHandler(), new BrandHandler())
                 .thenHandleEventsWithWorkerPool(new UploadHandler(), new UploadHandler(), new UploadHandler(), new UploadHandler())
                 .then(new AssembleHandler(), new FailedValidationHandler());
         disruptor.start();
@@ -169,9 +167,8 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
         );
 
         disruptor.handleEventsWith(
-                new IdHandler(), new NameHandler(), new BarcodeHandler(), new CategoryHandler(), new BrandHandler(),
-                new GrandHandler(), new MadeInHandler(), new SpecHandler(), new ShelfLifeHandler(),
-                new LastReceiptPriceHandler(), new RetailPriceHandler(), new MemeberPriceHandler(), new VipPriceHandler()
+                new IdHandler(), new BasicInfoHandler(), new BarcodeHandler(), new CategoryHandler(), new BrandHandler(),
+                new MadeInHandler()
         ).then(new AssembleHandler(), new FailedValidationHandler());
 
         disruptor.start();

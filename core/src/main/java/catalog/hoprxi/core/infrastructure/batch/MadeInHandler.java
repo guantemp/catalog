@@ -106,6 +106,7 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
 
     @Override
     public void onEvent(ItemImportEvent event, long sequence, boolean endOfBatch) throws Exception {
+        long start = System.nanoTime();
         event.madeInJson = MadeInHandler.buildUnknownJson();
         String madeInText = event.map.get(ItemMapping.MADE_IN);
         if (madeInText == null || madeInText.isBlank())
@@ -126,6 +127,12 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
             event.madeInJson = result;
         } catch (Exception e) {
             System.err.println("Failed to resolve madeIn: " + trimmed + ", error: " + e.getMessage());
+        }
+        long elapsed = (System.nanoTime() - start) / 1_000_000; // 毫秒
+        if (elapsed > 100) {
+            System.out.println("madin sleep");// 只记录超过阈值的慢操作
+            System.out.printf("Handler %s slow, event seq=%d, cost=%dms%n",
+                    this.getClass().getSimpleName(), sequence, elapsed);
         }
     }
 
