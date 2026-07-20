@@ -50,7 +50,7 @@ public class UploadHandlerTest {
         map.put(ItemMapping.BARCODE, "\"" + barcode + "\""); // 模拟带引号
         event.map = map;
         if(hasWrong)
-            event.addWrong(Verify.BARCODE_EXIST,barcode);
+            event.addWrong(Verify.BARCODE_REPEAT,barcode);
         return event;
     }
 }

@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
  * @version 0.0.1 builder 2023-05-08
  */
 public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandler<ItemImportEvent> {
-    private static final Set<String> BARCODE_CACHE = ConcurrentHashMap.newKeySet(5120);
+    private static final Set<String> BARCODE_CACHE = ConcurrentHashMap.newKeySet(2480);
     private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{7}$|^\\d{11,12}$");
     // 2. 记录所有发生过重复的条码（黑名单）
     static final Set<String> BARCODE_BLACKLIST = ConcurrentHashMap.newKeySet();
@@ -104,14 +104,14 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
             Barcode bar = BarcodeGenerateServices.createBarcode(barcode);
             return bar.barcode();
         } catch (InvalidBarcodeException e) {
-            System.out.println("InvalidBarcode:" + barcode);
+            System.out.println("校验和错误:" + barcode);
             Matcher matcher = BARCODE_PATTERN.matcher(barcode);
             if (!matcher.matches()) {
                 event.addWrong(Verify.BARCODE_CHECK_SUM_ERROR, barcode);
                 return null;
             }
-            System.out.println("补全:" + barcode);
             Barcode bar = BarcodeGenerateServices.createBarcodeCompleteChecksum(barcode);
+            System.out.println("补全:" + bar.barcode());
             return bar.barcode();
         }
     }
@@ -134,7 +134,7 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
         // 当前线程成功获得缓存标记，现在查询数据库
         if (BarcodeHandler.isExist(rawBarcode)) {
             // 数据库已存在，报告错误，保留缓存标记（后续线程会因缓存命中而报重复）
-            event.addWrong(Verify.BARCODE_EXIST, rawBarcode);
+            event.addWrong(Verify.BARCODE_REPEAT, rawBarcode);
             BARCODE_BLACKLIST.add(rawBarcode);
             //event.barcode = "'" + rawBarcode + "'";
             return true;
@@ -154,25 +154,26 @@ public class BarcodeHandler implements EventHandler<ItemImportEvent>, WorkHandle
 
             PreparedStatement ps = conn.prepareStatement("select id from item where barcode = ?");
             ps.setString(1, barcode);
-            long t3 = System.nanoTime();
+            //long t3 = System.nanoTime();
             ResultSet rs = ps.executeQuery();
-            long t4 = System.nanoTime();
-            System.out.println("执行查询耗时: " + (t4 - t3) / 1_000_000 + " ms");
+            //long t4 = System.nanoTime();
+            //System.out.println("执行查询耗时: " + (t4 - t3) / 1_000_000 + " ms");
 
             boolean exists = rs.next();
-            long t5 = System.nanoTime();
-            System.out.println("结果集处理耗时: " + (t5 - t4) / 1_000_000 + " ms");
+            //long t5 = System.nanoTime();
+            //System.out.println("结果集处理耗时: " + (t5 - t4) / 1_000_000 + " ms");
             return exists;
         } catch (SQLException e) {
             // ...
         } finally {
             try {
-                conn.close();
+                if (conn != null) {
+                    conn.close();
+                }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
         }
-
         return true;
     }
 }

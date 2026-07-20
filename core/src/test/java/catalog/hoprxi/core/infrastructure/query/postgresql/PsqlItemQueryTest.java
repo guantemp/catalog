@@ -48,7 +48,7 @@ public class PsqlItemQueryTest {
 
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFind() throws InterruptedException, IOException {
-        try (InputStream is = query.find(55307366414673724L)) {
+        try (InputStream is = query.find(35723064262774794L)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
         /*
@@ -66,15 +66,15 @@ public class PsqlItemQueryTest {
          */
 
         Flux<ByteBuf>[] fluxes = new Flux[]{
-                query.findAsync(55307366561474567L),
-                query.findAsync(55307366425159504L),
-                query.findAsync(55307366506948522L),
-                query.findAsync(55307407636294041L),
-                query.findByBarcodeAsync("6901028339537"),
-                query.findByBarcodeAsync("6903244120128"),
-                query.findByBarcodeAsync("6905418003640"),
-                query.findByBarcodeAsync("6934665085949"),
-                query.findByBarcodeAsync("6934665085948"),
+                query.findAsync(35723064262774786L),
+                query.findAsync(35723054311788544L),
+                query.findAsync(35723015189417984L),
+                query.findAsync(35722962838212632L),
+                query.findByBarcodeAsync("6928343007026"),
+                query.findByBarcodeAsync("6924513909176"),
+                query.findByBarcodeAsync("6910019004545"),
+                query.findByBarcodeAsync("6902312305375"),
+                query.findByBarcodeAsync("6951476304052"),
         };
         CountDownLatch latch = new CountDownLatch(fluxes.length);
         // 为每个查询在独立线程中启动订阅

@@ -181,7 +181,7 @@ public class FileUploadService {
                                @Param(value = "separateByDate") @Nullable Boolean separateByDateParam,
                                @Param(value = "directory") @Nullable String directoryParam,
                                @Param(value = "validSpec") @Nullable String validSpecParam) {
-        System.out.println("Armeria 收到的原始请求: " + ctx.request().path());
+        //System.out.println("Armeria 收到的原始请求: " + ctx.request().path());
         // 1. 校验文件列表
         if (multipartFiles == null || multipartFiles.isEmpty()) {
             return HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.JSON_UTF_8,
@@ -204,9 +204,8 @@ public class FileUploadService {
         if (separateByDate && !date.isEmpty()) {
             basePath = basePath.resolve(date);
         }
-
+        //文件校验，问题是文件要上传吗，不管行不行，都要上传才能验证
         EnumSet<FileValidSpec> specs = EnumSet.noneOf(FileValidSpec.class);
-        System.out.println("validSpecParam:" + validSpecParam);
         if (validSpecParam != null && !validSpecParam.trim().isEmpty()) {
             try {
                 // 将传入的字符串转换为对应的枚举值
@@ -224,7 +223,7 @@ public class FileUploadService {
             allSupportedExtensions.addAll(Arrays.asList(spec.support()));
         }
         String supportedExtensions = String.join(", ", allSupportedExtensions);
-        System.out.println(specs);
+        //System.out.println(specs);
 
         // 3. 获取协议和主机
         String scheme = ctx.request().headers().get("X-Forwarded-Proto");

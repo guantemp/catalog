@@ -292,6 +292,7 @@ public class PsqlItemRepository implements ItemRepository {
             ps.setString(idx++, toJson(item.retailPrice()));
             ps.setString(idx++, toJson(item.memberPrice()));
             ps.setString(idx++, toJson(item.vipPrice()));
+            //ps.setString(idx++, toJson(item.vipPrice()));//show未实现
             ps.executeUpdate();
         } catch (SQLException e) {
             LOGGER.error("Can't save item {}", item, e);

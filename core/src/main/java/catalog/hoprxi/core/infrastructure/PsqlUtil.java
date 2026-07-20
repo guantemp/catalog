@@ -84,6 +84,7 @@ public final class PsqlUtil {
                     break;
             }
         }
+        //System.out.println(hikariDataSource.getMaximumPoolSize());
     }
 
     public static Connection getConnection() throws SQLException {

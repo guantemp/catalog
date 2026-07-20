@@ -34,16 +34,16 @@ public class FailedValidationHandler implements EventHandler<ItemImportEvent> {
         if (event.hasWrong()) {
             for (Verify verify : event.wrong.keySet()){
                 switch (verify) {
-                    case BARCODE_EXIST:
                     case BARCODE_REPEAT:
-                    case BARCODE_CHECK_SUM_ERROR:
                         number.incrementAndGet();
                         System.out.println(verify + ":" + event.wrong.get(verify));
                         break;
+                    case BARCODE_CHECK_SUM_ERROR:
+
                     case RETAIL_PRICE_ZERO:
                     case RETAIL_LARGER_RECEIPT:
-                        number.incrementAndGet();
-                        System.out.println(verify + ":" +event.wrong.get(verify));
+                        //number.incrementAndGet();
+                        //System.out.println(verify + ":" +event.wrong.get(verify));
                         break;
                 }
             }

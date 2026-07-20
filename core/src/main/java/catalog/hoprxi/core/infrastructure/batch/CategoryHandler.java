@@ -88,6 +88,7 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
 
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        //long t1 = System.nanoTime();
         event.categoryId = Category.UNCATEGORIZED.id();
         String category = event.map.get(ItemMapping.CATEGORY);
         if (category == null || category.isBlank()
@@ -101,6 +102,8 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
                 return;
             if (CategoryHandler.isExists(id))//是id值的形式，但是数据库不存在该id
                 event.categoryId = id;
+            //long t2 = System.nanoTime();
+            //System.out.println("分类处理处理耗时:" + (t2 - t1) / 1_000_000 + " ms");
             return;
         }
 
@@ -146,6 +149,8 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
         }
         // 最终 parentId 就是最后一级（叶子节点）的 ID
         event.categoryId = parentId;
+        //long t2 = System.nanoTime();
+        //System.out.println("分类处理处理耗时:" + (t2 - t1) / 1_000_000 + " ms");
         //System.out.println("category:" +itemImportEvent.map.get(Corresponding.CATEGORY));
     }
 

@@ -48,7 +48,7 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
     private static final String DELIMITER;
     private static final BrandRepository repository = new PsqlBrandRepository();
     private static final Logger LOGGER = LoggerFactory.getLogger(BrandHandler.class);
-    // 【核心修复 1】：引入线程安全的内存缓存，彻底解放数据库
+    // 引入线程安全的内存缓存，彻底解放数据库
     private static final Map<String, Long> BRAND_CACHE = new ConcurrentHashMap<>(1024);
 
     static {
@@ -58,6 +58,7 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
 
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        //long t1 = System.nanoTime();
         event.brandId = Brand.UNBRANDED.id();
         String brand = event.map.get(ItemMapping.BRAND);
         if (brand == null || brand.isBlank()
@@ -71,6 +72,8 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
                 return;
             if (BrandHandler.isExists(id))//没有查到该id,错误的id
                 event.brandId = id;
+            //long t2 = System.nanoTime();
+            //System.out.println("品牌处理耗时:" + (t2 - t1) / 1_000_000 + " ms");
             return;
         }
 
@@ -79,10 +82,7 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
         String name = ss[0].trim();
         String shortName = ss.length > 1 ? ss[1].trim() : null;
 
-        // 先查数据库（带缓存）
-        //System.out.println("dbid:"+dbId);
-        // 未找到，创建新品牌
-
+        // 先查数据库（带缓存）未找到，创建新品牌
         event.brandId = BRAND_CACHE.computeIfAbsent(name, k -> {
             // 先查数据库（带缓存）
             long dbId = BrandHandler.findIdByName(name, shortName);
@@ -96,6 +96,8 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
                     : new Brand(repository.nextIdentity(), name);
             //System.out.println(newBrand);
             repository.save(newBrand);
+            //long t2 = System.nanoTime();
+            //System.out.println("品牌处理耗时:" + (t2 - t1) / 1_000_000 + " ms");
             return newBrand.id();
         });
     }

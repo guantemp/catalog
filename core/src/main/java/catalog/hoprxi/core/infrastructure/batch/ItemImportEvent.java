@@ -44,6 +44,7 @@ public class ItemImportEvent {
                             String lastReceiptPriceJson, String retailPriceJson, String memberPriceJson,
                             String vipPriceJson) {
     }
+
     public volatile BasicInfo basicInfo;
 
     public void addWrong(Verify error, String snapshotValue) {

@@ -116,11 +116,13 @@ public class UploadHandler implements EventHandler<ItemImportEvent>, WorkHandler
 
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        long t1 = System.nanoTime();
         if (!event.hasWrong()) {
             String barcodeRaw = event.barcode;
             if (barcodeRaw != null && barcodeRaw.length() > 2) {
                 String barcode = barcodeRaw.substring(1, barcodeRaw.length() - 1); // 去掉引号
                 List<File> imageFiles = UploadHandler.findImageFiles(barcode);
+                /*
                 if (!imageFiles.isEmpty()) {
                     List<String> uploadedUrls = UploadHandler.uploadFiles(imageFiles);
                     if (!uploadedUrls.isEmpty()) {
@@ -132,9 +134,14 @@ public class UploadHandler implements EventHandler<ItemImportEvent>, WorkHandler
                     }
                     // 全部失败则 SHOW 保持 null
                 }
+                 */
             }
         }
-
+        long t2 = System.nanoTime();
+        long elapsed = (System.nanoTime() - t1) / 1_000_000; // 毫秒
+        if (elapsed > 200) {
+            System.out.println("上传图片耗时 " + (t2 - t1) / 1_000_000 + " ms");
+        }
         if (event.map.get(ItemMapping.LAST_ROW) != null) {
             synchronized (UploadHandler.class) {
                 if (!closed) {

@@ -119,7 +119,6 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
             event.madeInJson = cached;
             return;
         }
-
         // 缓存未命中，发起网络请求
         try {
             String result = MadeInHandler.fetchFromApi(trimmed);
@@ -129,8 +128,8 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
             System.err.println("Failed to resolve madeIn: " + trimmed + ", error: " + e.getMessage());
         }
         long elapsed = (System.nanoTime() - start) / 1_000_000; // 毫秒
-        if (elapsed > 100) {
-            System.out.println("madin sleep");// 只记录超过阈值的慢操作
+        if (elapsed > 150) {
+            System.out.print("地址查询延时>150ms：");// 只记录超过阈值的慢操作
             System.out.printf("Handler %s slow, event seq=%d, cost=%dms%n",
                     this.getClass().getSimpleName(), sequence, elapsed);
         }

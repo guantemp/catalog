@@ -105,7 +105,7 @@ public class BarcodeHandlerTest {
         assertNotNull(result);
         assertTrue(result.startsWith("'") && result.endsWith("'"));
         assertEquals(result.substring(1, result.length() - 1), EXISTING_BARCODE);
-        assertTrue(event.wrong.containsKey(Verify.BARCODE_EXIST));
+        assertTrue(event.wrong.containsKey(Verify.BARCODE_REPEAT));
         assertTrue(getBlacklist().contains(EXISTING_BARCODE));
         assertTrue(getCache().contains(EXISTING_BARCODE));
     }

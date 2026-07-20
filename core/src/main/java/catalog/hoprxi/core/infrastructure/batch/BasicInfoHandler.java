@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
 public class BasicInfoHandler implements EventHandler<ItemImportEvent> {
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        //long t1 = System.nanoTime();
         //name
         String name = event.map.get(ItemMapping.NAME);
         name = name.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
@@ -128,6 +129,9 @@ public class BasicInfoHandler implements EventHandler<ItemImportEvent> {
         event.basicInfo = new ItemImportEvent.BasicInfo(nameJson.toString(), grade, spec, days,
                 lastReceiptPriceJoiner.toString(), retailPriceJoiner.toString(),
                 memberJoiner.toString(), vipPriceJoiner.toString());
+
+        //long t2 = System.nanoTime();
+        //System.out.println("基本信息: " + (t2 - t1) / 1_000_000 + " ms");
     }
 
     private static BigDecimal parsePriceOrDefault(String priceStr) {

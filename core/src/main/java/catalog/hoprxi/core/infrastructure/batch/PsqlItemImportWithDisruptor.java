@@ -54,24 +54,15 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
             itemMappings = DEFAULT_CORR;
         Disruptor<ItemImportEvent> disruptor = new Disruptor<>(
                 ItemImportEvent::new,
-                512,
+                1024,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
                 new YieldingWaitStrategy()
                 //new SleepingWaitStrategy()
         );
 
-
         disruptor.handleEventsWith(new IdHandler(), new BasicInfoHandler(), new CategoryHandler(), new MadeInHandler(), new BrandHandler())
-                // 2. 数据库 IO 操作，开启多线程（WorkerPool）并发处理！
-                // 注意：这里必须用 handleEventsWithWorkerPool，且 Handler 内部必须有你之前写的 ConcurrentHashMap 和 DCL 锁！
-                //.thenHandleEventsWithWorkerPool(new IdHandler(), new IdHandler(), new IdHandler(), new IdHandler())
-                .thenHandleEventsWithWorkerPool(new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler(), new BarcodeHandler())
-                //.thenHandleEventsWithWorkerPool(new CategoryHandler(), new CategoryHandler(), new CategoryHandler(), new CategoryHandler())
-                //.thenHandleEventsWithWorkerPool(new MadeInHandler(), new MadeInHandler(), new MadeInHandler(), new MadeInHandler())
-                //.thenHandleEventsWithWorkerPool(new BrandHandler(), new BrandHandler(), new BrandHandler(), new BrandHandler())
-                .thenHandleEventsWithWorkerPool(new UploadHandler(), new UploadHandler(), new UploadHandler(), new UploadHandler())
-                .then(new AssembleHandler(), new FailedValidationHandler());
+                .thenHandleEventsWithWorkerPool(new BatchBarcodeHandler(), new BatchBarcodeHandler(), new BatchBarcodeHandler(), new BatchBarcodeHandler());
         disruptor.start();
 
         RingBuffer<ItemImportEvent> ringBuffer = disruptor.getRingBuffer();

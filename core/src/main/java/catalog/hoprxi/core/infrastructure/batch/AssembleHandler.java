@@ -17,10 +17,7 @@
 package catalog.hoprxi.core.infrastructure.batch;
 
 import catalog.hoprxi.core.application.batch.ItemMapping;
-import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.EventTranslatorOneArg;
-import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.YieldingWaitStrategy;
+import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 
@@ -34,7 +31,7 @@ import java.util.concurrent.Executors;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-05-08
  */
-public class AssembleHandler implements EventHandler<ItemImportEvent> {
+public class AssembleHandler implements EventHandler<ItemImportEvent> , WorkHandler<ItemImportEvent> {
     private static final EventTranslatorOneArg<ExecuteSqlEvent, String> TRANSLATOR =
             (event, sequence, sql) -> event.sql = sql;
     private static final Disruptor<ExecuteSqlEvent> executeDisruptor;
@@ -43,25 +40,31 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
     static {
         executeDisruptor = new Disruptor<>(
                 ExecuteSqlEvent::new,
-                256,
+                1024,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
                 new YieldingWaitStrategy()
         );
-        //executeDisruptor.setDefaultExceptionHandler(new DisruptorExceptionHandler<>());
-        try {
-            executeDisruptor.handleEventsWith(new PsqlItemExecuteHandler());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        executeDisruptor.setDefaultExceptionHandler(new ExceptionHandler<ExecuteSqlEvent>() {
+            @Override
+            public void handleEventException(Throwable throwable, long l, ExecuteSqlEvent executeSqlEvent) {
+                throwable.printStackTrace(); // 打印到控制台
+            }
+
+            @Override
+            public void handleOnStartException(Throwable ex) {}
+            @Override
+            public void handleOnShutdownException(Throwable ex) {}
+        });
+        executeDisruptor.handleEventsWith(new PsqlItemExecuteHandler());
         executeDisruptor.start();
         ringBuffer = executeDisruptor.getRingBuffer();
     }
 
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) {
+        //long t1 = System.nanoTime();
         Map<ItemMapping, String> map = event.map;
-
         // 1. 如果前面（如校验和错误、后续重复）已经报错了，直接跳过组装 SQL
         if (event.hasWrong()) {
             // 注意：如果有错，也要判断是不是最后一行，如果是，依然要发 LAST_ROW 触发关闭
@@ -74,9 +77,9 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
         // 2. 【全局清算】：检查当前条码是否在“重复黑名单”里
         // 注意：此时 map 中的 barcode 带有单引号，需要去掉再比对
         String cleanBarcode = map.get(ItemMapping.BARCODE).replace("'", "");
-        if (BarcodeHandler.BARCODE_BLACKLIST.contains(cleanBarcode)) {
+        if (BatchBarcodeHandler.BARCODE_BLACKLIST.contains(cleanBarcode)) {
             // 说明它是第一条，但后面有重复的！在这里把它也变成错误！
-            event.addWrong(Verify.BARCODE_REPEAT, cleanBarcode);
+            //event.addWrong(Verify.BARCODE_REPEAT, cleanBarcode);
             return; // 不组装 SQL
         }
 
@@ -85,12 +88,20 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> {
                 .add(String.valueOf(event.brandId)).add("'" + event.basicInfo.grade().name() + "'").add(event.madeInJson).add(event.basicInfo.spec())
                 .add(String.valueOf(event.basicInfo.shelfLife())).add(event.basicInfo.lastReceiptPriceJson()).add(event.basicInfo.retailPriceJson())
                 .add(event.basicInfo.memberPriceJson()).add(event.basicInfo.vipPriceJson()).add(event.show);
-        //System.out.println(joiner.toString());
+        //System.out.println("joiner:"+joiner);
         ringBuffer.publishEvent(TRANSLATOR, joiner.toString());
 
         if (map.get(ItemMapping.LAST_ROW) != null) {//最后一行
             ringBuffer.publishEvent(TRANSLATOR, "LAST_ROW");
+            System.out.println("AssembleHandler last_row yesyes");
             executeDisruptor.shutdown();
         }
+        //long t2 = System.nanoTime();
+        //System.out.println("AssembleHandler处理耗时 " + (t2 - t1) / 1_000_000 + " ms");
+    }
+
+    @Override
+    public void onEvent(ItemImportEvent event) throws Exception {
+        this.onEvent(event, 0, false);
     }
 }
