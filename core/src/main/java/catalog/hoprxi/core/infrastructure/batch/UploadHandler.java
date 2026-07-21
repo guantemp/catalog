@@ -66,7 +66,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version 0.0.1 builder 2023-07-08
  */
 public class UploadHandler implements EventHandler<ItemImportEvent>, WorkHandler<ItemImportEvent> {
-
     private static final String UPLOAD_URI;
     private static final String LOCAL_IMG_DIR;          // 本地图片搜索目录
     private static final String SERVER_BARCODE_DIR;        // 上传后服务器保存目录（相对路径）

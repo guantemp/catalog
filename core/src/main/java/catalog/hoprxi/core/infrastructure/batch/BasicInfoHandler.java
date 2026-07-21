@@ -59,7 +59,7 @@ public class BasicInfoHandler implements EventHandler<ItemImportEvent> {
         if (spec != null && spec.isBlank())
             spec = null;
         if (spec != null) {
-            spec = "'" + spec.replaceAll("[*×Xx]\\d+.*", "") + "'";
+            spec = "'" + BasicInfoHandler.extractCoreSpec(spec) + "'";
         }
 //保质期
         String shelfLife = event.map.get(ItemMapping.SHELF_LIFE);
@@ -92,10 +92,14 @@ public class BasicInfoHandler implements EventHandler<ItemImportEvent> {
         }
         try {
             // 使用 BigDecimal 解析，彻底杜绝精度丢失
-            price = new BigDecimal(retailPrice.trim());
+            BigDecimal tempPrice = new BigDecimal(retailPrice.trim());
             // 判断是否为 0（compareTo 返回 0 表示相等）
-            if (price.compareTo(BigDecimal.ZERO) == 0) {
+            if (tempPrice.compareTo(BigDecimal.ZERO) == 0) {
                 event.addWrong(Verify.RETAIL_PRICE_ZERO, event.map.get(ItemMapping.BARCODE) + ":" + retailPrice);
+                return;
+            }
+            if (tempPrice.compareTo(price) < 0) {
+                event.addWrong(Verify.RETAIL_LESS_LAST_RECEIPT, event.map.get(ItemMapping.BARCODE) + ":" + retailPrice);
                 return;
             }
             // 解析成功且不为 0，继续后续逻辑...
@@ -104,7 +108,7 @@ public class BasicInfoHandler implements EventHandler<ItemImportEvent> {
             return;
         }
         StringJoiner retailPriceJoiner = new StringJoiner(",", "'{", "}'");
-        retailPriceJoiner.add("\"number\":" + event.map.get(ItemMapping.RETAIL_PRICE));
+        retailPriceJoiner.add("\"number\":" + price);
         retailPriceJoiner.add("\"currencyCode\":\"CNY\"");
         retailPriceJoiner.add("\"unit\":\"" + unit.name() + "\"");
 //memberprice
@@ -195,5 +199,58 @@ public class BasicInfoHandler implements EventHandler<ItemImportEvent> {
         }
         // 4. 无法识别
         return 0;
+    }
+
+    public static String extractCoreSpec(String spec) {
+        if (spec == null || spec.trim().isEmpty()) return "";
+        String s = spec.trim();
+
+        // 提取括号内
+        if (s.contains("(") && s.contains(")")) {
+            int start = s.indexOf('(');
+            int end = s.indexOf(')', start);
+            if (end > start) {
+                s = s.substring(start + 1, end);
+            }
+        }
+
+        // 处理 * 分隔：如果左无单位右有单位，取右
+        if (s.contains("*") || s.contains("×") || s.contains("x") || s.contains("X")) {
+            String[] parts = s.split("[*×xX]", 2);
+            if (parts.length == 2) {
+                String left = parts[0].trim();
+                String right = parts[1].trim();
+                if (!left.matches(".*[a-zA-Z].*") && right.matches(".*[a-zA-Z].*")) {
+                    s = right;
+                }
+            }
+        }
+
+        // 去除末尾的 /单位
+        s = s.replaceAll("/\\w+$", "");
+
+        // 循环去除末尾的 *数字+单位
+        while (true) {
+            String replaced = s.replaceFirst("[*×xX]\\d+[a-zA-Z]+$", "");
+            if (!replaced.equals(s)) {
+                s = replaced;
+            } else {
+                break;
+            }
+        }
+
+        // 去除末尾的 *数字（如果数字大于等于5）
+        if (s.matches(".*[*×xX]\\d+$")) {
+            String[] parts = s.split("[*×xX]");
+            String last = parts[parts.length - 1];
+            if (last.matches("\\d+")) {
+                int num = Integer.parseInt(last);
+                if (num >= 5) {
+                    s = s.replaceFirst("[*×xX]\\d+$", "");
+                }
+            }
+        }
+
+        return s;
     }
 }

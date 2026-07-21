@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,33 +23,34 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2023-05-10
+ * @since JDK21
+ * @version 0.0.2 builder 2026-07-21
  */
 public class FailedValidationHandler implements EventHandler<ItemImportEvent> {
-    private static final AtomicInteger number = new AtomicInteger(0);
+    private static final AtomicInteger BARCODE_NUMBER = new AtomicInteger(0);
+    private static final AtomicInteger RETAIL_NUMBER = new AtomicInteger(0);
 
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
         if (event.hasWrong()) {
-            for (Verify verify : event.wrong.keySet()){
+            for (Verify verify : event.wrong.keySet()) {
                 switch (verify) {
                     case BARCODE_REPEAT:
-                        number.incrementAndGet();
+                    case BARCODE_CHECK_SUM_ERROR:
+                        BARCODE_NUMBER.incrementAndGet();
                         System.out.println(verify + ":" + event.wrong.get(verify));
                         break;
-                    case BARCODE_CHECK_SUM_ERROR:
-
                     case RETAIL_PRICE_ZERO:
                     case RETAIL_LARGER_RECEIPT:
-                        //number.incrementAndGet();
+                        RETAIL_NUMBER.incrementAndGet();
                         //System.out.println(verify + ":" +event.wrong.get(verify));
                         break;
                 }
             }
         }
         if (event.map.get(ItemMapping.LAST_ROW) != null) {
-            System.out.println("Fail:" + number);
+            System.out.println("Barcode Fail:" + BARCODE_NUMBER);
+            System.out.println("RETAIL Fail:" + RETAIL_NUMBER);
         }
     }
 }

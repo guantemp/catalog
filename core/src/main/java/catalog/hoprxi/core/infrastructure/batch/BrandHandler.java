@@ -58,7 +58,6 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
 
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
-        //long t1 = System.nanoTime();
         event.brandId = Brand.UNBRANDED.id();
         String brand = event.map.get(ItemMapping.BRAND);
         if (brand == null || brand.isBlank()
@@ -72,8 +71,6 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
                 return;
             if (BrandHandler.isExists(id))//没有查到该id,错误的id
                 event.brandId = id;
-            //long t2 = System.nanoTime();
-            //System.out.println("品牌处理耗时:" + (t2 - t1) / 1_000_000 + " ms");
             return;
         }
 
@@ -94,10 +91,7 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
             Brand newBrand = (shortName != null)
                     ? new Brand(repository.nextIdentity(), new Name(name, shortName))
                     : new Brand(repository.nextIdentity(), name);
-            //System.out.println(newBrand);
             repository.save(newBrand);
-            //long t2 = System.nanoTime();
-            //System.out.println("品牌处理耗时:" + (t2 - t1) / 1_000_000 + " ms");
             return newBrand.id();
         });
     }

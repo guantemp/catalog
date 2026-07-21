@@ -53,8 +53,6 @@ import java.util.stream.Collectors;
 public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchBarcodeHandler.class);
     private static final Set<String> BARCODE_CACHE = ConcurrentHashMap.newKeySet(4960);
-    static final Set<String> BARCODE_BLACKLIST = ConcurrentHashMap.newKeySet();
-    // 配置参数
     private static final int BATCH_SIZE = 30;          // 批量查询阈值
     private static final long FLUSH_INTERVAL_MS = 500; // 超时刷新间隔（毫秒）
 
@@ -68,10 +66,11 @@ public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
     private static final String BARCODE_TYPE;
     private static final boolean complete = false;
     private static final boolean correct = false;
-
     // 共享的内部 Disruptor（单例）
-    private static final Disruptor<ItemImportEvent> POST_DISRUPTOR;
+    private static final Disruptor<ItemImportEvent> DISRUPTOR;
     private static final RingBuffer<ItemImportEvent> RING_BUFFER;
+
+    static final Set<String> BARCODE_BLACKLIST = ConcurrentHashMap.newKeySet();
 
     static {
         Config config = ConfigFactory.load("import");
@@ -80,17 +79,17 @@ public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
         START = config.hasPath("barcode.start") ? new AtomicInteger(config.getInt("barcode.start")) : new AtomicInteger(1);
 
         // 初始化共享的内部 Disruptor
-        POST_DISRUPTOR = new Disruptor<>(
+        DISRUPTOR = new Disruptor<>(
                 ItemImportEvent::new,
                 2048,
                 Executors.defaultThreadFactory(),
                 ProducerType.MULTI,          // 多个生产者（多个 Worker 实例）
                 new YieldingWaitStrategy()
         );
-        POST_DISRUPTOR.setDefaultExceptionHandler(new ExceptionHandler<ItemImportEvent>() {
+        DISRUPTOR.setDefaultExceptionHandler(new ExceptionHandler<>() {
             @Override
             public void handleEventException(Throwable ex, long sequence, ItemImportEvent event) {
-                ex.printStackTrace(); // 打印到控制台
+                LOGGER.error("handle error", ex);
             }
 
             @Override
@@ -102,26 +101,24 @@ public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
             }
         });
         // 消费者：多个 UploadHandler Worker，然后顺序执行 AssembleHandler 和 FailedValidationHandler
-        POST_DISRUPTOR.handleEventsWithWorkerPool(
+        DISRUPTOR.handleEventsWithWorkerPool(
                         new UploadHandler(), new UploadHandler(), new UploadHandler(), new UploadHandler())
                 .then(new AssembleHandler(), new FailedValidationHandler());
-        POST_DISRUPTOR.start();
-        RING_BUFFER = POST_DISRUPTOR.getRingBuffer();
+        DISRUPTOR.start();
+        RING_BUFFER = DISRUPTOR.getRingBuffer();
     }
 
     public BatchBarcodeHandler() {
-        // 启动定时刷新任务
         scheduler.scheduleAtFixedRate(this::flush, FLUSH_INTERVAL_MS, FLUSH_INTERVAL_MS, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void onEvent(ItemImportEvent event) throws Exception {
-        //long t1 = System.nanoTime();
-        // 不到BATCH_SIZE，最后一行， LAST_ROW 触发关闭
+        // 到BATCH_SIZE，最后一行， LAST_ROW 触发关闭
         if (event.map.get(ItemMapping.LAST_ROW) != null) {
             flush();
             publishToPostDisruptor(event);
-            POST_DISRUPTOR.shutdown();
+            DISRUPTOR.shutdown();
             return;
         }
 
@@ -152,8 +149,7 @@ public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
         copy.basicInfo = event.basicInfo;              // record 不可变，直接引用
         // 如果有其他字段，一并复制
         queue.offer(copy);
-        //long t2 = System.nanoTime();
-        //System.out.println("barcode前置处理耗时 " + (t2 - t1) / 1_000_000 + " ms");
+        //System.out.println("barcode前置处理耗时 " + (System.nanoTime() - t1) / 1_000_000 + " ms");
         if (queue.size() >= BATCH_SIZE) {
             scheduler.submit(this::flush);
         }
@@ -166,11 +162,9 @@ public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
         RING_BUFFER.publishEvent((e, sequence, arg) -> {
             // 1. 复制 map（浅拷贝，因为 map 内部是 String，不可变）
             e.map = arg.map; // 如果担心后续修改，可以 new HashMap<>(arg.map)，但一般不会修改 map
-
             // 2. 复制 wrong Map（必须深拷贝，因为后续会修改）
             e.wrong.clear();
             e.wrong.putAll(arg.wrong);
-
             // 3. 复制基本类型和不可变对象
             e.generatedId = arg.generatedId;
             e.barcode = arg.barcode;
@@ -218,7 +212,6 @@ public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
      * 批量查询并处理队列中的所有事件
      */
     private void flush() {
-        //long t1 = System.nanoTime();
         if (queue.isEmpty()) return;
         // 取出当前队列中的所有事件
         List<ItemImportEvent> batch = new ArrayList<>(BATCH_SIZE);
@@ -231,13 +224,9 @@ public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
-        //long t2 = System.nanoTime();
-        //System.out.println("批量查询前: " + (t2 - t1) / 1_000_000 + " ms");
         // 批量查询数据库
         Set<String> existing = queryExistingBarcodes(barcodes);
         BARCODE_BLACKLIST.addAll(existing);
-        //long t3 = System.nanoTime();
-        //System.out.println("读取数据库耗时: " + (t3 - t2) / 1_000_000 + " ms");
         // 处理每个事件
         for (ItemImportEvent event : batch) {
             if (existing.contains(event.barcode)) {
@@ -249,15 +238,12 @@ public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
             }
             publishToPostDisruptor(event);
         }
-        //long t4 = System.nanoTime();
-        //System.out.println("barCODE读取数据库后处理耗时: " + (t4 - t3) / 1_000_000 + " ms");
     }
 
     /**
      * 执行批量 IN 查询，返回已存在的条码集合
      */
     private Set<String> queryExistingBarcodes(List<String> barcodes) {
-       // long t1 = System.nanoTime();
         if (barcodes.isEmpty()) return Collections.emptySet();
         // 构建 IN 占位符
         String placeholders = barcodes.stream().map(b -> "?").collect(Collectors.joining(","));
@@ -265,8 +251,6 @@ public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
         Set<String> existing = new HashSet<>();
         try (Connection conn = PsqlUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            //long t2 = System.nanoTime();
-            //System.out.println("获取连接的时间: 获取连接的时间:获取连接的时间:" + (t2 - t1) / 1_000_000 + " ms");
             for (int i = 0; i < barcodes.size(); i++) {
                 ps.setString(i + 1, barcodes.get(i));
             }

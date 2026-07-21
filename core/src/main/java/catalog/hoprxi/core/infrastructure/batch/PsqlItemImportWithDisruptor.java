@@ -20,7 +20,6 @@ import catalog.hoprxi.core.application.batch.ItemImportService;
 import catalog.hoprxi.core.application.batch.ItemMapping;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.SleepingWaitStrategy;
-import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.commons.csv.CSVFormat;
@@ -54,14 +53,14 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
             itemMappings = DEFAULT_CORR;
         Disruptor<ItemImportEvent> disruptor = new Disruptor<>(
                 ItemImportEvent::new,
-                1024,
+                2048,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
-                new YieldingWaitStrategy()
-                //new SleepingWaitStrategy()
+                new SleepingWaitStrategy()
         );
 
-        disruptor.handleEventsWith(new IdHandler(), new BasicInfoHandler(), new CategoryHandler(), new MadeInHandler(), new BrandHandler())
+        disruptor.handleEventsWith(new IdHandler(), new BasicInfoHandler(), new CategoryHandler(), new BrandHandler())
+                .thenHandleEventsWithWorkerPool(new MadeInHandler(), new MadeInHandler())
                 .thenHandleEventsWithWorkerPool(new BatchBarcodeHandler(), new BatchBarcodeHandler(), new BatchBarcodeHandler(), new BatchBarcodeHandler());
         disruptor.start();
 
@@ -151,18 +150,17 @@ public class PsqlItemImportWithDisruptor implements ItemImportService {
 
         Disruptor<ItemImportEvent> disruptor = new Disruptor<>(
                 ItemImportEvent::new,
-                512,
+                1024,
                 Executors.defaultThreadFactory(),
                 ProducerType.SINGLE,
                 new SleepingWaitStrategy()
         );
 
-        disruptor.handleEventsWith(
-                new IdHandler(), new BasicInfoHandler(), new BarcodeHandler(), new CategoryHandler(), new BrandHandler(),
-                new MadeInHandler()
-        ).then(new AssembleHandler(), new FailedValidationHandler());
-
+        disruptor.handleEventsWith(new IdHandler(), new BasicInfoHandler(), new CategoryHandler(), new BrandHandler())
+                .thenHandleEventsWithWorkerPool(new MadeInHandler(), new MadeInHandler(), new MadeInHandler(), new MadeInHandler())
+                .thenHandleEventsWithWorkerPool(new BatchBarcodeHandler(), new BatchBarcodeHandler(), new BatchBarcodeHandler(), new BatchBarcodeHandler());
         disruptor.start();
+
         RingBuffer<ItemImportEvent> ringBuffer = disruptor.getRingBuffer();
 
         CSVFormat format = CSVFormat.DEFAULT          // 预定义格式

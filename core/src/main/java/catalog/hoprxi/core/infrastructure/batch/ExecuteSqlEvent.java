@@ -21,6 +21,6 @@ package catalog.hoprxi.core.infrastructure.batch;
  * @since JDK8.0
  * @version 0.0.1 builder 2023-05-09
  */
-public class ExecuteSqlEvent {
+public final class ExecuteSqlEvent {
     String sql;
 }

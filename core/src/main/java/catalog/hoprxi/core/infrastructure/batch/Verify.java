@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ package catalog.hoprxi.core.infrastructure.batch;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2023-05-08
+ * @since JDK21
+ * @version 0.2 builder 2026-07-20
  */
 public enum Verify {
-    BARCODE_CHECK_SUM_ERROR, REPEAT_ID,BARCODE_REPEAT, RETAIL_PRICE_ZERO,RETAIL_LARGER_RECEIPT,RETAIL_PRICE_FORMAT_ERROR;
+    BARCODE_CHECK_SUM_ERROR, ID_REPEAT, BARCODE_REPEAT, RETAIL_PRICE_ZERO, RETAIL_LARGER_RECEIPT, RETAIL_PRICE_FORMAT_ERROR,RETAIL_LESS_LAST_RECEIPT;
 }

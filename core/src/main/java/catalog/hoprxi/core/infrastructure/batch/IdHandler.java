@@ -38,18 +38,13 @@ public class IdHandler implements EventHandler<ItemImportEvent>, WorkHandler<Ite
 
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) {
-        //long t1 = System.nanoTime();
         String id = event.map.get(ItemMapping.ID);
         if (id == null || id.isBlank() || !ID_PATTERN.matcher(id).matches()) {
             event.generatedId=LongId.generate();
-            //long t2 = System.nanoTime();
-            //System.out.println("ID耗时: " + (t2 - t1) / 1_000_000 + " ms");
             return;
         }
         if (ID_PATTERN.matcher(id).matches() && IdHandler.isExist(id))
-            event.addWrong(Verify.REPEAT_ID,id);
-        //long t2 = System.nanoTime();
-        //System.out.println("ID耗时: " + (t2 - t1) / 1_000_000 + " ms");
+            event.addWrong(Verify.ID_REPEAT,id);
     }
 
     private static boolean isExist(String id) {
@@ -61,8 +56,7 @@ public class IdHandler implements EventHandler<ItemImportEvent>, WorkHandler<Ite
                     return true;
             }
         } catch (SQLException e) {
-            // log.error("e: ", e);
-            //LOGGER.error("Can't rebuild brand with (name = {})", name, e);
+            e.printStackTrace();
         }
         return false;
     }

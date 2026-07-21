@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,27 +25,24 @@ import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2023-05-08
+ * @since JDK21
+ * @version 0.2 builder 2026-07-20
  */
-public class ItemImportEvent {
+public final class ItemImportEvent {
+    record BasicInfo(String nameJson, GradeEnum grade, String spec, long shelfLife,
+                     String lastReceiptPriceJson, String retailPriceJson, String memberPriceJson,
+                     String vipPriceJson) {
+    }
     Map<ItemMapping, String> map;
     // 改为 Map，存储错误类型及触发时的原始值（作为快照）
     final Map<Verify, String> wrong = new EnumMap<>(Verify.class);
-
-    public volatile long generatedId;      // 由 IdHandler 写入
-    public volatile String barcode;      // 由 BarcodeHandler 写入
-    public volatile String madeInJson;       // 由 MadeInHandler 写入
-    public volatile long categoryId;     // 由 CategoryHandler 写入
-    public volatile long brandId;        // 由 BrandHandler 写入
-    public volatile String show;// 由 UploadHandler 等写入
-
-    public record BasicInfo(String nameJson, GradeEnum grade, String spec, long shelfLife,
-                            String lastReceiptPriceJson, String retailPriceJson, String memberPriceJson,
-                            String vipPriceJson) {
-    }
-
-    public volatile BasicInfo basicInfo;
+    volatile long generatedId;      // 由 IdHandler 写入
+    volatile String barcode;      // 由 BarcodeHandler 写入
+    volatile String madeInJson;       // 由 MadeInHandler 写入
+    volatile long categoryId;     // 由 CategoryHandler 写入
+    volatile long brandId;        // 由 BrandHandler 写入
+    volatile String show;// 由 UploadHandler 等写入
+    volatile BasicInfo basicInfo;
 
     public void addWrong(Verify error, String snapshotValue) {
         wrong.put(error, snapshotValue);
@@ -57,13 +54,5 @@ public class ItemImportEvent {
 
     public void setMap(Map<ItemMapping, String> map) {
         this.map = map;
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", ItemImportEvent.class.getSimpleName() + "[", "]")
-                .add("map=" + map)
-                .add("wrong=" + wrong)
-                .toString();
     }
 }

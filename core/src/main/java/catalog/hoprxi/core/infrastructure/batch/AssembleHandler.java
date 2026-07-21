@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. www.hoprxi.com All Rights Reserved.
+ * Copyright (c) 2026. www.hoprxi.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,17 +21,16 @@ import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 
-import java.sql.SQLException;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.Executors;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>
- * @since JDK8.0
- * @version 0.0.1 builder 2023-05-08
+ * @since JDK21
+ * @version 0.0.2 builder 2026-07-21
  */
-public class AssembleHandler implements EventHandler<ItemImportEvent> , WorkHandler<ItemImportEvent> {
+public class AssembleHandler implements EventHandler<ItemImportEvent>, WorkHandler<ItemImportEvent> {
     private static final EventTranslatorOneArg<ExecuteSqlEvent, String> TRANSLATOR =
             (event, sequence, sql) -> event.sql = sql;
     private static final Disruptor<ExecuteSqlEvent> executeDisruptor;
@@ -45,16 +44,19 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> , WorkHand
                 ProducerType.SINGLE,
                 new YieldingWaitStrategy()
         );
-        executeDisruptor.setDefaultExceptionHandler(new ExceptionHandler<ExecuteSqlEvent>() {
+        executeDisruptor.setDefaultExceptionHandler(new ExceptionHandler<>() {
             @Override
             public void handleEventException(Throwable throwable, long l, ExecuteSqlEvent executeSqlEvent) {
                 throwable.printStackTrace(); // 打印到控制台
             }
 
             @Override
-            public void handleOnStartException(Throwable ex) {}
+            public void handleOnStartException(Throwable ex) {
+            }
+
             @Override
-            public void handleOnShutdownException(Throwable ex) {}
+            public void handleOnShutdownException(Throwable ex) {
+            }
         });
         executeDisruptor.handleEventsWith(new PsqlItemExecuteHandler());
         executeDisruptor.start();
@@ -93,7 +95,6 @@ public class AssembleHandler implements EventHandler<ItemImportEvent> , WorkHand
 
         if (map.get(ItemMapping.LAST_ROW) != null) {//最后一行
             ringBuffer.publishEvent(TRANSLATOR, "LAST_ROW");
-            System.out.println("AssembleHandler last_row yesyes");
             executeDisruptor.shutdown();
         }
         //long t2 = System.nanoTime();
