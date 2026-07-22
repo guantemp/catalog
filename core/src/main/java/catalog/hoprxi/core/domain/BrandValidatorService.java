@@ -26,7 +26,7 @@ import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlBrandReposi
  * @version 0.0.2 builder 2025-03-01
  */
 public class BrandValidatorService {
-    private static BrandRepository repository= new PsqlBrandRepository();
+    private static BrandRepository repository = new PsqlBrandRepository();
 /*
     static {
         Config config = ConfigFactory.load("databases");

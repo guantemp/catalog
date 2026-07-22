@@ -47,14 +47,14 @@ import java.util.Locale;
  * @version 0.0.1 builder 2025-11-08
  */
 public class PsqlItemRepositoryTest {
-    static {
-        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465", "slave.tooo.top:6543:P$Qwe123465Pg");
-    }
-
     private static final ItemRepository itemRepository = new PsqlItemRepository();
     private static final BrandRepository brandRepository = new PsqlBrandRepository();
     private static final CategoryRepository categoryRepository = new PsqlCategoryRepository();
     private static final CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
+
+    static {
+        StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465", "slave.tooo.top:6543:P$Qwe123465Pg");
+    }
 
     @BeforeTest
     public void setUp() {

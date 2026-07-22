@@ -182,9 +182,9 @@
     </appender>
     <!-- level属性：指定根logger的分配级别 -->
     <root level="INFO">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="STDOUT"/>
         <!-- 增加这一行，引用那个按大小+时间滚动的文件 Appender -->
-        <appender-ref ref="size_time_file" />
+        <appender-ref ref="size_time_file"/>
     </root>
 
     <!-- name:指定logger名称；level：指定logger的分配级别；additivity(非必须，默认为true 冒泡到root)：设置appender叠加性 -->

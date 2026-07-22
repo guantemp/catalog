@@ -50,36 +50,6 @@ public class PsqlBrandRepository implements BrandRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
-    @Override
-    public Brand find(long id) {
-        final String findSql = "select id,name,about from brand where id=?";
-        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement ps = connection.prepareStatement(findSql)) {
-            ps.setLong(1, id);
-            try (ResultSet rs = ps.executeQuery();) {
-                return rebuild(rs);
-            }
-        } catch (SQLException e) {
-            LOGGER.error("Database query failed for brand id={}", id, e);
-            throw new SearchException("Database error when querying brand", e);
-        } catch (IOException e) {
-            LOGGER.error("Failed to rebuild brand with id={}", id, e);
-            // 4. 反序列化失败不返回 null，直接抛异常，避免上游空指针
-            throw new SearchException("Failed to parse brand data from JSON", e);
-        }
-    }
-
-    private Brand rebuild(ResultSet rs) throws SQLException, IOException {
-        if (rs.next()) {
-            long id = rs.getLong("id");
-            if (Brand.UNBRANDED.id() == id)
-                return Brand.UNBRANDED;
-            Name name = PsqlBrandRepository.toName(rs.getString("name"));
-            AboutBrand about = PsqlBrandRepository.toAboutBrand(rs.getString("about"));
-            return new Brand(id, name, about);
-        }
-        return null;
-    }
-
     private static Name toName(String json) throws IOException {
         if (json == null || json.isBlank()) {
             return Name.EMPTY;
@@ -121,6 +91,73 @@ public class PsqlBrandRepository implements BrandRepository {
             }
             return new AboutBrand(homepage, logo, since, story);
         }
+    }
+
+    private static String toJson(Name name) {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream();
+             JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+            generator.writeStartObject();
+            generator.writeStringField("name", name.name());
+            generator.writeStringField("shortName", name.shortName());
+            generator.writeEndObject();
+            generator.close();
+            return output.toString();
+        } catch (IOException e) {
+            LOGGER.error("Not write name as json", e);
+            throw new IllegalStateException("Failed to serialize Name object", e);
+        }
+    }
+
+    private static String toJson(AboutBrand about) {
+        if (about == null) return null;
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream();
+             JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+            generator.writeStartObject();
+            if (about.since() != null)
+                generator.writeNumberField("since", about.since().getValue());
+            if (about.story() != null)
+                generator.writeStringField("story", about.story());
+            if (about.logo() != null)
+                generator.writeStringField("logo", about.logo().toExternalForm());
+            if (about.homepage() != null)
+                generator.writeStringField("homepage", about.homepage().toExternalForm());
+            generator.writeEndObject();
+            generator.close();
+            return output.toString();
+        } catch (IOException e) {
+            LOGGER.error("Not write about as json", e);
+            throw new IllegalStateException("Failed to serialize AboutBrand object", e);
+        }
+    }
+
+    @Override
+    public Brand find(long id) {
+        final String findSql = "select id,name,about from brand where id=?";
+        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement ps = connection.prepareStatement(findSql)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery();) {
+                return rebuild(rs);
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Database query failed for brand id={}", id, e);
+            throw new SearchException("Database error when querying brand", e);
+        } catch (IOException e) {
+            LOGGER.error("Failed to rebuild brand with id={}", id, e);
+            // 4. 反序列化失败不返回 null，直接抛异常，避免上游空指针
+            throw new SearchException("Failed to parse brand data from JSON", e);
+        }
+    }
+
+    private Brand rebuild(ResultSet rs) throws SQLException, IOException {
+        if (rs.next()) {
+            long id = rs.getLong("id");
+            if (Brand.UNBRANDED.id() == id)
+                return Brand.UNBRANDED;
+            Name name = PsqlBrandRepository.toName(rs.getString("name"));
+            AboutBrand about = PsqlBrandRepository.toAboutBrand(rs.getString("about"));
+            return new Brand(id, name, about);
+        }
+        return null;
     }
 
     @Override
@@ -167,43 +204,6 @@ public class PsqlBrandRepository implements BrandRepository {
         } catch (SQLException e) {
             LOGGER.error("Can't save brand{}", brand, e);
             throw new PersistenceException(String.format("Can't save brand(%s)", brand), e);
-        }
-    }
-
-    private static String toJson(Name name) {
-        try (ByteArrayOutputStream output = new ByteArrayOutputStream();
-             JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
-            generator.writeStartObject();
-            generator.writeStringField("name", name.name());
-            generator.writeStringField("shortName", name.shortName());
-            generator.writeEndObject();
-            generator.close();
-            return output.toString();
-        } catch (IOException e) {
-            LOGGER.error("Not write name as json", e);
-            throw new IllegalStateException("Failed to serialize Name object", e);
-        }
-    }
-
-    private static String toJson(AboutBrand about) {
-        if (about == null) return null;
-        try (ByteArrayOutputStream output = new ByteArrayOutputStream();
-             JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
-            generator.writeStartObject();
-            if (about.since() != null)
-                generator.writeNumberField("since", about.since().getValue());
-            if (about.story() != null)
-                generator.writeStringField("story", about.story());
-            if (about.logo() != null)
-                generator.writeStringField("logo", about.logo().toExternalForm());
-            if (about.homepage() != null)
-                generator.writeStringField("homepage", about.homepage().toExternalForm());
-            generator.writeEndObject();
-            generator.close();
-            return output.toString();
-        } catch (IOException e) {
-            LOGGER.error("Not write about as json", e);
-            throw new IllegalStateException("Failed to serialize AboutBrand object", e);
         }
     }
 }

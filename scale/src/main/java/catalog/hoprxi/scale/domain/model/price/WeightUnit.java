@@ -166,8 +166,6 @@ public enum WeightUnit {
     };
 
 
-    public abstract BigDecimal convert(WeightUnit unit);
-
     public static WeightUnit of(String s) {
         if (s == null)
             return WeightUnit.KILOGRAM;
@@ -177,6 +175,8 @@ public enum WeightUnit {
         }
         return WeightUnit.KILOGRAM;
     }
+
+    public abstract BigDecimal convert(WeightUnit unit);
 
 }
 

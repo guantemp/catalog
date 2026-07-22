@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0, user-scalable=no" name="viewport"/>
     <title>商品档案管理</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js">
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap"
+          rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        /* ===== 全局样式 ===== */
+        /* ===== 全局样式（完全保留原样） ===== */
         :root {
             --primary: #2D9CDB;
             --primary-hover: #4DB8F0;
@@ -39,7 +41,12 @@
             --filter-panel-bg: #1e2a36;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Inter', system-ui, sans-serif;
             background: var(--bg-body);
@@ -48,13 +55,43 @@
             color: var(--text-main);
             font-size: 14px;
         }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #1e2a36; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: #3e5566; border-radius: 4px; }
 
-        .app-layout { display: flex; height: 100vh; width: 100%; }
-        .main-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-body); }
-        .scroll-content { flex: 1; overflow-y: auto; padding: var(--page-padding); display: flex; flex-direction: column; }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e2a36;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3e5566;
+            border-radius: 4px;
+        }
+
+        .app-layout {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-body);
+        }
+
+        .scroll-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--page-padding);
+            display: flex;
+            flex-direction: column;
+        }
 
         .card-panel {
             flex: 1;
@@ -77,18 +114,21 @@
             flex-shrink: 0;
             overflow: hidden;
         }
+
         .tree-header {
             padding: 16px 20px 12px;
             border-bottom: 1px solid var(--border-light);
             background: var(--bg-card);
             flex-shrink: 0;
         }
+
         .tree-header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
         }
+
         .tree-title {
             font-weight: 700;
             font-size: 1.1rem;
@@ -97,11 +137,16 @@
             align-items: center;
             gap: 10px;
         }
-        .tree-title i { color: var(--primary); }
+
+        .tree-title i {
+            color: var(--primary);
+        }
+
         .search-box {
             position: relative;
             width: 100%;
         }
+
         .search-box i {
             position: absolute;
             left: 14px;
@@ -110,6 +155,7 @@
             color: var(--text-muted);
             font-size: 0.9rem;
         }
+
         .search-box input {
             width: 100%;
             padding: 8px 14px 8px 40px;
@@ -120,11 +166,13 @@
             font-size: 0.85rem;
             transition: 0.2s;
         }
+
         .search-box input:focus {
             border-color: var(--primary);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(45,156,219,0.25);
+            box-shadow: 0 0 0 3px rgba(45, 156, 219, 0.25);
         }
+
         .search-loading {
             position: absolute;
             right: 14px;
@@ -133,19 +181,28 @@
             color: var(--primary);
             font-size: 0.8rem;
         }
+
         .tree-scroll {
             flex: 1;
             overflow-y: auto;
             padding: 8px 12px 20px 16px;
             background: var(--bg-body);
         }
+
         .tree-node, .tree-node ul, .node-item {
             list-style: none !important;
             margin: 0;
             padding-left: 0;
         }
-        .tree-node ul { padding-left: 28px; }
-        .node-item { margin: 2px 0; }
+
+        .tree-node ul {
+            padding-left: 28px;
+        }
+
+        .node-item {
+            margin: 2px 0;
+        }
+
         .node-content {
             display: flex;
             align-items: center;
@@ -157,23 +214,31 @@
             font-size: 0.9rem;
             color: var(--text-secondary);
         }
+
         .node-content:hover {
-            background: rgba(45,156,219,0.12);
+            background: rgba(45, 156, 219, 0.12);
             color: var(--text-main);
         }
+
         .active-cat {
             background: linear-gradient(135deg, #1a2a3a, #233544);
             color: #e0ecf5 !important;
             border-left: 3px solid var(--primary);
             font-weight: 500;
         }
-        .node-content.search-match-node .node-name span { color: #fbbf24 !important; font-weight: 700 !important; }
+
+        .node-content.search-match-node .node-name span {
+            color: #fbbf24 !important;
+            font-weight: 700 !important;
+        }
+
         .node-name {
             display: flex;
             align-items: center;
             gap: 8px;
             flex: 1;
         }
+
         .toggle-box {
             display: inline-flex;
             justify-content: center;
@@ -191,11 +256,13 @@
             user-select: none;
             flex-shrink: 0;
         }
+
         .toggle-box:hover {
             background: var(--bg-hover);
             border-color: var(--primary);
             color: var(--primary);
         }
+
         .node-icon-img {
             width: 20px;
             height: 20px;
@@ -204,11 +271,13 @@
             background: var(--bg-input);
             flex-shrink: 0;
         }
+
         .loading-placeholder, .empty-placeholder {
             text-align: center;
             padding: 30px 0;
             color: var(--text-muted);
         }
+
         .error-banner {
             background: var(--bg-card);
             border-radius: 40px;
@@ -220,6 +289,7 @@
             font-size: 0.7rem;
             width: 100%;
         }
+
         .error-banner .retry-btn {
             background: #dc2626;
             border: none;
@@ -231,11 +301,22 @@
             font-weight: 500;
             line-height: 1.8;
         }
-        .error-banner .retry-btn:hover { background: #b91c1c; }
-        @keyframes highlight-flash {
-            0% { background: rgba(251,191,36,0.5); border-left-color: #fbbf24; }
-            100% { background: transparent; border-left-color: transparent; }
+
+        .error-banner .retry-btn:hover {
+            background: #b91c1c;
         }
+
+        @keyframes highlight-flash {
+            0% {
+                background: rgba(251, 191, 36, 0.5);
+                border-left-color: #fbbf24;
+            }
+            100% {
+                background: transparent;
+                border-left-color: transparent;
+            }
+        }
+
         .node-content.highlight-new {
             animation: highlight-flash 1.8s ease-out forwards;
             border-left: 3px solid #fbbf24 !important;
@@ -252,6 +333,7 @@
             border: 1px solid var(--border-light);
             box-shadow: var(--shadow-card);
         }
+
         .top-toolbar {
             padding: var(--toolbar-padding);
             border-bottom: 1px solid var(--border-light);
@@ -262,12 +344,14 @@
             align-items: center;
             gap: 8px 16px;
         }
+
         .toolbar-left {
             display: flex;
             align-items: center;
             gap: 6px;
             flex-wrap: wrap;
         }
+
         .toolbar-right {
             display: flex;
             align-items: center;
@@ -275,6 +359,7 @@
             margin-left: auto;
             flex-wrap: wrap;
         }
+
         .toolbar-btn {
             padding: 6px 14px;
             border-radius: 6px;
@@ -290,38 +375,48 @@
             color: var(--text-secondary);
             height: 34px;
             white-space: nowrap;
+            user-select: none;
+            position: relative;
         }
+
         .toolbar-btn-primary {
             background: var(--primary);
             color: #fff;
             border-color: var(--primary);
         }
+
         .toolbar-btn-primary:hover {
             background: var(--primary-hover);
             border-color: var(--primary-hover);
         }
+
         .toolbar-btn-default {
             border-color: var(--border-medium);
             color: var(--text-secondary);
         }
+
         .toolbar-btn-default:hover {
             border-color: var(--primary);
             color: var(--primary);
         }
+
         .toolbar-btn .material-symbols-outlined {
             color: inherit;
             font-size: 18px;
         }
+
         /* 筛选按钮特殊样式 */
         .filter-toggle-btn {
             color: var(--primary);
             border-color: var(--primary);
             background: rgba(45, 156, 219, 0.1);
         }
+
         .filter-toggle-btn:hover {
             background: rgba(45, 156, 219, 0.2);
             color: var(--primary-hover);
         }
+
         .filter-toggle-btn .material-symbols-outlined {
             font-size: 18px;
         }
@@ -338,6 +433,7 @@
             flex: 1;
             max-width: 600px;
         }
+
         .search-input-wrapper input {
             background: transparent;
             border: none;
@@ -347,11 +443,78 @@
             width: 100%;
             padding: 0;
         }
-        .search-input-wrapper input::placeholder { color: var(--text-muted); }
+
+        .search-input-wrapper input::placeholder {
+            color: var(--text-muted);
+        }
+
         .search-input-wrapper .material-symbols-outlined {
             color: var(--text-muted);
             font-size: 20px;
             margin-right: 8px;
+        }
+
+        /* ===== 更多下拉菜单 ===== */
+        .more-dropdown {
+            position: relative;
+            display: inline-flex;
+        }
+
+        .more-dropdown .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 4px);
+            right: 0;
+            left: auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            padding: 6px 0;
+            min-width: 160px;
+            z-index: 1000;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            overflow: hidden;
+        }
+
+        .more-dropdown .dropdown-menu.open {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 10px 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            transition: 0.15s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+
+        .dropdown-item:hover {
+            background: var(--bg-hover);
+            color: var(--text-main);
+        }
+
+        .dropdown-item .material-symbols-outlined {
+            font-size: 20px;
+            color: var(--text-muted);
+        }
+
+        .dropdown-item:hover .material-symbols-outlined {
+            color: var(--primary);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border-light);
+            margin: 4px 12px;
         }
 
         /* ===== 筛选面板 ===== */
@@ -365,9 +528,11 @@
             gap: 16px 24px;
             align-items: flex-end;
         }
+
         .filter-panel.open {
             display: flex;
         }
+
         .filter-group {
             display: flex;
             flex-direction: column;
@@ -375,6 +540,7 @@
             min-width: 140px;
             flex: 0 1 auto;
         }
+
         .filter-group label {
             font-size: 12px;
             color: var(--text-muted);
@@ -382,6 +548,7 @@
             text-transform: uppercase;
             letter-spacing: 0.3px;
         }
+
         .filter-group input,
         .filter-group select {
             padding: 6px 10px;
@@ -395,22 +562,29 @@
             height: 32px;
             min-width: 120px;
         }
+
         .filter-group input:focus,
         .filter-group select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 2px rgba(45, 156, 219, 0.2);
         }
-        .filter-group input::placeholder { color: var(--text-muted); }
+
+        .filter-group input::placeholder {
+            color: var(--text-muted);
+        }
+
         .filter-group select option {
             background: var(--bg-card);
             color: var(--text-main);
         }
+
         .filter-actions {
             display: flex;
             gap: 8px;
             align-items: center;
             padding-bottom: 2px;
         }
+
         .filter-actions .btn {
             padding: 6px 18px;
             height: 32px;
@@ -423,6 +597,7 @@
             margin: 0;
             position: relative;
         }
+
         .data-table {
             width: 100%;
             border-collapse: separate;
@@ -436,6 +611,7 @@
             border: 1px solid var(--border-light);
             vertical-align: middle;
         }
+
         .data-table th {
             background: #1a2632;
             color: var(--text-secondary);
@@ -452,6 +628,7 @@
             background-clip: padding-box;
             opacity: 1;
         }
+
         .data-table td {
             font-size: 13px;
             color: var(--text-main);
@@ -459,24 +636,30 @@
             padding: var(--cell-padding);
             background-color: var(--bg-card);
         }
+
         .data-table td.col-price,
         .data-table td.col-profit {
             text-align: right;
         }
+
         .data-table td.col-seq,
         .data-table td.col-check {
             text-align: center;
         }
+
         .data-table tbody tr:hover td {
             background-color: var(--bg-hover);
         }
+
         .data-table tbody tr:nth-child(odd) td {
             background-color: var(--stripe-color);
         }
+
         .profit-rate {
             color: var(--profit-color);
             font-weight: 500;
         }
+
         .empty-row td {
             border: none !important;
             padding: 0 !important;
@@ -496,6 +679,7 @@
             min-height: 34px;
             position: relative;
         }
+
         .th-label {
             text-align: center;
             overflow: hidden;
@@ -507,6 +691,7 @@
             flex: 0 1 auto;
             max-width: 100%;
         }
+
         .sort-icon {
             position: absolute;
             right: 2px;
@@ -537,10 +722,12 @@
             user-select: none;
             background: transparent;
         }
+
         .sort-icon:hover {
             color: var(--text-main);
             background: rgba(255, 255, 255, 0.1);
         }
+
         .sort-icon.active {
             color: #fff;
             background: var(--primary);
@@ -559,29 +746,91 @@
             background: transparent;
             transition: background 0.1s;
         }
+
         .col-resize-handle:hover,
         .col-resize-handle.active {
             background: rgba(45, 156, 219, 0.4);
         }
 
-        .data-table .col-check   { width: 36px; min-width: 36px; max-width: 36px; }
-        .data-table .col-seq     { width: 50px; min-width: 50px; max-width: 50px; }
-        .data-table .col-name    { width: 220px; min-width: 100px; max-width: 400px; }
+        .data-table .col-check {
+            width: 36px;
+            min-width: 36px;
+            max-width: 36px;
+        }
+
+        .data-table .col-seq {
+            width: 50px;
+            min-width: 50px;
+            max-width: 50px;
+        }
+
+        .data-table .col-name {
+            width: 220px;
+            min-width: 100px;
+            max-width: 400px;
+        }
+
         .data-table .col-name .name-wrap {
             display: block;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        .data-table .col-barcode { width: 120px; min-width: 80px; max-width: 200px; }
-        .data-table .col-spec    { width: 80px; min-width: 60px; max-width: 150px; }
-        .data-table .col-grade   { width: 80px; min-width: 60px; max-width: 150px; }
-        .data-table .col-brand   { width: 80px; min-width: 60px; max-width: 150px; }
-        .data-table .col-madein  { width: 80px; min-width: 60px; max-width: 150px; }
-        .data-table .col-price   { width: 100px; min-width: 70px; max-width: 160px; }
-        .data-table .col-category{ width: 90px; min-width: 60px; max-width: 160px; }
-        .data-table .col-shelf   { width: 70px; min-width: 50px; max-width: 120px; text-align: center; }
-        .data-table .col-profit  { width: 80px; min-width: 60px; max-width: 130px; }
+
+        .data-table .col-barcode {
+            width: 120px;
+            min-width: 80px;
+            max-width: 200px;
+        }
+
+        .data-table .col-spec {
+            width: 80px;
+            min-width: 60px;
+            max-width: 150px;
+        }
+
+        .data-table .col-grade {
+            width: 80px;
+            min-width: 60px;
+            max-width: 150px;
+        }
+
+        .data-table .col-brand {
+            width: 80px;
+            min-width: 60px;
+            max-width: 150px;
+        }
+
+        .data-table .col-madein {
+            width: 80px;
+            min-width: 60px;
+            max-width: 150px;
+        }
+
+        .data-table .col-price {
+            width: 100px;
+            min-width: 70px;
+            max-width: 160px;
+        }
+
+        .data-table .col-category {
+            width: 90px;
+            min-width: 60px;
+            max-width: 160px;
+        }
+
+        .data-table .col-shelf {
+            width: 70px;
+            min-width: 50px;
+            max-width: 120px;
+            text-align: center;
+        }
+
+        .data-table .col-profit {
+            width: 80px;
+            min-width: 60px;
+            max-width: 130px;
+        }
 
         .table-loading-overlay {
             position: absolute;
@@ -594,6 +843,7 @@
             z-index: 10;
             pointer-events: none;
         }
+
         .table-spinner {
             width: 40px;
             height: 40px;
@@ -601,9 +851,14 @@
             border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 0.7s linear infinite;
-            filter: drop-shadow(0 0 8px rgba(0,0,0,0.8));
+            filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.8));
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
         .pagination-area {
             padding: var(--pagination-padding);
@@ -617,15 +872,18 @@
             flex-shrink: 0;
             font-size: 14px;
         }
-        .pagination-area>div:first-child {
+
+        .pagination-area > div:first-child {
             color: var(--text-muted);
             font-size: 14px;
         }
+
         .page-control {
             display: flex;
             align-items: center;
             gap: 4px;
         }
+
         .page-item {
             min-width: 32px;
             height: 32px;
@@ -640,34 +898,41 @@
             transition: all 0.2s;
             color: var(--text-secondary);
         }
+
         .page-item.active {
             background: var(--primary);
             border-color: var(--primary);
             color: #fff;
         }
+
         .page-item:hover:not(.disabled):not(.active) {
             border-color: var(--primary);
             color: var(--primary);
         }
+
         .page-item.disabled {
             opacity: 0.4;
             cursor: not-allowed;
         }
+
         .page-item.ellipsis {
             border: none;
             background: transparent;
             cursor: default;
             color: var(--text-muted);
         }
+
         .page-item.ellipsis:hover {
             background: transparent;
             border: none;
             color: var(--text-muted);
         }
+
         .page-item .material-symbols-outlined {
             color: inherit;
             font-size: 20px;
         }
+
         .jump-box {
             display: flex;
             align-items: center;
@@ -675,6 +940,7 @@
             font-size: 14px;
             color: var(--text-secondary);
         }
+
         .jump-box input {
             width: 50px;
             padding: 4px 6px;
@@ -686,11 +952,13 @@
             height: 32px;
             font-size: 14px;
         }
+
         .jump-box input:focus {
             border-color: var(--primary);
             outline: none;
             box-shadow: 0 0 0 2px rgba(45, 156, 219, 0.2);
         }
+
         .page-size-select {
             height: 32px;
             padding: 0 8px;
@@ -701,96 +969,374 @@
             font-size: 14px;
             outline: none;
         }
+
         .page-size-select:focus {
             border-color: var(--primary);
         }
 
         @media (max-width: 1200px) {
-            .search-input-wrapper { min-width: 300px; }
-            .data-table { min-width: 1450px; }
-            .category-side { width: 280px; }
+            .search-input-wrapper {
+                min-width: 300px;
+            }
+
+            .data-table {
+                min-width: 1450px;
+            }
+
+            .category-side {
+                width: 280px;
+            }
         }
+
         @media (max-width: 1024px) {
-            .category-side { width: 240px; }
-            .top-toolbar { padding: 6px 10px; gap: 6px 10px; }
+            .category-side {
+                width: 240px;
+            }
+
+            .top-toolbar {
+                padding: 6px 10px;
+                gap: 6px 10px;
+            }
+
             .toolbar-right {
                 margin-left: 0;
                 width: 100%;
                 justify-content: flex-end;
             }
-            .search-input-wrapper { flex: 1; min-width: 200px; max-width: none; }
-            .filter-panel { padding: 12px 16px; gap: 12px 16px; }
-            .filter-group { min-width: 100px; }
-            .data-table .col-name { width: 180px; min-width: 80px; max-width: 300px; }
-            .data-table .col-barcode { width: 100px; min-width: 70px; max-width: 180px; }
-            .data-table .col-spec { width: 70px; min-width: 50px; max-width: 120px; }
-            .data-table .col-grade { width: 70px; min-width: 50px; max-width: 120px; }
-            .data-table .col-brand { width: 70px; min-width: 50px; max-width: 120px; }
-            .data-table .col-madein { width: 70px; min-width: 50px; max-width: 120px; }
-            .data-table .col-price { width: 90px; min-width: 60px; max-width: 130px; }
-            .data-table .col-category { width: 80px; min-width: 50px; max-width: 130px; }
-            .data-table .col-shelf { width: 60px; min-width: 40px; max-width: 100px; }
-            .data-table .col-profit { width: 70px; min-width: 50px; max-width: 110px; }
-            .data-table { min-width: 1300px; }
+
+            .search-input-wrapper {
+                flex: 1;
+                min-width: 200px;
+                max-width: none;
+            }
+
+            .filter-panel {
+                padding: 12px 16px;
+                gap: 12px 16px;
+            }
+
+            .filter-group {
+                min-width: 100px;
+            }
+
+            .data-table .col-name {
+                width: 180px;
+                min-width: 80px;
+                max-width: 300px;
+            }
+
+            .data-table .col-barcode {
+                width: 100px;
+                min-width: 70px;
+                max-width: 180px;
+            }
+
+            .data-table .col-spec {
+                width: 70px;
+                min-width: 50px;
+                max-width: 120px;
+            }
+
+            .data-table .col-grade {
+                width: 70px;
+                min-width: 50px;
+                max-width: 120px;
+            }
+
+            .data-table .col-brand {
+                width: 70px;
+                min-width: 50px;
+                max-width: 120px;
+            }
+
+            .data-table .col-madein {
+                width: 70px;
+                min-width: 50px;
+                max-width: 120px;
+            }
+
+            .data-table .col-price {
+                width: 90px;
+                min-width: 60px;
+                max-width: 130px;
+            }
+
+            .data-table .col-category {
+                width: 80px;
+                min-width: 50px;
+                max-width: 130px;
+            }
+
+            .data-table .col-shelf {
+                width: 60px;
+                min-width: 40px;
+                max-width: 100px;
+            }
+
+            .data-table .col-profit {
+                width: 70px;
+                min-width: 50px;
+                max-width: 110px;
+            }
+
+            .data-table {
+                min-width: 1300px;
+            }
         }
+
         @media (max-width: 768px) {
-            .card-panel { flex-direction: column; gap: 8px; }
-            .category-side { width: 100%; max-height: 220px; }
-            .scroll-content { padding: 6px 8px 8px 8px; }
+            .card-panel {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .category-side {
+                width: 100%;
+                max-height: 220px;
+            }
+
+            .scroll-content {
+                padding: 6px 8px 8px 8px;
+            }
+
             .top-toolbar {
                 flex-direction: column;
                 align-items: stretch;
                 padding: 6px 8px;
                 gap: 6px;
             }
-            .toolbar-left { flex-wrap: wrap; }
+
+            .toolbar-left {
+                flex-wrap: wrap;
+            }
+
             .toolbar-right {
                 margin-left: 0;
                 width: 100%;
                 justify-content: stretch;
             }
-            .search-input-wrapper { min-width: 100px; max-width: none; }
-            .filter-panel { flex-direction: column; padding: 10px 12px; }
-            .filter-group { min-width: 100%; }
-            .filter-actions { width: 100%; justify-content: flex-end; }
-            .pagination-area { padding: 6px 8px; justify-content: center; }
-            .data-table { min-width: 1150px; }
-            .data-table .col-name { width: 150px; min-width: 60px; max-width: 250px; }
-            .data-table .col-barcode { width: 90px; min-width: 60px; max-width: 150px; }
-            .data-table .col-spec { width: 60px; min-width: 40px; max-width: 100px; }
-            .data-table .col-grade { width: 60px; min-width: 40px; max-width: 100px; }
-            .data-table .col-brand { width: 60px; min-width: 40px; max-width: 100px; }
-            .data-table .col-madein { width: 60px; min-width: 40px; max-width: 100px; }
-            .data-table .col-price { width: 85px; min-width: 55px; max-width: 120px; }
-            .data-table .col-category { width: 70px; min-width: 40px; max-width: 110px; }
-            .data-table .col-shelf { width: 55px; min-width: 35px; max-width: 90px; }
-            .data-table .col-profit { width: 60px; min-width: 40px; max-width: 100px; }
-            .data-table .col-seq { width: 44px; min-width: 32px; max-width: 60px; }
+
+            .search-input-wrapper {
+                min-width: 100px;
+                max-width: none;
+            }
+
+            .filter-panel {
+                flex-direction: column;
+                padding: 10px 12px;
+            }
+
+            .filter-group {
+                min-width: 100%;
+            }
+
+            .filter-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .pagination-area {
+                padding: 6px 8px;
+                justify-content: center;
+            }
+
+            .data-table {
+                min-width: 1150px;
+            }
+
+            .data-table .col-name {
+                width: 150px;
+                min-width: 60px;
+                max-width: 250px;
+            }
+
+            .data-table .col-barcode {
+                width: 90px;
+                min-width: 60px;
+                max-width: 150px;
+            }
+
+            .data-table .col-spec {
+                width: 60px;
+                min-width: 40px;
+                max-width: 100px;
+            }
+
+            .data-table .col-grade {
+                width: 60px;
+                min-width: 40px;
+                max-width: 100px;
+            }
+
+            .data-table .col-brand {
+                width: 60px;
+                min-width: 40px;
+                max-width: 100px;
+            }
+
+            .data-table .col-madein {
+                width: 60px;
+                min-width: 40px;
+                max-width: 100px;
+            }
+
+            .data-table .col-price {
+                width: 85px;
+                min-width: 55px;
+                max-width: 120px;
+            }
+
+            .data-table .col-category {
+                width: 70px;
+                min-width: 40px;
+                max-width: 110px;
+            }
+
+            .data-table .col-shelf {
+                width: 55px;
+                min-width: 35px;
+                max-width: 90px;
+            }
+
+            .data-table .col-profit {
+                width: 60px;
+                min-width: 40px;
+                max-width: 100px;
+            }
+
+            .data-table .col-seq {
+                width: 44px;
+                min-width: 32px;
+                max-width: 60px;
+            }
         }
+
         @media (max-width: 480px) {
-            .top-toolbar .toolbar-btn { font-size: 13px; padding: 4px 10px; height: 30px; }
-            .top-toolbar .toolbar-btn .material-symbols-outlined { font-size: 16px; }
-            .search-input-wrapper { height: 30px; min-width: 80px; }
-            .search-input-wrapper input { font-size: 13px; }
-            .data-table th, .data-table td { padding: 4px 6px; }
-            .data-table th { font-size: 13px; }
-            .data-table td { font-size: 12px; }
-            .data-table .col-name { width: 120px; min-width: 50px; max-width: 200px; }
-            .data-table .col-barcode { width: 80px; min-width: 50px; max-width: 130px; }
-            .data-table .col-spec { width: 50px; min-width: 30px; max-width: 80px; }
-            .data-table .col-grade { width: 50px; min-width: 30px; max-width: 80px; }
-            .data-table .col-brand { width: 50px; min-width: 30px; max-width: 80px; }
-            .data-table .col-madein { width: 50px; min-width: 30px; max-width: 80px; }
-            .data-table .col-price { width: 75px; min-width: 45px; max-width: 110px; }
-            .data-table .col-category { width: 60px; min-width: 30px; max-width: 90px; }
-            .data-table .col-shelf { width: 45px; min-width: 30px; max-width: 70px; }
-            .data-table .col-profit { width: 55px; min-width: 35px; max-width: 90px; }
-            .data-table .col-seq { width: 38px; min-width: 28px; max-width: 50px; }
-            .data-table .col-check { width: 30px; min-width: 24px; max-width: 40px; }
-            .pagination-area { flex-direction: column; align-items: center; gap: 6px; }
-            .page-item { min-width: 28px; height: 28px; font-size: 13px; }
-            .jump-box input { width: 40px; height: 28px; font-size: 13px; }
-            .page-size-select { height: 28px; font-size: 13px; }
+            .top-toolbar .toolbar-btn {
+                font-size: 13px;
+                padding: 4px 10px;
+                height: 30px;
+            }
+
+            .top-toolbar .toolbar-btn .material-symbols-outlined {
+                font-size: 16px;
+            }
+
+            .search-input-wrapper {
+                height: 30px;
+                min-width: 80px;
+            }
+
+            .search-input-wrapper input {
+                font-size: 13px;
+            }
+
+            .data-table th, .data-table td {
+                padding: 4px 6px;
+            }
+
+            .data-table th {
+                font-size: 13px;
+            }
+
+            .data-table td {
+                font-size: 12px;
+            }
+
+            .data-table .col-name {
+                width: 120px;
+                min-width: 50px;
+                max-width: 200px;
+            }
+
+            .data-table .col-barcode {
+                width: 80px;
+                min-width: 50px;
+                max-width: 130px;
+            }
+
+            .data-table .col-spec {
+                width: 50px;
+                min-width: 30px;
+                max-width: 80px;
+            }
+
+            .data-table .col-grade {
+                width: 50px;
+                min-width: 30px;
+                max-width: 80px;
+            }
+
+            .data-table .col-brand {
+                width: 50px;
+                min-width: 30px;
+                max-width: 80px;
+            }
+
+            .data-table .col-madein {
+                width: 50px;
+                min-width: 30px;
+                max-width: 80px;
+            }
+
+            .data-table .col-price {
+                width: 75px;
+                min-width: 45px;
+                max-width: 110px;
+            }
+
+            .data-table .col-category {
+                width: 60px;
+                min-width: 30px;
+                max-width: 90px;
+            }
+
+            .data-table .col-shelf {
+                width: 45px;
+                min-width: 30px;
+                max-width: 70px;
+            }
+
+            .data-table .col-profit {
+                width: 55px;
+                min-width: 35px;
+                max-width: 90px;
+            }
+
+            .data-table .col-seq {
+                width: 38px;
+                min-width: 28px;
+                max-width: 50px;
+            }
+
+            .data-table .col-check {
+                width: 30px;
+                min-width: 24px;
+                max-width: 40px;
+            }
+
+            .pagination-area {
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .page-item {
+                min-width: 28px;
+                height: 28px;
+                font-size: 13px;
+            }
+
+            .jump-box input {
+                width: 40px;
+                height: 28px;
+                font-size: 13px;
+            }
+
+            .page-size-select {
+                height: 28px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>
@@ -808,31 +1354,35 @@
                             </div>
                             <div class="search-box">
                                 <i class="fas fa-search"></i>
-                                <input type="text" v-model="searchKeyword" placeholder="搜索分类..." @input="onSearchInput" @keydown.enter="onSearchEnter">
-                                <i v-if="searchLoading" class="fas fa-spinner fa-pulse search-loading"></i>
+                                <input @input="onSearchInput" @keydown.enter="onSearchEnter" placeholder="搜索分类..."
+                                       type="text" v-model="searchKeyword">
+                                <i class="fas fa-spinner fa-pulse search-loading" v-if="searchLoading"></i>
                             </div>
                         </div>
                         <div class="tree-scroll">
-                            <div v-if="loading" class="loading-placeholder"><i class="fas fa-spinner fa-pulse"></i> 加载分类中...</div>
-                            <div v-else-if="errorMsg" class="error-banner">
+                            <div class="loading-placeholder" v-if="loading"><i class="fas fa-spinner fa-pulse"></i>
+                                加载分类中...
+                            </div>
+                            <div class="error-banner" v-else-if="errorMsg">
                                 <span><i class="fas fa-exclamation-triangle"></i> {{ errorMsg }}</span>
-                                <button class="retry-btn" @click="loadCategories"><i class="fas fa-sync-alt"></i> 重试</button>
+                                <button @click="loadCategories" class="retry-btn"><i class="fas fa-sync-alt"></i> 重试
+                                </button>
                             </div>
                             <ul class="tree-node" v-else-if="!loading && categoryTree.length > 0">
                                 <tree-item
-                                        v-for="node in categoryTree"
-                                        :key="node.id"
-                                        :node="node"
                                         :active-id="activeCategoryId"
                                         :expanded-set="expandedSet"
-                                        :search-match-set="searchMatchSet"
                                         :highlight-id="highlightNodeId"
-                                        @toggle="toggleExpand"
-                                        @select="selectCategory"
+                                        :key="node.id"
+                                        :node="node"
+                                        :search-match-set="searchMatchSet"
                                         @node-updated="onNodeUpdated"
+                                        @select="selectCategory"
+                                        @toggle="toggleExpand"
+                                        v-for="node in categoryTree"
                                 ></tree-item>
                             </ul>
-                            <div v-else-if="!loading && categoryTree.length === 0" class="empty-placeholder">
+                            <div class="empty-placeholder" v-else-if="!loading && categoryTree.length === 0">
                                 <i class="fas fa-folder-open"></i> 暂无分类数据
                             </div>
                         </div>
@@ -843,61 +1393,86 @@
                         <!-- 顶部工具栏 -->
                         <div class="top-toolbar">
                             <div class="toolbar-left">
-                                <button class="toolbar-btn toolbar-btn-primary" @click="handleAdd">
+                                <button @click="handleAdd" class="toolbar-btn toolbar-btn-primary">
                                     <span class="material-symbols-outlined">add</span> 新增
                                 </button>
-                                <button class="toolbar-btn toolbar-btn-default" @click="handleEdit">
+                                <button @click="handleEdit" class="toolbar-btn toolbar-btn-default">
                                     <span class="material-symbols-outlined">edit</span> 修改
                                 </button>
-                                <button class="toolbar-btn toolbar-btn-default" @click="handleDelete">
+                                <button @click="handleDelete" class="toolbar-btn toolbar-btn-default">
                                     <span class="material-symbols-outlined">delete</span> 删除
                                 </button>
-                                <button class="toolbar-btn toolbar-btn-default" @click="handleRefresh">
+                                <button @click="handleRefresh" class="toolbar-btn toolbar-btn-default">
                                     <span class="material-symbols-outlined">refresh</span> 刷新
                                 </button>
-                                <button class="toolbar-btn toolbar-btn-default" @click="handleSettings">
+                                <button @click="handleSettings" class="toolbar-btn toolbar-btn-default">
                                     <span class="material-symbols-outlined">settings</span> 设置
                                 </button>
-                                <button class="toolbar-btn toolbar-btn-default" @click="handleMore">
-                                    <span class="material-symbols-outlined">more_horiz</span> 更多
-                                </button>
+
+                                <!-- ===== 更多下拉菜单 ===== -->
+                                <div class="more-dropdown">
+                                    <button @click="toggleMoreMenu" class="toolbar-btn toolbar-btn-default">
+                                        <span class="material-symbols-outlined">more_horiz</span> 更多
+                                        <span class="material-symbols-outlined" style="font-size:16px;">{{ moreMenuOpen ? 'expand_less' : 'expand_more' }}</span>
+                                    </button>
+                                    <div class="dropdown-menu" :class="{ open: moreMenuOpen }">
+                                        <!-- ===== 导入：发送消息给父页面 ===== -->
+                                        <button @click="handleImport" class="dropdown-item">
+                                            <span class="material-symbols-outlined">upload_file</span> 导入
+                                        </button>
+                                        <button @click="handleExport" class="dropdown-item">
+                                            <span class="material-symbols-outlined">download</span> 导出
+                                        </button>
+                                        <div class="dropdown-divider"></div>
+                                        <button @click="handleMoreAction" class="dropdown-item">
+                                            <span class="material-symbols-outlined">more_vert</span> 其他操作
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                             <div class="toolbar-right">
                                 <div class="search-input-wrapper">
                                     <span class="material-symbols-outlined">search</span>
-                                    <input type="text" v-model="filters.keyword" placeholder="可输入品名/拼音/拼音首拼/条码/产地进行查询" @keyup.enter="handleSearch" />
+                                    <input @keyup.enter="handleSearch" placeholder="可输入品名/拼音/拼音首拼/条码/产地进行查询"
+                                           type="text"
+                                           v-model="filters.keyword"/>
                                 </div>
                                 <!-- 筛选按钮移到这里 -->
-                                <button class="toolbar-btn toolbar-btn-default filter-toggle-btn" @click="toggleFilterPanel">
+                                <button @click="toggleFilterPanel"
+                                        class="toolbar-btn toolbar-btn-default filter-toggle-btn">
                                     <span class="material-symbols-outlined">filter_list</span> 筛选...
-                                    <span class="material-symbols-outlined" style="font-size:16px;">{{ filterPanelOpen ? 'expand_less' : 'expand_more' }}</span>
+                                    <span class="material-symbols-outlined"
+                                          style="font-size:16px;">{{ filterPanelOpen ? 'expand_less' : 'expand_more'
+                                        }}</span>
                                 </button>
                             </div>
                         </div>
 
                         <!-- 筛选面板 -->
-                        <div class="filter-panel" :class="{ open: filterPanelOpen }">
+                        <div :class="{ open: filterPanelOpen }" class="filter-panel">
                             <div class="filter-group">
                                 <label>商品名称</label>
-                                <input type="text" v-model="filterForm.name" placeholder="请输入商品名称" />
+                                <input placeholder="请输入商品名称" type="text" v-model="filterForm.name"/>
                             </div>
                             <div class="filter-group">
                                 <label>条码</label>
-                                <input type="text" v-model="filterForm.barcode" placeholder="请输入条码" />
+                                <input placeholder="请输入条码" type="text" v-model="filterForm.barcode"/>
                             </div>
                             <div class="filter-group">
                                 <label>品牌</label>
-                                <input type="text" v-model="filterForm.brand" placeholder="请输入品牌" />
+                                <input placeholder="请输入品牌" type="text" v-model="filterForm.brand"/>
                             </div>
                             <div class="filter-group">
                                 <label>产地</label>
-                                <input type="text" v-model="filterForm.madeIn" placeholder="请输入产地" />
+                                <input placeholder="请输入产地" type="text" v-model="filterForm.madeIn"/>
                             </div>
                             <div class="filter-group">
                                 <label>分类</label>
                                 <select v-model="filterForm.categoryId">
                                     <option value="">全部分类</option>
-                                    <option v-for="cat in flatCategoryList" :key="cat.id" :value="cat.id">{{ cat.name.name }}</option>
+                                    <option :key="cat.id" :value="cat.id" v-for="cat in flatCategoryList">
+                                        {{ cat.name.name }}
+                                    </option>
                                 </select>
                             </div>
                             <div class="filter-group">
@@ -910,15 +1485,15 @@
                             </div>
                             <div class="filter-group">
                                 <label>创建日期</label>
-                                <input type="date" v-model="filterForm.dateFrom" style="min-width:100px;" />
+                                <input style="min-width:100px;" type="date" v-model="filterForm.dateFrom"/>
                             </div>
                             <div class="filter-group">
                                 <label>至</label>
-                                <input type="date" v-model="filterForm.dateTo" style="min-width:100px;" />
+                                <input style="min-width:100px;" type="date" v-model="filterForm.dateTo"/>
                             </div>
                             <div class="filter-actions">
-                                <button class="toolbar-btn toolbar-btn-primary" @click="applyFilters">查询</button>
-                                <button class="toolbar-btn toolbar-btn-default" @click="resetFilters">重置</button>
+                                <button @click="applyFilters" class="toolbar-btn toolbar-btn-primary">查询</button>
+                                <button @click="resetFilters" class="toolbar-btn toolbar-btn-default">重置</button>
                             </div>
                         </div>
 
@@ -926,151 +1501,191 @@
                         <div class="data-table-wrapper">
                             <table class="data-table" ref="dataTable">
                                 <colgroup>
-                                    <col class="col-check" />
-                                    <col class="col-seq" />
-                                    <col class="col-name" />
-                                    <col class="col-barcode" />
-                                    <col class="col-spec" />
-                                    <col class="col-grade" />
-                                    <col class="col-brand" />
-                                    <col class="col-madein" />
-                                    <col class="col-price" />
-                                    <col class="col-price" />
-                                    <col class="col-price" />
-                                    <col class="col-price" />
-                                    <col class="col-category" />
-                                    <col class="col-shelf" />
-                                    <col class="col-profit" />
+                                    <col class="col-check"/>
+                                    <col class="col-seq"/>
+                                    <col class="col-name"/>
+                                    <col class="col-barcode"/>
+                                    <col class="col-spec"/>
+                                    <col class="col-grade"/>
+                                    <col class="col-brand"/>
+                                    <col class="col-madein"/>
+                                    <col class="col-price"/>
+                                    <col class="col-price"/>
+                                    <col class="col-price"/>
+                                    <col class="col-price"/>
+                                    <col class="col-category"/>
+                                    <col class="col-shelf"/>
+                                    <col class="col-profit"/>
                                 </colgroup>
                                 <thead>
                                 <tr>
-                                    <th class="col-check"><input type="checkbox" v-model="allChecked" /></th>
+                                    <th class="col-check"><input type="checkbox" v-model="allChecked"/></th>
                                     <th class="col-seq">序号</th>
                                     <th class="col-name">
                                         <div class="th-inner">
                                             <span class="th-label">商品名称</span>
-                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'name' }" @click.stop="handleSort('name')">
+                                            <span :class="{ active: sort.field === 'name' }"
+                                                  @click.stop="handleSort('name')"
+                                                  class="material-symbols-outlined sort-icon">
                                                         {{ getSortIcon('name') }}
                                                     </span>
                                         </div>
-                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 2)"></div>
+                                        <div @mousedown.prevent="startResize($event, 2)"
+                                             class="col-resize-handle"></div>
                                     </th>
                                     <th class="col-barcode">
                                         <div class="th-inner">
                                             <span class="th-label">条码</span>
-                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'barcode' }" @click.stop="handleSort('barcode')">
+                                            <span :class="{ active: sort.field === 'barcode' }"
+                                                  @click.stop="handleSort('barcode')"
+                                                  class="material-symbols-outlined sort-icon">
                                                         {{ getSortIcon('barcode') }}
                                                     </span>
                                         </div>
-                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 3)"></div>
+                                        <div @mousedown.prevent="startResize($event, 3)"
+                                             class="col-resize-handle"></div>
                                     </th>
                                     <th class="col-spec">
                                         <div class="th-inner">
                                             <span class="th-label">规格</span>
-                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'spec' }" @click.stop="handleSort('spec')">
+                                            <span :class="{ active: sort.field === 'spec' }"
+                                                  @click.stop="handleSort('spec')"
+                                                  class="material-symbols-outlined sort-icon">
                                                         {{ getSortIcon('spec') }}
                                                     </span>
                                         </div>
-                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 4)"></div>
+                                        <div @mousedown.prevent="startResize($event, 4)"
+                                             class="col-resize-handle"></div>
                                     </th>
                                     <th class="col-grade">
                                         <div class="th-inner">
                                             <span class="th-label">等级</span>
-                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'grade' }" @click.stop="handleSort('grade')">
+                                            <span :class="{ active: sort.field === 'grade' }"
+                                                  @click.stop="handleSort('grade')"
+                                                  class="material-symbols-outlined sort-icon">
                                                         {{ getSortIcon('grade') }}
                                                     </span>
                                         </div>
-                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 5)"></div>
+                                        <div @mousedown.prevent="startResize($event, 5)"
+                                             class="col-resize-handle"></div>
                                     </th>
                                     <th class="col-brand">
                                         <div class="th-inner">
                                             <span class="th-label">品牌</span>
-                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'brand' }" @click.stop="handleSort('brand')">
+                                            <span :class="{ active: sort.field === 'brand' }"
+                                                  @click.stop="handleSort('brand')"
+                                                  class="material-symbols-outlined sort-icon">
                                                         {{ getSortIcon('brand') }}
                                                     </span>
                                         </div>
-                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 6)"></div>
+                                        <div @mousedown.prevent="startResize($event, 6)"
+                                             class="col-resize-handle"></div>
                                     </th>
                                     <th class="col-madein">
                                         <div class="th-inner">
                                             <span class="th-label">产地</span>
-                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'made_in' }" @click.stop="handleSort('made_in')">
+                                            <span :class="{ active: sort.field === 'made_in' }"
+                                                  @click.stop="handleSort('made_in')"
+                                                  class="material-symbols-outlined sort-icon">
                                                         {{ getSortIcon('made_in') }}
                                                     </span>
                                         </div>
-                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 7)"></div>
+                                        <div @mousedown.prevent="startResize($event, 7)"
+                                             class="col-resize-handle"></div>
                                     </th>
                                     <th class="col-price">
                                         <div class="th-inner">
                                             <span class="th-label">进货价</span>
-                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'last_receipt_price' }" @click.stop="handleSort('last_receipt_price')">
+                                            <span :class="{ active: sort.field === 'last_receipt_price' }"
+                                                  @click.stop="handleSort('last_receipt_price')"
+                                                  class="material-symbols-outlined sort-icon">
                                                         {{ getSortIcon('last_receipt_price') }}
                                                     </span>
                                         </div>
-                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 8)"></div>
+                                        <div @mousedown.prevent="startResize($event, 8)"
+                                             class="col-resize-handle"></div>
                                     </th>
                                     <th class="col-price">
                                         <div class="th-inner">
                                             <span class="th-label">零售价</span>
-                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'retail_price' }" @click.stop="handleSort('retail_price')">
+                                            <span :class="{ active: sort.field === 'retail_price' }"
+                                                  @click.stop="handleSort('retail_price')"
+                                                  class="material-symbols-outlined sort-icon">
                                                         {{ getSortIcon('retail_price') }}
                                                     </span>
                                         </div>
-                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 9)"></div>
+                                        <div @mousedown.prevent="startResize($event, 9)"
+                                             class="col-resize-handle"></div>
                                     </th>
                                     <th class="col-price">
                                         <div class="th-inner">
                                             <span class="th-label">会员价</span>
-                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'member_price' }" @click.stop="handleSort('member_price')">
+                                            <span :class="{ active: sort.field === 'member_price' }"
+                                                  @click.stop="handleSort('member_price')"
+                                                  class="material-symbols-outlined sort-icon">
                                                         {{ getSortIcon('member_price') }}
                                                     </span>
                                         </div>
-                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 10)"></div>
+                                        <div @mousedown.prevent="startResize($event, 10)"
+                                             class="col-resize-handle"></div>
                                     </th>
                                     <th class="col-price">
                                         <div class="th-inner">
                                             <span class="th-label">VIP价</span>
-                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'vip_price' }" @click.stop="handleSort('vip_price')">
+                                            <span :class="{ active: sort.field === 'vip_price' }"
+                                                  @click.stop="handleSort('vip_price')"
+                                                  class="material-symbols-outlined sort-icon">
                                                         {{ getSortIcon('vip_price') }}
                                                     </span>
                                         </div>
-                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 11)"></div>
+                                        <div @mousedown.prevent="startResize($event, 11)"
+                                             class="col-resize-handle"></div>
                                     </th>
                                     <th class="col-category">
                                         <div class="th-inner">
                                             <span class="th-label">分类</span>
-                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'category' }" @click.stop="handleSort('category')">
+                                            <span :class="{ active: sort.field === 'category' }"
+                                                  @click.stop="handleSort('category')"
+                                                  class="material-symbols-outlined sort-icon">
                                                         {{ getSortIcon('category') }}
                                                     </span>
                                         </div>
-                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 12)"></div>
+                                        <div @mousedown.prevent="startResize($event, 12)"
+                                             class="col-resize-handle"></div>
                                     </th>
                                     <th class="col-shelf">
                                         <div class="th-inner">
                                             <span class="th-label">保质期(天)</span>
-                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'shelf_life' }" @click.stop="handleSort('shelf_life')">
+                                            <span :class="{ active: sort.field === 'shelf_life' }"
+                                                  @click.stop="handleSort('shelf_life')"
+                                                  class="material-symbols-outlined sort-icon">
                                                         {{ getSortIcon('shelf_life') }}
                                                     </span>
                                         </div>
-                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 13)"></div>
+                                        <div @mousedown.prevent="startResize($event, 13)"
+                                             class="col-resize-handle"></div>
                                     </th>
                                     <th class="col-profit">
                                         <div class="th-inner">
                                             <span class="th-label">毛利率</span>
-                                            <span class="material-symbols-outlined sort-icon" :class="{ active: sort.field === 'profit_margin' }" @click.stop="handleSort('profit_margin')">
+                                            <span :class="{ active: sort.field === 'profit_margin' }"
+                                                  @click.stop="handleSort('profit_margin')"
+                                                  class="material-symbols-outlined sort-icon">
                                                         {{ getSortIcon('profit_margin') }}
                                                     </span>
                                         </div>
-                                        <div class="col-resize-handle" @mousedown.prevent="startResize($event, 14)"></div>
+                                        <div @mousedown.prevent="startResize($event, 14)"
+                                             class="col-resize-handle"></div>
                                     </th>
                                 </tr>
                                 </thead>
                                 <tbody v-if="productList.length > 0">
-                                <tr v-for="(item, idx) in productList" :key="item.id">
-                                    <td class="col-check"><input type="checkbox" v-model="item.checked" /></td>
+                                <tr :key="item.id" v-for="(item, idx) in productList">
+                                    <td class="col-check"><input type="checkbox" v-model="item.checked"/></td>
                                     <td class="col-seq">{{ (pagination.current - 1) * pagination.size + idx + 1 }}</td>
                                     <td class="col-name">
-                                        <span class="name-wrap" :title="item.shortName || item.name">{{ item.name }}</span>
+                                        <span :title="item.shortName || item.name" class="name-wrap">{{ item.name
+                                            }}</span>
                                     </td>
                                     <td class="col-barcode">{{ item.barcode || '-' }}</td>
                                     <td class="col-spec">{{ item.spec || '-' }}</td>
@@ -1078,12 +1693,20 @@
                                     <td class="col-brand">{{ item.brandName || '-' }}</td>
                                     <td class="col-madein">{{ item.madeIn || '-' }}</td>
                                     <td class="col-price">{{ formatPrice(item.purchasePrice, item.unit) }}</td>
-                                    <td class="col-price" style="color:var(--retail-color); font-weight:600;">{{ formatPrice(item.retailPrice, item.unit) }}</td>
+                                    <td class="col-price" style="color:var(--retail-color); font-weight:600;">
+                                        {{ formatPrice(item.retailPrice, item.unit) }}
+                                    </td>
                                     <td class="col-price">{{ formatPrice(item.memberPrice, item.unit) }}</td>
                                     <td class="col-price">{{ formatPrice(item.vipPrice, item.unit) }}</td>
                                     <td class="col-category">{{ item.categoryName || '-' }}</td>
-                                    <td class="col-shelf">{{ item.shelf_life !== undefined && item.shelf_life !== null ? item.shelf_life : '-' }}</td>
-                                    <td class="col-profit profit-rate">{{ item.profitMargin !== null && item.profitMargin !== undefined ? item.profitMargin.toFixed(2) + '%' : '-' }}</td>
+                                    <td class="col-shelf">
+                                        {{ item.shelf_life !== undefined && item.shelf_life !== null ? item.shelf_life : '-'
+                                        }}
+                                    </td>
+                                    <td class="col-profit profit-rate">
+                                        {{ item.profitMargin !== null && item.profitMargin !== undefined ? item.profitMargin.toFixed(2) + '%' : '-'
+                                        }}
+                                    </td>
                                 </tr>
                                 </tbody>
                                 <tbody v-else>
@@ -1093,7 +1716,7 @@
                                 </tbody>
                             </table>
 
-                            <div v-if="loadingProducts" class="table-loading-overlay">
+                            <div class="table-loading-overlay" v-if="loadingProducts">
                                 <div class="table-spinner"></div>
                             </div>
                         </div>
@@ -1103,7 +1726,7 @@
                             <div>共 {{ pagination.total }} 条</div>
                             <div style="display:flex;align-items:center;gap:6px;">
                                 <label style="font-size:14px;color:var(--text-muted);">每页</label>
-                                <select class="page-size-select" v-model="pagination.size" @change="onPageSizeChange">
+                                <select @change="onPageSizeChange" class="page-size-select" v-model="pagination.size">
                                     <option :value="15">15</option>
                                     <option :value="20">20</option>
                                     <option :value="30" selected>30</option>
@@ -1117,23 +1740,28 @@
                                 <label style="font-size:14px;color:var(--text-muted);">条</label>
                             </div>
                             <div class="page-control">
-                                <div class="page-item" :class="{ disabled: pagination.current === 1 }" @click="prevPage">
+                                <div :class="{ disabled: pagination.current === 1 }" @click="prevPage"
+                                     class="page-item">
                                     <span class="material-symbols-outlined">chevron_left</span>
                                 </div>
-                                <div v-for="pg in pageNumbers" :key="pg" class="page-item" :class="{
+                                <div :class="{
                                         active: pg === pagination.current,
                                         ellipsis: pg === '…'
-                                    }" @click="pg !== '…' && goPage(pg)">
+                                    }" :key="pg" @click="pg !== '…' && goPage(pg)" class="page-item" v-for="pg in pageNumbers">
                                     {{ pg }}
                                 </div>
-                                <div class="page-item" :class="{ disabled: pagination.current === pagination.totalPages }" @click="nextPage">
+                                <div :class="{ disabled: pagination.current === pagination.totalPages }"
+                                     @click="nextPage"
+                                     class="page-item">
                                     <span class="material-symbols-outlined">chevron_right</span>
                                 </div>
                             </div>
                             <div class="jump-box">
                                 跳至
-                                <input type="number" v-model.number="jumpPageNum" min="1" />
-                                <button class="toolbar-btn toolbar-btn-default" style="padding:2px 12px;height:32px;" @click="jumpToPage">确定</button>
+                                <input min="1" type="number" v-model.number="jumpPageNum"/>
+                                <button @click="jumpToPage" class="toolbar-btn toolbar-btn-default"
+                                        style="padding:2px 12px;height:32px;">确定
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1144,7 +1772,7 @@
 </div>
 
 <script>
-    const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+    const {createApp, ref, computed, onMounted, watch, nextTick} = Vue;
 
     // ---------- 精确的大数字安全判断 ----------
     function isUnsafeNumberStr(numStr) {
@@ -1191,13 +1819,31 @@
     const CAT_API_BASE = 'https://slave.tooo.top/catalog/v1/categories';
 
     // ---------- 分类 API 工具 ----------
-    async function fetchChildren(id) { const data = await apiFetch(`${CAT_API_BASE}/${id}/children`); return data.categories || []; }
-    async function fetchRoots() { const data = await apiFetch(`${CAT_API_BASE}/root`); return data.categories || []; }
-    async function fetchDescendants(id) { const data = await apiFetch(`${CAT_API_BASE}/${id}/desc.`); return data.category; }
-    async function searchRemote(keyword) { const encoded = encodeURIComponent(keyword); const url = `${CAT_API_BASE}?s=${encoded}&offset=0&limit=64`; const data = await apiFetch(url); return data.categories || []; }
+    async function fetchChildren(id) {
+        const data = await apiFetch(`${CAT_API_BASE}/${id}/children`);
+        return data.categories || [];
+    }
+
+    async function fetchRoots() {
+        const data = await apiFetch(`${CAT_API_BASE}/root`);
+        return data.categories || [];
+    }
+
+    async function fetchDescendants(id) {
+        const data = await apiFetch(`${CAT_API_BASE}/${id}/desc.`);
+        return data.category;
+    }
+
+    async function searchRemote(keyword) {
+        const encoded = encodeURIComponent(keyword);
+        const url = `${CAT_API_BASE}?s=${encoded}&offset=0&limit=64`;
+        const data = await apiFetch(url);
+        return data.categories || [];
+    }
 
     // ---------- 单位映射 ----------
     const unitMap = ref({});
+
     async function loadUnits() {
         try {
             const response = await fetch('https://slave.tooo.top/catalog/v1/units');
@@ -1210,7 +1856,9 @@
                 }
             }
             unitMap.value = map;
-        } catch (err) { console.error('加载单位映射失败:', err); }
+        } catch (err) {
+            console.error('加载单位映射失败:', err);
+        }
     }
 
     // ---------- TreeNode ----------
@@ -1218,7 +1866,7 @@
         constructor(apiNode) {
             if (!apiNode || apiNode.id === undefined || apiNode.id === null) throw new Error('节点缺少 id 字段');
             this.id = apiNode.id;
-            this.name = apiNode.name || { name: '', shortName: '' };
+            this.name = apiNode.name || {name: '', shortName: ''};
             this.icon_url = apiNode.icon_url || null;
             let parentId = apiNode.parent_id;
             if (apiNode.parentId !== undefined && parentId === undefined) parentId = apiNode.parentId;
@@ -1238,7 +1886,9 @@
         name: 'TreeItem',
         props: ['node', 'activeId', 'expandedSet', 'searchMatchSet', 'highlightId'],
         emits: ['toggle', 'select', 'node-updated'],
-        data() { return { loadingChildren: false }; },
+        data() {
+            return {loadingChildren: false};
+        },
         template: `
           <li class="node-item">
             <div class="node-content"
@@ -1274,13 +1924,22 @@
           </li>
         `,
         computed: {
-            isExpanded() { return this.expandedSet.has(this.node.id); },
-            isSearchMatch() { return this.searchMatchSet && this.searchMatchSet.has(this.node.id); },
-            isSpecialNode() { return this.node.id === -1 && this.node.name && this.node.name.name === '未分类'; }
+            isExpanded() {
+                return this.expandedSet.has(this.node.id);
+            },
+            isSearchMatch() {
+                return this.searchMatchSet && this.searchMatchSet.has(this.node.id);
+            },
+            isSpecialNode() {
+                return this.node.id === -1 && this.node.name && this.node.name.name === '未分类';
+            }
         },
         methods: {
             async handleToggle() {
-                if (this.isExpanded) { this.$emit('toggle', this.node.id); return; }
+                if (this.isExpanded) {
+                    this.$emit('toggle', this.node.id);
+                    return;
+                }
                 if (this.node.hasChildren && !this.node.loaded) {
                     this.loadingChildren = true;
                     try {
@@ -1288,8 +1947,12 @@
                         this.node.children = apiChildren.map(apiChild => new TreeNode(apiChild));
                         this.node.loaded = true;
                         this.$emit('node-updated', this.node.id);
-                    } catch (err) { console.error(err);
-                        alert(`加载子分类失败: ${err.message}`); } finally { this.loadingChildren = false; }
+                    } catch (err) {
+                        console.error(err);
+                        alert(`加载子分类失败: ${err.message}`);
+                    } finally {
+                        this.loadingChildren = false;
+                    }
                 }
                 this.$emit('toggle', this.node.id);
             }
@@ -1300,16 +1963,21 @@
     const API_BASE = 'https://slave.tooo.top/catalog/v1/items';
 
     createApp({
-        components: { TreeItem },
+        components: {TreeItem},
         setup() {
             const loadingProducts = ref(false);
             const productList = ref([]);
-            const filters = ref({ keyword: '', dateFrom: '', dateTo: '', status: '' });
-            const pagination = ref({ current: 1, size: 30, total: 0, totalPages: 1 });
+            const filters = ref({keyword: '', dateFrom: '', dateTo: '', status: ''});
+            const pagination = ref({current: 1, size: 30, total: 0, totalPages: 1});
             const jumpPageNum = ref(1);
             const allChecked = computed({
-                get: () => { if (productList.value.length === 0) return false; return productList.value.every(item => item.checked); },
-                set: (val) => { productList.value.forEach(item => item.checked = val); }
+                get: () => {
+                    if (productList.value.length === 0) return false;
+                    return productList.value.every(item => item.checked);
+                },
+                set: (val) => {
+                    productList.value.forEach(item => item.checked = val);
+                }
             });
 
             // 筛选面板状态
@@ -1326,7 +1994,7 @@
             });
 
             // 排序状态
-            const sort = ref({ field: null, order: null });
+            const sort = ref({field: null, order: null});
 
             // 字段映射到后端参数
             const sortFieldMap = {
@@ -1384,15 +2052,20 @@
                 startWidth: 0
             });
 
+            // 更多下拉菜单
+            const moreMenuOpen = ref(false);
+
             // 获取选中分类及其所有后代 ID
             function getAllDescendantIds(nodes, targetId) {
                 const result = [];
+
                 function traverse(node) {
                     result.push(String(node.id));
                     if (node.children && node.children.length) {
                         node.children.forEach(child => traverse(child));
                     }
                 }
+
                 const target = findNodeInTree(nodes, targetId);
                 if (target) {
                     traverse(target);
@@ -1440,7 +2113,10 @@
             }
 
             async function performRemoteSearch(keyword, forceRequest = false) {
-                if (!keyword || keyword.trim() === '') { lastSearchResults.value = []; return; }
+                if (!keyword || keyword.trim() === '') {
+                    lastSearchResults.value = [];
+                    return;
+                }
                 if (keyword === lastSearchKeyword.value && !forceRequest) {
                     if (lastSearchResults.value.length) applyExpansionFromResults(lastSearchResults.value);
                     return;
@@ -1451,8 +2127,12 @@
                     lastSearchKeyword.value = keyword;
                     lastSearchResults.value = results;
                     applyExpansionFromResults(results);
-                } catch (err) { console.error(err);
-                    alert('搜索失败: ' + err.message); } finally { searchLoading.value = false; }
+                } catch (err) {
+                    console.error(err);
+                    alert('搜索失败: ' + err.message);
+                } finally {
+                    searchLoading.value = false;
+                }
             }
 
             let debounceTimer = null;
@@ -1493,7 +2173,13 @@
                     const roots = await fetchRoots();
                     let trees = [];
                     if (roots.length === 0) {
-                        const uncatNode = new TreeNode({ id: -1, name: { name: '未分类', shortName: '' }, parent_id: -1, left: 0, right: 0 });
+                        const uncatNode = new TreeNode({
+                            id: -1,
+                            name: {name: '未分类', shortName: ''},
+                            parent_id: -1,
+                            left: 0,
+                            right: 0
+                        });
                         trees = [uncatNode];
                     } else {
                         const treePromises = roots.map(async (root) => {
@@ -1514,7 +2200,13 @@
 
                     let hasUncat = trees.some(n => n.id === -1);
                     if (!hasUncat) {
-                        const uncatNode = new TreeNode({ id: -1, name: { name: '未分类', shortName: '' }, parent_id: -1, left: 0, right: 0 });
+                        const uncatNode = new TreeNode({
+                            id: -1,
+                            name: {name: '未分类', shortName: ''},
+                            parent_id: -1,
+                            left: 0,
+                            right: 0
+                        });
                         trees.unshift(uncatNode);
                     }
 
@@ -1539,7 +2231,7 @@
             function selectCategory(id) {
                 activeCategoryId.value = id;
                 pagination.value.current = 1;
-                sort.value = { field: null, order: null };
+                sort.value = {field: null, order: null};
                 requestSeq++;
                 fetchProductList(requestSeq);
             }
@@ -1551,7 +2243,8 @@
                 expandedSet.value = set;
             }
 
-            function onNodeUpdated() {}
+            function onNodeUpdated() {
+            }
 
             // ---------- 筛选面板控制 ----------
             function toggleFilterPanel() {
@@ -1632,7 +2325,7 @@
                 if (!col) return;
                 const startX = e.clientX;
                 const startWidth = col.offsetWidth || 100;
-                colResize.value = { active: true, colIndex, startX, startWidth };
+                colResize.value = {active: true, colIndex, startX, startWidth};
                 document.addEventListener('mousemove', onResize);
                 document.addEventListener('mouseup', stopResize);
                 e.preventDefault();
@@ -1640,7 +2333,7 @@
 
             function onResize(e) {
                 if (!colResize.value.active) return;
-                const { colIndex, startX, startWidth } = colResize.value;
+                const {colIndex, startX, startWidth} = colResize.value;
                 const delta = e.clientX - startX;
                 const newWidth = Math.max(30, startWidth + delta);
                 const col = document.querySelector(`.data-table col:nth-child(${colIndex + 1})`);
@@ -1875,15 +2568,23 @@
                 // 打开筛选面板
                 filterPanelOpen.value = true;
             };
-            const handleAdd = () => { alert('新增商品'); };
+            const handleAdd = () => {
+                alert('新增商品');
+            };
             const handleEdit = () => {
                 const checked = productList.value.filter(item => item.checked);
-                if (checked.length === 0) { alert('请先选择要修改的商品'); return; }
+                if (checked.length === 0) {
+                    alert('请先选择要修改的商品');
+                    return;
+                }
                 alert('修改商品：' + checked.map(i => i.name).join(', '));
             };
             const handleDelete = () => {
                 const checked = productList.value.filter(item => item.checked);
-                if (checked.length === 0) { alert('请先选择要删除的商品'); return; }
+                if (checked.length === 0) {
+                    alert('请先选择要删除的商品');
+                    return;
+                }
                 if (confirm('确定删除选中的 ' + checked.length + ' 个商品吗？')) {
                     alert('删除成功（模拟）');
                     requestSeq++;
@@ -1894,8 +2595,65 @@
                 requestSeq++;
                 fetchProductList(requestSeq);
             };
-            const handleSettings = () => { alert('设置面板'); };
-            const handleMore = () => { alert('更多操作（如导入导出等）'); };
+            const handleSettings = () => {
+                alert('设置面板');
+            };
+
+            // ===== 更多下拉菜单 =====
+            function toggleMoreMenu() {
+                moreMenuOpen.value = !moreMenuOpen.value;
+            }
+
+            // ===== 导入：发送消息给父页面 =====
+            function handleImport() {
+                moreMenuOpen.value = false;
+                // 通知父页面打开导入弹窗
+                if (window.parent !== window) {
+                    window.parent.postMessage({ type: 'openImport' }, '*');
+                } else {
+                    // 如果不在 iframe 中（独立运行），则直接提示或降级
+                    alert('请在主框架中打开此页面');
+                }
+            }
+
+            // ===== 导出 =====
+            function handleExport() {
+                moreMenuOpen.value = false;
+                // 导出当前列表数据（模拟）
+                const data = productList.value.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    barcode: item.barcode,
+                    brand: item.brandName,
+                    price: item.retailPrice,
+                    category: item.categoryName
+                }));
+                if (data.length === 0) {
+                    alert('当前没有数据可导出');
+                    return;
+                }
+                // 导出为 CSV
+                try {
+                    const headers = ['ID', '名称', '条码', '品牌', '零售价', '分类'];
+                    const rows = data.map(d => [d.id, d.name, d.barcode || '', d.brand || '', d.price || '', d.category || '']);
+                    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+                    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `商品数据_${new Date().toISOString().slice(0,10)}.csv`;
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                    alert('导出成功！');
+                } catch (err) {
+                    alert('导出失败: ' + err.message);
+                }
+            }
+
+            // ===== 更多其他操作 =====
+            function handleMoreAction() {
+                moreMenuOpen.value = false;
+                alert('更多操作（如批量处理、打印等）');
+            }
 
             // ---------- 分页操作 ----------
             const prevPage = () => {
@@ -1964,7 +2722,6 @@
                 handleDelete,
                 handleRefresh,
                 handleSettings,
-                handleMore,
                 prevPage,
                 nextPage,
                 goPage,
@@ -1992,7 +2749,13 @@
                 filterForm,
                 toggleFilterPanel,
                 applyFilters,
-                resetFilters
+                resetFilters,
+                // 更多下拉菜单
+                moreMenuOpen,
+                toggleMoreMenu,
+                handleImport,
+                handleExport,
+                handleMoreAction
             };
         }
     }).mount('#app');

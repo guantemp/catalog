@@ -39,12 +39,12 @@ import javax.money.Monetary;
 import java.util.Locale;
 
 public class PsqlWeightRepositoryTest {
+    private static final WeightRepository repository = new PsqlWeightRepository();
+    private static final CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
+
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465", "slave.tooo.top:6543:P$Qwe123465Pg");
     }
-
-    private static final WeightRepository repository = new PsqlWeightRepository();
-    private static final CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
 
     @BeforeClass
     public void beforeClass() {
@@ -127,7 +127,7 @@ public class PsqlWeightRepositoryTest {
         Weight appale = repository.find(1);
         appale.adjustRetailPrice(new WeightRetailPrice(new WeightPrice(Money.of(7.99, currency), WeightUnit.FIVE_HUNDRED_GRAM)));
         repository.save(appale);
-        appale=repository.find(1);
+        appale = repository.find(1);
         Assert.assertEquals(appale.retailPrice().price().amount().getNumber().doubleValue(), 7.99);
         //System.out.println(v);
     }

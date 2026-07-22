@@ -26,6 +26,7 @@ import catalog.hoprxi.core.domain.model.category.Category;
 import catalog.hoprxi.core.domain.model.madeIn.MadeIn;
 import catalog.hoprxi.core.domain.model.shelfLife.ShelfLife;
 import catalog.hoprxi.scale.application.PluSegmentationService;
+
 import java.util.Objects;
 
 /**
@@ -45,7 +46,7 @@ public abstract class Scale {
     protected MadeIn madeIn;
 
     protected Scale(Plu plu, Name name, Specification spec, GradeEnum grade, MadeIn madeIn,
-                 ShelfLife shelfLife, long categoryId, long brandId) {
+                    ShelfLife shelfLife, long categoryId, long brandId) {
         setPlu(plu);
         setName(name);
         setMadeIn(madeIn);
@@ -201,14 +202,14 @@ public abstract class Scale {
     @Override
     public String toString() {
         return "Scale{" +
-                "brandId=" + brandId +
-                ", categoryId=" + categoryId +
-                ", grade=" + grade +
-                ", plu=" + plu +
-                ", name=" + name +
-                ", spec=" + spec +
-                ", shelfLife=" + shelfLife +
-                ", madeIn=" + madeIn +
-                '}';
+               "brandId=" + brandId +
+               ", categoryId=" + categoryId +
+               ", grade=" + grade +
+               ", plu=" + plu +
+               ", name=" + name +
+               ", spec=" + spec +
+               ", shelfLife=" + shelfLife +
+               ", madeIn=" + madeIn +
+               '}';
     }
 }

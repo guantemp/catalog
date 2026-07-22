@@ -30,16 +30,16 @@ import java.util.Objects;
 public final class ProhibitSellItem {
     private final Barcode barcode;
     private final long brandId;
-    private long categoryId;
     private final GradeEnum grade;
     private final long id;
-    private Name name;
     private final MadeIn madeIn;
     private final LastReceiptPrice lastReceiptPrice;
     private final RetailPrice retailPrice;
+    private final Specification spec;
+    private long categoryId;
+    private Name name;
     private MemberPrice memberPrice;
     private VipPrice vipPrice;
-    private final Specification spec;
     private ShelfLife shelfLife;
 
     protected ProhibitSellItem(long id, Barcode barcode, Name name, MadeIn madeIn, Specification spec,
@@ -153,7 +153,8 @@ public final class ProhibitSellItem {
     public Item permitSell() {
         return new Item(id, barcode, name, madeIn, spec, grade, shelfLife, LastReceiptPrice.ZERO_RMB_PCS, retailPrice, memberPrice, vipPrice, categoryId, brandId);
     }
-    public ProhibitTradingItem prohibitedStorageItem(){
+
+    public ProhibitTradingItem prohibitedStorageItem() {
         return null;
     }
 
@@ -172,19 +173,19 @@ public final class ProhibitSellItem {
     @Override
     public String toString() {
         return "ProhibitSellItem{" +
-                "barcode=" + barcode +
-                ", brandId=" + brandId +
-                ", categoryId=" + categoryId +
-                ", grade=" + grade +
-                ", id=" + id +
-                ", name=" + name +
-                ", madeIn=" + madeIn +
-                ", lastReceiptPrice=" + lastReceiptPrice +
-                ", retailPrice=" + retailPrice +
-                ", memberPrice=" + memberPrice +
-                ", vipPrice=" + vipPrice +
-                ", spec=" + spec +
-                ", shelfLife=" + shelfLife +
-                '}';
+               "barcode=" + barcode +
+               ", brandId=" + brandId +
+               ", categoryId=" + categoryId +
+               ", grade=" + grade +
+               ", id=" + id +
+               ", name=" + name +
+               ", madeIn=" + madeIn +
+               ", lastReceiptPrice=" + lastReceiptPrice +
+               ", retailPrice=" + retailPrice +
+               ", memberPrice=" + memberPrice +
+               ", vipPrice=" + vipPrice +
+               ", spec=" + spec +
+               ", shelfLife=" + shelfLife +
+               '}';
     }
 }

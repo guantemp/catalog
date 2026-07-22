@@ -17,11 +17,9 @@
 package catalog.hoprxi.scale.infrastructure.query.postgresql.spec;
 
 
-import catalog.hoprxi.scale.application.query.SqlClauseSpec;
 import catalog.hoprxi.scale.application.query.SqlClause;
-import salt.hoprxi.to.PinYin;
+import catalog.hoprxi.scale.application.query.SqlClauseSpec;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Objects;
 
@@ -34,12 +32,12 @@ import java.util.Objects;
 public record KeywordSqlClauseSpec(String keyword) implements SqlClauseSpec {
 
     public KeywordSqlClauseSpec {
-       Objects.requireNonNull(keyword,"keyword is null");
+        Objects.requireNonNull(keyword, "keyword is null");
     }
 
     @Override
     public boolean isSatisfied() {
-        return  !keyword.isEmpty();
+        return !keyword.isEmpty();
     }
 
     @Override
@@ -48,8 +46,8 @@ public record KeywordSqlClauseSpec(String keyword) implements SqlClauseSpec {
             return new SqlClause("", Collections.emptyList());
         }
         String sql = """
-            s.search_vector @@ to_tsquery('simple', ?)
-            """;
+                s.search_vector @@ to_tsquery('simple', ?)
+                """;
         return new SqlClause(sql, Collections.singletonList(keyword));
     }
 }

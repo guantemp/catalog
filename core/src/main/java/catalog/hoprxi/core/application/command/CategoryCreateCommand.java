@@ -24,5 +24,5 @@ import java.net.URL;
  * @version 0.0.2 builder 2025-11-05
  */
 public record CategoryCreateCommand(long parentId, String name, String shortName, String description,
-                                    URL icon) implements Command{
+                                    URL icon) implements Command {
 }

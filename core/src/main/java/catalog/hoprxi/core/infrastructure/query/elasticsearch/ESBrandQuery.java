@@ -24,7 +24,6 @@ import catalog.hoprxi.core.infrastructure.ESUtil;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import io.netty.buffer.ByteBuf;
-import org.apache.http.HttpEntity;
 import org.elasticsearch.client.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,52 +49,6 @@ public final class ESBrandQuery implements BrandQuery {
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
 
-    @Override
-    public InputStream find(long id) throws SearchException {
-        Request request = new Request("GET", PREFIX + "/_doc/" + id);
-        request.setOptions(ESUtil.requestOptions());
-        return ReactiveStream.toSingleByteBufInputStream(request, String.valueOf(id));
-    }
-
-    @Override
-    public Mono<ByteBuf> findAsync(long id) {
-        Request request = new Request("GET", PREFIX + "/_doc/" + id);
-        request.setOptions(ESUtil.requestOptions());
-        return ReactiveStream.toMonoByteBuf(request, String.valueOf(id));
-    }
-
-    @Override
-    public InputStream search(String name, int offset, int size, SortFieldEnum sortField) {
-        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("Offset value range is 0-10000");
-        if (size < 0 || size > 10000) throw new IllegalArgumentException("Size value range is 0-10000");
-        if (size + offset > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
-        if (sortField == null) {
-            sortField = SortFieldEnum._ID;
-            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
-        }
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
-
-        return ReactiveStream.toByteBufInputStream(request, "brands", name);
-    }
-
-    @Override
-    public Flux<ByteBuf> searchAsync(String name, int offset, int size, SortFieldEnum sortField) {
-        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("Offset value range is 0-10000");
-        if (size < 0 || size > 10000) throw new IllegalArgumentException("size value range is 0-10000");
-        if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
-        if (sortField == null) {
-            sortField = SortFieldEnum._ID;
-            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
-        }
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
-
-        return ReactiveStream.toFluxByteBuf(request, "brands", name);
-    }
-
     private static String buildSearchJsonRequest(String name, int offset, int limit, SortFieldEnum sortField) {
         try (StringWriter writer = new StringWriter(64); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -109,33 +62,6 @@ public final class ESBrandQuery implements BrandQuery {
             LOGGER.error("Cannot assemble request JSON", e);
             throw new IllegalStateException("Cannot assemble request JSON");
         }
-    }
-
-    @Override
-    public InputStream search(String name, int size, String searchAfter, SortFieldEnum sortField) {
-        if (size < 0 || size > 10000) throw new IllegalArgumentException("The size value range is 0-10000");
-        if (sortField == null) {
-            sortField = SortFieldEnum._ID;
-            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
-        }
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESBrandQuery.buildSearchAfterJsonRequest(name, size, searchAfter, sortField));
-        return ReactiveStream.toByteBufInputStream(request, "brands", name);
-    }
-
-    @Override
-    public Flux<ByteBuf> searchAsync(String name, int size, String searchAfter, SortFieldEnum sortField) {
-        if (size < 0 || size > 10000) throw new IllegalArgumentException("The size value range is 0-10000");
-        if (sortField == null) {
-            sortField = SortFieldEnum._ID;
-            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
-        }
-
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESBrandQuery.buildSearchAfterJsonRequest(name, size, searchAfter, sortField));
-        return ReactiveStream.toFluxByteBuf(request, "brands", name);
     }
 
     private static String buildSearchAfterJsonRequest(String name, int size, String searchAfter, SortFieldEnum sortField) {
@@ -189,5 +115,78 @@ public final class ESBrandQuery implements BrandQuery {
         generator.writeStringField(MapSortField.mapSortToField(sortField), sortField.sort());
         generator.writeEndObject();
         generator.writeEndArray();
+    }
+
+    @Override
+    public InputStream find(long id) throws SearchException {
+        Request request = new Request("GET", PREFIX + "/_doc/" + id);
+        request.setOptions(ESUtil.requestOptions());
+        return ReactiveStream.toSingleByteBufInputStream(request, String.valueOf(id));
+    }
+
+    @Override
+    public Mono<ByteBuf> findAsync(long id) {
+        Request request = new Request("GET", PREFIX + "/_doc/" + id);
+        request.setOptions(ESUtil.requestOptions());
+        return ReactiveStream.toMonoByteBuf(request, String.valueOf(id));
+    }
+
+    @Override
+    public InputStream search(String name, int offset, int size, SortFieldEnum sortField) {
+        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("Offset value range is 0-10000");
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("Size value range is 0-10000");
+        if (size + offset > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
+        if (sortField == null) {
+            sortField = SortFieldEnum._ID;
+            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
+
+        return ReactiveStream.toByteBufInputStream(request, "brands", name);
+    }
+
+    @Override
+    public Flux<ByteBuf> searchAsync(String name, int offset, int size, SortFieldEnum sortField) {
+        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("Offset value range is 0-10000");
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("size value range is 0-10000");
+        if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
+        if (sortField == null) {
+            sortField = SortFieldEnum._ID;
+            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESBrandQuery.buildSearchJsonRequest(name, offset, size, sortField));
+
+        return ReactiveStream.toFluxByteBuf(request, "brands", name);
+    }
+
+    @Override
+    public InputStream search(String name, int size, String searchAfter, SortFieldEnum sortField) {
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("The size value range is 0-10000");
+        if (sortField == null) {
+            sortField = SortFieldEnum._ID;
+            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESBrandQuery.buildSearchAfterJsonRequest(name, size, searchAfter, sortField));
+        return ReactiveStream.toByteBufInputStream(request, "brands", name);
+    }
+
+    @Override
+    public Flux<ByteBuf> searchAsync(String name, int size, String searchAfter, SortFieldEnum sortField) {
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("The size value range is 0-10000");
+        if (sortField == null) {
+            sortField = SortFieldEnum._ID;
+            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
+
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESBrandQuery.buildSearchAfterJsonRequest(name, size, searchAfter, sortField));
+        return ReactiveStream.toFluxByteBuf(request, "brands", name);
     }
 }

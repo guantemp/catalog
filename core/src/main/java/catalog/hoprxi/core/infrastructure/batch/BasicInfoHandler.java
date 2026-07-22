@@ -34,110 +34,6 @@ import java.util.regex.Pattern;
  */
 
 public class BasicInfoHandler implements EventHandler<ItemImportEvent> {
-    @Override
-    public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
-        //long t1 = System.nanoTime();
-        //name
-        String name = event.map.get(ItemMapping.NAME);
-        name = name.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
-        //没有简称置空
-        String shortName = event.map.get(ItemMapping.SHORT_NAME);
-        shortName = shortName == null ? null : shortName.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
-        StringJoiner nameJson = new StringJoiner(",", "'{", "}'");
-        nameJson.add("\"name\":\"" + name + "\"");
-        nameJson.add("\"shortName\":\"" + shortName + "\"");
-//grade
-        String gradeStr = event.map.get(ItemMapping.GRADE);
-        if (gradeStr == null) gradeStr = "";
-        String cleanGrade = gradeStr.replace("\u3000", "").replace(" ", "").trim();
-        if (cleanGrade.isEmpty()) {  // 2. 【新增】如果清洗后为空，给予默认值（例如 "合格"）
-            cleanGrade = GradeEnum.QUALIFIED.name();
-        }
-        GradeEnum grade = GradeEnum.of(cleanGrade);
-//spec
-        String spec = event.map.get(ItemMapping.SPEC);
-        if (spec != null && spec.isBlank())
-            spec = null;
-        if (spec != null) {
-            spec = "'" + BasicInfoHandler.extractCoreSpec(spec) + "'";
-        }
-//保质期
-        String shelfLife = event.map.get(ItemMapping.SHELF_LIFE);
-        int days = BasicInfoHandler.parseShelfLife(shelfLife);
-
-        //公共unit
-        String units = event.map.get(ItemMapping.UNIT);
-        if (units == null || units.isBlank()) units = "";
-        String cleanS = units.replace("\u3000", "").replace(" ", "").trim();
-        // 2. 【新增】如果清洗后为空，给予默认值（例如 "个" 或 "PCS"）
-        // 如果你们系统有默认单位，请替换下面的 "个"
-        if (cleanS.isEmpty()) {
-            cleanS = UnitEnum.PCS.name();
-        }
-        UnitEnum unit = UnitEnum.of(cleanS);
-//lastReceipt
-        String lastReceiptPrice = event.map.get(ItemMapping.LAST_RECEIPT_PRICE);
-        BigDecimal price = BasicInfoHandler.parsePriceOrDefault(lastReceiptPrice);
-        StringJoiner lastReceiptPriceJoiner = new StringJoiner(",", "'{\"name\":\"最近入库价\",\"price\": ", "}'");
-        StringJoiner lastReceiptPriceSubJoiner = new StringJoiner(",", "{", "}");
-        lastReceiptPriceSubJoiner.add("\"number\":" + price);
-        lastReceiptPriceSubJoiner.add("\"currencyCode\":\"CNY\"");
-        lastReceiptPriceSubJoiner.add("\"unit\":\"" + unit.name() + "\"");
-        lastReceiptPriceJoiner.add(lastReceiptPriceSubJoiner.toString());
-// retailPrice
-        String retailPrice = event.map.get(ItemMapping.RETAIL_PRICE);
-        if (retailPrice == null || retailPrice.isBlank()) {
-            event.addWrong(Verify.RETAIL_PRICE_ZERO, event.map.get(ItemMapping.BARCODE) + ":" + retailPrice);
-            return;
-        }
-        try {
-            // 使用 BigDecimal 解析，彻底杜绝精度丢失
-            BigDecimal tempPrice = new BigDecimal(retailPrice.trim());
-            // 判断是否为 0（compareTo 返回 0 表示相等）
-            if (tempPrice.compareTo(BigDecimal.ZERO) == 0) {
-                event.addWrong(Verify.RETAIL_PRICE_ZERO, event.map.get(ItemMapping.BARCODE) + ":" + retailPrice);
-                return;
-            }
-            if (tempPrice.compareTo(price) < 0) {
-                event.addWrong(Verify.RETAIL_LESS_LAST_RECEIPT, event.map.get(ItemMapping.BARCODE) + ":" + retailPrice);
-                return;
-            }
-            // 解析成功且不为 0，继续后续逻辑...
-        } catch (NumberFormatException e) {
-            event.addWrong(Verify.RETAIL_PRICE_FORMAT_ERROR, event.map.get(ItemMapping.BARCODE) + ":" + retailPrice);
-            return;
-        }
-        StringJoiner retailPriceJoiner = new StringJoiner(",", "'{", "}'");
-        retailPriceJoiner.add("\"number\":" + price);
-        retailPriceJoiner.add("\"currencyCode\":\"CNY\"");
-        retailPriceJoiner.add("\"unit\":\"" + unit.name() + "\"");
-//memberprice
-        String memberPrice = event.map.get(ItemMapping.MEMBER_PRICE);
-        price = BasicInfoHandler.parsePriceOrDefault(memberPrice);
-        StringJoiner memberJoiner = new StringJoiner(",", "'{\"name\":\"会员价\",\"price\": ", "}'");
-        StringJoiner memberSubJoiner = new StringJoiner(",", "{", "}");
-        memberSubJoiner.add("\"number\":" + price);
-        memberSubJoiner.add("\"currencyCode\":\"CNY\"");
-        memberSubJoiner.add("\"unit\":\"" + unit.name() + "\"");
-        memberJoiner.add(memberSubJoiner.toString());
-        //vipprice
-        String VipPrice = event.map.get(ItemMapping.VIP_PRICE);
-        price = BasicInfoHandler.parsePriceOrDefault(VipPrice);
-        StringJoiner vipPriceJoiner = new StringJoiner(",", "'{\"name\":\"VIP\",\"price\": ", "}'");
-        StringJoiner vipPriceSubJoiner = new StringJoiner(",", "{", "}");
-        vipPriceSubJoiner.add("\"number\":" + price);
-        vipPriceSubJoiner.add("\"currencyCode\":\"CNY\"");
-        vipPriceSubJoiner.add("\"unit\":\"" + unit.name() + "\"");
-        vipPriceJoiner.add(vipPriceSubJoiner.toString());
-
-        event.basicInfo = new ItemImportEvent.BasicInfo(nameJson.toString(), grade, spec, days,
-                lastReceiptPriceJoiner.toString(), retailPriceJoiner.toString(),
-                memberJoiner.toString(), vipPriceJoiner.toString());
-
-        //long t2 = System.nanoTime();
-        //System.out.println("基本信息: " + (t2 - t1) / 1_000_000 + " ms");
-    }
-
     private static BigDecimal parsePriceOrDefault(String priceStr) {
         if (priceStr == null || priceStr.trim().isEmpty()) {
             return BigDecimal.ZERO;
@@ -252,5 +148,105 @@ public class BasicInfoHandler implements EventHandler<ItemImportEvent> {
         }
 
         return s;
+    }
+
+    @Override
+    public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        //name
+        String name = event.map.get(ItemMapping.NAME);
+        name = name.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
+        //没有简称置空
+        String shortName = event.map.get(ItemMapping.SHORT_NAME);
+        shortName = shortName == null ? null : shortName.replaceAll("'", "''").replaceAll("\\\\", "\\\\\\\\").trim();
+        StringJoiner nameJson = new StringJoiner(",", "'{", "}'");
+        nameJson.add("\"name\":\"" + name + "\"");
+        nameJson.add("\"shortName\":\"" + shortName + "\"");
+//grade
+        String gradeStr = event.map.get(ItemMapping.GRADE);
+        if (gradeStr == null) gradeStr = "";
+        String cleanGrade = gradeStr.replace("\u3000", "").replace(" ", "").trim();
+        if (cleanGrade.isEmpty()) {  // 2. 【新增】如果清洗后为空，给予默认值（例如 "合格"）
+            cleanGrade = GradeEnum.QUALIFIED.name();
+        }
+        GradeEnum grade = GradeEnum.of(cleanGrade);
+//spec
+        String spec = event.map.get(ItemMapping.SPEC);
+        if (spec != null && spec.isBlank())
+            spec = null;
+        if (spec != null) {
+            spec = "'" + BasicInfoHandler.extractCoreSpec(spec) + "'";
+        }
+//保质期
+        String shelfLife = event.map.get(ItemMapping.SHELF_LIFE);
+        int days = BasicInfoHandler.parseShelfLife(shelfLife);
+
+        //公共unit
+        String units = event.map.get(ItemMapping.UNIT);
+        if (units == null || units.isBlank()) units = "";
+        String cleanS = units.replace("\u3000", "").replace(" ", "").trim();
+        // 2. 【新增】如果清洗后为空，给予默认值（例如 "个" 或 "PCS"）
+        // 如果你们系统有默认单位，请替换下面的 "个"
+        if (cleanS.isEmpty()) {
+            cleanS = UnitEnum.PCS.name();
+        }
+        UnitEnum unit = UnitEnum.of(cleanS);
+//lastReceipt
+        String lastReceiptPrice = event.map.get(ItemMapping.LAST_RECEIPT_PRICE);
+        BigDecimal price = BasicInfoHandler.parsePriceOrDefault(lastReceiptPrice);
+        StringJoiner lastReceiptPriceJoiner = new StringJoiner(",", "'{\"name\":\"最近入库价\",\"price\": ", "}'");
+        StringJoiner lastReceiptPriceSubJoiner = new StringJoiner(",", "{", "}");
+        lastReceiptPriceSubJoiner.add("\"number\":" + price);
+        lastReceiptPriceSubJoiner.add("\"currencyCode\":\"CNY\"");
+        lastReceiptPriceSubJoiner.add("\"unit\":\"" + unit.name() + "\"");
+        lastReceiptPriceJoiner.add(lastReceiptPriceSubJoiner.toString());
+// retailPrice
+        String retailPrice = event.map.get(ItemMapping.RETAIL_PRICE);
+        if (retailPrice == null || retailPrice.isBlank()) {
+            event.addWrong(Verify.RETAIL_PRICE_ZERO, event.map.get(ItemMapping.BARCODE) + ":" + retailPrice);
+            return;
+        }
+        try {
+            // 使用 BigDecimal 解析，彻底杜绝精度丢失
+            BigDecimal tempPrice = new BigDecimal(retailPrice.trim());
+            // 判断是否为 0（compareTo 返回 0 表示相等）
+            if (tempPrice.compareTo(BigDecimal.ZERO) == 0) {
+                event.addWrong(Verify.RETAIL_PRICE_ZERO, event.map.get(ItemMapping.BARCODE) + ":" + retailPrice);
+                return;
+            }
+            if (tempPrice.compareTo(price) < 0) {
+                event.addWrong(Verify.RETAIL_LESS_LAST_RECEIPT, event.map.get(ItemMapping.BARCODE) + ":" + retailPrice);
+                return;
+            }
+            // 解析成功且不为 0，继续后续逻辑...
+        } catch (NumberFormatException e) {
+            event.addWrong(Verify.RETAIL_PRICE_FORMAT_ERROR, event.map.get(ItemMapping.BARCODE) + ":" + retailPrice);
+            return;
+        }
+        StringJoiner retailPriceJoiner = new StringJoiner(",", "'{", "}'");
+        retailPriceJoiner.add("\"number\":" + price);
+        retailPriceJoiner.add("\"currencyCode\":\"CNY\"");
+        retailPriceJoiner.add("\"unit\":\"" + unit.name() + "\"");
+//memberprice
+        String memberPrice = event.map.get(ItemMapping.MEMBER_PRICE);
+        price = BasicInfoHandler.parsePriceOrDefault(memberPrice);
+        StringJoiner memberJoiner = new StringJoiner(",", "'{\"name\":\"会员价\",\"price\": ", "}'");
+        StringJoiner memberSubJoiner = new StringJoiner(",", "{", "}");
+        memberSubJoiner.add("\"number\":" + price);
+        memberSubJoiner.add("\"currencyCode\":\"CNY\"");
+        memberSubJoiner.add("\"unit\":\"" + unit.name() + "\"");
+        memberJoiner.add(memberSubJoiner.toString());
+        //vipprice
+        String VipPrice = event.map.get(ItemMapping.VIP_PRICE);
+        price = BasicInfoHandler.parsePriceOrDefault(VipPrice);
+        StringJoiner vipPriceJoiner = new StringJoiner(",", "'{\"name\":\"VIP\",\"price\": ", "}'");
+        StringJoiner vipPriceSubJoiner = new StringJoiner(",", "{", "}");
+        vipPriceSubJoiner.add("\"number\":" + price);
+        vipPriceSubJoiner.add("\"currencyCode\":\"CNY\"");
+        vipPriceSubJoiner.add("\"unit\":\"" + unit.name() + "\"");
+        vipPriceJoiner.add(vipPriceSubJoiner.toString());
+
+        event.basicInfo = new ItemImportEvent.BasicInfo(nameJson.toString(), grade, spec, days,
+                lastReceiptPriceJoiner.toString(), retailPriceJoiner.toString(),
+                memberJoiner.toString(), vipPriceJoiner.toString());
     }
 }

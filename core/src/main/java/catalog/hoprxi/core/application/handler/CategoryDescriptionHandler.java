@@ -25,7 +25,7 @@ import catalog.hoprxi.core.domain.model.category.Category;
  * @since JDK 21
  */
 
-public class CategoryDescriptionHandler implements AggregateHandler<CategoryChangDescriptionCommand, Category>{
+public class CategoryDescriptionHandler implements AggregateHandler<CategoryChangDescriptionCommand, Category> {
     private final UnitOfWork<Category> uow;
 
     public CategoryDescriptionHandler(UnitOfWork<Category> uow) {

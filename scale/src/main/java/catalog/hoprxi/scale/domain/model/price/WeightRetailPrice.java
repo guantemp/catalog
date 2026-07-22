@@ -28,9 +28,8 @@ import java.util.Objects;
  * @version 0.0.1 2019/10/29
  */
 public class WeightRetailPrice {
-    private WeightPrice weightPrice;
-
     public static final WeightRetailPrice ZERO_KILOGRAM_RMB = new WeightRetailPrice(WeightPrice.ZERO_KILOGRAM_RMB);
+    private WeightPrice weightPrice;
 
     public WeightRetailPrice(WeightPrice weightPrice) {
         setWeightPrice(weightPrice);
@@ -71,7 +70,7 @@ public class WeightRetailPrice {
     @Override
     public String toString() {
         return "WeightRetailPrice{" +
-                "weightPrice=" + weightPrice +
-                '}';
+               "weightPrice=" + weightPrice +
+               '}';
     }
 }

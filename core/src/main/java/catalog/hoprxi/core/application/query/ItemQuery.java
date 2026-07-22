@@ -156,7 +156,7 @@ public interface ItemQuery {
     /**
      * 根据查询条件异步搜索物品列表（基于偏移量分页）。
      *
-     * @param specs   查询条件规范数组。
+     * @param specs     查询条件规范数组。
      * @param offset    起始偏移量。
      * @param size      期望返回的最大记录数。
      * @param sortField 排序字段。

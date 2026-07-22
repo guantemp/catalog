@@ -23,9 +23,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.linecorp.armeria.common.*;
 import com.linecorp.armeria.common.stream.StreamMessage;
 import com.linecorp.armeria.common.stream.StreamWriter;
-import com.linecorp.armeria.server.annotation.Default;
 import com.linecorp.armeria.server.annotation.Get;
-import com.linecorp.armeria.server.annotation.Param;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

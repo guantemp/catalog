@@ -66,11 +66,6 @@ public enum FileValidSpec {
         }
     };
 
-    // 抽象方法：由每个枚举值具体实现
-    public abstract boolean validFormat(File file);
-
-    public abstract String[] support();
-
     // 提取公共的 Magic Number 校验逻辑
     private static boolean checkMagicNumber(File file, String[] heads) {
         try (FileInputStream fis = new FileInputStream(file)) {
@@ -89,4 +84,9 @@ public enum FileValidSpec {
             throw new RuntimeException("读取文件头失败", e);
         }
     }
+
+    // 抽象方法：由每个枚举值具体实现
+    public abstract boolean validFormat(File file);
+
+    public abstract String[] support();
 }

@@ -16,7 +16,6 @@
 
 package catalog.hoprxi.scale.infrastructure.i18n;
 
-import catalog.hoprxi.core.infrastructure.i18n.Label;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Field;

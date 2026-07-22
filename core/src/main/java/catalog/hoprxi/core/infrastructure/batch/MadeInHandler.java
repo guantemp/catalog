@@ -99,42 +99,6 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
                 .build();
     }
 
-    @Override
-    public void onEvent(ItemImportEvent event) throws Exception {
-        this.onEvent(event, 0, false);
-    }
-
-    @Override
-    public void onEvent(ItemImportEvent event, long sequence, boolean endOfBatch) throws Exception {
-        long start = System.nanoTime();
-        event.madeInJson = MadeInHandler.buildUnknownJson();
-        String madeInText = event.map.get(ItemMapping.MADE_IN);
-        if (madeInText == null || madeInText.isBlank())
-            return;
-
-        String trimmed = madeInText.trim();
-        // 尝试从缓存获取
-        String cached = madeInCache.get(trimmed);
-        if (cached != null) {
-            event.madeInJson = cached;
-            return;
-        }
-        // 缓存未命中，发起网络请求
-        try {
-            String result = MadeInHandler.fetchFromApi(trimmed);
-            madeInCache.put(trimmed, result);
-            event.madeInJson = result;
-        } catch (Exception e) {
-            System.err.println("Failed to resolve madeIn: " + trimmed + ", error: " + e.getMessage());
-        }
-        long elapsed = (System.nanoTime() - start) / 1_000_000; // 毫秒
-        if (elapsed > 150) {
-            System.out.print("地址查询延时>150ms：");// 只记录超过阈值的慢操作
-            System.out.printf("Handler %s slow, event seq=%d, cost=%dms%n",
-                    this.getClass().getSimpleName(), sequence, elapsed);
-        }
-    }
-
     /**
      * 发起 HTTP 请求并解析返回结果
      */
@@ -332,6 +296,49 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
                 .replace("\t", "\\t");
     }
 
+    @Override
+    public void onEvent(ItemImportEvent event) throws Exception {
+        this.onEvent(event, 0, false);
+    }
+
+    @Override
+    public void onEvent(ItemImportEvent event, long sequence, boolean endOfBatch) throws Exception {
+        long start = System.nanoTime();
+        event.madeInJson = MadeInHandler.buildUnknownJson();
+        String madeInText = event.map.get(ItemMapping.MADE_IN);
+        if (madeInText == null || madeInText.isBlank())
+            return;
+
+        String trimmed = madeInText.trim();
+        // 尝试从缓存获取
+        String cached = madeInCache.get(trimmed);
+        if (cached != null) {
+            event.madeInJson = cached;
+            return;
+        }
+        // 缓存未命中，发起网络请求
+        try {
+            String result = MadeInHandler.fetchFromApi(trimmed);
+            madeInCache.put(trimmed, result);
+            event.madeInJson = result;
+        } catch (Exception e) {
+            System.err.println("Failed to resolve madeIn: " + trimmed + ", error: " + e.getMessage());
+        }
+        long elapsed = (System.nanoTime() - start) / 1_000_000; // 毫秒
+        if (elapsed > 150) {
+            System.out.print("地址查询延时>150ms：");// 只记录超过阈值的慢操作
+            System.out.printf("Handler %s slow, event seq=%d, cost=%dms%n",
+                    this.getClass().getSimpleName(), sequence, elapsed);
+        }
+    }
+
+    // ---------- 缓存接口（假设 CacheFactory 提供） ----------
+    interface Cache<K, V> {
+        V get(K key);
+
+        void put(K key, V value);
+    }
+
     // ---------- 内部数据类 ----------
     private static class AreaInfo {
         int parentCode;
@@ -358,13 +365,6 @@ public class MadeInHandler implements EventHandler<ItemImportEvent>, WorkHandler
                     .add("level='" + level + "'")
                     .toString();
         }
-    }
-
-    // ---------- 缓存接口（假设 CacheFactory 提供） ----------
-    interface Cache<K, V> {
-        V get(K key);
-
-        void put(K key, V value);
     }
 
     static class CacheFactory {

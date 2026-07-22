@@ -17,17 +17,19 @@
 package catalog.hoprxi.core.application.handler;
 
 import catalog.hoprxi.core.application.command.Command;
+
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK21
  * @version 0.0.1 builder 2025/11/11
  */
 public interface AggregateHandler<T extends Command, R> {
-     /**
-      * 执行具体的业务逻辑
-      * @param entity 内存中的领域对象
-      * @param command 具体的命令
-      * @return 返回修改后的领域对象
-      */
-     R execute(R entity, T command);
+    /**
+     * 执行具体的业务逻辑
+     *
+     * @param entity  内存中的领域对象
+     * @param command 具体的命令
+     * @return 返回修改后的领域对象
+     */
+    R execute(R entity, T command);
 }

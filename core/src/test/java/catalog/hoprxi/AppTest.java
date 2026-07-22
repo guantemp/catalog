@@ -18,15 +18,15 @@ package catalog.hoprxi;
 
 import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import catalog.hoprxi.core.application.query.SortFieldEnum;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.MapSortField;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.BrandSpec;
-import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.CategorySpec;
 import catalog.hoprxi.core.domain.model.GradeEnum;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.price.Price;
 import catalog.hoprxi.core.domain.model.price.RetailPrice;
 import catalog.hoprxi.core.domain.model.price.UnitEnum;
 import catalog.hoprxi.core.infrastructure.DecryptUtil;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.MapSortField;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.BrandSpec;
+import catalog.hoprxi.core.infrastructure.query.elasticsearch.spec.CategorySpec;
 import com.fasterxml.jackson.core.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -66,14 +66,15 @@ import static salt.hoprxi.crypto.util.AESUtil.decrypt;
  * @version 0.0.1 builder 2022-07-09
  */
 public class AppTest {
+    private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
+            .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
+            .build());
+
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "120.77.47.145:6543:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
 
-    private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())
-            .set(CurrencyStyle.SYMBOL).set("pattern", "¤###0.00###")
-            .build());
     private final JsonFactory jsonFactory = JsonFactory.builder().build();
 
 
@@ -457,14 +458,14 @@ public class AppTest {
         System.out.println("\n读json内部对象测试:");
         JsonParser parser = jsonFactory.createParser("{}");
         parser = jsonFactory.createParser("{\n" +
-                "    \"name\": \"name的子对象\",\n" +
-                "    \"retailPrice\": {\n" +
-                "        \"unit\": \"盒\",\n" +
-                "        \"number\": 45.3,\n" +
-                "        \"currency\": \"CNY\"\n" +//USD
-                "    },\n" +
-                "    \"shortName\": \"sut个好fsd\"\n" +
-                "}");
+                                          "    \"name\": \"name的子对象\",\n" +
+                                          "    \"retailPrice\": {\n" +
+                                          "        \"unit\": \"盒\",\n" +
+                                          "        \"number\": 45.3,\n" +
+                                          "        \"currency\": \"CNY\"\n" +//USD
+                                          "    },\n" +
+                                          "    \"shortName\": \"sut个好fsd\"\n" +
+                                          "}");
         String name;
         Price price = null;
         while (!parser.isClosed()) {

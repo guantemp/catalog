@@ -55,17 +55,12 @@ public class ItemView {
     private MemberPrice memberPrice;
     private VipPrice vipPrice;
     private URI video;
-
-    public void setImages(URI[] images) {
-        this.images = images;
-    }
-
     private URI[] images;
-
 
     public ItemView(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade) {
         this(id, barcode, name, madeIn, spec, grade, ShelfLife.SAME_DAY);
     }
+
 
     public ItemView(String id, Barcode barcode, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, ShelfLife shelfLife) {
         this.barcode = barcode;
@@ -92,6 +87,10 @@ public class ItemView {
         this.memberPrice = memberPrice;
         this.vipPrice = vipPrice;
         this.video = video;
+        this.images = images;
+    }
+
+    public void setImages(URI[] images) {
         this.images = images;
     }
 

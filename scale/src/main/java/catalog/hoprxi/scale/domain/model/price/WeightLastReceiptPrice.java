@@ -28,10 +28,9 @@ import java.util.Objects;
  */
 
 public class WeightLastReceiptPrice {
+    public static final WeightLastReceiptPrice ZERO_KILOGRAM_RMB = new WeightLastReceiptPrice(Label.PRICE_LAST_RECEIPT, WeightPrice.ZERO_KILOGRAM_RMB);
     private final String name;
     private WeightPrice weightPrice;
-
-    public static final WeightLastReceiptPrice ZERO_KILOGRAM_RMB = new WeightLastReceiptPrice(Label.PRICE_LAST_RECEIPT, WeightPrice.ZERO_KILOGRAM_RMB);
 
     public WeightLastReceiptPrice(String name, WeightPrice weightPrice) {
         this.name = Objects.requireNonNull(name, "name is null").trim();
@@ -71,8 +70,8 @@ public class WeightLastReceiptPrice {
     @Override
     public String toString() {
         return "WeightLastReceiptPrice{" +
-                "name='" + name + '\'' +
-                ", weightPrice=" + weightPrice +
-                '}';
+               "name='" + name + '\'' +
+               ", weightPrice=" + weightPrice +
+               '}';
     }
 }

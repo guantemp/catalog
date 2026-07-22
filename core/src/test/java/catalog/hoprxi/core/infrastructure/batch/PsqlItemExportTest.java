@@ -33,6 +33,7 @@ public class PsqlItemExportTest {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "120.77.47.145:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
+
     @Test
     public void testExport() throws IOException {
         PsqlItemExport export = new PsqlItemExport();

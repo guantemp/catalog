@@ -18,8 +18,6 @@ package catalog.hoprxi.core.domain.model;
 
 import catalog.hoprxi.core.infrastructure.i18n.Label;
 
-import java.util.Objects;
-
 /***
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
  * @since JDK8.0

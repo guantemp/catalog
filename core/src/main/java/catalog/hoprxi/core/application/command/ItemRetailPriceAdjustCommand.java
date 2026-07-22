@@ -17,9 +17,6 @@
 package catalog.hoprxi.core.application.command;
 
 
-import catalog.hoprxi.core.domain.model.price.UnitEnum;
-import org.javamoney.moneta.Money;
-
 import javax.money.MonetaryAmount;
 
 /***

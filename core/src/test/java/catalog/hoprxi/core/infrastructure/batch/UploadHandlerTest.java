@@ -5,7 +5,7 @@ import org.testng.annotations.Test;
 
 import java.util.EnumMap;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertNull;
 
 public class UploadHandlerTest {
 
@@ -49,8 +49,8 @@ public class UploadHandlerTest {
         EnumMap<ItemMapping, String> map = new EnumMap<>(ItemMapping.class);
         map.put(ItemMapping.BARCODE, "\"" + barcode + "\""); // 模拟带引号
         event.map = map;
-        if(hasWrong)
-            event.addWrong(Verify.BARCODE_REPEAT,barcode);
+        if (hasWrong)
+            event.addWrong(Verify.BARCODE_REPEAT, barcode);
         return event;
     }
 }

@@ -17,7 +17,6 @@
 package catalog.hoprxi.core.application.command;
 
 import catalog.hoprxi.core.domain.model.GradeEnum;
-import catalog.hoprxi.core.domain.model.Item;
 import catalog.hoprxi.core.domain.model.Name;
 import catalog.hoprxi.core.domain.model.Specification;
 import catalog.hoprxi.core.domain.model.barcode.Barcode;

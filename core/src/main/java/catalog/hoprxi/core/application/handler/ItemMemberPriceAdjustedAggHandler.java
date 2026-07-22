@@ -29,10 +29,10 @@ import catalog.hoprxi.core.domain.model.price.UnitEnum;
  * @version 0.0.1 builder 2025/11/24
  */
 
-public class ItemMemberPriceAdjustedAggHandler implements AggregateHandler<ItemMemberPriceAdjustedCommand, Item>{
+public class ItemMemberPriceAdjustedAggHandler implements AggregateHandler<ItemMemberPriceAdjustedCommand, Item> {
     @Override
     public Item execute(Item item, ItemMemberPriceAdjustedCommand command) {
-        MemberPrice price=new MemberPrice(command.name(),new Price(command.amount(), UnitEnum.valueOf(command.unit())));
+        MemberPrice price = new MemberPrice(command.name(), new Price(command.amount(), UnitEnum.valueOf(command.unit())));
         item.adjustMemberPrice(price);
         return item;
     }

@@ -2,15 +2,25 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta content="width=device-width, initial-scale=1.0, user-scalable=no" name="viewport">
     <title>分类管理 · 内嵌版</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap"
+          rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1"
+          rel="stylesheet">
     <style>
         /* ===== 保留全部原有样式，仅调整配色 ===== */
-        [v-cloak] { display: none !important; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        [v-cloak] {
+            display: none !important;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             background: #1e2a36;
             font-family: 'Inter', system-ui, sans-serif;
@@ -35,12 +45,13 @@
             background: #2a3a48;
             border-radius: 28px;
             border: 1px solid #3e5566;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
             overflow: hidden;
             height: 100%;
             display: flex;
             flex-direction: column;
         }
+
         .right-panel {
             flex: 1;
             min-width: 560px;
@@ -48,35 +59,40 @@
             flex-direction: column;
             height: 100%;
         }
+
         .card {
             background: #2a3a48;
             border-radius: 28px;
             border: 1px solid #3e5566;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
             overflow: hidden;
             flex: 1;
             display: flex;
             flex-direction: column;
             height: 100%;
         }
+
         .card-body {
             padding: 28px 32px;
             overflow-y: auto;
             flex: 1;
             background: #1e2a36;
         }
+
         .tree-header {
             padding: 20px 24px 16px;
             border-bottom: 1px solid #3e5566;
             background: #2a3a48;
             flex-shrink: 0;
         }
+
         .tree-header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
         }
+
         .tree-title {
             font-weight: 700;
             font-size: 1.1rem;
@@ -85,9 +101,13 @@
             align-items: center;
             gap: 10px;
         }
-        .tree-title i { color: #2D9CDB; }
+
+        .tree-title i {
+            color: #2D9CDB;
+        }
+
         .add-root-btn {
-            background: rgba(45,156,219,0.2);
+            background: rgba(45, 156, 219, 0.2);
             border: 1px solid #2D9CDB;
             color: #b8d8f0;
             padding: 6px 14px;
@@ -100,15 +120,18 @@
             align-items: center;
             gap: 6px;
         }
+
         .add-root-btn:hover {
-            background: rgba(45,156,219,0.35);
+            background: rgba(45, 156, 219, 0.35);
             border-color: #4DB8F0;
             color: white;
         }
+
         .search-box {
             position: relative;
             width: 100%;
         }
+
         .search-box i {
             position: absolute;
             left: 14px;
@@ -117,6 +140,7 @@
             color: #8fa8b8;
             font-size: 0.9rem;
         }
+
         .search-box input {
             width: 100%;
             padding: 10px 14px 10px 40px;
@@ -126,13 +150,15 @@
             color: #e8edf4;
             font-size: 0.85rem;
             transition: 0.2s;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
+
         .search-box input:focus {
             border-color: #2D9CDB;
             outline: none;
-            box-shadow: 0 0 0 3px rgba(45,156,219,0.25);
+            box-shadow: 0 0 0 3px rgba(45, 156, 219, 0.25);
         }
+
         .search-loading {
             position: absolute;
             right: 14px;
@@ -142,6 +168,7 @@
             font-size: 0.8rem;
             pointer-events: none;
         }
+
         .tree-scroll {
             flex: 1;
             overflow-y: auto;
@@ -150,13 +177,21 @@
             display: flex;
             flex-direction: column;
         }
+
         .tree-node, .tree-node ul, .node-item {
             list-style: none !important;
             margin: 0;
             padding-left: 0;
         }
-        .tree-node ul { padding-left: 28px; }
-        .node-item { margin: 2px 0; }
+
+        .tree-node ul {
+            padding-left: 28px;
+        }
+
+        .node-item {
+            margin: 2px 0;
+        }
+
         .node-content {
             display: flex;
             align-items: center;
@@ -168,26 +203,48 @@
             font-size: 0.9rem;
             color: #c8d8e8;
         }
+
         .node-content:hover {
-            background: rgba(45,156,219,0.12);
+            background: rgba(45, 156, 219, 0.12);
             color: #e8edf4;
         }
+
         .active-cat {
             background: linear-gradient(135deg, #1a2a3a, #233544);
             color: #e0ecf5 !important;
             border-left: 3px solid #2D9CDB;
             font-weight: 500;
         }
-        .node-content.search-match-node { background: transparent !important; border-left: none !important; box-shadow: none !important; }
-        .node-content.search-match-node .node-name span { color: #fbbf24 !important; font-weight: 700 !important; text-shadow: 0 0 4px rgba(251,191,36,0.6); }
-        .node-content.search-match-node .node-icon-img { box-shadow: 0 0 10px #fbbf24, 0 0 4px rgba(0,0,0,0.5); border-radius: 8px; transform: scale(1.1); }
-        .node-content.search-match-node:hover .node-name span { color: #fcd34d !important; }
+
+        .node-content.search-match-node {
+            background: transparent !important;
+            border-left: none !important;
+            box-shadow: none !important;
+        }
+
+        .node-content.search-match-node .node-name span {
+            color: #fbbf24 !important;
+            font-weight: 700 !important;
+            text-shadow: 0 0 4px rgba(251, 191, 36, 0.6);
+        }
+
+        .node-content.search-match-node .node-icon-img {
+            box-shadow: 0 0 10px #fbbf24, 0 0 4px rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            transform: scale(1.1);
+        }
+
+        .node-content.search-match-node:hover .node-name span {
+            color: #fcd34d !important;
+        }
+
         .node-name {
             display: flex;
             align-items: center;
             gap: 8px;
             flex: 1;
         }
+
         .toggle-box {
             display: inline-flex;
             justify-content: center;
@@ -204,13 +261,15 @@
             transition: 0.1s;
             user-select: none;
             flex-shrink: 0;
-            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
         }
+
         .toggle-box:hover {
             background: #2a3a48;
             border-color: #2D9CDB;
             color: #2D9CDB;
         }
+
         .node-icon-img {
             width: 20px;
             height: 20px;
@@ -220,12 +279,17 @@
             flex-shrink: 0;
             transition: all 0.15s ease;
         }
+
         .node-actions {
             display: none;
             gap: 6px;
             margin-left: 8px;
         }
-        .node-content:hover .node-actions { display: flex; }
+
+        .node-content:hover .node-actions {
+            display: flex;
+        }
+
         .node-actions i {
             font-size: 0.7rem;
             padding: 5px;
@@ -233,12 +297,14 @@
             background: #15222e;
             color: #8fa8b8;
             cursor: pointer;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
+
         .node-actions i:hover {
             background: #2a3a48;
             color: #2D9CDB;
         }
+
         .card-header {
             padding: 20px 28px;
             border-bottom: 1px solid #3e5566;
@@ -248,6 +314,7 @@
             flex-wrap: wrap;
             flex-shrink: 0;
         }
+
         .card-header h2 {
             font-size: 1.3rem;
             font-weight: 600;
@@ -256,25 +323,32 @@
             gap: 10px;
             color: #e8edf4;
         }
+
         .add-mode-badge {
-            background: rgba(45,156,219,0.2);
+            background: rgba(45, 156, 219, 0.2);
             border-radius: 20px;
             padding: 4px 12px;
             font-size: 0.75rem;
             color: #7AC9FF;
             margin-left: 12px;
         }
+
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 24px 32px;
         }
-        .full-width { grid-column: 1 / -1; }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
         .field-group {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
+
         .field-group label {
             font-size: 0.8rem;
             font-weight: 600;
@@ -282,7 +356,13 @@
             color: #7AC9FF;
             letter-spacing: 0.3px;
         }
-        .required-star { color: #f87171; margin-left: 4px; font-size: 0.8rem; }
+
+        .required-star {
+            color: #f87171;
+            margin-left: 4px;
+            font-size: 0.8rem;
+        }
+
         input, select, textarea {
             background: #15222e;
             border: 1px solid #3e5566;
@@ -293,12 +373,17 @@
             color: #e8edf4;
             font-family: 'Inter', monospace;
         }
+
         input:focus, select:focus, textarea:focus {
             border-color: #2D9CDB;
-            box-shadow: 0 0 0 3px rgba(45,156,219,0.2);
+            box-shadow: 0 0 0 3px rgba(45, 156, 219, 0.2);
             outline: none;
         }
-        .field-group select { width: 100%; }
+
+        .field-group select {
+            width: 100%;
+        }
+
         .btn-group {
             display: flex;
             flex-wrap: wrap;
@@ -306,6 +391,7 @@
             margin-top: 24px;
             justify-content: flex-end;
         }
+
         button {
             background: #2a3a48;
             border: 1px solid #3e5566;
@@ -319,29 +405,70 @@
             align-items: center;
             gap: 8px;
             color: #c8d8e8;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
+
         button.primary {
             background: linear-gradient(135deg, #2D9CDB, #4DB8F0);
             border: none;
             color: white;
-            box-shadow: 0 4px 8px rgba(45,156,219,0.3);
+            box-shadow: 0 4px 8px rgba(45, 156, 219, 0.3);
         }
-        button.primary:hover { background: linear-gradient(135deg, #1a8bc8, #3EACEB); transform: translateY(-1px); }
-        button.danger { background: #4d2e2e; border-color: #6a4242; color: #f5c8b8; }
-        button.danger:hover { background: #6a3a3a; }
-        button.warning { background: #8a4a1a; border-color: #b86a2a; color: #fffbeb; }
-        button.warning:hover { background: #7a3a10; }
-        button.info { background: #1a4a5a; border-color: #2a6a7a; color: #cffafe; }
-        button.info:hover { background: #1a5a6a; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        hr { margin: 28px 0 20px; border: none; border-top: 1px solid #3e5566; }
+
+        button.primary:hover {
+            background: linear-gradient(135deg, #1a8bc8, #3EACEB);
+            transform: translateY(-1px);
+        }
+
+        button.danger {
+            background: #4d2e2e;
+            border-color: #6a4242;
+            color: #f5c8b8;
+        }
+
+        button.danger:hover {
+            background: #6a3a3a;
+        }
+
+        button.warning {
+            background: #8a4a1a;
+            border-color: #b86a2a;
+            color: #fffbeb;
+        }
+
+        button.warning:hover {
+            background: #7a3a10;
+        }
+
+        button.info {
+            background: #1a4a5a;
+            border-color: #2a6a7a;
+            color: #cffafe;
+        }
+
+        button.info:hover {
+            background: #1a5a6a;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        hr {
+            margin: 28px 0 20px;
+            border: none;
+            border-top: 1px solid #3e5566;
+        }
+
         .extended-section {
             background: #1e2a36;
             border-radius: 24px;
             padding: 16px 0 8px;
             margin-top: 12px;
         }
+
         .section-mini-title {
             font-weight: 600;
             margin: 12px 0 18px;
@@ -353,6 +480,7 @@
             padding-left: 16px;
             color: #e8edf4;
         }
+
         .attr-selector {
             background: #2a3a48;
             border-radius: 20px;
@@ -365,12 +493,14 @@
             flex-wrap: wrap;
             gap: 14px;
         }
+
         .attr-selector-left {
             display: flex;
             align-items: center;
             gap: 14px;
             flex-wrap: wrap;
         }
+
         .badge-count {
             background: #15222e;
             padding: 4px 12px;
@@ -379,43 +509,56 @@
             color: #7AC9FF;
             font-weight: 500;
         }
+
         .attr-actions {
             display: flex;
             gap: 10px;
             align-items: center;
         }
+
         .icon-url-wrapper {
             display: flex;
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
         }
-        .icon-url-wrapper input { flex: 1; min-width: 200px; }
+
+        .icon-url-wrapper input {
+            flex: 1;
+            min-width: 200px;
+        }
+
         .icon-actions button {
             padding: 8px 16px;
             background: #2a3a48;
             border: 1px solid #3e5566;
             font-size: 0.75rem;
         }
+
         .modal-mask {
             position: fixed;
             z-index: 2000;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.7);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(8px);
             display: flex;
             justify-content: center;
             align-items: center;
         }
+
         .modal-container {
             background: #2a3a48;
             border-radius: 32px;
-            box-shadow: 0 25px 40px -12px rgba(0,0,0,0.5);
+            box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.5);
             overflow: hidden;
             width: auto;
             max-width: 80vw;
             border: 1px solid #3e5566;
         }
+
         .modal-header {
             padding: 16px 24px;
             background: #1e2a36;
@@ -424,9 +567,26 @@
             justify-content: space-between;
             align-items: center;
         }
-        .modal-header h3 { color: #e8edf4; font-size: 1rem; font-weight: 600; }
-        .modal-close { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #8fa8b8; line-height: 1; }
-        .modal-close:hover { color: #f87171; }
+
+        .modal-header h3 {
+            color: #e8edf4;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #8fa8b8;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: #f87171;
+        }
+
         .modal-body {
             padding: 24px;
             text-align: center;
@@ -438,12 +598,14 @@
             justify-content: center;
             background: #1e2a36;
         }
+
         .modal-body img {
             max-width: 100%;
             max-height: 60vh;
             border-radius: 20px;
             display: block;
         }
+
         .preview-error {
             color: #f87171;
             font-size: 0.9rem;
@@ -452,12 +614,38 @@
             align-items: center;
             gap: 12px;
         }
-        .preview-error i { font-size: 3rem; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #1e2a36; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #3e5566; border-radius: 10px; }
-        .loading-placeholder { text-align: center; padding: 40px; color: #8fa8b8; }
-        .empty-placeholder { text-align: center; padding: 40px; color: #8fa8b8; }
+
+        .preview-error i {
+            font-size: 3rem;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e2a36;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3e5566;
+            border-radius: 10px;
+        }
+
+        .loading-placeholder {
+            text-align: center;
+            padding: 40px;
+            color: #8fa8b8;
+        }
+
+        .empty-placeholder {
+            text-align: center;
+            padding: 40px;
+            color: #8fa8b8;
+        }
+
         .error-banner {
             background: #2a3a48;
             border: none;
@@ -469,11 +657,12 @@
             justify-content: space-between;
             flex-wrap: nowrap;
             gap: 8px 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             color: #fca5a5;
             font-size: 0.7rem;
             width: 100%;
         }
+
         .error-banner .retry-btn {
             background: #dc2626;
             border: none;
@@ -488,25 +677,58 @@
             white-space: nowrap;
             flex-shrink: 0;
         }
-        .error-banner .retry-btn:hover { background: #b91c1c; }
-        .error-banner .retry-btn:active { transform: scale(0.96); }
-        .error-banner i { margin-right: 4px; }
-        @keyframes highlight-flash {
-            0% { background: rgba(251,191,36,0.5); border-left-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.3); }
-            70% { background: rgba(251,191,36,0.15); border-left-color: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.1); }
-            100% { background: transparent; border-left-color: transparent; box-shadow: none; }
+
+        .error-banner .retry-btn:hover {
+            background: #b91c1c;
         }
+
+        .error-banner .retry-btn:active {
+            transform: scale(0.96);
+        }
+
+        .error-banner i {
+            margin-right: 4px;
+        }
+
+        @keyframes highlight-flash {
+            0% {
+                background: rgba(251, 191, 36, 0.5);
+                border-left-color: #fbbf24;
+                box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+            }
+            70% {
+                background: rgba(251, 191, 36, 0.15);
+                border-left-color: #fbbf24;
+                box-shadow: 0 0 8px rgba(251, 191, 36, 0.1);
+            }
+            100% {
+                background: transparent;
+                border-left-color: transparent;
+                box-shadow: none;
+            }
+        }
+
         .node-content.highlight-new {
             animation: highlight-flash 1.8s ease-out forwards;
             border-left: 3px solid #fbbf24 !important;
         }
-        .disabled-select { opacity: 0.7; cursor: not-allowed; }
+
+        .disabled-select {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
 
         /* 响应式保留（原样） */
         @media (max-width: 1000px) {
-            .tree-panel { flex: 0 0 300px; }
-            .right-panel { min-width: 300px; }
+            .tree-panel {
+                flex: 0 0 300px;
+            }
+
+            .right-panel {
+                min-width: 300px;
+            }
         }
+
         @media (max-width: 760px) {
             .app-layout {
                 flex-direction: column;
@@ -515,18 +737,23 @@
                 height: auto;
                 overflow-y: auto;
             }
+
             .tree-panel {
                 flex: none;
                 height: 50vh;
                 min-height: 300px;
                 width: 100%;
             }
+
             .right-panel {
                 min-width: unset;
                 height: 50vh;
                 min-height: 300px;
             }
-            .form-grid { grid-template-columns: 1fr; }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -538,38 +765,40 @@
             <div class="tree-header">
                 <div class="tree-header-top">
                     <div class="tree-title"><i class="fas fa-folder-tree"></i> 类别</div>
-                    <button class="add-root-btn" @click="addChild(null)"><i class="fas fa-plus"></i> 根类</button>
+                    <button @click="addChild(null)" class="add-root-btn"><i class="fas fa-plus"></i> 根类</button>
                 </div>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" v-model="searchKeyword" placeholder="搜索分类..." @input="onSearchInput" @keydown.enter="onSearchEnter">
-                    <i v-if="searchLoading" class="fas fa-spinner fa-pulse search-loading"></i>
+                    <input @input="onSearchInput" @keydown.enter="onSearchEnter" placeholder="搜索分类..." type="text"
+                           v-model="searchKeyword">
+                    <i class="fas fa-spinner fa-pulse search-loading" v-if="searchLoading"></i>
                 </div>
             </div>
             <div class="tree-scroll">
-                <div v-if="loading" class="loading-placeholder"><i class="fas fa-spinner fa-pulse"></i> 加载分类中...</div>
-                <div v-else-if="errorMsg" class="error-banner">
+                <div class="loading-placeholder" v-if="loading"><i class="fas fa-spinner fa-pulse"></i> 加载分类中...
+                </div>
+                <div class="error-banner" v-else-if="errorMsg">
                     <span><i class="fas fa-exclamation-triangle"></i> {{ errorMsg }}</span>
-                    <button class="retry-btn" @click="loadCategories"><i class="fas fa-sync-alt"></i> 重试</button>
+                    <button @click="loadCategories" class="retry-btn"><i class="fas fa-sync-alt"></i> 重试</button>
                 </div>
                 <ul class="tree-node" v-else-if="!loading && categoryTree.length > 0">
                     <tree-item
-                            v-for="node in categoryTree"
+                            :active-id="activeCategory.id"
+                            :depth="1"
+                            :expanded-set="expandedSet"
+                            :highlight-id="highlightNodeId"
                             :key="node.id"
                             :node="node"
-                            :active-id="activeCategory.id"
-                            :expanded-set="expandedSet"
                             :search-match-set="searchMatchSet"
-                            :highlight-id="highlightNodeId"
-                            :depth="1"
-                            @toggle="toggleExpand"
-                            @select="selectCategory"
                             @add-child="addChild"
                             @delete-cat="deleteCategoryNode"
                             @node-updated="onNodeUpdated"
+                            @select="selectCategory"
+                            @toggle="toggleExpand"
+                            v-for="node in categoryTree"
                     ></tree-item>
                 </ul>
-                <div v-else-if="!loading && categoryTree.length === 0" class="empty-placeholder">
+                <div class="empty-placeholder" v-else-if="!loading && categoryTree.length === 0">
                     <i class="fas fa-folder-open"></i> 暂无分类数据
                 </div>
             </div>
@@ -579,89 +808,142 @@
         <div class="right-panel">
             <div class="card">
                 <div class="card-header">
-                    <h2><i class="fas fa-info-circle"></i> 属性<span v-if="isAddMode" class="add-mode-badge"><i class="fas fa-plus-circle"></i> 添加子分类模式</span></h2>
+                    <h2><i class="fas fa-info-circle"></i> 属性<span class="add-mode-badge" v-if="isAddMode"><i
+                            class="fas fa-plus-circle"></i> 添加子分类模式</span></h2>
                 </div>
                 <div class="card-body">
                     <div class="form-grid">
                         <div class="field-group">
-                            <label><i class="fas fa-level-up-alt"></i> 上级分类 <span class="required-star">*</span></label>
+                            <label><i class="fas fa-level-up-alt"></i> 上级分类 <span
+                                    class="required-star">*</span></label>
                             <div v-if="isAddMode && parentForAdd">
                                 <select :disabled="true" class="disabled-select">
                                     <option :value="parentForAdd.id">{{ parentForAdd.name }}</option>
                                 </select>
                             </div>
                             <div v-else-if="activeCategory.id && !isAddMode">
-                                <select v-if="isRootCategory" :disabled="true">
+                                <select :disabled="true" v-if="isRootCategory">
                                     <option :value="activeCategory.id">{{ activeCategory.name.name }}（顶级分类）</option>
                                 </select>
-                                <select v-else v-model="editableCategory.parent_id" :disabled="isSpecialUncategorized">
+                                <select :disabled="isSpecialUncategorized" v-else v-model="editableCategory.parent_id">
                                     <option value="-1">无（顶级分类）</option>
-                                    <option v-for="cat in flatCategoryList" :value="cat.id" :disabled="cat.id === editableCategory.id">{{ cat.name.name }}</option>
+                                    <option :disabled="cat.id === editableCategory.id" :value="cat.id"
+                                            v-for="cat in flatCategoryList">{{ cat.name.name }}
+                                    </option>
                                 </select>
                             </div>
-                            <select v-else :disabled="true"><option value="">请先选择一个分类</option></select>
+                            <select :disabled="true" v-else>
+                                <option value="">请先选择一个分类</option>
+                            </select>
                         </div>
                         <div class="field-group">
                             <label>分类名称 <span class="required-star">*</span></label>
-                            <input ref="categoryNameInput" v-model="editableCategory.name.name" placeholder="例：品质男鞋" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
+                            <input :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized" placeholder="例：品质男鞋"
+                                   ref="categoryNameInput"
+                                   v-model="editableCategory.name.name">
                         </div>
                         <div class="field-group">
                             <label>简称</label>
-                            <input v-model="editableCategory.name.shortName" placeholder="简称" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
+                            <input :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized" placeholder="简称"
+                                   v-model="editableCategory.name.shortName">
                         </div>
                         <div class="field-group full-width">
                             <label>图标URL</label>
                             <div class="icon-url-wrapper">
-                                <input v-model="editableCategory.icon_url" placeholder="https://... 或上传图片" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
+                                <input :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized" placeholder="https://... 或上传图片"
+                                       v-model="editableCategory.icon_url">
                                 <div class="icon-actions">
-                                    <button type="button" @click="triggerFileUpload" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"><i class="fas fa-cloud-upload-alt"></i> 上传</button>
-                                    <button type="button" @click="openModalPreview" :disabled="!editableCategory.icon_url || ((!isValidCategory && !isAddMode) || isSpecialUncategorized)"><i class="fas fa-eye"></i> 预览</button>
+                                    <button :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized" @click="triggerFileUpload"
+                                            type="button"><i
+                                            class="fas fa-cloud-upload-alt"></i> 上传
+                                    </button>
+                                    <button :disabled="!editableCategory.icon_url || ((!isValidCategory && !isAddMode) || isSpecialUncategorized)" @click="openModalPreview"
+                                            type="button">
+                                        <i class="fas fa-eye"></i> 预览
+                                    </button>
                                 </div>
                             </div>
-                            <input type="file" ref="fileInput" style="display:none" accept="image/*" @change="handleFileUpload">
+                            <input @change="handleFileUpload" accept="image/*" ref="fileInput" style="display:none"
+                                   type="file">
                         </div>
                         <div class="field-group full-width">
                             <label>描述</label>
-                            <textarea rows="2" v-model="editableCategory.description" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></textarea>
+                            <textarea :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized" rows="2"
+                                      v-model="editableCategory.description"></textarea>
                         </div>
                     </div>
                     <div class="btn-group" v-if="!isAddMode">
-                        <button @click="restoreOriginal" :disabled="!isModified || !isValidCategory || isSpecialUncategorized" class="info"><i class="fas fa-undo-alt"></i> 恢复</button>
-                        <button @click="updateCurrentCategory" :disabled="!isModified || !isValidCategory || isSpecialUncategorized" class="warning"><i class="fas fa-save"></i> 修改</button>
-                        <button @click="deleteCurrentCategory" :disabled="!isValidCategory || isSpecialUncategorized" class="danger"><i class="fas fa-trash"></i> 删除</button>
+                        <button :disabled="!isModified || !isValidCategory || isSpecialUncategorized"
+                                @click="restoreOriginal" class="info"><i
+                                class="fas fa-undo-alt"></i> 恢复
+                        </button>
+                        <button :disabled="!isModified || !isValidCategory || isSpecialUncategorized"
+                                @click="updateCurrentCategory" class="warning"><i
+                                class="fas fa-save"></i> 修改
+                        </button>
+                        <button :disabled="!isValidCategory || isSpecialUncategorized" @click="deleteCurrentCategory"
+                                class="danger"><i class="fas fa-trash"></i> 删除
+                        </button>
                     </div>
                     <div class="btn-group" v-else>
                         <button @click="cancelAddMode" class="info"><i class="fas fa-times"></i> 取消</button>
                         <button @click="saveNewCategory" class="primary"><i class="fas fa-save"></i> 保存</button>
                     </div>
-                    <hr />
+                    <hr/>
                     <div class="extended-section">
                         <div class="section-mini-title"><i class="fas fa-cog"></i> 扩展属性</div>
                         <div class="attr-selector">
                             <div class="attr-selector-left">
                                 <label>属性名：</label>
-                                <select v-model="selectedExtIdForSelect" @change="onSelectExtFromDropdown" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized">
+                                <select :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized" @change="onSelectExtFromDropdown"
+                                        v-model="selectedExtIdForSelect">
                                     <option value="">-- 选择属性 --</option>
-                                    <option v-for="attr in activeExtList" :value="attr.recordId">{{ attr.displayName }} ({{ attr.fieldName }})</option>
+                                    <option :value="attr.recordId" v-for="attr in activeExtList">{{ attr.displayName }}
+                                        ({{ attr.fieldName }})
+                                    </option>
                                 </select>
-                                <span class="badge-count" v-if="activeExtList.length">共 {{ activeExtList.length }} 个字段</span>
-                                <span v-else class="badge-count">暂无扩展属性</span>
+                                <span class="badge-count" v-if="activeExtList.length">共 {{ activeExtList.length
+                                    }} 个字段</span>
+                                <span class="badge-count" v-else>暂无扩展属性</span>
                             </div>
                             <div class="attr-actions">
-                                <button @click="saveExtAttribute" :disabled="!isSaveEnabled || (!isValidCategory && !isAddMode) || isSpecialUncategorized" class="warning"><i class="fas fa-save"></i> 保存</button>
-                                <button @click="deleteExtAttribute" :disabled="!selectedExtId || (!isValidCategory && !isAddMode) || isSpecialUncategorized" class="danger"><i class="fas fa-trash"></i> 删除</button>
+                                <button :disabled="!isSaveEnabled || (!isValidCategory && !isAddMode) || isSpecialUncategorized"
+                                        @click="saveExtAttribute"
+                                        class="warning"><i class="fas fa-save"></i> 保存
+                                </button>
+                                <button :disabled="!selectedExtId || (!isValidCategory && !isAddMode) || isSpecialUncategorized"
+                                        @click="deleteExtAttribute"
+                                        class="danger"><i class="fas fa-trash"></i> 删除
+                                </button>
                                 <button @click="clearExtForm" class="info"><i class="fas fa-eraser"></i> 清空</button>
                             </div>
                         </div>
                         <div class="form-grid">
-                            <div class="field-group"><label>显示名称 <span class="required-star">*</span></label><input v-model="extForm.displayName" placeholder="例：颜色" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
-                            <div class="field-group"><label>别名 <span class="required-star">*</span></label><input v-model="extForm.fieldName" placeholder="例：YanSe" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
-                            <div class="field-group"><label>默认值</label><input v-model="extForm.defaultValue" placeholder="红色、橙色、绿色" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
-                            <div class="field-group"><label>是否必填</label><select v-model="extForm.isRequired" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"><option>必填</option><option>可选</option></select></div>
-                            <div class="field-group"><label>排序号</label><input type="number" v-model="extForm.sortOrder" :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"></div>
+                            <div class="field-group"><label>显示名称 <span class="required-star">*</span></label><input
+                                    :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized" placeholder="例：颜色"
+                                    v-model="extForm.displayName"></div>
+                            <div class="field-group"><label>别名 <span class="required-star">*</span></label><input
+                                    :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized" placeholder="例：YanSe"
+                                    v-model="extForm.fieldName"></div>
+                            <div class="field-group"><label>默认值</label><input :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"
+                                                                                 placeholder="红色、橙色、绿色"
+                                                                                 v-model="extForm.defaultValue">
+                            </div>
+                            <div class="field-group"><label>是否必填</label><select :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"
+                                                                                    v-model="extForm.isRequired">
+                                <option>必填</option>
+                                <option>可选</option>
+                            </select></div>
+                            <div class="field-group"><label>排序号</label><input :disabled="(!isValidCategory && !isAddMode) || isSpecialUncategorized"
+                                                                                 type="number"
+                                                                                 v-model="extForm.sortOrder">
+                            </div>
                         </div>
                         <div class="btn-group" style="justify-content: flex-start; margin-top: 16px;">
-                            <button @click="syncToSubClass" :disabled="!hasSubCategories || (!isValidCategory && !isAddMode) || isSpecialUncategorized" class="warning"><i class="fas fa-share-alt"></i> 同步应用到子类</button>
+                            <button :disabled="!hasSubCategories || (!isValidCategory && !isAddMode) || isSpecialUncategorized"
+                                    @click="syncToSubClass"
+                                    class="warning"><i class="fas fa-share-alt"></i> 同步应用到子类
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -670,12 +952,17 @@
     </div>
 
     <!-- 预览模态框 -->
-    <div v-if="modalVisible" class="modal-mask" @click.self="modalVisible = false">
+    <div @click.self="modalVisible = false" class="modal-mask" v-if="modalVisible">
         <div class="modal-container">
-            <div class="modal-header"><h3><i class="fas fa-image"></i> 图标预览</h3><button class="modal-close" @click="modalVisible = false">&times;</button></div>
+            <div class="modal-header"><h3><i class="fas fa-image"></i> 图标预览</h3>
+                <button @click="modalVisible = false" class="modal-close">&times;</button>
+            </div>
             <div class="modal-body">
-                <img v-if="!previewError" :src="modalImageUrl" @error="onModalImageError" style="max-width:100%; max-height:60vh; border-radius:20px;">
-                <div v-else class="preview-error"><i class="fas fa-exclamation-triangle"></i><span>图片加载失败，请检查URL地址是否有效</span><span style="font-size:0.7rem; color:#8fa8b8;">{{ modalImageUrl }}</span></div>
+                <img :src="modalImageUrl" @error="onModalImageError" style="max-width:100%; max-height:60vh; border-radius:20px;"
+                     v-if="!previewError">
+                <div class="preview-error" v-else><i
+                        class="fas fa-exclamation-triangle"></i><span>图片加载失败，请检查URL地址是否有效</span><span
+                        style="font-size:0.7rem; color:#8fa8b8;">{{ modalImageUrl }}</span></div>
             </div>
         </div>
     </div>
@@ -683,38 +970,69 @@
 
 <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
 <script>
-    const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+    const {createApp, ref, computed, onMounted, watch, nextTick} = Vue;
 
     // ---------- 工具函数 ----------
     function safeParseBigIntJson(jsonStr) {
         const safeStr = jsonStr.replace(/:\s*(-?\d{16,})(?=\s*[,\]}])/g, ':"$1"');
         return JSON.parse(safeStr);
     }
+
     const API_BASE = 'https://slave.tooo.top/catalog/v1/categories';
+
     async function apiFetch(url, options = {}) {
         const response = await fetch(url, options);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const text = await response.text();
         return safeParseBigIntJson(text);
     }
-    async function fetchChildren(id) { const data = await apiFetch(`${API_BASE}/${id}/children`); return data.categories || []; }
-    async function fetchRoots() { const data = await apiFetch(`${API_BASE}/root`); return data.categories || []; }
-    async function fetchDescendants(id) { const data = await apiFetch(`${API_BASE}/${id}/desc.`); return data.category; }
-    async function searchRemote(keyword) { const encoded = encodeURIComponent(keyword); const url = `${API_BASE}?s=${encoded}&offset=0&limit=64`; const data = await apiFetch(url); return data.categories || []; }
+
+    async function fetchChildren(id) {
+        const data = await apiFetch(`${API_BASE}/${id}/children`);
+        return data.categories || [];
+    }
+
+    async function fetchRoots() {
+        const data = await apiFetch(`${API_BASE}/root`);
+        return data.categories || [];
+    }
+
+    async function fetchDescendants(id) {
+        const data = await apiFetch(`${API_BASE}/${id}/desc.`);
+        return data.category;
+    }
+
+    async function searchRemote(keyword) {
+        const encoded = encodeURIComponent(keyword);
+        const url = `${API_BASE}?s=${encoded}&offset=0&limit=64`;
+        const data = await apiFetch(url);
+        return data.categories || [];
+    }
+
     async function createCategory(payload) {
-        const response = await fetch(API_BASE, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const response = await fetch(API_BASE, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
         if (!response.ok) throw new Error('创建失败');
         const text = await response.text();
         return safeParseBigIntJson(text);
     }
+
     async function updateCategory(id, payload) {
-        const response = await fetch(`${API_BASE}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const response = await fetch(`${API_BASE}/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
         if (!response.ok) throw new Error('更新失败');
         const text = await response.text();
         return safeParseBigIntJson(text);
     }
+
     async function deleteCategory(id) {
-        const response = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+        const response = await fetch(`${API_BASE}/${id}`, {method: 'DELETE'});
         if (!response.ok) throw new Error('删除失败');
         const text = await response.text();
         return text ? safeParseBigIntJson(text) : {};
@@ -728,7 +1046,7 @@
                 throw new Error('节点缺少 id 字段');
             }
             this.id = apiNode.id;
-            this.name = apiNode.name || { name: '', shortName: '' };
+            this.name = apiNode.name || {name: '', shortName: ''};
             this.icon_url = apiNode.icon_url || null;
             let parentId = apiNode.parent_id;
             if (apiNode.parentId !== undefined && parentId === undefined) {
@@ -754,10 +1072,12 @@
             expandedSet: Set,
             searchMatchSet: Set,
             highlightId: [Number, String, null],
-            depth: { type: Number, default: 1 }
+            depth: {type: Number, default: 1}
         },
         emits: ['toggle', 'select', 'add-child', 'delete-cat', 'node-updated'],
-        data() { return { loadingChildren: false }; },
+        data() {
+            return {loadingChildren: false};
+        },
         template: `
           <li class="node-item">
             <div class="node-content"
@@ -800,13 +1120,22 @@
           </li>
         `,
         computed: {
-            isExpanded() { return this.expandedSet.has(this.node.id); },
-            isSearchMatch() { return this.searchMatchSet && this.searchMatchSet.has(this.node.id); },
-            isSpecialNode() { return this.node.id === -1 && this.node.name && this.node.name.name === '未分类'; }
+            isExpanded() {
+                return this.expandedSet.has(this.node.id);
+            },
+            isSearchMatch() {
+                return this.searchMatchSet && this.searchMatchSet.has(this.node.id);
+            },
+            isSpecialNode() {
+                return this.node.id === -1 && this.node.name && this.node.name.name === '未分类';
+            }
         },
         methods: {
             async handleToggle() {
-                if (this.isExpanded) { this.$emit('toggle', this.node.id); return; }
+                if (this.isExpanded) {
+                    this.$emit('toggle', this.node.id);
+                    return;
+                }
                 if (this.node.hasChildren && !this.node.loaded) {
                     this.loadingChildren = true;
                     try {
@@ -815,8 +1144,12 @@
                         this.node.children = newChildren;
                         this.node.loaded = true;
                         this.$emit('node-updated', this.node.id);
-                    } catch (err) { console.error(err);
-                        alert(`加载子分类失败: ${err.message}`); } finally { this.loadingChildren = false; }
+                    } catch (err) {
+                        console.error(err);
+                        alert(`加载子分类失败: ${err.message}`);
+                    } finally {
+                        this.loadingChildren = false;
+                    }
                 }
                 this.$emit('toggle', this.node.id);
             }
@@ -825,17 +1158,19 @@
 
     // ---------- Vue 应用 ----------
     createApp({
-        components: { TreeItem },
+        components: {TreeItem},
         setup() {
             // ===== 数据 =====
             const categoryTree = ref([]);
             const loading = ref(true);
             const errorMsg = ref('');
-            const emptyCategory = { id: null, name: { name: '', shortName: '' }, icon_url: null, parent_id: -1,
-                description: '' };
-            const activeCategory = ref({ ...emptyCategory });
-            const originalCategoryBackup = ref({ ...emptyCategory });
-            const editableCategory = ref({ ...emptyCategory });
+            const emptyCategory = {
+                id: null, name: {name: '', shortName: ''}, icon_url: null, parent_id: -1,
+                description: ''
+            };
+            const activeCategory = ref({...emptyCategory});
+            const originalCategoryBackup = ref({...emptyCategory});
+            const editableCategory = ref({...emptyCategory});
             const allExtAttrs = ref([]);
             const searchKeyword = ref('');
             const expandedSet = ref(new Set());
@@ -862,7 +1197,12 @@
             const isSpecialUncategorized = computed(() => activeCategory.value.id === -1 && activeCategory.value.name && activeCategory.value.name.name === '未分类');
             const flatCategoryList = computed(() => {
                 const all = [];
-                const collect = (nodes) => { for (const node of nodes) { all.push(node); if (node.children) collect(node.children); } };
+                const collect = (nodes) => {
+                    for (const node of nodes) {
+                        all.push(node);
+                        if (node.children) collect(node.children);
+                    }
+                };
                 collect(categoryTree.value);
                 return all.filter(c => c.id !== editableCategory.value.id);
             });
@@ -876,8 +1216,8 @@
             const hasSubCategories = computed(() => flatCategoryList.value.some(c => c.parent_id === activeCategory.value.id));
 
             // ===== 扩展属性表单 =====
-            const extForm = ref({ displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0 });
-            const extBackup = ref({ displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0 });
+            const extForm = ref({displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0});
+            const extBackup = ref({displayName: '', fieldName: '', defaultValue: '', isRequired: '可选', sortOrder: 0});
             const selectedExtId = ref(null);
             const selectedExtIdForSelect = ref('');
             const isSaveEnabled = computed(() => {
@@ -943,7 +1283,10 @@
             }
 
             async function performRemoteSearch(keyword, forceRequest = false) {
-                if (!keyword || keyword.trim() === '') { lastSearchResults.value = []; return; }
+                if (!keyword || keyword.trim() === '') {
+                    lastSearchResults.value = [];
+                    return;
+                }
                 if (keyword === lastSearchKeyword.value && !forceRequest) {
                     if (lastSearchResults.value.length) applyExpansionFromResults(lastSearchResults.value);
                     return;
@@ -955,9 +1298,13 @@
                     lastSearchKeyword.value = keyword;
                     lastSearchResults.value = results;
                     applyExpansionFromResults(results);
-                } catch (err) { console.error(err);
-                    alert('搜索失败: ' + err.message); } finally { searchLoading.value = false;
-                    topSearching.value = false; }
+                } catch (err) {
+                    console.error(err);
+                    alert('搜索失败: ' + err.message);
+                } finally {
+                    searchLoading.value = false;
+                    topSearching.value = false;
+                }
             }
 
             let debounceTimer = null;
@@ -994,12 +1341,15 @@
             function handleNotification() {
                 alert(`您有 ${notificationCount.value} 条通知`);
             }
+
             function handleHelp() {
                 alert('📖 帮助中心\n如需帮助，请联系技术支持。');
             }
+
             function goToSettings() {
                 alert('⚙️ 跳转到用户设置页面');
             }
+
             function handleLogout() {
                 if (confirm('确认退出登录吗？')) {
                     alert('您已退出登录');
@@ -1029,7 +1379,7 @@
                     const roots = await fetchRoots();
                     if (roots.length === 0) {
                         categoryTree.value = [];
-                        activeCategory.value = { ...emptyCategory };
+                        activeCategory.value = {...emptyCategory};
                         refreshEditable();
                         loading.value = false;
                         return;
@@ -1049,7 +1399,7 @@
                     });
                     const trees = await Promise.all(treePromises);
                     categoryTree.value = trees;
-                    activeCategory.value = { ...emptyCategory };
+                    activeCategory.value = {...emptyCategory};
                     refreshEditable();
                     lastSearchResults.value = [];
                     expandedSet.value.clear();
@@ -1058,7 +1408,7 @@
                     console.error(err);
                     errorMsg.value = '获取分类数据失败：' + err.message;
                     categoryTree.value = [];
-                    activeCategory.value = { ...emptyCategory };
+                    activeCategory.value = {...emptyCategory};
                     refreshEditable();
                 } finally {
                     loading.value = false;
@@ -1071,9 +1421,11 @@
                 isAddMode.value = true;
                 highlightNodeId.value = null;
                 if (!parentNode) {
-                    parentForAdd.value = { id: -1, name: "无（顶级分类）" };
-                    editableCategory.value = { id: null, name: { name: '', shortName: '' }, icon_url: null, parent_id: -1,
-                        description: '' };
+                    parentForAdd.value = {id: -1, name: "无（顶级分类）"};
+                    editableCategory.value = {
+                        id: null, name: {name: '', shortName: ''}, icon_url: null, parent_id: -1,
+                        description: ''
+                    };
                 } else {
                     const parentId = parentNode.id;
                     const parentName = parentNode.name.name;
@@ -1083,16 +1435,20 @@
                         return;
                     }
                     if (parentId === -1) {
-                        parentForAdd.value = { id: -1, name: "无（顶级分类）" };
-                        editableCategory.value = { id: null, name: { name: '', shortName: '' }, icon_url: null, parent_id: -1,
-                            description: '' };
+                        parentForAdd.value = {id: -1, name: "无（顶级分类）"};
+                        editableCategory.value = {
+                            id: null, name: {name: '', shortName: ''}, icon_url: null, parent_id: -1,
+                            description: ''
+                        };
                     } else {
-                        parentForAdd.value = { id: parentId, name: parentName };
-                        editableCategory.value = { id: null, name: { name: '', shortName: '' }, icon_url: null,
-                            parent_id: parentId, description: '' };
+                        parentForAdd.value = {id: parentId, name: parentName};
+                        editableCategory.value = {
+                            id: null, name: {name: '', shortName: ''}, icon_url: null,
+                            parent_id: parentId, description: ''
+                        };
                     }
                 }
-                activeCategory.value = { ...emptyCategory };
+                activeCategory.value = {...emptyCategory};
                 nextTick(() => {
                     const input = document.querySelector('.field-group input[placeholder="例：品质男鞋"]');
                     if (input) input.focus();
@@ -1105,7 +1461,9 @@
                 refreshEditable();
             }
 
-            function cancelAddMode() { exitAddMode(); }
+            function cancelAddMode() {
+                exitAddMode();
+            }
 
             // ===== 保存新分类 =====
             async function saveNewCategory() {
@@ -1113,11 +1471,14 @@
                 const newName = editableCategory.value.name.name.trim();
                 if (!newName) {
                     alert("分类名称不能为空");
-                    nextTick(() => { const inp = document.querySelector('.field-group input[placeholder="例：品质男鞋"]'); if (inp) inp.focus(); });
+                    nextTick(() => {
+                        const inp = document.querySelector('.field-group input[placeholder="例：品质男鞋"]');
+                        if (inp) inp.focus();
+                    });
                     return;
                 }
                 const payload = {
-                    name: { name: newName, shortName: editableCategory.value.name.shortName || newName.slice(0, 2) },
+                    name: {name: newName, shortName: editableCategory.value.name.shortName || newName.slice(0, 2)},
                     icon_url: editableCategory.value.icon_url,
                     parent_id: parentForAdd.value.id,
                     description: editableCategory.value.description
@@ -1128,7 +1489,7 @@
                     if (!rawCategory.id && result.id) {
                         rawCategory = result;
                     }
-                    const mapped = { ...rawCategory };
+                    const mapped = {...rawCategory};
                     if (mapped.parentId !== undefined && mapped.parent_id === undefined) {
                         mapped.parent_id = mapped.parentId;
                         delete mapped.parentId;
@@ -1138,7 +1499,7 @@
                         delete mapped.icon;
                     }
                     if (!mapped.name) {
-                        mapped.name = { name: newName, shortName: '' };
+                        mapped.name = {name: newName, shortName: ''};
                     }
                     if (!mapped.name.name) mapped.name.name = newName;
                     if (!mapped.name.shortName) mapped.name.shortName = newName.slice(0, 2);
@@ -1218,27 +1579,38 @@
                 try {
                     const el = document.querySelector(`.node-content[data-id="${nodeId}"]`);
                     if (el) {
-                        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                        setTimeout(() => { highlightNodeId.value = null; }, 2000);
+                        el.scrollIntoView({block: 'center', behavior: 'smooth'});
+                        setTimeout(() => {
+                            highlightNodeId.value = null;
+                        }, 2000);
                     } else {
                         setTimeout(() => {
                             const el2 = document.querySelector(`.node-content[data-id="${nodeId}"]`);
                             if (el2) {
-                                el2.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                                setTimeout(() => { highlightNodeId.value = null; }, 2000);
+                                el2.scrollIntoView({block: 'center', behavior: 'smooth'});
+                                setTimeout(() => {
+                                    highlightNodeId.value = null;
+                                }, 2000);
                             } else {
                                 highlightNodeId.value = null;
                             }
                         }, 300);
                     }
-                } catch (e) { highlightNodeId.value = null; }
+                } catch (e) {
+                    highlightNodeId.value = null;
+                }
             }
 
             // ===== 选择分类 =====
             function selectCategory(id) {
                 if (isAddMode.value) exitAddMode();
                 const allNodes = [];
-                const collect = (nodes) => { for (const node of nodes) { allNodes.push(node); if (node.children) collect(node.children); } };
+                const collect = (nodes) => {
+                    for (const node of nodes) {
+                        allNodes.push(node);
+                        if (node.children) collect(node.children);
+                    }
+                };
                 collect(categoryTree.value);
                 const found = allNodes.find(n => n.id === id);
                 if (found && found.name && found.name.name && found.name.name !== 'undefined') {
@@ -1246,7 +1618,7 @@
                     refreshEditable();
                     clearExtForm();
                 } else {
-                    activeCategory.value = { ...emptyCategory };
+                    activeCategory.value = {...emptyCategory};
                     refreshEditable();
                 }
             }
@@ -1254,15 +1626,17 @@
             function refreshEditable() {
                 if (isAddMode.value) return;
                 if (!isValidCategory.value || isSpecialUncategorized.value) {
-                    editableCategory.value = { ...emptyCategory };
-                    originalCategoryBackup.value = { ...emptyCategory };
+                    editableCategory.value = {...emptyCategory};
+                    originalCategoryBackup.value = {...emptyCategory};
                 } else {
                     editableCategory.value = JSON.parse(JSON.stringify(activeCategory.value));
                     originalCategoryBackup.value = JSON.parse(JSON.stringify(activeCategory.value));
                 }
             }
 
-            function restoreOriginal() { if (isModified.value && isValidCategory.value && !isSpecialUncategorized.value && !isAddMode.value) editableCategory.value = JSON.parse(JSON.stringify(originalCategoryBackup.value)); }
+            function restoreOriginal() {
+                if (isModified.value && isValidCategory.value && !isSpecialUncategorized.value && !isAddMode.value) editableCategory.value = JSON.parse(JSON.stringify(originalCategoryBackup.value));
+            }
 
             // ===== 更新分类 =====
             async function updateCurrentCategory() {
@@ -1279,25 +1653,44 @@
                     alert("无修改");
                     return;
                 }
-                const payload = { id: activeCategory.value.id };
+                const payload = {id: activeCategory.value.id};
                 const orig = originalCategoryBackup.value;
                 const curr = editableCategory.value;
                 let nameChanged = false;
                 let nameObj = {};
-                if (curr.name.name !== orig.name.name) { nameObj.name = curr.name.name;
-                    nameChanged = true; }
-                if (curr.name.shortName !== orig.name.shortName) { nameObj.shortName = curr.name.shortName;
-                    nameChanged = true; }
-                if (nameChanged) { payload.name = nameObj; }
-                if (curr.icon_url !== orig.icon_url) { payload.icon_url = curr.icon_url; }
-                if (curr.description !== orig.description) { payload.description = curr.description; }
+                if (curr.name.name !== orig.name.name) {
+                    nameObj.name = curr.name.name;
+                    nameChanged = true;
+                }
+                if (curr.name.shortName !== orig.name.shortName) {
+                    nameObj.shortName = curr.name.shortName;
+                    nameChanged = true;
+                }
+                if (nameChanged) {
+                    payload.name = nameObj;
+                }
+                if (curr.icon_url !== orig.icon_url) {
+                    payload.icon_url = curr.icon_url;
+                }
+                if (curr.description !== orig.description) {
+                    payload.description = curr.description;
+                }
                 let newParentId = curr.parent_id;
-                if (isRootCategory.value) { newParentId = activeCategory.value.id; }
-                if (newParentId !== orig.parent_id) { payload.parent_id = newParentId; }
+                if (isRootCategory.value) {
+                    newParentId = activeCategory.value.id;
+                }
+                if (newParentId !== orig.parent_id) {
+                    payload.parent_id = newParentId;
+                }
                 try {
                     await updateCategory(activeCategory.value.id, payload);
                     const allNodes = [];
-                    const collect = (nodes) => { for (const node of nodes) { allNodes.push(node); if (node.children) collect(node.children); } };
+                    const collect = (nodes) => {
+                        for (const node of nodes) {
+                            allNodes.push(node);
+                            if (node.children) collect(node.children);
+                        }
+                    };
                     collect(categoryTree.value);
                     const target = allNodes.find(n => n.id === activeCategory.value.id);
                     if (target) {
@@ -1311,15 +1704,20 @@
                     }
                     selectCategory(activeCategory.value.id);
                     alert("更新成功");
-                } catch (err) { console.error(err);
-                    alert(`更新失败: ${err.message}`); }
+                } catch (err) {
+                    console.error(err);
+                    alert(`更新失败: ${err.message}`);
+                }
             }
 
             // ===== 删除分类 =====
             function removeNodeFromTree(nodes, targetId) {
                 for (let i = 0; i < nodes.length; i++) {
                     const node = nodes[i];
-                    if (node.id === targetId) { nodes.splice(i, 1); return true; }
+                    if (node.id === targetId) {
+                        nodes.splice(i, 1);
+                        return true;
+                    }
                     if (node.children && node.children.length) {
                         if (removeNodeFromTree(node.children, targetId)) {
                             node.hasChildren = node.children.length > 0;
@@ -1334,16 +1732,25 @@
                 if (!node) return;
                 const id = node.id;
                 if (isAddMode.value) exitAddMode();
-                if (id === -1) { alert("系统保留分类不可删除"); return; }
+                if (id === -1) {
+                    alert("系统保留分类不可删除");
+                    return;
+                }
                 const rootCount = categoryTree.value.filter(n => n.parent_id === n.id).length;
-                if (node.parent_id === id && rootCount <= 1) { alert("至少保留一个顶级分类"); return; }
+                if (node.parent_id === id && rootCount <= 1) {
+                    alert("至少保留一个顶级分类");
+                    return;
+                }
                 if (!confirm(`永久删除分类“${node.name.name}”及其所有子类？`)) return;
                 try {
                     await deleteCategory(id);
                     let toDeleteIds = new Set();
                     const findNodeAndCollect = (nodes) => {
                         for (const n of nodes) {
-                            if (n.id === id) { collectAllDescendantIds(n, toDeleteIds); return true; }
+                            if (n.id === id) {
+                                collectAllDescendantIds(n, toDeleteIds);
+                                return true;
+                            }
                             if (n.children && findNodeAndCollect(n.children)) return true;
                         }
                         return false;
@@ -1355,13 +1762,18 @@
                         expandedSet.value = newExpanded;
                     }
                     const success = removeNodeFromTree(categoryTree.value, id);
-                    if (!success) { console.warn('本地删除失败，节点不存在'); return; }
+                    if (!success) {
+                        console.warn('本地删除失败，节点不存在');
+                        return;
+                    }
                     if (activeCategory.value.id === id) {
-                        activeCategory.value = { ...emptyCategory };
+                        activeCategory.value = {...emptyCategory};
                         refreshEditable();
                     }
-                } catch (err) { console.error(err);
-                    alert(`删除失败: ${err.message}`); }
+                } catch (err) {
+                    console.error(err);
+                    alert(`删除失败: ${err.message}`);
+                }
             }
 
             function deleteCurrentCategory() {
@@ -1373,8 +1785,10 @@
             // ===== 图标上传预览 =====
             const fileInput = ref(null);
 
-            function triggerFileUpload() { if ((isValidCategory.value || isAddMode.value) && !isSpecialUncategorized.value) fileInput.value.click();
-            else alert("无法修改系统保留分类"); }
+            function triggerFileUpload() {
+                if ((isValidCategory.value || isAddMode.value) && !isSpecialUncategorized.value) fileInput.value.click();
+                else alert("无法修改系统保留分类");
+            }
 
             const handleFileUpload = async (e) => {
                 const file = e.target.files[0];
@@ -1417,18 +1831,29 @@
             const modalImageUrl = ref('');
             const previewError = ref(false);
 
-            function openModalPreview() { const url = editableCategory.value.icon_url; if (url && url.trim()) { modalImageUrl.value = url;
-                previewError.value = false;
-                modalVisible.value = true; } else alert("无图标URL或URL为空"); }
+            function openModalPreview() {
+                const url = editableCategory.value.icon_url;
+                if (url && url.trim()) {
+                    modalImageUrl.value = url;
+                    previewError.value = false;
+                    modalVisible.value = true;
+                } else alert("无图标URL或URL为空");
+            }
 
-            function onModalImageError() { previewError.value = true; }
+            function onModalImageError() {
+                previewError.value = true;
+            }
 
             // ===== 扩展属性 =====
-            function clearExtForm() { extForm.value = { displayName: '', fieldName: '', defaultValue: '', isRequired: '可选',
-                sortOrder: 0 };
-                extBackup.value = { ...extForm.value };
+            function clearExtForm() {
+                extForm.value = {
+                    displayName: '', fieldName: '', defaultValue: '', isRequired: '可选',
+                    sortOrder: 0
+                };
+                extBackup.value = {...extForm.value};
                 selectedExtId.value = null;
-                selectedExtIdForSelect.value = ''; }
+                selectedExtIdForSelect.value = '';
+            }
 
             function onSelectExtFromDropdown() {
                 if ((!isValidCategory.value && !isAddMode.value) || isSpecialUncategorized.value) return;
@@ -1436,10 +1861,15 @@
                 if (rid) {
                     const attr = allExtAttrs.value.find(a => a.recordId === rid);
                     if (attr && attr.classId === activeCategory.value.id) {
-                        const newForm = { displayName: attr.displayName, fieldName: attr.fieldName, defaultValue: attr.defaultValue || '',
-                            isRequired: attr.isRequired, sortOrder: attr.sortOrder };
-                        extForm.value = { ...newForm };
-                        extBackup.value = { ...newForm };
+                        const newForm = {
+                            displayName: attr.displayName,
+                            fieldName: attr.fieldName,
+                            defaultValue: attr.defaultValue || '',
+                            isRequired: attr.isRequired,
+                            sortOrder: attr.sortOrder
+                        };
+                        extForm.value = {...newForm};
+                        extBackup.value = {...newForm};
                         selectedExtId.value = attr.recordId;
                     } else selectedExtIdForSelect.value = '';
                 } else clearExtForm();
@@ -1448,45 +1878,79 @@
             let lastAutoId = 500;
 
             function saveExtAttribute() {
-                if ((!isValidCategory.value && !isAddMode.value) || isSpecialUncategorized.value) { alert("无法修改系统保留分类的扩展属性"); return; }
-                if (!extForm.value.displayName || !extForm.value.displayName.trim()) { alert("显示名称不能为空"); return; }
-                if (!extForm.value.fieldName || !extForm.value.fieldName.trim()) { alert("别名不能为空"); return; }
+                if ((!isValidCategory.value && !isAddMode.value) || isSpecialUncategorized.value) {
+                    alert("无法修改系统保留分类的扩展属性");
+                    return;
+                }
+                if (!extForm.value.displayName || !extForm.value.displayName.trim()) {
+                    alert("显示名称不能为空");
+                    return;
+                }
+                if (!extForm.value.fieldName || !extForm.value.fieldName.trim()) {
+                    alert("别名不能为空");
+                    return;
+                }
                 const currentAlias = extForm.value.fieldName.trim();
                 let duplicate = false;
                 if (selectedExtId.value) duplicate = activeExtList.value.some(a => a.fieldName === currentAlias && a.recordId !== selectedExtId.value);
                 else duplicate = activeExtList.value.some(a => a.fieldName === currentAlias);
-                if (duplicate) { alert("别名已存在，请使用其他别名"); return; }
+                if (duplicate) {
+                    alert("别名已存在，请使用其他别名");
+                    return;
+                }
                 if (selectedExtId.value) {
                     const idx = allExtAttrs.value.findIndex(a => a.recordId === selectedExtId.value);
                     if (idx !== -1) {
-                        allExtAttrs.value[idx] = { ...allExtAttrs.value[idx], displayName: extForm.value.displayName,
+                        allExtAttrs.value[idx] = {
+                            ...allExtAttrs.value[idx], displayName: extForm.value.displayName,
                             fieldName: extForm.value.fieldName, defaultValue: extForm.value.defaultValue,
-                            isRequired: extForm.value.isRequired, sortOrder: extForm.value.sortOrder };
-                        extBackup.value = { ...extForm.value };
+                            isRequired: extForm.value.isRequired, sortOrder: extForm.value.sortOrder
+                        };
+                        extBackup.value = {...extForm.value};
                         alert("属性更新成功");
                     }
                 } else {
-                    const newAttr = { recordId: `${Date.now()}-${Math.random().toString(36).substr(2, 8)}`, classId: activeCategory.value.id,
-                        displayName: extForm.value.displayName, fieldName: extForm.value.fieldName,
-                        defaultValue: extForm.value.defaultValue, isRequired: extForm.value.isRequired,
-                        sortOrder: extForm.value.sortOrder || (activeExtList.value.length + 1), autoId: ++lastAutoId };
+                    const newAttr = {
+                        recordId: `${Date.now()}-${Math.random().toString(36).substr(2, 8)}`,
+                        classId: activeCategory.value.id,
+                        displayName: extForm.value.displayName,
+                        fieldName: extForm.value.fieldName,
+                        defaultValue: extForm.value.defaultValue,
+                        isRequired: extForm.value.isRequired,
+                        sortOrder: extForm.value.sortOrder || (activeExtList.value.length + 1),
+                        autoId: ++lastAutoId
+                    };
                     allExtAttrs.value.push(newAttr);
                     clearExtForm();
                     alert(`属性 "${newAttr.displayName}" 添加成功`);
                 }
             }
 
-            function deleteExtAttribute() { if (!selectedExtId.value) { alert("请选择要删除的属性"); return; } if (confirm("永久删除此扩展属性？")) { allExtAttrs.value = allExtAttrs.value.filter(a => a.recordId !== selectedExtId.value);
-                clearExtForm(); } }
+            function deleteExtAttribute() {
+                if (!selectedExtId.value) {
+                    alert("请选择要删除的属性");
+                    return;
+                }
+                if (confirm("永久删除此扩展属性？")) {
+                    allExtAttrs.value = allExtAttrs.value.filter(a => a.recordId !== selectedExtId.value);
+                    clearExtForm();
+                }
+            }
 
-            function syncToSubClass() { alert("演示: 扩展属性同步子类完成"); }
+            function syncToSubClass() {
+                alert("演示: 扩展属性同步子类完成");
+            }
 
             // ===== 切换展开 =====
-            function toggleExpand(id) { const set = new Set(expandedSet.value); if (set.has(id)) set.delete(id);
-            else set.add(id);
-                expandedSet.value = set; }
+            function toggleExpand(id) {
+                const set = new Set(expandedSet.value);
+                if (set.has(id)) set.delete(id);
+                else set.add(id);
+                expandedSet.value = set;
+            }
 
-            function onNodeUpdated() {}
+            function onNodeUpdated() {
+            }
 
             // ===== 侧边栏折叠切换（已移除，但保留函数） =====
             function toggleSidebar() {
@@ -1496,16 +1960,25 @@
             // 下拉菜单相关（已移除，但保留函数）
             let closeTimer = null;
             const closeDelay = 200;
-            const openDropdown = () => {};
-            const scheduleClose = () => {};
-            const cancelClose = () => {};
+            const openDropdown = () => {
+            };
+            const scheduleClose = () => {
+            };
+            const cancelClose = () => {
+            };
 
-            watch(activeCategory, () => { if (!isAddMode.value) { clearExtForm();
-                refreshEditable(); } });
+            watch(activeCategory, () => {
+                if (!isAddMode.value) {
+                    clearExtForm();
+                    refreshEditable();
+                }
+            });
 
-            onMounted(() => { loadCategories();
+            onMounted(() => {
+                loadCategories();
                 modalVisible.value = false;
-                previewError.value = false; });
+                previewError.value = false;
+            });
 
             return {
                 loading,

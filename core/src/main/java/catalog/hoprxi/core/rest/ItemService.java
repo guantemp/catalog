@@ -81,84 +81,6 @@ public final class ItemService {
             .build();
     private static final ExecutorService VIRTUAL_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
 
-    @Get("/items/{id}")
-    @Description("Retrieves the item information by the given ID.")
-    public Mono<HttpResponse> find(@Param("id") long id) {
-        return QUERY.findAsync(id)
-                .map(byteBuf -> HttpResponse.of(
-                        ResponseHeaders.builder(HttpStatus.OK)
-                                .contentType(MediaType.JSON_UTF_8)
-                                .build(),
-                        HttpData.wrap(byteBuf)
-                ))
-                .onErrorResume(NotFoundException.class, error ->
-                        Mono.just(HttpResponse.of(
-                                ResponseHeaders.builder(HttpStatus.NOT_FOUND)
-                                        .contentType(MediaType.JSON_UTF_8)
-                                        .build(),
-                                HttpData.ofUtf8(String.format("{\"Error\":\"Item not found: %d\"}", id))
-                        ))
-                )
-                .onErrorResume(error ->
-                        Mono.just(HttpResponse.of(
-                                ResponseHeaders.builder(HttpStatus.INTERNAL_SERVER_ERROR)
-                                        .contentType(MediaType.JSON_UTF_8)
-                                        .build(),
-                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
-                        ))
-                );
-    }
-
-    @Get("/items")
-    public HttpResponse search(QueryParams params) {
-        //ServiceRequestContext.current().setRequestTimeoutMillis(60_000);
-        int offset = params.getInt("offset", OFFSET);
-        int size = params.getInt("size", SIZE);
-        String cursor = params.get("cursor", "");
-        SortFieldEnum sortField = SortFieldEnum.of(params.get("sort", "_ID"));
-        // 解析查询 specs（key,cid,bid,filters 价格等）
-        ItemQuerySpec[] querySpecs = ItemService.parseQuerySpecs(params);
-        Flux<ByteBuf> dataFlux = cursor.isBlank()
-                ? QUERY.searchAsync(querySpecs, offset, size, sortField)
-                : QUERY.searchAsync(querySpecs, size, cursor, sortField);
-        // 使用 switchMap：一旦有第一个元素，就前置 headers
-        Flux<HttpObject> responseStream = dataFlux
-                .map(HttpData::wrap)
-                .transform(flux -> {
-                    AtomicBoolean headersSent = new AtomicBoolean(false);
-                    return flux.concatMap(data -> {
-                        if (!headersSent.getAndSet(true)) {
-                            // 第一个数据：先响应头 200，再发数据
-                            return Flux.concat(
-                                    Flux.just(ResponseHeaders.builder(HttpStatus.OK)
-                                            .contentType(MediaType.JSON_UTF_8)
-                                            .build()),
-                                    Flux.just(data)
-                            );
-                        }
-                        return Flux.just(data);
-                    });
-                })
-                .switchIfEmpty(Flux.just(
-                        ResponseHeaders.of(HttpStatus.NOT_FOUND),
-                        HttpData.ofUtf8(String.format("{\"Warn\":\"No items found for search keyword: %s\"}", "query"))
-                ))
-                .onErrorResume(throwable -> {
-                    if (throwable instanceof IllegalArgumentException) {
-                        return Flux.just(
-                                ResponseHeaders.of(HttpStatus.BAD_REQUEST),
-                                HttpData.ofUtf8(String.format("{\"error\":\"Invalid parameter: %s\"}", throwable.getMessage()))
-                        );
-                    }
-                    LOGGER.error("Data stream error", throwable);
-                    return Flux.just(
-                            ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
-                            HttpData.ofUtf8("{\"error\":\"Internal server error\"}")
-                    );
-                });
-        return HttpResponse.of(responseStream);
-    }
-
     private static ItemQuerySpec[] parseQuerySpecs(QueryParams params) {
         List<ItemQuerySpec> filterList = new ArrayList<>();
         Optional.ofNullable(params.get("q"))
@@ -177,9 +99,12 @@ public final class ItemService {
                     String key = keyValue[0].trim();
                     String value = keyValue[1].trim();
                     switch (key) {
-                        case "retail_price", "r_price" -> ItemService.parsePriceSpec(filterList, value, RetailPriceSpec::new);
-                        case "last_receipt_price", "l_r_price" -> ItemService.parsePriceSpec(filterList, value, LastReceiptPriceSpec::new);
-                        case "member_price", "m_price" -> ItemService.parsePriceSpec(filterList, value, MemberPriceSpec::new);
+                        case "retail_price", "r_price" ->
+                                ItemService.parsePriceSpec(filterList, value, RetailPriceSpec::new);
+                        case "last_receipt_price", "l_r_price" ->
+                                ItemService.parsePriceSpec(filterList, value, LastReceiptPriceSpec::new);
+                        case "member_price", "m_price" ->
+                                ItemService.parsePriceSpec(filterList, value, MemberPriceSpec::new);
                         case "vip_price", "v_price" -> ItemService.parsePriceSpec(filterList, value, VipPriceSpec::new);
                         default -> { /* 未知条件忽略，可记录日志 */ }
                     }
@@ -209,12 +134,6 @@ public final class ItemService {
                 .mapToLong(Long::longValue)
                 .toArray();
         return ids.length > 0 ? Optional.of(ids) : Optional.empty();
-    }
-
-
-    @FunctionalInterface
-    private interface PriceSpecFactory {
-        ItemQuerySpec create(Double min, Double max); // 允许 null
     }
 
     // ---------- 解析价格区间（支持部分有效） ----------
@@ -263,51 +182,8 @@ public final class ItemService {
         }
     }
 
-    private static  String mapQuerySpec(ItemQuerySpec[] specs){
+    private static String mapQuerySpec(ItemQuerySpec[] specs) {
         return "query";
-    }
-
-    @Get("/items/suggest")
-    public Mono<HttpResponse> suggest(@Param("word") String word) {
-        return QUERY.suggest(word)
-                .map(byteBuf -> HttpResponse.of(
-                        ResponseHeaders.builder(HttpStatus.OK)
-                                .contentType(MediaType.JSON_UTF_8)
-                                .build(),
-                        HttpData.wrap(byteBuf)
-                ))
-                .onErrorResume(NotFoundException.class, e ->
-                        Mono.just(HttpResponse.of(
-                                ResponseHeaders.builder(HttpStatus.NOT_FOUND).contentType(MediaType.JSON_UTF_8).build(),
-                                HttpData.ofUtf8("{\"Error\":\"not found\"}")
-                        ))
-                )
-                .onErrorResume(e ->
-                        Mono.just(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                                "{\"status\":fail,\"code\":500,\"message\":\"Internal server error,cause by %s\"}", e))
-                );
-    }
-
-    @Post("/items")
-    public HttpResponse create(ServiceRequestContext ctx, HttpData body) {
-        RequestHeaders headers = ctx.request().headers();
-        if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) ||
-              MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
-            return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-                    MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
-        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
-        ctx.blockingTaskExecutor().execute(() -> {
-            try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
-                Item item = ItemService.createItem(parser);
-                future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
-                        "{\"status\":\"success\",\"code\":201,\"message\":\"A item created,it's %s\"}", item));
-            } catch (Exception e) {
-                LOGGER.warn(e.getMessage(), e);
-                future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
-                        "{\"status\":fail,\"code\":500,\"message\":\"Can't create a item,cause by %s\"}", e));
-            }
-        });
-        return HttpResponse.of(future);
     }
 
     private static Item createItem(JsonParser parser) throws IOException {
@@ -459,6 +335,127 @@ public final class ItemService {
         }
     }
 
+    @Get("/items/{id}")
+    @Description("Retrieves the item information by the given ID.")
+    public Mono<HttpResponse> find(@Param("id") long id) {
+        return QUERY.findAsync(id)
+                .map(byteBuf -> HttpResponse.of(
+                        ResponseHeaders.builder(HttpStatus.OK)
+                                .contentType(MediaType.JSON_UTF_8)
+                                .build(),
+                        HttpData.wrap(byteBuf)
+                ))
+                .onErrorResume(NotFoundException.class, error ->
+                        Mono.just(HttpResponse.of(
+                                ResponseHeaders.builder(HttpStatus.NOT_FOUND)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build(),
+                                HttpData.ofUtf8(String.format("{\"Error\":\"Item not found: %d\"}", id))
+                        ))
+                )
+                .onErrorResume(error ->
+                        Mono.just(HttpResponse.of(
+                                ResponseHeaders.builder(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .contentType(MediaType.JSON_UTF_8)
+                                        .build(),
+                                HttpData.ofUtf8("{\"Error\":\"Internal server error\"}")
+                        ))
+                );
+    }
+
+    @Get("/items")
+    public HttpResponse search(QueryParams params) {
+        //ServiceRequestContext.current().setRequestTimeoutMillis(60_000);
+        int offset = params.getInt("offset", OFFSET);
+        int size = params.getInt("size", SIZE);
+        String cursor = params.get("cursor", "");
+        SortFieldEnum sortField = SortFieldEnum.of(params.get("sort", "_ID"));
+        // 解析查询 specs（key,cid,bid,filters 价格等）
+        ItemQuerySpec[] querySpecs = ItemService.parseQuerySpecs(params);
+        Flux<ByteBuf> dataFlux = cursor.isBlank()
+                ? QUERY.searchAsync(querySpecs, offset, size, sortField)
+                : QUERY.searchAsync(querySpecs, size, cursor, sortField);
+        // 使用 switchMap：一旦有第一个元素，就前置 headers
+        Flux<HttpObject> responseStream = dataFlux
+                .map(HttpData::wrap)
+                .transform(flux -> {
+                    AtomicBoolean headersSent = new AtomicBoolean(false);
+                    return flux.concatMap(data -> {
+                        if (!headersSent.getAndSet(true)) {
+                            // 第一个数据：先响应头 200，再发数据
+                            return Flux.concat(
+                                    Flux.just(ResponseHeaders.builder(HttpStatus.OK)
+                                            .contentType(MediaType.JSON_UTF_8)
+                                            .build()),
+                                    Flux.just(data)
+                            );
+                        }
+                        return Flux.just(data);
+                    });
+                })
+                .switchIfEmpty(Flux.just(
+                        ResponseHeaders.of(HttpStatus.NOT_FOUND),
+                        HttpData.ofUtf8(String.format("{\"Warn\":\"No items found for search keyword: %s\"}", "query"))
+                ))
+                .onErrorResume(throwable -> {
+                    if (throwable instanceof IllegalArgumentException) {
+                        return Flux.just(
+                                ResponseHeaders.of(HttpStatus.BAD_REQUEST),
+                                HttpData.ofUtf8(String.format("{\"error\":\"Invalid parameter: %s\"}", throwable.getMessage()))
+                        );
+                    }
+                    LOGGER.error("Data stream error", throwable);
+                    return Flux.just(
+                            ResponseHeaders.of(HttpStatus.INTERNAL_SERVER_ERROR),
+                            HttpData.ofUtf8("{\"error\":\"Internal server error\"}")
+                    );
+                });
+        return HttpResponse.of(responseStream);
+    }
+
+    @Get("/items/suggest")
+    public Mono<HttpResponse> suggest(@Param("word") String word) {
+        return QUERY.suggest(word)
+                .map(byteBuf -> HttpResponse.of(
+                        ResponseHeaders.builder(HttpStatus.OK)
+                                .contentType(MediaType.JSON_UTF_8)
+                                .build(),
+                        HttpData.wrap(byteBuf)
+                ))
+                .onErrorResume(NotFoundException.class, e ->
+                        Mono.just(HttpResponse.of(
+                                ResponseHeaders.builder(HttpStatus.NOT_FOUND).contentType(MediaType.JSON_UTF_8).build(),
+                                HttpData.ofUtf8("{\"Error\":\"not found\"}")
+                        ))
+                )
+                .onErrorResume(e ->
+                        Mono.just(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                                "{\"status\":fail,\"code\":500,\"message\":\"Internal server error,cause by %s\"}", e))
+                );
+    }
+
+    @Post("/items")
+    public HttpResponse create(ServiceRequestContext ctx, HttpData body) {
+        RequestHeaders headers = ctx.request().headers();
+        if (!(MediaType.JSON.is(Objects.requireNonNull(headers.contentType())) ||
+              MediaType.JSON_UTF_8.is(Objects.requireNonNull(headers.contentType()))))
+            return HttpResponse.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    MediaType.PLAIN_TEXT_UTF_8, "Expected JSON content");
+        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
+        ctx.blockingTaskExecutor().execute(() -> {
+            try (JsonParser parser = JSON_FACTORY.createParser(body.toInputStream())) {
+                Item item = ItemService.createItem(parser);
+                future.complete(HttpResponse.of(HttpStatus.CREATED, MediaType.JSON_UTF_8,
+                        "{\"status\":\"success\",\"code\":201,\"message\":\"A item created,it's %s\"}", item));
+            } catch (Exception e) {
+                LOGGER.warn(e.getMessage(), e);
+                future.complete(HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
+                        "{\"status\":fail,\"code\":500,\"message\":\"Can't create a item,cause by %s\"}", e));
+            }
+        });
+        return HttpResponse.of(future);
+    }
+
     @Put("/items/{id}")
     public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id) {
         RequestHeaders headers = ctx.request().headers();
@@ -506,5 +503,10 @@ public final class ItemService {
                         "{\"status\":\"error\",\"code\":500,\"message\":\"Delete failed due to internal error\"}");
             }
         }, VIRTUAL_EXECUTOR));
+    }
+
+    @FunctionalInterface
+    private interface PriceSpecFactory {
+        ItemQuerySpec create(Double min, Double max); // 允许 null
     }
 }

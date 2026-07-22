@@ -36,17 +36,6 @@ import java.util.regex.Pattern;
 public class IdHandler implements EventHandler<ItemImportEvent>, WorkHandler<ItemImportEvent> {
     private static final Pattern ID_PATTERN = Pattern.compile("^\\d{7,19}$");
 
-    @Override
-    public void onEvent(ItemImportEvent event, long l, boolean b) {
-        String id = event.map.get(ItemMapping.ID);
-        if (id == null || id.isBlank() || !ID_PATTERN.matcher(id).matches()) {
-            event.generatedId=LongId.generate();
-            return;
-        }
-        if (ID_PATTERN.matcher(id).matches() && IdHandler.isExist(id))
-            event.addWrong(Verify.ID_REPEAT,id);
-    }
-
     private static boolean isExist(String id) {
         final String query = "select id from item where id = ?";
         try (Connection connection = PsqlUtil.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
@@ -59,6 +48,17 @@ public class IdHandler implements EventHandler<ItemImportEvent>, WorkHandler<Ite
             e.printStackTrace();
         }
         return false;
+    }
+
+    @Override
+    public void onEvent(ItemImportEvent event, long l, boolean b) {
+        String id = event.map.get(ItemMapping.ID);
+        if (id == null || id.isBlank() || !ID_PATTERN.matcher(id).matches()) {
+            event.generatedId = LongId.generate();
+            return;
+        }
+        if (ID_PATTERN.matcher(id).matches() && IdHandler.isExist(id))
+            event.addWrong(Verify.ID_REPEAT, id);
     }
 
     @Override

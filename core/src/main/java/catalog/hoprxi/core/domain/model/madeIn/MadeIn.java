@@ -40,7 +40,7 @@ public interface MadeIn {
         @Override
         public String toString() {
             return new StringJoiner(", ", "MadeIn[", "]")
-                    .add("madeIn='"+Label.MADIN_UNORIGINATED+"'")
+                    .add("madeIn='" + Label.MADIN_UNORIGINATED + "'")
                     .add("code='-1'")
                     .toString();
         }

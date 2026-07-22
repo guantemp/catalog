@@ -56,6 +56,41 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
         DELIMITER = config.hasPath("brand_delimiter") ? config.getString("brand_delimiter") : "/";
     }
 
+    private static long findIdByName(String name, String shortName) {
+        final String query = """
+                SELECT id FROM brand 
+                WHERE name::jsonb->>'name' = ? OR name::jsonb->>'shortName' = ?
+                ORDER BY (name::jsonb->>'name' = ?) DESC 
+                LIMIT 1""";
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement ps = connection.prepareStatement(query)) {
+            ps.setString(1, name);
+            ps.setString(2, shortName != null ? shortName : name);
+            ps.setString(3, name); // 对应 ORDER BY
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getLong("id");
+            }
+        } catch (SQLException e) {
+            LOGGER.error("查询品牌失败: {}", name, e);
+        }
+        return Long.MIN_VALUE;
+    }
+
+    private static boolean isExists(long id) {
+        if (id == Brand.UNBRANDED.id()) return true;
+        String query = "SELECT id FROM brand WHERE id = ?";
+        try (Connection conn = PsqlUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Failed to check existence of brand id={}", id, e);
+            return false;
+        }
+    }
+
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
         event.brandId = Brand.UNBRANDED.id();
@@ -95,42 +130,6 @@ public class BrandHandler implements EventHandler<ItemImportEvent>, WorkHandler<
             return newBrand.id();
         });
     }
-
-    private static long findIdByName(String name, String shortName) {
-        final String query = """
-                SELECT id FROM brand 
-                WHERE name::jsonb->>'name' = ? OR name::jsonb->>'shortName' = ?
-                ORDER BY (name::jsonb->>'name' = ?) DESC 
-                LIMIT 1""";
-        try (Connection connection = PsqlUtil.getConnection();
-             PreparedStatement ps = connection.prepareStatement(query)) {
-            ps.setString(1, name);
-            ps.setString(2, shortName != null ? shortName : name);
-            ps.setString(3, name); // 对应 ORDER BY
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getLong("id");
-            }
-        } catch (SQLException e) {
-            LOGGER.error("查询品牌失败: {}", name, e);
-        }
-        return Long.MIN_VALUE;
-    }
-
-    private static boolean isExists(long id) {
-        if (id == Brand.UNBRANDED.id()) return true;
-        String query = "SELECT id FROM brand WHERE id = ?";
-        try (Connection conn = PsqlUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setLong(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-        } catch (SQLException e) {
-            LOGGER.error("Failed to check existence of brand id={}", id, e);
-            return false;
-        }
-    }
-
 
     @Override
     public void onEvent(ItemImportEvent event) throws Exception {

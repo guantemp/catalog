@@ -55,24 +55,6 @@ public class ESCategoryQuery implements CategoryQuery {
             .build();
     private static final int MAX_SIZE = 999;
 
-    @Override
-    public InputStream root() {
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESCategoryQuery.buildRootRequest());
-
-        return ReactiveStream.toByteBufInputStream(request, "categories", "root");
-    }
-
-    @Override
-    public Flux<ByteBuf> rootAsync() {
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESCategoryQuery.buildRootRequest());
-
-        return ReactiveStream.toFluxByteBuf(request, "categories", "root");
-    }
-
     private static String buildRootRequest() {
         try (StringWriter writer = new StringWriter(); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -100,40 +82,6 @@ public class ESCategoryQuery implements CategoryQuery {
             LOGGER.error("Cannot assemble request JSON", e);
             throw new IllegalStateException("Cannot assemble request JSON");
         }
-    }
-
-    @Override
-    public InputStream find(long id) {
-        Request request = new Request("GET", PREFIX + "/_doc/" + id);
-        request.setOptions(ESUtil.requestOptions());
-
-        return ReactiveStream.toSingleByteBufInputStream(request, String.valueOf(id));
-    }
-
-    @Override
-    public Mono<ByteBuf> findAsync(long id) {
-        Request request = new Request("GET", PREFIX + "/_doc/" + id);
-        request.setOptions(ESUtil.requestOptions());
-
-        return ReactiveStream.toMonoByteBuf(request, String.valueOf(id));
-    }
-
-    @Override
-    public InputStream children(long id) {
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESCategoryQuery.buildChildrenRequest(id));
-
-        return ReactiveStream.toSingleByteBufInputStream(request, String.valueOf(id));
-    }
-
-    @Override
-    public Flux<ByteBuf> childrenAsync(long id) {
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESCategoryQuery.buildChildrenRequest(id));
-
-        return ReactiveStream.toFluxByteBuf(request, "categories", String.valueOf(id));
     }
 
     private static String buildChildrenRequest(long id) {
@@ -172,113 +120,6 @@ public class ESCategoryQuery implements CategoryQuery {
             LOGGER.error("Cannot assemble request JSON", e);
             throw new IllegalStateException("Cannot assemble request JSON", e);
         }
-    }
-
-    @Override
-    public InputStream descendants(long id) {
-        long familyId = -1;
-        int left = 1, right = 1;
-        Request request = new Request("GET", PREFIX + "/_doc/" + id);
-        request.setOptions(ESUtil.requestOptions());
-        try {
-            Response response = ESUtil.restClient().performRequest(request);
-            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content)) {
-                while (parser.nextToken() != null) {
-                    JsonToken jsonToken = parser.currentToken();
-                    if (JsonToken.FIELD_NAME == jsonToken) {
-                        String fieldName = parser.currentName();
-                        parser.nextToken();
-                        switch (fieldName) {
-                            case "family_id" -> familyId = parser.getValueAsLong();
-                            case "left" -> left = parser.getValueAsInt();
-                            case "right" -> right = parser.getValueAsInt();
-                        }
-                    }
-                }
-            } finally {
-                EntityUtils.consumeQuietly(response.getEntity());// 必须静默消费实体，防止连接泄漏
-            }
-        } catch (ResponseException e) {
-            LOGGER.error("Failed to query category by id: {}, response exception", id, e);
-            throw new IllegalStateException(String.format("Failed to query category by id: %d, response exception", id), e);
-        } catch (IOException e) {
-            LOGGER.error("IO exception when querying category by id: {}", id, e);
-            throw new IllegalStateException(String.format("IO exception when querying category by id: %d", id), e);
-        }
-
-        request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESCategoryQuery.buildDescendantRequest(familyId, left, right));
-
-        return ReactiveStream.toByteBufInputStream(request, String.valueOf(id),
-                (parser, generator) -> ESCategoryQuery.extractAsTree(parser, generator, "category"));
-    }
-
-    @Override
-    public Flux<ByteBuf> descendantsAsync(long id) {
-        return Mono.defer(() -> {
-            Sinks.One<Map<String, Object>> sink = Sinks.one();
-            AtomicBoolean isCancelled = new AtomicBoolean(false);
-            Request request = new Request("GET", PREFIX + "/_doc/" + id);
-            request.setOptions(ESUtil.requestOptions());
-
-            Cancellable cancellable = ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
-                @Override
-                public void onSuccess(Response response) {
-                    // 取消标记，和你第二步的逻辑一模一样
-                    if (isCancelled.get()) {
-                        EntityUtils.consumeQuietly(response.getEntity());
-                        sink.tryEmitEmpty();
-                        return;
-                    }
-
-                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content)) {
-                        // 解析完，把结果塞给Mono，和你sink.tryEmitNext 一样
-                        Map<String, Object> nodeInfo = new HashMap<>();
-                        while (parser.nextToken() != null) {
-                            JsonToken jsonToken = parser.currentToken();
-                            if (JsonToken.FIELD_NAME == jsonToken) {
-                                String fieldName = parser.currentName();
-                                parser.nextToken();
-                                switch (fieldName) {
-                                    case "family_id" -> nodeInfo.put("familyId", parser.getValueAsLong());
-                                    case "left" -> nodeInfo.put("left", parser.getValueAsInt());
-                                    case "right" -> nodeInfo.put("right", parser.getValueAsInt());
-                                }
-                            }
-                        }
-                        sink.tryEmitValue(nodeInfo);
-                    } catch (IOException e) {
-                        sink.tryEmitError(new UncheckedIOException(e));
-                    } finally {
-                        EntityUtils.consumeQuietly(response.getEntity());
-                    }
-                }
-
-                @Override
-                public void onFailure(Exception exception) {
-                    // 异常处理，和你第二步的逻辑一模一样
-                    if (isCancelled.get()) return;
-                    LOGGER.error("Failed to query category by id: {}, response exception", id, exception);
-                    sink.tryEmitError(MapException.mapException(exception, id));
-                }
-            });
-
-            return sink.asMono().doOnCancel(() -> {
-                isCancelled.set(true);
-                cancellable.cancel();
-            });
-        }).cast(Map.class).flatMapMany(node -> {
-            long familyId = (long) node.get("familyId");
-            int left = (int) node.get("left");
-            int right = (int) node.get("right");
-            Request request = new Request("GET", SEARCH_ENDPOINT);
-            request.setOptions(ESUtil.requestOptions());
-            request.setJsonEntity(ESCategoryQuery.buildDescendantRequest(familyId, left, right));
-
-            return ReactiveStream.toFluxByteBuf(request, String.valueOf(id),
-                    (parser, generator) -> ESCategoryQuery.extractAsTree(parser, generator, "category"));
-        });
     }
 
     /**
@@ -466,33 +307,6 @@ public class ESCategoryQuery implements CategoryQuery {
         }
     }
 
-
-    @Override
-    public InputStream search(String key, int offset, int size) {
-        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("Offset value range is 0-10000");
-        if (size < 0 || size > 10000) throw new IllegalArgumentException("Size value range is 0-10000");
-        if (size + offset > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
-
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESCategoryQuery.buildKeyRequest(key, offset, size));
-
-        return ReactiveStream.toByteBufInputStream(request, "categories", key);
-    }
-
-    @Override
-    public Flux<ByteBuf> searchAsync(String key, int offset, int size) {
-        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("Offset value range is 0-10000");
-        if (size < 0 || size > 10000) throw new IllegalArgumentException("Size value range is 0-10000");
-        if (size + offset > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
-
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESCategoryQuery.buildKeyRequest(key, offset, size));
-
-        return ReactiveStream.toFluxByteBuf(request, "categories", key);
-    }
-
     private static String buildKeyRequest(String key, int offset, int limit) {
         try (StringWriter writer = new StringWriter(128); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -532,6 +346,240 @@ public class ESCategoryQuery implements CategoryQuery {
             LOGGER.error("Can't assemble name request json", e);
             throw new IllegalStateException("Can't assemble name request json", e);
         }
+    }
+
+    private static String buildPathRequest(long familyId, int left, int right) {
+        try (StringWriter writer = new StringWriter(256); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
+            generator.writeStartObject();
+            generator.writeNumberField("size", MAX_SIZE);
+            generator.writeObjectFieldStart("query");
+            generator.writeObjectFieldStart("bool");
+            generator.writeArrayFieldStart("filter");
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("term");
+            generator.writeNumberField("family_id", familyId);
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("range");
+            generator.writeObjectFieldStart("left");
+            generator.writeNumberField("lte", left);
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeStartObject();
+            generator.writeObjectFieldStart("range");
+            generator.writeObjectFieldStart("right");
+            generator.writeNumberField("gte", right);
+            generator.writeEndObject();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeEndArray();
+            generator.writeEndObject();
+            generator.writeEndObject();
+
+            generator.writeArrayFieldStart("sort");
+            generator.writeStartObject();
+            generator.writeStringField("left", "asc");
+            generator.writeEndObject();
+            generator.writeEndArray();
+
+            generator.writeEndObject();
+            generator.close();
+            return writer.toString();
+        } catch (IOException e) {
+            LOGGER.error("Cannot assemble request JSON", e);
+            throw new IllegalStateException("Cannot assemble request JSON", e);
+        }
+    }
+
+    @Override
+    public InputStream root() {
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESCategoryQuery.buildRootRequest());
+
+        return ReactiveStream.toByteBufInputStream(request, "categories", "root");
+    }
+
+    @Override
+    public Flux<ByteBuf> rootAsync() {
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESCategoryQuery.buildRootRequest());
+
+        return ReactiveStream.toFluxByteBuf(request, "categories", "root");
+    }
+
+    @Override
+    public InputStream find(long id) {
+        Request request = new Request("GET", PREFIX + "/_doc/" + id);
+        request.setOptions(ESUtil.requestOptions());
+
+        return ReactiveStream.toSingleByteBufInputStream(request, String.valueOf(id));
+    }
+
+    @Override
+    public Mono<ByteBuf> findAsync(long id) {
+        Request request = new Request("GET", PREFIX + "/_doc/" + id);
+        request.setOptions(ESUtil.requestOptions());
+
+        return ReactiveStream.toMonoByteBuf(request, String.valueOf(id));
+    }
+
+    @Override
+    public InputStream children(long id) {
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESCategoryQuery.buildChildrenRequest(id));
+
+        return ReactiveStream.toSingleByteBufInputStream(request, String.valueOf(id));
+    }
+
+    @Override
+    public Flux<ByteBuf> childrenAsync(long id) {
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESCategoryQuery.buildChildrenRequest(id));
+
+        return ReactiveStream.toFluxByteBuf(request, "categories", String.valueOf(id));
+    }
+
+    @Override
+    public InputStream descendants(long id) {
+        long familyId = -1;
+        int left = 1, right = 1;
+        Request request = new Request("GET", PREFIX + "/_doc/" + id);
+        request.setOptions(ESUtil.requestOptions());
+        try {
+            Response response = ESUtil.restClient().performRequest(request);
+            try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content)) {
+                while (parser.nextToken() != null) {
+                    JsonToken jsonToken = parser.currentToken();
+                    if (JsonToken.FIELD_NAME == jsonToken) {
+                        String fieldName = parser.currentName();
+                        parser.nextToken();
+                        switch (fieldName) {
+                            case "family_id" -> familyId = parser.getValueAsLong();
+                            case "left" -> left = parser.getValueAsInt();
+                            case "right" -> right = parser.getValueAsInt();
+                        }
+                    }
+                }
+            } finally {
+                EntityUtils.consumeQuietly(response.getEntity());// 必须静默消费实体，防止连接泄漏
+            }
+        } catch (ResponseException e) {
+            LOGGER.error("Failed to query category by id: {}, response exception", id, e);
+            throw new IllegalStateException(String.format("Failed to query category by id: %d, response exception", id), e);
+        } catch (IOException e) {
+            LOGGER.error("IO exception when querying category by id: {}", id, e);
+            throw new IllegalStateException(String.format("IO exception when querying category by id: %d", id), e);
+        }
+
+        request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESCategoryQuery.buildDescendantRequest(familyId, left, right));
+
+        return ReactiveStream.toByteBufInputStream(request, String.valueOf(id),
+                (parser, generator) -> ESCategoryQuery.extractAsTree(parser, generator, "category"));
+    }
+
+    @Override
+    public Flux<ByteBuf> descendantsAsync(long id) {
+        return Mono.defer(() -> {
+            Sinks.One<Map<String, Object>> sink = Sinks.one();
+            AtomicBoolean isCancelled = new AtomicBoolean(false);
+            Request request = new Request("GET", PREFIX + "/_doc/" + id);
+            request.setOptions(ESUtil.requestOptions());
+
+            Cancellable cancellable = ESUtil.restClient().performRequestAsync(request, new ResponseListener() {
+                @Override
+                public void onSuccess(Response response) {
+                    // 取消标记，和你第二步的逻辑一模一样
+                    if (isCancelled.get()) {
+                        EntityUtils.consumeQuietly(response.getEntity());
+                        sink.tryEmitEmpty();
+                        return;
+                    }
+
+                    try (InputStream content = response.getEntity().getContent(); JsonParser parser = JSON_FACTORY.createParser(content)) {
+                        // 解析完，把结果塞给Mono，和你sink.tryEmitNext 一样
+                        Map<String, Object> nodeInfo = new HashMap<>();
+                        while (parser.nextToken() != null) {
+                            JsonToken jsonToken = parser.currentToken();
+                            if (JsonToken.FIELD_NAME == jsonToken) {
+                                String fieldName = parser.currentName();
+                                parser.nextToken();
+                                switch (fieldName) {
+                                    case "family_id" -> nodeInfo.put("familyId", parser.getValueAsLong());
+                                    case "left" -> nodeInfo.put("left", parser.getValueAsInt());
+                                    case "right" -> nodeInfo.put("right", parser.getValueAsInt());
+                                }
+                            }
+                        }
+                        sink.tryEmitValue(nodeInfo);
+                    } catch (IOException e) {
+                        sink.tryEmitError(new UncheckedIOException(e));
+                    } finally {
+                        EntityUtils.consumeQuietly(response.getEntity());
+                    }
+                }
+
+                @Override
+                public void onFailure(Exception exception) {
+                    // 异常处理，和你第二步的逻辑一模一样
+                    if (isCancelled.get()) return;
+                    LOGGER.error("Failed to query category by id: {}, response exception", id, exception);
+                    sink.tryEmitError(MapException.mapException(exception, id));
+                }
+            });
+
+            return sink.asMono().doOnCancel(() -> {
+                isCancelled.set(true);
+                cancellable.cancel();
+            });
+        }).cast(Map.class).flatMapMany(node -> {
+            long familyId = (long) node.get("familyId");
+            int left = (int) node.get("left");
+            int right = (int) node.get("right");
+            Request request = new Request("GET", SEARCH_ENDPOINT);
+            request.setOptions(ESUtil.requestOptions());
+            request.setJsonEntity(ESCategoryQuery.buildDescendantRequest(familyId, left, right));
+
+            return ReactiveStream.toFluxByteBuf(request, String.valueOf(id),
+                    (parser, generator) -> ESCategoryQuery.extractAsTree(parser, generator, "category"));
+        });
+    }
+
+    @Override
+    public InputStream search(String key, int offset, int size) {
+        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("Offset value range is 0-10000");
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("Size value range is 0-10000");
+        if (size + offset > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
+
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESCategoryQuery.buildKeyRequest(key, offset, size));
+
+        return ReactiveStream.toByteBufInputStream(request, "categories", key);
+    }
+
+    @Override
+    public Flux<ByteBuf> searchAsync(String key, int offset, int size) {
+        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("Offset value range is 0-10000");
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("Size value range is 0-10000");
+        if (size + offset > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
+
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESCategoryQuery.buildKeyRequest(key, offset, size));
+
+        return ReactiveStream.toFluxByteBuf(request, "categories", key);
     }
 
     @Override
@@ -659,54 +707,5 @@ public class ESCategoryQuery implements CategoryQuery {
 
                     return ReactiveStream.toFluxByteBuf(request, "categories", String.valueOf(id));
                 });
-    }
-
-    private static String buildPathRequest(long familyId, int left, int right) {
-        try (StringWriter writer = new StringWriter(256); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
-            generator.writeStartObject();
-            generator.writeNumberField("size", MAX_SIZE);
-            generator.writeObjectFieldStart("query");
-            generator.writeObjectFieldStart("bool");
-            generator.writeArrayFieldStart("filter");
-
-            generator.writeStartObject();
-            generator.writeObjectFieldStart("term");
-            generator.writeNumberField("family_id", familyId);
-            generator.writeEndObject();
-            generator.writeEndObject();
-
-            generator.writeStartObject();
-            generator.writeObjectFieldStart("range");
-            generator.writeObjectFieldStart("left");
-            generator.writeNumberField("lte", left);
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeEndObject();
-
-            generator.writeStartObject();
-            generator.writeObjectFieldStart("range");
-            generator.writeObjectFieldStart("right");
-            generator.writeNumberField("gte", right);
-            generator.writeEndObject();
-            generator.writeEndObject();
-            generator.writeEndObject();
-
-            generator.writeEndArray();
-            generator.writeEndObject();
-            generator.writeEndObject();
-
-            generator.writeArrayFieldStart("sort");
-            generator.writeStartObject();
-            generator.writeStringField("left", "asc");
-            generator.writeEndObject();
-            generator.writeEndArray();
-
-            generator.writeEndObject();
-            generator.close();
-            return writer.toString();
-        } catch (IOException e) {
-            LOGGER.error("Cannot assemble request JSON", e);
-            throw new IllegalStateException("Cannot assemble request JSON", e);
-        }
     }
 }

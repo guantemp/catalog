@@ -37,11 +37,11 @@ import java.util.StringJoiner;
  * @since JDK21
  */
 public class Item {
+    private final long id;
     private Barcode barcode;
     private long brandId;
     private long categoryId;
     private GradeEnum grade;
-    private final long id;
     private Name name;
     private MadeIn madeIn;
     private LastReceiptPrice lastReceiptPrice;
@@ -131,8 +131,8 @@ public class Item {
     private void setVipPrice(VipPrice vipPrice) {
         Objects.requireNonNull(vipPrice, "vipPrice required");
         boolean skipCheck = (retailPrice.price().unit() == UnitEnum.PCS)
-                || (vipPrice.price().unit() == UnitEnum.PCS
-                && vipPrice.price().amount().getNumber().numberValue(BigDecimal.class).compareTo(BigDecimal.ZERO) == 0);
+                            || (vipPrice.price().unit() == UnitEnum.PCS
+                                && vipPrice.price().amount().getNumber().numberValue(BigDecimal.class).compareTo(BigDecimal.ZERO) == 0);
         if (!skipCheck && memberPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("vipPrice unit must be consistent with retailPrice unit");
         this.vipPrice = vipPrice;
@@ -141,8 +141,8 @@ public class Item {
     private void setMemberPrice(MemberPrice memberPrice) {
         Objects.requireNonNull(memberPrice, "memberPrice required");
         boolean skipCheck = (retailPrice.price().unit() == UnitEnum.PCS)
-                || (memberPrice.price().unit() == UnitEnum.PCS
-                && memberPrice.price().amount().getNumber().numberValue(BigDecimal.class).compareTo(BigDecimal.ZERO) == 0);
+                            || (memberPrice.price().unit() == UnitEnum.PCS
+                                && memberPrice.price().amount().getNumber().numberValue(BigDecimal.class).compareTo(BigDecimal.ZERO) == 0);
         if (!skipCheck && memberPrice.price().unit() != retailPrice.price().unit())
             throw new IllegalArgumentException("memberPrice unit must be consistent with retailPrice unit");
         this.memberPrice = memberPrice;
@@ -247,7 +247,7 @@ public class Item {
         Objects.requireNonNull(name, "name required");
         if (!this.name.equals(name)) {
             this.name = name;
-            DomainRegistry.domainEventPublisher().publish(new ItemRenamed(id, name.name(),name.shortName()));
+            DomainRegistry.domainEventPublisher().publish(new ItemRenamed(id, name.name(), name.shortName()));
         }
     }
 

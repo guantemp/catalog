@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>帮助中心</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 30px 36px;
+      line-height: 1.7;
+      height: 100%;
+      overflow-y: auto;
+    }
+    body::-webkit-scrollbar { width: 4px; }
+    body::-webkit-scrollbar-track { background: transparent; }
+    body::-webkit-scrollbar-thumb { background: #3A4A5A; border-radius: 4px; }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    h1 i {
+      color: #818cf8;
+      font-size: 28px;
+    }
+    .subtitle {
+      color: #94a3b8;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(129, 140, 248, 0.10);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin: 28px 0 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h2 i {
+      color: #818cf8;
+      font-size: 18px;
+    }
+    p {
+      color: #c8d6e5;
+      font-size: 14px;
+      margin-bottom: 12px;
+      padding-left: 4px;
+    }
+    ul {
+      padding-left: 28px;
+      margin-bottom: 16px;
+    }
+    ul li {
+      color: #c8d6e5;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+    .highlight {
+      background: rgba(129, 140, 248, 0.06);
+      border-left: 3px solid #818cf8;
+      padding: 10px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0 18px 0;
+      color: #d4dcec;
+      font-size: 13px;
+    }
+    .highlight strong {
+      color: #a5b4fc;
+    }
+    .footer-note {
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(129, 140, 248, 0.06);
+      font-size: 12px;
+      color: #64748b;
+      text-align: center;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 12px 0 18px 0;
+    }
+    .grid-2 .card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(129, 140, 248, 0.06);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+    .grid-2 .card h4 {
+      color: #e2e8f0;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .grid-2 .card p {
+      font-size: 13px;
+      color: #94a3b8;
+      margin: 0;
+    }
+    @media (max-width: 600px) {
+      body { padding: 20px; }
+      h1 { font-size: 20px; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<h1><i class="fas fa-question-circle"></i> 帮助中心</h1>
+<div class="subtitle">SaaS 零售 · 重庆夏至店 — 操作指南与常见问题</div>
+
+<h2><i class="fas fa-rocket"></i> 快速上手</h2>
+<p>欢迎使用一体化工作台！左侧菜单栏集中了所有核心模块，点击即可切换。</p>
+<ul>
+  <li><strong>桌面</strong> — 数据概览与快捷入口</li>
+  <li><strong>品牌 / 分类 / 商品</strong> — 基础数据维护</li>
+  <li><strong>文件上传</strong> — 批量导入图片与资料</li>
+  <li><strong>零售 / 采购 / 库存</strong> — 业务核心操作（开发中）</li>
+</ul>
+
+<h2><i class="fas fa-lightbulb"></i> 常用功能</h2>
+<div class="grid-2">
+  <div class="card">
+    <h4>🔍 搜索菜单</h4>
+    <p>侧边栏顶部搜索框，输入关键词快速定位菜单项。</p>
+  </div>
+  <div class="card">
+    <h4>📌 折叠侧边栏</h4>
+    <p>点击底部「折叠」按钮，为工作区腾出更多空间。</p>
+  </div>
+  <div class="card">
+    <h4>📂 多标签管理</h4>
+    <p>点击菜单项自动新建标签，支持切换与关闭。</p>
+  </div>
+  <div class="card">
+    <h4>👤 用户中心</h4>
+    <p>右上角头像下拉菜单，可修改设置或退出登录。</p>
+  </div>
+</div>
+
+<h2><i class="fas fa-bell"></i> 通知提醒</h2>
+<p>右上角铃铛图标显示未读通知数量，点击可查看详情。</p>
+<div class="highlight">
+  <strong>💡 提示：</strong> 帮助页面内容完全独立，不占用主页面加载资源，点击才加载。
+</div>
+
+<h2><i class="fas fa-life-ring"></i> 技术支持</h2>
+<p>如有任何疑问，请联系技术团队：</p>
+<ul>
+  <li>📧 邮箱：support@saas-retail.com</li>
+  <li>📞 内线：8888</li>
+  <li>💬 企业微信：搜索「零售运维组」</li>
+</ul>
+
+<div class="footer-note">
+  © 2026 SaaS 零售 · 重庆夏至店 &mdash; 帮助页面 v1.0
+</div>
+</body>
+</html>

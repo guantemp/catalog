@@ -48,8 +48,8 @@ import java.io.IOException;
  * }</pre>
  *
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
- * @since JDK21
  * @version 0.0.1 builder 2025-01-03
+ * @since JDK21
  */
 public interface ItemQuerySpec {
     /**

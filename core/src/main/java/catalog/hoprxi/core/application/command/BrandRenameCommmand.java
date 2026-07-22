@@ -21,5 +21,5 @@ package catalog.hoprxi.core.application.command;
  * @version 0.1 2026/6/17
  * @since JDK 21
  */
-public record BrandRenameCommmand(long id,String name,String shortName) implements Command{
+public record BrandRenameCommmand(long id, String name, String shortName) implements Command {
 }

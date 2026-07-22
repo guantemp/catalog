@@ -25,13 +25,12 @@ import java.util.regex.Pattern;
  * @version 0.0.2 2023-03-01
  */
 public record Domestic(String code, String city) implements MadeIn {
-    private static final Pattern CODE_PATTERN = Pattern.compile("^\\d{3,}$");
-
     public static final Domestic BEI_JING = new Domestic("110100", "北京市");
     public static final Domestic TIAN_JIN = new Domestic("120100", "天津市");
     public static final Domestic SHANG_HAI = new Domestic("310100", "上海市");
     public static final Domestic CHONG_QING = new Domestic("500100", "重庆市");
-    
+    private static final Pattern CODE_PATTERN = Pattern.compile("^\\d{3,}$");
+
     public Domestic {
         Objects.requireNonNull(city, "city required");
         Objects.requireNonNull(code, "code required");

@@ -30,9 +30,11 @@ import com.linecorp.armeria.server.annotation.Param;
 public class SpecService {
     @Get("/specs/spec")
     public HttpResponse find(@Param("spec") String spec) {
-        switch (spec){
-            case "grade","GRADE"->{}
-            case "fileValid"->{}
+        switch (spec) {
+            case "grade", "GRADE" -> {
+            }
+            case "fileValid" -> {
+            }
         }
         return null;
     }

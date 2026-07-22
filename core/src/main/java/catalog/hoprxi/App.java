@@ -90,7 +90,7 @@ public class App {
                     return bodyFlux;   // 流式返回 ByteBuf
                 });
         final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
-        JsonParser nonBlockingParser=JSON_FACTORY.createNonBlockingByteBufferParser();
+        JsonParser nonBlockingParser = JSON_FACTORY.createNonBlockingByteBufferParser();
         ByteBufferFeeder feeder = (ByteBufferFeeder) nonBlockingParser.getNonBlockingInputFeeder();
 
         // 打印每个接收到的块（不聚合）

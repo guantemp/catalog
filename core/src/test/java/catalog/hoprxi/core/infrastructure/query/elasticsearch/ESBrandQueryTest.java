@@ -28,8 +28,6 @@ import salt.hoprxi.crypto.util.StoreKeyLoad;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -37,12 +35,12 @@ import java.util.concurrent.TimeUnit;
  * @version 0.0.1 builder 2024-06-15
  */
 public class ESBrandQueryTest {
+    private static final BrandQuery query = new ESBrandQuery();
+
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"125.68.186.195:5432:P$Qwe123465Pg", "129.28.29.105:5432:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
-
-    private static final BrandQuery query = new ESBrandQuery();
 
     @Test(priority = 1, invocationCount = 1, threadPoolSize = 1, expectedExceptions = SearchException.class)
     public void testFind() throws IOException {
@@ -104,7 +102,7 @@ public class ESBrandQueryTest {
                 query.searchAsync(null, 100, 30, SortFieldEnum._NAME),
                 query.searchAsync("", 0, 64, SortFieldEnum._ID),
                 query.searchAsync("天", 0, 20, SortFieldEnum.NAME),
-                query.searchAsync("天", 0, 20,SortFieldEnum._ID),
+                query.searchAsync("天", 0, 20, SortFieldEnum._ID),
                 query.searchAsync("白萝卜", 10, 5, SortFieldEnum.NAME),
                 query.searchAsync("", 8, "62078807563681609", SortFieldEnum.ID),
                 query.searchAsync("", 128, "495651176959596546", SortFieldEnum.ID),

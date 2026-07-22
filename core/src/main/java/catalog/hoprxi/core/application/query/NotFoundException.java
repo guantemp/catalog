@@ -23,7 +23,7 @@ package catalog.hoprxi.core.application.query;
  * @version 0.0.1 builder 2025/12/24
  */
 
-public class NotFoundException extends RuntimeException{
+public class NotFoundException extends RuntimeException {
     public NotFoundException() {
     }
 

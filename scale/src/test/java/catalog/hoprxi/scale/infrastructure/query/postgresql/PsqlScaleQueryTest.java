@@ -32,32 +32,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 
 public class PsqlScaleQueryTest {
+    private static final ScaleQuery query = new PsqlScaleQuery();
+
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "slave.tooo.top:9200"});
-    }
-
-    private static final ScaleQuery query = new PsqlScaleQuery();
-
-    @Test(invocationCount = 5, threadPoolSize = 1)
-    public void testFindAsync() throws InterruptedException {
-        Flux<ByteBuf>[] fluxes = new Flux[]{
-                query.findAsync(new Plu(102)),
-                query.findAsync(new Plu(100)),
-                query.findAsync(new Plu(1))
-        };
-        PsqlScaleQueryTest.printResult(fluxes);
-    }
-
-    @Test()
-    public void testSearchAsync() throws InterruptedException {
-        Flux<ByteBuf>[] fluxes = new Flux[]{
-                query.searchAsync(new SqlClauseSpec[]{new KeywordSqlClauseSpec("鱼")}, 0, 50, SortFieldEnum._ID),
-                query.searchAsync(0, 20),
-                query.searchAsync(new SqlClauseSpec[]{new RetailPriceSqlClauseSpec(Money.of(1.99, "CNY"), Money.of(199, "CNY"))},
-                        0, 50, SortFieldEnum._LAST_RECEIPT_PRICE)
-        };
-        PsqlScaleQueryTest.printResult(fluxes);
     }
 
     private static void printResult(Flux<ByteBuf>[] fluxes) throws InterruptedException {
@@ -90,5 +69,26 @@ public class PsqlScaleQueryTest {
         }
         // 等待所有查询完成（30秒超时）
         latch.await();
+    }
+
+    @Test(invocationCount = 5, threadPoolSize = 1)
+    public void testFindAsync() throws InterruptedException {
+        Flux<ByteBuf>[] fluxes = new Flux[]{
+                query.findAsync(new Plu(102)),
+                query.findAsync(new Plu(100)),
+                query.findAsync(new Plu(1))
+        };
+        PsqlScaleQueryTest.printResult(fluxes);
+    }
+
+    @Test()
+    public void testSearchAsync() throws InterruptedException {
+        Flux<ByteBuf>[] fluxes = new Flux[]{
+                query.searchAsync(new SqlClauseSpec[]{new KeywordSqlClauseSpec("鱼")}, 0, 50, SortFieldEnum._ID),
+                query.searchAsync(0, 20),
+                query.searchAsync(new SqlClauseSpec[]{new RetailPriceSqlClauseSpec(Money.of(1.99, "CNY"), Money.of(199, "CNY"))},
+                        0, 50, SortFieldEnum._LAST_RECEIPT_PRICE)
+        };
+        PsqlScaleQueryTest.printResult(fluxes);
     }
 }

@@ -79,18 +79,18 @@ public class Count extends Scale {
     @Override
     public String toString() {
         return "Count{" +
-                "plu=" + plu +
-                ", name=" + name +
-                ", grade=" + grade +
-                ", spec=" + spec +
-                ", madeIn=" + madeIn +
-                ", shelfLife=" + shelfLife +
-                ", lastReceiptPrice=" + lastReceiptPrice +
-                ", retailPrice=" + retailPrice +
-                ", memberPrice=" + memberPrice +
-                ", vipPrice=" + vipPrice +
-                ", categoryId=" + categoryId +
-                ", brandId=" + brandId +
-                '}';
+               "plu=" + plu +
+               ", name=" + name +
+               ", grade=" + grade +
+               ", spec=" + spec +
+               ", madeIn=" + madeIn +
+               ", shelfLife=" + shelfLife +
+               ", lastReceiptPrice=" + lastReceiptPrice +
+               ", retailPrice=" + retailPrice +
+               ", memberPrice=" + memberPrice +
+               ", vipPrice=" + vipPrice +
+               ", categoryId=" + categoryId +
+               ", brandId=" + brandId +
+               '}';
     }
 }

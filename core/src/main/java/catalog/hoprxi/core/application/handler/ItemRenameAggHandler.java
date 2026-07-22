@@ -27,7 +27,7 @@ import catalog.hoprxi.core.domain.model.Name;
  * @version 0.0.1 builder 2025/11/16
  */
 
-public class ItemRenameAggHandler implements  AggregateHandler<ItemRenameCommand,Item> {
+public class ItemRenameAggHandler implements AggregateHandler<ItemRenameCommand, Item> {
 
     /**
      * @param item
@@ -36,7 +36,7 @@ public class ItemRenameAggHandler implements  AggregateHandler<ItemRenameCommand
      */
     @Override
     public Item execute(Item item, ItemRenameCommand command) {
-        Name name=new Name(command.name(), command.alias());
+        Name name = new Name(command.name(), command.alias());
         item.rename(name);
         return item;
     }

@@ -35,12 +35,32 @@ import static org.testng.Assert.assertEquals;
  * @version 0.0.1 builder 2026-07-11
  */
 public class BrandHandlerTest {
+    private static final long UNBRANDED_ID = Brand.UNBRANDED.id();
+
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
 
-    private static final long UNBRANDED_ID = Brand.UNBRANDED.id();
+    // ---- 测试完成后打印 BRAND_CACHE ----
+    @AfterClass
+    static void printBrandCache() {
+        try {
+            Field field = BrandHandler.class.getDeclaredField("BRAND_CACHE");
+            field.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            ConcurrentHashMap<String, Long> cache = (ConcurrentHashMap<String, Long>) field.get(null);
+            System.out.println("========== BRAND_CACHE 内容 (size=" + cache.size() + ") ==========");
+            for (Map.Entry<String, Long> entry : cache.entrySet()) {
+                System.out.println("  " + entry.getKey() + " -> " + entry.getValue());
+            }
+            System.out.println("==================================================");
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            System.err.println("无法访问 BRAND_CACHE 字段: " + e.getMessage());
+        }
+    }
+
+    // ---- 测试用例 ----
 
     // 执行处理并返回结果 map
     private ItemImportEvent processBrand(String value) throws Exception {
@@ -52,8 +72,6 @@ public class BrandHandlerTest {
         handler.onEvent(event, 0, false);
         return event;
     }
-
-    // ---- 测试用例 ----
 
     @Test
     void testNullBrand() throws Exception {
@@ -99,23 +117,5 @@ public class BrandHandlerTest {
         long id2 = result2.brandId;
         assertEquals(id1, id2, "缓存应返回相同 ID");
 
-    }
-
-    // ---- 测试完成后打印 BRAND_CACHE ----
-    @AfterClass
-    static void printBrandCache() {
-        try {
-            Field field = BrandHandler.class.getDeclaredField("BRAND_CACHE");
-            field.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            ConcurrentHashMap<String, Long> cache = (ConcurrentHashMap<String, Long>) field.get(null);
-            System.out.println("========== BRAND_CACHE 内容 (size=" + cache.size() + ") ==========");
-            for (Map.Entry<String, Long> entry : cache.entrySet()) {
-                System.out.println("  " + entry.getKey() + " -> " + entry.getValue());
-            }
-            System.out.println("==================================================");
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            System.err.println("无法访问 BRAND_CACHE 字段: " + e.getMessage());
-        }
     }
 }

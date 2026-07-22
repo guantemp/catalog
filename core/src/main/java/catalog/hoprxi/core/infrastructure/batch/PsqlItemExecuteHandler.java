@@ -34,13 +34,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
     private static final AtomicInteger number = new AtomicInteger(0);
-
     // 纯内存中攒 SQL 的容器
     private final List<String> batchBuffer = new ArrayList<>();
-
     // 记录当前 StringJoiner 里攒了多少条数据
-    private int currentJoinerCount = 0;
-
+    private int anInt = 0;
     // 128条拼成一个完整的多值 INSERT 语句
     private StringJoiner sql = new StringJoiner(",", "insert into item (id,\"name\",barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price,show) values ", "");
 
@@ -48,7 +45,7 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
     public void onEvent(ExecuteSqlEvent executeSqlEvent, long l, boolean b) throws Exception {
         if ("LAST_ROW".equals(executeSqlEvent.sql)) {
             // 【LAST_ROW 的职责】：专门负责把 StringJoiner 里最后没凑够 ? 条的尾巴数据闭合，塞进 batchBuffer
-            if (currentJoinerCount > 0) {
+            if (anInt > 0) {
                 batchBuffer.add(sql.toString());
             }
             // 闭合完毕后，触发 flush 把 batchBuffer 里的所有数据全部提交入库
@@ -60,14 +57,14 @@ public class PsqlItemExecuteHandler implements EventHandler<ExecuteSqlEvent> {
                 return;
             }
             sql.add(executeSqlEvent.sql);
-            currentJoinerCount++;
+            anInt++;
             int i = number.incrementAndGet();
             // 每 128 条，拼成一个完整的多值 INSERT 语句，放入批量缓冲区
-            if (currentJoinerCount == 128) {
+            if (anInt == 128) {
                 batchBuffer.add(sql.toString());
                 // 重置 StringJoiner 和计数器，准备下一轮
                 sql = new StringJoiner(",", "insert into item (id,\"name\",barcode,category_id,brand_id,grade,made_in,spec,shelf_life,last_receipt_price,retail_price,member_price,vip_price,show) values ", "");
-                currentJoinerCount = 0;
+                anInt = 0;
             }
             // 每 1024 条，触发一次数据库批量提交
             if (i % 1024 == 0) {

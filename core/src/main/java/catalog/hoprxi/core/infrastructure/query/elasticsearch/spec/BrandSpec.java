@@ -20,8 +20,6 @@ import catalog.hoprxi.core.application.query.ItemQuerySpec;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuang</a>
@@ -44,7 +42,7 @@ public record BrandSpec(long[] ids) implements ItemQuerySpec {
         if (ids.length == 1) {
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");
-            generator.writeNumberField("brand.id",ids[0]);
+            generator.writeNumberField("brand.id", ids[0]);
             generator.writeEndObject();
             generator.writeEndObject();
         } else {

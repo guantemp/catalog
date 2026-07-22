@@ -36,8 +36,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class FluxByteBufOutputStream extends OutputStream {
     private final FluxSink<ByteBuf> sink;
     private final AtomicBoolean isCancelled;
-    private ByteBuf buffer;
     private final int chunkSize;
+    private ByteBuf buffer;
     private volatile boolean closed = false;
 
     // 传入 Flux.create 的原生 sink

@@ -37,24 +37,24 @@ import static org.testng.Assert.*;
  * @version 0.0.1 builder 2025-09-20
  */
 public class PsqlBrandRepositoryTest {
+    private static final BrandRepository repository = new PsqlBrandRepository();
+
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"slave.tooo.top:6543:P$Qwe123465Pg"});
     }
 
-    private static final BrandRepository repository = new PsqlBrandRepository();
-
     @BeforeClass
     public void beforeClass() throws MalformedURLException {
         URL logo = URI.create("https://www.hikvision.com/cn/images/logo.png").toURL();
         AboutBrand ab = new AboutBrand(URI.create("https://www.hikvision.com/cn/").toURL(), logo, Year.of(2001), "海康威视是以视频为核心的物联网解决方案提供商，面向全球提供综合安防、智慧业务与大数据服务。" +
-                "海康威视秉承“专业、厚实、诚信”的经营理念，坚持将“成就客户、价值为本、诚信务实、追求卓越”核心价值观内化为行动准则，不断发展视频技术，服务人类。");
+                                                                                                                 "海康威视秉承“专业、厚实、诚信”的经营理念，坚持将“成就客户、价值为本、诚信务实、追求卓越”核心价值观内化为行动准则，不断发展视频技术，服务人类。");
         Brand hikvision = new Brand(495651176959596552L, new Name("海康威视", "HIKVISION"), ab);
         repository.save(hikvision);
 
         logo = URI.create("https://www.dahuatech.com/bocweb/web/img/logo.png").toURL();
         ab = new AboutBrand(URI.create("https://www.dahuatech.com/").toURL(), logo, Year.of(2005), "浙江大华技术股份有限公司是全球领先的以视频为核心的智慧物联解决方案提供商和运营服务商，" +
-                "以技术创新为基础，提供端到端的视频监控解决方案、系统及服务，为城市运营、企业管理、个人消费者生活创造价值。");
+                                                                                                   "以技术创新为基础，提供端到端的视频监控解决方案、系统及服务，为城市运营、企业管理、个人消费者生活创造价值。");
         Brand hua = new Brand(495651176959596578L, new Name("大华", "@hua"), ab);
         repository.save(hua);
 
@@ -66,7 +66,7 @@ public class PsqlBrandRepositoryTest {
         Brand my = new Brand(495651176959596602L, new Name("官的"));
         repository.save(my);
 
-        Brand kong= new Brand(495651176959596603L, new Name("空的"));
+        Brand kong = new Brand(495651176959596603L, new Name("空的"));
         repository.save(kong);
 
         Brand chenguang = new Brand(495651176959596634L, new Name("晨光", "M&G"));

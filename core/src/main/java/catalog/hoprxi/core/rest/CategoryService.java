@@ -60,6 +60,87 @@ public class CategoryService {
     private static final CategoryQuery QUERY = new ESCategoryQuery();
     private static final CategoryRepository REPOSITORY = new PsqlCategoryRepository();
 
+    private static void writeCategoryResponse(JsonGenerator generator, Category category) throws IOException {
+        generator.writeStartObject();
+        generator.writeStringField("status", "success");
+        generator.writeStringField("message", "A category created or update, it's " + category.name().name());
+
+        generator.writeObjectFieldStart("category");
+        generator.writeNumberField("parentId", category.parentId());
+        generator.writeNumberField("id", category.id());
+
+        generator.writeObjectFieldStart("name");
+        generator.writeStringField("name", category.name().name());
+        generator.writeStringField("shortName", category.name().shortName());
+        generator.writeEndObject();
+        // 优化 null 值处理，语义更清晰
+        if (category.icon() != null) {
+            generator.writeStringField("icon", category.icon().toExternalForm());
+        } else {
+            generator.writeNullField("icon");
+        }
+
+        generator.writeStringField("description", category.description());
+        generator.writeEndObject();
+
+        generator.writeEndObject();
+        generator.flush();
+    }
+
+    private static Category createCategory(JsonParser parser) throws IOException {
+        String name = null, shortName = null, description = null;
+        URL icon = null;
+        long parentId = 0L;
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                String fieldName = parser.currentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "parent_id" -> parentId = parser.getValueAsLong();
+                    case "name" -> name = parser.getValueAsString();
+                    case "shortName" -> shortName = parser.getValueAsString();
+                    case "description" -> description = parser.getValueAsString();
+                    case "icon" -> icon = URI.create(parser.getValueAsString()).toURL();
+                }
+            }
+        }
+        CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, shortName, description, icon);
+        Handler<CategoryCreateCommand, Category> handler = new CategoryCreateHandler();
+        return handler.execute(command);
+    }
+
+    private static Category update(JsonParser parser, long id) throws IOException {
+        Category category = REPOSITORY.find(id);
+        if (category == null) {
+            return null;
+        }
+        UnitOfWork<Category> uow = new UnitOfWork<>();
+        MacroInvoker<Category> invoker = new MacroInvoker<>(uow);
+        String name = null, shortName = null;
+        URL icon = null;
+        while (parser.nextToken() != null) {
+            if (parser.currentToken() == JsonToken.FIELD_NAME) {
+                String fieldName = parser.currentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "parent_id" ->
+                            invoker.addCommand(new CategoryMoveCommand(id, parser.getValueAsLong())).bind(CategoryMoveCommand.class, new CategoryMoveHandler(uow));
+                    case "name" -> name = parser.getValueAsString();
+                    case "shortName" -> shortName = parser.getValueAsString();
+                    case "description" ->
+                            invoker.addCommand(new CategoryChangDescriptionCommand(id, parser.getValueAsString())).bind(CategoryChangDescriptionCommand.class, new CategoryDescriptionHandler(uow));
+                    case "icon_url" -> URI.create(parser.getValueAsString()).toURL();
+                }
+            }
+        }
+        if (name != null || shortName != null) {
+            invoker.addCommand(new CategoryRenameCommand(id, name, shortName)).bind(CategoryRenameCommand.class, new CategoryRenameHandler(uow));
+        }
+        category = invoker.execute(category, REPOSITORY::save);
+        //System.out.println(category);
+        return category;
+    }
+
     @Get("/categories/{id}")
     @Description("Retrieves the category information by the given category ID.")
     public Mono<HttpResponse> find(@Param("id") long id) {
@@ -164,7 +245,6 @@ public class CategoryService {
     public HttpResponse desc(@Param("id") long id) {
         return descendants(id);
     }
-
 
     @Get("/categories/{id}/path")
     public HttpResponse path(@Param("id") long id) {
@@ -311,56 +391,6 @@ public class CategoryService {
         }));
     }
 
-    private static void writeCategoryResponse(JsonGenerator generator, Category category) throws IOException {
-        generator.writeStartObject();
-        generator.writeStringField("status", "success");
-        generator.writeStringField("message", "A category created or update, it's " + category.name().name());
-
-        generator.writeObjectFieldStart("category");
-        generator.writeNumberField("parentId", category.parentId());
-        generator.writeNumberField("id", category.id());
-
-        generator.writeObjectFieldStart("name");
-        generator.writeStringField("name", category.name().name());
-        generator.writeStringField("shortName", category.name().shortName());
-        generator.writeEndObject();
-        // 优化 null 值处理，语义更清晰
-        if (category.icon() != null) {
-            generator.writeStringField("icon", category.icon().toExternalForm());
-        } else {
-            generator.writeNullField("icon");
-        }
-
-        generator.writeStringField("description", category.description());
-        generator.writeEndObject();
-
-        generator.writeEndObject();
-        generator.flush();
-    }
-
-
-    private static Category createCategory(JsonParser parser) throws IOException {
-        String name = null, shortName = null, description = null;
-        URL icon = null;
-        long parentId = 0L;
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                String fieldName = parser.currentName();
-                parser.nextToken();
-                switch (fieldName) {
-                    case "parent_id" -> parentId = parser.getValueAsLong();
-                    case "name" -> name = parser.getValueAsString();
-                    case "shortName" -> shortName = parser.getValueAsString();
-                    case "description" -> description = parser.getValueAsString();
-                    case "icon" -> icon = URI.create(parser.getValueAsString()).toURL();
-                }
-            }
-        }
-        CategoryCreateCommand command = new CategoryCreateCommand(parentId, name, shortName, description, icon);
-        Handler<CategoryCreateCommand, Category> handler = new CategoryCreateHandler();
-        return handler.execute(command);
-    }
-
     @Put("/categories/{id}")
     public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id) {
         RequestHeaders headers = ctx.request().headers();
@@ -391,38 +421,6 @@ public class CategoryService {
             return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
                     "{\"status\":500,\"message\":\"Unexpected error\"}");
         }));
-    }
-
-    private static Category update(JsonParser parser, long id) throws IOException {
-        Category category = REPOSITORY.find(id);
-        if (category == null) {
-            return null;
-        }
-        UnitOfWork<Category> uow = new UnitOfWork<>();
-        MacroInvoker<Category> invoker = new MacroInvoker<>(uow);
-        String name = null, shortName = null;
-        URL icon = null;
-        while (parser.nextToken() != null) {
-            if (parser.currentToken() == JsonToken.FIELD_NAME) {
-                String fieldName = parser.currentName();
-                parser.nextToken();
-                switch (fieldName) {
-                    case "parent_id" ->
-                            invoker.addCommand(new CategoryMoveCommand(id, parser.getValueAsLong())).bind(CategoryMoveCommand.class, new CategoryMoveHandler(uow));
-                    case "name" -> name = parser.getValueAsString();
-                    case "shortName" -> shortName = parser.getValueAsString();
-                    case "description" ->
-                            invoker.addCommand(new CategoryChangDescriptionCommand(id, parser.getValueAsString())).bind(CategoryChangDescriptionCommand.class, new CategoryDescriptionHandler(uow));
-                    case "icon_url" -> URI.create(parser.getValueAsString()).toURL();
-                }
-            }
-        }
-        if (name != null || shortName != null) {
-            invoker.addCommand(new CategoryRenameCommand(id, name, shortName)).bind(CategoryRenameCommand.class,new CategoryRenameHandler(uow));
-        }
-        category = invoker.execute(category, REPOSITORY::save);
-        //System.out.println(category);
-        return category;
     }
 
     private boolean validate(JsonGenerator generator, boolean root, String parentId, String name, String shortName, String description, String uri) throws IOException {

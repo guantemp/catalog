@@ -36,11 +36,11 @@ import java.nio.charset.StandardCharsets;
  * @version 0.0.2 builder 2026-04-12
  */
 public class ESItemQueryTest {
+    private static final ItemQuery query = new ESItemQuery();
+
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465", "slave.tooo.top:9200");
     }
-
-    private static final ItemQuery query = new ESItemQuery();
 
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testFindAsync() {
@@ -56,7 +56,7 @@ public class ESItemQueryTest {
     @Test(invocationCount = 1, threadPoolSize = 1)
     public void testSuggest() {
         Mono<ByteBuf>[] monos = new Mono[]{
-              query.suggest("蒙牛")
+                query.suggest("蒙牛")
         };
         PrintUtil.printMono(monos);
     }
@@ -148,13 +148,13 @@ public class ESItemQueryTest {
         try (InputStream is = query.search(50, "471019908050", SortFieldEnum.BARCODE)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
-        try (InputStream is = query.search(new ItemQuerySpec[]{new BrandSpec(52495569395175425L)},50, "471019908050", SortFieldEnum.BARCODE)) {
+        try (InputStream is = query.search(new ItemQuerySpec[]{new BrandSpec(52495569395175425L)}, 50, "471019908050", SortFieldEnum.BARCODE)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
         try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("69312")}, 60, null, SortFieldEnum._NAME)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
-        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("yl"), new BrandSpec(-1L),new LastReceiptPriceSpec(1.1, 2)}, 20, null, SortFieldEnum._BARCODE)) {
+        try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("yl"), new BrandSpec(-1L), new LastReceiptPriceSpec(1.1, 2)}, 20, null, SortFieldEnum._BARCODE)) {
             System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
         }
         try (InputStream is = query.search(new ItemQuerySpec[]{new KeywordSpec("伊利692")}, 10, "258", SortFieldEnum._RETAIL_PRICE)) {
@@ -173,15 +173,15 @@ public class ESItemQueryTest {
         // 创建所有查询（不立即执行）
         Flux<ByteBuf>[] fluxes = new Flux[]{
                 query.searchAsync(50, "471019908050", SortFieldEnum.BARCODE),
-                query.searchAsync(new ItemQuerySpec[]{new BrandSpec(52495569395175425L)},50, "471019908050", SortFieldEnum.BARCODE),
+                query.searchAsync(new ItemQuerySpec[]{new BrandSpec(52495569395175425L)}, 50, "471019908050", SortFieldEnum.BARCODE),
                 query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("69312")}, 60, null, SortFieldEnum._NAME),
-                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("yl"), new BrandSpec(-1L),new LastReceiptPriceSpec(1.1, 2)}, 20, null, SortFieldEnum._BARCODE),
+                query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("yl"), new BrandSpec(-1L), new LastReceiptPriceSpec(1.1, 2)}, 20, null, SortFieldEnum._BARCODE),
                 query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("伊利692")}, 10, "258", SortFieldEnum._RETAIL_PRICE),
                 query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("330ml")}, 50),
                 query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("乐山")}, 50),
                 query.searchAsync(new ItemQuerySpec[]{new KeywordSpec("695"), new RetailPriceSpec(2.6, 25.5), new LastReceiptPriceSpec(1.1, 3)}, 15, null, SortFieldEnum._ID),
         };
-      PrintUtil.printFlux(fluxes);
+        PrintUtil.printFlux(fluxes);
     }
 
 }

@@ -37,12 +37,12 @@ import javax.money.Monetary;
 import java.util.Locale;
 
 public class PsqlCountRepositoryTest {
+    private static final CountRepository repository = new PsqlCountRepository();
+    private static final CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
+
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465", "slave.tooo.top:6543:P$Qwe123465Pg");
     }
-
-    private static final CountRepository repository = new PsqlCountRepository();
-    private static final CurrencyUnit currency = Monetary.getCurrency(Locale.getDefault());
 
     @BeforeClass
     public void beforeClass() {
@@ -78,7 +78,7 @@ public class PsqlCountRepositoryTest {
         lastReceiptPrice = new LastReceiptPrice(new Price(Money.of(0.246, currency), UnitEnum.KUN));
         retailPrice = new RetailPrice(new Price(Money.of(0.69, currency), UnitEnum.KUN));
         vipPrice = new VipPrice("plus会员价", new Price(Money.of(0.49, currency), UnitEnum.KUN));
-        Count radish = new Count(new Plu(76), new Name("长白萝卜","长条不是圆的"), new Domestic("510502", "江阳区"), Specification.of("1.5Kg±25g"), GradeEnum.QUALIFIED, ShelfLife.SAME_DAY,
+        Count radish = new Count(new Plu(76), new Name("长白萝卜", "长条不是圆的"), new Domestic("510502", "江阳区"), Specification.of("1.5Kg±25g"), GradeEnum.QUALIFIED, ShelfLife.SAME_DAY,
                 lastReceiptPrice, retailPrice, MemberPrice.ZERO_RMB_PCS, vipPrice, 49581450261846042L, Brand.UNBRANDED.id());
         repository.save(radish);
     }

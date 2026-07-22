@@ -29,12 +29,12 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public class ESCategoryQueryTest {
+    private static final CategoryQuery query = new ESCategoryQuery();
+
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"slave.tooo.top:9200"});
     }
-
-    private static final CategoryQuery query = new ESCategoryQuery();
 
     @Test
     public void testRoot() throws IOException {
@@ -105,8 +105,9 @@ public class ESCategoryQueryTest {
                 query.childrenAsync(1),
                 query.childrenAsync(711),
         };
-       PrintUtil.printFlux(fluxes);
+        PrintUtil.printFlux(fluxes);
     }
+
     @Test(expectedExceptions = IllegalStateException.class)
     public void testDescendants() throws IOException {
         try (InputStream is = query.descendants(1)) {

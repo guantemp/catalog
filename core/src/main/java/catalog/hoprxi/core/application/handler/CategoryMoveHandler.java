@@ -28,7 +28,7 @@ import java.util.Objects;
  * @since JDK 21
  */
 
-public class CategoryMoveHandler implements AggregateHandler<CategoryMoveCommand, Category>{
+public class CategoryMoveHandler implements AggregateHandler<CategoryMoveCommand, Category> {
     private final UnitOfWork<Category> uow;
 
     public CategoryMoveHandler(UnitOfWork<Category> uow) {
@@ -36,8 +36,8 @@ public class CategoryMoveHandler implements AggregateHandler<CategoryMoveCommand
     }
 
     /**
-     * @param category  内存中的领域对象
-     * @param command 具体的命令
+     * @param category 内存中的领域对象
+     * @param command  具体的命令
      * @return
      */
     @Override

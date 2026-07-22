@@ -51,15 +51,11 @@ import java.util.stream.Collectors;
  */
 
 public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
+    static final Set<String> BARCODE_BLACKLIST = ConcurrentHashMap.newKeySet();
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchBarcodeHandler.class);
     private static final Set<String> BARCODE_CACHE = ConcurrentHashMap.newKeySet(4960);
     private static final int BATCH_SIZE = 30;          // 批量查询阈值
     private static final long FLUSH_INTERVAL_MS = 500; // 超时刷新间隔（毫秒）
-
-    // 队列：存放等待批量处理的事件和条码
-    private final BlockingQueue<ItemImportEvent> queue = new LinkedBlockingQueue<>();
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-
     private static final Pattern BARCODE_PATTERN = Pattern.compile("^\\d{7}$|^\\d{11,12}$");
     private static final AtomicInteger START;
     private static final String PREFIX;
@@ -69,8 +65,6 @@ public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
     // 共享的内部 Disruptor（单例）
     private static final Disruptor<ItemImportEvent> DISRUPTOR;
     private static final RingBuffer<ItemImportEvent> RING_BUFFER;
-
-    static final Set<String> BARCODE_BLACKLIST = ConcurrentHashMap.newKeySet();
 
     static {
         Config config = ConfigFactory.load("import");
@@ -108,8 +102,43 @@ public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
         RING_BUFFER = DISRUPTOR.getRingBuffer();
     }
 
+    // 队列：存放等待批量处理的事件和条码
+    private final BlockingQueue<ItemImportEvent> queue = new LinkedBlockingQueue<>();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
     public BatchBarcodeHandler() {
         scheduler.scheduleAtFixedRate(this::flush, FLUSH_INTERVAL_MS, FLUSH_INTERVAL_MS, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * 获取或生成标准条码（原始字符串，不带引号）。
+     * 如果条码为空，则生成店内码；如果非空，则校验并补全。
+     * 若无法补全，会添加错误并放入原始输入值，返回 null。
+     */
+    private static String getOrGenerateBarcode(ItemImportEvent event) {
+        String barcode = event.map.get(ItemMapping.BARCODE);
+        if (barcode == null || barcode.isBlank()) {
+            // 生成店内码
+            return BARCODE_TYPE.equals("ean_13")
+                    ? BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(START.getAndIncrement(), PREFIX).barcode()
+                    : BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(START.getAndIncrement(), PREFIX).barcode();
+        }
+        barcode = barcode.trim();
+        // 非空条码：校验并如果是7,11,12位补全
+        try {
+            Barcode bar = BarcodeGenerateServices.createBarcode(barcode);
+            return bar.barcode();
+        } catch (InvalidBarcodeException e) {
+            //System.out.println("校验和错误:" + barcode);
+            Matcher matcher = BARCODE_PATTERN.matcher(barcode);
+            if (!matcher.matches()) {
+                event.addWrong(Verify.BARCODE_CHECK_SUM_ERROR, barcode);
+                return null;
+            }
+            Barcode bar = BarcodeGenerateServices.createBarcodeCompleteChecksum(barcode);
+            System.out.println("已补全:" + bar.barcode());
+            return bar.barcode();
+        }
     }
 
     @Override
@@ -175,37 +204,6 @@ public class BatchBarcodeHandler implements WorkHandler<ItemImportEvent> {
             // 4. basicInfo 是 record，不可变，直接引用
             e.basicInfo = arg.basicInfo;
         }, event);
-    }
-
-    /**
-     * 获取或生成标准条码（原始字符串，不带引号）。
-     * 如果条码为空，则生成店内码；如果非空，则校验并补全。
-     * 若无法补全，会添加错误并放入原始输入值，返回 null。
-     */
-    private static String getOrGenerateBarcode(ItemImportEvent event) {
-        String barcode = event.map.get(ItemMapping.BARCODE);
-        if (barcode == null || barcode.isBlank()) {
-            // 生成店内码
-            return BARCODE_TYPE.equals("ean_13")
-                    ? BarcodeGenerateServices.inStoreEAN_13BarcodeGenerate(START.getAndIncrement(), PREFIX).barcode()
-                    : BarcodeGenerateServices.inStoreEAN_8BarcodeGenerate(START.getAndIncrement(), PREFIX).barcode();
-        }
-        barcode = barcode.trim();
-        // 非空条码：校验并如果是7,11,12位补全
-        try {
-            Barcode bar = BarcodeGenerateServices.createBarcode(barcode);
-            return bar.barcode();
-        } catch (InvalidBarcodeException e) {
-            //System.out.println("校验和错误:" + barcode);
-            Matcher matcher = BARCODE_PATTERN.matcher(barcode);
-            if (!matcher.matches()) {
-                event.addWrong(Verify.BARCODE_CHECK_SUM_ERROR, barcode);
-                return null;
-            }
-            Barcode bar = BarcodeGenerateServices.createBarcodeCompleteChecksum(barcode);
-            System.out.println("已补全:" + bar.barcode());
-            return bar.barcode();
-        }
     }
 
     /**

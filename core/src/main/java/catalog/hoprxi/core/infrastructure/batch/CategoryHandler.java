@@ -79,12 +79,74 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
         FAMILY_ID = id;
     }
 
+    private static long findIdByParentAndName(long parentId, String nodeName) {
+        String cacheKey = parentId + "_" + nodeName;
+        Long cached = CATEGORY_CACHE.get(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
+
+        String query = """
+                SELECT id FROM category
+                WHERE parent_id = ?
+                 AND (name::jsonb->>'name' = ?
+                 OR (LENGTH(?) > 0 AND name::jsonb->>'shortName' = ?))
+                LIMIT 1
+                """;
+        try (Connection conn = PsqlUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setLong(1, parentId);
+            ps.setString(2, nodeName);
+            ps.setString(3, nodeName);
+            ps.setString(4, nodeName);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    long id = rs.getLong(1);
+                    CATEGORY_CACHE.put(cacheKey, id);
+                    return id;
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Failed to find category by parentId={}, nodeName={}", parentId, nodeName, e);
+        }
+        return Long.MIN_VALUE;
+    }
+
+    private static boolean isExists(long id) {
+        if (id == Category.UNCATEGORIZED.id()) return true;
+        String query = "SELECT 1 FROM category WHERE id = ?";
+        try (Connection conn = PsqlUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Failed to check existence of category id={}", id, e);
+            return false;
+        }
+    }
+
+    private static Category[] root() {
+        List<Category> categoryList = new ArrayList<>();
+        final String rootSql = "select id,name::jsonb->>'name' as name,name::jsonb->>'shortName' as shortName from category where id = parent_id";
+        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(rootSql)) {
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                while (rs.next()) {
+                    categoryList.add(new Category(rs.getLong(1), rs.getLong(1), new Name(rs.getString(2), rs.getString(3))));
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Can't rebuild category", e);
+            throw new RuntimeException(e);
+        }
+        return categoryList.toArray(new Category[0]);
+    }
 
     @Override
     public void onEvent(ItemImportEvent event) throws Exception {
         this.onEvent(event, 0, false);
     }
-
 
     @Override
     public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
@@ -152,69 +214,5 @@ public class CategoryHandler implements EventHandler<ItemImportEvent>, WorkHandl
         //long t2 = System.nanoTime();
         //System.out.println("分类处理处理耗时:" + (t2 - t1) / 1_000_000 + " ms");
         //System.out.println("category:" +itemImportEvent.map.get(Corresponding.CATEGORY));
-    }
-
-    private static long findIdByParentAndName(long parentId, String nodeName) {
-        String cacheKey = parentId + "_" + nodeName;
-        Long cached = CATEGORY_CACHE.get(cacheKey);
-        if (cached != null) {
-            return cached;
-        }
-
-        String query = """
-                SELECT id FROM category
-                WHERE parent_id = ?
-                 AND (name::jsonb->>'name' = ?
-                 OR (LENGTH(?) > 0 AND name::jsonb->>'shortName' = ?))
-                LIMIT 1
-                """;
-        try (Connection conn = PsqlUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setLong(1, parentId);
-            ps.setString(2, nodeName);
-            ps.setString(3, nodeName);
-            ps.setString(4, nodeName);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    long id = rs.getLong(1);
-                    CATEGORY_CACHE.put(cacheKey, id);
-                    return id;
-                }
-            }
-        } catch (SQLException e) {
-            LOGGER.error("Failed to find category by parentId={}, nodeName={}", parentId, nodeName, e);
-        }
-        return Long.MIN_VALUE;
-    }
-
-    private static boolean isExists(long id) {
-        if (id == Category.UNCATEGORIZED.id()) return true;
-        String query = "SELECT 1 FROM category WHERE id = ?";
-        try (Connection conn = PsqlUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setLong(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-        } catch (SQLException e) {
-            LOGGER.error("Failed to check existence of category id={}", id, e);
-            return false;
-        }
-    }
-
-    private static Category[] root() {
-        List<Category> categoryList = new ArrayList<>();
-        final String rootSql = "select id,name::jsonb->>'name' as name,name::jsonb->>'shortName' as shortName from category where id = parent_id";
-        try (Connection connection = PsqlUtil.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(rootSql)) {
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                while (rs.next()) {
-                    categoryList.add(new Category(rs.getLong(1), rs.getLong(1), new Name(rs.getString(2), rs.getString(3))));
-                }
-            }
-        } catch (SQLException e) {
-            LOGGER.error("Can't rebuild category", e);
-            throw new RuntimeException(e);
-        }
-        return categoryList.toArray(new Category[0]);
     }
 }

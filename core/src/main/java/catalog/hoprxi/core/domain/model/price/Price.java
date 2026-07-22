@@ -35,8 +35,8 @@ import java.util.Objects;
  */
 public record Price(MonetaryAmount amount, UnitEnum unit) {
     private static final CurrencyUnit CNY = Monetary.getCurrency("CNY");
-    private static final CurrencyUnit USD = Monetary.getCurrency("USD");
     public static final Price ZERO_RMB_PCS = new Price(Money.zero(CNY), UnitEnum.PCS);
+    private static final CurrencyUnit USD = Monetary.getCurrency("USD");
     public static final Price ZERO_USD_PCS = new Price(Money.zero(USD), UnitEnum.PCS);
 
     private static final MonetaryAmountFormat MONETARY_AMOUNT_FORMAT = MonetaryFormats.getAmountFormat(AmountFormatQueryBuilder.of(Locale.getDefault())

@@ -75,11 +75,6 @@ public final class ReactiveStream {
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
 
-    @FunctionalInterface
-    public interface ExtractFunction {
-        void extract(JsonParser parser, JsonGenerator generator) throws IOException;
-    }
-
     /**
      * 同步阻塞方式获取单个 ByteBuf 输入流。
      * <p>
@@ -348,6 +343,11 @@ public final class ReactiveStream {
                 .timeout(Duration.ofSeconds(20), Mono.error(new TimeoutException("Request timed out for : " + tips)))
                 .doOnCancel(() -> isCancelled.set(true)).doOnTerminate(() -> LOGGER.debug("Request terminated for {}", tips))
                 .doOnDiscard(ByteBuf.class, ReferenceCountUtil::safeRelease);
+    }
+
+    @FunctionalInterface
+    public interface ExtractFunction {
+        void extract(JsonParser parser, JsonGenerator generator) throws IOException;
     }
 /*
     private static Flux<ByteBuf> byteBufFlux(String tips, Request request, boolean alone) {

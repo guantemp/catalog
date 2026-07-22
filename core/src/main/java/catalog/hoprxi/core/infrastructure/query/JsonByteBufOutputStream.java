@@ -18,7 +18,6 @@ package catalog.hoprxi.core.infrastructure.query;
 
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
 import reactor.core.publisher.Sinks;
@@ -37,8 +36,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class JsonByteBufOutputStream extends OutputStream {
     private final Sinks.Many<ByteBuf> sink;
     private final AtomicBoolean isCancelled;
-    private ByteBuf buffer;
     private final int chunkSize;
+    private ByteBuf buffer;
     private volatile boolean closed = false;
 
     public JsonByteBufOutputStream(Sinks.Many<ByteBuf> sink, AtomicBoolean isCancelled, int chunkSize) {

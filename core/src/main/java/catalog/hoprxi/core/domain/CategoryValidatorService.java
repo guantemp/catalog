@@ -27,7 +27,7 @@ import catalog.hoprxi.core.infrastructure.persistence.postgresql.PsqlCategoryRep
  * @version 0.0.3 2022-09-21
  */
 public final class CategoryValidatorService {
-    private static final CategoryRepository repository= new PsqlCategoryRepository();
+    private static final CategoryRepository repository = new PsqlCategoryRepository();
 
 /*
     static {

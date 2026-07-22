@@ -17,7 +17,6 @@
 package catalog.hoprxi.core.domain.model;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.StringJoiner;
 
 /**
@@ -30,18 +29,18 @@ import java.util.StringJoiner;
  * </ul>
  *
  * @author <a href="www.hoprxi.com/authors/guan xianghuang">guan xiangHuan</a>
- * @since JDK21
  * @version 0.3 builder 2026-07-12
+ * @since JDK21
  */
 public final class Name {
-    private static final int MAX_LENGTH = 256;
-    private final String name;
-    private final String shortName;
     /**
      * 空名称对象（空对象模式）
      * <p>调用 rename 仍返回自身，避免空指针</p>
      */
     public static final Name EMPTY = new Name("", null);
+    private static final int MAX_LENGTH = 256;
+    private final String name;
+    private final String shortName;
 
     /**
      * 构造方法。

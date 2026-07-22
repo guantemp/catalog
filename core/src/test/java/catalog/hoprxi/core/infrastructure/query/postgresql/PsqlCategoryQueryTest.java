@@ -33,12 +33,12 @@ import java.net.URI;
  * @version 0.0.1 builder 2022-10-21
  */
 public class PsqlCategoryQueryTest {
+    private static final CategoryRepository repository = new PsqlCategoryRepository();
+
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "slave.tooo.top:9200"});
     }
-
-    private static final CategoryRepository repository = new PsqlCategoryRepository();
 
     @BeforeClass
     public void beforeClass() throws MalformedURLException {

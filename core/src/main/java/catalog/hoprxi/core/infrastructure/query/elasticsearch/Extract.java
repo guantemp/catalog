@@ -21,8 +21,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
 import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.Objects;
 
 /**
@@ -58,9 +56,8 @@ public final class Extract {
      *
      * @param parser JSON 解析器，应指向任意位置（方法会向前扫描直到找到 {@code _source}）
      * @param gen    JSON 生成器，用于输出处理后的对象
-     * @throws IOException 如果解析或生成过程中发生 I/O 错误
+     * @throws IOException           如果解析或生成过程中发生 I/O 错误
      * @throws IllegalStateException 如果找到的 {@code _source} 字段的值不是对象（START_OBJECT）
-     *
      * @see JsonParser#skipChildren()
      * @see JsonGenerator#copyCurrentStructure(JsonParser)
      */
@@ -138,14 +135,13 @@ public final class Extract {
      * @param parser     JSON 解析器，应指向 Elasticsearch 响应对象的开始（通常为 {@code START_OBJECT}）
      * @param gen        JSON 生成器，用于输出处理后的结果
      * @param objectName 文档数组的字段名，例如 {@code "items"}、{@code "documents"} 等，不能为空
-     * @throws NullPointerException 如果 {@code objectName} 为 {@code null}
-     * @throws IOException 如果解析或生成过程中发生 I/O 错误
+     * @throws NullPointerException  如果 {@code objectName} 为 {@code null}
+     * @throws IOException           如果解析或生成过程中发生 I/O 错误
      * @throws IllegalStateException 如果 JSON 结构不符合 Elasticsearch 响应的预期格式
      *                               （例如 {@code hits} 或 {@code hits.hits} 的类型错误）
-     *
      * @apiNote 该方法会修改解析器的位置，调用前请确保解析器处于响应对象的开始处或任意位置（方法会向前扫描）。
-     *          {@code _source} 中的 {@code _meta} 字段会被自动跳过，不包含在输出中。
-     *          {@code sort} 字段如果存在，会与 {@code _source} 的内容合并到同一个输出对象中。
+     * {@code _source} 中的 {@code _meta} 字段会被自动跳过，不包含在输出中。
+     * {@code sort} 字段如果存在，会与 {@code _source} 的内容合并到同一个输出对象中。
      */
     public static void extract(JsonParser parser, JsonGenerator gen, String objectName) throws IOException {
         Objects.requireNonNull(objectName, "objectName is required");
@@ -263,9 +259,8 @@ public final class Extract {
      *
      * @param parser JSON 解析器，应指向聚合响应的根节点或任意位置（方法会自动定位到 {@code buckets} 数组）
      * @param gen    JSON 生成器，用于输出结果数组
-     * @throws IOException 如果解析或生成过程中发生 I/O 错误
+     * @throws IOException           如果解析或生成过程中发生 I/O 错误
      * @throws IllegalStateException 如果未找到 {@code buckets} 数组或 JSON 结构不符合预期
-     *
      * @implNote 该方法假设输入的 JSON 符合 Elasticsearch 聚合响应格式，例如：
      * <pre>
      * {
@@ -306,7 +301,6 @@ public final class Extract {
      *   <li>非 {@code _source} 的字段统一用 {@code skipChildren()} 跳过；</li>
      *   <li>输出结果数组，每个元素包含 id, barcode, name（仅当相应字段存在时写入）。</li>
      * </ul>
-     *
      * @see JsonParser#skipChildren()
      * @see JsonGenerator#writeStartArray()
      * @see JsonGenerator#writeEndArray()

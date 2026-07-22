@@ -113,49 +113,6 @@ public class UploadHandler implements EventHandler<ItemImportEvent>, WorkHandler
         this.uri = URI.create(UPLOAD_URI);
     }
 
-    @Override
-    public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
-        long t1 = System.nanoTime();
-        if (!event.hasWrong()) {
-            String barcodeRaw = event.barcode;
-            if (barcodeRaw != null && barcodeRaw.length() > 2) {
-                String barcode = barcodeRaw.substring(1, barcodeRaw.length() - 1); // 去掉引号
-                List<File> imageFiles = UploadHandler.findImageFiles(barcode);
-                /*
-                if (!imageFiles.isEmpty()) {
-                    List<String> uploadedUrls = UploadHandler.uploadFiles(imageFiles);
-                    if (!uploadedUrls.isEmpty()) {
-                        // 使用 JsonGenerator 将 URL 列表序列化为 JSON 数组字符串
-                        String json = UploadHandler.serializeUrlsToJson(uploadedUrls);
-                        if (json != null)
-                            event.show = "'" + json + "'";
-                        totalSuccessCount.addAndGet(uploadedUrls.size());
-                    }
-                    // 全部失败则 SHOW 保持 null
-                }
-                 */
-            }
-        }
-        long t2 = System.nanoTime();
-        long elapsed = (System.nanoTime() - t1) / 1_000_000; // 毫秒
-        if (elapsed > 200) {
-            System.out.println("上传图片耗时 " + (t2 - t1) / 1_000_000 + " ms");
-        }
-        if (event.map.get(ItemMapping.LAST_ROW) != null) {
-            synchronized (UploadHandler.class) {
-                if (!closed) {
-                    try {
-                        HTTP_CLIENT.close();
-                        closed = true;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    System.out.println("Total uploaded files: " + totalSuccessCount.get());
-                }
-            }
-        }
-    }
-
     /**
      * 查找条形码对应的所有图片文件（主文件 + 序号文件），支持多种后缀
      */
@@ -269,6 +226,49 @@ public class UploadHandler implements EventHandler<ItemImportEvent>, WorkHandler
             gen.flush();
         }
         return baos.toString(StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public void onEvent(ItemImportEvent event, long l, boolean b) throws Exception {
+        long t1 = System.nanoTime();
+        if (!event.hasWrong()) {
+            String barcodeRaw = event.barcode;
+            if (barcodeRaw != null && barcodeRaw.length() > 2) {
+                String barcode = barcodeRaw.substring(1, barcodeRaw.length() - 1); // 去掉引号
+                List<File> imageFiles = UploadHandler.findImageFiles(barcode);
+                /*
+                if (!imageFiles.isEmpty()) {
+                    List<String> uploadedUrls = UploadHandler.uploadFiles(imageFiles);
+                    if (!uploadedUrls.isEmpty()) {
+                        // 使用 JsonGenerator 将 URL 列表序列化为 JSON 数组字符串
+                        String json = UploadHandler.serializeUrlsToJson(uploadedUrls);
+                        if (json != null)
+                            event.show = "'" + json + "'";
+                        totalSuccessCount.addAndGet(uploadedUrls.size());
+                    }
+                    // 全部失败则 SHOW 保持 null
+                }
+                 */
+            }
+        }
+        long t2 = System.nanoTime();
+        long elapsed = (System.nanoTime() - t1) / 1_000_000; // 毫秒
+        if (elapsed > 200) {
+            System.out.println("上传图片耗时 " + (t2 - t1) / 1_000_000 + " ms");
+        }
+        if (event.map.get(ItemMapping.LAST_ROW) != null) {
+            synchronized (UploadHandler.class) {
+                if (!closed) {
+                    try {
+                        HTTP_CLIENT.close();
+                        closed = true;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println("Total uploaded files: " + totalSuccessCount.get());
+                }
+            }
+        }
     }
 
     @Override

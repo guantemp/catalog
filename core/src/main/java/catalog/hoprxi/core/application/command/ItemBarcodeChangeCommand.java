@@ -22,7 +22,7 @@ package catalog.hoprxi.core.application.command;
  * @since JDK 21
  */
 
-public class ItemBarcodeChangeCommand implements Command{
+public class ItemBarcodeChangeCommand implements Command {
     private final long id;
     private final String barcode;
 

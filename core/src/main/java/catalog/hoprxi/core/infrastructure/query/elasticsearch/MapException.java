@@ -49,8 +49,8 @@ public final class MapException {
         if (err instanceof UncheckedIOException) {
             cause = err.getCause(); // 解包 IO 异常
         }
-        if (cause  instanceof ResponseException) {
-            int status = ((ResponseException) cause ).getResponse().getStatusLine().getStatusCode();
+        if (cause instanceof ResponseException) {
+            int status = ((ResponseException) cause).getResponse().getStatusLine().getStatusCode();
             if (status == 404) {
                 return new NotFoundException("Not found for: " + identifier);
             } else if (status >= 400 && status < 500) {
@@ -59,10 +59,10 @@ public final class MapException {
                 return new SearchException("Server error: " + status);
             }
         } else if (cause instanceof IOException) {
-            LOGGER.error("I/O error for id={}", identifier, cause );
-            return new SearchException("Network error", cause );
+            LOGGER.error("I/O error for id={}", identifier, cause);
+            return new SearchException("Network error", cause);
         }
-        return new SearchException("Unexpected error", cause );
+        return new SearchException("Unexpected error", cause);
     }
 
     /**

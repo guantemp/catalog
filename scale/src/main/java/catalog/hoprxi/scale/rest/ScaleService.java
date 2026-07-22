@@ -38,9 +38,9 @@ import java.nio.charset.StandardCharsets;
  * @since JDK 21
  */
 
-public class ScaleService  {
+public class ScaleService {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core.Item");
-    private static final ScaleQuery QUERY=new PsqlScaleQuery();
+    private static final ScaleQuery QUERY = new PsqlScaleQuery();
 
     @Get("/scale/:plu")
     @Description("Retrieves the item information by the given ID.")
@@ -69,6 +69,7 @@ public class ScaleService  {
 
         return HttpResponse.of(responseStream);
     }
+
     private Publisher<? extends HttpObject> handleErrorResponse(ServiceRequestContext ctx, int plu, Throwable cause) {
         LOGGER.warn("Error for plu={}", plu, cause);
         ByteBuf buf = ctx.alloc().buffer();

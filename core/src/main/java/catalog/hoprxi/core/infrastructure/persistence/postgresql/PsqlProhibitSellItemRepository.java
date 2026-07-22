@@ -65,34 +65,6 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
         }
     }
 
-    @Override
-    public ProhibitSellItem find(long id) {
-        final String findSql = """
-                SELECT id, name, barcode, category_id, brand_id, grade, made_in, spec, shelf_life,
-                       retail_price, last_receipt_price, member_price, vip_price
-                FROM item 
-                WHERE id = ? 
-                LIMIT 1
-                """;
-        try (Connection connection = PsqlUtil.getConnection();
-             PreparedStatement ps = connection.prepareStatement(findSql)) {
-            ps.setLong(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rebuild(rs);
-                }
-            }
-            return null;// 如果没有返回数据，正常返回 null，不要抛异常
-        } catch (SQLException e) {// 【关键修复 2】区分数据库异常和业务异常
-            LOGGER.warn("Database error while fetching item id={}", id, e);
-            throw new PersistenceException("Failed to query item from database: " + id, e);
-        } catch (IOException | InvocationTargetException | InstantiationException |
-                 IllegalAccessException e) {// 重建对象时的错误属于系统内部错误，不是“未找到”
-            LOGGER.error("Failed to rebuild item object from result set (id={})", id, e);
-            throw new PersistenceException("Failed to reconstruct item object: " + id, e);
-        }
-    }
-
     private static ProhibitSellItem rebuild(ResultSet rs) throws SQLException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException {
         long id = rs.getLong("id");
         Name name = PsqlProhibitSellItemRepository.buildName(rs.getString("name"));
@@ -249,67 +221,6 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
         return new Price(Money.of(number, currency), unit);
     }
 
-
-    @Override
-    public void delete(long id) {
-        final String delSql = "delete from prohibitSellItem where id=?";
-        try (Connection connection = PsqlUtil.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(delSql)) {
-            preparedStatement.setLong(1, id);
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            LOGGER.error("Can't remove from item(id={})", id, e);
-            throw new PersistenceException(String.format("Can't delte from item(id=%s)", id), e);
-        }
-    }
-
-    @Override
-    public void save(ProhibitSellItem item) {
-        final String insertOrReplaceSql = """
-                INSERT INTO item (
-                    id, name, barcode, category_id, brand_id, grade, made_in, spec, shelf_life,
-                    last_receipt_price, retail_price, member_price, vip_price
-                ) VALUES (
-                    ?, ?::jsonb, ?, ?, ?, ?::grade, ?::jsonb, ?, ?,
-                    ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb
-                )
-                ON CONFLICT (id) DO UPDATE SET
-                    name = EXCLUDED.name,
-                    barcode = EXCLUDED.barcode,
-                    category_id = EXCLUDED.category_id,
-                    brand_id = EXCLUDED.brand_id,
-                    grade = EXCLUDED.grade,
-                    made_in = EXCLUDED.made_in,
-                    spec = EXCLUDED.spec,
-                    shelf_life = EXCLUDED.shelf_life,
-                    last_receipt_price = EXCLUDED.last_receipt_price,
-                    retail_price = EXCLUDED.retail_price,
-                    member_price = EXCLUDED.member_price,
-                    vip_price = EXCLUDED.vip_price;
-                """;
-        try (Connection connection = PsqlUtil.getConnection();
-             PreparedStatement ps = connection.prepareStatement(insertOrReplaceSql)) {
-            int idx = 1;
-            ps.setLong(idx++, item.id());
-            ps.setString(idx++, toJson(item.name()));
-            ps.setString(idx++, String.valueOf(item.barcode().barcode()));
-            ps.setLong(idx++, item.categoryId());
-            ps.setLong(idx++, item.brandId());
-            ps.setString(idx++, item.grade().name()); // 确保 enum 名称匹配 DB
-            ps.setString(idx++, toJson(item.madeIn()));
-            ps.setString(idx++, item.spec().value());
-            ps.setInt(idx++, item.shelfLife().days());
-            ps.setString(idx++, toJson(item.lastReceiptPrice()));
-            ps.setString(idx++, toJson(item.retailPrice()));
-            ps.setString(idx++, toJson(item.memberPrice()));
-            ps.setString(idx++, toJson(item.vipPrice()));
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            LOGGER.error("Can't save item {}", item, e);
-            throw new PersistenceException(String.format("Can't save Item(%s)", item), e);
-        }
-    }
-
     private static String toJson(MadeIn madeIn) {
         StringWriter writer = new StringWriter(128);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
@@ -381,5 +292,93 @@ public class PsqlProhibitSellItemRepository implements ProhibitSellItemRepositor
             LOGGER.error("Not write RetailPrice as json", e);
         }
         return writer.toString();
+    }
+
+    @Override
+    public ProhibitSellItem find(long id) {
+        final String findSql = """
+                SELECT id, name, barcode, category_id, brand_id, grade, made_in, spec, shelf_life,
+                       retail_price, last_receipt_price, member_price, vip_price
+                FROM item 
+                WHERE id = ? 
+                LIMIT 1
+                """;
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement ps = connection.prepareStatement(findSql)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rebuild(rs);
+                }
+            }
+            return null;// 如果没有返回数据，正常返回 null，不要抛异常
+        } catch (SQLException e) {// 【关键修复 2】区分数据库异常和业务异常
+            LOGGER.warn("Database error while fetching item id={}", id, e);
+            throw new PersistenceException("Failed to query item from database: " + id, e);
+        } catch (IOException | InvocationTargetException | InstantiationException |
+                 IllegalAccessException e) {// 重建对象时的错误属于系统内部错误，不是“未找到”
+            LOGGER.error("Failed to rebuild item object from result set (id={})", id, e);
+            throw new PersistenceException("Failed to reconstruct item object: " + id, e);
+        }
+    }
+
+    @Override
+    public void delete(long id) {
+        final String delSql = "delete from prohibitSellItem where id=?";
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(delSql)) {
+            preparedStatement.setLong(1, id);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Can't remove from item(id={})", id, e);
+            throw new PersistenceException(String.format("Can't delte from item(id=%s)", id), e);
+        }
+    }
+
+    @Override
+    public void save(ProhibitSellItem item) {
+        final String insertOrReplaceSql = """
+                INSERT INTO item (
+                    id, name, barcode, category_id, brand_id, grade, made_in, spec, shelf_life,
+                    last_receipt_price, retail_price, member_price, vip_price
+                ) VALUES (
+                    ?, ?::jsonb, ?, ?, ?, ?::grade, ?::jsonb, ?, ?,
+                    ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb
+                )
+                ON CONFLICT (id) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    barcode = EXCLUDED.barcode,
+                    category_id = EXCLUDED.category_id,
+                    brand_id = EXCLUDED.brand_id,
+                    grade = EXCLUDED.grade,
+                    made_in = EXCLUDED.made_in,
+                    spec = EXCLUDED.spec,
+                    shelf_life = EXCLUDED.shelf_life,
+                    last_receipt_price = EXCLUDED.last_receipt_price,
+                    retail_price = EXCLUDED.retail_price,
+                    member_price = EXCLUDED.member_price,
+                    vip_price = EXCLUDED.vip_price;
+                """;
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement ps = connection.prepareStatement(insertOrReplaceSql)) {
+            int idx = 1;
+            ps.setLong(idx++, item.id());
+            ps.setString(idx++, toJson(item.name()));
+            ps.setString(idx++, String.valueOf(item.barcode().barcode()));
+            ps.setLong(idx++, item.categoryId());
+            ps.setLong(idx++, item.brandId());
+            ps.setString(idx++, item.grade().name()); // 确保 enum 名称匹配 DB
+            ps.setString(idx++, toJson(item.madeIn()));
+            ps.setString(idx++, item.spec().value());
+            ps.setInt(idx++, item.shelfLife().days());
+            ps.setString(idx++, toJson(item.lastReceiptPrice()));
+            ps.setString(idx++, toJson(item.retailPrice()));
+            ps.setString(idx++, toJson(item.memberPrice()));
+            ps.setString(idx++, toJson(item.vipPrice()));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Can't save item {}", item, e);
+            throw new PersistenceException(String.format("Can't save Item(%s)", item), e);
+        }
     }
 }

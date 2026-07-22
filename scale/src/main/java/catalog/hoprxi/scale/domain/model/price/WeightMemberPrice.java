@@ -28,10 +28,9 @@ import java.util.Objects;
  * @version 0.0.1 2019/10/29
  */
 public class WeightMemberPrice {
+    public static final WeightMemberPrice ZERO_KILOGRAM_RMB = new WeightMemberPrice(WeightPrice.ZERO_KILOGRAM_RMB);
     private final String name;
     private WeightPrice weightPrice;
-
-    public static final WeightMemberPrice ZERO_KILOGRAM_RMB = new WeightMemberPrice(WeightPrice.ZERO_KILOGRAM_RMB);
 
     public WeightMemberPrice(String name, WeightPrice weightPrice) {
         this.name = Objects.requireNonNull(name, "name is null");
@@ -76,8 +75,8 @@ public class WeightMemberPrice {
     @Override
     public String toString() {
         return "WeightMemberPrice{" +
-                "name='" + name + '\'' +
-                ", weightPrice=" + weightPrice +
-                '}';
+               "name='" + name + '\'' +
+               ", weightPrice=" + weightPrice +
+               '}';
     }
 }

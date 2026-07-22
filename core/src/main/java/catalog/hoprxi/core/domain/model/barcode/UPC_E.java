@@ -32,7 +32,7 @@ public class UPC_E extends Barcode {
     }
 
     @Override
-   protected boolean isChecksumValid(String candidate) {
+    protected boolean isChecksumValid(String candidate) {
         Matcher matcher = BARCODE_PATTERN.matcher(barcode);
         if (matcher.matches())
             return EanCheckService.isChecksum(barcode);

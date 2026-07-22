@@ -27,7 +27,7 @@ public final class ProhibitStorageItem {
         return null;
     }
 
-    public ProhibitTradingItem prohibitedSell(){
+    public ProhibitTradingItem prohibitedSell() {
         return null;
     }
 }

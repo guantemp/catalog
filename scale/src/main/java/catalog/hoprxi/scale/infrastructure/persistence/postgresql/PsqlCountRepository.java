@@ -57,37 +57,6 @@ public class PsqlCountRepository implements CountRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlCountRepository.class);
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
-    /**
-     * @param plu
-     * @return
-     */
-    @Override
-    public Count find(Plu plu) {
-        final String findSql = """
-                SELECT plu, name, category_id, brand_id, grade, made_in, spec, shelf_life,
-                       retail_price, last_receipt_price, member_price, vip_price
-                FROM scale
-                WHERE plu = ?
-                LIMIT 1
-                """;
-        try (Connection connection = PsqlUtil.getConnection();
-             PreparedStatement ps = connection.prepareStatement(findSql)) {
-            ps.setInt(1, plu.id());
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return PsqlCountRepository.rebuild(rs);
-                }
-            }
-            return null;// 如果没有返回数据，正常返回 null，不要抛异常
-        } catch (SQLException e) {// 【关键修复 2】区分数据库异常和业务异常
-            LOGGER.error("Database access failure while fetching count for PLU={}", plu.id(), e);
-            throw new PersistenceException("Database query execution failed for PLU " + plu.id() + ": " + e.getMessage(), e);
-        } catch (IOException e) {// 重建对象时的错误属于系统内部错误，不是“未找到”
-            LOGGER.error("Critical failure: Unable to map result set to count object (id={})", plu.id(), e);
-            throw new PersistenceException("Internal error: Failed to reconstruct count entity from database result (ID: " + plu.id() + ")", e);
-        }
-    }
-
     private static Count rebuild(ResultSet rs) throws SQLException, IOException {
         Plu plu = new Plu(rs.getInt("plu"));
         Name name = PsqlCountRepository.buildName(rs.getString("name"));
@@ -243,80 +212,6 @@ public class PsqlCountRepository implements CountRepository {
         return new Name(name, alias);
     }
 
-    /**
-     * @return
-     */
-    @Override
-    public Plu nextPlu() {
-        return null;
-    }
-
-    /**
-     * @param plu
-     */
-    @Override
-    public void delete(Plu plu) {
-        final String removeSql = "delete from scale where plu=?";
-        try (Connection connection = PsqlUtil.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(removeSql)) {
-            preparedStatement.setLong(1, plu.id());
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            LOGGER.error("Can't remove from Count(plu={})", plu.id(), e);
-            throw new PersistenceException(String.format("Can't remove from Count(plu=%s)", plu.id()), e);
-        }
-    }
-
-    /**
-     * @param count
-     */
-    @Override
-    public void save(Count count) {
-        final String insertOrReplaceSql = """
-                INSERT INTO scale (
-                    plu, name,  category_id, brand_id, grade, made_in, spec, shelf_life,
-                    last_receipt_price, retail_price, member_price, vip_price,search_vector
-                ) VALUES (
-                    ?, ?::jsonb,  ?, ?, ?::grade, ?::jsonb, ?, ?,
-                    ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb, to_tsvector('simple', ?)
-                )
-                ON CONFLICT (plu) DO UPDATE SET
-                    name = EXCLUDED.name,
-                    category_id = EXCLUDED.category_id,
-                    brand_id = EXCLUDED.brand_id,
-                    grade = EXCLUDED.grade,
-                    made_in = EXCLUDED.made_in,
-                    spec = EXCLUDED.spec,
-                    shelf_life = EXCLUDED.shelf_life,
-                    last_receipt_price = EXCLUDED.last_receipt_price,
-                    retail_price = EXCLUDED.retail_price,
-                    member_price = EXCLUDED.member_price,
-                    vip_price = EXCLUDED.vip_price,
-                    search_vector = EXCLUDED.search_vector;
-                """;
-        try (Connection conn = PsqlUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(insertOrReplaceSql)) {
-            int idx = 1;
-            ps.setLong(idx++, count.plu().id());
-            ps.setString(idx++, toJson(count.name()));
-            ps.setLong(idx++, count.categoryId());
-            ps.setLong(idx++, count.brandId());
-            ps.setString(idx++, count.grade().name()); // 确保 enum 名称匹配 DB
-            ps.setString(idx++, toJson(count.madeIn()));
-            ps.setString(idx++, count.spec().value());
-            ps.setInt(idx++, count.shelfLife().days());
-            ps.setString(idx++, toJson(count.lastReceiptPrice()));
-            ps.setString(idx++, toJson(count.retailPrice()));
-            ps.setString(idx++, toJson(count.memberPrice()));
-            ps.setString(idx++, toJson(count.vipPrice()));
-            ps.setString(idx++, SearchUtils.buildSearchVector(count.name(), count.spec(), count.madeIn()));
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            LOGGER.error("Can't save count {}", count, e);
-            throw new PersistenceException(String.format("Can't save Count(%s)", count), e);
-        }
-    }
-
     private static String toJson(Name name) {
         StringWriter writer = new StringWriter(128);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
@@ -392,6 +287,110 @@ public class PsqlCountRepository implements CountRepository {
         return writer.toString();
     }
 
+    /**
+     * @param plu
+     * @return
+     */
+    @Override
+    public Count find(Plu plu) {
+        final String findSql = """
+                SELECT plu, name, category_id, brand_id, grade, made_in, spec, shelf_life,
+                       retail_price, last_receipt_price, member_price, vip_price
+                FROM scale
+                WHERE plu = ?
+                LIMIT 1
+                """;
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement ps = connection.prepareStatement(findSql)) {
+            ps.setInt(1, plu.id());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return PsqlCountRepository.rebuild(rs);
+                }
+            }
+            return null;// 如果没有返回数据，正常返回 null，不要抛异常
+        } catch (SQLException e) {// 【关键修复 2】区分数据库异常和业务异常
+            LOGGER.error("Database access failure while fetching count for PLU={}", plu.id(), e);
+            throw new PersistenceException("Database query execution failed for PLU " + plu.id() + ": " + e.getMessage(), e);
+        } catch (IOException e) {// 重建对象时的错误属于系统内部错误，不是“未找到”
+            LOGGER.error("Critical failure: Unable to map result set to count object (id={})", plu.id(), e);
+            throw new PersistenceException("Internal error: Failed to reconstruct count entity from database result (ID: " + plu.id() + ")", e);
+        }
+    }
+
+    /**
+     * @return
+     */
+    @Override
+    public Plu nextPlu() {
+        return null;
+    }
+
+    /**
+     * @param plu
+     */
+    @Override
+    public void delete(Plu plu) {
+        final String removeSql = "delete from scale where plu=?";
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(removeSql)) {
+            preparedStatement.setLong(1, plu.id());
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Can't remove from Count(plu={})", plu.id(), e);
+            throw new PersistenceException(String.format("Can't remove from Count(plu=%s)", plu.id()), e);
+        }
+    }
+
+    /**
+     * @param count
+     */
+    @Override
+    public void save(Count count) {
+        final String insertOrReplaceSql = """
+                INSERT INTO scale (
+                    plu, name,  category_id, brand_id, grade, made_in, spec, shelf_life,
+                    last_receipt_price, retail_price, member_price, vip_price,search_vector
+                ) VALUES (
+                    ?, ?::jsonb,  ?, ?, ?::grade, ?::jsonb, ?, ?,
+                    ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb, to_tsvector('simple', ?)
+                )
+                ON CONFLICT (plu) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    category_id = EXCLUDED.category_id,
+                    brand_id = EXCLUDED.brand_id,
+                    grade = EXCLUDED.grade,
+                    made_in = EXCLUDED.made_in,
+                    spec = EXCLUDED.spec,
+                    shelf_life = EXCLUDED.shelf_life,
+                    last_receipt_price = EXCLUDED.last_receipt_price,
+                    retail_price = EXCLUDED.retail_price,
+                    member_price = EXCLUDED.member_price,
+                    vip_price = EXCLUDED.vip_price,
+                    search_vector = EXCLUDED.search_vector;
+                """;
+        try (Connection conn = PsqlUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(insertOrReplaceSql)) {
+            int idx = 1;
+            ps.setLong(idx++, count.plu().id());
+            ps.setString(idx++, toJson(count.name()));
+            ps.setLong(idx++, count.categoryId());
+            ps.setLong(idx++, count.brandId());
+            ps.setString(idx++, count.grade().name()); // 确保 enum 名称匹配 DB
+            ps.setString(idx++, toJson(count.madeIn()));
+            ps.setString(idx++, count.spec().value());
+            ps.setInt(idx++, count.shelfLife().days());
+            ps.setString(idx++, toJson(count.lastReceiptPrice()));
+            ps.setString(idx++, toJson(count.retailPrice()));
+            ps.setString(idx++, toJson(count.memberPrice()));
+            ps.setString(idx++, toJson(count.vipPrice()));
+            ps.setString(idx++, SearchUtils.buildSearchVector(count.name(), count.spec(), count.madeIn()));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Can't save count {}", count, e);
+            throw new PersistenceException(String.format("Can't save Count(%s)", count), e);
+        }
+    }
 
     /**
      * @param plu

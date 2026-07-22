@@ -24,5 +24,5 @@ import java.net.URL;
  * @since JDK 21
  */
 
-public record CategoryChangeIconCommand(long id, URL icon) implements Command{
+public record CategoryChangeIconCommand(long id, URL icon) implements Command {
 }

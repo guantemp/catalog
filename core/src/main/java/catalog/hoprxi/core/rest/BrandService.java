@@ -70,6 +70,75 @@ public class BrandService {
             .build();
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
 
+    private static Brand createBrand(JsonParser parser) throws IOException, URISyntaxException {
+        BrandFields fields = BrandService.parseBrandFields(parser);
+        BrandCreateCommand command = new BrandCreateCommand(
+                fields.name,
+                fields.shortName,
+                fields.homepage,
+                fields.logo,
+                fields.since,
+                fields.story
+        );
+        Handler<BrandCreateCommand, Brand> handler = new BrandCreateHandler();
+        return handler.execute(command);
+    }
+
+    private static Brand update(JsonParser parser, long id) throws IOException, URISyntaxException {
+        BrandFields fields = BrandService.parseBrandFields(parser);
+
+        BrandUpdateCommand command = new BrandUpdateCommand(
+                id,
+                fields.name,
+                fields.shortName,
+                fields.homepage,
+                fields.logo,
+                fields.since,
+                fields.story
+        );
+
+        Handler<BrandUpdateCommand, Brand> handler = new BrandUpdateHandler();
+        return handler.execute(command);
+    }
+
+    /**
+     * 提取的公共解析方法：专门负责将 JSON 流解析为字段集合
+     */
+    private static BrandFields parseBrandFields(JsonParser parser) throws IOException, URISyntaxException {
+        BrandFields fields = new BrandFields();
+
+        if (parser.nextToken() != JsonToken.START_OBJECT) {
+            throw new IOException("Expected JSON object");
+        }
+
+        while (parser.nextToken() != null) {
+            if (JsonToken.FIELD_NAME == parser.currentToken()) {
+                String fieldName = parser.currentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "name" -> fields.name = parser.getValueAsString();
+                    case "shortName" -> fields.shortName = parser.getValueAsString();
+                    case "story" -> fields.story = parser.getValueAsString();
+                    case "homepage" -> {
+                        String urlStr = parser.getValueAsString();
+                        if (urlStr != null) fields.homepage = new URI(urlStr).toURL();
+                    }
+                    case "logo" -> {
+                        String urlStr = parser.getValueAsString();
+                        if (urlStr != null) fields.logo = new URI(urlStr).toURL();
+                    }
+                    case "since" -> {
+                        if (parser.currentToken() == JsonToken.VALUE_NUMBER_INT) {
+                            fields.since = Year.of(parser.getIntValue());
+                        }
+                    }
+                    // default -> parser.skipChildren();
+                }
+            }
+        }
+        return fields;
+    }
+
     @Get("/brands/{id}")
     @Description("Retrieves the brand information by the given brand ID.")
     public Mono<HttpResponse> find(@Param("id") long id) {
@@ -184,20 +253,6 @@ public class BrandService {
         }));
     }
 
-    private static Brand createBrand(JsonParser parser) throws IOException, URISyntaxException {
-        BrandFields fields = BrandService.parseBrandFields(parser);
-        BrandCreateCommand command = new BrandCreateCommand(
-                fields.name,
-                fields.shortName,
-                fields.homepage,
-                fields.logo,
-                fields.since,
-                fields.story
-        );
-        Handler<BrandCreateCommand, Brand> handler = new BrandCreateHandler();
-        return handler.execute(command);
-    }
-
     @Put("/brands/{id}")
     public HttpResponse update(ServiceRequestContext ctx, HttpData body, @Param("id") long id) {
         RequestHeaders headers = ctx.request().headers();
@@ -230,23 +285,6 @@ public class BrandService {
             return HttpResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, MediaType.JSON_UTF_8,
                     "{\"status\":500,\"message\":\"Unexpected error\"}");
         }));
-    }
-
-    private static Brand update(JsonParser parser, long id) throws IOException, URISyntaxException {
-        BrandFields fields = BrandService.parseBrandFields(parser);
-
-        BrandUpdateCommand command = new BrandUpdateCommand(
-                id,
-                fields.name,
-                fields.shortName,
-                fields.homepage,
-                fields.logo,
-                fields.since,
-                fields.story
-        );
-
-        Handler<BrandUpdateCommand, Brand> handler = new BrandUpdateHandler();
-        return handler.execute(command);
     }
 
     @Delete("/brands/:id")
@@ -282,43 +320,5 @@ public class BrandService {
         URL logo;
         URL homepage;
         Year since;
-    }
-
-    /**
-     * 提取的公共解析方法：专门负责将 JSON 流解析为字段集合
-     */
-    private static BrandFields parseBrandFields(JsonParser parser) throws IOException, URISyntaxException {
-        BrandFields fields = new BrandFields();
-
-        if (parser.nextToken() != JsonToken.START_OBJECT) {
-            throw new IOException("Expected JSON object");
-        }
-
-        while (parser.nextToken() != null) {
-            if (JsonToken.FIELD_NAME == parser.currentToken()) {
-                String fieldName = parser.currentName();
-                parser.nextToken();
-                switch (fieldName) {
-                    case "name" -> fields.name = parser.getValueAsString();
-                    case "shortName" -> fields.shortName = parser.getValueAsString();
-                    case "story" -> fields.story = parser.getValueAsString();
-                    case "homepage" -> {
-                        String urlStr = parser.getValueAsString();
-                        if (urlStr != null) fields.homepage = new URI(urlStr).toURL();
-                    }
-                    case "logo" -> {
-                        String urlStr = parser.getValueAsString();
-                        if (urlStr != null) fields.logo = new URI(urlStr).toURL();
-                    }
-                    case "since" -> {
-                        if (parser.currentToken() == JsonToken.VALUE_NUMBER_INT) {
-                            fields.since = Year.of(parser.getIntValue());
-                        }
-                    }
-                    // default -> parser.skipChildren();
-                }
-            }
-        }
-        return fields;
     }
 }

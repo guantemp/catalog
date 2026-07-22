@@ -22,5 +22,5 @@ package catalog.hoprxi.core.application.command;
  * @since JDK 21
  */
 
-public record CategoryChangDescriptionCommand(long id, String description)  implements Command {
+public record CategoryChangDescriptionCommand(long id, String description) implements Command {
 }

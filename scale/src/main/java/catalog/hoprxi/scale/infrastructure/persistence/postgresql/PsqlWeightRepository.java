@@ -57,34 +57,6 @@ public class PsqlWeightRepository implements WeightRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlWeightRepository.class);
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
-
-    @Override
-    public Weight find(Plu plu) {
-        final String findSql = """
-                SELECT plu, name, category_id, brand_id, grade, made_in, spec, shelf_life,
-                       retail_price, last_receipt_price, member_price, vip_price
-                FROM scale
-                WHERE plu = ?
-                LIMIT 1
-                """;
-        try (Connection connection = PsqlUtil.getConnection();
-             PreparedStatement ps = connection.prepareStatement(findSql)) {
-            ps.setInt(1, plu.id());
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return PsqlWeightRepository.rebuild(rs);
-                }
-            }
-            return null;// 如果没有返回数据，正常返回 null，不要抛异常
-        } catch (SQLException e) {// 【关键修复 2】区分数据库异常和业务异常
-            LOGGER.error("Database access failure while fetching weight for PLU={}", plu.id(), e);
-            throw new PersistenceException("Database query execution failed for PLU " + plu.id() + ": " + e.getMessage(), e);
-        } catch (IOException e) {// 重建对象时的错误属于系统内部错误，不是“未找到”
-            LOGGER.error("Critical failure: Unable to map result set to weight object (id={})", plu.id(), e);
-            throw new PersistenceException("Internal error: Failed to reconstruct weight entity from database result (ID: " + plu.id() + ")", e);
-        }
-    }
-
     private static Weight rebuild(ResultSet rs) throws SQLException, IOException {
         Plu plu = new Plu(rs.getInt("plu"));
         Name name = PsqlWeightRepository.buildName(rs.getString("name"));
@@ -240,78 +212,6 @@ public class PsqlWeightRepository implements WeightRepository {
         return new WeightPrice(Money.of(number, currency), unit);
     }
 
-
-    @Override
-    public Plu nextPlu() {
-        return null;
-    }
-
-    @Override
-    public void delete(Plu plu) {
-        final String removeSql = "delete from scale where plu=?";
-        try (Connection connection = PsqlUtil.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(removeSql)) {
-            preparedStatement.setLong(1, plu.id());
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            LOGGER.error("Can't remove from Weight(plu={})", plu.id(), e);
-            throw new PersistenceException(String.format("Can't remove from Weight(plu=%s)", plu.id()), e);
-        }
-    }
-
-    @Override
-    public void save(Weight weight) {
-        final String insertOrReplaceSql = """
-                INSERT INTO scale (
-                    plu, name,  category_id, brand_id, grade, made_in, spec, shelf_life,
-                    last_receipt_price, retail_price, member_price, vip_price,search_vector
-                ) VALUES (
-                    ?, ?::jsonb,  ?, ?, ?::grade, ?::jsonb, ?, ?,
-                    ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb, to_tsvector('simple', ?)
-                )
-                ON CONFLICT (plu) DO UPDATE SET
-                    name = EXCLUDED.name,
-                    category_id = EXCLUDED.category_id,
-                    brand_id = EXCLUDED.brand_id,
-                    grade = EXCLUDED.grade,
-                    made_in = EXCLUDED.made_in,
-                    spec = EXCLUDED.spec,
-                    shelf_life = EXCLUDED.shelf_life,
-                    last_receipt_price = EXCLUDED.last_receipt_price,
-                    retail_price = EXCLUDED.retail_price,
-                    member_price = EXCLUDED.member_price,
-                    vip_price = EXCLUDED.vip_price,
-                    search_vector = EXCLUDED.search_vector;
-                """;
-        try (Connection conn = PsqlUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(insertOrReplaceSql)) {
-/*
-            System.out.println("=== DB Connection Info ===");
-            System.out.println("URL: " + conn.getMetaData().getURL());
-            System.out.println("DB Name: " + conn.getCatalog());
-            System.out.println("Current Schema: " + conn.getSchema());
- */
-            int idx = 1;
-            ps.setLong(idx++, weight.plu().id());
-            ps.setString(idx++, toJson(weight.name()));
-            ps.setLong(idx++, weight.categoryId());
-            ps.setLong(idx++, weight.brandId());
-            ps.setString(idx++, weight.grade().name()); // 确保 enum 名称匹配 DB
-            ps.setString(idx++, toJson(weight.madeIn()));
-            ps.setString(idx++, weight.spec().value());
-            ps.setInt(idx++, weight.shelfLife().days());
-            ps.setString(idx++, toJson(weight.lastReceiptPrice()));
-            ps.setString(idx++, toJson(weight.retailPrice()));
-            ps.setString(idx++, toJson(weight.memberPrice()));
-            ps.setString(idx++, toJson(weight.vipPrice()));
-            ps.setString(idx++, SearchUtils.buildSearchVector(weight.name(), weight.spec(), weight.madeIn()));
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            LOGGER.error("Can't save weight {}", weight, e);
-            throw new PersistenceException(String.format("Can't save Weight(%s)", weight), e);
-        }
-    }
-
     private static String toJson(Name name) {
         StringWriter writer = new StringWriter(128);
         try (JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
@@ -385,6 +285,104 @@ public class PsqlWeightRepository implements WeightRepository {
             LOGGER.error("Not write RetailPrice as json", e);
         }
         return writer.toString();
+    }
+
+    @Override
+    public Weight find(Plu plu) {
+        final String findSql = """
+                SELECT plu, name, category_id, brand_id, grade, made_in, spec, shelf_life,
+                       retail_price, last_receipt_price, member_price, vip_price
+                FROM scale
+                WHERE plu = ?
+                LIMIT 1
+                """;
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement ps = connection.prepareStatement(findSql)) {
+            ps.setInt(1, plu.id());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return PsqlWeightRepository.rebuild(rs);
+                }
+            }
+            return null;// 如果没有返回数据，正常返回 null，不要抛异常
+        } catch (SQLException e) {// 【关键修复 2】区分数据库异常和业务异常
+            LOGGER.error("Database access failure while fetching weight for PLU={}", plu.id(), e);
+            throw new PersistenceException("Database query execution failed for PLU " + plu.id() + ": " + e.getMessage(), e);
+        } catch (IOException e) {// 重建对象时的错误属于系统内部错误，不是“未找到”
+            LOGGER.error("Critical failure: Unable to map result set to weight object (id={})", plu.id(), e);
+            throw new PersistenceException("Internal error: Failed to reconstruct weight entity from database result (ID: " + plu.id() + ")", e);
+        }
+    }
+
+    @Override
+    public Plu nextPlu() {
+        return null;
+    }
+
+    @Override
+    public void delete(Plu plu) {
+        final String removeSql = "delete from scale where plu=?";
+        try (Connection connection = PsqlUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(removeSql)) {
+            preparedStatement.setLong(1, plu.id());
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Can't remove from Weight(plu={})", plu.id(), e);
+            throw new PersistenceException(String.format("Can't remove from Weight(plu=%s)", plu.id()), e);
+        }
+    }
+
+    @Override
+    public void save(Weight weight) {
+        final String insertOrReplaceSql = """
+                INSERT INTO scale (
+                    plu, name,  category_id, brand_id, grade, made_in, spec, shelf_life,
+                    last_receipt_price, retail_price, member_price, vip_price,search_vector
+                ) VALUES (
+                    ?, ?::jsonb,  ?, ?, ?::grade, ?::jsonb, ?, ?,
+                    ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb, to_tsvector('simple', ?)
+                )
+                ON CONFLICT (plu) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    category_id = EXCLUDED.category_id,
+                    brand_id = EXCLUDED.brand_id,
+                    grade = EXCLUDED.grade,
+                    made_in = EXCLUDED.made_in,
+                    spec = EXCLUDED.spec,
+                    shelf_life = EXCLUDED.shelf_life,
+                    last_receipt_price = EXCLUDED.last_receipt_price,
+                    retail_price = EXCLUDED.retail_price,
+                    member_price = EXCLUDED.member_price,
+                    vip_price = EXCLUDED.vip_price,
+                    search_vector = EXCLUDED.search_vector;
+                """;
+        try (Connection conn = PsqlUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(insertOrReplaceSql)) {
+/*
+            System.out.println("=== DB Connection Info ===");
+            System.out.println("URL: " + conn.getMetaData().getURL());
+            System.out.println("DB Name: " + conn.getCatalog());
+            System.out.println("Current Schema: " + conn.getSchema());
+ */
+            int idx = 1;
+            ps.setLong(idx++, weight.plu().id());
+            ps.setString(idx++, toJson(weight.name()));
+            ps.setLong(idx++, weight.categoryId());
+            ps.setLong(idx++, weight.brandId());
+            ps.setString(idx++, weight.grade().name()); // 确保 enum 名称匹配 DB
+            ps.setString(idx++, toJson(weight.madeIn()));
+            ps.setString(idx++, weight.spec().value());
+            ps.setInt(idx++, weight.shelfLife().days());
+            ps.setString(idx++, toJson(weight.lastReceiptPrice()));
+            ps.setString(idx++, toJson(weight.retailPrice()));
+            ps.setString(idx++, toJson(weight.memberPrice()));
+            ps.setString(idx++, toJson(weight.vipPrice()));
+            ps.setString(idx++, SearchUtils.buildSearchVector(weight.name(), weight.spec(), weight.madeIn()));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Can't save weight {}", weight, e);
+            throw new PersistenceException(String.format("Can't save Weight(%s)", weight), e);
+        }
     }
 
     @Override

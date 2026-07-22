@@ -1,288 +1,1275 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商品数据批量导入</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>数据导入 · 上传工具</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" rel="stylesheet" />
+
+    <!-- SheetJS 用于读取 Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js">
+    </script>
+    <!-- PapaParse 用于 CSV 解析 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js">
+    </script>
+
     <style>
+        /* ===== 全局样式（与 item.html 配色一致） ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
-            --primary-color: #2c3e50; --secondary-color: #34495e; --accent-color: #3498db;
-            --success-color: #2ecc71; --bg-color: #f4f7f6; --card-bg: #ffffff;
-            --text-main: #2c3e50; --text-muted: #7f8c8d; --border-color: #e0e0e0;
+            --bg-body: #1e2a36;
+            --bg-card: #2a3a48;
+            --bg-hover: #344a5a;
+            --bg-input: #15222e;
+            --text-main: #e8edf4;
+            --text-secondary: #c8d8e8;
+            --text-muted: #8fa8b8;
+            --border-light: #3e5566;
+            --border-medium: #3e5566;
+            --primary: #2D9CDB;
+            --primary-hover: #4DB8F0;
+            --danger: #DC4C4C;
+            --profit-color: #6ee7b7;
+            --retail-color: #f87171;
+            --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.5);
+            --radius: 12px;
         }
-        body { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; }
-        .import-container { max-width: 100%; margin: 0 auto; background: var(--card-bg); padding: 24px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); height: calc(100vh - 40px); display: flex; flex-direction: column; }
-        h2 { margin-top: 0; color: var(--primary-color); font-weight: 600; }
 
-        .upload-area { border: 2px dashed var(--border-color); padding: 30px; text-align: center; margin-bottom: 20px; cursor: pointer; transition: all 0.3s ease; border-radius: 6px; background-color: #fcfcfc; }
-        .upload-area:hover { border-color: var(--accent-color); background-color: #f0f8ff; }
-
-        .options-bar { display: flex; align-items: center; margin-bottom: 15px; font-size: 14px; color: var(--secondary-color); gap: 20px; }
-        .options-bar label { cursor: pointer; user-select: none; display: flex; align-items: center; }
-        .options-bar input[type="checkbox"] { margin-right: 8px; width: 16px; height: 16px; cursor: pointer; }
-
-        /* 刷新按钮样式 */
-        .refresh-btn {
-            background: #e67e22; color: white; border: none; padding: 6px 16px; border-radius: 4px;
-            cursor: pointer; font-size: 13px; font-weight: 500; transition: background 0.2s;
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            width: 100%;
         }
-        .refresh-btn:hover { background: #d35400; }
 
-        .mapping-container { display: flex; gap: 20px; flex: 1; overflow: hidden; }
-        .preview-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .table-wrapper { flex: 1; overflow: auto; border: 1px solid var(--border-color); border-radius: 4px; }
-        .fields-section { width: 240px; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; flex-direction: column; overflow-y: auto; }
+        .app-container {
+            width: 100%;
+            max-width: 100%;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-card);
+            padding: 24px 28px 28px 28px;
+        }
 
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th, td { border: 1px solid var(--border-color); padding: 10px 12px; text-align: left; white-space: nowrap; }
-        th { background-color: #f8f9fa; position: sticky; top: 0; z-index: 1; box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1); }
+        /* ===== 头部 ===== */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .page-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .page-header h1 .material-symbols-outlined {
+            font-size: 30px;
+            color: var(--primary);
+        }
+        .page-header .sub {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .page-header .badge-status {
+            background: rgba(45, 156, 219, 0.12);
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            border: 1px solid rgba(45, 156, 219, 0.15);
+        }
 
-        .draggable-field { background: var(--accent-color); color: white; padding: 8px 12px; margin-bottom: 8px; border-radius: 4px; cursor: grab; text-align: center; font-size: 13px; user-select: none; transition: transform 0.2s; }
-        .draggable-field:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .draggable-field:active { cursor: grabbing; }
-        .mapped { background-color: #e0e0e0; color: #999; cursor: not-allowed; text-decoration: line-through; }
+        /* ===== 上传区域（拖拽框） ===== */
+        .upload-zone {
+            border: 2px dashed var(--border-medium);
+            border-radius: 16px;
+            padding: 28px 20px 24px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            background: var(--bg-input);
+            margin-bottom: 12px;
+            position: relative;
+        }
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(45, 156, 219, 0.04);
+        }
+        .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(45, 156, 219, 0.08);
+            box-shadow: 0 0 30px rgba(45, 156, 219, 0.06);
+        }
 
-        .drop-zone { min-height: 28px; border: 1px dashed #ccc; padding: 4px; text-align: center; color: var(--text-muted); font-size: 12px; border-radius: 4px; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .upload-zone .icon-big {
+            font-size: 42px;
+            color: var(--primary);
+            margin-bottom: 4px;
+            display: block;
+        }
+        .upload-zone p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+        .upload-zone .hint {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 2px;
+        }
+        .upload-zone .hint strong {
+            color: var(--primary);
+        }
 
-        /* 【核心样式】：只要 mapping[header] 有值，就显示亮蓝色高亮 */
-        .drop-zone.active { background-color: #e8f4ff; border-color: var(--accent-color); color: var(--accent-color); font-weight: bold; }
+        /* ---- 文件信息行（在拖拽框内，保留原有内容下方） ---- */
+        .upload-zone .file-info-row {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(45, 156, 219, 0.10);
+            width: 100%;
+        }
+        .upload-zone .file-info-row.show {
+            display: flex;
+        }
 
-        .submit-btn { background: var(--success-color); color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; margin-top: 15px; font-size: 15px; font-weight: 500; width: 100%; transition: background 0.2s; }
-        .submit-btn:hover:not(:disabled) { background: #27ae60; }
-        .submit-btn:disabled { background: #bdc3c7; cursor: not-allowed; }
+        .upload-zone .file-info-row .info-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+        }
+        .upload-zone .file-info-row .info-item .label {
+            color: var(--text-muted);
+        }
+        .upload-zone .file-info-row .info-item .value {
+            font-weight: 600;
+        }
+        .upload-zone .file-info-row .info-item .value.filename {
+            color: var(--primary);
+        }
+        .upload-zone .file-info-row .info-item .value.filesize {
+            color: #fbbf24;
+        }
+        .upload-zone .file-info-row .info-item .value.rows {
+            color: var(--profit-color);
+        }
+        .upload-zone .file-info-row .info-item .value.preview {
+            color: var(--retail-color);
+        }
+
+        .upload-zone .file-info-row .divider {
+            width: 1px;
+            height: 18px;
+            background: var(--border-light);
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* ===== 字段池（拖拽源） ===== */
+        .field-pool-container {
+            display: none;
+            margin-bottom: 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 12px 16px;
+        }
+        .field-pool-container.show {
+            display: block;
+        }
+        .field-pool-container .pool-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .field-pool-container .pool-label i {
+            color: var(--primary);
+        }
+        .field-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .field-pool .field-tag {
+            background: rgba(45, 156, 219, 0.10);
+            border: 1px solid rgba(45, 156, 219, 0.15);
+            border-radius: 20px;
+            padding: 4px 14px 4px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: grab;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.15s;
+            user-select: none;
+        }
+        .field-pool .field-tag:hover {
+            background: rgba(45, 156, 219, 0.18);
+            border-color: var(--primary);
+        }
+        .field-pool .field-tag:active {
+            cursor: grabbing;
+        }
+        .field-pool .field-tag .tag-icon {
+            font-size: 14px;
+            color: var(--primary);
+        }
+        .field-pool .field-tag.mapped {
+            opacity: 0.4;
+            border-style: dashed;
+            cursor: default;
+            pointer-events: none;
+        }
+        .field-pool .field-tag.mapped .tag-icon {
+            color: var(--text-muted);
+        }
+
+        /* ===== 数据预览表格 ===== */
+        .preview-section {
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--bg-input);
+            display: none;
+        }
+        .preview-section.show {
+            display: block;
+        }
+        .preview-section .preview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-card);
+        }
+        .preview-section .preview-header span {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        .preview-section .preview-header span strong {
+            color: var(--text-main);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            padding: 0 0 4px 0;
+        }
+        .table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .table-wrap table th {
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-align: left;
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            white-space: nowrap;
+        }
+        .table-wrap table th.drop-zone-row {
+            background: var(--bg-input);
+            border-bottom: 2px dashed var(--border-medium);
+            padding: 4px 8px;
+            text-align: center;
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 12px;
+            min-width: 80px;
+        }
+        .table-wrap table th.drop-zone-row .drop-target {
+            min-height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 2px 8px;
+            transition: 0.2s;
+            border: 1px dashed transparent;
+            cursor: default;
+        }
+        .table-wrap table th.drop-zone-row .drop-target.empty {
+            border-color: var(--border-medium);
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+        .table-wrap table th.drop-zone-row .drop-target.mapped {
+            border-color: rgba(45, 156, 219, 0.2);
+            background: rgba(45, 156, 219, 0.06);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        .table-wrap table th.drop-zone-row .drop-target.dragover {
+            border-color: var(--primary);
+            background: rgba(45, 156, 219, 0.12);
+            color: var(--text-main);
+        }
+        .table-wrap table th.drop-zone-row .drop-target .remove-map {
+            margin-left: 6px;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 12px;
+            padding: 0 4px;
+        }
+        .table-wrap table th.drop-zone-row .drop-target .remove-map:hover {
+            color: var(--danger);
+        }
+        .table-wrap table td {
+            padding: 7px 14px;
+            border-bottom: 1px solid rgba(62, 85, 102, 0.4);
+            color: var(--text-secondary);
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .table-wrap table tr:hover td {
+            background: var(--bg-hover);
+        }
+        .table-wrap table .row-num {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-align: center;
+            width: 40px;
+            flex-shrink: 0;
+        }
+
+        /* ===== 底部操作栏 ===== */
+        .action-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 16px;
+            flex-wrap: wrap;
+            display: none;
+        }
+        .action-bar.show {
+            display: flex;
+        }
+        .action-bar .status-msg {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        .action-bar .status-msg .ok {
+            color: var(--profit-color);
+        }
+        .action-bar .status-msg .err {
+            color: var(--retail-color);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 8px 22px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', system-ui, sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(45, 156, 219, 0.2);
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(45, 156, 219, 0.3);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-secondary {
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-medium);
+        }
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+            color: var(--text-main);
+        }
+        .btn-success {
+            background: #059669;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(52, 211, 153, 0.15);
+        }
+        .btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(52, 211, 153, 0.25);
+        }
+        .btn-danger {
+            background: rgba(220, 76, 76, 0.12);
+            color: var(--retail-color);
+            border: 1px solid rgba(220, 76, 76, 0.15);
+        }
+        .btn-danger:hover {
+            background: rgba(220, 76, 76, 0.2);
+        }
+
+        /* ===== 上传进度 ===== */
+        .upload-progress {
+            display: none;
+            margin-top: 12px;
+            width: 100%;
+        }
+        .upload-progress.show {
+            display: block;
+        }
+        .upload-progress .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+        .upload-progress .progress-bar .fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-hover));
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        .upload-progress .progress-text {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ===== Toast 消息 ===== */
+        .toast-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 14px 20px;
+            color: var(--text-main);
+            font-size: 14px;
+            box-shadow: var(--shadow-card);
+            animation: toastIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .toast .toast-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .toast.success .toast-icon {
+            color: var(--profit-color);
+        }
+        .toast.error .toast-icon {
+            color: var(--retail-color);
+        }
+        .toast.info .toast-icon {
+            color: var(--primary);
+        }
+        .toast .toast-close {
+            margin-left: auto;
+            cursor: pointer;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            font-size: 16px;
+            padding: 0 4px;
+        }
+        .toast .toast-close:hover {
+            color: var(--text-main);
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+            .app-container {
+                padding: 16px;
+            }
+            .page-header h1 {
+                font-size: 18px;
+            }
+            .upload-zone {
+                padding: 20px 16px 18px 16px;
+            }
+            .upload-zone .icon-big {
+                font-size: 32px;
+            }
+            .upload-zone .file-info-row {
+                gap: 10px;
+            }
+            .upload-zone .file-info-row .info-item {
+                font-size: 12px;
+            }
+            .upload-zone .file-info-row .divider {
+                display: none;
+            }
+            .table-wrap table {
+                font-size: 12px;
+            }
+            .table-wrap table th,
+            .table-wrap table td {
+                padding: 5px 10px;
+            }
+            .table-wrap table th.drop-zone-row {
+                font-size: 10px;
+                padding: 2px 4px;
+            }
+            .table-wrap table th.drop-zone-row .drop-target {
+                min-height: 22px;
+                font-size: 10px;
+            }
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-group {
+                justify-content: stretch;
+            }
+            .btn-group .btn {
+                flex: 1;
+                justify-content: center;
+            }
+            .toast-container {
+                bottom: 16px;
+                right: 16px;
+                left: 16px;
+                max-width: none;
+            }
+            .field-pool .field-tag {
+                font-size: 11px;
+                padding: 3px 10px 3px 8px;
+            }
+        }
+        @media (max-width: 480px) {
+            .upload-zone .file-info-row {
+                flex-direction: column;
+                gap: 4px;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div id="app">
-    <div class="import-container">
-        <h2>商品数据批量导入</h2>
+<div class="app-container">
+    <!-- ===== 头部 ===== -->
+    <div class="page-header">
+        <h1>
+            <span class="material-symbols-outlined">cloud_upload</span>
+            数据导入
+            <span class="sub">· 上传 &amp; 拖拽映射</span>
+        </h1>
+        <span class="badge-status">
+            <i class="fas fa-database" style="margin-right:6px;"></i> ItemMapping
+        </span>
+    </div>
 
-        <div class="upload-area" @click="triggerFileInput" @dragover.prevent @drop.prevent="handleDrop">
-            <p style="margin: 0; font-size: 16px; color: var(--primary-color);">点击或拖拽文件到此处上传</p>
-            <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">支持格式: .xls, .xlsx, .csv, .txt</p>
-            <input type="file" ref="fileInputRef" @change="handleFile" accept=".xls,.xlsx,.csv,.txt" style="display: none;">
+    <!-- ===== 上传区域（拖拽框） ===== -->
+    <div class="upload-zone" id="uploadZone">
+        <!-- 原有内容：完全保留，不动 -->
+        <span class="icon-big material-symbols-outlined">upload_file</span>
+        <p><strong>点击选择文件</strong> 或将文件拖拽到此</p>
+        <div class="hint">支持 <strong>.xls</strong> · <strong>.xlsx</strong> · <strong>.csv</strong> · <strong>.txt</strong></div>
+
+        <!-- 新增：文件信息行（在原有内容下方，用颜色标识） -->
+        <div class="file-info-row" id="fileInfoRow">
+            <span class="info-item">
+                <span class="label">📄</span>
+                <span class="value filename" id="fileNameDisplay">—</span>
+            </span>
+            <span class="divider"></span>
+            <span class="info-item">
+                <span class="label">大小</span>
+                <span class="value filesize" id="fileSizeDisplay">—</span>
+            </span>
+            <span class="divider"></span>
+            <span class="info-item">
+                <span class="label">行数</span>
+                <span class="value rows" id="totalRowsDisplay">0</span>
+            </span>
+            <span class="divider"></span>
+            <span class="info-item">
+                <span class="label">预览</span>
+                <span class="value preview" id="previewLimitDisplay">12</span>
+                <span class="label">行</span>
+            </span>
         </div>
 
-        <div class="options-bar" v-if="currentFile">
-            <label>
-                <input type="checkbox" v-model="hasHeader" @change="reParseFile">
-                文件包含表头（第一行作为列名）
-            </label>
-            <!-- 新增刷新按钮 -->
-            <button class="refresh-btn" @click="refreshFile">刷新文件 (清空映射)</button>
+        <!-- file input -->
+        <input type="file" id="fileInput" accept=".xls,.xlsx,.csv,.txt" />
+    </div>
+
+    <!-- ===== 字段池（拖拽源） ===== -->
+    <div class="field-pool-container" id="fieldPoolContainer">
+        <div class="pool-label">
+            <i class="fas fa-arrows-alt"></i> 拖拽以下字段到表格列头的放置区完成映射
         </div>
+        <div class="field-pool" id="fieldPool"></div>
+    </div>
 
-        <div v-if="headers.length" class="mapping-container">
-            <div class="preview-section">
-                <h4 style="margin-top: 0; margin-bottom: 10px; color: var(--secondary-color);">数据预览 (前12行)</h4>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                        <tr>
-                            <th v-for="header in headers" :key="header" style="min-width: 150px;">
-                                <div style="font-weight: bold; margin-bottom: 8px; color: var(--primary-color);">{{ header }}</div>
-                                <div
-                                        class="drop-zone"
-                                        :class="{ active: mapping[header] }"
-                                        @dragover.prevent="onDragOver"
-                                        @dragleave="onDragLeave"
-                                        @drop="onDrop($event, header)"
-                                        @dblclick="removeMapping(header)"
-                                >
-                                    {{ mapping[header] || '拖拽字段到这里' }}
-                                </div>
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr v-for="(row, index) in fileData" :key="index">
-                            <td v-for="header in headers" :key="header">{{ row[header] }}</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <!-- ===== 数据预览（预览前12行） ===== -->
+    <div class="preview-section" id="previewSection">
+        <div class="preview-header">
+            <span>📋 数据预览 <strong id="previewCount">0</strong> 行</span>
+            <span style="font-size:12px;color:var(--text-muted);">将字段拖到列头下方的空位完成映射</span>
+        </div>
+        <div class="table-wrap">
+            <table id="dataTable">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
 
-            <div class="fields-section" @dragover.prevent @drop="onDropToFields">
-                <h4 style="margin-top: 0; margin-bottom: 15px; color: var(--secondary-color); border-bottom: 1px solid #eee; padding-bottom: 10px;">系统字段</h4>
-                <div style="flex: 1; overflow-y: auto;">
-                    <div
-                            v-for="field in systemFields"
-                            :key="field"
-                            class="draggable-field"
-                            :class="{ mapped: isFieldMapped(field) }"
-                            :draggable="!isFieldMapped(field)"
-                            @dragstart="onDragStart($event, field)"
-                    >
-                        {{ field }}
-                    </div>
-                </div>
-                <button class="submit-btn" @click="submitData" :disabled="Object.keys(mapping).length === 0">
-                    确认映射并上传
-                </button>
-            </div>
+    <!-- ===== 操作栏 ===== -->
+    <div class="action-bar" id="actionBar">
+        <div class="status-msg" id="statusMsg">
+            <i class="fas fa-info-circle"></i> 请上传文件并完成列映射
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-secondary" id="resetAllBtn"><i class="fas fa-undo"></i> 重置</button>
+            <button class="btn btn-primary" id="uploadBtn" disabled>
+                <i class="fas fa-cloud-upload-alt"></i> 上传到服务器
+            </button>
+        </div>
+        <!-- 进度条 -->
+        <div class="upload-progress" id="uploadProgress">
+            <div class="progress-text" id="progressText">准备上传...</div>
+            <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
         </div>
     </div>
 </div>
 
+<!-- ===== Toast 容器 ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
 <script>
-    const { createApp, ref, reactive } = Vue
+    // ================================================================
+    //  配置
+    // ================================================================
+    const UPLOAD_URL = 'https://slave.tooo.top/catalog/v1/upload';
 
-    createApp({
-        setup() {
-            const systemFields = [
-                '检查', 'ID', '名字', '简称', '条码', '规格', '等级',
-                '分类', '品牌', '保质期', '产地', '单位',
-                '最近入库价', '零售价', '会员价', 'VIP价', '商品图片'
-            ]
+    const FIELD_META = [
+        { key: 'CHECK', label: '检查列' },
+        { key: 'ID', label: 'ID' },
+        { key: 'NAME', label: '名字' },
+        { key: 'SHORT_NAME', label: '简称' },
+        { key: 'BARCODE', label: '条码' },
+        { key: 'SPEC', label: '规格' },
+        { key: 'GRADE', label: '商品等级' },
+        { key: 'CATEGORY', label: '分类' },
+        { key: 'BRAND', label: '品牌' },
+        { key: 'SHELF_LIFE', label: '保质期' },
+        { key: 'MADE_IN', label: '产地' },
+        { key: 'UNIT', label: '单位' },
+        { key: 'LAST_RECEIPT_PRICE', label: '最近入库价' },
+        { key: 'RETAIL_PRICE', label: '零售价' },
+        { key: 'MEMBER_PRICE', label: '会员价' },
+        { key: 'VIP_PRICE', label: 'VIP价' },
+        { key: 'SHOW', label: '展示图片' },
+        { key: 'IGNORE', label: '忽略' }
+    ];
 
-            const fileInputRef = ref(null)
-            const currentFile = ref(null)
-            const hasHeader = ref(true)
-            const headers = ref([])
-            const fileData = ref([])
-            const mapping = reactive({})
+    const FIELD_KEYS = FIELD_META.map(f => f.key);
+    const FIELD_LABEL_MAP = Object.fromEntries(FIELD_META.map(f => [f.key, f.label]));
 
-            const triggerFileInput = () => fileInputRef.value.click()
+    // ================================================================
+    //  状态
+    // ================================================================
+    let fileData = null;
+    let headers = [];
+    let totalRows = 0;
+    let mapping = {};
+    let reverseMapping = {};
+    let isUploading = false;
 
-            const handleDrop = (e) => {
-                const files = e.dataTransfer.files
-                if (files.length) { currentFile.value = files[0]; parseFile(files[0]) }
-            }
+    // ================================================================
+    //  DOM 引用
+    // ================================================================
+    const $ = id => document.getElementById(id);
+    const uploadZone = $('uploadZone');
+    const fileInput = $('fileInput');
 
-            const handleFile = (e) => {
-                const file = e.target.files[0]
-                if (file) { currentFile.value = file; parseFile(file) }
-            }
+    const fileInfoRow = $('fileInfoRow');
+    const fileNameDisplay = $('fileNameDisplay');
+    const fileSizeDisplay = $('fileSizeDisplay');
+    const totalRowsDisplay = $('totalRowsDisplay');
+    const previewLimitDisplay = $('previewLimitDisplay');
 
-            // 切换表头选项时，重新解析但不清空映射
-            const reParseFile = () => { if (currentFile.value) parseFile(currentFile.value) }
+    const fieldPoolContainer = $('fieldPoolContainer');
+    const fieldPool = $('fieldPool');
+    const previewSection = $('previewSection');
+    const tableHead = $('tableHead');
+    const tableBody = $('tableBody');
+    const previewCount = $('previewCount');
+    const actionBar = $('actionBar');
+    const statusMsg = $('statusMsg');
+    const resetAllBtn = $('resetAllBtn');
+    const uploadBtn = $('uploadBtn');
+    const uploadProgress = $('uploadProgress');
+    const progressText = $('progressText');
+    const progressFill = $('progressFill');
 
-            // 【新增】刷新文件：重新读取并彻底清空映射
-            const refreshFile = () => {
-                if (currentFile.value) {
-                    // 1. 彻底清空映射
-                    Object.keys(mapping).forEach(key => delete mapping[key])
-                    // 2. 重新解析文件
-                    parseFile(currentFile.value)
-                }
-            }
+    // ================================================================
+    //  Toast 消息
+    // ================================================================
+    function showToast(message, type = 'info', duration = 4000) {
+        const container = $('toastContainer');
+        const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+                <span class="toast-icon"><i class="fas ${icons[type] || icons.info}"></i></span>
+                <span>${message}</span>
+                <button class="toast-close"><i class="fas fa-times"></i></button>
+            `;
+        toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
+        container.appendChild(toast);
+        setTimeout(() => { if (toast.parentNode) toast.remove(); }, duration);
+    }
 
-            const parseFile = (file) => {
-                const reader = new FileReader()
-                const ext = file.name.split('.').pop().toLowerCase()
-                reader.onload = (e) => {
+    // ================================================================
+    //  工具：格式化文件大小
+    // ================================================================
+    function formatSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    // ================================================================
+    //  解析文件
+    // ================================================================
+    function parseFile(file) {
+        return new Promise((resolve, reject) => {
+            const ext = file.name.split('.').pop().toLowerCase();
+
+            if (ext === 'xls' || ext === 'xlsx') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
                     try {
-                        if (ext === 'csv' || ext === 'txt') {
-                            const result = Papa.parse(e.target.result, { skipEmptyLines: true })
-                            const allData = result.data
-                            if (hasHeader.value) {
-                                headers.value = allData[0]
-                                fileData.value = allData.slice(1, 13).map(row => { let obj = {}; headers.value.forEach((h, i) => obj[h] = row[i] || ""); return obj })
-                            } else {
-                                const maxCols = Math.max(...allData.map(row => row.length))
-                                headers.value = Array.from({ length: maxCols }, (_, i) => `字段${i + 1}`)
-                                fileData.value = allData.slice(0, 12).map(row => { let obj = {}; headers.value.forEach((h, i) => obj[h] = row[i] || ""); return obj })
-                            }
-                        } else if (ext === 'xls' || ext === 'xlsx') {
-                            const data = new Uint8Array(e.target.result)
-                            const workbook = XLSX.read(data, { type: 'array' })
-                            const firstSheet = workbook.Sheets[workbook.SheetNames[0]]
-                            const rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" })
-                            if (hasHeader.value) {
-                                headers.value = rawData[0]
-                                fileData.value = rawData.slice(1, 13).map(row => { let obj = {}; headers.value.forEach((h, i) => obj[h] = row[i]); return obj })
-                            } else {
-                                const maxCols = Math.max(...rawData.map(row => row.length))
-                                headers.value = Array.from({ length: maxCols }, (_, i) => `字段${i + 1}`)
-                                fileData.value = rawData.slice(0, 12).map(row => { let obj = {}; headers.value.forEach((h, i) => obj[h] = row[i]); return obj })
-                            }
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+                        if (json.length === 0) {
+                            reject(new Error('文件为空或无法读取'));
+                            return;
                         }
-                    } catch (err) { alert('文件解析失败: ' + err.message) }
-                }
-                if (ext === 'xls' || ext === 'xlsx') reader.readAsArrayBuffer(file)
-                else reader.readAsText(file)
-            }
-
-            const onDragStart = (e, field) => {
-                e.dataTransfer.setData('text/plain', field)
-                e.dataTransfer.effectAllowed = 'move'
-            }
-
-            const onDragOver = (e) => e.target.classList.add('active')
-            const onDragLeave = (e) => e.target.classList.remove('active')
-
-            // 【核心逻辑】：处理拖拽到表头（支持覆盖和互换）
-            const onDrop = (e, targetHeader) => {
-                e.target.classList.remove('active')
-                const draggedField = e.dataTransfer.getData('text/plain')
-
-                // 1. 检查目标表头是否已经有映射（用于互换）
-                const existingFieldInTarget = mapping[targetHeader]
-
-                // 2. 查找拖拽的字段当前在哪个表头上（用于互换）
-                let sourceHeader = null
-                for (const [key, value] of Object.entries(mapping)) {
-                    if (value === draggedField) {
-                        sourceHeader = key
-                        break
+                        resolve(json);
+                    } catch (err) {
+                        reject(err);
                     }
-                }
-
-                // 3. 执行映射更新
-                if (sourceHeader && existingFieldInTarget) {
-                    // 情况 A：互换映射（把目标表头的旧字段，给到源表头）
-                    mapping[sourceHeader] = existingFieldInTarget
-                } else if (sourceHeader && !existingFieldInTarget) {
-                    // 情况 B：移动映射（源表头清空）
-                    delete mapping[sourceHeader]
-                }
-
-                // 4. 无论如何，目标表头最终都要变成拖拽过来的字段
-                mapping[targetHeader] = draggedField
-            }
-
-            // 【新增功能】：处理拖拽回右侧字段区（删除映射）
-            const onDropToFields = (e) => {
-                const draggedField = e.dataTransfer.getData('text/plain')
-                // 遍历 mapping，找到这个字段对应的表头并删除
-                for (const [key, value] of Object.entries(mapping)) {
-                    if (value === draggedField) {
-                        delete mapping[key]
-                        break
+                };
+                reader.onerror = () => reject(new Error('读取文件失败'));
+                reader.readAsArrayBuffer(file);
+            } else if (ext === 'csv' || ext === 'txt') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const text = e.target.result;
+                        const result = Papa.parse(text, {
+                            skipEmptyLines: true,
+                            trimHeaders: false,
+                            delimitersToGuess: [',', ';', '\t', '|'],
+                            transform: (value) => value.trim()
+                        });
+                        if (result.errors.length > 0) {
+                            console.warn('CSV解析警告:', result.errors);
+                        }
+                        const data = result.data.filter(row => row.some(cell => cell !== ''));
+                        if (data.length === 0) {
+                            reject(new Error('文件为空或无法解析'));
+                            return;
+                        }
+                        resolve(data);
+                    } catch (err) {
+                        reject(err);
                     }
+                };
+                reader.onerror = () => reject(new Error('读取文件失败'));
+                reader.readAsText(file, 'UTF-8');
+            } else {
+                reject(new Error('不支持的文件格式: ' + ext));
+            }
+        });
+    }
+
+    // ================================================================
+    //  渲染：字段池
+    // ================================================================
+    function renderFieldPool() {
+        fieldPool.innerHTML = '';
+        FIELD_META.forEach(f => {
+            const tag = document.createElement('span');
+            tag.className = 'field-tag';
+            if (reverseMapping[f.key] !== undefined) {
+                tag.classList.add('mapped');
+            }
+            tag.draggable = true;
+            tag.dataset.field = f.key;
+            tag.innerHTML = `<span class="tag-icon material-symbols-outlined">label</span> ${f.label}`;
+            tag.addEventListener('dragstart', onFieldDragStart);
+            tag.addEventListener('dragend', onFieldDragEnd);
+            fieldPool.appendChild(tag);
+        });
+    }
+
+    // ================================================================
+    //  渲染：数据预览表格（预览前12行）
+    // ================================================================
+    function renderTable() {
+        if (!fileData || fileData.length === 0) {
+            tableHead.innerHTML = '';
+            tableBody.innerHTML = '';
+            previewCount.textContent = '0';
+            return;
+        }
+
+        const PREVIEW_LIMIT = 12;
+        const displayRows = fileData.slice(0, PREVIEW_LIMIT);
+        const numCols = headers.length;
+
+        let theadHTML = '<tr>';
+        theadHTML += `<th style="width:40px;text-align:center;color:var(--text-muted);">#</th>`;
+        headers.forEach((h, idx) => {
+            theadHTML += `<th title="${h || `列${idx+1}`}">${h || `列${idx+1}`}</th>`;
+        });
+        theadHTML += '</tr>';
+
+        theadHTML += '<tr class="drop-zone-row">';
+        theadHTML += `<td style="background:transparent;border:none;"></td>`;
+        headers.forEach((h, idx) => {
+            const mappedKey = mapping[idx] || '';
+            const mappedLabel = mappedKey ? FIELD_LABEL_MAP[mappedKey] : '';
+            const isEmpty = !mappedKey;
+            theadHTML += `
+                    <th class="drop-zone-row" data-colidx="${idx}">
+                        <div class="drop-target ${isEmpty ? 'empty' : 'mapped'}" data-colidx="${idx}">
+                            ${mappedKey ? `<span>${mappedLabel}</span><span class="remove-map" data-colidx="${idx}">✕</span>` : '⬇ 放置'}
+                        </div>
+                    </th>
+                `;
+        });
+        theadHTML += '</tr>';
+
+        tableHead.innerHTML = theadHTML;
+
+        let tbodyHTML = '';
+        displayRows.forEach((row, ri) => {
+            tbodyHTML += `<tr>`;
+            tbodyHTML += `<td style="text-align:center;color:var(--text-muted);font-size:12px;">${ri + 1}</td>`;
+            for (let ci = 0; ci < numCols; ci++) {
+                const val = (row[ci] !== undefined && row[ci] !== null) ? String(row[ci]) : '';
+                tbodyHTML += `<td title="${val.replace(/"/g, '&quot;')}">${val || '—'}</td>`;
+            }
+            tbodyHTML += `</tr>`;
+        });
+        tableBody.innerHTML = tbodyHTML;
+        previewCount.textContent = Math.min(fileData.length, PREVIEW_LIMIT);
+        previewLimitDisplay.textContent = PREVIEW_LIMIT;
+
+        document.querySelectorAll('.drop-target').forEach(el => {
+            el.addEventListener('dragover', onDropTargetDragOver);
+            el.addEventListener('dragleave', onDropTargetDragLeave);
+            el.addEventListener('drop', onDropTargetDrop);
+        });
+
+        document.querySelectorAll('.remove-map').forEach(el => {
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const idx = parseInt(this.dataset.colidx);
+                if (!isNaN(idx)) {
+                    setMapping(idx, null);
                 }
-            }
+            });
+        });
+    }
 
-            const removeMapping = (header) => delete mapping[header]
-            const isFieldMapped = (field) => Object.values(mapping).includes(field)
+    // ================================================================
+    //  拖拽事件
+    // ================================================================
+    let draggedField = null;
 
-            const submitData = () => {
-                const file = fileInputRef.value.files[0]
-                if (!file) return
-                const formData = new FormData()
-                formData.append('file', file)
-                formData.append('mapping', JSON.stringify(mapping))
-                formData.append('hasHeader', hasHeader.value)
-                fetch('https://slave.tooo.top/catalog/v1/upload', { method: 'POST', body: formData })
-                    .then(response => response.json())
-                    .then(data => { alert('上传成功！'); console.log('后端返回:', data) })
-                    .catch(error => { alert('上传失败，请检查网络或后端服务'); console.error(error) })
-            }
+    function onFieldDragStart(e) {
+        draggedField = this.dataset.field;
+        this.style.opacity = '0.5';
+        e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.setData('text/plain', draggedField);
+    }
 
-            return {
-                systemFields, fileInputRef, currentFile, hasHeader, headers, fileData, mapping,
-                triggerFileInput, handleDrop, handleFile, reParseFile, refreshFile,
-                onDragStart, onDragOver, onDragLeave, onDrop, onDropToFields, removeMapping,
-                isFieldMapped, submitData
+    function onFieldDragEnd(e) {
+        this.style.opacity = '1';
+        document.querySelectorAll('.drop-target.dragover').forEach(el => el.classList.remove('dragover'));
+    }
+
+    function onDropTargetDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        this.classList.add('dragover');
+    }
+
+    function onDropTargetDragLeave(e) {
+        this.classList.remove('dragover');
+    }
+
+    function onDropTargetDrop(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        const fieldKey = e.dataTransfer.getData('text/plain');
+        if (!fieldKey || !FIELD_KEYS.includes(fieldKey)) return;
+
+        const colIdx = parseInt(this.dataset.colidx);
+        if (isNaN(colIdx)) return;
+
+        for (const [idx, key] of Object.entries(reverseMapping)) {
+            if (key === fieldKey && parseInt(idx) !== colIdx) {
+                showToast(`"${FIELD_LABEL_MAP[fieldKey]}" 已被列 "${headers[parseInt(idx)] || idx}" 使用`, 'error');
+                return;
             }
         }
-    }).mount('#app')
-</script>
 
+        setMapping(colIdx, fieldKey);
+        showToast(`列 "${headers[colIdx] || colIdx+1}" → ${FIELD_LABEL_MAP[fieldKey]}`, 'success', 1500);
+    }
+
+    // ================================================================
+    //  核心：设置映射
+    // ================================================================
+    function setMapping(colIdx, fieldKey) {
+        if (!fieldKey) {
+            const oldKey = mapping[colIdx];
+            if (oldKey) {
+                delete reverseMapping[oldKey];
+            }
+            delete mapping[colIdx];
+        } else {
+            for (const [idx, key] of Object.entries(reverseMapping)) {
+                if (key === fieldKey && parseInt(idx) !== colIdx) {
+                    showToast(`"${FIELD_LABEL_MAP[fieldKey]}" 已被其他列使用`, 'error');
+                    return;
+                }
+            }
+            const oldKey = mapping[colIdx];
+            if (oldKey) delete reverseMapping[oldKey];
+            mapping[colIdx] = fieldKey;
+            reverseMapping[fieldKey] = colIdx;
+        }
+
+        renderFieldPool();
+        renderTable();
+        updateUploadBtn();
+        updateStatusMsg();
+    }
+
+    // ================================================================
+    //  更新按钮状态
+    // ================================================================
+    function updateUploadBtn() {
+        const mappedCount = Object.keys(mapping).length;
+        const totalCols = headers.length;
+        const hasMapping = mappedCount > 0;
+        const hasData = fileData && fileData.length > 0;
+        uploadBtn.disabled = !hasMapping || !hasData || isUploading;
+        if (hasMapping && hasData) {
+            uploadBtn.title = `已映射 ${mappedCount}/${totalCols} 列`;
+        } else {
+            uploadBtn.title = '请先上传文件并完成列映射';
+        }
+    }
+
+    function updateStatusMsg() {
+        const mappedCount = Object.keys(mapping).length;
+        const totalCols = headers.length;
+        if (!fileData || fileData.length === 0) {
+            statusMsg.innerHTML = `<i class="fas fa-info-circle"></i> 请上传文件`;
+            return;
+        }
+        if (mappedCount === 0) {
+            statusMsg.innerHTML = `<i class="fas fa-exclamation-triangle" style="color:#fbbf24;"></i> 请将字段拖拽到列头下方的放置区完成映射`;
+        } else if (mappedCount < totalCols) {
+            statusMsg.innerHTML = `<i class="fas fa-edit" style="color:var(--primary);"></i> 已映射 ${mappedCount}/${totalCols} 列，${totalCols - mappedCount} 列未映射`;
+        } else {
+            statusMsg.innerHTML = `<i class="fas fa-check-circle" style="color:var(--profit-color);"></i> 全部 ${mappedCount} 列已映射，可以上传`;
+        }
+    }
+
+    // ================================================================
+    //  重置所有
+    // ================================================================
+    function resetAll() {
+        fileData = null;
+        headers = [];
+        totalRows = 0;
+        mapping = {};
+        reverseMapping = {};
+        isUploading = false;
+
+        fileInput.value = '';
+        fileInfoRow.classList.remove('show');
+        fieldPoolContainer.classList.remove('show');
+        previewSection.classList.remove('show');
+        actionBar.classList.remove('show');
+        uploadProgress.classList.remove('show');
+        uploadBtn.disabled = true;
+        tableHead.innerHTML = '';
+        tableBody.innerHTML = '';
+        previewCount.textContent = '0';
+        statusMsg.innerHTML = `<i class="fas fa-info-circle"></i> 请上传文件`;
+
+        renderFieldPool();
+        renderTable();
+        showToast('已重置所有数据', 'info', 1500);
+    }
+
+    // ================================================================
+    //  处理文件上传
+    // ================================================================
+    async function handleFile(file) {
+        try {
+            const rawData = await parseFile(file);
+            if (rawData.length === 0) {
+                showToast('文件为空', 'error');
+                return;
+            }
+
+            headers = rawData[0].map(h => String(h || '').trim() || `列${rawData[0].indexOf(h) + 1}`);
+            fileData = rawData.slice(1).filter(row => row.some(cell => cell !== '' && cell !== null && cell !== undefined));
+            totalRows = fileData.length;
+
+            if (fileData.length === 0) {
+                showToast('数据行为空', 'error');
+                return;
+            }
+
+            mapping = {};
+            reverseMapping = {};
+
+            // 更新文件信息行
+            fileNameDisplay.textContent = file.name;
+            fileSizeDisplay.textContent = formatSize(file.size);
+            totalRowsDisplay.textContent = totalRows;
+            fileInfoRow.classList.add('show');
+
+            fieldPoolContainer.classList.add('show');
+            previewSection.classList.add('show');
+            actionBar.classList.add('show');
+
+            renderFieldPool();
+            renderTable();
+            updateUploadBtn();
+            updateStatusMsg();
+
+            showToast(`成功解析 ${totalRows} 行数据`, 'success');
+
+        } catch (err) {
+            showToast('解析失败: ' + err.message, 'error');
+            console.error(err);
+        }
+    }
+
+    // ================================================================
+    //  上传到服务器
+    // ================================================================
+    async function uploadToServer() {
+        if (isUploading) return;
+        if (!fileData || fileData.length === 0) {
+            showToast('没有数据可上传', 'error');
+            return;
+        }
+
+        const mappedCount = Object.keys(mapping).length;
+        if (mappedCount === 0) {
+            showToast('请先完成列映射', 'error');
+            return;
+        }
+
+        const colIndexes = Object.keys(mapping).map(Number).sort((a, b) => a - b);
+        const fieldKeys = colIndexes.map(idx => mapping[idx]);
+
+        const rows = fileData.map(row => {
+            const obj = {};
+            colIndexes.forEach((idx, i) => {
+                const key = fieldKeys[i];
+                obj[key] = (row[idx] !== undefined && row[idx] !== null) ? String(row[idx]).trim() : '';
+            });
+            return obj;
+        });
+
+        const payload = {
+            fileName: fileNameDisplay.textContent || 'upload',
+            totalRows: rows.length,
+            mapping: mapping,
+            data: rows
+        };
+
+        try {
+            isUploading = true;
+            uploadBtn.disabled = true;
+            uploadProgress.classList.add('show');
+            progressFill.style.width = '0%';
+            progressText.textContent = '正在上传...';
+
+            const response = await fetch(UPLOAD_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            progressFill.style.width = '100%';
+            progressText.textContent = '上传完成';
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`服务器响应 ${response.status}: ${errText}`);
+            }
+
+            const result = await response.json();
+            showToast(`✅ 上传成功！共 ${rows.length} 条数据`, 'success', 5000);
+            console.log('上传结果:', result);
+
+        } catch (err) {
+            showToast('❌ 上传失败: ' + err.message, 'error', 5000);
+            console.error(err);
+        } finally {
+            isUploading = false;
+            uploadBtn.disabled = false;
+            setTimeout(() => {
+                uploadProgress.classList.remove('show');
+                progressFill.style.width = '0%';
+            }, 2000);
+            updateUploadBtn();
+        }
+    }
+
+    // ================================================================
+    //  事件绑定
+    // ================================================================
+
+    fileInput.addEventListener('change', function(e) {
+        if (this.files && this.files.length > 0) {
+            handleFile(this.files[0]);
+        }
+    });
+
+    uploadZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+    uploadZone.addEventListener('dragleave', function(e) {
+        this.classList.remove('dragover');
+    });
+    uploadZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            const file = files[0];
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (['xls', 'xlsx', 'csv', 'txt'].includes(ext)) {
+                handleFile(file);
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+            } else {
+                showToast('不支持的文件格式: ' + ext, 'error');
+            }
+        }
+    });
+
+    resetAllBtn.addEventListener('click', resetAll);
+    uploadBtn.addEventListener('click', uploadToServer);
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && e.ctrlKey) {
+            if (confirm('确定要重置所有数据吗？')) resetAll();
+        }
+    });
+
+    // ================================================================
+    //  初始化
+    // ================================================================
+    renderFieldPool();
+    renderTable();
+    updateUploadBtn();
+    updateStatusMsg();
+
+    console.log('✅ 数据导入工具已启动（拖拽映射模式，预览12行）');
+</script>
 </body>
 </html>

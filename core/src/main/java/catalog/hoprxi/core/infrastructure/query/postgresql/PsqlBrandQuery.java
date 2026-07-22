@@ -89,7 +89,7 @@ public class PsqlBrandQuery implements BrandQuery {
 
     public Brand[] queryAll(int offset, int limit) {
         final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'shortName' shortName,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo " +
-                "from brand a INNER JOIN (SELECT id FROM brand order by id desc offset ? LIMIT ?) b USING (id)";
+                             "from brand a INNER JOIN (SELECT id FROM brand order by id desc offset ? LIMIT ?) b USING (id)";
         try (Connection connection = PsqlUtil.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setInt(1, offset);
@@ -106,9 +106,9 @@ public class PsqlBrandQuery implements BrandQuery {
 
     public Brand[] queryByName(String name) {
         final String query = "select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'shortName' shortName,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
-                "where name::jsonb->>'name' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'shortName' shortName,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
-                "where name::jsonb->>'mnemonic' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'shortName' shortName,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
-                "where name::jsonb->>'shortName' ~ ?";
+                             "where name::jsonb->>'name' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'shortName' shortName,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
+                             "where name::jsonb->>'mnemonic' ~ ? union select id,name::jsonb->>'name' name,name::jsonb->>'mnemonic' mnemonic,name::jsonb->>'shortName' shortName,about::jsonb->>'story' story, about::jsonb->>'since' since,about::jsonb->>'homepage' homepage,about::jsonb->>'logo' logo from brand " +
+                             "where name::jsonb->>'shortName' ~ ?";
         try (Connection connection = PsqlUtil.getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, name);

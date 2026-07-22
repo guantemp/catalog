@@ -37,6 +37,9 @@ import static org.testng.Assert.*;
  * @version 0.0.1 builder 2026-07-12
  */
 public class CategoryHandlerTest {
+    // ===================== 预定义常量（请根据实际数据库修改） =====================
+    private static final long INVALID_ID = Long.MIN_VALUE; // 确保数据库不存在
+
     static {
         StoreKeyLoad.loadSecretKey("keystore.jks", "Qwe123465",
                 new String[]{"slave.tooo.top:6543:P$Qwe123465Pg", "slave.tooo.top:9200"});
@@ -44,8 +47,19 @@ public class CategoryHandlerTest {
 
     private CategoryHandler handler;
 
-    // ===================== 预定义常量（请根据实际数据库修改） =====================
-    private static final long INVALID_ID = Long.MIN_VALUE; // 确保数据库不存在
+    @AfterClass
+    public static void printFinalCacheState() throws Exception {
+        Field cacheField = CategoryHandler.class.getDeclaredField("CATEGORY_CACHE");
+        cacheField.setAccessible(true);
+        ConcurrentHashMap<String, Long> cache = (ConcurrentHashMap<String, Long>) cacheField.get(null);
+
+        System.out.println("===== Final Category Cache State =====");
+        System.out.println("Cache size: " + cache.size());
+        for (Map.Entry<String, Long> entry : cache.entrySet()) {
+            System.out.println("  " + entry.getKey() + " -> " + entry.getValue());
+        }
+        System.out.println("========================================");
+    }
 
     @BeforeMethod
     public void setUp() {
@@ -62,14 +76,14 @@ public class CategoryHandlerTest {
         return event;
     }
 
+    // ===================== 测试用例（按 priority 顺序执行） =====================
+
     @SuppressWarnings("unchecked")
     private ConcurrentHashMap<String, Long> getCache() throws Exception {
         Field cacheField = CategoryHandler.class.getDeclaredField("CATEGORY_CACHE");
         cacheField.setAccessible(true);
         return (ConcurrentHashMap<String, Long>) cacheField.get(null);
     }
-
-    // ===================== 测试用例（按 priority 顺序执行） =====================
 
     // -------- 优先级 1：不改变缓存 / 快速返回 --------
     @Test(priority = 1)
@@ -174,6 +188,8 @@ public class CategoryHandlerTest {
         assertFalse(cache.isEmpty());
     }
 
+    // ===================== 所有测试完成后打印最终缓存状态 =====================
+
     @Test(priority = 3)
     public void testCategoryValidIdExists() throws Exception {
         // 自己创建一条路径获得一个真实 ID
@@ -187,22 +203,6 @@ public class CategoryHandlerTest {
         ItemImportEvent idEvent = createEvent(String.valueOf(createdId));
         handler.onEvent(idEvent);
         assertEquals(idEvent.categoryId, createdId);
-    }
-
-    // ===================== 所有测试完成后打印最终缓存状态 =====================
-
-    @AfterClass
-    public static void printFinalCacheState() throws Exception {
-        Field cacheField = CategoryHandler.class.getDeclaredField("CATEGORY_CACHE");
-        cacheField.setAccessible(true);
-        ConcurrentHashMap<String, Long> cache = (ConcurrentHashMap<String, Long>) cacheField.get(null);
-
-        System.out.println("===== Final Category Cache State =====");
-        System.out.println("Cache size: " + cache.size());
-        for (Map.Entry<String, Long> entry : cache.entrySet()) {
-            System.out.println("  " + entry.getKey() + " -> " + entry.getValue());
-        }
-        System.out.println("========================================");
     }
 
 }

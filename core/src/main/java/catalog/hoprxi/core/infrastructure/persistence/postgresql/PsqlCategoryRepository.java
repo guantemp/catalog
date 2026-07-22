@@ -47,23 +47,6 @@ public class PsqlCategoryRepository implements CategoryRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger("catalog.hoprxi.core");
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
-    @Override
-    public Category find(long id) {
-        try (Connection connection = PsqlUtil.getConnection()) {
-            final String findSql = "select id,parent_id,name,description,icon_url from category where id=?";
-            PreparedStatement preparedStatement = connection.prepareStatement(findSql);
-            preparedStatement.setLong(1, id);
-            ResultSet rs = preparedStatement.executeQuery();
-            return PsqlCategoryRepository.rebuild(rs);
-        } catch (SQLException e) {
-            LOGGER.error("Database error", e);
-            throw new SearchException("Database error", e);
-        } catch (InvocationTargetException | InstantiationException | IllegalAccessException | IOException e) {
-            LOGGER.error("Can't rebuild name", e);
-            throw new SearchException("Can't rebuild category", e);
-        }
-    }
-
     private static Category rebuild(ResultSet rs) throws SQLException, InvocationTargetException, InstantiationException, IllegalAccessException, IOException {
         if (rs.next()) {
             long id = rs.getLong("id");
@@ -97,6 +80,37 @@ public class PsqlCategoryRepository implements CategoryRepository {
             }
         }
         return new Name(name, shortName);
+    }
+
+    private static String toJson(Name name) {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream(); JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
+            generator.writeStartObject();
+            generator.writeStringField("name", name.name());
+            generator.writeStringField("shortName", name.shortName());
+            generator.writeEndObject();
+            generator.close();
+            return output.toString();
+        } catch (IOException e) {
+            LOGGER.error("Not write about as json", e);
+            throw new IllegalStateException("Failed to serialize AboutBrand object", e);
+        }
+    }
+
+    @Override
+    public Category find(long id) {
+        try (Connection connection = PsqlUtil.getConnection()) {
+            final String findSql = "select id,parent_id,name,description,icon_url from category where id=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(findSql);
+            preparedStatement.setLong(1, id);
+            ResultSet rs = preparedStatement.executeQuery();
+            return PsqlCategoryRepository.rebuild(rs);
+        } catch (SQLException e) {
+            LOGGER.error("Database error", e);
+            throw new SearchException("Database error", e);
+        } catch (InvocationTargetException | InstantiationException | IllegalAccessException | IOException e) {
+            LOGGER.error("Can't rebuild name", e);
+            throw new SearchException("Can't rebuild category", e);
+        }
     }
 
     @Override
@@ -246,7 +260,6 @@ public class PsqlCategoryRepository implements CategoryRepository {
         connection.setAutoCommit(true);
     }
 
-
     private void insertNewCategory(Category category, Connection connection) throws SQLException {
         final String parentSql = "select \"right\",family_Id from category where id=?";
         PreparedStatement ps = connection.prepareStatement(parentSql);
@@ -284,20 +297,6 @@ public class PsqlCategoryRepository implements CategoryRepository {
             statement.executeBatch();
             connection.commit();
             connection.setAutoCommit(true);
-        }
-    }
-
-    private static String toJson(Name name) {
-        try (ByteArrayOutputStream output = new ByteArrayOutputStream(); JsonGenerator generator = JSON_FACTORY.createGenerator(output, JsonEncoding.UTF8)) {
-            generator.writeStartObject();
-            generator.writeStringField("name", name.name());
-            generator.writeStringField("shortName", name.shortName());
-            generator.writeEndObject();
-            generator.close();
-            return output.toString();
-        } catch (IOException e) {
-            LOGGER.error("Not write about as json", e);
-            throw new IllegalStateException("Failed to serialize AboutBrand object", e);
         }
     }
 }

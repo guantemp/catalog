@@ -37,7 +37,7 @@ public class ItemCreateHandler implements Handler<ItemCreateCommand, Item> {
                 command.lastReceiptPrice(), command.retailPrice(), command.memberPrice(), command.vipPrice(), command.categoryId(), command.brandId());
         repository.save(item);
         //领域事件
-        ItemCreated event = new ItemCreated ();
+        ItemCreated event = new ItemCreated();
         DomainRegistry.domainEventPublisher().publish(event);
         return item;
     }

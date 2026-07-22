@@ -24,10 +24,11 @@ import catalog.hoprxi.scale.domain.model.Plu;
  * @version 0.0.1 2020-05-05
  */
 public class PluSegmentationService {
+    public static boolean isComplyWithSpec(Plu plu) {
+        return true;
+    }
+
     public int nextPlu(String categoryId) {
         return 1;
-    }
-    public static boolean isComplyWithSpec(Plu plu){
-        return true;
     }
 }

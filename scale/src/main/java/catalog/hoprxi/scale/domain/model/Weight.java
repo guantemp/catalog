@@ -33,10 +33,10 @@ import java.util.Objects;
  * @since JDK 21
  */
 public class Weight extends Scale {
-    private WeightLastReceiptPrice lastReceiptPrice;
-    private WeightRetailPrice retailPrice;
     private final WeightMemberPrice memberPrice;
     private final WeightVipPrice vipPrice;
+    private WeightLastReceiptPrice lastReceiptPrice;
+    private WeightRetailPrice retailPrice;
 
     public Weight(Plu plu, Name name, MadeIn madeIn, Specification spec, GradeEnum grade, ShelfLife shelfLife, WeightLastReceiptPrice lastReceiptPrice,
                   WeightRetailPrice retailPrice, WeightMemberPrice memberPrice, WeightVipPrice vipPrice, long categoryId, long brandId) {
@@ -78,18 +78,18 @@ public class Weight extends Scale {
     @Override
     public String toString() {
         return "Weight{" +
-                "lastReceiptPrice=" + lastReceiptPrice +
-                ", retailPrice=" + retailPrice +
-                ", memberPrice=" + memberPrice +
-                ", vipPrice=" + vipPrice +
-                ", brandId=" + brandId +
-                ", categoryId=" + categoryId +
-                ", grade=" + grade +
-                ", plu=" + plu +
-                ", name=" + name +
-                ", spec=" + spec +
-                ", shelfLife=" + shelfLife +
-                ", madeIn=" + madeIn +
-                '}';
+               "lastReceiptPrice=" + lastReceiptPrice +
+               ", retailPrice=" + retailPrice +
+               ", memberPrice=" + memberPrice +
+               ", vipPrice=" + vipPrice +
+               ", brandId=" + brandId +
+               ", categoryId=" + categoryId +
+               ", grade=" + grade +
+               ", plu=" + plu +
+               ", name=" + name +
+               ", spec=" + spec +
+               ", shelfLife=" + shelfLife +
+               ", madeIn=" + madeIn +
+               '}';
     }
 }

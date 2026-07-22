@@ -42,7 +42,7 @@ import java.util.List;
  * @since JDK8.0
  * @version 0.0.1 builder 2022-10-20
  */
-public class PsqlCategoryQuery implements  DomainEventSubscriber {
+public class PsqlCategoryQuery implements DomainEventSubscriber {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlCategoryQuery.class);
     private static Tree<CategoryView>[] trees;
     private static Constructor<Name> nameConstructor;
@@ -171,10 +171,10 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
     public void queryAndFillDescendants(Tree<CategoryView> tree, long id) {
         try (Connection connection = PsqlUtil.getConnection()) {
             final String descendantsSql = "select id,parent_id,name::jsonb->>'name' as name,name::jsonb->>'mnemonic' as mnemonic,name::jsonb->>'shortName' as shortName,description,icon_url,\"right\" - \"left\" as distance from category \n" +
-                    "where family_Id = (select family_Id from category where id = ?)\n" +
-                    "  and \"left\" >= (select \"left\" from category where id = ?)\n" +
-                    "  and \"right\" <= (select \"right\" from category where id = ?)\n" +
-                    "order by \"left\"";
+                                          "where family_Id = (select family_Id from category where id = ?)\n" +
+                                          "  and \"left\" >= (select \"left\" from category where id = ?)\n" +
+                                          "  and \"right\" <= (select \"right\" from category where id = ?)\n" +
+                                          "order by \"left\"";
             PreparedStatement preparedStatement = connection.prepareStatement(descendantsSql);
             preparedStatement.setLong(1, id);
             preparedStatement.setLong(2, id);
@@ -195,10 +195,10 @@ public class PsqlCategoryQuery implements  DomainEventSubscriber {
         List<CategoryView> categoryViewList = new ArrayList<>();
         try (Connection connection = PsqlUtil.getConnection()) {
             final String searchSql = "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'shortName' as shortName, description,icon_url,\"right\" - \"left\" as distance from category where name::jsonb ->> 'name' ~ ?\n" +
-                    "union\n" +
-                    "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'shortName' as shortName, description,icon_url,\"right\" - \"left\" as distance from category where name::jsonb ->> 'shortName' ~ ?\n" +
-                    "union\n" +
-                    "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'shortName' as shortName, description,icon_url,\"right\" - \"left\" as distance from category where name::jsonb ->> 'mnemonic' ~ ?";
+                                     "union\n" +
+                                     "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'shortName' as shortName, description,icon_url,\"right\" - \"left\" as distance from category where name::jsonb ->> 'shortName' ~ ?\n" +
+                                     "union\n" +
+                                     "select id,parent_id, name::jsonb ->> 'name' as name, name::jsonb ->> 'mnemonic' as mnemonic, name::jsonb ->> 'shortName' as shortName, description,icon_url,\"right\" - \"left\" as distance from category where name::jsonb ->> 'mnemonic' ~ ?";
             PreparedStatement ps = connection.prepareStatement(searchSql);
             ps.setString(1, regularExpression);
             ps.setString(2, regularExpression);

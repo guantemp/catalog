@@ -20,8 +20,6 @@ package catalog.hoprxi.scale.infrastructure.persistence;
 import catalog.hoprxi.scale.infrastructure.Setup;
 import org.testng.annotations.Test;
 
-import java.util.Properties;
-
 /***
  * @author <a href="www.foxtail.cc/authors/guan xiangHuan">guan xiangHuang</a>
  * @since JDK8.0

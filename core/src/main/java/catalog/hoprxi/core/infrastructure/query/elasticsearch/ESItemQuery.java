@@ -56,44 +56,6 @@ public class ESItemQuery implements ItemQuery {
             .disable(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES)
             .build();
 
-    @Override
-    public InputStream find(long id) {
-        Request request = new Request("GET", PREFIX + "/_doc/" + id);
-        request.setOptions(ESUtil.requestOptions());
-
-        return ReactiveStream.toSingleByteBufInputStream(request, String.valueOf(id));
-    }
-
-    @Override
-    public Mono<ByteBuf> findAsync(long id) {
-        Request request = new Request("GET", PREFIX + "/_doc/" + id);
-        request.setOptions(ESUtil.requestOptions());
-
-        return ReactiveStream.toMonoByteBuf(request, String.valueOf(id));
-    }
-
-    @Override
-    public InputStream findByBarcode(String barcode) {
-        if (!BarcodeValidServices.valid(barcode)) throw new IllegalArgumentException("Not valid barcode ctr");
-
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESItemQuery.buildBarcodeFindRequest(barcode));
-
-        return ReactiveStream.toSingleByteBufInputStream(request, barcode);
-    }
-
-    @Override
-    public Mono<ByteBuf> findByBarcodeAsync(String barcode) {
-        if (!BarcodeValidServices.valid(barcode)) return Mono.error(new IllegalArgumentException("Not valid barcode"));
-
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESItemQuery.buildBarcodeFindRequest(barcode));
-
-        return ReactiveStream.toMonoByteBuf(request, barcode);
-    }
-
     private static String buildBarcodeFindRequest(String barcode) {
         try (StringWriter writer = new StringWriter(); JsonGenerator generator = JSON_FACTORY.createGenerator(writer)) {
             generator.writeStartObject();
@@ -110,36 +72,6 @@ public class ESItemQuery implements ItemQuery {
             LOGGER.error("Cannot assemble request JSON", e);
             throw new IllegalStateException("Failed to build ES query", e);
         }
-    }
-
-    @Override
-    public InputStream search(ItemQuerySpec[] specs, int size, String cursor, SortFieldEnum sortField) {
-        if (size < 0 || size > 10000)
-            throw new IllegalArgumentException("The size rang is 0-10000");
-        if (sortField == null) {
-            sortField = SortFieldEnum._ID;
-            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
-        }
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, size, cursor, sortField));
-
-        return ReactiveStream.toByteBufInputStream(request, "items", ESItemQuery.extractIdentifier(specs));
-    }
-
-    @Override
-    public Flux<ByteBuf> searchAsync(ItemQuerySpec[] specs, int size, String cursor, SortFieldEnum sortField) {
-        if (size < 0 || size > 10000)
-            throw new IllegalArgumentException("The size rang is 0-10000");
-        if (sortField == null) {
-            sortField = SortFieldEnum._ID;
-            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
-        }
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, size, cursor, sortField));
-
-        return ReactiveStream.toFluxByteBuf(request, "items", ESItemQuery.extractIdentifier(specs));
     }
 
     private static String buildSearchRequest(ItemQuerySpec[] filters, int size, String searchAfter, SortFieldEnum sortField) {
@@ -164,38 +96,6 @@ public class ESItemQuery implements ItemQuery {
         generator.writeArrayFieldStart("search_after");
         generator.writeString(searchAfter);
         generator.writeEndArray();
-    }
-
-    @Override
-    public InputStream search(ItemQuerySpec[] specs, int offset, int size, SortFieldEnum sortField) {
-        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("from must lager 10000");
-        if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
-        if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
-        if (sortField == null) {
-            sortField = SortFieldEnum._ID;
-            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
-        }
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
-        return ReactiveStream.toByteBufInputStream(request, "items", ESItemQuery.extractIdentifier(specs));
-    }
-
-    @Override
-    public Flux<ByteBuf> searchAsync(ItemQuerySpec[] specs, int offset, int size, SortFieldEnum sortField) {
-        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("offset must lager 10000");
-        if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
-        if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
-        if (sortField == null) {
-            sortField = SortFieldEnum._ID;
-            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
-        }
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
-        //System.out.println(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
-
-        return ReactiveStream.toFluxByteBuf(request, "items", ESItemQuery.extractIdentifier(specs));
     }
 
     private static String buildSearchRequest(ItemQuerySpec[] specs, int offset, int size, SortFieldEnum sortField) {
@@ -261,7 +161,6 @@ public class ESItemQuery implements ItemQuery {
         generator.writeEndArray();
     }
 
-
     private static void buildAggsRequest(JsonGenerator generator) throws IOException {
         generator.writeObjectFieldStart("aggs");
         ESItemQuery.buildCompositeAggRequest(generator, "brand_aggs", "brand.id", "brand.name");
@@ -301,15 +200,6 @@ public class ESItemQuery implements ItemQuery {
         gen.writeEndObject(); // end composite
         gen.writeEndObject(); // end aggName
  */
-    }
-
-    @Override
-    public Mono<ByteBuf> suggest(String keyword) {
-        Request request = new Request("GET", SEARCH_ENDPOINT);
-        request.setOptions(ESUtil.requestOptions());
-        request.setJsonEntity(ESItemQuery.buildSuggestRequest(keyword, 1));
-
-        return ReactiveStream.toSuggestMonoByteBuf(request);
     }
 
     private static String buildSuggestRequest(String keyword, int score) {
@@ -448,5 +338,114 @@ public class ESItemQuery implements ItemQuery {
         }
         // 否则返回数量
         return "filters(" + specs.length + ")";
+    }
+
+    @Override
+    public InputStream find(long id) {
+        Request request = new Request("GET", PREFIX + "/_doc/" + id);
+        request.setOptions(ESUtil.requestOptions());
+
+        return ReactiveStream.toSingleByteBufInputStream(request, String.valueOf(id));
+    }
+
+    @Override
+    public Mono<ByteBuf> findAsync(long id) {
+        Request request = new Request("GET", PREFIX + "/_doc/" + id);
+        request.setOptions(ESUtil.requestOptions());
+
+        return ReactiveStream.toMonoByteBuf(request, String.valueOf(id));
+    }
+
+    @Override
+    public InputStream findByBarcode(String barcode) {
+        if (!BarcodeValidServices.valid(barcode)) throw new IllegalArgumentException("Not valid barcode ctr");
+
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESItemQuery.buildBarcodeFindRequest(barcode));
+
+        return ReactiveStream.toSingleByteBufInputStream(request, barcode);
+    }
+
+    @Override
+    public Mono<ByteBuf> findByBarcodeAsync(String barcode) {
+        if (!BarcodeValidServices.valid(barcode)) return Mono.error(new IllegalArgumentException("Not valid barcode"));
+
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESItemQuery.buildBarcodeFindRequest(barcode));
+
+        return ReactiveStream.toMonoByteBuf(request, barcode);
+    }
+
+    @Override
+    public InputStream search(ItemQuerySpec[] specs, int size, String cursor, SortFieldEnum sortField) {
+        if (size < 0 || size > 10000)
+            throw new IllegalArgumentException("The size rang is 0-10000");
+        if (sortField == null) {
+            sortField = SortFieldEnum._ID;
+            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, size, cursor, sortField));
+
+        return ReactiveStream.toByteBufInputStream(request, "items", ESItemQuery.extractIdentifier(specs));
+    }
+
+    @Override
+    public Flux<ByteBuf> searchAsync(ItemQuerySpec[] specs, int size, String cursor, SortFieldEnum sortField) {
+        if (size < 0 || size > 10000)
+            throw new IllegalArgumentException("The size rang is 0-10000");
+        if (sortField == null) {
+            sortField = SortFieldEnum._ID;
+            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, size, cursor, sortField));
+
+        return ReactiveStream.toFluxByteBuf(request, "items", ESItemQuery.extractIdentifier(specs));
+    }
+
+    @Override
+    public InputStream search(ItemQuerySpec[] specs, int offset, int size, SortFieldEnum sortField) {
+        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("from must lager 10000");
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
+        if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
+        if (sortField == null) {
+            sortField = SortFieldEnum._ID;
+            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
+        return ReactiveStream.toByteBufInputStream(request, "items", ESItemQuery.extractIdentifier(specs));
+    }
+
+    @Override
+    public Flux<ByteBuf> searchAsync(ItemQuerySpec[] specs, int offset, int size, SortFieldEnum sortField) {
+        if (offset < 0 || offset > 10000) throw new IllegalArgumentException("offset must lager 10000");
+        if (size < 0 || size > 10000) throw new IllegalArgumentException("size must lager 10000");
+        if (offset + size > 10000) throw new IllegalArgumentException("Only the first 10,000 items are supported");
+        if (sortField == null) {
+            sortField = SortFieldEnum._ID;
+            //LOGGER.info("The sorting field is not set, and the default id is used in reverse order");
+        }
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
+        //System.out.println(ESItemQuery.buildSearchRequest(specs, offset, size, sortField));
+
+        return ReactiveStream.toFluxByteBuf(request, "items", ESItemQuery.extractIdentifier(specs));
+    }
+
+    @Override
+    public Mono<ByteBuf> suggest(String keyword) {
+        Request request = new Request("GET", SEARCH_ENDPOINT);
+        request.setOptions(ESUtil.requestOptions());
+        request.setJsonEntity(ESItemQuery.buildSuggestRequest(keyword, 1));
+
+        return ReactiveStream.toSuggestMonoByteBuf(request);
     }
 }

@@ -43,8 +43,8 @@ public record KeywordSpec(String keyword) implements ItemQuerySpec {
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");
             generator.writeObjectFieldStart("barcode.raw");
-            generator.writeStringField("value",keyword);
-            generator.writeNumberField("boost",5);
+            generator.writeStringField("value", keyword);
+            generator.writeNumberField("boost", 5);
             generator.writeEndObject();//barcode.raw
             generator.writeEndObject();//end term
             generator.writeEndObject();//end
@@ -52,8 +52,8 @@ public record KeywordSpec(String keyword) implements ItemQuerySpec {
             generator.writeStartObject();
             generator.writeObjectFieldStart("term");
             generator.writeObjectFieldStart("barcode");
-            generator.writeStringField("value",keyword);
-            generator.writeNumberField("boost",2);
+            generator.writeStringField("value", keyword);
+            generator.writeNumberField("boost", 2);
             generator.writeEndObject();//barcode.raw
             generator.writeEndObject();//end term
             generator.writeEndObject();//end
@@ -92,7 +92,7 @@ public record KeywordSpec(String keyword) implements ItemQuerySpec {
                 generator.writeEndObject();//end match
                 generator.writeEndObject();//end
             }
-            if (NUMBER.matcher(keyword).matches()){
+            if (NUMBER.matcher(keyword).matches()) {
                 generator.writeStartObject();
                 generator.writeObjectFieldStart("term");
                 generator.writeObjectFieldStart("barcode");
@@ -104,6 +104,6 @@ public record KeywordSpec(String keyword) implements ItemQuerySpec {
             }
         }
         generator.writeEndArray();//end should
-        generator.writeNumberField("minimum_should_match",1);
+        generator.writeNumberField("minimum_should_match", 1);
     }
 }

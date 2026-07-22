@@ -16,7 +16,6 @@
 package catalog.hoprxi.core.domain.model.barcode;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /***
  * @author <a href="www.hoprxi.com/authors/guan xiangHuan">guan xiangHuan</a>

@@ -27,19 +27,20 @@ import javax.money.MonetaryAmount;
  * @version 0.0.1 builder 2025/12/8
  */
 
-public class ItemMemberPriceAdjustedCommand implements Command{
+public class ItemMemberPriceAdjustedCommand implements Command {
     private final long id;
     private final MonetaryAmount amount;
     private final String unit;
     private final String name;
 
-    public ItemMemberPriceAdjustedCommand(long id,  String name,MonetaryAmount amount, String unit) {
+    public ItemMemberPriceAdjustedCommand(long id, String name, MonetaryAmount amount, String unit) {
         this.id = id;
         this.amount = amount;
         this.unit = unit;
         this.name = name;
     }
-    public ItemMemberPriceAdjustedCommand(long id,  MonetaryAmount amount, String unit) {
+
+    public ItemMemberPriceAdjustedCommand(long id, MonetaryAmount amount, String unit) {
         this.id = id;
         this.amount = amount;
         this.unit = unit;

@@ -57,6 +57,97 @@ public class PsqlScaleQuery implements ScaleQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger(PsqlScaleQuery.class);
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder().build();
 
+    private static void writeAloneScale(ResultSet rs, JsonGenerator gen) throws IOException, SQLException {
+        gen.writeStartObject();
+        gen.writeNumberField("plu", rs.getInt("plu"));
+        gen.writeFieldName("name");
+        gen.writeRawValue(rs.getString("name"));
+        gen.writeStringField("spec", rs.getString("spec"));
+        gen.writeStringField("grade", rs.getString("grade"));
+        gen.writeFieldName("madeIn");
+        gen.writeRawValue(rs.getString("made_in"));
+        gen.writeNumberField("shelf_life", rs.getLong("shelf_life"));
+        gen.writeFieldName("last_receipt_price");
+        gen.writeRawValue(rs.getString("last_receipt_price"));
+        gen.writeFieldName("retail_price");
+        gen.writeRawValue(rs.getString("retail_price"));
+        gen.writeFieldName("member_price");
+        gen.writeRawValue(rs.getString("member_price"));
+        gen.writeFieldName("vip_price");
+        gen.writeRawValue(rs.getString("vip_price"));
+        gen.writeFieldName("category");
+        gen.writeRawValue(rs.getString("category"));
+        gen.writeFieldName("brand");
+        gen.writeRawValue(rs.getString("brand"));
+        gen.writeEndObject();
+    }
+
+    private static String buildOrderClause(SortFieldEnum sortBy) {
+        if (sortBy == null) {
+            sortBy = SortFieldEnum._ID;
+        }
+        return " ORDER BY " + mapEsFieldToDbField(sortBy) + " " + sortBy.sort().toUpperCase();
+    }
+
+    private static String mapEsFieldToDbField(SortFieldEnum sortField) {
+        return switch (sortField) {
+            case ID, _ID -> "s.plu";
+            case NAME, _NAME -> "s.name ->> 'mnemonic'";
+            case BARCODE, _BARCODE -> "s.barcode";
+            case MADE_IN, _MADE_IN -> "s.made_in";
+            case GRADE, _GRADE -> "s.grade";
+            case SPEC, _SPEC -> "s.spec";
+            case CATEGORY, _CATEGORY -> "c.id";
+            case BRAND, _BRAND -> "b.id";
+            case LAST_RECEIPT_PRICE, _LAST_RECEIPT_PRICE -> "(s.last_receipt_price->>'number')::numeric";
+            case RETAIL_PRICE, _RETAIL_PRICE -> "(s.retail_price->>'number')::numeric";
+            case MEMBER_PRICE, _MEMBER_PRICE -> "(s.member_price->>'number')::numeric";
+            case VIP_PRICE, _VIP_PRICE -> "(s.vip_price->>'number')::numeric";
+            //case STOCK -> "i.stock";
+        };
+    }
+
+    private static Flux<ByteBuf> findAsync(String sql, Consumer<PreparedStatement> paramSetter, String info) {
+        AtomicBoolean isCancelled = new AtomicBoolean(false);
+        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
+        CompletableFuture.runAsync(() -> {
+            try (Connection connection = PsqlUtil.getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
+                paramSetter.accept(ps);
+                try (ResultSet rs = ps.executeQuery();
+                     OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
+                    if (rs.next()) {
+                        writeAloneScale(rs, gen);
+                    }
+                    gen.flush();
+                }
+            } catch (SQLException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).whenComplete((v, err) -> {
+            if (err != null && !isCancelled.get()) {
+                Throwable cause = err;
+                if (err instanceof RuntimeException) cause = err.getCause();// 取出里面的原始 Exception,区分数据库异常和业务异常
+                if (cause instanceof SQLException) {
+                    LOGGER.warn("Database error while fetching item {}", info, cause);
+                    sink.tryEmitError(new PersistenceException("Database error while fetching item " + info, cause));
+                } else if (cause instanceof IOException) {
+                    LOGGER.warn("Failed to serialize for item {}", info, cause);
+                    sink.tryEmitError(new PersistenceException("Failed to serialize cause by", cause));
+                } else {  //未知错误 (兜底，防止请求挂起),比如代码逻辑错误导致的 NullPointerException 等
+                    LOGGER.error("Unexpected system error while fetching item {}", info, cause);
+                    sink.tryEmitError(new SearchException("Unexpected error: " + err.getMessage(), cause));
+                }
+            } else if (!isCancelled.get()) {
+                sink.tryEmitComplete();
+            }
+        });
+
+        return sink.asFlux()
+                .doOnCancel(() -> isCancelled.set(true))
+                .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", info))
+                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
+    }
+
     @Override
     public Flux<ByteBuf> findAsync(Plu plu) {
         final String sql = """
@@ -206,97 +297,6 @@ public class PsqlScaleQuery implements ScaleQuery {
         return sink.asFlux()
                 .doOnCancel(() -> isCancelled.set(true))
                 .doOnTerminate(() -> LOGGER.debug("Request terminated for scale"))
-                .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
-    }
-
-    private static void writeAloneScale(ResultSet rs, JsonGenerator gen) throws IOException, SQLException {
-        gen.writeStartObject();
-        gen.writeNumberField("plu", rs.getInt("plu"));
-        gen.writeFieldName("name");
-        gen.writeRawValue(rs.getString("name"));
-        gen.writeStringField("spec", rs.getString("spec"));
-        gen.writeStringField("grade", rs.getString("grade"));
-        gen.writeFieldName("madeIn");
-        gen.writeRawValue(rs.getString("made_in"));
-        gen.writeNumberField("shelf_life", rs.getLong("shelf_life"));
-        gen.writeFieldName("last_receipt_price");
-        gen.writeRawValue(rs.getString("last_receipt_price"));
-        gen.writeFieldName("retail_price");
-        gen.writeRawValue(rs.getString("retail_price"));
-        gen.writeFieldName("member_price");
-        gen.writeRawValue(rs.getString("member_price"));
-        gen.writeFieldName("vip_price");
-        gen.writeRawValue(rs.getString("vip_price"));
-        gen.writeFieldName("category");
-        gen.writeRawValue(rs.getString("category"));
-        gen.writeFieldName("brand");
-        gen.writeRawValue(rs.getString("brand"));
-        gen.writeEndObject();
-    }
-
-    private static String buildOrderClause(SortFieldEnum sortBy) {
-        if (sortBy == null) {
-            sortBy = SortFieldEnum._ID;
-        }
-        return " ORDER BY " + mapEsFieldToDbField(sortBy) + " " + sortBy.sort().toUpperCase();
-    }
-
-    private static String mapEsFieldToDbField(SortFieldEnum sortField) {
-        return switch (sortField) {
-            case ID, _ID -> "s.plu";
-            case NAME, _NAME -> "s.name ->> 'mnemonic'";
-            case BARCODE, _BARCODE -> "s.barcode";
-            case MADE_IN, _MADE_IN -> "s.made_in";
-            case GRADE, _GRADE -> "s.grade";
-            case SPEC, _SPEC -> "s.spec";
-            case CATEGORY, _CATEGORY -> "c.id";
-            case BRAND, _BRAND -> "b.id";
-            case LAST_RECEIPT_PRICE, _LAST_RECEIPT_PRICE -> "(s.last_receipt_price->>'number')::numeric";
-            case RETAIL_PRICE, _RETAIL_PRICE -> "(s.retail_price->>'number')::numeric";
-            case MEMBER_PRICE, _MEMBER_PRICE -> "(s.member_price->>'number')::numeric";
-            case VIP_PRICE, _VIP_PRICE -> "(s.vip_price->>'number')::numeric";
-            //case STOCK -> "i.stock";
-        };
-    }
-
-    private static Flux<ByteBuf> findAsync(String sql, Consumer<PreparedStatement> paramSetter, String info) {
-        AtomicBoolean isCancelled = new AtomicBoolean(false);
-        Sinks.Many<ByteBuf> sink = Sinks.many().unicast().onBackpressureBuffer();  // 使用单播接收器（更高效）
-        CompletableFuture.runAsync(() -> {
-            try (Connection connection = PsqlUtil.getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
-                paramSetter.accept(ps);
-                try (ResultSet rs = ps.executeQuery();
-                     OutputStream os = new JsonByteBufOutputStream(sink, isCancelled); JsonGenerator gen = JSON_FACTORY.createGenerator(os)) {
-                    if (rs.next()) {
-                        writeAloneScale(rs, gen);
-                    }
-                    gen.flush();
-                }
-            } catch (SQLException | IOException e) {
-                throw new RuntimeException(e);
-            }
-        }).whenComplete((v, err) -> {
-            if (err != null && !isCancelled.get()) {
-                Throwable cause = err;
-                if (err instanceof RuntimeException) cause = err.getCause();// 取出里面的原始 Exception,区分数据库异常和业务异常
-                if (cause instanceof SQLException) {
-                    LOGGER.warn("Database error while fetching item {}", info, cause);
-                    sink.tryEmitError(new PersistenceException("Database error while fetching item " + info, cause));
-                } else if (cause instanceof IOException) {
-                    LOGGER.warn("Failed to serialize for item {}", info, cause);
-                    sink.tryEmitError(new PersistenceException("Failed to serialize cause by", cause));
-                } else {  //未知错误 (兜底，防止请求挂起),比如代码逻辑错误导致的 NullPointerException 等
-                    LOGGER.error("Unexpected system error while fetching item {}", info, cause);
-                    sink.tryEmitError(new SearchException("Unexpected error: " + err.getMessage(), cause));
-                }
-            } else if (!isCancelled.get()) {
-                sink.tryEmitComplete();
-            }
-        });
-
-        return sink.asFlux()
-                .doOnCancel(() -> isCancelled.set(true))
-                .doOnTerminate(() -> LOGGER.debug("Request terminated for id: {}", info))
                 .doOnDiscard(ByteBuf.class, ByteBuf::release); // 确保释放资源
     }
 
